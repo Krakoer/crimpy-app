@@ -94,8 +94,7 @@ class WeekHistogramWidget extends StatelessWidget {
             height: maxBarHeight * heightPercentage,
             width: 24,
             decoration: BoxDecoration(
-              color:
-                  isToday ? barColor.withValues(alpha: 1.0) : barColor.withValues(alpha: 0.7),
+              color: barColor.withValues(alpha: isToday ? 1 : 0.7),
               borderRadius: BorderRadius.circular(4),
               // Draw a slight shadow for current day
               boxShadow:

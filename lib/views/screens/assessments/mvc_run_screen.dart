@@ -56,10 +56,10 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
       // TODO: Move this logic to PostAssessmentScreen and show progress indicator/error text accordingly.
       final prevValueRight = await ref
           .read(assessmentsProvider(widget.type).notifier)
-          .getLastValueForHand(true);
+          .getLastValueForHand(HandSide.right);
       final prevValueLeft = await ref
           .read(assessmentsProvider(widget.type).notifier)
-          .getLastValueForHand(false);
+          .getLastValueForHand(HandSide.left);
 
       if (mounted) {
         // Push result screen
@@ -70,7 +70,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
                   type: widget.type,
                   rightHandResults: (prevValueRight, rightMax),
                   leftHandResults: (prevValueLeft, leftMax),
-                  saveAssessment: FinishedAssessmentModel(
+                  saveAssessment: AssessmentResultModel(
                     type: widget.type,
                     rightValue: rightMax,
                     leftValue: leftMax,
@@ -209,7 +209,10 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
                   padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: CrimpyTheme.accentYellow,
-                    border: Border.all(color: CrimpyTheme.borderDefault, width: 2),
+                    border: Border.all(
+                      color: CrimpyTheme.borderDefault,
+                      width: 2,
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: CrimpyTheme.borderDefault,

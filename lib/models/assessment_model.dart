@@ -1,3 +1,4 @@
+import 'package:crimpy/models/common.dart';
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/training_model.dart';
 
@@ -27,25 +28,23 @@ class AssessmentTrainingModel {
   });
 }
 
-class FinishedAssessmentModel {
+class AssessmentResultModel {
   final AssessmentType type;
   final double? rightValue;
   final double? leftValue;
 
-  FinishedAssessmentModel({
-    required this.type,
-    this.rightValue,
-    this.leftValue,
-  });
+  AssessmentResultModel({required this.type, this.rightValue, this.leftValue});
 
   /// Get the hand of the assessment.
   /// `null` means both hands, `true` means right hand and `false` means left hand.
-  bool? get hand {
-    return leftValue == null
-        ? true
-        : rightValue == null
-        ? false
-        : null;
+  HandSide? get hand {
+    if (leftValue == null) {
+      if (rightValue == null) {
+        return null;
+      }
+      return HandSide.right;
+    }
+    return rightValue == null ? HandSide.left : HandSide.both;
   }
 }
 

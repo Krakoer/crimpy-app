@@ -393,7 +393,7 @@ class AppDatabase extends _$AppDatabase {
   // ------------------------------------- ASSESSMENTS -------------------------------------
   /// Given an assessment with the results and a sessionId, store the assessment into DB.
   Future<int> saveAssessment(
-    FinishedAssessmentModel assessment,
+    AssessmentResultModel assessment,
     int sessionId,
   ) async {
     final companion = AssessmentsCompanion(
@@ -415,7 +415,7 @@ class AppDatabase extends _$AppDatabase {
   /// If the `rightHand` parameter is set, it will only return the results for the given hand.
   Future<List<AssessmentModel>> getAssessments({
     AssessmentType? type,
-    bool? rightHand,
+    HandSide? handSide,
   }) async {
     var query = select(assessments);
 
@@ -423,11 +423,11 @@ class AppDatabase extends _$AppDatabase {
       query = query..where((r) => r.type.equals(type.index));
     }
     // Add filter if hand was provided.
-    if (rightHand != null) {
+    if (handSide != null) {
       query =
           query..where(
             (assessment) =>
-                rightHand
+                handSide.isRightHand
                     ? assessment.rightValue.isNotNull()
                     : assessment.leftValue.isNotNull(),
           );

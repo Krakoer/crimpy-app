@@ -1,4 +1,5 @@
 import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
@@ -15,7 +16,7 @@ import 'package:crimpy/views/widgets/workout_timer.dart';
 
 class CriticalForceRunScreen extends ConsumerStatefulWidget {
   final List<RepModel> reps;
-  final bool hand;
+  final HandSide hand;
   const CriticalForceRunScreen({
     required this.reps,
     required this.hand,
@@ -60,10 +61,10 @@ class _CriticalForceRunScreenState
             .getLastValueForHand(widget.hand);
 
         // Create assessment model
-        final saveAssessment = FinishedAssessmentModel(
+        final saveAssessment = AssessmentResultModel(
           type: AssessmentType.criticalForce,
-          rightValue: widget.hand ? criticalLoad : null,
-          leftValue: !widget.hand ? criticalLoad : null,
+          rightValue: widget.hand.isRightHand ? criticalLoad : null,
+          leftValue: !widget.hand.isRightHand ? criticalLoad : null,
         );
         // Create rep models
         final saveReps =
@@ -187,7 +188,10 @@ class _CriticalForceRunScreenState
                   padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: CrimpyTheme.accentYellow,
-                    border: Border.all(color: CrimpyTheme.borderDefault, width: 2),
+                    border: Border.all(
+                      color: CrimpyTheme.borderDefault,
+                      width: 2,
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: CrimpyTheme.borderDefault,

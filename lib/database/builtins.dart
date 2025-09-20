@@ -145,32 +145,134 @@ final builtinsAssessments = [
 /// Built-in trainings that require assessment values to be available.
 final List<BuiltinTrainingModel> builtinTrainings = [
   BuiltinTrainingModel(
-    id: 1000, // Use a different ID range for builtin trainings
+    id: 1000,
     name: "Power Endurance",
-    description:
-        "Repeater training with 3 sets of 10 reps at 80% of max force for power endurance development",
+    description: "3 sets of 10 7/3 repeaters at 65% of max force.",
     requiredAssessments: [
       AssessmentType.mvc,
     ], // Requires MVC for max force calculation
     isAvailable: (assessmentValues) {
       // Check if we have both right and left hand MVC values
-      final mvcRight = assessmentValues[AssessmentType.mvc];
-      return mvcRight != null && mvcRight > 0;
+      final mvcRight = assessmentValues.lastWhereOrNull(
+        (assessment) =>
+            assessment.type == AssessmentType.mvc &&
+            assessment.rightValue != null,
+      );
+      final mvcLeft = assessmentValues.lastWhereOrNull(
+        (assessment) =>
+            assessment.type == AssessmentType.mvc &&
+            assessment.leftValue != null,
+      );
+      return mvcRight != null &&
+          mvcLeft != null &&
+          mvcLeft.leftValue! > 0 &&
+          mvcRight.rightValue! > 0;
     },
-    trainingGenerator: (assessmentValues, {double? customLoad}) {
-      final maxForce = assessmentValues[AssessmentType.mvc] ?? 0.0;
-      final targetWeight =
-          customLoad ?? (maxForce * 0.8); // Use custom load or 80% of max force
+    trainingGenerator: (
+      assessmentValues, {
+      double? customLoadRight,
+      double? customLoadLeft,
+    }) {
+      final maxForceRight =
+          assessmentValues
+              .lastWhereOrNull(
+                (assessment) =>
+                    assessment.type == AssessmentType.mvc &&
+                    assessment.rightValue != null,
+              )
+              ?.rightValue ??
+          0.0;
+      final maxForceLeft =
+          assessmentValues
+              .lastWhereOrNull(
+                (assessment) =>
+                    assessment.type == AssessmentType.mvc &&
+                    assessment.leftValue != null,
+              )
+              ?.leftValue ??
+          0.0;
+      final targetWeightRight =
+          customLoadRight ??
+          (maxForceRight * 0.65); // Use custom load or 65% of max force
+      final targetWeightLeft =
+          customLoadLeft ??
+          (maxForceLeft * 0.65); // Use custom load or 65% of max force
 
       return RepeaterModel(
         sets: 3,
         restBteweenSets: 8 * 60, // 8 minutes in seconds
         repsBySet: 10,
-        workTime: 5,
-        restTime: 5,
+        workTime: 7,
+        restTime: 3,
         splitHand: true,
-        weightRight: targetWeight,
-        weightLeft: targetWeight,
+        weightRight: targetWeightRight,
+        weightLeft: targetWeightLeft,
+      );
+    },
+  ),
+  BuiltinTrainingModel(
+    id: 1001,
+    name: "Max Force",
+    description: "Max force training at 85% of max force.",
+    requiredAssessments: [
+      AssessmentType.mvc,
+    ], // Requires MVC for max force calculation
+    isAvailable: (assessmentValues) {
+      // Check if we have both right and left hand MVC values
+      final mvcRight = assessmentValues.lastWhereOrNull(
+        (assessment) =>
+            assessment.type == AssessmentType.mvc &&
+            assessment.rightValue != null,
+      );
+      final mvcLeft = assessmentValues.lastWhereOrNull(
+        (assessment) =>
+            assessment.type == AssessmentType.mvc &&
+            assessment.leftValue != null,
+      );
+      return mvcRight != null &&
+          mvcLeft != null &&
+          mvcLeft.leftValue! > 0 &&
+          mvcRight.rightValue! > 0;
+    },
+    trainingGenerator: (
+      assessmentValues, {
+      double? customLoadRight,
+      double? customLoadLeft,
+    }) {
+      final maxForceRight =
+          assessmentValues
+              .lastWhereOrNull(
+                (assessment) =>
+                    assessment.type == AssessmentType.mvc &&
+                    assessment.rightValue != null,
+              )
+              ?.rightValue ??
+          0.0;
+      final maxForceLeft =
+          assessmentValues
+              .lastWhereOrNull(
+                (assessment) =>
+                    assessment.type == AssessmentType.mvc &&
+                    assessment.leftValue != null,
+              )
+              ?.leftValue ??
+          0.0;
+      final targetWeightRight =
+          customLoadRight ??
+          (maxForceRight * 0.85); // Use custom load or 85% of max force
+      final targetWeightLeft =
+          customLoadLeft ??
+          (maxForceLeft * 0.85); // Use custom load or 85% of max force
+
+      return RepeaterModel(
+        sets: 3,
+        restBteweenSets: 4 * 60, // 8 minutes in seconds
+        repsBySet: 3,
+        workTime: 7,
+        restTime: 15,
+        splitHand: true,
+        weightRight: targetWeightRight,
+        weightLeft: targetWeightLeft,
       );
     },
   ),

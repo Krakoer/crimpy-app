@@ -13,7 +13,7 @@ class PostAssessmentScreen extends ConsumerWidget {
   final (double?, double)? rightHandResults;
   final (double?, double)? leftHandResults;
 
-  final FinishedAssessmentModel saveAssessment;
+  final AssessmentResultModel saveAssessment;
   final SessionModel saveTraining;
   final List<RepDataModel> saveReps;
 
@@ -43,7 +43,10 @@ class PostAssessmentScreen extends ConsumerWidget {
         children: [
           SizedBox(height: 100),
           // If they gave their max, it's always a good job rigth ?
-          Text("Great job! 💪", style: Theme.of(context).textTheme.displaySmall),
+          Text(
+            "Great job! 💪",
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
           SizedBox(height: 16),
           // Show the results cards for the provided hands.
           Column(
@@ -114,7 +117,10 @@ class ResultCard extends StatelessWidget {
             ? double.infinity
             : ((newValue - prevValue!) / prevValue! * 100).round();
     final isPositive = prevValue == null ? true : newValue >= prevValue!;
-    final percentageColor = isPositive ? CrimpyTheme.accentYellow : Theme.of(context).colorScheme.error;
+    final percentageColor =
+        isPositive
+            ? CrimpyTheme.accentYellow
+            : Theme.of(context).colorScheme.error;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -140,7 +146,9 @@ class ResultCard extends StatelessWidget {
                   children: [
                     Text(
                       'Previous',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(color: CrimpyTheme.gray500),
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: CrimpyTheme.gray500,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -165,10 +173,7 @@ class ResultCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: percentageColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: percentageColor,
-                          width: 1,
-                        ),
+                        border: Border.all(color: percentageColor, width: 1),
                       ),
                       child: Text(
                         "${isPositive ? '+' : ''}$percentage%",
@@ -191,7 +196,9 @@ class ResultCard extends StatelessWidget {
                   children: [
                     Text(
                       'Current',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(color: CrimpyTheme.gray500),
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: CrimpyTheme.gray500,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(

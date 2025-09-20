@@ -11,7 +11,7 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 class CriticalForceResultScreen extends ConsumerWidget {
   final double? previousCriticalForce;
   final CriticalForceResults results;
-  final FinishedAssessmentModel saveAssessment;
+  final AssessmentResultModel saveAssessment;
   final SessionModel saveSession;
   final List<RepDataModel> saveReps;
   final List<BleDataPoint> data;
@@ -39,7 +39,10 @@ class CriticalForceResultScreen extends ConsumerWidget {
       body: Column(
         children: [
           SizedBox(height: 20),
-          Text("Great job! 💪", style: Theme.of(context).textTheme.displaySmall),
+          Text(
+            "Great job! 💪",
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
           SizedBox(height: 16),
           ResultCard(
             prevValue: previousCriticalForce,

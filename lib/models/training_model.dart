@@ -311,12 +311,12 @@ class BuiltinTrainingModel {
   final String description;
   final List<AssessmentType> requiredAssessments;
   final RepeaterModel Function(
-    Map<AssessmentType, double?> assessmentValues, {
-    double? customLoad,
+    List<AssessmentResultModel> assessmentValues, {
+    double? customLoadRight,
+    double? customLoadLeft,
   })
   trainingGenerator;
-  final bool Function(Map<AssessmentType, double?> assessmentValues)
-  isAvailable;
+  final bool Function(List<AssessmentResultModel> assessmentValues) isAvailable;
   final bool supportsLoadAdjustment;
 
   BuiltinTrainingModel({
@@ -331,8 +331,9 @@ class BuiltinTrainingModel {
 
   /// Generate the training based on assessment values.
   TrainingWithReps? generateTraining(
-    Map<AssessmentType, double?> assessmentValues, {
-    double? customLoad,
+    List<AssessmentResultModel> assessmentValues, {
+    double? customLoadRight,
+    double? customLoadLeft,
   }) {
     if (!isAvailable(assessmentValues)) {
       return null;
@@ -340,7 +341,8 @@ class BuiltinTrainingModel {
 
     final repeater = trainingGenerator(
       assessmentValues,
-      customLoad: customLoad,
+      customLoadRight: customLoadRight,
+      customLoadLeft: customLoadLeft,
     );
     final reps = repeater.generateReps();
 
