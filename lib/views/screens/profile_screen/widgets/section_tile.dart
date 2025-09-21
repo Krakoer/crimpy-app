@@ -11,9 +11,9 @@ class SectionTitle extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: Text(
         title,
-        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
     );
   }

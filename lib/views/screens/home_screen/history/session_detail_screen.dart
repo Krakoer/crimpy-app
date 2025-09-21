@@ -109,181 +109,189 @@ class SessionDetailScreen extends ConsumerWidget {
 
     return session.isAssessment
         ? CrimpyCards.assessment(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: CrimpyTheme.assessmentColor.withValues(alpha: 0.2),
-                        border: Border.all(color: CrimpyTheme.assessmentColor.withValues(alpha: 0.3), width: 1),
-                      ),
-                      child: Icon(
-                        Icons.assessment,
-                        color: CrimpyTheme.assessmentColor,
-                        size: 24,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: CrimpyTheme.assessmentColor.withValues(alpha: 0.2),
+                      border: Border.all(
+                        color: CrimpyTheme.assessmentColor.withValues(
+                          alpha: 0.3,
+                        ),
+                        width: 1,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Assessment',
-                            style: TextStyle(
-                              color: CrimpyTheme.gray600,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
+                    child: Icon(
+                      Icons.assessment,
+                      color: CrimpyTheme.assessmentColor,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Assessment',
+                          style: TextStyle(
+                            color: CrimpyTheme.gray600,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
                           ),
-                          Text(
-                            session.name,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        ),
+                        Text(
+                          session.name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatItem(
-                        context,
-                        'Date',
-                        DateFormat('MMM d, yyyy').format(session.date),
-                        Icons.calendar_today,
-                      ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatItem(
+                      context,
+                      'Date',
+                      DateFormat('MMM d, yyyy').format(session.date),
+                      Icons.calendar_today,
                     ),
-                    Expanded(
-                      child: _buildStatItem(
-                        context,
-                        'Time',
-                        DateFormat('HH:mm').format(session.date),
-                        Icons.access_time,
-                      ),
+                  ),
+                  Expanded(
+                    child: _buildStatItem(
+                      context,
+                      'Time',
+                      DateFormat('HH:mm').format(session.date),
+                      Icons.access_time,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatItem(
-                        context,
-                        'Duration',
-                        _formatDuration(duration),
-                        Icons.timer,
-                      ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatItem(
+                      context,
+                      'Duration',
+                      _formatDuration(duration),
+                      Icons.timer,
                     ),
-                    Expanded(
-                      child: _buildStatItem(
-                        context,
-                        'Reps',
-                        session.reps?.length.toString() ?? 'N/A',
-                        Icons.repeat,
-                      ),
+                  ),
+                  Expanded(
+                    child: _buildStatItem(
+                      context,
+                      'Reps',
+                      session.reps?.length.toString() ?? 'N/A',
+                      Icons.repeat,
                     ),
-                  ],
-                ),
-              ],
-            ),
-          )
+                  ),
+                ],
+              ),
+            ],
+          ),
+        )
         : CrimpyCards.training(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: CrimpyTheme.trainingColor.withValues(alpha: 0.2),
-                        border: Border.all(color: CrimpyTheme.trainingColor.withValues(alpha: 0.3), width: 1),
-                      ),
-                      child: Icon(
-                        Icons.fitness_center,
-                        color: CrimpyTheme.trainingColor,
-                        size: 24,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: CrimpyTheme.trainingColor.withValues(alpha: 0.2),
+                      border: Border.all(
+                        color: CrimpyTheme.trainingColor.withValues(alpha: 0.3),
+                        width: 1,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Training',
-                            style: TextStyle(
-                              color: CrimpyTheme.gray600,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
+                    child: Icon(
+                      Icons.fitness_center,
+                      color: CrimpyTheme.trainingColor,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Training',
+                          style: TextStyle(
+                            color: CrimpyTheme.gray600,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
                           ),
-                          Text(
-                            session.name,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        ),
+                        Text(
+                          session.name,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatItem(
-                        context,
-                        'Date',
-                        DateFormat('MMM d, yyyy').format(session.date),
-                        Icons.calendar_today,
-                      ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatItem(
+                      context,
+                      'Date',
+                      DateFormat('MMM d, yyyy').format(session.date),
+                      Icons.calendar_today,
                     ),
-                    Expanded(
-                      child: _buildStatItem(
-                        context,
-                        'Time',
-                        DateFormat('HH:mm').format(session.date),
-                        Icons.access_time,
-                      ),
+                  ),
+                  Expanded(
+                    child: _buildStatItem(
+                      context,
+                      'Time',
+                      DateFormat('HH:mm').format(session.date),
+                      Icons.access_time,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatItem(
-                        context,
-                        'Duration',
-                        _formatDuration(duration),
-                        Icons.timer,
-                      ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatItem(
+                      context,
+                      'Duration',
+                      _formatDuration(duration),
+                      Icons.timer,
                     ),
-                    Expanded(
-                      child: _buildStatItem(
-                        context,
-                        'Reps',
-                        session.reps?.length.toString() ?? 'N/A',
-                        Icons.repeat,
-                      ),
+                  ),
+                  Expanded(
+                    child: _buildStatItem(
+                      context,
+                      'Reps',
+                      session.reps?.length.toString() ?? 'N/A',
+                      Icons.repeat,
                     ),
-                  ],
-                ),
-              ],
-            ),
-          );
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
   }
 
   Widget _buildStatItem(
@@ -425,7 +433,9 @@ class SessionDetailScreen extends ConsumerWidget {
                   leading: CircleAvatar(
                     radius: 12,
                     backgroundColor:
-                        rep.isRest ? CrimpyTheme.gray300 : CrimpyTheme.trainingColor.withValues(alpha: 0.6),
+                        rep.isRest
+                            ? CrimpyTheme.gray300
+                            : CrimpyTheme.trainingColor.withValues(alpha: 0.6),
                     child: Text(
                       '${index + 1}',
                       style: const TextStyle(
@@ -497,9 +507,9 @@ class SessionDetailScreen extends ConsumerWidget {
             children: [
               Text(
                 'Raw Data',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
                 '${dataPoints.length} data points',
@@ -543,7 +553,11 @@ class SessionDetailScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: CrimpyTheme.errorColor),
+          const Icon(
+            Icons.error_outline,
+            size: 64,
+            color: CrimpyTheme.errorColor,
+          ),
           const SizedBox(height: 16),
           Text(
             'Error loading session details',

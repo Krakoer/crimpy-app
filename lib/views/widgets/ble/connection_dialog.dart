@@ -127,7 +127,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         children: [
           Text(
             'Connected to:',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: CrimpyTheme.gray500),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.gray500),
           ),
           const SizedBox(height: 8),
           Row(
@@ -148,7 +150,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                     ),
                     Text(
                       device?.remoteId.toString() ?? '',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: CrimpyTheme.gray500),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: CrimpyTheme.gray500,
+                      ),
                     ),
                   ],
                 ),

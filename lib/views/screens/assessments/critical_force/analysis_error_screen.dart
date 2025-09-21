@@ -60,9 +60,9 @@ class AnalysisErrorScreen extends StatelessWidget {
             SizedBox(height: 32),
             Text(
               "Your session data has been saved for debugging purposes.",
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontStyle: FontStyle.italic,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic),
               textAlign: TextAlign.center,
             ),
           ],
