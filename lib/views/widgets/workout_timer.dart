@@ -64,7 +64,7 @@ class WorkoutTimer {
       playerBiiip.setSource(AssetSource('beep-09.mp3'));
       playerBiiip.setReleaseMode(ReleaseMode.stop);
     }
-    timer = Timer.periodic(const Duration(milliseconds: 100), (_timer) {
+    timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (onTick != null) {
         onTick!();
       }
@@ -93,7 +93,7 @@ class WorkoutTimer {
           currentRepIndex += 1;
         } else {
           _stopwatch.stop();
-          _timer.cancel();
+          timer.cancel();
           finished = true;
           if (onFinished != null) {
             onFinished!();
