@@ -55,25 +55,29 @@ class _TrainingFeedbackScreenState
               style: Theme.of(context).textTheme.titleMedium,
             ),
             SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: RadioListTile<TrainingResult>(
-                    title: Text('Success'),
-                    value: TrainingResult.success,
-                    groupValue: _result,
-                    onChanged: (value) => setState(() => _result = value),
+            RadioGroup<TrainingResult>(
+              onChanged:
+                  (TrainingResult? value) => setState(() => _result = value),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ListTile(
+                      title: Text('Success'),
+                      leading: Radio<TrainingResult>(
+                        value: TrainingResult.success,
+                      ),
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: RadioListTile<TrainingResult>(
-                    title: Text('Failed'),
-                    value: TrainingResult.failure,
-                    groupValue: _result,
-                    onChanged: (value) => setState(() => _result = value),
+                  Expanded(
+                    child: ListTile(
+                      title: Text('Failed'),
+                      leading: Radio<TrainingResult>(
+                        value: TrainingResult.failure,
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
 
             // Difficulty selection (only if successful)
@@ -84,14 +88,26 @@ class _TrainingFeedbackScreenState
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               SizedBox(height: 8),
-              ...TrainingDifficulty.values.map(
-                (difficulty) => RadioListTile<TrainingDifficulty>(
-                  title: Text(
-                    LoadAdjustmentService.getDifficultyDescription(difficulty),
-                  ),
-                  value: difficulty,
-                  groupValue: _difficulty,
-                  onChanged: (value) => setState(() => _difficulty = value),
+              RadioGroup<TrainingDifficulty>(
+                onChanged:
+                    (TrainingDifficulty? value) =>
+                        setState(() => _difficulty = value),
+                child: Column(
+                  children:
+                      TrainingDifficulty.values
+                          .map(
+                            (difficulty) => ListTile(
+                              title: Text(
+                                LoadAdjustmentService.getDifficultyDescription(
+                                  difficulty,
+                                ),
+                              ),
+                              leading: Radio<TrainingDifficulty>(
+                                value: difficulty,
+                              ),
+                            ),
+                          )
+                          .toList(),
                 ),
               ),
             ],
