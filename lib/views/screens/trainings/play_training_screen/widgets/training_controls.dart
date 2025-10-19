@@ -16,7 +16,7 @@ class TrainingControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 0, 20),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
