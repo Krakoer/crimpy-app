@@ -153,9 +153,7 @@ class _SuccessFeedbackFormState extends State<SuccessFeedbackForm> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      LoadAdjustmentService.getDifficultyDescription(
-                                        difficulty,
-                                      ),
+                                      difficulty.description,
                                       style: Theme.of(
                                         context,
                                       ).textTheme.bodyMedium?.copyWith(
