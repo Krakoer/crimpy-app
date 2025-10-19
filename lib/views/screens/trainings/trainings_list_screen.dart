@@ -78,7 +78,7 @@ class TrainingScreen extends ConsumerWidget {
               ),
             ),
             AsyncError(:final error) => Text('Oops $error'),
-            _ => const CircularProgressIndicator(),
+            _ => const Center(child: CircularProgressIndicator()),
           },
         ),
         Padding(

@@ -1,10 +1,11 @@
-import 'package:crimpy/models/assessment_model.dart';
-
 /// Represents how a user felt after completing a builtin training.
 enum TrainingDifficulty { veryEasy, easy, moderate, hard, veryHard }
 
 /// Represents whether a user succeeded or failed a builtin training.
 enum TrainingResult { success, failure }
+
+typedef LoadAdjustmentFunction =
+    double Function({TrainingDifficulty? difficulty, double? failureRate});
 
 /// Feedback from a completed builtin training session.
 class TrainingFeedbackModel {
@@ -76,18 +77,4 @@ class LoadAdjustmentService {
       return "Your current load seems perfect! Keep using ${currentLoad.toStringAsFixed(1)} kg.";
     }
   }
-}
-
-/// Future: Repository for storing and retrieving training feedback.
-/// This would be implemented when the load adjustment feature is fully developed.
-abstract class TrainingFeedbackRepository {
-  Future<void> saveFeedback(TrainingFeedbackModel feedback);
-  Future<List<TrainingFeedbackModel>> getFeedbackForTraining(
-    int builtinTrainingId,
-  );
-  Future<TrainingFeedbackModel?> getLastFeedback(int builtinTrainingId);
-  Future<double?> getRecommendedLoad(
-    int builtinTrainingId,
-    Map<AssessmentType, double?> assessmentValues,
-  );
 }

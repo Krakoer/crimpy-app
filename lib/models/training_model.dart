@@ -1,6 +1,7 @@
 import "package:crimpy/database/database.dart";
 import "package:crimpy/logger.dart";
 import "package:crimpy/models/common.dart";
+import "package:crimpy/models/training_feedback_model.dart";
 
 import "ble_data_model.dart";
 import "assessment_model.dart";
@@ -52,6 +53,8 @@ class TrainingWithReps {
   final List<RepModel> reps;
   final RepeaterModel? repeater;
   final bool isFav;
+  // Used by builtin trainings
+  final LoadAdjustmentFunction? computeNewWeights;
 
   TrainingWithReps({
     required this.id,
@@ -59,6 +62,7 @@ class TrainingWithReps {
     required this.reps,
     required this.isFav,
     this.repeater,
+    this.computeNewWeights,
   });
 
   Duration get totalDuration =>
@@ -317,7 +321,7 @@ class BuiltinTrainingModel {
   })
   trainingGenerator;
   final bool Function(List<AssessmentResultModel> assessmentValues) isAvailable;
-  final bool supportsLoadAdjustment;
+  final LoadAdjustmentFunction computeNewWeights;
 
   BuiltinTrainingModel({
     required this.id,
@@ -326,7 +330,7 @@ class BuiltinTrainingModel {
     required this.requiredAssessments,
     required this.trainingGenerator,
     required this.isAvailable,
-    this.supportsLoadAdjustment = true,
+    required this.computeNewWeights,
   });
 
   /// Generate the training based on assessment values.
@@ -364,6 +368,7 @@ class BuiltinTrainingModel {
               )
               .toList(),
       repeater: repeater,
+      computeNewWeights: computeNewWeights,
     );
   }
 }
