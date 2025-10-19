@@ -41,19 +41,16 @@ class _SuccessFeedbackFormState extends State<SuccessFeedbackForm> {
           groupValue: _difficulty,
           onChanged: (TrainingDifficulty? value) {
             setState(() => _difficulty = value);
-            widget.onNewWeightChange(
-              widget.loadAdjustmentFunction(difficulty: value) *
-                  widget.currentWeight,
-            );
+            final multiplier = widget.loadAdjustmentFunction(difficulty: value);
+            final newWeight = widget.currentWeight * (1 + multiplier);
+            widget.onNewWeightChange(newWeight);
           },
           child: Column(
             children:
                 TrainingDifficulty.values.map((difficulty) {
-                  final int variation =
-                      (widget.loadAdjustmentFunction(difficulty: difficulty) *
-                              100)
-                          .round();
-                  final newWeight = widget.currentWeight * variation;
+                  final multiplier = widget.loadAdjustmentFunction(difficulty: difficulty);
+                  final int variation = (multiplier * 100).round();
+                  final newWeight = widget.currentWeight * (1 + multiplier);
                   return ListTile(
                     title: Text.rich(
                       TextSpan(
@@ -66,7 +63,7 @@ class _SuccessFeedbackFormState extends State<SuccessFeedbackForm> {
                           ),
                           TextSpan(
                             text:
-                                "(${newWeight.toStringAsFixed(1)}, {variation >= 0 ? '+' : ''}$variation%)",
+                                " (${newWeight.toStringAsFixed(1)}kg, ${variation >= 0 ? '+' : ''}$variation%)",
                           ),
                         ],
                       ),

@@ -58,7 +58,12 @@ class TrainingResultCard extends StatelessWidget {
                   currentWeight: currentWeight,
                   onNewWeightChange: onNewWeightChange,
                 )
-                : FailureFeedbackForm(reps: reps),
+                : FailureFeedbackForm(
+                    reps: reps,
+                    loadAdjustmentFunction: loadAdjustmentFunction,
+                    currentWeight: currentWeight,
+                    onNewWeightChange: onNewWeightChange,
+                  ),
           ],
         ),
       ),

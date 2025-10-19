@@ -96,6 +96,15 @@ class SensorConfigs extends Table {
   late final RealColumn coef = real()();
 }
 
+// Stores custom weights for builtin trainings per user.
+class BuiltinTrainingWeights extends Table {
+  late final IntColumn id = integer().autoIncrement()();
+  late final IntColumn builtinTrainingId = integer().references(Trainings, #id, onDelete: KeyAction.cascade)();
+  late final RealColumn customWeightRight = real().nullable()();
+  late final RealColumn customWeightLeft = real().nullable()();
+  late final DateTimeColumn updatedAt = dateTime().withDefault(currentDateAndTime)();
+}
+
 @DriftDatabase(
   tables: [
     Sessions,
@@ -105,6 +114,7 @@ class SensorConfigs extends Table {
     RepDatas,
     Repeaters,
     SensorConfigs,
+    BuiltinTrainingWeights,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -485,8 +495,59 @@ class AppDatabase extends _$AppDatabase {
   Future<void> deleteSensorConfig(int id) async =>
       (delete(sensorConfigs)..where((t) => t.id.equals(id))).go();
 
+  // ------------------------------------- BUILTIN TRAINING WEIGHTS -------------------------------------
+  /// Get custom weights for a builtin training.
+  Future<BuiltinTrainingWeight?> getBuiltinTrainingWeights(int builtinTrainingId) async =>
+      (select(builtinTrainingWeights)
+        ..where((w) => w.builtinTrainingId.equals(builtinTrainingId))
+        ..orderBy([(w) => OrderingTerm.desc(w.updatedAt)]))
+      .getSingleOrNull();
+
+  /// Save or update custom weights for a builtin training.
+  Future<void> saveBuiltinTrainingWeights({
+    required int builtinTrainingId,
+    double? customWeightRight,
+    double? customWeightLeft,
+  }) async {
+    // Check if weights already exist
+    final existing = await getBuiltinTrainingWeights(builtinTrainingId);
+
+    if (existing != null) {
+      // Update existing weights
+      await (update(builtinTrainingWeights)
+        ..where((w) => w.id.equals(existing.id)))
+      .write(BuiltinTrainingWeightsCompanion(
+        customWeightRight: Value(customWeightRight),
+        customWeightLeft: Value(customWeightLeft),
+        updatedAt: Value(DateTime.now()),
+      ));
+    } else {
+      // Insert new weights
+      await into(builtinTrainingWeights).insert(
+        BuiltinTrainingWeightsCompanion.insert(
+          builtinTrainingId: builtinTrainingId,
+          customWeightRight: Value(customWeightRight),
+          customWeightLeft: Value(customWeightLeft),
+        ),
+      );
+    }
+  }
+
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (Migrator m) async {
+      await m.createAll();
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from == 1 && to == 2) {
+        // Migration from schema version 1 to 2: Add BuiltinTrainingWeights table
+        await m.createTable(builtinTrainingWeights);
+      }
+    },
+  );
 }
 
 /// Helper function that given a file path, will read its content as JSON

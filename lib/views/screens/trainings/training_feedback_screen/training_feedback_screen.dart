@@ -1,10 +1,10 @@
+import 'package:crimpy/database/builtins.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/trainings/training_feedback_screen/widgets/training_result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:collection/collection.dart';
 import 'package:intl/intl.dart';
 
@@ -31,6 +31,10 @@ class _TrainingFeedbackScreenState
   final _noteController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  // Track new weights from feedback
+  double _newWeightRight = 0;
+  double _newWeightLeft = 0;
+
   @override
   void initState() {
     _trainingNameController.text =
@@ -47,8 +51,14 @@ class _TrainingFeedbackScreenState
 
   @override
   Widget build(BuildContext context) {
-    double _newWeightRight = 0;
-    double _newWeightLeft = 0;
+    // Check if this is a builtin training by looking up the training ID
+    final isBuiltinTraining = builtinTrainings.any(
+      (bt) => bt.id == widget.template.id,
+    );
+    final builtinTraining = builtinTrainings.firstWhereOrNull(
+      (bt) => bt.id == widget.template.id,
+    );
+
     // Check if training concerns only one hand or both
     final handSide =
         widget.results.firstWhereOrNull((r) => r.handSide == HandSide.right) ==
@@ -69,89 +79,110 @@ class _TrainingFeedbackScreenState
           ).appBarTheme.titleTextStyle!.copyWith(fontSize: 27),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            if (handSide == HandSide.both) ...[
-              TrainingResultCard(
-                reps:
-                    widget.results
-                        .where((r) => !r.isRest && r.handSide == HandSide.right)
-                        .toList(),
-                handSide: HandSide.right,
-                loadAdjustmentFunction: widget.template.computeNewWeights!,
-                onNewWeightChange:
-                    (double newWeight) => _newWeightRight = newWeight,
-              ),
-              TrainingResultCard(
-                reps:
-                    widget.results
-                        .where((r) => !r.isRest && r.handSide == HandSide.left)
-                        .toList(),
-                handSide: HandSide.left,
-                loadAdjustmentFunction: widget.template.computeNewWeights!,
-                onNewWeightChange:
-                    (double newWeight) => _newWeightLeft = newWeight,
-              ),
-            ] else
-              TrainingResultCard(
-                reps: widget.results,
-                handSide: handSide,
-                loadAdjustmentFunction: widget.template.computeNewWeights!,
-                onNewWeightChange:
-                    (double newWeight) =>
-                        handSide == HandSide.right
-                            ? _newWeightRight = newWeight
-                            : _newWeightLeft = newWeight,
-              ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32.0,
-                vertical: 16.0,
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      controller: _trainingNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Training Name',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a training name';
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                if (handSide == HandSide.both) ...[
+                  TrainingResultCard(
+                    reps:
+                        widget.results
+                            .where(
+                              (r) => !r.isRest && r.handSide == HandSide.right,
+                            )
+                            .toList(),
+                    handSide: HandSide.right,
+                    loadAdjustmentFunction: widget.template.computeNewWeights!,
+                    onNewWeightChange: (double newWeight) {
+                      setState(() {
+                        _newWeightRight = newWeight;
+                      });
+                    },
+                  ),
+                  TrainingResultCard(
+                    reps:
+                        widget.results
+                            .where(
+                              (r) => !r.isRest && r.handSide == HandSide.left,
+                            )
+                            .toList(),
+                    handSide: HandSide.left,
+                    loadAdjustmentFunction: widget.template.computeNewWeights!,
+                    onNewWeightChange: (double newWeight) {
+                      setState(() {
+                        _newWeightLeft = newWeight;
+                      });
+                    },
+                  ),
+                ] else
+                  TrainingResultCard(
+                    reps: widget.results,
+                    handSide: handSide,
+                    loadAdjustmentFunction: widget.template.computeNewWeights!,
+                    onNewWeightChange: (double newWeight) {
+                      setState(() {
+                        if (handSide == HandSide.right) {
+                          _newWeightRight = newWeight;
+                        } else {
+                          _newWeightLeft = newWeight;
                         }
-                        return null;
-                      },
+                      });
+                    },
+                  ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32.0,
+                    vertical: 16.0,
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _trainingNameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Training Name',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a training name';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _noteController,
+                          decoration: const InputDecoration(
+                            labelText: 'Notes',
+                            hintText: "How did you feel?",
+                            border: OutlineInputBorder(),
+                            alignLabelWithHint: true,
+                          ),
+                          keyboardType: TextInputType.multiline,
+                          maxLines: 20,
+                          minLines: 4,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _noteController,
-                      decoration: const InputDecoration(
-                        labelText: 'Notes',
-                        hintText: "How did you feel?",
-                        border: OutlineInputBorder(),
-                        alignLabelWithHint: true,
-                      ),
-                      keyboardType: TextInputType.multiline,
-                      maxLines: 20,
-                      minLines: 4,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: ElevatedButton(
         style: null,
-        onPressed: () {
+        onPressed: () async {
           if (_formKey.currentState!.validate()) {
+            final navigator = Navigator.of(context);
+
+            // Save the session
             ref
                 .read(sessionsProvider(null).notifier)
                 .saveSession(
@@ -163,50 +194,53 @@ class _TrainingFeedbackScreenState
                   ),
                   widget.results,
                 );
-            // TODO: Update the training target weight.
-            Navigator.of(context).pop();
+
+            // Update target weights if this is a builtin training and new weights were calculated
+            if (isBuiltinTraining && builtinTraining != null) {
+              final currentWeightRight =
+                  widget.results
+                      .firstWhereOrNull(
+                        (r) => !r.isRest && r.handSide == HandSide.right,
+                      )
+                      ?.targetWeight ??
+                  0.0;
+              final currentWeightLeft =
+                  widget.results
+                      .firstWhereOrNull(
+                        (r) => !r.isRest && r.handSide == HandSide.left,
+                      )
+                      ?.targetWeight ??
+                  0.0;
+
+              // Only update weights if they were actually changed (feedback was given)
+              if (_newWeightRight > 0 || _newWeightLeft > 0) {
+                final newWeightRight =
+                    _newWeightRight > 0 ? _newWeightRight : currentWeightRight;
+                final newWeightLeft =
+                    _newWeightLeft > 0 ? _newWeightLeft : currentWeightLeft;
+
+                await ref
+                    .read(builtinTrainingRepositoryProvider)
+                    .updateTargetWeights(
+                      training: builtinTraining,
+                      currentWeightRight: currentWeightRight,
+                      currentWeightLeft: currentWeightLeft,
+                      newWeightRight: newWeightRight,
+                      newWeightLeft: newWeightLeft,
+                    );
+
+                // Invalidate builtin trainings to refresh with new weights
+                ref.invalidate(allTrainingsProvider);
+              }
+            }
+
+            if (mounted) {
+              navigator.pop();
+            }
           }
         },
         child: Text("Save training"),
       ),
     );
-  }
-
-  void _submitFeedback() {
-    // Future: Create and save feedback
-    // final feedback = TrainingFeedbackModel(
-    //   builtinTrainingId: widget.builtinTrainingId,
-    //   completionDate: DateTime.now(),
-    //   result: _result!,
-    //   difficulty: _difficulty,
-    //   notes: _notesController.text.isEmpty ? null : _notesController.text,
-    //   usedWeight: widget.usedWeight,
-    // );
-
-    // Future: Save feedback to repository and update training recommendations
-    // ref.read(trainingFeedbackProvider.notifier).saveFeedback(feedback);
-
-    Navigator.of(context).pop();
-
-    // Show snackbar with load adjustment recommendation
-    // if (_result == TrainingResult.success && _difficulty != null) {
-    //   // final nextLoad = LoadAdjustmentService.calculateNextLoad(
-    //   //   widget.usedWeight,
-    //   //   _result!,
-    //   //   _difficulty,
-    //   // );
-    //   final nextLoad = 70;
-
-    //   // final recommendation = LoadAdjustmentService.getAdjustmentRecommendation(
-    //   //   widget.usedWeight,
-    //   //   nextLoad,
-    //   // );
-
-    //   final recommendation = "We recommend increasing your load by 10% to 8kg";
-
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text(recommendation), duration: Duration(seconds: 5)),
-    //   );
-    // }
   }
 }
