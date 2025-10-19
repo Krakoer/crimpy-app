@@ -1,21 +1,20 @@
 import 'dart:math';
 
-import 'package:crimpy/utils/reps.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-import '../../../theme/crimpy_theme.dart';
+import 'package:crimpy/theme.dart';
 
 class PostWorkoutScreen extends ConsumerStatefulWidget {
   final TrainingWithReps template;
-  final List<double> avgs;
+  final List<RepDataModel> results;
 
   /// Show the results of the workout to the user, and allow them to add a note to the session.
   const PostWorkoutScreen({
-    required this.avgs,
+    required this.results,
     required this.template,
     super.key,
   });
@@ -46,23 +45,15 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // List of non null target weight of the training.
-    final targetWeights =
-        widget.template.reps
-            .map((r) => r.targetWeight)
-            .where((w) => w != 0)
-            .toList();
-
     // Percentage of reps the user has succeded.
-    final int? percentageSuccess =
-        targetWeights.isEmpty
-            ? null
-            : (List.generate(targetWeights.length, (index) {
-                      return widget.avgs[index] >= targetWeights[index] ? 1 : 0;
-                    }).reduce((a, b) => a + b) /
-                    targetWeights.length *
-                    100)
-                .round();
+    final workingReps = widget.results.where((r) => !r.isRest).toList();
+    final int percentageSuccess =
+        (workingReps
+                    .where((rep) => rep.averageWeight >= rep.targetWeight)
+                    .length /
+                workingReps.length *
+                100)
+            .round();
 
     return PopScope(
       canPop: false,
@@ -106,31 +97,30 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
               style: Theme.of(context).textTheme.displaySmall,
             ),
             // Show the success percentage
-            if (percentageSuccess != null)
-              Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: "you managed to do ",
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: CrimpyTheme.gray500,
-                      ),
-                    ),
-                    TextSpan(
-                      text: "$percentageSuccess%",
-                      style: Theme.of(
-                        context,
-                      ).textTheme.labelLarge?.copyWith(fontSize: 12),
-                    ),
-                    TextSpan(
-                      text: " of the reps",
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: CrimpyTheme.gray500,
-                      ),
-                    ),
-                  ],
-                ),
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: "you managed to do ",
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.gray500),
+                  ),
+                  TextSpan(
+                    text: "$percentageSuccess%",
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelLarge?.copyWith(fontSize: 12),
+                  ),
+                  TextSpan(
+                    text: " of the reps",
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.gray500),
+                  ),
+                ],
               ),
+            ),
             SizedBox(height: 25),
             // Form for session name and notes.
             Padding(
@@ -188,7 +178,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                       notes: _noteController.text,
                       isAssessment: false,
                     ),
-                    buildRepsData(widget.avgs, widget.template.reps),
+                    widget.results,
                   );
               Navigator.of(context).pop();
             }

@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:crimpy/database/builtins.dart';
+import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_model.dart';
@@ -7,6 +8,7 @@ import 'package:crimpy/repositories/assessment_repository.dart';
 
 class BuiltinTrainingRepository {
   final AssessmentRepository _assessmentRepository = AssessmentRepository();
+  final AppDatabase _database = gDatabase;
 
   /// Get all built-in trainings with their availability status.
   Future<List<BuiltinTrainingModel>> getBuiltinTrainings() async {
@@ -22,6 +24,7 @@ class BuiltinTrainingRepository {
   }
 
   /// Generate a training if available, returns null if not.
+  /// If custom weights are not provided, it will try to load them from the database.
   Future<TrainingWithReps?> generateTraining(
     BuiltinTrainingModel training, {
     double? customLoadRight,
@@ -30,6 +33,16 @@ class BuiltinTrainingRepository {
     final assessmentValues = await _getAssessmentValues(
       training.requiredAssessments,
     );
+
+    // If custom weights are not provided, try to load them from database
+    if (customLoadRight == null || customLoadLeft == null) {
+      final savedWeights = await _database.getBuiltinTrainingWeights(
+        training.id,
+      );
+      customLoadRight ??= savedWeights?.customWeightRight;
+      customLoadLeft ??= savedWeights?.customWeightLeft;
+    }
+
     return training.generateTraining(
       assessmentValues,
       customLoadRight: customLoadRight,
@@ -85,5 +98,33 @@ class BuiltinTrainingRepository {
     }
 
     return values;
+  }
+
+  /// Update the target weights for a builtin training based on feedback.
+  Future<void> updateTargetWeights({
+    required BuiltinTrainingModel training,
+    required double currentWeightRight,
+    required double currentWeightLeft,
+    required double newWeightRight,
+    required double newWeightLeft,
+  }) async {
+    await _database.saveBuiltinTrainingWeights(
+      builtinTrainingId: training.id,
+      customWeightRight: newWeightRight,
+      customWeightLeft: newWeightLeft,
+    );
+  }
+
+  /// Get the current custom weights for a builtin training.
+  Future<({double? weightRight, double? weightLeft})> getCustomWeights(
+    int builtinTrainingId,
+  ) async {
+    final weights = await _database.getBuiltinTrainingWeights(
+      builtinTrainingId,
+    );
+    return (
+      weightRight: weights?.customWeightRight,
+      weightLeft: weights?.customWeightLeft,
+    );
   }
 }

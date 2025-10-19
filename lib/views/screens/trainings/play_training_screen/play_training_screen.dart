@@ -1,5 +1,6 @@
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_footer.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_time_header.dart';
+import 'package:crimpy/views/screens/trainings/training_feedback_screen/training_feedback_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
@@ -27,7 +28,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   late AnimationController _serieController;
 
   /// List of the average weights done during the training.
-  List<double> averageWeights = [];
+  List<RepDataModel> repResults = [];
 
   // Setup the workout timer
   late WorkoutTimer timer = WorkoutTimer(
@@ -35,10 +36,19 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     // Set state each second to update the UI.
     onSecondChange: () => setState(() {}),
     onNextRep: (nextRepDuration) {
-      // If the finished rep was a workout rep, add the avg to the list.
-      if (!timer.currentRep.isRest) {
-        averageWeights.add(ref.read(bleSessionProvider).avg);
-      }
+      repResults.add(
+        RepDataModel(
+          handSide: timer.currentRep.handSide,
+          targetWeight: timer.currentRep.targetWeight,
+          // Add avg if it was not a rest
+          averageWeight:
+              timer.currentRep.isRest ? 0 : ref.read(bleSessionProvider).avg,
+          duration: timer.currentRep.durationInSeconds,
+          index: timer.currentRep.index,
+          isRest: timer.currentRep.isRest,
+        ),
+      );
+
       // Setup the animation controller for the next rep.
       _serieController.duration = Duration(seconds: nextRepDuration);
       _serieController.reset();
@@ -51,16 +61,34 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     onFinished: () async {
       _serieController.stop();
       // Add the final average.
-      if (!timer.currentRep.isRest) {
-        averageWeights.add(ref.read(bleSessionProvider).avg);
-      }
+      repResults.add(
+        RepDataModel(
+          handSide: timer.currentRep.handSide,
+          targetWeight: timer.currentRep.targetWeight,
+          // Add avg if it was not a rest
+          averageWeight:
+              timer.currentRep.isRest ? 0 : ref.read(bleSessionProvider).avg,
+          duration: timer.currentRep.durationInSeconds,
+          index: timer.currentRep.index,
+          isRest: timer.currentRep.isRest,
+        ),
+      );
+
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder:
-              (context) => PostWorkoutScreen(
-                template: widget.training,
-                avgs: averageWeights,
-              ),
+              // If the training can compute new weights, show feedback screen.
+              // Otherwise show regular post-training screen.
+              (context) =>
+                  widget.training.computeNewWeights == null
+                      ? PostWorkoutScreen(
+                        template: widget.training,
+                        results: repResults,
+                      )
+                      : TrainingFeedbackScreen(
+                        template: widget.training,
+                        results: repResults,
+                      ),
         ),
       );
     },
