@@ -9,7 +9,7 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/trainings/training_creation_screen/custom_training_creation_screen.dart';
-import 'package:crimpy/views/screens/trainings/repeater_creation_screen.dart';
+import 'package:crimpy/views/screens/trainings/repeater_creation_screen/repeater_creation_screen.dart';
 import 'package:crimpy/views/screens/trainings/training_details_screen.dart';
 
 class TrainingScreen extends ConsumerWidget {

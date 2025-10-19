@@ -175,76 +175,78 @@ class _CriticalForceRunScreenState
       },
       child: Scaffold(
         appBar: AppBar(title: Text("Critical Force Test")),
-        body: Stack(
-          alignment: Alignment.bottomCenter,
-          children: [
-            // Box of text to show the user the action to do (rest or pull).
-            Positioned(
-              top: 230,
-              child: Opacity(
-                opacity: 0.7,
-                child: Container(
-                  width: 200,
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: CrimpyTheme.accentYellow,
-                    border: Border.all(
-                      color: CrimpyTheme.borderDefault,
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
+        body: SafeArea(
+          child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              // Box of text to show the user the action to do (rest or pull).
+              Positioned(
+                top: 230,
+                child: Opacity(
+                  opacity: 0.7,
+                  child: Container(
+                    width: 200,
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: CrimpyTheme.accentYellow,
+                      border: Border.all(
                         color: CrimpyTheme.borderDefault,
-                        offset: Offset(4, 4),
-                        blurRadius: 0,
-                        spreadRadius: 0,
+                        width: 2,
                       ),
-                    ],
-                  ),
-                  child:
-                      !timer.currentRep.isRest
-                          ? Text(
-                            "Pull!\n${timer.currentRepRemaining}",
-                            style: TextStyle(
-                              fontSize: 39,
-                              color: CrimpyTheme.primaryWhite,
+                      boxShadow: [
+                        BoxShadow(
+                          color: CrimpyTheme.borderDefault,
+                          offset: Offset(4, 4),
+                          blurRadius: 0,
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child:
+                        !timer.currentRep.isRest
+                            ? Text(
+                              "Pull!\n${timer.currentRepRemaining}",
+                              style: TextStyle(
+                                fontSize: 39,
+                                color: CrimpyTheme.primaryWhite,
+                              ),
+                              textAlign: TextAlign.center,
+                            )
+                            : Column(
+                              children: [
+                                Text(
+                                  "Pulling in",
+                                  style: TextStyle(
+                                    fontSize: 29,
+                                    color: CrimpyTheme.primaryWhite,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                Text(
+                                  "${timer.currentRepRemaining}",
+                                  style: TextStyle(
+                                    fontSize: 39,
+                                    color: CrimpyTheme.primaryWhite,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
                             ),
-                            textAlign: TextAlign.center,
-                          )
-                          : Column(
-                            children: [
-                              Text(
-                                "Pulling in",
-                                style: TextStyle(
-                                  fontSize: 29,
-                                  color: CrimpyTheme.primaryWhite,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              Text(
-                                "${timer.currentRepRemaining}",
-                                style: TextStyle(
-                                  fontSize: 39,
-                                  color: CrimpyTheme.primaryWhite,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
+                  ),
                 ),
               ),
-            ),
-            // Show a minimalist graph in the background
-            MinimalistGraph(),
-            // Show the number of reps we're at
-            Positioned(
-              top: 10,
-              child: Text(
-                "${timer.repCount}/24",
-                style: Theme.of(context).textTheme.displaySmall,
+              // Show a minimalist graph in the background
+              MinimalistGraph(),
+              // Show the number of reps we're at
+              Positioned(
+                top: 10,
+                child: Text(
+                  "${timer.repCount}/24",
+                  style: Theme.of(context).textTheme.displaySmall,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

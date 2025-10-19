@@ -50,20 +50,22 @@ class SessionDetailScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body:
-          asyncFullSession != null
-              ? switch (asyncFullSession) {
-                AsyncData(:final value) =>
-                  value != null
-                      ? _buildSessionDetails(context, value)
-                      : _buildNotFoundError(context),
-                AsyncError(:final error) => _buildErrorState(
-                  context,
-                  error.toString(),
-                ),
-                _ => const Center(child: CircularProgressIndicator()),
-              }
-              : _buildSessionDetails(context, session),
+      body: SafeArea(
+        child:
+            asyncFullSession != null
+                ? switch (asyncFullSession) {
+                  AsyncData(:final value) =>
+                    value != null
+                        ? _buildSessionDetails(context, value)
+                        : _buildNotFoundError(context),
+                  AsyncError(:final error) => _buildErrorState(
+                    context,
+                    error.toString(),
+                  ),
+                  _ => const Center(child: CircularProgressIndicator()),
+                }
+                : _buildSessionDetails(context, session),
+      ),
     );
   }
 
