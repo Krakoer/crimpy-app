@@ -15,11 +15,16 @@ class TrainingDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(title: Text(template.name)),
-      body: ListView.builder(
-        itemCount: template.reps.length,
-        itemBuilder:
-            (ctx, i) =>
-                RepListItem(key: ValueKey(i), rep: template.reps[i], index: i),
+      body: SafeArea(
+        child: ListView.builder(
+          itemCount: template.reps.length,
+          itemBuilder:
+              (ctx, i) => RepListItem(
+                key: ValueKey(i),
+                rep: template.reps[i],
+                index: i,
+              ),
+        ),
       ),
       floatingActionButton: IconButton(
         onPressed:

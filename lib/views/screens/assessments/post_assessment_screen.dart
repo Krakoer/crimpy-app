@@ -39,37 +39,39 @@ class PostAssessmentScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text("${assessmentTypeToString(type)} assessment results"),
       ),
-      body: Column(
-        children: [
-          SizedBox(height: 100),
-          // If they gave their max, it's always a good job rigth ?
-          Text(
-            "Great job! 💪",
-            style: Theme.of(context).textTheme.displaySmall,
-          ),
-          SizedBox(height: 16),
-          // Show the results cards for the provided hands.
-          Column(
-            children: [
-              if (rightHandResults != null)
-                ResultCard(
-                  prevValue: rightHandResults!.$1,
-                  newValue: rightHandResults!.$2,
-                  // If `leftHandResults` was provided, it's a two hands assessment.
-                  // In that case, tell the card the result is right hand related to show the hand side.
-                  rightHand: leftHandResults != null ? true : null,
-                ),
-              if (leftHandResults != null)
-                ResultCard(
-                  prevValue: leftHandResults!.$1,
-                  newValue: leftHandResults!.$2,
-                  // If `rightHandResults` was provided, it's a two hands assessment.
-                  // In that case, tell the card the result is left hand related to show the hand side.
-                  rightHand: rightHandResults != null ? false : null,
-                ),
-            ],
-          ),
-        ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            SizedBox(height: 100),
+            // If they gave their max, it's always a good job rigth ?
+            Text(
+              "Great job! 💪",
+              style: Theme.of(context).textTheme.displaySmall,
+            ),
+            SizedBox(height: 16),
+            // Show the results cards for the provided hands.
+            Column(
+              children: [
+                if (rightHandResults != null)
+                  ResultCard(
+                    prevValue: rightHandResults!.$1,
+                    newValue: rightHandResults!.$2,
+                    // If `leftHandResults` was provided, it's a two hands assessment.
+                    // In that case, tell the card the result is right hand related to show the hand side.
+                    rightHand: leftHandResults != null ? true : null,
+                  ),
+                if (leftHandResults != null)
+                  ResultCard(
+                    prevValue: leftHandResults!.$1,
+                    newValue: leftHandResults!.$2,
+                    // If `rightHandResults` was provided, it's a two hands assessment.
+                    // In that case, tell the card the result is left hand related to show the hand side.
+                    rightHand: rightHandResults != null ? false : null,
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,

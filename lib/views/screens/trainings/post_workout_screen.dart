@@ -89,80 +89,82 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
       },
       child: Scaffold(
         appBar: AppBar(title: Text(widget.template.name)),
-        body: Column(
-          children: [
-            SizedBox(height: 100),
-            Text(
-              "Well done! 💪",
-              style: Theme.of(context).textTheme.displaySmall,
-            ),
-            // Show the success percentage
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: "you managed to do ",
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.gray500),
-                  ),
-                  TextSpan(
-                    text: "$percentageSuccess%",
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelLarge?.copyWith(fontSize: 12),
-                  ),
-                  TextSpan(
-                    text: " of the reps",
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.gray500),
-                  ),
-                ],
+        body: SafeArea(
+          child: Column(
+            children: [
+              SizedBox(height: 100),
+              Text(
+                "Well done! 💪",
+                style: Theme.of(context).textTheme.displaySmall,
               ),
-            ),
-            SizedBox(height: 25),
-            // Form for session name and notes.
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32.0,
-                vertical: 16.0,
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
+              // Show the success percentage
+              Text.rich(
+                TextSpan(
                   children: [
-                    TextFormField(
-                      controller: _trainingNameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Training Name',
-                        border: OutlineInputBorder(),
+                    TextSpan(
+                      text: "you managed to do ",
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: CrimpyTheme.gray500,
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a training name';
-                        }
-                        return null;
-                      },
                     ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _noteController,
-                      decoration: const InputDecoration(
-                        labelText: 'Notes',
-                        hintText: "How did you feel?",
-                        border: OutlineInputBorder(),
-                        alignLabelWithHint: true,
+                    TextSpan(
+                      text: "$percentageSuccess%",
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelLarge?.copyWith(fontSize: 12),
+                    ),
+                    TextSpan(
+                      text: " of the reps",
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: CrimpyTheme.gray500,
                       ),
-                      keyboardType: TextInputType.multiline,
-                      maxLines: 20,
-                      minLines: 4,
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+              SizedBox(height: 25),
+              // Form for session name and notes.
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32.0,
+                  vertical: 16.0,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _trainingNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Training Name',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a training name';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _noteController,
+                        decoration: const InputDecoration(
+                          labelText: 'Notes',
+                          hintText: "How did you feel?",
+                          border: OutlineInputBorder(),
+                          alignLabelWithHint: true,
+                        ),
+                        keyboardType: TextInputType.multiline,
+                        maxLines: 20,
+                        minLines: 4,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: ElevatedButton(

@@ -58,11 +58,13 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
           ),
         ],
       ),
-      body: switch (asyncSessions) {
-        AsyncData(:final value) => _buildSessionList(value),
-        AsyncError(:final error) => _buildErrorState(error.toString()),
-        _ => const Center(child: CircularProgressIndicator()),
-      },
+      body: SafeArea(
+        child: switch (asyncSessions) {
+          AsyncData(:final value) => _buildSessionList(value),
+          AsyncError(:final error) => _buildErrorState(error.toString()),
+          _ => const Center(child: CircularProgressIndicator()),
+        },
+      ),
     );
   }
 

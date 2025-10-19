@@ -227,19 +227,21 @@ class _MainPageState extends ConsumerState<MainPage> {
           ),
         ],
       ),
-      body:
-          <Widget>[
-            HomeScreen(),
-            TrainingScreen(
-              goToAssessments:
-                  () => setState(() {
-                    currentPageIndex = 2;
-                  }),
-            ),
-            AssessmentsScreen(),
-            ClimbingProfileScreen(),
-            SettingsScreen(),
-          ][currentPageIndex],
+      body: SafeArea(
+        child:
+            <Widget>[
+              HomeScreen(),
+              TrainingScreen(
+                goToAssessments:
+                    () => setState(() {
+                      currentPageIndex = 2;
+                    }),
+              ),
+              AssessmentsScreen(),
+              ClimbingProfileScreen(),
+              SettingsScreen(),
+            ][currentPageIndex],
+      ),
     );
   }
 

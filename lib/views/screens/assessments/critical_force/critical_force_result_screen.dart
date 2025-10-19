@@ -36,82 +36,84 @@ class CriticalForceResultScreen extends ConsumerWidget {
     final forces = data.map((e) => e.value).toList();
     return Scaffold(
       appBar: AppBar(title: Text("Critical Force assessment results")),
-      body: Column(
-        children: [
-          SizedBox(height: 20),
-          Text(
-            "Great job! 💪",
-            style: Theme.of(context).textTheme.displaySmall,
-          ),
-          SizedBox(height: 16),
-          ResultCard(
-            prevValue: previousCriticalForce,
-            newValue: results.criticalLoad,
-          ),
-          SizedBox(height: 20),
-          Text(
-            "Critical force:",
-            style: Theme.of(context).textTheme.titleLarge!.copyWith(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 30,
+      body: SafeArea(
+        child: Column(
+          children: [
+            SizedBox(height: 20),
+            Text(
+              "Great job! 💪",
+              style: Theme.of(context).textTheme.displaySmall,
             ),
-          ),
-          Text(
-            "${results.criticalLoad.toStringAsFixed(2)} kg",
-            style: Theme.of(context).textTheme.titleLarge!.copyWith(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 45,
-              fontWeight: FontWeight.bold,
+            SizedBox(height: 16),
+            ResultCard(
+              prevValue: previousCriticalForce,
+              newValue: results.criticalLoad,
             ),
-          ),
-          SfCartesianChart(
-            plotAreaBorderWidth: 0,
-            series: <CartesianSeries>[
-              FastLineSeries<(double, double), double>(
-                width: 2,
-                dataSource: List.generate(
-                  timestamps.length,
-                  (index) => (timestamps[index], forces[index]),
+            SizedBox(height: 20),
+            Text(
+              "Critical force:",
+              style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 30,
+              ),
+            ),
+            Text(
+              "${results.criticalLoad.toStringAsFixed(2)} kg",
+              style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 45,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SfCartesianChart(
+              plotAreaBorderWidth: 0,
+              series: <CartesianSeries>[
+                FastLineSeries<(double, double), double>(
+                  width: 2,
+                  dataSource: List.generate(
+                    timestamps.length,
+                    (index) => (timestamps[index], forces[index]),
+                  ),
+                  xValueMapper: ((double, double) data, _) => data.$1,
+                  yValueMapper: ((double, double) data, _) => data.$2,
                 ),
-                xValueMapper: ((double, double) data, _) => data.$1,
-                yValueMapper: ((double, double) data, _) => data.$2,
-              ),
-              // Print points on tmeans, fmeans
-              ScatterSeries<(double, double), double>(
-                dataSource: List.generate(
-                  results.tmeans.length,
-                  (index) => (results.tmeans[index], results.fmeans[index]),
+                // Print points on tmeans, fmeans
+                ScatterSeries<(double, double), double>(
+                  dataSource: List.generate(
+                    results.tmeans.length,
+                    (index) => (results.tmeans[index], results.fmeans[index]),
+                  ),
+                  xValueMapper: (data, _) => data.$1,
+                  yValueMapper: (data, _) => data.$2,
+                  markerSettings: MarkerSettings(isVisible: true),
                 ),
-                xValueMapper: (data, _) => data.$1,
-                yValueMapper: (data, _) => data.$2,
-                markerSettings: MarkerSettings(isVisible: true),
+                // Print dashed horizontal line at criticalLoad
+                LineSeries<(double, double), double>(
+                  dataSource: [
+                    (timestamps[0], results.criticalLoad),
+                    (timestamps.last, results.criticalLoad),
+                  ],
+                  xValueMapper: (data, _) => data.$1,
+                  yValueMapper: (data, _) => data.$2,
+                  dashArray: <double>[5, 5],
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ],
+              primaryYAxis: NumericAxis(
+                axisLine: AxisLine(color: Colors.transparent),
+                majorGridLines: MajorGridLines(width: 0),
+                majorTickLines: MajorTickLines(size: 0),
               ),
-              // Print dashed horizontal line at criticalLoad
-              LineSeries<(double, double), double>(
-                dataSource: [
-                  (timestamps[0], results.criticalLoad),
-                  (timestamps.last, results.criticalLoad),
-                ],
-                xValueMapper: (data, _) => data.$1,
-                yValueMapper: (data, _) => data.$2,
-                dashArray: <double>[5, 5],
-                color: Theme.of(context).colorScheme.error,
+              primaryXAxis: NumericAxis(
+                axisLine: AxisLine(color: Colors.transparent),
+                majorTickLines: MajorTickLines(size: 0),
+                majorGridLines: MajorGridLines(width: 0),
+                autoScrollingMode: AutoScrollingMode.end,
+                decimalPlaces: 0,
               ),
-            ],
-            primaryYAxis: NumericAxis(
-              axisLine: AxisLine(color: Colors.transparent),
-              majorGridLines: MajorGridLines(width: 0),
-              majorTickLines: MajorTickLines(size: 0),
             ),
-            primaryXAxis: NumericAxis(
-              axisLine: AxisLine(color: Colors.transparent),
-              majorTickLines: MajorTickLines(size: 0),
-              majorGridLines: MajorGridLines(width: 0),
-              autoScrollingMode: AutoScrollingMode.end,
-              decimalPlaces: 0,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
