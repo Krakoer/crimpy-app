@@ -60,6 +60,7 @@ class AssessmentNotifier
     // First, delete same-day assessment if any.
     final prevAssessmentId = await getSameDayAssessment(
       handSide: assessmentModel.hand,
+      gripPosition: assessmentModel.gripPosition,
     );
     if (prevAssessmentId != null) {
       await _assessmentRepository.deleteAssessment(prevAssessmentId);
@@ -87,18 +88,29 @@ class AssessmentNotifier
   }
 
   /// Returns the last assessment result for a given hand.
+  /// If `gripPosition` is provided, only assessments with that grip position will be considered.
   /// Only call this method with a non null type family.
-  Future<double?> getLastValueForHand(HandSide handSide) async {
+  Future<double?> getLastValueForHand(
+    HandSide handSide, {
+    GripPosition? gripPosition,
+  }) async {
     if (_type == null) {
       AppLoggerHelper.warning("Called getLastValueForHand with a type null.");
       return 0;
     }
-    return _assessmentRepository.getLastValueForHand(_type!, handSide);
+    return _assessmentRepository.getLastValueForHand(
+      _type!,
+      handSide,
+      gripPosition: gripPosition,
+    );
   }
 
-  /// Retuns the id of the assessment that has been done the same day with the same hand, if any.
+  /// Retuns the id of the assessment that has been done the same day with the same hand and grip position, if any.
   /// Only call this method with a non null type family.
-  Future<int?> getSameDayAssessment({HandSide? handSide}) async {
+  Future<int?> getSameDayAssessment({
+    HandSide? handSide,
+    GripPosition? gripPosition,
+  }) async {
     if (_type == null) {
       AppLoggerHelper.warning("Called getSameDayAssessment with a type null.");
       return 0;
@@ -107,6 +119,7 @@ class AssessmentNotifier
         (await _assessmentRepository.getAssessments(
           type: _type,
           handSide: handSide,
+          gripPosition: gripPosition,
         )).lastOrNull;
     if (prevAssessment == null) {
       return null;

@@ -2,14 +2,13 @@ import 'package:crimpy/models/common.dart';
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/training_model.dart';
 
-enum AssessmentType { criticalForce, mvc, mvc3fd, endurance60 }
+enum AssessmentType { criticalForce, mvc, endurance60 }
 
 enum AssessmentUnit { kilograms, seconds }
 
 String assessmentTypeToString(AssessmentType type) {
   return switch (type) {
-    AssessmentType.mvc => "Max Force - Half Crimp",
-    AssessmentType.mvc3fd => "Max Force - 3FD",
+    AssessmentType.mvc => "Max Force",
     AssessmentType.criticalForce => "Critical Force",
     AssessmentType.endurance60 => "60% Endurance",
   };
@@ -18,7 +17,6 @@ String assessmentTypeToString(AssessmentType type) {
 AssessmentUnit getAssessmentUnit(AssessmentType type) {
   return switch (type) {
     AssessmentType.mvc => AssessmentUnit.kilograms,
-    AssessmentType.mvc3fd => AssessmentUnit.kilograms,
     AssessmentType.criticalForce => AssessmentUnit.kilograms,
     AssessmentType.endurance60 => AssessmentUnit.seconds,
   };
@@ -57,8 +55,14 @@ class AssessmentResultModel {
   final AssessmentType type;
   final double? rightValue;
   final double? leftValue;
+  final GripPosition? gripPosition;
 
-  AssessmentResultModel({required this.type, this.rightValue, this.leftValue});
+  AssessmentResultModel({
+    required this.type,
+    this.rightValue,
+    this.leftValue,
+    this.gripPosition,
+  });
 
   /// Get the hand of the assessment.
   /// `null` means both hands, `true` means right hand and `false` means left hand.
@@ -79,6 +83,7 @@ class AssessmentModel {
   final DateTime date;
   final double? rightValue;
   final double? leftValue;
+  final GripPosition? gripPosition;
 
   AssessmentModel({
     required this.type,
@@ -86,6 +91,7 @@ class AssessmentModel {
     required this.date,
     this.rightValue,
     this.leftValue,
+    this.gripPosition,
   });
 
   /// Get the hand of the assessment.

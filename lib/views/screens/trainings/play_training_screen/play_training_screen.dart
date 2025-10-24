@@ -50,6 +50,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
           duration: timer.currentRep.durationInSeconds,
           index: timer.currentRep.index,
           isRest: timer.currentRep.isRest,
+          gripPosition: timer.currentRep.gripPosition,
         ),
       );
 
@@ -75,6 +76,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
           duration: timer.currentRep.durationInSeconds,
           index: timer.currentRep.index,
           isRest: timer.currentRep.isRest,
+          gripPosition: timer.currentRep.gripPosition,
         ),
       );
 
@@ -203,7 +205,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                         children: [
                           // Hand label (above gauge during work)
                           if (!timer.currentRep.isRest)
-                            HandLabel(handSide: timer.currentRep.handSide),
+                            HandLabel(
+                              handSide: timer.currentRep.handSide,
+                              gripPosition: timer.currentRep.gripPosition,
+                            ),
                           // Workout circle with gauge
                           SizedBox(
                             width: gaugeSize,

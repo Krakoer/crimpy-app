@@ -471,6 +471,18 @@ class $AssessmentsTable extends Assessments
       'REFERENCES sessions (id)',
     ),
   );
+  static const VerificationMeta _gripPositionMeta = const VerificationMeta(
+    'gripPosition',
+  );
+  @override
+  late final GeneratedColumn<int> gripPosition = GeneratedColumn<int>(
+    'grip_position',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -478,6 +490,7 @@ class $AssessmentsTable extends Assessments
     rightValue,
     leftValue,
     sessionId,
+    gripPosition,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -522,6 +535,15 @@ class $AssessmentsTable extends Assessments
     } else if (isInserting) {
       context.missing(_sessionIdMeta);
     }
+    if (data.containsKey('grip_position')) {
+      context.handle(
+        _gripPositionMeta,
+        gripPosition.isAcceptableOrUnknown(
+          data['grip_position']!,
+          _gripPositionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -554,6 +576,10 @@ class $AssessmentsTable extends Assessments
             DriftSqlType.int,
             data['${effectivePrefix}session_id'],
           )!,
+      gripPosition: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}grip_position'],
+      ),
     );
   }
 
@@ -569,12 +595,14 @@ class Assessment extends DataClass implements Insertable<Assessment> {
   final double? rightValue;
   final double? leftValue;
   final int sessionId;
+  final int? gripPosition;
   const Assessment({
     required this.id,
     required this.type,
     this.rightValue,
     this.leftValue,
     required this.sessionId,
+    this.gripPosition,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -588,6 +616,9 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       map['left_value'] = Variable<double>(leftValue);
     }
     map['session_id'] = Variable<int>(sessionId);
+    if (!nullToAbsent || gripPosition != null) {
+      map['grip_position'] = Variable<int>(gripPosition);
+    }
     return map;
   }
 
@@ -604,6 +635,10 @@ class Assessment extends DataClass implements Insertable<Assessment> {
               ? const Value.absent()
               : Value(leftValue),
       sessionId: Value(sessionId),
+      gripPosition:
+          gripPosition == null && nullToAbsent
+              ? const Value.absent()
+              : Value(gripPosition),
     );
   }
 
@@ -618,6 +653,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       rightValue: serializer.fromJson<double?>(json['rightValue']),
       leftValue: serializer.fromJson<double?>(json['leftValue']),
       sessionId: serializer.fromJson<int>(json['sessionId']),
+      gripPosition: serializer.fromJson<int?>(json['gripPosition']),
     );
   }
   @override
@@ -629,6 +665,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       'rightValue': serializer.toJson<double?>(rightValue),
       'leftValue': serializer.toJson<double?>(leftValue),
       'sessionId': serializer.toJson<int>(sessionId),
+      'gripPosition': serializer.toJson<int?>(gripPosition),
     };
   }
 
@@ -638,12 +675,14 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     Value<double?> rightValue = const Value.absent(),
     Value<double?> leftValue = const Value.absent(),
     int? sessionId,
+    Value<int?> gripPosition = const Value.absent(),
   }) => Assessment(
     id: id ?? this.id,
     type: type ?? this.type,
     rightValue: rightValue.present ? rightValue.value : this.rightValue,
     leftValue: leftValue.present ? leftValue.value : this.leftValue,
     sessionId: sessionId ?? this.sessionId,
+    gripPosition: gripPosition.present ? gripPosition.value : this.gripPosition,
   );
   Assessment copyWithCompanion(AssessmentsCompanion data) {
     return Assessment(
@@ -653,6 +692,10 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           data.rightValue.present ? data.rightValue.value : this.rightValue,
       leftValue: data.leftValue.present ? data.leftValue.value : this.leftValue,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      gripPosition:
+          data.gripPosition.present
+              ? data.gripPosition.value
+              : this.gripPosition,
     );
   }
 
@@ -663,13 +706,15 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           ..write('type: $type, ')
           ..write('rightValue: $rightValue, ')
           ..write('leftValue: $leftValue, ')
-          ..write('sessionId: $sessionId')
+          ..write('sessionId: $sessionId, ')
+          ..write('gripPosition: $gripPosition')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, type, rightValue, leftValue, sessionId);
+  int get hashCode =>
+      Object.hash(id, type, rightValue, leftValue, sessionId, gripPosition);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -678,7 +723,8 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           other.type == this.type &&
           other.rightValue == this.rightValue &&
           other.leftValue == this.leftValue &&
-          other.sessionId == this.sessionId);
+          other.sessionId == this.sessionId &&
+          other.gripPosition == this.gripPosition);
 }
 
 class AssessmentsCompanion extends UpdateCompanion<Assessment> {
@@ -687,12 +733,14 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
   final Value<double?> rightValue;
   final Value<double?> leftValue;
   final Value<int> sessionId;
+  final Value<int?> gripPosition;
   const AssessmentsCompanion({
     this.id = const Value.absent(),
     this.type = const Value.absent(),
     this.rightValue = const Value.absent(),
     this.leftValue = const Value.absent(),
     this.sessionId = const Value.absent(),
+    this.gripPosition = const Value.absent(),
   });
   AssessmentsCompanion.insert({
     this.id = const Value.absent(),
@@ -700,6 +748,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     this.rightValue = const Value.absent(),
     this.leftValue = const Value.absent(),
     required int sessionId,
+    this.gripPosition = const Value.absent(),
   }) : type = Value(type),
        sessionId = Value(sessionId);
   static Insertable<Assessment> custom({
@@ -708,6 +757,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     Expression<double>? rightValue,
     Expression<double>? leftValue,
     Expression<int>? sessionId,
+    Expression<int>? gripPosition,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -715,6 +765,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
       if (rightValue != null) 'right_value': rightValue,
       if (leftValue != null) 'left_value': leftValue,
       if (sessionId != null) 'session_id': sessionId,
+      if (gripPosition != null) 'grip_position': gripPosition,
     });
   }
 
@@ -724,6 +775,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     Value<double?>? rightValue,
     Value<double?>? leftValue,
     Value<int>? sessionId,
+    Value<int?>? gripPosition,
   }) {
     return AssessmentsCompanion(
       id: id ?? this.id,
@@ -731,6 +783,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
       rightValue: rightValue ?? this.rightValue,
       leftValue: leftValue ?? this.leftValue,
       sessionId: sessionId ?? this.sessionId,
+      gripPosition: gripPosition ?? this.gripPosition,
     );
   }
 
@@ -752,6 +805,9 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     if (sessionId.present) {
       map['session_id'] = Variable<int>(sessionId.value);
     }
+    if (gripPosition.present) {
+      map['grip_position'] = Variable<int>(gripPosition.value);
+    }
     return map;
   }
 
@@ -762,7 +818,8 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
           ..write('type: $type, ')
           ..write('rightValue: $rightValue, ')
           ..write('leftValue: $leftValue, ')
-          ..write('sessionId: $sessionId')
+          ..write('sessionId: $sessionId, ')
+          ..write('gripPosition: $gripPosition')
           ..write(')'))
         .toString();
   }
@@ -875,6 +932,18 @@ class $RepeatersTable extends Repeaters
       'CHECK ("split_hand" IN (0, 1))',
     ),
   );
+  static const VerificationMeta _gripPositionMeta = const VerificationMeta(
+    'gripPosition',
+  );
+  @override
+  late final GeneratedColumn<int> gripPosition = GeneratedColumn<int>(
+    'grip_position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -886,6 +955,7 @@ class $RepeatersTable extends Repeaters
     targetWeigthRight,
     targetWeigthLeft,
     splitHand,
+    gripPosition,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -968,6 +1038,15 @@ class $RepeatersTable extends Repeaters
     } else if (isInserting) {
       context.missing(_splitHandMeta);
     }
+    if (data.containsKey('grip_position')) {
+      context.handle(
+        _gripPositionMeta,
+        gripPosition.isAcceptableOrUnknown(
+          data['grip_position']!,
+          _gripPositionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1020,6 +1099,11 @@ class $RepeatersTable extends Repeaters
             DriftSqlType.bool,
             data['${effectivePrefix}split_hand'],
           )!,
+      gripPosition:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}grip_position'],
+          )!,
     );
   }
 
@@ -1039,6 +1123,7 @@ class Repeater extends DataClass implements Insertable<Repeater> {
   final double? targetWeigthRight;
   final double? targetWeigthLeft;
   final bool splitHand;
+  final int gripPosition;
   const Repeater({
     required this.id,
     required this.sets,
@@ -1049,6 +1134,7 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     this.targetWeigthRight,
     this.targetWeigthLeft,
     required this.splitHand,
+    required this.gripPosition,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1066,6 +1152,7 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       map['target_weigth_left'] = Variable<double>(targetWeigthLeft);
     }
     map['split_hand'] = Variable<bool>(splitHand);
+    map['grip_position'] = Variable<int>(gripPosition);
     return map;
   }
 
@@ -1086,6 +1173,7 @@ class Repeater extends DataClass implements Insertable<Repeater> {
               ? const Value.absent()
               : Value(targetWeigthLeft),
       splitHand: Value(splitHand),
+      gripPosition: Value(gripPosition),
     );
   }
 
@@ -1106,6 +1194,7 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       ),
       targetWeigthLeft: serializer.fromJson<double?>(json['targetWeigthLeft']),
       splitHand: serializer.fromJson<bool>(json['splitHand']),
+      gripPosition: serializer.fromJson<int>(json['gripPosition']),
     );
   }
   @override
@@ -1121,6 +1210,7 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       'targetWeigthRight': serializer.toJson<double?>(targetWeigthRight),
       'targetWeigthLeft': serializer.toJson<double?>(targetWeigthLeft),
       'splitHand': serializer.toJson<bool>(splitHand),
+      'gripPosition': serializer.toJson<int>(gripPosition),
     };
   }
 
@@ -1134,6 +1224,7 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     Value<double?> targetWeigthRight = const Value.absent(),
     Value<double?> targetWeigthLeft = const Value.absent(),
     bool? splitHand,
+    int? gripPosition,
   }) => Repeater(
     id: id ?? this.id,
     sets: sets ?? this.sets,
@@ -1150,6 +1241,7 @@ class Repeater extends DataClass implements Insertable<Repeater> {
             ? targetWeigthLeft.value
             : this.targetWeigthLeft,
     splitHand: splitHand ?? this.splitHand,
+    gripPosition: gripPosition ?? this.gripPosition,
   );
   Repeater copyWithCompanion(RepeatersCompanion data) {
     return Repeater(
@@ -1168,6 +1260,10 @@ class Repeater extends DataClass implements Insertable<Repeater> {
               ? data.targetWeigthLeft.value
               : this.targetWeigthLeft,
       splitHand: data.splitHand.present ? data.splitHand.value : this.splitHand,
+      gripPosition:
+          data.gripPosition.present
+              ? data.gripPosition.value
+              : this.gripPosition,
     );
   }
 
@@ -1182,7 +1278,8 @@ class Repeater extends DataClass implements Insertable<Repeater> {
           ..write('setRest: $setRest, ')
           ..write('targetWeigthRight: $targetWeigthRight, ')
           ..write('targetWeigthLeft: $targetWeigthLeft, ')
-          ..write('splitHand: $splitHand')
+          ..write('splitHand: $splitHand, ')
+          ..write('gripPosition: $gripPosition')
           ..write(')'))
         .toString();
   }
@@ -1198,6 +1295,7 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     targetWeigthRight,
     targetWeigthLeft,
     splitHand,
+    gripPosition,
   );
   @override
   bool operator ==(Object other) =>
@@ -1211,7 +1309,8 @@ class Repeater extends DataClass implements Insertable<Repeater> {
           other.setRest == this.setRest &&
           other.targetWeigthRight == this.targetWeigthRight &&
           other.targetWeigthLeft == this.targetWeigthLeft &&
-          other.splitHand == this.splitHand);
+          other.splitHand == this.splitHand &&
+          other.gripPosition == this.gripPosition);
 }
 
 class RepeatersCompanion extends UpdateCompanion<Repeater> {
@@ -1224,6 +1323,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
   final Value<double?> targetWeigthRight;
   final Value<double?> targetWeigthLeft;
   final Value<bool> splitHand;
+  final Value<int> gripPosition;
   const RepeatersCompanion({
     this.id = const Value.absent(),
     this.sets = const Value.absent(),
@@ -1234,6 +1334,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     this.targetWeigthRight = const Value.absent(),
     this.targetWeigthLeft = const Value.absent(),
     this.splitHand = const Value.absent(),
+    this.gripPosition = const Value.absent(),
   });
   RepeatersCompanion.insert({
     this.id = const Value.absent(),
@@ -1245,6 +1346,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     this.targetWeigthRight = const Value.absent(),
     this.targetWeigthLeft = const Value.absent(),
     required bool splitHand,
+    this.gripPosition = const Value.absent(),
   }) : sets = Value(sets),
        reps = Value(reps),
        worktime = Value(worktime),
@@ -1261,6 +1363,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     Expression<double>? targetWeigthRight,
     Expression<double>? targetWeigthLeft,
     Expression<bool>? splitHand,
+    Expression<int>? gripPosition,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1272,6 +1375,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
       if (targetWeigthRight != null) 'target_weigth_right': targetWeigthRight,
       if (targetWeigthLeft != null) 'target_weigth_left': targetWeigthLeft,
       if (splitHand != null) 'split_hand': splitHand,
+      if (gripPosition != null) 'grip_position': gripPosition,
     });
   }
 
@@ -1285,6 +1389,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     Value<double?>? targetWeigthRight,
     Value<double?>? targetWeigthLeft,
     Value<bool>? splitHand,
+    Value<int>? gripPosition,
   }) {
     return RepeatersCompanion(
       id: id ?? this.id,
@@ -1296,6 +1401,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
       targetWeigthRight: targetWeigthRight ?? this.targetWeigthRight,
       targetWeigthLeft: targetWeigthLeft ?? this.targetWeigthLeft,
       splitHand: splitHand ?? this.splitHand,
+      gripPosition: gripPosition ?? this.gripPosition,
     );
   }
 
@@ -1329,6 +1435,9 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     if (splitHand.present) {
       map['split_hand'] = Variable<bool>(splitHand.value);
     }
+    if (gripPosition.present) {
+      map['grip_position'] = Variable<int>(gripPosition.value);
+    }
     return map;
   }
 
@@ -1343,7 +1452,8 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
           ..write('setRest: $setRest, ')
           ..write('targetWeigthRight: $targetWeigthRight, ')
           ..write('targetWeigthLeft: $targetWeigthLeft, ')
-          ..write('splitHand: $splitHand')
+          ..write('splitHand: $splitHand, ')
+          ..write('gripPosition: $gripPosition')
           ..write(')'))
         .toString();
   }
@@ -1858,6 +1968,18 @@ class $RepTemplatesTable extends RepTemplates
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _gripPositionMeta = const VerificationMeta(
+    'gripPosition',
+  );
+  @override
+  late final GeneratedColumn<int> gripPosition = GeneratedColumn<int>(
+    'grip_position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1867,6 +1989,7 @@ class $RepTemplatesTable extends RepTemplates
     trainingId,
     targetWeight,
     index,
+    gripPosition,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1934,6 +2057,15 @@ class $RepTemplatesTable extends RepTemplates
     } else if (isInserting) {
       context.missing(_indexMeta);
     }
+    if (data.containsKey('grip_position')) {
+      context.handle(
+        _gripPositionMeta,
+        gripPosition.isAcceptableOrUnknown(
+          data['grip_position']!,
+          _gripPositionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1978,6 +2110,11 @@ class $RepTemplatesTable extends RepTemplates
             DriftSqlType.int,
             data['${effectivePrefix}index'],
           )!,
+      gripPosition:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}grip_position'],
+          )!,
     );
   }
 
@@ -1995,6 +2132,7 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
   final int trainingId;
   final double targetWeight;
   final int index;
+  final int gripPosition;
   const RepTemplate({
     required this.id,
     required this.isRest,
@@ -2003,6 +2141,7 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     required this.trainingId,
     required this.targetWeight,
     required this.index,
+    required this.gripPosition,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2014,6 +2153,7 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     map['training_id'] = Variable<int>(trainingId);
     map['target_weight'] = Variable<double>(targetWeight);
     map['index'] = Variable<int>(index);
+    map['grip_position'] = Variable<int>(gripPosition);
     return map;
   }
 
@@ -2026,6 +2166,7 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       trainingId: Value(trainingId),
       targetWeight: Value(targetWeight),
       index: Value(index),
+      gripPosition: Value(gripPosition),
     );
   }
 
@@ -2042,6 +2183,7 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       trainingId: serializer.fromJson<int>(json['trainingId']),
       targetWeight: serializer.fromJson<double>(json['targetWeight']),
       index: serializer.fromJson<int>(json['index']),
+      gripPosition: serializer.fromJson<int>(json['gripPosition']),
     );
   }
   @override
@@ -2055,6 +2197,7 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       'trainingId': serializer.toJson<int>(trainingId),
       'targetWeight': serializer.toJson<double>(targetWeight),
       'index': serializer.toJson<int>(index),
+      'gripPosition': serializer.toJson<int>(gripPosition),
     };
   }
 
@@ -2066,6 +2209,7 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     int? trainingId,
     double? targetWeight,
     int? index,
+    int? gripPosition,
   }) => RepTemplate(
     id: id ?? this.id,
     isRest: isRest ?? this.isRest,
@@ -2074,6 +2218,7 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     trainingId: trainingId ?? this.trainingId,
     targetWeight: targetWeight ?? this.targetWeight,
     index: index ?? this.index,
+    gripPosition: gripPosition ?? this.gripPosition,
   );
   RepTemplate copyWithCompanion(RepTemplatesCompanion data) {
     return RepTemplate(
@@ -2088,6 +2233,10 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
               ? data.targetWeight.value
               : this.targetWeight,
       index: data.index.present ? data.index.value : this.index,
+      gripPosition:
+          data.gripPosition.present
+              ? data.gripPosition.value
+              : this.gripPosition,
     );
   }
 
@@ -2100,7 +2249,8 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
           ..write('duration: $duration, ')
           ..write('trainingId: $trainingId, ')
           ..write('targetWeight: $targetWeight, ')
-          ..write('index: $index')
+          ..write('index: $index, ')
+          ..write('gripPosition: $gripPosition')
           ..write(')'))
         .toString();
   }
@@ -2114,6 +2264,7 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     trainingId,
     targetWeight,
     index,
+    gripPosition,
   );
   @override
   bool operator ==(Object other) =>
@@ -2125,7 +2276,8 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
           other.duration == this.duration &&
           other.trainingId == this.trainingId &&
           other.targetWeight == this.targetWeight &&
-          other.index == this.index);
+          other.index == this.index &&
+          other.gripPosition == this.gripPosition);
 }
 
 class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
@@ -2136,6 +2288,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
   final Value<int> trainingId;
   final Value<double> targetWeight;
   final Value<int> index;
+  final Value<int> gripPosition;
   const RepTemplatesCompanion({
     this.id = const Value.absent(),
     this.isRest = const Value.absent(),
@@ -2144,6 +2297,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     this.trainingId = const Value.absent(),
     this.targetWeight = const Value.absent(),
     this.index = const Value.absent(),
+    this.gripPosition = const Value.absent(),
   });
   RepTemplatesCompanion.insert({
     this.id = const Value.absent(),
@@ -2153,6 +2307,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     required int trainingId,
     required double targetWeight,
     required int index,
+    this.gripPosition = const Value.absent(),
   }) : isRest = Value(isRest),
        rightHand = Value(rightHand),
        duration = Value(duration),
@@ -2167,6 +2322,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     Expression<int>? trainingId,
     Expression<double>? targetWeight,
     Expression<int>? index,
+    Expression<int>? gripPosition,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2176,6 +2332,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
       if (trainingId != null) 'training_id': trainingId,
       if (targetWeight != null) 'target_weight': targetWeight,
       if (index != null) 'index': index,
+      if (gripPosition != null) 'grip_position': gripPosition,
     });
   }
 
@@ -2187,6 +2344,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     Value<int>? trainingId,
     Value<double>? targetWeight,
     Value<int>? index,
+    Value<int>? gripPosition,
   }) {
     return RepTemplatesCompanion(
       id: id ?? this.id,
@@ -2196,6 +2354,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
       trainingId: trainingId ?? this.trainingId,
       targetWeight: targetWeight ?? this.targetWeight,
       index: index ?? this.index,
+      gripPosition: gripPosition ?? this.gripPosition,
     );
   }
 
@@ -2223,6 +2382,9 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     if (index.present) {
       map['index'] = Variable<int>(index.value);
     }
+    if (gripPosition.present) {
+      map['grip_position'] = Variable<int>(gripPosition.value);
+    }
     return map;
   }
 
@@ -2235,7 +2397,8 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
           ..write('duration: $duration, ')
           ..write('trainingId: $trainingId, ')
           ..write('targetWeight: $targetWeight, ')
-          ..write('index: $index')
+          ..write('index: $index, ')
+          ..write('gripPosition: $gripPosition')
           ..write(')'))
         .toString();
   }
@@ -2341,6 +2504,18 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _gripPositionMeta = const VerificationMeta(
+    'gripPosition',
+  );
+  @override
+  late final GeneratedColumn<int> gripPosition = GeneratedColumn<int>(
+    'grip_position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2351,6 +2526,7 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     duration,
     targetWeight,
     index,
+    gripPosition,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2429,6 +2605,15 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     } else if (isInserting) {
       context.missing(_indexMeta);
     }
+    if (data.containsKey('grip_position')) {
+      context.handle(
+        _gripPositionMeta,
+        gripPosition.isAcceptableOrUnknown(
+          data['grip_position']!,
+          _gripPositionMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2478,6 +2663,11 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
             DriftSqlType.int,
             data['${effectivePrefix}index'],
           )!,
+      gripPosition:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}grip_position'],
+          )!,
     );
   }
 
@@ -2496,6 +2686,7 @@ class RepData extends DataClass implements Insertable<RepData> {
   final int duration;
   final double targetWeight;
   final int index;
+  final int gripPosition;
   const RepData({
     required this.id,
     required this.averageWeight,
@@ -2505,6 +2696,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     required this.duration,
     required this.targetWeight,
     required this.index,
+    required this.gripPosition,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2517,6 +2709,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     map['duration'] = Variable<int>(duration);
     map['target_weight'] = Variable<double>(targetWeight);
     map['index'] = Variable<int>(index);
+    map['grip_position'] = Variable<int>(gripPosition);
     return map;
   }
 
@@ -2530,6 +2723,7 @@ class RepData extends DataClass implements Insertable<RepData> {
       duration: Value(duration),
       targetWeight: Value(targetWeight),
       index: Value(index),
+      gripPosition: Value(gripPosition),
     );
   }
 
@@ -2547,6 +2741,7 @@ class RepData extends DataClass implements Insertable<RepData> {
       duration: serializer.fromJson<int>(json['duration']),
       targetWeight: serializer.fromJson<double>(json['targetWeight']),
       index: serializer.fromJson<int>(json['index']),
+      gripPosition: serializer.fromJson<int>(json['gripPosition']),
     );
   }
   @override
@@ -2561,6 +2756,7 @@ class RepData extends DataClass implements Insertable<RepData> {
       'duration': serializer.toJson<int>(duration),
       'targetWeight': serializer.toJson<double>(targetWeight),
       'index': serializer.toJson<int>(index),
+      'gripPosition': serializer.toJson<int>(gripPosition),
     };
   }
 
@@ -2573,6 +2769,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     int? duration,
     double? targetWeight,
     int? index,
+    int? gripPosition,
   }) => RepData(
     id: id ?? this.id,
     averageWeight: averageWeight ?? this.averageWeight,
@@ -2582,6 +2779,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     duration: duration ?? this.duration,
     targetWeight: targetWeight ?? this.targetWeight,
     index: index ?? this.index,
+    gripPosition: gripPosition ?? this.gripPosition,
   );
   RepData copyWithCompanion(RepDatasCompanion data) {
     return RepData(
@@ -2599,6 +2797,10 @@ class RepData extends DataClass implements Insertable<RepData> {
               ? data.targetWeight.value
               : this.targetWeight,
       index: data.index.present ? data.index.value : this.index,
+      gripPosition:
+          data.gripPosition.present
+              ? data.gripPosition.value
+              : this.gripPosition,
     );
   }
 
@@ -2612,7 +2814,8 @@ class RepData extends DataClass implements Insertable<RepData> {
           ..write('rightHand: $rightHand, ')
           ..write('duration: $duration, ')
           ..write('targetWeight: $targetWeight, ')
-          ..write('index: $index')
+          ..write('index: $index, ')
+          ..write('gripPosition: $gripPosition')
           ..write(')'))
         .toString();
   }
@@ -2627,6 +2830,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     duration,
     targetWeight,
     index,
+    gripPosition,
   );
   @override
   bool operator ==(Object other) =>
@@ -2639,7 +2843,8 @@ class RepData extends DataClass implements Insertable<RepData> {
           other.rightHand == this.rightHand &&
           other.duration == this.duration &&
           other.targetWeight == this.targetWeight &&
-          other.index == this.index);
+          other.index == this.index &&
+          other.gripPosition == this.gripPosition);
 }
 
 class RepDatasCompanion extends UpdateCompanion<RepData> {
@@ -2651,6 +2856,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
   final Value<int> duration;
   final Value<double> targetWeight;
   final Value<int> index;
+  final Value<int> gripPosition;
   const RepDatasCompanion({
     this.id = const Value.absent(),
     this.averageWeight = const Value.absent(),
@@ -2660,6 +2866,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     this.duration = const Value.absent(),
     this.targetWeight = const Value.absent(),
     this.index = const Value.absent(),
+    this.gripPosition = const Value.absent(),
   });
   RepDatasCompanion.insert({
     this.id = const Value.absent(),
@@ -2670,6 +2877,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     required int duration,
     required double targetWeight,
     required int index,
+    this.gripPosition = const Value.absent(),
   }) : averageWeight = Value(averageWeight),
        sessionId = Value(sessionId),
        isRest = Value(isRest),
@@ -2686,6 +2894,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     Expression<int>? duration,
     Expression<double>? targetWeight,
     Expression<int>? index,
+    Expression<int>? gripPosition,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2696,6 +2905,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       if (duration != null) 'duration': duration,
       if (targetWeight != null) 'target_weight': targetWeight,
       if (index != null) 'index': index,
+      if (gripPosition != null) 'grip_position': gripPosition,
     });
   }
 
@@ -2708,6 +2918,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     Value<int>? duration,
     Value<double>? targetWeight,
     Value<int>? index,
+    Value<int>? gripPosition,
   }) {
     return RepDatasCompanion(
       id: id ?? this.id,
@@ -2718,6 +2929,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       duration: duration ?? this.duration,
       targetWeight: targetWeight ?? this.targetWeight,
       index: index ?? this.index,
+      gripPosition: gripPosition ?? this.gripPosition,
     );
   }
 
@@ -2748,6 +2960,9 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     if (index.present) {
       map['index'] = Variable<int>(index.value);
     }
+    if (gripPosition.present) {
+      map['grip_position'] = Variable<int>(gripPosition.value);
+    }
     return map;
   }
 
@@ -2761,7 +2976,8 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
           ..write('rightHand: $rightHand, ')
           ..write('duration: $duration, ')
           ..write('targetWeight: $targetWeight, ')
-          ..write('index: $index')
+          ..write('index: $index, ')
+          ..write('gripPosition: $gripPosition')
           ..write(')'))
         .toString();
   }
@@ -3982,6 +4198,7 @@ typedef $$AssessmentsTableCreateCompanionBuilder =
       Value<double?> rightValue,
       Value<double?> leftValue,
       required int sessionId,
+      Value<int?> gripPosition,
     });
 typedef $$AssessmentsTableUpdateCompanionBuilder =
     AssessmentsCompanion Function({
@@ -3990,6 +4207,7 @@ typedef $$AssessmentsTableUpdateCompanionBuilder =
       Value<double?> rightValue,
       Value<double?> leftValue,
       Value<int> sessionId,
+      Value<int?> gripPosition,
     });
 
 final class $$AssessmentsTableReferences
@@ -4042,6 +4260,11 @@ class $$AssessmentsTableFilterComposer
 
   ColumnFilters<double> get leftValue => $composableBuilder(
     column: $table.leftValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get gripPosition => $composableBuilder(
+    column: $table.gripPosition,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4098,6 +4321,11 @@ class $$AssessmentsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get gripPosition => $composableBuilder(
+    column: $table.gripPosition,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$SessionsTableOrderingComposer get sessionId {
     final $$SessionsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4144,6 +4372,11 @@ class $$AssessmentsTableAnnotationComposer
 
   GeneratedColumn<double> get leftValue =>
       $composableBuilder(column: $table.leftValue, builder: (column) => column);
+
+  GeneratedColumn<int> get gripPosition => $composableBuilder(
+    column: $table.gripPosition,
+    builder: (column) => column,
+  );
 
   $$SessionsTableAnnotationComposer get sessionId {
     final $$SessionsTableAnnotationComposer composer = $composerBuilder(
@@ -4203,12 +4436,14 @@ class $$AssessmentsTableTableManager
                 Value<double?> rightValue = const Value.absent(),
                 Value<double?> leftValue = const Value.absent(),
                 Value<int> sessionId = const Value.absent(),
+                Value<int?> gripPosition = const Value.absent(),
               }) => AssessmentsCompanion(
                 id: id,
                 type: type,
                 rightValue: rightValue,
                 leftValue: leftValue,
                 sessionId: sessionId,
+                gripPosition: gripPosition,
               ),
           createCompanionCallback:
               ({
@@ -4217,12 +4452,14 @@ class $$AssessmentsTableTableManager
                 Value<double?> rightValue = const Value.absent(),
                 Value<double?> leftValue = const Value.absent(),
                 required int sessionId,
+                Value<int?> gripPosition = const Value.absent(),
               }) => AssessmentsCompanion.insert(
                 id: id,
                 type: type,
                 rightValue: rightValue,
                 leftValue: leftValue,
                 sessionId: sessionId,
+                gripPosition: gripPosition,
               ),
           withReferenceMapper:
               (p0) =>
@@ -4304,6 +4541,7 @@ typedef $$RepeatersTableCreateCompanionBuilder =
       Value<double?> targetWeigthRight,
       Value<double?> targetWeigthLeft,
       required bool splitHand,
+      Value<int> gripPosition,
     });
 typedef $$RepeatersTableUpdateCompanionBuilder =
     RepeatersCompanion Function({
@@ -4316,6 +4554,7 @@ typedef $$RepeatersTableUpdateCompanionBuilder =
       Value<double?> targetWeigthRight,
       Value<double?> targetWeigthLeft,
       Value<bool> splitHand,
+      Value<int> gripPosition,
     });
 
 final class $$RepeatersTableReferences
@@ -4392,6 +4631,11 @@ class $$RepeatersTableFilterComposer
 
   ColumnFilters<bool> get splitHand => $composableBuilder(
     column: $table.splitHand,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get gripPosition => $composableBuilder(
+    column: $table.gripPosition,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4474,6 +4718,11 @@ class $$RepeatersTableOrderingComposer
     column: $table.splitHand,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get gripPosition => $composableBuilder(
+    column: $table.gripPosition,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RepeatersTableAnnotationComposer
@@ -4515,6 +4764,11 @@ class $$RepeatersTableAnnotationComposer
 
   GeneratedColumn<bool> get splitHand =>
       $composableBuilder(column: $table.splitHand, builder: (column) => column);
+
+  GeneratedColumn<int> get gripPosition => $composableBuilder(
+    column: $table.gripPosition,
+    builder: (column) => column,
+  );
 
   Expression<T> trainingsRefs<T extends Object>(
     Expression<T> Function($$TrainingsTableAnnotationComposer a) f,
@@ -4579,6 +4833,7 @@ class $$RepeatersTableTableManager
                 Value<double?> targetWeigthRight = const Value.absent(),
                 Value<double?> targetWeigthLeft = const Value.absent(),
                 Value<bool> splitHand = const Value.absent(),
+                Value<int> gripPosition = const Value.absent(),
               }) => RepeatersCompanion(
                 id: id,
                 sets: sets,
@@ -4589,6 +4844,7 @@ class $$RepeatersTableTableManager
                 targetWeigthRight: targetWeigthRight,
                 targetWeigthLeft: targetWeigthLeft,
                 splitHand: splitHand,
+                gripPosition: gripPosition,
               ),
           createCompanionCallback:
               ({
@@ -4601,6 +4857,7 @@ class $$RepeatersTableTableManager
                 Value<double?> targetWeigthRight = const Value.absent(),
                 Value<double?> targetWeigthLeft = const Value.absent(),
                 required bool splitHand,
+                Value<int> gripPosition = const Value.absent(),
               }) => RepeatersCompanion.insert(
                 id: id,
                 sets: sets,
@@ -4611,6 +4868,7 @@ class $$RepeatersTableTableManager
                 targetWeigthRight: targetWeigthRight,
                 targetWeigthLeft: targetWeigthLeft,
                 splitHand: splitHand,
+                gripPosition: gripPosition,
               ),
           withReferenceMapper:
               (p0) =>
@@ -5231,6 +5489,7 @@ typedef $$RepTemplatesTableCreateCompanionBuilder =
       required int trainingId,
       required double targetWeight,
       required int index,
+      Value<int> gripPosition,
     });
 typedef $$RepTemplatesTableUpdateCompanionBuilder =
     RepTemplatesCompanion Function({
@@ -5241,6 +5500,7 @@ typedef $$RepTemplatesTableUpdateCompanionBuilder =
       Value<int> trainingId,
       Value<double> targetWeight,
       Value<int> index,
+      Value<int> gripPosition,
     });
 
 final class $$RepTemplatesTableReferences
@@ -5303,6 +5563,11 @@ class $$RepTemplatesTableFilterComposer
 
   ColumnFilters<int> get index => $composableBuilder(
     column: $table.index,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get gripPosition => $composableBuilder(
+    column: $table.gripPosition,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5369,6 +5634,11 @@ class $$RepTemplatesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get gripPosition => $composableBuilder(
+    column: $table.gripPosition,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$TrainingsTableOrderingComposer get trainingId {
     final $$TrainingsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -5421,6 +5691,11 @@ class $$RepTemplatesTableAnnotationComposer
 
   GeneratedColumn<int> get index =>
       $composableBuilder(column: $table.index, builder: (column) => column);
+
+  GeneratedColumn<int> get gripPosition => $composableBuilder(
+    column: $table.gripPosition,
+    builder: (column) => column,
+  );
 
   $$TrainingsTableAnnotationComposer get trainingId {
     final $$TrainingsTableAnnotationComposer composer = $composerBuilder(
@@ -5482,6 +5757,7 @@ class $$RepTemplatesTableTableManager
                 Value<int> trainingId = const Value.absent(),
                 Value<double> targetWeight = const Value.absent(),
                 Value<int> index = const Value.absent(),
+                Value<int> gripPosition = const Value.absent(),
               }) => RepTemplatesCompanion(
                 id: id,
                 isRest: isRest,
@@ -5490,6 +5766,7 @@ class $$RepTemplatesTableTableManager
                 trainingId: trainingId,
                 targetWeight: targetWeight,
                 index: index,
+                gripPosition: gripPosition,
               ),
           createCompanionCallback:
               ({
@@ -5500,6 +5777,7 @@ class $$RepTemplatesTableTableManager
                 required int trainingId,
                 required double targetWeight,
                 required int index,
+                Value<int> gripPosition = const Value.absent(),
               }) => RepTemplatesCompanion.insert(
                 id: id,
                 isRest: isRest,
@@ -5508,6 +5786,7 @@ class $$RepTemplatesTableTableManager
                 trainingId: trainingId,
                 targetWeight: targetWeight,
                 index: index,
+                gripPosition: gripPosition,
               ),
           withReferenceMapper:
               (p0) =>
@@ -5588,6 +5867,7 @@ typedef $$RepDatasTableCreateCompanionBuilder =
       required int duration,
       required double targetWeight,
       required int index,
+      Value<int> gripPosition,
     });
 typedef $$RepDatasTableUpdateCompanionBuilder =
     RepDatasCompanion Function({
@@ -5599,6 +5879,7 @@ typedef $$RepDatasTableUpdateCompanionBuilder =
       Value<int> duration,
       Value<double> targetWeight,
       Value<int> index,
+      Value<int> gripPosition,
     });
 
 final class $$RepDatasTableReferences
@@ -5664,6 +5945,11 @@ class $$RepDatasTableFilterComposer
 
   ColumnFilters<int> get index => $composableBuilder(
     column: $table.index,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get gripPosition => $composableBuilder(
+    column: $table.gripPosition,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5735,6 +6021,11 @@ class $$RepDatasTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get gripPosition => $composableBuilder(
+    column: $table.gripPosition,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$SessionsTableOrderingComposer get sessionId {
     final $$SessionsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -5792,6 +6083,11 @@ class $$RepDatasTableAnnotationComposer
 
   GeneratedColumn<int> get index =>
       $composableBuilder(column: $table.index, builder: (column) => column);
+
+  GeneratedColumn<int> get gripPosition => $composableBuilder(
+    column: $table.gripPosition,
+    builder: (column) => column,
+  );
 
   $$SessionsTableAnnotationComposer get sessionId {
     final $$SessionsTableAnnotationComposer composer = $composerBuilder(
@@ -5853,6 +6149,7 @@ class $$RepDatasTableTableManager
                 Value<int> duration = const Value.absent(),
                 Value<double> targetWeight = const Value.absent(),
                 Value<int> index = const Value.absent(),
+                Value<int> gripPosition = const Value.absent(),
               }) => RepDatasCompanion(
                 id: id,
                 averageWeight: averageWeight,
@@ -5862,6 +6159,7 @@ class $$RepDatasTableTableManager
                 duration: duration,
                 targetWeight: targetWeight,
                 index: index,
+                gripPosition: gripPosition,
               ),
           createCompanionCallback:
               ({
@@ -5873,6 +6171,7 @@ class $$RepDatasTableTableManager
                 required int duration,
                 required double targetWeight,
                 required int index,
+                Value<int> gripPosition = const Value.absent(),
               }) => RepDatasCompanion.insert(
                 id: id,
                 averageWeight: averageWeight,
@@ -5882,6 +6181,7 @@ class $$RepDatasTableTableManager
                 duration: duration,
                 targetWeight: targetWeight,
                 index: index,
+                gripPosition: gripPosition,
               ),
           withReferenceMapper:
               (p0) =>

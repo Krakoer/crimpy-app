@@ -36,6 +36,7 @@ class RepModel {
   HandSide handSide;
   double targetWeight;
   int index;
+  GripPosition gripPosition;
 
   RepModel({
     this.id,
@@ -44,6 +45,7 @@ class RepModel {
     required this.handSide,
     required this.targetWeight,
     required this.index,
+    this.gripPosition = GripPosition.halfCrimp, // Default to half crimp
   });
 }
 
@@ -76,6 +78,7 @@ class RepDataModel {
   final int duration;
   final double targetWeight;
   final int index;
+  final GripPosition gripPosition;
 
   RepDataModel({
     required this.averageWeight,
@@ -84,6 +87,7 @@ class RepDataModel {
     required this.isRest,
     required this.handSide,
     required this.targetWeight,
+    this.gripPosition = GripPosition.halfCrimp, // Default to half crimp
   });
 }
 
@@ -108,6 +112,7 @@ class RepeaterModel {
   final bool splitHand;
   final double? weightRight;
   final double? weightLeft;
+  final GripPosition gripPosition;
 
   RepeaterModel({
     required this.sets,
@@ -118,6 +123,7 @@ class RepeaterModel {
     required this.splitHand,
     this.weightRight,
     this.weightLeft,
+    this.gripPosition = GripPosition.halfCrimp, // Default to half crimp
   });
 
   bool isValid() {
@@ -177,6 +183,7 @@ class RepeaterModel {
               index: currentIndex++,
               id: 0,
               trainingId: 0,
+              gripPosition: gripPosition,
             ),
           );
 
@@ -220,6 +227,7 @@ class RepeaterModel {
               index: currentIndex++,
               id: 0,
               trainingId: 0,
+              gripPosition: gripPosition,
             ),
           );
 
@@ -268,6 +276,7 @@ class RepeaterModel {
               index: currentIndex++,
               id: 0,
               trainingId: 0,
+              gripPosition: gripPosition,
             ),
           );
 
@@ -364,6 +373,7 @@ class BuiltinTrainingModel {
                   targetWeight: r.targetWeight,
                   id: r.id,
                   index: r.index,
+                  gripPosition: r.gripPosition,
                 ),
               )
               .toList(),
@@ -429,6 +439,7 @@ class RepTemplate {
   final int index;
   final int id;
   final int trainingId;
+  final GripPosition gripPosition;
 
   RepTemplate({
     required this.duration,
@@ -438,5 +449,6 @@ class RepTemplate {
     required this.index,
     required this.id,
     required this.trainingId,
+    this.gripPosition = GripPosition.halfCrimp, // Default to half crimp
   });
 }

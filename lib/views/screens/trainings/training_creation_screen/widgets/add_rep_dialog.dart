@@ -24,6 +24,7 @@ class RepFormDialogState extends ConsumerState<RepFormDialog> {
   final _weightController = TextEditingController();
   bool _isRest = false;
   late HandSide _handSide = HandSide.left;
+  late GripPosition _gripPosition = GripPosition.halfCrimp;
 
   @override
   void initState() {
@@ -35,6 +36,7 @@ class RepFormDialogState extends ConsumerState<RepFormDialog> {
       _weightController.text = widget.initialRep!.targetWeight.toString();
       _isRest = widget.initialRep!.isRest;
       _handSide = widget.initialRep!.handSide;
+      _gripPosition = widget.initialRep!.gripPosition;
     }
   }
 
@@ -142,6 +144,35 @@ class RepFormDialogState extends ConsumerState<RepFormDialog> {
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<GripPosition>(
+                initialValue: _gripPosition,
+                decoration: const InputDecoration(
+                  labelText: 'Grip Position',
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+                items:
+                    GripPosition.values.map((position) {
+                      return DropdownMenuItem(
+                        value: position,
+                        child: Text(position.displayName),
+                      );
+                    }).toList(),
+                onChanged:
+                    !_isRest
+                        ? (newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _gripPosition = newValue;
+                            });
+                          }
+                        }
+                        : null,
+              ),
             ],
           ),
         ),
@@ -161,6 +192,7 @@ class RepFormDialogState extends ConsumerState<RepFormDialog> {
                 targetWeight:
                     _isRest ? 0 : double.parse(_weightController.text),
                 index: -1,
+                gripPosition: _gripPosition,
               );
               widget.onAddRep(rep);
               Navigator.of(context).pop();
