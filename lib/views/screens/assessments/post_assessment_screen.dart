@@ -35,63 +35,101 @@ class PostAssessmentScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("${assessmentTypeToString(type)} assessment results"),
-      ),
-      body: SafeArea(
-        child: Column(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) {
+          return;
+        }
+
+        final NavigatorState navigator = Navigator.of(context);
+
+        // Ask user if they want to discard results
+        final shouldPop = await showDialog<bool>(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: Text('Discard assessment results?'),
+                content: Text(
+                  'If you leave without saving, your assessment results will be lost.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: Text('Discard'),
+                  ),
+                ],
+              ),
+        );
+
+        if (shouldPop ?? false) {
+          navigator.pop();
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("${assessmentTypeToString(type)} assessment results"),
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              SizedBox(height: 100),
+              // If they gave their max, it's always a good job rigth ?
+              Text(
+                "Great job! 💪",
+                style: Theme.of(context).textTheme.displaySmall,
+              ),
+              SizedBox(height: 16),
+              // Show the results cards for the provided hands.
+              Column(
+                children: [
+                  if (rightHandResults != null)
+                    ResultCard(
+                      prevValue: rightHandResults!.$1,
+                      newValue: rightHandResults!.$2,
+                      // If `leftHandResults` was provided, it's a two hands assessment.
+                      // In that case, tell the card the result is right hand related to show the hand side.
+                      rightHand: leftHandResults != null ? true : null,
+                      unit: getAssessmentUnit(type),
+                    ),
+                  if (leftHandResults != null)
+                    ResultCard(
+                      prevValue: leftHandResults!.$1,
+                      newValue: leftHandResults!.$2,
+                      // If `rightHandResults` was provided, it's a two hands assessment.
+                      // In that case, tell the card the result is left hand related to show the hand side.
+                      rightHand: rightHandResults != null ? false : null,
+                      unit: getAssessmentUnit(type),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        floatingActionButton: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            SizedBox(height: 100),
-            // If they gave their max, it's always a good job rigth ?
-            Text(
-              "Great job! 💪",
-              style: Theme.of(context).textTheme.displaySmall,
+            TextButton(
+              child: Text("Save new result"),
+              onPressed: () {
+                ref
+                    .read(assessmentsProvider(type).notifier)
+                    .saveAssessment(saveAssessment, saveTraining, saveReps);
+                Navigator.of(context).pop();
+              },
             ),
-            SizedBox(height: 16),
-            // Show the results cards for the provided hands.
-            Column(
-              children: [
-                if (rightHandResults != null)
-                  ResultCard(
-                    prevValue: rightHandResults!.$1,
-                    newValue: rightHandResults!.$2,
-                    // If `leftHandResults` was provided, it's a two hands assessment.
-                    // In that case, tell the card the result is right hand related to show the hand side.
-                    rightHand: leftHandResults != null ? true : null,
-                  ),
-                if (leftHandResults != null)
-                  ResultCard(
-                    prevValue: leftHandResults!.$1,
-                    newValue: leftHandResults!.$2,
-                    // If `rightHandResults` was provided, it's a two hands assessment.
-                    // In that case, tell the card the result is left hand related to show the hand side.
-                    rightHand: rightHandResults != null ? false : null,
-                  ),
-              ],
+            TextButton(
+              child: Text("Discard"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
           ],
         ),
-      ),
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          TextButton(
-            child: Text("Save new result"),
-            onPressed: () {
-              ref
-                  .read(assessmentsProvider(type).notifier)
-                  .saveAssessment(saveAssessment, saveTraining, saveReps);
-              Navigator.of(context).pop();
-            },
-          ),
-          TextButton(
-            child: Text("Discard"),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
       ),
     );
   }
@@ -101,18 +139,22 @@ class ResultCard extends StatelessWidget {
   final double? prevValue;
   final double newValue;
   final bool? rightHand;
+  final AssessmentUnit? unit;
 
   /// Display the assessment results in a card.
   /// If `rightHand` is not null, the hand side will be displayed above the card (use this option for both hands assessments).
+  /// If `unit` is not null, it will be used to format the values (otherwise defaults to kg).
   const ResultCard({
     super.key,
     required this.newValue,
     this.prevValue,
     this.rightHand,
+    this.unit,
   });
 
   @override
   Widget build(BuildContext context) {
+    final displayUnit = unit ?? AssessmentUnit.kilograms;
     // Compute relative percentage between the previous and the new results.
     final percentage =
         prevValue == null
@@ -154,7 +196,9 @@ class ResultCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      "${prevValue == null ? "--" : prevValue!.toStringAsFixed(1)} kg",
+                      prevValue == null
+                          ? "--"
+                          : formatAssessmentValue(prevValue!, displayUnit),
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                   ],
@@ -204,7 +248,7 @@ class ResultCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      "${newValue.toStringAsFixed(1)} kg",
+                      formatAssessmentValue(newValue, displayUnit),
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                   ],

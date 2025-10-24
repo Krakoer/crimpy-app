@@ -35,6 +35,10 @@ class ProfileContent extends ConsumerWidget {
             .toList()
           ..sort((a, b) => a.date.compareTo(b.date));
 
+    final endurance60 =
+        assessments.where((a) => a.type == AssessmentType.endurance60).toList()
+          ..sort((a, b) => a.date.compareTo(b.date));
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -158,6 +162,56 @@ class ProfileContent extends ConsumerWidget {
                               builder:
                                   (ctx) => PreRunScreen(
                                     type: AssessmentType.criticalForce,
+                                  ),
+                            ),
+                          );
+                        }
+                        : () => showDialog(
+                          builder:
+                              (context) => AlertDialog(
+                                title: Text("No BLE device connected"),
+                                content: Text(
+                                  "You must connect to a BLE device to run an assessment",
+                                ),
+                              ),
+                          context: context,
+                        ),
+          ),
+
+          SizedBox(height: 32),
+
+          // 60% Endurance Section
+          StatContent(
+            title: "60% Endurance",
+            maxLeft: endurance60
+                .map((a) => a.leftValue ?? 0)
+                .fold<double>(0, (prev, el) => el > prev ? el : prev),
+            maxRight: endurance60
+                .map((a) => a.rightValue ?? 0)
+                .fold<double>(0, (prev, el) => el > prev ? el : prev),
+            accentLeft: accentLeft,
+            accentRight: accentRight,
+            leftData:
+                endurance60
+                    .where((a) => a.leftValue != null)
+                    .map((a) => (a.date, a.leftValue!))
+                    .toList(),
+            rightData:
+                endurance60
+                    .where((a) => a.rightValue != null)
+                    .map((a) => (a.date, a.rightValue!))
+                    .toList(),
+            unit: AssessmentUnit.seconds,
+            onStartAssessment:
+                () =>
+                    ref.watch(connectionStateProvider) ==
+                            BleConnectionState.connected
+                        ? () async {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder:
+                                  (ctx) => PreRunScreen(
+                                    type: AssessmentType.endurance60,
                                   ),
                             ),
                           );

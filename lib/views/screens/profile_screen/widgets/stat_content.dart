@@ -1,3 +1,4 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/assessment_chart.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/section_tile.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/stat_card.dart';
@@ -12,6 +13,7 @@ class StatContent extends StatelessWidget {
   final List<(DateTime, double)> rightData;
   final List<(DateTime, double)> leftData;
   final VoidCallback onStartAssessment;
+  final AssessmentUnit unit;
 
   const StatContent({
     required this.title,
@@ -22,6 +24,7 @@ class StatContent extends StatelessWidget {
     required this.leftData,
     required this.rightData,
     required this.onStartAssessment,
+    this.unit = AssessmentUnit.kilograms,
     super.key,
   });
 
@@ -36,7 +39,7 @@ class StatContent extends StatelessWidget {
             Expanded(
               child: StatCard(
                 "Left Hand",
-                maxLeft == 0 ? "-- kg" : "${maxLeft.toStringAsFixed(1)} kg",
+                maxLeft == 0 ? "--" : formatAssessmentValue(maxLeft, unit),
                 accentLeft,
               ),
             ),
@@ -44,7 +47,7 @@ class StatContent extends StatelessWidget {
             Expanded(
               child: StatCard(
                 "Right Hand",
-                maxRight == 0 ? "-- kg" : "${maxRight.toStringAsFixed(1)} kg",
+                maxRight == 0 ? "--" : formatAssessmentValue(maxRight, unit),
                 accentRight,
               ),
             ),

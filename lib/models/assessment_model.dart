@@ -2,13 +2,38 @@ import 'package:crimpy/models/common.dart';
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/training_model.dart';
 
-enum AssessmentType { criticalForce, mvc, mvc3fd }
+enum AssessmentType { criticalForce, mvc, mvc3fd, endurance60 }
+
+enum AssessmentUnit { kilograms, seconds }
 
 String assessmentTypeToString(AssessmentType type) {
   return switch (type) {
     AssessmentType.mvc => "Max Force - Half Crimp",
     AssessmentType.mvc3fd => "Max Force - 3FD",
     AssessmentType.criticalForce => "Critical Force",
+    AssessmentType.endurance60 => "60% Endurance",
+  };
+}
+
+AssessmentUnit getAssessmentUnit(AssessmentType type) {
+  return switch (type) {
+    AssessmentType.mvc => AssessmentUnit.kilograms,
+    AssessmentType.mvc3fd => AssessmentUnit.kilograms,
+    AssessmentType.criticalForce => AssessmentUnit.kilograms,
+    AssessmentType.endurance60 => AssessmentUnit.seconds,
+  };
+}
+
+String formatAssessmentValue(
+  double value,
+  AssessmentUnit unit, {
+  bool showUnit = true,
+}) {
+  return switch (unit) {
+    AssessmentUnit.kilograms =>
+      showUnit ? "${value.toStringAsFixed(1)} kg" : value.toStringAsFixed(1),
+    AssessmentUnit.seconds =>
+      showUnit ? "${value.toStringAsFixed(0)}s" : value.toStringAsFixed(0),
   };
 }
 
