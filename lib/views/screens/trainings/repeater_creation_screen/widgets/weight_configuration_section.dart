@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/models/common.dart';
+import 'package:crimpy/views/widgets/mvc_weight_input_field.dart';
 
-class WeightConfigurationSection extends StatelessWidget {
+class WeightConfigurationSection extends ConsumerWidget {
   final bool splitHand;
   final TextEditingController rightHandWeightController;
   final TextEditingController leftHandWeightController;
@@ -16,7 +19,7 @@ class WeightConfigurationSection extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -36,100 +39,29 @@ class WeightConfigurationSection extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           if (!splitHand)
-            _WeightRow(
+            MvcWeightInputField(
               label: 'Weight',
               controller: rightHandWeightController,
               validator: weightValidator,
+              handSide: HandSide.right,
             )
           else ...[
-            _WeightRow(
+            MvcWeightInputField(
               label: 'Right hand',
               controller: rightHandWeightController,
               validator: weightValidator,
+              handSide: HandSide.right,
             ),
             const SizedBox(height: 12),
-            _WeightRow(
+            MvcWeightInputField(
               label: 'Left hand',
               controller: leftHandWeightController,
               validator: weightValidator,
+              handSide: HandSide.left,
             ),
           ],
         ],
       ),
-    );
-  }
-}
-
-class _WeightRow extends StatelessWidget {
-  final String label;
-  final TextEditingController controller;
-  final String? Function(String?) validator;
-
-  const _WeightRow({
-    required this.label,
-    required this.controller,
-    required this.validator,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          flex: 2,
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        Expanded(
-          child: TextFormField(
-            onTapOutside: (event) {
-              FocusManager.instance.primaryFocus?.unfocus();
-            },
-            keyboardType: TextInputType.number,
-            controller: controller,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: CrimpyTheme.borderDefault,
-                  width: 2,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: CrimpyTheme.borderDefault,
-                  width: 2,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: CrimpyTheme.primaryOrange,
-                  width: 2,
-                ),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
-              ),
-            ),
-            validator: validator,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          'kg',
-          style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
     );
   }
 }
