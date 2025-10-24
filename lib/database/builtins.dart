@@ -338,6 +338,7 @@ final List<BuiltinTrainingModel> builtinTrainings = [
   //   description: "Test training.",
   //   requiredAssessments: [
   //     AssessmentType.mvc,
+  //     AssessmentType.criticalForce,
   //   ], // Requires MVC for max force calculation
   //   isAvailable: (assessmentValues) {
   //     // Check if we have both right and left hand MVC values
