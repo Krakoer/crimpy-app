@@ -3,20 +3,22 @@ import 'dart:math' as math;
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/views/widgets/mvc_weight_input_field.dart';
 
-class RepFormDialog extends StatefulWidget {
+class RepFormDialog extends ConsumerStatefulWidget {
   final Function(RepModel) onAddRep;
   final RepModel? initialRep;
 
   const RepFormDialog({super.key, required this.onAddRep, this.initialRep});
 
   @override
-  RepFormDialogState createState() => RepFormDialogState();
+  ConsumerState<RepFormDialog> createState() => RepFormDialogState();
 }
 
-class RepFormDialogState extends State<RepFormDialog> {
+class RepFormDialogState extends ConsumerState<RepFormDialog> {
   final _formKey = GlobalKey<FormState>();
   final _durationController = TextEditingController();
   final _weightController = TextEditingController();
@@ -71,16 +73,12 @@ class RepFormDialogState extends State<RepFormDialog> {
                 },
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              MvcWeightInputField(
                 controller: _weightController,
                 enabled: !_isRest,
-                decoration: const InputDecoration(
-                  labelText: 'Target Weight (kg)',
-                  hintText: 'e.g., 10.5',
-                ),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                handSide: _handSide,
+                label: 'Target Weight (kg)',
+                compactLayout: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter the target weight';
