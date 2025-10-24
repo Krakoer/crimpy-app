@@ -26,22 +26,31 @@ class AssessmentRepository {
   /// Get all the assessments.
   /// Allow to filter on `type`.
   /// If the `handSide` parameter is set, only corresponding assessment will be retrieved.
+  /// If the `gripPosition` parameter is set, only assessments with that grip position will be retrieved.
   Future<List<AssessmentModel>> getAssessments({
     AssessmentType? type,
     HandSide? handSide,
+    GripPosition? gripPosition,
   }) async {
-    return await gDatabase.getAssessments(type: type, handSide: handSide);
+    return await gDatabase.getAssessments(
+      type: type,
+      handSide: handSide,
+      gripPosition: gripPosition,
+    );
   }
 
   /// Get the last value of an assessment given its type for a given hand.
+  /// If `gripPosition` is provided, only assessments with that grip position will be considered.
   Future<double?> getLastValueForHand(
     AssessmentType type,
-    HandSide handSide,
-  ) async {
+    HandSide handSide, {
+    GripPosition? gripPosition,
+  }) async {
     final assessment =
         (await gDatabase.getAssessments(
           type: type,
           handSide: handSide,
+          gripPosition: gripPosition,
         )).lastOrNull;
     return handSide.isRightHand
         ? assessment?.rightValue

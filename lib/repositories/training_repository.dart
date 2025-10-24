@@ -34,6 +34,7 @@ class TrainingRepository {
                 splitHand: repeaterData.splitHand,
                 weightRight: repeaterData.targetWeigthRight,
                 weightLeft: repeaterData.targetWeigthLeft,
+                gripPosition: GripPosition.values[repeaterData.gripPosition],
               );
       // If the training is a repeater, generate the reps instead of getting them from DB.
       final List<RepModel> repModels;
@@ -49,6 +50,7 @@ class TrainingRepository {
                     targetWeight: r.targetWeight,
                     id: r.id,
                     index: r.index,
+                    gripPosition: r.gripPosition,
                   ),
                 )
                 .toList();
@@ -64,6 +66,7 @@ class TrainingRepository {
                     targetWeight: r.targetWeight,
                     id: r.id,
                     index: r.index,
+                    gripPosition: GripPosition.values[r.gripPosition],
                   ),
                 )
                 .toList();

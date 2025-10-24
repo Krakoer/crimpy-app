@@ -2,7 +2,9 @@ import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/widgets/assessment_card.dart';
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/widgets/select_hand_dialog.dart';
+import 'package:crimpy/views/screens/assessments/assessments_list_screen/widgets/select_grip_position_dialog.dart';
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/widgets/confirm_redo_assessment_dialog.dart';
+import 'package:crimpy/database/builtins.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/critical_force_run_screen.dart';
 import 'package:crimpy/views/screens/assessments/endurance_60/endurance_60_run_screen.dart';
 import 'package:crimpy/views/widgets/ble/connection_dialog.dart';
@@ -33,7 +35,7 @@ class AssessmentsScreen extends ConsumerWidget {
         MaterialPageRoute(
           builder:
               (ctx) => switch (model.type) {
-                AssessmentType.mvc || AssessmentType.mvc3fd => MvcRunScreen(
+                AssessmentType.mvc => MvcRunScreen(
                   reps: model.training.reps,
                   type: model.type,
                 ),
@@ -56,12 +58,16 @@ class AssessmentsScreen extends ConsumerWidget {
       AssessmentTrainingModel model, {
       HandSide? handSide,
       double? mvcValue,
+      GripPosition? gripPosition,
     }) async {
       // First check if the assessment has been done today.
       // If so, show the dialog
       if (await ref
               .read(assessmentsProvider(model.type).notifier)
-              .getSameDayAssessment(handSide: handSide) !=
+              .getSameDayAssessment(
+                handSide: handSide,
+                gripPosition: gripPosition,
+              ) !=
           null) {
         if (context.mounted) {
           showDialog(
@@ -96,8 +102,29 @@ class AssessmentsScreen extends ConsumerWidget {
                           // Ask the hand to test for the assessment types that need it.
                           // Otherwise, just run the assessment.
                           switch (template.type) {
-                            case AssessmentType.mvc || AssessmentType.mvc3fd:
-                              checkAndRunAssessment(template);
+                            case AssessmentType.mvc:
+                              // First get the grip position
+                              final GripPosition? gripPosition =
+                                  await showDialog(
+                                    context: context,
+                                    builder:
+                                        (ctx) => SelectGripPositionDialog(),
+                                  );
+                              if (gripPosition != null) {
+                                // Generate the assessment with the selected grip position
+                                final builtinModel = builtinAssessments
+                                    .firstWhere(
+                                      (a) => a.type == AssessmentType.mvc,
+                                    );
+                                final assessmentWithGrip = builtinModel
+                                    .generateAssessment(
+                                      gripPosition: gripPosition,
+                                    );
+                                checkAndRunAssessment(
+                                  assessmentWithGrip,
+                                  gripPosition: gripPosition,
+                                );
+                              }
                               break;
                             case AssessmentType.criticalForce:
                               // First get the hand to test

@@ -18,7 +18,7 @@ class PreRunScreen extends ConsumerWidget {
             MaterialPageRoute(
               builder:
                   (ctx) => switch (type) {
-                    AssessmentType.mvc || AssessmentType.mvc3fd => MvcRunScreen(
+                    AssessmentType.mvc => MvcRunScreen(
                       reps: data.training.reps,
                       type: type,
                     ),

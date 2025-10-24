@@ -54,12 +54,14 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
       // Get previous values for printing results screen.
       // Not ideal, if it takes time the screen will just freeze.
       // TODO: Move this logic to PostAssessmentScreen and show progress indicator/error text accordingly.
+      final gripPosition =
+          widget.reps.firstWhere((r) => !r.isRest).gripPosition;
       final prevValueRight = await ref
           .read(assessmentsProvider(widget.type).notifier)
-          .getLastValueForHand(HandSide.right);
+          .getLastValueForHand(HandSide.right, gripPosition: gripPosition);
       final prevValueLeft = await ref
           .read(assessmentsProvider(widget.type).notifier)
-          .getLastValueForHand(HandSide.left);
+          .getLastValueForHand(HandSide.left, gripPosition: gripPosition);
 
       if (mounted) {
         // Push result screen
@@ -74,10 +76,12 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
                     type: widget.type,
                     rightValue: rightMax,
                     leftValue: leftMax,
+                    gripPosition:
+                        widget.reps.firstWhere((r) => !r.isRest).gripPosition,
                   ),
                   saveTraining: SessionModel(
                     name:
-                        "MVC assessment (${widget.type == AssessmentType.mvc3fd ? "3FD" : "HC"}) - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}",
+                        "MVC assessment (${widget.reps.firstWhere((r) => !r.isRest).gripPosition.shortName}) - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}",
                     isAssessment: true,
                   ),
                   saveReps: buildRepsData([rightMax, leftMax], widget.reps),

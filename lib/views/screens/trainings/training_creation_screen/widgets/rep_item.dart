@@ -22,7 +22,7 @@ class RepListItem extends StatelessWidget {
     String repText = '${rep.durationInSeconds}s';
     if (!rep.isRest) {
       repText +=
-          ' | ${rep.handSide.isRightHand ? 'Right' : 'Left'} hand | ${rep.targetWeight}kg';
+          ' | ${rep.handSide.isRightHand ? 'Right' : 'Left'} hand | ${rep.targetWeight}kg | ${rep.gripPosition.shortName}';
     }
 
     return CrimpyCards.training(

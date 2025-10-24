@@ -18,7 +18,8 @@ class BuiltinAssessmentModel {
   final String description;
   final AssessmentType type;
   final IconData icon;
-  final TrainingWithReps Function() trainingGenerator;
+  final TrainingWithReps Function({GripPosition? gripPosition})
+  trainingGenerator;
 
   BuiltinAssessmentModel({
     required this.id,
@@ -30,10 +31,10 @@ class BuiltinAssessmentModel {
   });
 
   /// Generate an AssessmentTrainingModel with training data
-  AssessmentTrainingModel generateAssessment() {
+  AssessmentTrainingModel generateAssessment({GripPosition? gripPosition}) {
     return AssessmentTrainingModel(
       trainingId: id,
-      training: trainingGenerator(),
+      training: trainingGenerator(gripPosition: gripPosition),
       type: type,
       icon: icon,
       description: description,
@@ -45,99 +46,56 @@ class BuiltinAssessmentModel {
 final List<BuiltinAssessmentModel> builtinAssessments = [
   BuiltinAssessmentModel(
     id: 1 << 32,
-    name: "MVC - Half Crimp",
-    description:
-        "Measure your Maximum Volontary Contraction (MVC) in half crimp",
+    name: "Max Force",
+    description: "Measure your Maximum Voluntary Contraction (MVC)",
     type: AssessmentType.mvc,
     icon: FontAwesomeIcons.boltLightning,
-    trainingGenerator:
-        () => TrainingWithReps(
-          id: 1 << 32,
-          name: "MVC - Half Crimp",
-          isFav: false,
-          reps: [
-            RepModel(
-              id: 1 << 32,
-              durationInSeconds: 10,
-              isRest: true,
-              handSide: HandSide.left,
-              targetWeight: 0,
-              index: 0,
-            ),
-            RepModel(
-              id: 2 << 32,
-              durationInSeconds: 5,
-              isRest: false,
-              handSide: HandSide.right,
-              targetWeight: 0,
-              index: 1,
-            ),
-            RepModel(
-              id: 3 << 32,
-              durationInSeconds: 10,
-              isRest: true,
-              handSide: HandSide.left,
-              targetWeight: 0,
-              index: 2,
-            ),
-            RepModel(
-              id: 4 << 32,
-              durationInSeconds: 5,
-              isRest: false,
-              handSide: HandSide.left,
-              targetWeight: 0,
-              index: 3,
-            ),
-          ],
-        ),
-  ),
-  BuiltinAssessmentModel(
-    id: 2 << 32,
-    name: "MVC - 3FD",
-    description:
-        "Measure your Maximum Volontary Contraction (MVC) in 3-finger drag",
-    type: AssessmentType.mvc3fd,
-    icon: FontAwesomeIcons.gaugeHigh,
-    trainingGenerator:
-        () => TrainingWithReps(
-          id: 2 << 32,
-          name: "MVC - 3FD",
-          isFav: false,
-          reps: [
-            RepModel(
-              id: 5 << 32,
-              durationInSeconds: 10,
-              isRest: true,
-              handSide: HandSide.left,
-              targetWeight: 0,
-              index: 0,
-            ),
-            RepModel(
-              id: 6 << 32,
-              durationInSeconds: 5,
-              isRest: false,
-              handSide: HandSide.right,
-              targetWeight: 0,
-              index: 1,
-            ),
-            RepModel(
-              id: 7 << 32,
-              durationInSeconds: 10,
-              isRest: true,
-              handSide: HandSide.left,
-              targetWeight: 0,
-              index: 2,
-            ),
-            RepModel(
-              id: 8 << 32,
-              durationInSeconds: 5,
-              isRest: false,
-              handSide: HandSide.left,
-              targetWeight: 0,
-              index: 3,
-            ),
-          ],
-        ),
+    trainingGenerator: ({GripPosition? gripPosition}) {
+      final grip = gripPosition ?? GripPosition.halfCrimp;
+      return TrainingWithReps(
+        id: 1 << 32,
+        name: "Max Force",
+        isFav: false,
+        reps: [
+          RepModel(
+            id: 1 << 32,
+            durationInSeconds: 10,
+            isRest: true,
+            handSide: HandSide.left,
+            targetWeight: 0,
+            index: 0,
+            gripPosition: grip,
+          ),
+          RepModel(
+            id: 2 << 32,
+            durationInSeconds: 5,
+            isRest: false,
+            handSide: HandSide.right,
+            targetWeight: 0,
+            index: 1,
+            gripPosition: grip,
+          ),
+          RepModel(
+            id: 3 << 32,
+            durationInSeconds: 10,
+            isRest: true,
+            handSide: HandSide.left,
+            targetWeight: 0,
+            index: 2,
+            gripPosition: grip,
+          ),
+          RepModel(
+            id: 4 << 32,
+            durationInSeconds: 5,
+            isRest: false,
+            handSide: HandSide.left,
+            targetWeight: 0,
+            index: 3,
+            gripPosition: grip,
+          ),
+        ],
+      );
+    },
   ),
   BuiltinAssessmentModel(
     id: 3 << 32,
@@ -146,7 +104,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
     type: AssessmentType.criticalForce,
     icon: FontAwesomeIcons.clock,
     trainingGenerator:
-        () => TrainingWithReps(
+        ({GripPosition? gripPosition}) => TrainingWithReps(
           id: 3 << 32,
           name: "Critical Force",
           isFav: false,
@@ -186,7 +144,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
     type: AssessmentType.endurance60,
     icon: FontAwesomeIcons.hourglass,
     trainingGenerator:
-        () => TrainingWithReps(
+        ({GripPosition? gripPosition}) => TrainingWithReps(
           id: 4 << 32,
           name: "60% Endurance",
           isFav: false,

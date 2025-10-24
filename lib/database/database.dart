@@ -31,6 +31,10 @@ class Assessments extends Table {
   late final RealColumn rightValue = real().nullable()();
   late final RealColumn leftValue = real().nullable()();
   late final IntColumn sessionId = integer().references(Sessions, #id)();
+  late final IntColumn gripPosition =
+      integer().nullable().withDefault(
+        const Constant(0),
+      )(); // 0 = halfCrimp (default)
 }
 
 // Stores the available trainings, including builtins and assessments.
@@ -60,6 +64,8 @@ class Repeaters extends Table {
   late final RealColumn targetWeigthRight = real().nullable()();
   late final RealColumn targetWeigthLeft = real().nullable()();
   late final BoolColumn splitHand = boolean()();
+  late final IntColumn gripPosition =
+      integer().withDefault(const Constant(0))(); // 0 = halfCrimp (default)
 }
 
 // Stores the repetitions for the trainings.
@@ -72,6 +78,8 @@ class RepTemplates extends Table {
       integer().references(Trainings, #id, onDelete: KeyAction.cascade)();
   late final RealColumn targetWeight = real()();
   late final IntColumn index = integer()();
+  late final IntColumn gripPosition =
+      integer().withDefault(const Constant(0))(); // 0 = halfCrimp (default)
 }
 
 // Stores the data for the repetitions done during a session.
@@ -84,6 +92,8 @@ class RepDatas extends Table {
   late final IntColumn duration = integer()();
   late final RealColumn targetWeight = real()();
   late final IntColumn index = integer()();
+  late final IntColumn gripPosition =
+      integer().withDefault(const Constant(0))(); // 0 = halfCrimp (default)
 }
 
 // Stores the saved sensor configs.
@@ -212,6 +222,7 @@ class AppDatabase extends _$AppDatabase {
                 sessionId: Value(sessionId),
                 targetWeight: Value(index.$2.targetWeight),
                 averageWeight: Value(index.$2.averageWeight),
+                gripPosition: Value(index.$2.gripPosition.index),
               ),
             )
             .toList();
@@ -243,6 +254,7 @@ class AppDatabase extends _$AppDatabase {
                   rightHand: Value(rep.handSide.isRightHand),
                   trainingId: Value(trainingId),
                   targetWeight: Value(rep.targetWeight),
+                  gripPosition: Value(rep.gripPosition.index),
                 ),
               ),
             )
@@ -299,6 +311,7 @@ class AppDatabase extends _$AppDatabase {
                     rightHand: Value(rep.handSide.isRightHand),
                     trainingId: Value(trainingId),
                     targetWeight: Value(rep.targetWeight),
+                    gripPosition: Value(rep.gripPosition.index),
                   ),
                 ),
               )
@@ -348,6 +361,7 @@ class AppDatabase extends _$AppDatabase {
           targetWeigthLeft: Value(model.weightLeft),
           targetWeigthRight: Value(model.weightRight),
           worktime: Value(model.workTime),
+          gripPosition: Value(model.gripPosition.index),
         ),
       );
     }
@@ -365,6 +379,7 @@ class AppDatabase extends _$AppDatabase {
         targetWeigthLeft: Value(model.weightLeft),
         targetWeigthRight: Value(model.weightRight),
         worktime: Value(model.workTime),
+        gripPosition: Value(model.gripPosition.index),
       ),
     );
 
@@ -412,6 +427,7 @@ class AppDatabase extends _$AppDatabase {
       leftValue: Value(assessment.leftValue),
       type: Value(assessment.type.index),
       sessionId: Value(sessionId),
+      gripPosition: Value(assessment.gripPosition?.index),
     );
 
     return await into(assessments).insert(companion);
@@ -424,9 +440,11 @@ class AppDatabase extends _$AppDatabase {
   /// Get the assessments done.
   /// Allow to filter on `type`.
   /// If the `rightHand` parameter is set, it will only return the results for the given hand.
+  /// If the `gripPosition` parameter is set, only assessments with that grip position will be retrieved.
   Future<List<AssessmentModel>> getAssessments({
     AssessmentType? type,
     HandSide? handSide,
+    GripPosition? gripPosition,
   }) async {
     var query = select(assessments);
 
@@ -441,6 +459,13 @@ class AppDatabase extends _$AppDatabase {
                 handSide.isRightHand
                     ? assessment.rightValue.isNotNull()
                     : assessment.leftValue.isNotNull(),
+          );
+    }
+    // Add filter if grip position was provided.
+    if (gripPosition != null) {
+      query =
+          query..where(
+            (assessment) => assessment.gripPosition.equals(gripPosition.index),
           );
     }
 
@@ -460,6 +485,10 @@ class AppDatabase extends _$AppDatabase {
         leftValue: assessment.leftValue,
         rightValue: assessment.rightValue,
         id: assessment.id,
+        gripPosition:
+            assessment.gripPosition != null
+                ? GripPosition.values[assessment.gripPosition!]
+                : null,
       );
     }).toList();
   }
@@ -538,7 +567,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -549,6 +578,16 @@ class AppDatabase extends _$AppDatabase {
       if (from == 1 && to == 2) {
         // Migration from schema version 1 to 2: Add BuiltinTrainingWeights table
         await m.createTable(builtinTrainingWeights);
+      }
+      if (from <= 2 && to >= 3) {
+        // Migration to schema version 3: Add gripPosition columns
+        await m.addColumn(repTemplates, repTemplates.gripPosition);
+        await m.addColumn(repDatas, repDatas.gripPosition);
+        await m.addColumn(assessments, assessments.gripPosition);
+      }
+      if (from <= 3 && to >= 4) {
+        // Migration to schema version 4: Add gripPosition to repeaters
+        await m.addColumn(repeaters, repeaters.gripPosition);
       }
     },
   );

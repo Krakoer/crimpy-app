@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 
@@ -34,6 +35,7 @@ class _RepeaterCreationScreenState
   Duration rest = const Duration(seconds: 3);
   Duration setRest = const Duration(minutes: 8);
   bool _splitHand = false;
+  GripPosition _gripPosition = GripPosition.halfCrimp;
 
   @override
   void initState() {
@@ -50,6 +52,7 @@ class _RepeaterCreationScreenState
       setRest = Duration(
         seconds: widget.originalTemplate!.repeater!.restBteweenSets,
       );
+      _gripPosition = widget.originalTemplate!.repeater!.gripPosition;
     }
     super.initState();
   }
@@ -84,6 +87,7 @@ class _RepeaterCreationScreenState
         splitHand: _splitHand,
         weightRight: double.parse(_rightHandWeightController.text),
         weightLeft: double.parse(_leftHandWeightController.text),
+        gripPosition: _gripPosition,
       );
 
       if (_isEdit) {
@@ -202,6 +206,49 @@ class _RepeaterCreationScreenState
                       (newVal) => setState(() {
                         _splitHand = newVal;
                       }),
+                ),
+                const SizedBox(height: 20),
+                // Grip position selector
+                Container(
+                  decoration: BoxDecoration(
+                    color: CrimpyTheme.bgSecondary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Grip Position',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<GripPosition>(
+                        initialValue: _gripPosition,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                        items:
+                            GripPosition.values.map((position) {
+                              return DropdownMenuItem(
+                                value: position,
+                                child: Text(position.displayName),
+                              );
+                            }).toList(),
+                        onChanged: (newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _gripPosition = newValue;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 32),
                 // Save button
