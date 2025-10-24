@@ -112,8 +112,8 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
     double height = MediaQuery.of(context).size.height;
     // Screen padding
     final padding = MediaQuery.of(context).viewPadding;
-    // Height (without status and toolbar)
-    double trueHeight = height - padding.top - kToolbarHeight;
+    // Height (without status bar, toolbar, and bottom padding due to SafeArea)
+    double trueHeight = height - padding.top - padding.bottom - kToolbarHeight;
 
     // Bottom padding for the max bar.
     // Max is 90% of screen at 100kg.
