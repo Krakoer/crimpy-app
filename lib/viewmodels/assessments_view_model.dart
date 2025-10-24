@@ -1,5 +1,6 @@
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/models/common.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/assessment_model.dart';
@@ -51,14 +52,14 @@ class AssessmentNotifier
 
   /// Save the assessment into the database. If the assessment has already been done today, the previous results will be deleted.
   Future<void> saveAssessment(
-    FinishedAssessmentModel assessmentModel,
+    AssessmentResultModel assessmentModel,
     SessionModel session,
     List<RepDataModel> reps, {
     List<BleDataPoint>? data,
   }) async {
     // First, delete same-day assessment if any.
     final prevAssessmentId = await getSameDayAssessment(
-      rightHand: assessmentModel.hand,
+      handSide: assessmentModel.hand,
     );
     if (prevAssessmentId != null) {
       await _assessmentRepository.deleteAssessment(prevAssessmentId);
@@ -87,17 +88,17 @@ class AssessmentNotifier
 
   /// Returns the last assessment result for a given hand.
   /// Only call this method with a non null type family.
-  Future<double?> getLastValueForHand(bool rightHand) async {
+  Future<double?> getLastValueForHand(HandSide handSide) async {
     if (_type == null) {
       AppLoggerHelper.warning("Called getLastValueForHand with a type null.");
       return 0;
     }
-    return _assessmentRepository.getLastValueForHand(_type!, rightHand);
+    return _assessmentRepository.getLastValueForHand(_type!, handSide);
   }
 
   /// Retuns the id of the assessment that has been done the same day with the same hand, if any.
   /// Only call this method with a non null type family.
-  Future<int?> getSameDayAssessment({bool? rightHand}) async {
+  Future<int?> getSameDayAssessment({HandSide? handSide}) async {
     if (_type == null) {
       AppLoggerHelper.warning("Called getSameDayAssessment with a type null.");
       return 0;
@@ -105,7 +106,7 @@ class AssessmentNotifier
     final prevAssessment =
         (await _assessmentRepository.getAssessments(
           type: _type,
-          rightHand: rightHand,
+          handSide: handSide,
         )).lastOrNull;
     if (prevAssessment == null) {
       return null;

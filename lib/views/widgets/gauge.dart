@@ -71,7 +71,8 @@ class WeightGaugePainter extends CustomPainter {
     // Paint for dark gray fill
     final darkGrayPaint =
         Paint()
-          ..color = targetMatched ? CrimpyTheme.primaryBlack : CrimpyTheme.gray600
+          ..color =
+              targetMatched ? CrimpyTheme.primaryBlack : CrimpyTheme.gray600
           ..style = PaintingStyle.fill;
 
     // Draw light gray background circle

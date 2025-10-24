@@ -42,12 +42,8 @@ class ProfileContent extends ConsumerWidget {
           // Max Force Section
           StatContent(
             title: "Max Force - Half Crimp",
-            maxLeft: maxForce
-                .map((a) => a.leftValue ?? 0)
-                .fold<double>(0, (prev, el) => el > prev ? el : prev),
-            maxRight: maxForce
-                .map((a) => a.rightValue ?? 0)
-                .fold<double>(0, (prev, el) => el > prev ? el : prev),
+            maxLeft: maxForce.map((a) => a.leftValue ?? 0).lastOrNull ?? 0,
+            maxRight: maxForce.map((a) => a.rightValue ?? 0).lastOrNull ?? 0,
             accentLeft: accentLeft,
             accentRight: accentRight,
             leftData:
@@ -152,7 +148,30 @@ class ProfileContent extends ConsumerWidget {
                     .where((a) => a.rightValue != null)
                     .map((a) => (a.date, a.rightValue!))
                     .toList(),
-            onStartAssessment: () {},
+            onStartAssessment:
+                () =>
+                    ref.watch(connectionStateProvider) ==
+                            BleConnectionState.connected
+                        ? () async {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder:
+                                  (ctx) => PreRunScreen(
+                                    type: AssessmentType.criticalForce,
+                                  ),
+                            ),
+                          );
+                        }
+                        : () => showDialog(
+                          builder:
+                              (context) => AlertDialog(
+                                title: Text("No BLE device connected"),
+                                content: Text(
+                                  "You must connect to a BLE device to run an assessment",
+                                ),
+                              ),
+                          context: context,
+                        ),
           ),
         ],
       ),

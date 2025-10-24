@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.5'
+        channel: 'stable'
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Generate code
+      run: dart run build_runner build --delete-conflicting-outputs
+
+    - name: Build Android APK (Beta)
+      run: flutter build apk --flavor beta --release
+
+    - name: Build Android APK (Prod)
+      run: flutter build apk --flavor prod --release
+
+    - name: Build Android App Bundle (Beta)
+      run: flutter build appbundle --flavor beta --release
+
+    - name: Build Android App Bundle (Prod)
+      run: flutter build appbundle --flavor prod --release
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          build/app/outputs/flutter-apk/app-beta-release.apk
+          build/app/outputs/flutter-apk/app-prod-release.apk
+          build/app/outputs/bundle/betaRelease/app-beta-release.aab
+          build/app/outputs/bundle/prodRelease/app-prod-release.aab
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

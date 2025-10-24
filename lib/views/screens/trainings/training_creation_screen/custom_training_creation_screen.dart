@@ -126,71 +126,76 @@ class _TrainingCreationScreenState
           ).appBarTheme.titleTextStyle!.copyWith(fontSize: 27),
         ),
       ),
-      body: Form(
-        key: _formKey,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Training name field
-              TextFormField(
-                controller: _trainingNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Training Name',
-                  border: OutlineInputBorder(),
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Training name field
+                TextFormField(
+                  controller: _trainingNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Training Name',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a training name';
+                    }
+                    return null;
+                  },
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a training name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              // Reps section header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Reps',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: _addOrEditRep,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Rep'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
+                // Reps section header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Reps',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: _addOrEditRep,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Rep'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
 
-              // Reps list
-              Expanded(
-                child:
-                    _reps.isEmpty
-                        ? const Center(
-                          child: Text(
-                            'No reps added yet. Tap "Add Rep" to create one.',
+                // Reps list
+                Expanded(
+                  child:
+                      _reps.isEmpty
+                          ? const Center(
+                            child: Text(
+                              'No reps added yet. Tap "Add Rep" to create one.',
+                            ),
+                          )
+                          : ReorderableListView.builder(
+                            itemCount: _reps.length,
+                            onReorder: _reorderRep,
+                            itemBuilder: (context, index) {
+                              final rep = _reps[index];
+                              return RepListItem(
+                                key: ValueKey(index),
+                                rep: rep,
+                                index: index,
+                                onEdit: () => _addOrEditRep(index: index),
+                                onDelete: () => _deleteRep(index),
+                              );
+                            },
                           ),
-                        )
-                        : ReorderableListView.builder(
-                          itemCount: _reps.length,
-                          onReorder: _reorderRep,
-                          itemBuilder: (context, index) {
-                            final rep = _reps[index];
-                            return RepListItem(
-                              key: ValueKey(index),
-                              rep: rep,
-                              index: index,
-                              onEdit: () => _addOrEditRep(index: index),
-                              onDelete: () => _deleteRep(index),
-                            );
-                          },
-                        ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

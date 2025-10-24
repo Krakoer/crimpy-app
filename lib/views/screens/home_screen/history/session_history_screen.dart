@@ -10,7 +10,8 @@ class SessionHistoryScreen extends ConsumerStatefulWidget {
   const SessionHistoryScreen({super.key});
 
   @override
-  ConsumerState<SessionHistoryScreen> createState() => _SessionHistoryScreenState();
+  ConsumerState<SessionHistoryScreen> createState() =>
+      _SessionHistoryScreenState();
 }
 
 class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
@@ -26,7 +27,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final asyncSessions = ref.watch(sessionsProvider(_currentFilter));
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Session History'),
@@ -34,36 +35,36 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
             onSelected: (value) => _applyFilter(value),
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'all',
-                child: Text('All Sessions'),
-              ),
-              const PopupMenuItem(
-                value: 'assessments',
-                child: Text('Assessments Only'),
-              ),
-              const PopupMenuItem(
-                value: 'trainings',
-                child: Text('Trainings Only'),
-              ),
-              const PopupMenuItem(
-                value: 'week',
-                child: Text('This Week'),
-              ),
-              const PopupMenuItem(
-                value: 'month',
-                child: Text('This Month'),
-              ),
-            ],
+            itemBuilder:
+                (context) => [
+                  const PopupMenuItem(
+                    value: 'all',
+                    child: Text('All Sessions'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'assessments',
+                    child: Text('Assessments Only'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'trainings',
+                    child: Text('Trainings Only'),
+                  ),
+                  const PopupMenuItem(value: 'week', child: Text('This Week')),
+                  const PopupMenuItem(
+                    value: 'month',
+                    child: Text('This Month'),
+                  ),
+                ],
           ),
         ],
       ),
-      body: switch (asyncSessions) {
-        AsyncData(:final value) => _buildSessionList(value),
-        AsyncError(:final error) => _buildErrorState(error.toString()),
-        _ => const Center(child: CircularProgressIndicator()),
-      },
+      body: SafeArea(
+        child: switch (asyncSessions) {
+          AsyncData(:final value) => _buildSessionList(value),
+          AsyncError(:final error) => _buildErrorState(error.toString()),
+          _ => const Center(child: CircularProgressIndicator()),
+        },
+      ),
     );
   }
 
@@ -95,8 +96,8 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
     }
 
     // Sort dates in descending order
-    final sortedDates = groupedSessions.keys.toList()
-      ..sort((a, b) => b.compareTo(a));
+    final sortedDates =
+        groupedSessions.keys.toList()..sort((a, b) => b.compareTo(a));
 
     return ListView.builder(
       controller: _scrollController,
@@ -106,7 +107,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
         final dateKey = sortedDates[index];
         final dateSessions = groupedSessions[dateKey]!;
         final date = DateTime.parse(dateKey);
-        
+
         return _buildDateGroup(date, dateSessions);
       },
     );
@@ -115,10 +116,10 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
   Widget _buildDateGroup(DateTime date, List<SessionModel> sessions) {
     final isToday = DateUtils.isSameDay(date, DateTime.now());
     final isYesterday = DateUtils.isSameDay(
-      date, 
+      date,
       DateTime.now().subtract(const Duration(days: 1)),
     );
-    
+
     String dateLabel;
     if (isToday) {
       dateLabel = 'Today';
@@ -150,168 +151,176 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
   Widget _buildSessionCard(SessionModel session) {
     final duration = Duration(seconds: session.duration);
     final formattedTime = DateFormat('HH:mm').format(session.date);
-    
+
     return session.isAssessment
         ? CrimpyCards.assessment(
-            margin: const EdgeInsets.only(bottom: 8),
-            onTap: () => _onSessionTap(session),
-            child: Row(
-              children: [
-                // Session type icon
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: CrimpyTheme.assessmentColor.withValues(alpha: 0.2),
-                    border: Border.all(color: CrimpyTheme.assessmentColor.withValues(alpha: 0.3), width: 1),
-                  ),
-                  child: Icon(
-                    Icons.assessment,
-                    color: CrimpyTheme.assessmentColor,
-                    size: 20,
+          margin: const EdgeInsets.only(bottom: 8),
+          onTap: () => _onSessionTap(session),
+          child: Row(
+            children: [
+              // Session type icon
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: CrimpyTheme.assessmentColor.withValues(alpha: 0.2),
+                  border: Border.all(
+                    color: CrimpyTheme.assessmentColor.withValues(alpha: 0.3),
+                    width: 1,
                   ),
                 ),
-                const SizedBox(width: 16),
-                // Session details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        session.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
+                child: Icon(
+                  Icons.assessment,
+                  color: CrimpyTheme.assessmentColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Session details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      session.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.schedule,
+                          size: 14,
+                          color: CrimpyTheme.gray600,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.schedule, size: 14, color: CrimpyTheme.gray600),
-                          const SizedBox(width: 4),
-                          Text(
-                            formattedTime,
-                            style: TextStyle(
-                              color: CrimpyTheme.gray600,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Icon(Icons.timer, size: 14, color: CrimpyTheme.gray600),
-                          const SizedBox(width: 4),
-                          Text(
-                            _formatDuration(duration),
-                            style: TextStyle(
-                              color: CrimpyTheme.gray600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (session.notes != null && session.notes!.isNotEmpty) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(width: 4),
                         Text(
-                          session.notes!,
+                          formattedTime,
                           style: TextStyle(
-                            color: CrimpyTheme.gray700,
+                            color: CrimpyTheme.gray600,
                             fontSize: 12,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(width: 16),
+                        Icon(Icons.timer, size: 14, color: CrimpyTheme.gray600),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatDuration(duration),
+                          style: TextStyle(
+                            color: CrimpyTheme.gray600,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
+                    ),
+                    if (session.notes != null && session.notes!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        session.notes!,
+                        style: TextStyle(
+                          color: CrimpyTheme.gray700,
+                          fontSize: 12,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
-                  ),
+                  ],
                 ),
-                // Arrow indicator
-                Icon(
-                  Icons.chevron_right,
-                  color: CrimpyTheme.gray400,
-                ),
-              ],
-            ),
-          )
+              ),
+              // Arrow indicator
+              Icon(Icons.chevron_right, color: CrimpyTheme.gray400),
+            ],
+          ),
+        )
         : CrimpyCards.training(
-            margin: const EdgeInsets.only(bottom: 8),
-            onTap: () => _onSessionTap(session),
-            child: Row(
-              children: [
-                // Session type icon
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: CrimpyTheme.trainingColor.withValues(alpha: 0.2),
-                    border: Border.all(color: CrimpyTheme.trainingColor.withValues(alpha: 0.3), width: 1),
-                  ),
-                  child: Icon(
-                    Icons.fitness_center,
-                    color: CrimpyTheme.trainingColor,
-                    size: 20,
+          margin: const EdgeInsets.only(bottom: 8),
+          onTap: () => _onSessionTap(session),
+          child: Row(
+            children: [
+              // Session type icon
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: CrimpyTheme.trainingColor.withValues(alpha: 0.2),
+                  border: Border.all(
+                    color: CrimpyTheme.trainingColor.withValues(alpha: 0.3),
+                    width: 1,
                   ),
                 ),
-                const SizedBox(width: 16),
-                // Session details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        session.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
+                child: Icon(
+                  Icons.fitness_center,
+                  color: CrimpyTheme.trainingColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Session details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      session.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.schedule,
+                          size: 14,
+                          color: CrimpyTheme.gray600,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.schedule, size: 14, color: CrimpyTheme.gray600),
-                          const SizedBox(width: 4),
-                          Text(
-                            formattedTime,
-                            style: TextStyle(
-                              color: CrimpyTheme.gray600,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Icon(Icons.timer, size: 14, color: CrimpyTheme.gray600),
-                          const SizedBox(width: 4),
-                          Text(
-                            _formatDuration(duration),
-                            style: TextStyle(
-                              color: CrimpyTheme.gray600,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (session.notes != null && session.notes!.isNotEmpty) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(width: 4),
                         Text(
-                          session.notes!,
+                          formattedTime,
                           style: TextStyle(
-                            color: CrimpyTheme.gray700,
+                            color: CrimpyTheme.gray600,
                             fontSize: 12,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(width: 16),
+                        Icon(Icons.timer, size: 14, color: CrimpyTheme.gray600),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatDuration(duration),
+                          style: TextStyle(
+                            color: CrimpyTheme.gray600,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
+                    ),
+                    if (session.notes != null && session.notes!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        session.notes!,
+                        style: TextStyle(
+                          color: CrimpyTheme.gray700,
+                          fontSize: 12,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
-                  ),
+                  ],
                 ),
-                // Arrow indicator
-                Icon(
-                  Icons.chevron_right,
-                  color: CrimpyTheme.gray400,
-                ),
-              ],
-            ),
-          );
+              ),
+              // Arrow indicator
+              Icon(Icons.chevron_right, color: CrimpyTheme.gray400),
+            ],
+          ),
+        );
   }
 
   Widget _buildErrorState(String error) {
@@ -319,7 +328,11 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline, size: 64, color: CrimpyTheme.errorColor),
+          const Icon(
+            Icons.error_outline,
+            size: 64,
+            color: CrimpyTheme.errorColor,
+          ),
           const SizedBox(height: 16),
           Text(
             'Error loading sessions',
@@ -357,8 +370,16 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
           final now = DateTime.now();
           final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
           _currentFilter = SessionFilter(
-            startDate: DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day),
-            endDate: DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day + 7),
+            startDate: DateTime(
+              startOfWeek.year,
+              startOfWeek.month,
+              startOfWeek.day,
+            ),
+            endDate: DateTime(
+              startOfWeek.year,
+              startOfWeek.month,
+              startOfWeek.day + 7,
+            ),
           );
           break;
         case 'month':

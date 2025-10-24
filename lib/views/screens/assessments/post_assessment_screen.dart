@@ -13,7 +13,7 @@ class PostAssessmentScreen extends ConsumerWidget {
   final (double?, double)? rightHandResults;
   final (double?, double)? leftHandResults;
 
-  final FinishedAssessmentModel saveAssessment;
+  final AssessmentResultModel saveAssessment;
   final SessionModel saveTraining;
   final List<RepDataModel> saveReps;
 
@@ -39,34 +39,39 @@ class PostAssessmentScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text("${assessmentTypeToString(type)} assessment results"),
       ),
-      body: Column(
-        children: [
-          SizedBox(height: 100),
-          // If they gave their max, it's always a good job rigth ?
-          Text("Great job! 💪", style: Theme.of(context).textTheme.displaySmall),
-          SizedBox(height: 16),
-          // Show the results cards for the provided hands.
-          Column(
-            children: [
-              if (rightHandResults != null)
-                ResultCard(
-                  prevValue: rightHandResults!.$1,
-                  newValue: rightHandResults!.$2,
-                  // If `leftHandResults` was provided, it's a two hands assessment.
-                  // In that case, tell the card the result is right hand related to show the hand side.
-                  rightHand: leftHandResults != null ? true : null,
-                ),
-              if (leftHandResults != null)
-                ResultCard(
-                  prevValue: leftHandResults!.$1,
-                  newValue: leftHandResults!.$2,
-                  // If `rightHandResults` was provided, it's a two hands assessment.
-                  // In that case, tell the card the result is left hand related to show the hand side.
-                  rightHand: rightHandResults != null ? false : null,
-                ),
-            ],
-          ),
-        ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            SizedBox(height: 100),
+            // If they gave their max, it's always a good job rigth ?
+            Text(
+              "Great job! 💪",
+              style: Theme.of(context).textTheme.displaySmall,
+            ),
+            SizedBox(height: 16),
+            // Show the results cards for the provided hands.
+            Column(
+              children: [
+                if (rightHandResults != null)
+                  ResultCard(
+                    prevValue: rightHandResults!.$1,
+                    newValue: rightHandResults!.$2,
+                    // If `leftHandResults` was provided, it's a two hands assessment.
+                    // In that case, tell the card the result is right hand related to show the hand side.
+                    rightHand: leftHandResults != null ? true : null,
+                  ),
+                if (leftHandResults != null)
+                  ResultCard(
+                    prevValue: leftHandResults!.$1,
+                    newValue: leftHandResults!.$2,
+                    // If `rightHandResults` was provided, it's a two hands assessment.
+                    // In that case, tell the card the result is left hand related to show the hand side.
+                    rightHand: rightHandResults != null ? false : null,
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -114,7 +119,10 @@ class ResultCard extends StatelessWidget {
             ? double.infinity
             : ((newValue - prevValue!) / prevValue! * 100).round();
     final isPositive = prevValue == null ? true : newValue >= prevValue!;
-    final percentageColor = isPositive ? CrimpyTheme.accentYellow : Theme.of(context).colorScheme.error;
+    final percentageColor =
+        isPositive
+            ? CrimpyTheme.accentYellow
+            : Theme.of(context).colorScheme.error;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -140,7 +148,9 @@ class ResultCard extends StatelessWidget {
                   children: [
                     Text(
                       'Previous',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(color: CrimpyTheme.gray500),
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: CrimpyTheme.gray500,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -165,10 +175,7 @@ class ResultCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: percentageColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: percentageColor,
-                          width: 1,
-                        ),
+                        border: Border.all(color: percentageColor, width: 1),
                       ),
                       child: Text(
                         "${isPositive ? '+' : ''}$percentage%",
@@ -191,7 +198,9 @@ class ResultCard extends StatelessWidget {
                   children: [
                     Text(
                       'Current',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(color: CrimpyTheme.gray500),
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: CrimpyTheme.gray500,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(

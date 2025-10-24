@@ -15,11 +15,11 @@ class ClimbingProfileScreen extends ConsumerWidget {
     final Color accentRight = CrimpyTheme.accentYellow;
 
     return switch (asyncAssessments) {
-        AsyncData(:final value) => ProfileContent(
-          assessments: value,
-          accentLeft: accentLeft,
-          accentRight: accentRight,
-        ),
+      AsyncData(:final value) => ProfileContent(
+        assessments: value,
+        accentLeft: accentLeft,
+        accentRight: accentRight,
+      ),
       AsyncError(:final error) => Center(child: Text("Error: $error")),
       AsyncLoading() => const Center(child: CircularProgressIndicator()),
     };

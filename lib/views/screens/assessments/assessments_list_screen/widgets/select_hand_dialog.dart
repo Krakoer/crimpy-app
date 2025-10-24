@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:crimpy/models/common.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -28,7 +29,7 @@ class SelectHandDialog extends StatelessWidget {
               ],
             ),
             onPressed: () {
-              Navigator.of(context).pop(false);
+              Navigator.of(context).pop(HandSide.left);
             },
           ),
           ElevatedButton(
@@ -40,7 +41,7 @@ class SelectHandDialog extends StatelessWidget {
               ],
             ),
             onPressed: () {
-              Navigator.of(context).pop(true);
+              Navigator.of(context).pop(HandSide.right);
             },
           ),
         ],

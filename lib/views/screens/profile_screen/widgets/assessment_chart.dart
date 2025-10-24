@@ -109,7 +109,9 @@ class _ForceChartState extends State<ForceChart> {
                 borderRadius: BorderRadius.circular(16),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                  child: Container(color: CrimpyTheme.primaryWhite.withValues(alpha: 0.4)),
+                  child: Container(
+                    color: CrimpyTheme.primaryWhite.withValues(alpha: 0.4),
+                  ),
                 ),
               ),
             ),
