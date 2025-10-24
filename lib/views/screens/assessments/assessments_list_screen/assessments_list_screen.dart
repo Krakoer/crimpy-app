@@ -4,6 +4,7 @@ import 'package:crimpy/views/screens/assessments/assessments_list_screen/widgets
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/widgets/select_hand_dialog.dart';
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/widgets/confirm_redo_assessment_dialog.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/critical_force_run_screen.dart';
+import 'package:crimpy/views/screens/assessments/endurance_60/endurance_60_run_screen.dart';
 import 'package:crimpy/views/widgets/ble/connection_dialog.dart';
 import 'package:crimpy/views/widgets/ble/tare_dialog.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +23,11 @@ class AssessmentsScreen extends ConsumerWidget {
     final assessmentTemplates = ref.watch(assessmentTrainingsProvider);
 
     /// Run the assessment given its type and hand.
-    void runAssessment(AssessmentTrainingModel model, HandSide? handSide) {
+    void runAssessment(
+      AssessmentTrainingModel model,
+      HandSide? handSide, {
+      double? mvcValue,
+    }) {
       ref.read(bleSessionProvider.notifier).reset();
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -36,6 +41,10 @@ class AssessmentsScreen extends ConsumerWidget {
                   reps: model.training.reps,
                   hand: handSide!,
                 ),
+                AssessmentType.endurance60 => Endurance60RunScreen(
+                  hand: handSide!,
+                  mvcValue: mvcValue!,
+                ),
               },
         ),
       );
@@ -46,6 +55,7 @@ class AssessmentsScreen extends ConsumerWidget {
     void checkAndRunAssessment(
       AssessmentTrainingModel model, {
       HandSide? handSide,
+      double? mvcValue,
     }) async {
       // First check if the assessment has been done today.
       // If so, show the dialog
@@ -58,12 +68,13 @@ class AssessmentsScreen extends ConsumerWidget {
             context: context,
             builder:
                 (ctx) => ConfirmRedoAssessmentDialog(
-                  runAssessment: () => runAssessment(model, handSide),
+                  runAssessment:
+                      () => runAssessment(model, handSide, mvcValue: mvcValue),
                 ),
           );
         }
       } else {
-        runAssessment(model, handSide);
+        runAssessment(model, handSide, mvcValue: mvcValue);
       }
     }
 
@@ -96,6 +107,55 @@ class AssessmentsScreen extends ConsumerWidget {
                               );
                               if (hand != null) {
                                 checkAndRunAssessment(template, handSide: hand);
+                              }
+                              break;
+                            case AssessmentType.endurance60:
+                              // First get the hand to test
+                              final HandSide? hand = await showDialog(
+                                context: context,
+                                builder: (ctx) => SelectHandDialog(),
+                              );
+                              if (hand == null) break;
+
+                              // Check if MVC has been done for this hand
+                              final mvcValue = await ref
+                                  .read(
+                                    assessmentsProvider(
+                                      AssessmentType.mvc,
+                                    ).notifier,
+                                  )
+                                  .getLastValueForHand(hand);
+
+                              if (mvcValue == null || mvcValue <= 0) {
+                                // Show error dialog - no MVC available
+                                if (context.mounted) {
+                                  showDialog(
+                                    context: context,
+                                    builder:
+                                        (ctx) => AlertDialog(
+                                          title: Text("MVC Required"),
+                                          content: Text(
+                                            "You must complete an MVC assessment for your ${hand.isRightHand ? 'right' : 'left'} hand before running this assessment.",
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed:
+                                                  () =>
+                                                      Navigator.of(
+                                                        context,
+                                                      ).pop(),
+                                              child: Text("OK"),
+                                            ),
+                                          ],
+                                        ),
+                                  );
+                                }
+                              } else {
+                                checkAndRunAssessment(
+                                  template,
+                                  handSide: hand,
+                                  mvcValue: mvcValue,
+                                );
                               }
                               break;
                           }

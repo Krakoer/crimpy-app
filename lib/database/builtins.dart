@@ -179,6 +179,20 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
           ],
         ),
   ),
+  BuiltinAssessmentModel(
+    id: 4 << 32,
+    name: "60% Endurance",
+    description: "Measure how long you can maintain 60% of your MVC",
+    type: AssessmentType.endurance60,
+    icon: FontAwesomeIcons.hourglass,
+    trainingGenerator:
+        () => TrainingWithReps(
+          id: 4 << 32,
+          name: "60% Endurance",
+          isFav: false,
+          reps: [],
+        ),
+  ),
 ];
 
 /// Built-in trainings that require assessment values to be available.

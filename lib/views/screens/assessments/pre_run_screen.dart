@@ -23,6 +23,7 @@ class PreRunScreen extends ConsumerWidget {
                       type: type,
                     ),
                     AssessmentType.criticalForce => Text("NOT IMPL"),
+                    AssessmentType.endurance60 => Text("NOT IMPL"),
                   },
             ),
           );
