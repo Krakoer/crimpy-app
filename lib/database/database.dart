@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:crimpy/database/builtins.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
@@ -576,64 +575,6 @@ LazyDatabase _openConnection() {
     final file = File(p.join(dbFolder.path, 'ble_sessions.sqlite'));
     return NativeDatabase(file);
   });
-}
-
-/// Helper function to ensure that the builtins assessments/trainings defined in builtins.dart
-/// are seeded into the database.
-Future<void> ensureBuiltinTrainingsExist(AppDatabase db) async {
-  // Add assessments trainings and reps.
-  for (final assessment in builtinsAssessments) {
-    // First add the training
-    final training = assessment.training;
-
-    final existingTraining =
-        await (db.select(db.trainings)
-          ..where((t) => t.id.equals(training.id))).getSingleOrNull();
-
-    if (existingTraining == null) {
-      // Insert with fixed id
-      await db
-          .into(db.trainings)
-          .insert(
-            TrainingsCompanion.insert(
-              id: Value(training.id),
-              name: training.name,
-              isBuiltin: const Value(true),
-              isFavorite: const Value(false),
-              isAssessment: const Value(true),
-            ),
-            mode: InsertMode.insertOrIgnore,
-          );
-    }
-
-    // The add the reps
-    for (final rep in training.reps) {
-      final existingRep =
-          await (db.select(db.repTemplates)
-            ..where((t) => t.id.equals(rep.id!))).getSingleOrNull();
-
-      if (existingRep == null) {
-        // Insert with fixed id
-        await db
-            .into(db.repTemplates)
-            .insert(
-              RepTemplatesCompanion.insert(
-                id: Value(rep.id!),
-                duration: rep.durationInSeconds,
-                index: rep.index,
-                isRest: rep.isRest,
-                rightHand: rep.handSide.isRightHand,
-                targetWeight: rep.targetWeight,
-                trainingId: training.id,
-              ),
-              mode: InsertMode.insertOrIgnore,
-            );
-      }
-    }
-  }
-
-  // Then add builtins trainings.
-  // TODO
 }
 
 final AppDatabase gDatabase = AppDatabase();

@@ -57,8 +57,8 @@ class _MainPageState extends ConsumerState<MainPage> {
               icon: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.dashboard_rounded,
+                  FaIcon(
+                    FontAwesomeIcons.house,
                     size: 20,
                     color:
                         currentPageIndex == 0
@@ -88,7 +88,7 @@ class _MainPageState extends ConsumerState<MainPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   FaIcon(
-                    FontAwesomeIcons.dumbbell,
+                    FontAwesomeIcons.fire,
                     size: 20,
                     color:
                         currentPageIndex == 1
@@ -117,8 +117,8 @@ class _MainPageState extends ConsumerState<MainPage> {
               icon: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    FontAwesomeIcons.ruler,
+                  FaIcon(
+                    FontAwesomeIcons.chartSimple,
                     size: 20,
                     color:
                         currentPageIndex == 2
@@ -147,8 +147,8 @@ class _MainPageState extends ConsumerState<MainPage> {
               icon: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    FontAwesomeIcons.solidCircleUser,
+                  FaIcon(
+                    FontAwesomeIcons.userLarge,
                     size: 20,
                     color:
                         currentPageIndex == 3
@@ -177,8 +177,8 @@ class _MainPageState extends ConsumerState<MainPage> {
               icon: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.settings,
+                  FaIcon(
+                    FontAwesomeIcons.gear,
                     size: 20,
                     color:
                         currentPageIndex == 4

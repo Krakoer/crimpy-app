@@ -9,7 +9,6 @@ import 'package:crimpy/repositories/builtin_training_repository.dart';
 /// Returns the trainings repository.
 final trainingRepositoryProvider = Provider<TrainingRepository>((ref) {
   final repository = TrainingRepository();
-  repository.init();
   return repository;
 });
 
