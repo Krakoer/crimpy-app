@@ -102,7 +102,7 @@ class AssessmentRepository {
 
   /// Save an assessment given its model and a session ID.
   Future<void> saveAssessment(
-    AssessmentResultModel assessment,
+    FinishedAssessmentModel assessment,
     int sessionId,
   ) async {
     await gDatabase.saveAssessment(assessment, sessionId);
@@ -115,26 +115,24 @@ class AssessmentRepository {
 
   /// Get all the assessments.
   /// Allow to filter on `type`.
-  /// If the `handSide` parameter is set, only corresponding assessment will be retrieved.
+  /// If the `rightHand` parameter is set, only corresponding assessment will be retrieved.
   Future<List<AssessmentModel>> getAssessments({
     AssessmentType? type,
-    HandSide? handSide,
+    bool? rightHand,
   }) async {
-    return await gDatabase.getAssessments(type: type, handSide: handSide);
+    return await gDatabase.getAssessments(type: type, rightHand: rightHand);
   }
 
   /// Get the last value of an assessment given its type for a given hand.
   Future<double?> getLastValueForHand(
     AssessmentType type,
-    HandSide handSide,
+    bool rightHand,
   ) async {
     final assessment =
         (await gDatabase.getAssessments(
           type: type,
-          handSide: handSide,
+          rightHand: rightHand,
         )).lastOrNull;
-    return handSide.isRightHand
-        ? assessment?.rightValue
-        : assessment?.leftValue;
+    return rightHand ? assessment?.rightValue : assessment?.leftValue;
   }
 }

@@ -30,9 +30,7 @@ class _SensorSettingsListState extends ConsumerState<SensorSettingsList> {
                       value
                           .map(
                             (config) => Dismissible(
-                              background: Container(
-                                color: CrimpyTheme.errorColor,
-                              ),
+                              background: Container(color: CrimpyTheme.errorColor),
                               key: ValueKey<int>(config.index),
                               // Setting card
                               child: CrimpyCard.simple(

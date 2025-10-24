@@ -3,7 +3,7 @@ import 'package:crimpy/views/screens/assessments/assessments_list_screen/assessm
 import 'package:crimpy/views/screens/profile_screen/profile_screen.dart';
 import 'package:crimpy/views/widgets/ble/tare_dialog.dart';
 import 'package:crimpy/views/screens/chart_screen.dart';
-import 'package:crimpy/views/screens/trainings/trainings_list_screen/trainings_list_screen.dart';
+import 'package:crimpy/views/screens/trainings/trainings_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/views/screens/home_screen/home_screen.dart';
@@ -227,21 +227,19 @@ class _MainPageState extends ConsumerState<MainPage> {
           ),
         ],
       ),
-      body: SafeArea(
-        child:
-            <Widget>[
-              HomeScreen(),
-              TrainingScreen(
-                goToAssessments:
-                    () => setState(() {
-                      currentPageIndex = 2;
-                    }),
-              ),
-              AssessmentsScreen(),
-              ClimbingProfileScreen(),
-              SettingsScreen(),
-            ][currentPageIndex],
-      ),
+      body:
+          <Widget>[
+            HomeScreen(),
+            TrainingScreen(
+              goToAssessments:
+                  () => setState(() {
+                    currentPageIndex = 2;
+                  }),
+            ),
+            AssessmentsScreen(),
+            ClimbingProfileScreen(),
+            SettingsScreen(),
+          ][currentPageIndex],
     );
   }
 

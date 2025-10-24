@@ -30,10 +30,16 @@ class AssessmentCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Title
-                Text(title, style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 4),
                 // Description
-                Text(description, style: Theme.of(context).textTheme.bodySmall),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ],
             ),
           ),

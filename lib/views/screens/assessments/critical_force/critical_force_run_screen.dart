@@ -1,5 +1,4 @@
 import 'package:crimpy/models/assessment_model.dart';
-import 'package:crimpy/models/common.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
@@ -16,7 +15,7 @@ import 'package:crimpy/views/widgets/workout_timer.dart';
 
 class CriticalForceRunScreen extends ConsumerStatefulWidget {
   final List<RepModel> reps;
-  final HandSide hand;
+  final bool hand;
   const CriticalForceRunScreen({
     required this.reps,
     required this.hand,
@@ -61,10 +60,10 @@ class _CriticalForceRunScreenState
             .getLastValueForHand(widget.hand);
 
         // Create assessment model
-        final saveAssessment = AssessmentResultModel(
+        final saveAssessment = FinishedAssessmentModel(
           type: AssessmentType.criticalForce,
-          rightValue: widget.hand.isRightHand ? criticalLoad : null,
-          leftValue: !widget.hand.isRightHand ? criticalLoad : null,
+          rightValue: widget.hand ? criticalLoad : null,
+          leftValue: !widget.hand ? criticalLoad : null,
         );
         // Create rep models
         final saveReps =
@@ -175,78 +174,73 @@ class _CriticalForceRunScreenState
       },
       child: Scaffold(
         appBar: AppBar(title: Text("Critical Force Test")),
-        body: SafeArea(
-          child: Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              // Box of text to show the user the action to do (rest or pull).
-              Positioned(
-                top: 230,
-                child: Opacity(
-                  opacity: 0.7,
-                  child: Container(
-                    width: 200,
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: CrimpyTheme.accentYellow,
-                      border: Border.all(
+        body: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            // Box of text to show the user the action to do (rest or pull).
+            Positioned(
+              top: 230,
+              child: Opacity(
+                opacity: 0.7,
+                child: Container(
+                  width: 200,
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: CrimpyTheme.accentYellow,
+                    border: Border.all(color: CrimpyTheme.borderDefault, width: 2),
+                    boxShadow: [
+                      BoxShadow(
                         color: CrimpyTheme.borderDefault,
-                        width: 2,
+                        offset: Offset(4, 4),
+                        blurRadius: 0,
+                        spreadRadius: 0,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: CrimpyTheme.borderDefault,
-                          offset: Offset(4, 4),
-                          blurRadius: 0,
-                          spreadRadius: 0,
-                        ),
-                      ],
-                    ),
-                    child:
-                        !timer.currentRep.isRest
-                            ? Text(
-                              "Pull!\n${timer.currentRepRemaining}",
-                              style: TextStyle(
-                                fontSize: 39,
-                                color: CrimpyTheme.primaryWhite,
-                              ),
-                              textAlign: TextAlign.center,
-                            )
-                            : Column(
-                              children: [
-                                Text(
-                                  "Pulling in",
-                                  style: TextStyle(
-                                    fontSize: 29,
-                                    color: CrimpyTheme.primaryWhite,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                Text(
-                                  "${timer.currentRepRemaining}",
-                                  style: TextStyle(
-                                    fontSize: 39,
-                                    color: CrimpyTheme.primaryWhite,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
+                    ],
                   ),
+                  child:
+                      !timer.currentRep.isRest
+                          ? Text(
+                            "Pull!\n${timer.currentRepRemaining}",
+                            style: TextStyle(
+                              fontSize: 39,
+                              color: CrimpyTheme.primaryWhite,
+                            ),
+                            textAlign: TextAlign.center,
+                          )
+                          : Column(
+                            children: [
+                              Text(
+                                "Pulling in",
+                                style: TextStyle(
+                                  fontSize: 29,
+                                  color: CrimpyTheme.primaryWhite,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                "${timer.currentRepRemaining}",
+                                style: TextStyle(
+                                  fontSize: 39,
+                                  color: CrimpyTheme.primaryWhite,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                 ),
               ),
-              // Show a minimalist graph in the background
-              MinimalistGraph(),
-              // Show the number of reps we're at
-              Positioned(
-                top: 10,
-                child: Text(
-                  "${timer.repCount}/24",
-                  style: Theme.of(context).textTheme.displaySmall,
-                ),
+            ),
+            // Show a minimalist graph in the background
+            MinimalistGraph(),
+            // Show the number of reps we're at
+            Positioned(
+              top: 10,
+              child: Text(
+                "${timer.repCount}/24",
+                style: Theme.of(context).textTheme.displaySmall,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

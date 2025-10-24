@@ -1,7 +1,6 @@
 import "package:crimpy/database/database.dart";
 import "package:crimpy/logger.dart";
 import "package:crimpy/models/common.dart";
-import "package:crimpy/models/training_feedback_model.dart";
 
 import "ble_data_model.dart";
 import "assessment_model.dart";
@@ -53,8 +52,6 @@ class TrainingWithReps {
   final List<RepModel> reps;
   final RepeaterModel? repeater;
   final bool isFav;
-  // Used by builtin trainings
-  final LoadAdjustmentFunction? computeNewWeights;
 
   TrainingWithReps({
     required this.id,
@@ -62,7 +59,6 @@ class TrainingWithReps {
     required this.reps,
     required this.isFav,
     this.repeater,
-    this.computeNewWeights,
   });
 
   Duration get totalDuration =>
@@ -315,13 +311,13 @@ class BuiltinTrainingModel {
   final String description;
   final List<AssessmentType> requiredAssessments;
   final RepeaterModel Function(
-    List<AssessmentResultModel> assessmentValues, {
-    double? customLoadRight,
-    double? customLoadLeft,
+    Map<AssessmentType, double?> assessmentValues, {
+    double? customLoad,
   })
   trainingGenerator;
-  final bool Function(List<AssessmentResultModel> assessmentValues) isAvailable;
-  final LoadAdjustmentFunction computeNewWeights;
+  final bool Function(Map<AssessmentType, double?> assessmentValues)
+  isAvailable;
+  final bool supportsLoadAdjustment;
 
   BuiltinTrainingModel({
     required this.id,
@@ -330,14 +326,13 @@ class BuiltinTrainingModel {
     required this.requiredAssessments,
     required this.trainingGenerator,
     required this.isAvailable,
-    required this.computeNewWeights,
+    this.supportsLoadAdjustment = true,
   });
 
   /// Generate the training based on assessment values.
   TrainingWithReps? generateTraining(
-    List<AssessmentResultModel> assessmentValues, {
-    double? customLoadRight,
-    double? customLoadLeft,
+    Map<AssessmentType, double?> assessmentValues, {
+    double? customLoad,
   }) {
     if (!isAvailable(assessmentValues)) {
       return null;
@@ -345,8 +340,7 @@ class BuiltinTrainingModel {
 
     final repeater = trainingGenerator(
       assessmentValues,
-      customLoadRight: customLoadRight,
-      customLoadLeft: customLoadLeft,
+      customLoad: customLoad,
     );
     final reps = repeater.generateReps();
 
@@ -368,7 +362,6 @@ class BuiltinTrainingModel {
               )
               .toList(),
       repeater: repeater,
-      computeNewWeights: computeNewWeights,
     );
   }
 }

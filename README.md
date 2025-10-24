@@ -1,181 +1,56 @@
-# Crimpy
-
-A Flutter mobile application for climbing training and performance assessment using Bluetooth-connected force sensors.
-
-## Overview
-
-Crimpy helps climbers track and improve their performance through:
-- **Custom Training Programs**: Create personalized workouts with precise rep-by-rep configuration
-- **Standardized Assessments**: MVC 3FD and Critical Force testing protocols
-- **Real-time Data Collection**: Bluetooth force sensor integration
-- **Performance Analytics**: Session history and data visualization
-- **Repeater Training**: Structured interval training templates
-
-## Features
-
-### Training & Workouts
-- Custom training creation with configurable reps, sets, and rest periods
-- Repeater training templates for systematic finger strength development
-- Split-hand training support for targeted improvement
-- Audio feedback during sessions
-- Training favorites and organization
-
-### Assessments
-- **MVC 3FD**: Maximum Voluntary Contraction assessment
-- **Critical Force**: Endurance capacity evaluation
-- Hand-specific testing (left/right or combined)
-- Historical assessment tracking and comparison
-
-### Data Management
-- Real-time force data collection via Bluetooth sensors
-- Session history with detailed performance metrics
-- Data export capabilities
-- Sensor calibration and configuration management
-
-### User Experience
-- Cross-platform support (Android, iOS, Windows, macOS, Linux)
-- Material Design UI with custom theming
-- Profile management and settings
-- Intuitive navigation and training flow
-
-## Getting Started
-
-### Prerequisites
-- Flutter SDK ^3.7.2
-- Dart SDK ^3.7.2
-- Android Studio / VS Code with Flutter extensions
-- Compatible Bluetooth force sensor device
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd crimpy-app
-   ```
-
-2. **Install dependencies**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Generate code**
-   ```bash
-   dart run build_runner build
-   ```
-
-4. **Run the app**
-   ```bash
-   flutter run
-   ```
-
-### Building for Production
-
-**Android APK (Production)**
-```bash
-flutter build apk --flavor prod --release
-```
-
-**Install without losing data**
-```bash
-adb install -r .\build\app\outputs\flutter-apk\app-prod-release.apk
-```
-
-## Development
-
-### Project Structure
-```
-lib/
-├── database/        # Drift database and builtin configurations
-├── models/         # Data models (BLE, Training, Assessment, etc.)
-├── repositories/   # Data access layer
-├── viewmodels/     # Riverpod providers and business logic
-├── views/          # UI screens and widgets
-│   ├── screens/    # Main application screens
-│   └── widgets/    # Reusable UI components
-├── theme/          # App theming and custom widgets
-└── utils/          # Utility functions
-```
-
-### Key Technologies
-- **Flutter**: Cross-platform mobile framework
-- **Riverpod**: State management with code generation
-- **Drift**: Type-safe SQLite ORM with code generation
-- **Flutter Blue Plus**: Bluetooth Low Energy communication
-- **Syncfusion Charts**: Data visualization
-
-### Code Generation
-
-The project uses code generation for database models and state management:
-
-```bash
-# Generate all code
-dart run build_runner build
-
-# Clean and regenerate
-dart run build_runner build --delete-conflicting-outputs
-```
-
-### Static Analysis
-```bash
-flutter analyze
-```
-
-## Terminology
-
-- **Training**: An available workout that can be performed using the app
-- **Session**: A completed workout (either Crimpy training or logged climbing/stretching session)
-- **Assessment**: Standardized performance test stored separately from regular sessions
-- **Repeater**: Structured interval training format with configurable work/rest periods
-
-## Bluetooth Integration
-
-Crimpy connects to external force sensors via Bluetooth Low Energy for real-time data collection during training sessions and assessments. The app handles:
-- Device discovery and pairing
-- Sensor calibration and tare functionality
-- Real-time data streaming
-- Connection state management
-
-## Data Storage
-
-- **Local Database**: SQLite via Drift ORM for training templates, sessions, and assessments
-- **File System**: JSON files for detailed session force data
-- **Configuration**: Sensor settings and user preferences
+# Cripmpy
 
 ## Roadmap
 
-### Current Version (V1)
-- [x] Custom training creation and editing
-- [x] Repeater training support
-- [x] MVC 3FD and Critical Force assessments
-- [x] Bluetooth sensor integration
-- [x] Session history and data visualization
-- [x] Profile management
-- [x] Training favorites
+- [x] Clean custom training form (no load when rest, hand selector, show some stats, etc)
+- [x] Clean available trainings list
+- [x] Add form to edit training
+- [x] Add form to create repeaters
+- [x] Run trainings
+- [x] Calibration settings
+- [x] Tare dialog when connected
+- [x] Allow user to pin trainings on main screen
+- [x] Choose a nomenclature and rename all things accordingly
+- [x] Better error handling (e.g when saving thing into db, etc.) + Apply logging to all files
+- [x] Refacto and clean the code
+- [x] BT activation error handling (activate BT, enable location etc.)
+- [x] Add profile page
+- [x] Add MVC 3FD assessment
+- [x] Add critical force assessment
+- [ ] Create trainings based on profile
+- [ ] Allow logging climbing/stretching/workout sessions
+- [ ] Add sessions history screen & session details screen
+- [ ] Histogram modes (monday to sunday vs 3 days before 3 days after)
+- [ ] Add tutorials before assessment
+- [ ] Cleanup UI
+- [ ] Write docs and comment code
+- [ ] Reorganise whole rep
+---------------- V1 merge in main
 
-### Future Features
-- [ ] Training recommendations based on user profile
-- [ ] Session planning and scheduling
-- [ ] Advanced analytics and progress tracking
-- [ ] Cloud synchronization
-- [ ] Coach accounts and shared training programs
-- [ ] Injury prevention features
+Future work/ideas:
+- [ ] BLE session add record and stop record to avoid saving data in memory when not needed
+- [ ] Add tests ???
+- [ ] Add an "RPE" notion
+- [ ] Allow user to plan its sessions
+- [ ] Add backend db
+- [ ] Add fitness exercices (dips, pushups, etc.) and allow to create trainings from them.
+- [ ] Add AI to suggest planning ?
+- [ ] Injury prevention (allow user to tell pain felt during session, propose routines/help)
+- [ ] Add "coach" accounts (can edit planning of some users & add notes)
 
-## Contributing
+## Install
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is private and not currently licensed for public use.
-
-## Debug Commands
-
-**Extract Critical Force Data**
-```bash
-adb -d shell "run-as com.example.crimpy.beta cat /data/user/0/com.example.crimpy.beta/app_flutter/1757075795797" > data.json
+Install a new prod version wihtout losing data:
+```PowerShell
+flutter build apk --flavor prod --release
+adb install -r .\build\app\outputs\flutter-apk\app-prod-release.apk
 ```
+
+## Used nomenclature
+
+- A `training` refers as an available workout that can be done using the Crimpy app.
+- A `session` refers as a workout that has been done, either using the crimpy or a logged climbing/stretching session.
+
+## Debugging
+
+debug critical force: pull data with `adb -d shell "run-as com.example.crimpy.beta cat /data/user/0/com.example.crimpy.beta/app_flutter/1757075795797" > data.json`

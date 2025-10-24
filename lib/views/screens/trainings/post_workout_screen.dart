@@ -1,20 +1,21 @@
 import 'dart:math';
 
+import 'package:crimpy/utils/reps.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
-import 'package:crimpy/theme.dart';
+import '../../../theme/crimpy_theme.dart';
 
 class PostWorkoutScreen extends ConsumerStatefulWidget {
   final TrainingWithReps template;
-  final List<RepDataModel> results;
+  final List<double> avgs;
 
   /// Show the results of the workout to the user, and allow them to add a note to the session.
   const PostWorkoutScreen({
-    required this.results,
+    required this.avgs,
     required this.template,
     super.key,
   });
@@ -45,15 +46,23 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // List of non null target weight of the training.
+    final targetWeights =
+        widget.template.reps
+            .map((r) => r.targetWeight)
+            .where((w) => w != 0)
+            .toList();
+
     // Percentage of reps the user has succeded.
-    final workingReps = widget.results.where((r) => !r.isRest).toList();
-    final int percentageSuccess =
-        (workingReps
-                    .where((rep) => rep.averageWeight >= rep.targetWeight)
-                    .length /
-                workingReps.length *
-                100)
-            .round();
+    final int? percentageSuccess =
+        targetWeights.isEmpty
+            ? null
+            : (List.generate(targetWeights.length, (index) {
+                      return widget.avgs[index] >= targetWeights[index] ? 1 : 0;
+                    }).reduce((a, b) => a + b) /
+                    targetWeights.length *
+                    100)
+                .round();
 
     return PopScope(
       canPop: false,
@@ -89,15 +98,15 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
       },
       child: Scaffold(
         appBar: AppBar(title: Text(widget.template.name)),
-        body: SafeArea(
-          child: Column(
-            children: [
-              SizedBox(height: 100),
-              Text(
-                "Well done! 💪",
-                style: Theme.of(context).textTheme.displaySmall,
-              ),
-              // Show the success percentage
+        body: Column(
+          children: [
+            SizedBox(height: 100),
+            Text(
+              "Well done! 💪",
+              style: Theme.of(context).textTheme.displaySmall,
+            ),
+            // Show the success percentage
+            if (percentageSuccess != null)
               Text.rich(
                 TextSpan(
                   children: [
@@ -122,49 +131,48 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                   ],
                 ),
               ),
-              SizedBox(height: 25),
-              // Form for session name and notes.
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32.0,
-                  vertical: 16.0,
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _trainingNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Training Name',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a training name';
-                          }
-                          return null;
-                        },
+            SizedBox(height: 25),
+            // Form for session name and notes.
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32.0,
+                vertical: 16.0,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _trainingNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Training Name',
+                        border: OutlineInputBorder(),
                       ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _noteController,
-                        decoration: const InputDecoration(
-                          labelText: 'Notes',
-                          hintText: "How did you feel?",
-                          border: OutlineInputBorder(),
-                          alignLabelWithHint: true,
-                        ),
-                        keyboardType: TextInputType.multiline,
-                        maxLines: 20,
-                        minLines: 4,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a training name';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _noteController,
+                      decoration: const InputDecoration(
+                        labelText: 'Notes',
+                        hintText: "How did you feel?",
+                        border: OutlineInputBorder(),
+                        alignLabelWithHint: true,
                       ),
-                    ],
-                  ),
+                      keyboardType: TextInputType.multiline,
+                      maxLines: 20,
+                      minLines: 4,
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: ElevatedButton(
@@ -180,7 +188,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                       notes: _noteController.text,
                       isAssessment: false,
                     ),
-                    widget.results,
+                    buildRepsData(widget.avgs, widget.template.reps),
                   );
               Navigator.of(context).pop();
             }

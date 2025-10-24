@@ -5,6 +5,7 @@ import 'package:crimpy/views/screens/home_screen/widgets/home_card.dart';
 import 'package:crimpy/views/screens/trainings/training_details_screen.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 

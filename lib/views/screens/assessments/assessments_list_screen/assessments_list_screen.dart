@@ -1,5 +1,4 @@
 import 'package:crimpy/models/ble_data_model.dart';
-import 'package:crimpy/models/common.dart';
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/widgets/assessment_card.dart';
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/widgets/select_hand_dialog.dart';
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/widgets/confirm_redo_assessment_dialog.dart';
@@ -22,7 +21,7 @@ class AssessmentsScreen extends ConsumerWidget {
     final assessmentTemplates = ref.watch(assessmentTrainingsProvider);
 
     /// Run the assessment given its type and hand.
-    void runAssessment(AssessmentTrainingModel model, HandSide? handSide) {
+    void runAssessment(AssessmentTrainingModel model, bool? hand) {
       ref.read(bleSessionProvider.notifier).reset();
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -34,7 +33,7 @@ class AssessmentsScreen extends ConsumerWidget {
                 ),
                 AssessmentType.criticalForce => CriticalForceRunScreen(
                   reps: model.training.reps,
-                  hand: handSide!,
+                  hand: hand!,
                 ),
               },
         ),
@@ -45,25 +44,25 @@ class AssessmentsScreen extends ConsumerWidget {
     /// If so, ask the user before running it.
     void checkAndRunAssessment(
       AssessmentTrainingModel model, {
-      HandSide? handSide,
+      bool? rightHand,
     }) async {
       // First check if the assessment has been done today.
       // If so, show the dialog
       if (await ref
               .read(assessmentsProvider(model.type).notifier)
-              .getSameDayAssessment(handSide: handSide) !=
+              .getSameDayAssessment(rightHand: rightHand) !=
           null) {
         if (context.mounted) {
           showDialog(
             context: context,
             builder:
                 (ctx) => ConfirmRedoAssessmentDialog(
-                  runAssessment: () => runAssessment(model, handSide),
+                  runAssessment: () => runAssessment(model, rightHand),
                 ),
           );
         }
       } else {
-        runAssessment(model, handSide);
+        runAssessment(model, rightHand);
       }
     }
 
@@ -90,12 +89,15 @@ class AssessmentsScreen extends ConsumerWidget {
                               break;
                             case AssessmentType.criticalForce:
                               // First get the hand to test
-                              final HandSide? hand = await showDialog(
+                              final hand = await showDialog(
                                 context: context,
                                 builder: (ctx) => SelectHandDialog(),
                               );
                               if (hand != null) {
-                                checkAndRunAssessment(template, handSide: hand);
+                                checkAndRunAssessment(
+                                  template,
+                                  rightHand: hand,
+                                );
                               }
                               break;
                           }

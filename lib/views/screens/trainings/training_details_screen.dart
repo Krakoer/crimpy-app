@@ -15,16 +15,11 @@ class TrainingDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(title: Text(template.name)),
-      body: SafeArea(
-        child: ListView.builder(
-          itemCount: template.reps.length,
-          itemBuilder:
-              (ctx, i) => RepListItem(
-                key: ValueKey(i),
-                rep: template.reps[i],
-                index: i,
-              ),
-        ),
+      body: ListView.builder(
+        itemCount: template.reps.length,
+        itemBuilder:
+            (ctx, i) =>
+                RepListItem(key: ValueKey(i), rep: template.reps[i], index: i),
       ),
       floatingActionButton: IconButton(
         onPressed:
@@ -56,12 +51,11 @@ class RepListItem extends StatelessWidget {
     String repText = '${rep.durationInSeconds}s';
     if (!rep.isRest) {
       repText +=
-          ' | ${rep.handSide.isRightHand ? 'Right' : 'Left'} hand | ${rep.targetWeight.toStringAsFixed(1)}kg';
+          ' | ${rep.handSide.isRightHand ? 'Right' : 'Left'} hand | ${rep.targetWeight}kg';
     }
 
     return CrimpyCards.training(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-      padding: const EdgeInsets.all(0),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor:

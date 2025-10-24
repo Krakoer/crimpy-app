@@ -56,10 +56,10 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
       // TODO: Move this logic to PostAssessmentScreen and show progress indicator/error text accordingly.
       final prevValueRight = await ref
           .read(assessmentsProvider(widget.type).notifier)
-          .getLastValueForHand(HandSide.right);
+          .getLastValueForHand(true);
       final prevValueLeft = await ref
           .read(assessmentsProvider(widget.type).notifier)
-          .getLastValueForHand(HandSide.left);
+          .getLastValueForHand(false);
 
       if (mounted) {
         // Push result screen
@@ -70,7 +70,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
                   type: widget.type,
                   rightHandResults: (prevValueRight, rightMax),
                   leftHandResults: (prevValueLeft, leftMax),
-                  saveAssessment: AssessmentResultModel(
+                  saveAssessment: FinishedAssessmentModel(
                     type: widget.type,
                     rightValue: rightMax,
                     leftValue: leftMax,
@@ -166,132 +166,125 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
       },
       child: Scaffold(
         appBar: AppBar(title: Text("Max Force Test")),
-        body: SafeArea(
-          child: Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              // Text to show current sensor value.
-              Padding(
-                padding: EdgeInsets.only(bottom: trueHeight * 0.75),
-                child: Text(
-                  "${lastValue.toStringAsFixed(2)} kg",
-                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    fontSize: 70,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
+        body: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            // Text to show current sensor value.
+            Padding(
+              padding: EdgeInsets.only(bottom: trueHeight * 0.75),
+              child: Text(
+                "${lastValue.toStringAsFixed(2)} kg",
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                  fontSize: 70,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ),
+            // Box to represent current sensor value. Only visible during active reps.
+            SizedBox(
+              height: double.infinity,
+              width: double.infinity,
+              child: FractionallySizedBox(
+                heightFactor: heightFactor,
+                alignment: Alignment.bottomCenter,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.rectangle,
+                    color:
+                        timer.currentRep.isRest
+                            ? Colors.transparent
+                            : CrimpyTheme.accentYellow.withValues(alpha: 0.5),
                   ),
                 ),
               ),
-              // Box to represent current sensor value. Only visible during active reps.
-              SizedBox(
-                height: double.infinity,
-                width: double.infinity,
-                child: FractionallySizedBox(
-                  heightFactor: heightFactor,
-                  alignment: Alignment.bottomCenter,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.rectangle,
-                      color:
-                          timer.currentRep.isRest
-                              ? Colors.transparent
-                              : CrimpyTheme.accentYellow.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ),
-              ),
-              // Box of text to show the user the action to do (rest or pull).
-              Positioned(
-                top: 230,
-                child: Opacity(
-                  opacity: 0.7,
-                  child: Container(
-                    width: 200,
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: CrimpyTheme.accentYellow,
-                      border: Border.all(
+            ),
+            // Box of text to show the user the action to do (rest or pull).
+            Positioned(
+              top: 230,
+              child: Opacity(
+                opacity: 0.7,
+                child: Container(
+                  width: 200,
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: CrimpyTheme.accentYellow,
+                    border: Border.all(color: CrimpyTheme.borderDefault, width: 2),
+                    boxShadow: [
+                      BoxShadow(
                         color: CrimpyTheme.borderDefault,
-                        width: 2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: CrimpyTheme.borderDefault,
-                          offset: Offset(4, 4),
-                          blurRadius: 0,
-                          spreadRadius: 0,
-                        ),
-                      ],
-                    ),
-                    child:
-                        !timer.currentRep.isRest
-                            ? Text(
-                              "Pull!\n${timer.currentRepRemaining}",
-                              style: TextStyle(
-                                fontSize: 39,
-                                color: CrimpyTheme.primaryWhite,
-                              ),
-                              textAlign: TextAlign.center,
-                            )
-                            : Column(
-                              children: [
-                                Text(
-                                  "Pulling with ${timer.currentRepIndex == 0 ? "right" : "left"} hand in",
-                                  style: TextStyle(
-                                    fontSize: 29,
-                                    color: CrimpyTheme.primaryWhite,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                Text(
-                                  "${timer.currentRepRemaining}",
-                                  style: TextStyle(
-                                    fontSize: 39,
-                                    color: CrimpyTheme.primaryWhite,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                  ),
-                ),
-              ),
-              // If on an active rep, show the max bar with max value.
-              if (!timer.currentRep.isRest)
-                Padding(
-                  padding: EdgeInsets.only(bottom: paddingMax),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0),
-                        child: Text(
-                          "${bleSession.max.toStringAsFixed(2)} kg",
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyLarge!.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontSize: 27,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        height: 2,
-                        width: double.infinity,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            border: Border.symmetric(),
-                            shape: BoxShape.rectangle,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
+                        offset: Offset(4, 4),
+                        blurRadius: 0,
+                        spreadRadius: 0,
                       ),
                     ],
                   ),
+                  child:
+                      !timer.currentRep.isRest
+                          ? Text(
+                            "Pull!\n${timer.currentRepRemaining}",
+                            style: TextStyle(
+                              fontSize: 39,
+                              color: CrimpyTheme.primaryWhite,
+                            ),
+                            textAlign: TextAlign.center,
+                          )
+                          : Column(
+                            children: [
+                              Text(
+                                "Pulling with ${timer.currentRepIndex == 0 ? "right" : "left"} hand in",
+                                style: TextStyle(
+                                  fontSize: 29,
+                                  color: CrimpyTheme.primaryWhite,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                "${timer.currentRepRemaining}",
+                                style: TextStyle(
+                                  fontSize: 39,
+                                  color: CrimpyTheme.primaryWhite,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                 ),
-            ],
-          ),
+              ),
+            ),
+            // If on an active rep, show the max bar with max value.
+            if (!timer.currentRep.isRest)
+              Padding(
+                padding: EdgeInsets.only(bottom: paddingMax),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Text(
+                        "${bleSession.max.toStringAsFixed(2)} kg",
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: 27,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 2,
+                      width: double.infinity,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          border: Border.symmetric(),
+                          shape: BoxShape.rectangle,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
       ),
     );

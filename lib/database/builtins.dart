@@ -3,7 +3,6 @@
 library;
 
 import 'package:crimpy/models/assessment_model.dart';
-import 'package:crimpy/models/training_feedback_model.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:collection/collection.dart';
@@ -146,284 +145,33 @@ final builtinsAssessments = [
 /// Built-in trainings that require assessment values to be available.
 final List<BuiltinTrainingModel> builtinTrainings = [
   BuiltinTrainingModel(
-    id: 1000,
+    id: 1000, // Use a different ID range for builtin trainings
     name: "Power Endurance",
-    description: "3 sets of 10 7/3 repeaters at 65% of max force.",
+    description:
+        "Repeater training with 3 sets of 10 reps at 80% of max force for power endurance development",
     requiredAssessments: [
       AssessmentType.mvc,
     ], // Requires MVC for max force calculation
     isAvailable: (assessmentValues) {
       // Check if we have both right and left hand MVC values
-      final mvcRight = assessmentValues.lastWhereOrNull(
-        (assessment) =>
-            assessment.type == AssessmentType.mvc &&
-            assessment.rightValue != null,
-      );
-      final mvcLeft = assessmentValues.lastWhereOrNull(
-        (assessment) =>
-            assessment.type == AssessmentType.mvc &&
-            assessment.leftValue != null,
-      );
-      return mvcRight != null &&
-          mvcLeft != null &&
-          mvcLeft.leftValue! > 0 &&
-          mvcRight.rightValue! > 0;
+      final mvcRight = assessmentValues[AssessmentType.mvc];
+      return mvcRight != null && mvcRight > 0;
     },
-    trainingGenerator: (
-      assessmentValues, {
-      double? customLoadRight,
-      double? customLoadLeft,
-    }) {
-      final maxForceRight =
-          assessmentValues
-              .lastWhereOrNull(
-                (assessment) =>
-                    assessment.type == AssessmentType.mvc &&
-                    assessment.rightValue != null,
-              )
-              ?.rightValue ??
-          0.0;
-      final maxForceLeft =
-          assessmentValues
-              .lastWhereOrNull(
-                (assessment) =>
-                    assessment.type == AssessmentType.mvc &&
-                    assessment.leftValue != null,
-              )
-              ?.leftValue ??
-          0.0;
-      final targetWeightRight =
-          customLoadRight ??
-          (maxForceRight * 0.65); // Use custom load or 65% of max force
-      final targetWeightLeft =
-          customLoadLeft ??
-          (maxForceLeft * 0.65); // Use custom load or 65% of max force
+    trainingGenerator: (assessmentValues, {double? customLoad}) {
+      final maxForce = assessmentValues[AssessmentType.mvc] ?? 0.0;
+      final targetWeight =
+          customLoad ?? (maxForce * 0.8); // Use custom load or 80% of max force
 
       return RepeaterModel(
         sets: 3,
         restBteweenSets: 8 * 60, // 8 minutes in seconds
         repsBySet: 10,
-        workTime: 7,
-        restTime: 3,
+        workTime: 5,
+        restTime: 5,
         splitHand: true,
-        weightRight: targetWeightRight,
-        weightLeft: targetWeightLeft,
+        weightRight: targetWeight,
+        weightLeft: targetWeight,
       );
-    },
-    computeNewWeights: ({difficulty, failureRate}) {
-      if (difficulty != null) {
-        switch (difficulty) {
-          case TrainingDifficulty.veryEasy:
-            return 0.1;
-          case TrainingDifficulty.easy:
-            return 0.05;
-          case TrainingDifficulty.moderate:
-            return 0.02;
-          case TrainingDifficulty.hard:
-            return 0;
-          case TrainingDifficulty.veryHard:
-            return -.02;
-        }
-      } else if (failureRate != null) {
-        if (failureRate >= 0.75) {
-          return -.2;
-        } else if (failureRate >= 50) {
-          return -.15;
-        } else if (failureRate >= 25) {
-          return -.1;
-        } else {
-          return -.05;
-        }
-      }
-      throw Exception("One of difficulty, failureRate should be non-null");
     },
   ),
-  BuiltinTrainingModel(
-    id: 1001,
-    name: "Max Force",
-    description: "Max force training at 85% of max force.",
-    requiredAssessments: [
-      AssessmentType.mvc,
-    ], // Requires MVC for max force calculation
-    isAvailable: (assessmentValues) {
-      // Check if we have both right and left hand MVC values
-      final mvcRight = assessmentValues.lastWhereOrNull(
-        (assessment) =>
-            assessment.type == AssessmentType.mvc &&
-            assessment.rightValue != null,
-      );
-      final mvcLeft = assessmentValues.lastWhereOrNull(
-        (assessment) =>
-            assessment.type == AssessmentType.mvc &&
-            assessment.leftValue != null,
-      );
-      return mvcRight != null &&
-          mvcLeft != null &&
-          mvcLeft.leftValue! > 0 &&
-          mvcRight.rightValue! > 0;
-    },
-    trainingGenerator: (
-      assessmentValues, {
-      double? customLoadRight,
-      double? customLoadLeft,
-    }) {
-      final maxForceRight =
-          assessmentValues
-              .lastWhereOrNull(
-                (assessment) =>
-                    assessment.type == AssessmentType.mvc &&
-                    assessment.rightValue != null,
-              )
-              ?.rightValue ??
-          0.0;
-      final maxForceLeft =
-          assessmentValues
-              .lastWhereOrNull(
-                (assessment) =>
-                    assessment.type == AssessmentType.mvc &&
-                    assessment.leftValue != null,
-              )
-              ?.leftValue ??
-          0.0;
-      final targetWeightRight =
-          customLoadRight ??
-          (maxForceRight * 0.85); // Use custom load or 85% of max force
-      final targetWeightLeft =
-          customLoadLeft ??
-          (maxForceLeft * 0.85); // Use custom load or 85% of max force
-
-      return RepeaterModel(
-        sets: 3,
-        restBteweenSets: 4 * 60, // 8 minutes in seconds
-        repsBySet: 3,
-        workTime: 7,
-        restTime: 15,
-        splitHand: true,
-        weightRight: targetWeightRight,
-        weightLeft: targetWeightLeft,
-      );
-    },
-    computeNewWeights: ({difficulty, failureRate}) {
-      if (difficulty != null) {
-        switch (difficulty) {
-          case TrainingDifficulty.veryEasy:
-            return 0.1;
-          case TrainingDifficulty.easy:
-            return 0.07;
-          case TrainingDifficulty.moderate:
-            return 0.05;
-          case TrainingDifficulty.hard:
-            return 0.02;
-          case TrainingDifficulty.veryHard:
-            return 0;
-        }
-      } else if (failureRate != null) {
-        if (failureRate >= 0.75) {
-          return -.2;
-        } else if (failureRate >= 50) {
-          return -.15;
-        } else if (failureRate >= 25) {
-          return -.1;
-        } else {
-          return -.05;
-        }
-      }
-      throw Exception("One of difficulty, failureRate should be non-null");
-    },
-  ),
-  // For debug purposes
-  // BuiltinTrainingModel(
-  //   id: 1002,
-  //   name: "Test",
-  //   description: "Test training.",
-  //   requiredAssessments: [
-  //     AssessmentType.mvc,
-  //     AssessmentType.criticalForce,
-  //   ], // Requires MVC for max force calculation
-  //   isAvailable: (assessmentValues) {
-  //     // Check if we have both right and left hand MVC values
-  //     final mvcRight = assessmentValues.lastWhereOrNull(
-  //       (assessment) =>
-  //           assessment.type == AssessmentType.mvc &&
-  //           assessment.rightValue != null,
-  //     );
-  //     final mvcLeft = assessmentValues.lastWhereOrNull(
-  //       (assessment) =>
-  //           assessment.type == AssessmentType.mvc &&
-  //           assessment.leftValue != null,
-  //     );
-  //     return mvcRight != null &&
-  //         mvcLeft != null &&
-  //         mvcLeft.leftValue! > 0 &&
-  //         mvcRight.rightValue! > 0;
-  //   },
-  //   trainingGenerator: (
-  //     assessmentValues, {
-  //     double? customLoadRight,
-  //     double? customLoadLeft,
-  //   }) {
-  //     final maxForceRight =
-  //         assessmentValues
-  //             .lastWhereOrNull(
-  //               (assessment) =>
-  //                   assessment.type == AssessmentType.mvc &&
-  //                   assessment.rightValue != null,
-  //             )
-  //             ?.rightValue ??
-  //         0.0;
-  //     final maxForceLeft =
-  //         assessmentValues
-  //             .lastWhereOrNull(
-  //               (assessment) =>
-  //                   assessment.type == AssessmentType.mvc &&
-  //                   assessment.leftValue != null,
-  //             )
-  //             ?.leftValue ??
-  //         0.0;
-  //     final targetWeightRight =
-  //         customLoadRight ??
-  //         (maxForceRight * 0.85); // Use custom load or 85% of max force
-  //     final targetWeightLeft =
-  //         customLoadLeft ??
-  //         (maxForceLeft * 0.85); // Use custom load or 85% of max force
-
-  //     return RepeaterModel(
-  //       sets: 1,
-  //       restBteweenSets: 10,
-  //       repsBySet: 2,
-  //       workTime: 3,
-  //       restTime: 3,
-  //       splitHand: true,
-  //       weightRight: targetWeightRight,
-  //       weightLeft: targetWeightLeft,
-  //     );
-  //   },
-  //   computeNewWeights: ({difficulty, failureRate}) {
-  //     if (difficulty != null) {
-  //       switch (difficulty) {
-  //         case TrainingDifficulty.veryEasy:
-  //           return 0.1;
-  //         case TrainingDifficulty.easy:
-  //           return 0.05;
-  //         case TrainingDifficulty.moderate:
-  //           return 0.02;
-  //         case TrainingDifficulty.hard:
-  //           return 0;
-  //         case TrainingDifficulty.veryHard:
-  //           return -.02;
-  //       }
-  //     } else if (failureRate != null) {
-  //       if (failureRate >= 75) {
-  //         return -.3;
-  //       } else if (failureRate >= 50) {
-  //         return -.2;
-  //       } else if (failureRate >= 25) {
-  //         return -.1;
-  //       } else {
-  //         return -.05;
-  //       }
-  //     }
-  //     throw Exception("One of difficulty, failureRate should be non-null");
-  //   },
-  // ),
 ];

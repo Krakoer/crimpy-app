@@ -1,10 +1,5 @@
-import 'package:crimpy/views/screens/trainings/training_feedback_screen/training_feedback_screen.dart';
-import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_header.dart';
-import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/hand_label.dart';
-import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_timer_display.dart';
-import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/next_rep_preview.dart';
-import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_progress_info.dart';
-import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_controls.dart';
+import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_footer.dart';
+import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_time_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
@@ -32,7 +27,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   late AnimationController _serieController;
 
   /// List of the average weights done during the training.
-  List<RepDataModel> repResults = [];
+  List<double> averageWeights = [];
 
   // Setup the workout timer
   late WorkoutTimer timer = WorkoutTimer(
@@ -40,19 +35,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     // Set state each second to update the UI.
     onSecondChange: () => setState(() {}),
     onNextRep: (nextRepDuration) {
-      repResults.add(
-        RepDataModel(
-          handSide: timer.currentRep.handSide,
-          targetWeight: timer.currentRep.targetWeight,
-          // Add avg if it was not a rest
-          averageWeight:
-              timer.currentRep.isRest ? 0 : ref.read(bleSessionProvider).avg,
-          duration: timer.currentRep.durationInSeconds,
-          index: timer.currentRep.index,
-          isRest: timer.currentRep.isRest,
-        ),
-      );
-
+      // If the finished rep was a workout rep, add the avg to the list.
+      if (!timer.currentRep.isRest) {
+        averageWeights.add(ref.read(bleSessionProvider).avg);
+      }
       // Setup the animation controller for the next rep.
       _serieController.duration = Duration(seconds: nextRepDuration);
       _serieController.reset();
@@ -65,34 +51,16 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     onFinished: () async {
       _serieController.stop();
       // Add the final average.
-      repResults.add(
-        RepDataModel(
-          handSide: timer.currentRep.handSide,
-          targetWeight: timer.currentRep.targetWeight,
-          // Add avg if it was not a rest
-          averageWeight:
-              timer.currentRep.isRest ? 0 : ref.read(bleSessionProvider).avg,
-          duration: timer.currentRep.durationInSeconds,
-          index: timer.currentRep.index,
-          isRest: timer.currentRep.isRest,
-        ),
-      );
-
+      if (!timer.currentRep.isRest) {
+        averageWeights.add(ref.read(bleSessionProvider).avg);
+      }
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder:
-              // If the training can compute new weights, show feedback screen.
-              // Otherwise show regular post-training screen.
-              (context) =>
-                  widget.training.computeNewWeights == null
-                      ? PostWorkoutScreen(
-                        template: widget.training,
-                        results: repResults,
-                      )
-                      : TrainingFeedbackScreen(
-                        template: widget.training,
-                        results: repResults,
-                      ),
+              (context) => PostWorkoutScreen(
+                template: widget.training,
+                avgs: averageWeights,
+              ),
         ),
       );
     },
@@ -143,18 +111,18 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
           context: context,
           builder:
               (context) => AlertDialog(
-                title: const Text('Leave the workout?'),
-                content: const Text(
+                title: Text('Leave the workout?'),
+                content: Text(
                   'If you leave this workout, you will lose your progress.',
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('No'),
+                    child: Text('No'),
                   ),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('Yes'),
+                    child: Text('Yes'),
                   ),
                 ],
               ),
@@ -165,103 +133,74 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: CrimpyTheme.bgPrimary,
-        appBar: AppBar(title: Text(widget.training.name), centerTitle: true),
-        body: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              // Calculate available height
-              final availableHeight = constraints.maxHeight;
-
-              // Determine sizes based on available height
-              // Reserve space for header (~60), footer (~70), controls (~70), spacing (~40)
-              // Remaining space for gauge and timer
-              final reservedSpace = 240;
-              final gaugeSpace = availableHeight - reservedSpace;
-
-              // Calculate gauge size (max 300, but scale down if needed)
-              final gaugeSize = (gaugeSpace * 0.6).clamp(200.0, 300.0);
-
-              // Scale timer text based on available space
-              final timerFontSize = (availableHeight * 0.06).clamp(32.0, 48.0);
-
-              return Column(
+        appBar: AppBar(),
+        floatingActionButton: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Pause/Play button
+            IconButton(
+              onPressed: timer.isRunning ? _stop : _start,
+              color: CrimpyTheme.primaryBlack,
+              iconSize: 40,
+              icon: Icon(timer.isRunning ? Icons.pause : Icons.play_arrow),
+            ),
+            // Skip rep button
+            IconButton(
+              onPressed: () {
+                _start();
+                timer.skipRep();
+              },
+              color: CrimpyTheme.primaryBlack,
+              iconSize: 40,
+              icon: Icon(Icons.skip_next),
+            ),
+          ],
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Header that displays global elapsed and remaining time.
+            TrainingTimeHeader(
+              elapsedMilliseconds: timer.elapsedMilliseconds,
+              timeLeftMilliseconds:
+                  widget.training.totalDuration.inMilliseconds -
+                  timer.elapsedMilliseconds,
+            ),
+            // Workout circle with gauge
+            Container(
+              padding: EdgeInsets.all(16),
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  // Header
-                  TrainingHeader(
-                    elapsedMilliseconds: timer.elapsedMilliseconds,
-                    remainingMilliseconds:
-                        widget.training.totalDuration.inMilliseconds -
-                        timer.elapsedMilliseconds,
-                  ),
-                  // Main content area with gauge
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Hand label (above gauge during work)
-                          if (!timer.currentRep.isRest)
-                            HandLabel(handSide: timer.currentRep.handSide),
-                          // Workout circle with gauge
-                          SizedBox(
-                            width: gaugeSize,
-                            height: gaugeSize,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Gauge(timer.currentRep.targetWeight),
-                                AnimatedBuilder(
-                                  animation: _serieController,
-                                  builder:
-                                      (ctx, child) => WorkoutCircle(
-                                        value: _serieController.value,
-                                        rest: timer.currentRep.isRest,
-                                      ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          // Timer and status display
-                          TrainingTimerDisplay(
-                            secondsRemaining: timer.currentRepRemaining,
-                            isRest: timer.currentRep.isRest,
-                            fontSize: timerFontSize * 1.4,
-                          ),
-                          // Next rep preview (during rest)
-                          if (timer.currentRep.isRest &&
-                              timer.currentRepIndex <
-                                  timer.repetitions.length - 1)
-                            NextRepPreview(
-                              nextRep:
-                                  timer.repetitions[timer.currentRepIndex + 1],
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Progress info
-                  TrainingProgressInfo(
-                    currentRepIndex: timer.currentRepIndex,
-                    totalReps: timer.repetitions.length,
-                    repeater: widget.training.repeater,
-                  ),
-                  const SizedBox(height: 8),
-                  // Controls
-                  TrainingControls(
-                    isRunning: timer.isRunning,
-                    onPlayPause: timer.isRunning ? _stop : _start,
-                    onSkip: () {
-                      _start();
-                      timer.skipRep();
-                    },
+                  Gauge(timer.currentRep.targetWeight),
+                  AnimatedBuilder(
+                    animation: _serieController,
+                    builder:
+                        (ctx, child) => WorkoutCircle(
+                          value: _serieController.value,
+                          rest: timer.currentRep.isRest,
+                        ),
                   ),
                 ],
-              );
-            },
-          ),
+              ),
+            ),
+            SizedBox(height: 20),
+            // Footer below the gauge
+            TrainingFooter(
+              currentRepIndex: timer.currentRepIndex + 1,
+              numberReps: timer.repetitions.length,
+              timeLeftMilliseconds:
+                  widget.training.totalDuration.inMilliseconds -
+                  timer.elapsedMilliseconds,
+            ),
+            SizedBox(height: 20),
+            // Time remaining for current rep
+            Text(
+              "${(timer.currentRepRemaining / 60).floor().toString().padLeft(2, '0')}:${(timer.currentRepRemaining % 60).toString().padLeft(2, '0')}",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 54),
+            ),
+          ],
         ),
       ),
     );
