@@ -75,6 +75,11 @@ class AssessmentResultModel {
     }
     return rightValue == null ? HandSide.left : HandSide.both;
   }
+
+  /// Helper method to get value for a specific hand.
+  double? getValue(bool isRight) {
+    return isRight ? rightValue : leftValue;
+  }
 }
 
 class AssessmentModel {

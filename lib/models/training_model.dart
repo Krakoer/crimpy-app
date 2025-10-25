@@ -6,6 +6,24 @@ import "package:crimpy/models/training_feedback_model.dart";
 import "ble_data_model.dart";
 import "assessment_model.dart";
 
+/// Represents a required assessment with optional grip position.
+class AssessmentRequirement {
+  final AssessmentType type;
+  final GripPosition? gripPosition;
+
+  const AssessmentRequirement({required this.type, this.gripPosition});
+
+  @override
+  bool operator ==(Object other) {
+    return other is AssessmentRequirement &&
+        other.type == type &&
+        other.gripPosition == gripPosition;
+  }
+
+  @override
+  int get hashCode => Object.hash(type, gripPosition);
+}
+
 class SessionModel {
   final int? id;
   final String name;
@@ -327,15 +345,15 @@ class BuiltinTrainingModel {
   final int id;
   final String name;
   final String description;
-  final List<AssessmentType> requiredAssessments;
-  final RepeaterModel Function(
+  final List<AssessmentRequirement> requiredAssessments;
+  final List<RepeaterModel> Function(
     List<AssessmentResultModel> assessmentValues, {
     double? customLoadRight,
     double? customLoadLeft,
   })
   trainingGenerator;
   final bool Function(List<AssessmentResultModel> assessmentValues) isAvailable;
-  final LoadAdjustmentFunction computeNewWeights;
+  final LoadAdjustmentFunction? computeNewWeights;
 
   BuiltinTrainingModel({
     required this.id,
@@ -344,7 +362,7 @@ class BuiltinTrainingModel {
     required this.requiredAssessments,
     required this.trainingGenerator,
     required this.isAvailable,
-    required this.computeNewWeights,
+    this.computeNewWeights,
   });
 
   /// Generate the training based on assessment values.
@@ -357,32 +375,38 @@ class BuiltinTrainingModel {
       return null;
     }
 
-    final repeater = trainingGenerator(
+    final repeaters = trainingGenerator(
       assessmentValues,
       customLoadRight: customLoadRight,
       customLoadLeft: customLoadLeft,
     );
-    final reps = repeater.generateReps();
+
+    // Combine all repeater reps into a single list
+    List<RepModel> allReps = [];
+    int globalIndex = 0;
+    for (final repeater in repeaters) {
+      final repeaterReps = repeater.generateReps();
+      for (final rep in repeaterReps) {
+        allReps.add(
+          RepModel(
+            durationInSeconds: rep.duration,
+            isRest: rep.isRest,
+            handSide: rep.handSide,
+            targetWeight: rep.targetWeight,
+            id: rep.id,
+            index: globalIndex++,
+            gripPosition: rep.gripPosition,
+          ),
+        );
+      }
+    }
 
     return TrainingWithReps(
       id: id,
       name: name,
       isFav: false,
-      reps:
-          reps
-              .map(
-                (r) => RepModel(
-                  durationInSeconds: r.duration,
-                  isRest: r.isRest,
-                  handSide: r.handSide,
-                  targetWeight: r.targetWeight,
-                  id: r.id,
-                  index: r.index,
-                  gripPosition: r.gripPosition,
-                ),
-              )
-              .toList(),
-      repeater: repeater,
+      reps: allReps,
+      repeater: repeaters.isNotEmpty ? repeaters.first : null,
       computeNewWeights: computeNewWeights,
     );
   }
@@ -393,7 +417,7 @@ class TrainingListItem {
   final TrainingWithReps? training;
   final BuiltinTrainingModel? builtinTraining;
   final bool isAvailable;
-  final List<AssessmentType> missingAssessments;
+  final List<AssessmentRequirement> missingAssessments;
 
   TrainingListItem._({
     this.training,
@@ -415,7 +439,7 @@ class TrainingListItem {
   factory TrainingListItem.builtin(
     BuiltinTrainingModel builtinTraining,
     bool isAvailable,
-    List<AssessmentType> missingAssessments,
+    List<AssessmentRequirement> missingAssessments,
     TrainingWithReps? generatedTraining,
   ) {
     return TrainingListItem._(

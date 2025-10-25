@@ -51,48 +51,53 @@ class BuiltinTrainingRepository {
   }
 
   /// Get the missing assessments for a training.
-  Future<List<AssessmentType>> getMissingAssessments(
+  Future<List<AssessmentRequirement>> getMissingAssessments(
     BuiltinTrainingModel training,
   ) async {
     final assessmentValues = await _getAssessmentValues(
       training.requiredAssessments,
     );
-    final missing = <AssessmentType>[];
+    final missing = <AssessmentRequirement>[];
 
-    for (final requiredType in training.requiredAssessments) {
+    for (final requirement in training.requiredAssessments) {
       final value = assessmentValues.lastWhereOrNull(
-        (ass) => ass.type == requiredType,
+        (ass) =>
+            ass.type == requirement.type &&
+            ass.gripPosition == requirement.gripPosition,
       );
       if (value == null ||
           value.leftValue == null ||
           value.rightValue == null) {
-        missing.add(requiredType);
+        missing.add(requirement);
       }
     }
 
     return missing;
   }
 
-  /// Private method to get assessment values for required types.
+  /// Private method to get assessment values for required assessments.
   Future<List<AssessmentResultModel>> _getAssessmentValues(
-    List<AssessmentType> requiredTypes,
+    List<AssessmentRequirement> requirements,
   ) async {
     final List<AssessmentResultModel> values = [];
 
-    for (final type in requiredTypes) {
+    for (final requirement in requirements) {
       final rightValue = await _assessmentRepository.getLastValueForHand(
-        type,
+        requirement.type,
         HandSide.right,
+        gripPosition: requirement.gripPosition,
       );
       final leftValue = await _assessmentRepository.getLastValueForHand(
-        type,
+        requirement.type,
         HandSide.left,
+        gripPosition: requirement.gripPosition,
       );
       values.add(
         AssessmentResultModel(
-          type: type,
+          type: requirement.type,
           rightValue: rightValue,
           leftValue: leftValue,
+          gripPosition: requirement.gripPosition,
         ),
       );
     }

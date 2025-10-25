@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/common.dart';
+import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 
 class MissingAssessmentsDialog extends StatelessWidget {
-  final List<AssessmentType> missingAssessments;
+  final List<AssessmentRequirement> missingAssessments;
   final VoidCallback onGoToAssessments;
 
   const MissingAssessmentsDialog({
@@ -73,7 +75,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
                 children:
                     missingAssessments
                         .map(
-                          (type) => Padding(
+                          (requirement) => Padding(
                             padding: const EdgeInsets.symmetric(vertical: 6.0),
                             child: Row(
                               children: [
@@ -84,10 +86,32 @@ class MissingAssessmentsDialog extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: Text(
-                                    assessmentTypeToString(type),
-                                    style: Theme.of(context).textTheme.bodyLarge
-                                        ?.copyWith(fontWeight: FontWeight.w500),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        assessmentTypeToString(
+                                          requirement.type,
+                                        ),
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyLarge?.copyWith(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      if (requirement.gripPosition != null) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          'Grip: ${requirement.gripPosition!.displayName}',
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodySmall?.copyWith(
+                                            color: CrimpyTheme.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ),
                               ],

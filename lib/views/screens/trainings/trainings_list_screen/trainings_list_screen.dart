@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/missing_assessments_dialog.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/training_list_item.dart';
@@ -14,7 +14,9 @@ class TrainingScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final templates = ref.watch(allTrainingsProvider);
 
-    void showMissingAssessmentsDialog(List<AssessmentType> missingAssessments) {
+    void showMissingAssessmentsDialog(
+      List<AssessmentRequirement> missingAssessments,
+    ) {
       showDialog(
         context: context,
         builder:

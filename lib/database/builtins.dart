@@ -160,18 +160,23 @@ final List<BuiltinTrainingModel> builtinTrainings = [
     name: "Power Endurance",
     description: "3 sets of 10 7/3 repeaters at 65% of max force.",
     requiredAssessments: [
-      AssessmentType.mvc,
+      AssessmentRequirement(
+        type: AssessmentType.mvc,
+        gripPosition: GripPosition.halfCrimp,
+      ),
     ], // Requires MVC for max force calculation
     isAvailable: (assessmentValues) {
       // Check if we have both right and left hand MVC values
       final mvcRight = assessmentValues.lastWhereOrNull(
         (assessment) =>
             assessment.type == AssessmentType.mvc &&
+            assessment.gripPosition == GripPosition.halfCrimp &&
             assessment.rightValue != null,
       );
       final mvcLeft = assessmentValues.lastWhereOrNull(
         (assessment) =>
             assessment.type == AssessmentType.mvc &&
+            assessment.gripPosition == GripPosition.halfCrimp &&
             assessment.leftValue != null,
       );
       return mvcRight != null &&
@@ -189,6 +194,7 @@ final List<BuiltinTrainingModel> builtinTrainings = [
               .lastWhereOrNull(
                 (assessment) =>
                     assessment.type == AssessmentType.mvc &&
+                    assessment.gripPosition == GripPosition.halfCrimp &&
                     assessment.rightValue != null,
               )
               ?.rightValue ??
@@ -198,6 +204,7 @@ final List<BuiltinTrainingModel> builtinTrainings = [
               .lastWhereOrNull(
                 (assessment) =>
                     assessment.type == AssessmentType.mvc &&
+                    assessment.gripPosition == GripPosition.halfCrimp &&
                     assessment.leftValue != null,
               )
               ?.leftValue ??
@@ -209,16 +216,19 @@ final List<BuiltinTrainingModel> builtinTrainings = [
           customLoadLeft ??
           (maxForceLeft * 0.65); // Use custom load or 65% of max force
 
-      return RepeaterModel(
-        sets: 3,
-        restBteweenSets: 8 * 60, // 8 minutes in seconds
-        repsBySet: 10,
-        workTime: 7,
-        restTime: 3,
-        splitHand: true,
-        weightRight: targetWeightRight,
-        weightLeft: targetWeightLeft,
-      );
+      return [
+        RepeaterModel(
+          sets: 3,
+          restBteweenSets: 8 * 60, // 8 minutes in seconds
+          repsBySet: 10,
+          workTime: 7,
+          restTime: 3,
+          splitHand: true,
+          weightRight: targetWeightRight,
+          weightLeft: targetWeightLeft,
+          gripPosition: GripPosition.halfCrimp,
+        ),
+      ];
     },
     computeNewWeights: ({difficulty, failureRate}) {
       if (difficulty != null) {
@@ -253,18 +263,23 @@ final List<BuiltinTrainingModel> builtinTrainings = [
     name: "Max Force",
     description: "Max force training at 85% of max force.",
     requiredAssessments: [
-      AssessmentType.mvc,
+      AssessmentRequirement(
+        type: AssessmentType.mvc,
+        gripPosition: GripPosition.halfCrimp,
+      ),
     ], // Requires MVC for max force calculation
     isAvailable: (assessmentValues) {
       // Check if we have both right and left hand MVC values
       final mvcRight = assessmentValues.lastWhereOrNull(
         (assessment) =>
             assessment.type == AssessmentType.mvc &&
+            assessment.gripPosition == GripPosition.halfCrimp &&
             assessment.rightValue != null,
       );
       final mvcLeft = assessmentValues.lastWhereOrNull(
         (assessment) =>
             assessment.type == AssessmentType.mvc &&
+            assessment.gripPosition == GripPosition.halfCrimp &&
             assessment.leftValue != null,
       );
       return mvcRight != null &&
@@ -282,6 +297,7 @@ final List<BuiltinTrainingModel> builtinTrainings = [
               .lastWhereOrNull(
                 (assessment) =>
                     assessment.type == AssessmentType.mvc &&
+                    assessment.gripPosition == GripPosition.halfCrimp &&
                     assessment.rightValue != null,
               )
               ?.rightValue ??
@@ -291,6 +307,7 @@ final List<BuiltinTrainingModel> builtinTrainings = [
               .lastWhereOrNull(
                 (assessment) =>
                     assessment.type == AssessmentType.mvc &&
+                    assessment.gripPosition == GripPosition.halfCrimp &&
                     assessment.leftValue != null,
               )
               ?.leftValue ??
@@ -302,16 +319,19 @@ final List<BuiltinTrainingModel> builtinTrainings = [
           customLoadLeft ??
           (maxForceLeft * 0.85); // Use custom load or 85% of max force
 
-      return RepeaterModel(
-        sets: 3,
-        restBteweenSets: 4 * 60, // 8 minutes in seconds
-        repsBySet: 3,
-        workTime: 7,
-        restTime: 15,
-        splitHand: true,
-        weightRight: targetWeightRight,
-        weightLeft: targetWeightLeft,
-      );
+      return [
+        RepeaterModel(
+          sets: 3,
+          restBteweenSets: 4 * 60, // 8 minutes in seconds
+          repsBySet: 3,
+          workTime: 7,
+          restTime: 15,
+          splitHand: true,
+          weightRight: targetWeightRight,
+          weightLeft: targetWeightLeft,
+          gripPosition: GripPosition.halfCrimp,
+        ),
+      ];
     },
     computeNewWeights: ({difficulty, failureRate}) {
       if (difficulty != null) {
@@ -339,6 +359,161 @@ final List<BuiltinTrainingModel> builtinTrainings = [
         }
       }
       throw Exception("One of difficulty, failureRate should be non-null");
+    },
+  ),
+  BuiltinTrainingModel(
+    id: 1003,
+    name: "Warmup",
+    description:
+        "Progressive warmup through all grip positions at 20%, 35%, 50%, 60%, 75%, and 95% of MVC.",
+    requiredAssessments: [
+      AssessmentRequirement(
+        type: AssessmentType.mvc,
+        gripPosition: GripPosition.threeFinger,
+      ),
+      AssessmentRequirement(
+        type: AssessmentType.mvc,
+        gripPosition: GripPosition.openHand,
+      ),
+      AssessmentRequirement(
+        type: AssessmentType.mvc,
+        gripPosition: GripPosition.halfCrimp,
+      ),
+    ],
+    isAvailable: (assessmentValues) {
+      // Check for MVC values in all three grip positions
+      for (final grip in [
+        GripPosition.threeFinger,
+        GripPosition.openHand,
+        GripPosition.halfCrimp,
+      ]) {
+        final mvcRight = assessmentValues.lastWhereOrNull(
+          (assessment) =>
+              assessment.type == AssessmentType.mvc &&
+              assessment.gripPosition == grip &&
+              assessment.rightValue != null &&
+              assessment.rightValue! > 0,
+        );
+        final mvcLeft = assessmentValues.lastWhereOrNull(
+          (assessment) =>
+              assessment.type == AssessmentType.mvc &&
+              assessment.gripPosition == grip &&
+              assessment.leftValue != null &&
+              assessment.leftValue! > 0,
+        );
+        if (mvcRight == null || mvcLeft == null) {
+          return false;
+        }
+      }
+      return true;
+    },
+    trainingGenerator: (
+      assessmentValues, {
+      double? customLoadRight,
+      double? customLoadLeft,
+    }) {
+      // Helper function to get MVC for a grip position
+      double getMvc(GripPosition grip, bool isRight) {
+        return assessmentValues
+                .lastWhereOrNull(
+                  (assessment) =>
+                      assessment.type == AssessmentType.mvc &&
+                      assessment.gripPosition == grip &&
+                      (isRight
+                          ? assessment.rightValue != null
+                          : assessment.leftValue != null),
+                )
+                ?.getValue(isRight) ??
+            0.0;
+      }
+
+      // Define the warmup structure: intensity percentages and grip positions
+      final warmupBlocks = [
+        // 20% intensity
+        (
+          0.20,
+          [
+            GripPosition.threeFinger,
+            GripPosition.openHand,
+            GripPosition.halfCrimp,
+          ],
+        ),
+        // 35% intensity
+        (
+          0.35,
+          [
+            GripPosition.threeFinger,
+            GripPosition.openHand,
+            GripPosition.halfCrimp,
+          ],
+        ),
+        // 50% intensity
+        (
+          0.50,
+          [
+            GripPosition.threeFinger,
+            GripPosition.openHand,
+            GripPosition.halfCrimp,
+          ],
+        ),
+        // 60% intensity
+        (
+          0.60,
+          [
+            GripPosition.threeFinger,
+            GripPosition.openHand,
+            GripPosition.halfCrimp,
+          ],
+        ),
+        // 75% intensity
+        (
+          0.75,
+          [
+            GripPosition.threeFinger,
+            GripPosition.openHand,
+            GripPosition.halfCrimp,
+          ],
+        ),
+        // 95% intensity
+        (
+          0.95,
+          [
+            GripPosition.threeFinger,
+            GripPosition.openHand,
+            GripPosition.halfCrimp,
+          ],
+        ),
+      ];
+
+      List<RepeaterModel> repeaters = [];
+
+      for (final (intensity, grips) in warmupBlocks) {
+        for (final grip in grips) {
+          final mvcRight = getMvc(grip, true);
+          final mvcLeft = getMvc(grip, false);
+
+          // Calculate set duration: repsBySet * workTime + (repsBySet - 1) * restTime
+          final restTime = intensity >= 0.95 ? 10 : 5;
+          final setDuration = 4 * 5 + 3 * restTime; // 35s or 50s
+
+          repeaters.add(
+            RepeaterModel(
+              sets: 1,
+              restBteweenSets:
+                  setDuration, // Minimal rest - just time for other hand
+              repsBySet: 4,
+              workTime: 5,
+              restTime: restTime, // 10s rest for 95%, 5s otherwise
+              splitHand: true,
+              weightRight: mvcRight * intensity,
+              weightLeft: mvcLeft * intensity,
+              gripPosition: grip,
+            ),
+          );
+        }
+      }
+
+      return repeaters;
     },
   ),
   // For debug purposes
