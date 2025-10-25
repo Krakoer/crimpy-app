@@ -99,6 +99,14 @@ class RepDatas extends Table {
       integer().withDefault(const Constant(0))(); // 0 = halfCrimp (default)
 }
 
+// Stores the IDs of pinned builtin trainings
+class PinnedBuiltinTrainings extends Table {
+  late final IntColumn builtinTrainingId = integer()();
+
+  @override
+  Set<Column> get primaryKey => {builtinTrainingId};
+}
+
 // Stores the saved sensor configs.
 class SensorConfigs extends Table {
   late final IntColumn id = integer().autoIncrement()();
@@ -129,6 +137,7 @@ class BuiltinTrainingWeights extends Table {
     Repeaters,
     SensorConfigs,
     BuiltinTrainingWeights,
+    PinnedBuiltinTrainings,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -603,8 +612,40 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
+  // ------------------------------------- PINNED BUILTIN TRAININGS -------------------------------------
+  /// Get all pinned builtin training IDs.
+  Future<List<int>> getPinnedBuiltinTrainingIds() async {
+    return (await select(pinnedBuiltinTrainings).get())
+        .map((row) => row.builtinTrainingId)
+        .toList();
+  }
+
+  /// Pin a builtin training to the home screen.
+  Future<void> pinBuiltinTraining(int builtinTrainingId) async {
+    await into(pinnedBuiltinTrainings).insert(
+      PinnedBuiltinTrainingsCompanion(
+        builtinTrainingId: Value(builtinTrainingId),
+      ),
+    );
+  }
+
+  /// Unpin a builtin training from the home screen.
+  Future<void> unpinBuiltinTraining(int builtinTrainingId) async {
+    await (delete(pinnedBuiltinTrainings)
+      ..where((t) => t.builtinTrainingId.equals(builtinTrainingId))).go();
+  }
+
+  /// Check if a builtin training is pinned.
+  Future<bool> isBuiltinTrainingPinned(int builtinTrainingId) async {
+    final result =
+        await (select(pinnedBuiltinTrainings)..where(
+          (t) => t.builtinTrainingId.equals(builtinTrainingId),
+        )).getSingleOrNull();
+    return result != null;
+  }
+
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -630,6 +671,10 @@ class AppDatabase extends _$AppDatabase {
         // Migration to schema version 5: Add sessionType and duration to sessions
         await m.addColumn(sessions, sessions.sessionType);
         await m.addColumn(sessions, sessions.duration);
+      }
+      if (from <= 5 && to >= 6) {
+        // Migration to schema version 6: Add PinnedBuiltinTrainings table
+        await m.createTable(pinnedBuiltinTrainings);
       }
     },
   );

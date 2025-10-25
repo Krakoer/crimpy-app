@@ -228,6 +228,80 @@ final sessionWithDataProvider = FutureProvider.family<SessionModel?, int>((
   return trainingRepository.getSessionWithData(sessionId);
 });
 
+/// Provider for pinned builtin trainings (with favorites).
+final pinnedTrainingsProvider =
+    AsyncNotifierProvider<PinnedTrainingsNotifier, List<TrainingListItem>>(
+      PinnedTrainingsNotifier.new,
+    );
+
+class PinnedTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
+  late TrainingRepository _trainingRepository;
+  late BuiltinTrainingRepository _builtinTrainingRepository;
+
+  @override
+  Future<List<TrainingListItem>> build() async {
+    _trainingRepository = ref.watch(trainingRepositoryProvider);
+    _builtinTrainingRepository = ref.watch(builtinTrainingRepositoryProvider);
+
+    // Get favorite regular trainings
+    final favoriteTrainings = await _trainingRepository.getAllTrainings(
+      onlyFavs: true,
+    );
+    final favoriteItems =
+        favoriteTrainings.map(TrainingListItem.regular).toList();
+
+    // Get pinned builtin training IDs
+    final pinnedIds =
+        await _builtinTrainingRepository.getPinnedBuiltinTrainingIds();
+
+    // Get all builtin trainings
+    final allBuiltins = await _builtinTrainingRepository.getBuiltinTrainings();
+
+    // Filter to only pinned ones and generate them
+    final pinnedBuiltinItems = <TrainingListItem>[];
+    for (final builtin in allBuiltins) {
+      if (pinnedIds.contains(builtin.id)) {
+        final isAvailable = await _builtinTrainingRepository
+            .isTrainingAvailable(builtin);
+        final missingAssessments = await _builtinTrainingRepository
+            .getMissingAssessments(builtin);
+        final generatedTraining =
+            isAvailable
+                ? await _builtinTrainingRepository.generateTraining(builtin)
+                : null;
+
+        pinnedBuiltinItems.add(
+          TrainingListItem.builtin(
+            builtin,
+            isAvailable,
+            missingAssessments,
+            generatedTraining,
+            true, // isPinned is true since we filtered to only pinned items
+          ),
+        );
+      }
+    }
+
+    // Combine favorite regular trainings and pinned builtin trainings
+    return [...favoriteItems, ...pinnedBuiltinItems];
+  }
+
+  /// Toggle pin status for a builtin training.
+  Future<void> togglePin(int builtinTrainingId) async {
+    final isPinned = await _builtinTrainingRepository.isBuiltinTrainingPinned(
+      builtinTrainingId,
+    );
+
+    if (isPinned) {
+      await _builtinTrainingRepository.unpinBuiltinTraining(builtinTrainingId);
+    } else {
+      await _builtinTrainingRepository.pinBuiltinTraining(builtinTrainingId);
+    }
+
+    ref.invalidateSelf();
+  }
+}
+
 /// Provider for combined training list (regular + builtin trainings).
 final allTrainingsProvider =
     AsyncNotifierProvider<AllTrainingsNotifier, List<TrainingListItem>>(
@@ -263,6 +337,9 @@ class AllTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
           isAvailable
               ? await _builtinTrainingRepository.generateTraining(builtin)
               : null;
+      final isPinned = await _builtinTrainingRepository.isBuiltinTrainingPinned(
+        builtin.id,
+      );
 
       builtinItems.add(
         TrainingListItem.builtin(
@@ -270,6 +347,7 @@ class AllTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
           isAvailable,
           missingAssessments,
           generatedTraining,
+          isPinned,
         ),
       );
     }

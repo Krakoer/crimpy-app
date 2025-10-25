@@ -11,40 +11,48 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 class FavoriteTrainingList extends ConsumerWidget {
   /// Displays the list of favorite training as cards.
   /// Cards are clickable and allow the user to start trainings.
-  /// The user can edit the favorite trainings by clicking the `Pin a training` button.
+  /// The user can edit the favorite trainings by clicking the `Favorite a training` button.
   const FavoriteTrainingList({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final favs = ref.watch(favTrainingsProvider);
+    final pinned = ref.watch(pinnedTrainingsProvider);
     return HomeCard(
-      title: "Pinned Trainings",
-      child: switch (favs) {
+      title: "Favorite Trainings",
+      child: switch (pinned) {
         AsyncData(:final value) => SizedBox(
           height: 200,
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // ListView for favorite trainings.
+                // ListView for favorite trainings (regular favorites + favorited builtins).
                 ListView.builder(
                   shrinkWrap: true,
                   primary: false,
                   itemCount: value.length,
                   itemBuilder: (context, index) {
+                    final item = value[index];
+                    // Skip unavailable builtin trainings
+                    if (!item.isAvailable) return SizedBox.shrink();
+
                     // Favorite training Card.
                     return CrimpyCards.training(
                       padding: EdgeInsets.all(0),
                       child: ListTile(
                         // On tap, show the details to allow the user to start the training.
-                        onTap:
-                            () => Navigator.of(context).push(
+                        onTap: () {
+                          if (item.training != null) {
+                            Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder:
-                                    (ctx) => TrainingDetailScreen(value[index]),
+                                    (ctx) =>
+                                        TrainingDetailScreen(item.training!),
                               ),
-                            ),
+                            );
+                          }
+                        },
                         title: Text(
-                          value[index].name,
+                          item.name,
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
@@ -57,9 +65,7 @@ class FavoriteTrainingList extends ConsumerWidget {
                               size: 17,
                             ),
                             SizedBox(width: 6),
-                            Text(
-                              formatDurationMinSec(value[index].totalDuration),
-                            ),
+                            Text(formatDurationMinSec(item.totalDuration)),
                           ],
                         ),
                       ),
@@ -94,7 +100,7 @@ class FavoriteTrainingList extends ConsumerWidget {
                           ),
                           SizedBox(width: 8),
                           Text(
-                            "Pin a training",
+                            "Favorite a training",
                             style: TextStyle(
                               fontSize: 18,
                               color: CrimpyTheme.primaryBlack,
@@ -115,7 +121,7 @@ class FavoriteTrainingList extends ConsumerWidget {
             children: [
               Text('Error: $error'),
               ElevatedButton(
-                onPressed: () => ref.invalidate(favTrainingsProvider),
+                onPressed: () => ref.invalidate(pinnedTrainingsProvider),
                 child: const Text('Retry'),
               ),
             ],
@@ -129,14 +135,14 @@ class FavoriteTrainingList extends ConsumerWidget {
 
 class PinTrainingDialog extends ConsumerWidget {
   /// Dialog to allow the user to toggle the favorite status of trainings.
-  /// The favorite status is shown using a filled/empty heart icon.
+  /// Both regular and builtin trainings show a heart icon.
   const PinTrainingDialog({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final availableTrainings = ref.watch(trainingsProvider);
+    final availableTrainings = ref.watch(allTrainingsProvider);
     return AlertDialog(
-      title: Text("Pin a new training"),
+      title: Text("Favorite a training"),
       content: switch (availableTrainings) {
         AsyncData(:final value) => SingleChildScrollView(
           child: SizedBox(
@@ -152,43 +158,51 @@ class PinTrainingDialog extends ConsumerWidget {
                     )
                     : ListView.builder(
                       itemCount: value.length,
-                      itemBuilder:
-                          (contex, index) => ListTile(
-                            // Heart icon to represent the favorite status.
-                            trailing: Icon(
-                              value[index].isFav
-                                  ? FontAwesomeIcons.solidHeart
-                                  : FontAwesomeIcons.heart,
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                            // On tap, toggle the status. Let the user pop the dialog if they want to pin/unpin mutliple trainings.
-                            onTap: () {
-                              ref
-                                  .read(favTrainingsProvider.notifier)
-                                  .toggleFav(value[index].id);
-                            },
-                            title: Text(
-                              value[index].name,
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  FontAwesomeIcons.stopwatch,
-                                  color: CrimpyTheme.gray400,
-                                  size: 17,
-                                ),
-                                SizedBox(width: 6),
-                                Text(
-                                  formatDurationMinSec(
-                                    value[index].totalDuration,
-                                  ),
-                                ),
-                              ],
-                            ),
+                      itemBuilder: (contex, index) {
+                        final item = value[index];
+
+                        return ListTile(
+                          // Heart icon to represent the favorite status.
+                          trailing: Icon(
+                            item.isPinned
+                                ? FontAwesomeIcons.solidHeart
+                                : FontAwesomeIcons.heart,
+                            color: Theme.of(context).colorScheme.error,
                           ),
+                          // On tap, toggle the status.
+                          onTap: () async {
+                            if (item.isBuiltin) {
+                              await ref
+                                  .read(pinnedTrainingsProvider.notifier)
+                                  .togglePin(item.id);
+                            } else {
+                              await ref
+                                  .read(favTrainingsProvider.notifier)
+                                  .toggleFav(item.id);
+                            }
+                            // Invalidate both providers to refresh the dialog and home screen
+                            ref.invalidate(allTrainingsProvider);
+                            ref.invalidate(pinnedTrainingsProvider);
+                          },
+                          title: Text(
+                            item.name,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Icon(
+                                FontAwesomeIcons.stopwatch,
+                                color: CrimpyTheme.gray400,
+                                size: 17,
+                              ),
+                              SizedBox(width: 6),
+                              Text(formatDurationMinSec(item.totalDuration)),
+                            ],
+                          ),
+                        );
+                      },
                     ),
           ),
         ),
@@ -198,7 +212,7 @@ class PinTrainingDialog extends ConsumerWidget {
             children: [
               Text('Error: $error'),
               ElevatedButton(
-                onPressed: () => ref.invalidate(favTrainingsProvider),
+                onPressed: () => ref.invalidate(allTrainingsProvider),
                 child: const Text('Retry'),
               ),
             ],

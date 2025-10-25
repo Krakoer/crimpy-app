@@ -3827,6 +3827,176 @@ class BuiltinTrainingWeightsCompanion
   }
 }
 
+class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
+    with TableInfo<$PinnedBuiltinTrainingsTable, PinnedBuiltinTraining> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PinnedBuiltinTrainingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _builtinTrainingIdMeta = const VerificationMeta(
+    'builtinTrainingId',
+  );
+  @override
+  late final GeneratedColumn<int> builtinTrainingId = GeneratedColumn<int>(
+    'builtin_training_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [builtinTrainingId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pinned_builtin_trainings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PinnedBuiltinTraining> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('builtin_training_id')) {
+      context.handle(
+        _builtinTrainingIdMeta,
+        builtinTrainingId.isAcceptableOrUnknown(
+          data['builtin_training_id']!,
+          _builtinTrainingIdMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {builtinTrainingId};
+  @override
+  PinnedBuiltinTraining map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PinnedBuiltinTraining(
+      builtinTrainingId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}builtin_training_id'],
+          )!,
+    );
+  }
+
+  @override
+  $PinnedBuiltinTrainingsTable createAlias(String alias) {
+    return $PinnedBuiltinTrainingsTable(attachedDatabase, alias);
+  }
+}
+
+class PinnedBuiltinTraining extends DataClass
+    implements Insertable<PinnedBuiltinTraining> {
+  final int builtinTrainingId;
+  const PinnedBuiltinTraining({required this.builtinTrainingId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['builtin_training_id'] = Variable<int>(builtinTrainingId);
+    return map;
+  }
+
+  PinnedBuiltinTrainingsCompanion toCompanion(bool nullToAbsent) {
+    return PinnedBuiltinTrainingsCompanion(
+      builtinTrainingId: Value(builtinTrainingId),
+    );
+  }
+
+  factory PinnedBuiltinTraining.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PinnedBuiltinTraining(
+      builtinTrainingId: serializer.fromJson<int>(json['builtinTrainingId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'builtinTrainingId': serializer.toJson<int>(builtinTrainingId),
+    };
+  }
+
+  PinnedBuiltinTraining copyWith({int? builtinTrainingId}) =>
+      PinnedBuiltinTraining(
+        builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
+      );
+  PinnedBuiltinTraining copyWithCompanion(
+    PinnedBuiltinTrainingsCompanion data,
+  ) {
+    return PinnedBuiltinTraining(
+      builtinTrainingId:
+          data.builtinTrainingId.present
+              ? data.builtinTrainingId.value
+              : this.builtinTrainingId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PinnedBuiltinTraining(')
+          ..write('builtinTrainingId: $builtinTrainingId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => builtinTrainingId.hashCode;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PinnedBuiltinTraining &&
+          other.builtinTrainingId == this.builtinTrainingId);
+}
+
+class PinnedBuiltinTrainingsCompanion
+    extends UpdateCompanion<PinnedBuiltinTraining> {
+  final Value<int> builtinTrainingId;
+  const PinnedBuiltinTrainingsCompanion({
+    this.builtinTrainingId = const Value.absent(),
+  });
+  PinnedBuiltinTrainingsCompanion.insert({
+    this.builtinTrainingId = const Value.absent(),
+  });
+  static Insertable<PinnedBuiltinTraining> custom({
+    Expression<int>? builtinTrainingId,
+  }) {
+    return RawValuesInsertable({
+      if (builtinTrainingId != null) 'builtin_training_id': builtinTrainingId,
+    });
+  }
+
+  PinnedBuiltinTrainingsCompanion copyWith({Value<int>? builtinTrainingId}) {
+    return PinnedBuiltinTrainingsCompanion(
+      builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (builtinTrainingId.present) {
+      map['builtin_training_id'] = Variable<int>(builtinTrainingId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PinnedBuiltinTrainingsCompanion(')
+          ..write('builtinTrainingId: $builtinTrainingId')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3839,6 +4009,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SensorConfigsTable sensorConfigs = $SensorConfigsTable(this);
   late final $BuiltinTrainingWeightsTable builtinTrainingWeights =
       $BuiltinTrainingWeightsTable(this);
+  late final $PinnedBuiltinTrainingsTable pinnedBuiltinTrainings =
+      $PinnedBuiltinTrainingsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3852,6 +4024,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     repDatas,
     sensorConfigs,
     builtinTrainingWeights,
+    pinnedBuiltinTrainings,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -6944,6 +7117,146 @@ typedef $$BuiltinTrainingWeightsTableProcessedTableManager =
       BuiltinTrainingWeight,
       PrefetchHooks Function({bool builtinTrainingId})
     >;
+typedef $$PinnedBuiltinTrainingsTableCreateCompanionBuilder =
+    PinnedBuiltinTrainingsCompanion Function({Value<int> builtinTrainingId});
+typedef $$PinnedBuiltinTrainingsTableUpdateCompanionBuilder =
+    PinnedBuiltinTrainingsCompanion Function({Value<int> builtinTrainingId});
+
+class $$PinnedBuiltinTrainingsTableFilterComposer
+    extends Composer<_$AppDatabase, $PinnedBuiltinTrainingsTable> {
+  $$PinnedBuiltinTrainingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get builtinTrainingId => $composableBuilder(
+    column: $table.builtinTrainingId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PinnedBuiltinTrainingsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PinnedBuiltinTrainingsTable> {
+  $$PinnedBuiltinTrainingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get builtinTrainingId => $composableBuilder(
+    column: $table.builtinTrainingId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PinnedBuiltinTrainingsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PinnedBuiltinTrainingsTable> {
+  $$PinnedBuiltinTrainingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get builtinTrainingId => $composableBuilder(
+    column: $table.builtinTrainingId,
+    builder: (column) => column,
+  );
+}
+
+class $$PinnedBuiltinTrainingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PinnedBuiltinTrainingsTable,
+          PinnedBuiltinTraining,
+          $$PinnedBuiltinTrainingsTableFilterComposer,
+          $$PinnedBuiltinTrainingsTableOrderingComposer,
+          $$PinnedBuiltinTrainingsTableAnnotationComposer,
+          $$PinnedBuiltinTrainingsTableCreateCompanionBuilder,
+          $$PinnedBuiltinTrainingsTableUpdateCompanionBuilder,
+          (
+            PinnedBuiltinTraining,
+            BaseReferences<
+              _$AppDatabase,
+              $PinnedBuiltinTrainingsTable,
+              PinnedBuiltinTraining
+            >,
+          ),
+          PinnedBuiltinTraining,
+          PrefetchHooks Function()
+        > {
+  $$PinnedBuiltinTrainingsTableTableManager(
+    _$AppDatabase db,
+    $PinnedBuiltinTrainingsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$PinnedBuiltinTrainingsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer:
+              () => $$PinnedBuiltinTrainingsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer:
+              () => $$PinnedBuiltinTrainingsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({Value<int> builtinTrainingId = const Value.absent()}) =>
+                  PinnedBuiltinTrainingsCompanion(
+                    builtinTrainingId: builtinTrainingId,
+                  ),
+          createCompanionCallback:
+              ({Value<int> builtinTrainingId = const Value.absent()}) =>
+                  PinnedBuiltinTrainingsCompanion.insert(
+                    builtinTrainingId: builtinTrainingId,
+                  ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PinnedBuiltinTrainingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PinnedBuiltinTrainingsTable,
+      PinnedBuiltinTraining,
+      $$PinnedBuiltinTrainingsTableFilterComposer,
+      $$PinnedBuiltinTrainingsTableOrderingComposer,
+      $$PinnedBuiltinTrainingsTableAnnotationComposer,
+      $$PinnedBuiltinTrainingsTableCreateCompanionBuilder,
+      $$PinnedBuiltinTrainingsTableUpdateCompanionBuilder,
+      (
+        PinnedBuiltinTraining,
+        BaseReferences<
+          _$AppDatabase,
+          $PinnedBuiltinTrainingsTable,
+          PinnedBuiltinTraining
+        >,
+      ),
+      PinnedBuiltinTraining,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6966,5 +7279,10 @@ class $AppDatabaseManager {
       $$BuiltinTrainingWeightsTableTableManager(
         _db,
         _db.builtinTrainingWeights,
+      );
+  $$PinnedBuiltinTrainingsTableTableManager get pinnedBuiltinTrainings =>
+      $$PinnedBuiltinTrainingsTableTableManager(
+        _db,
+        _db.pinnedBuiltinTrainings,
       );
 }

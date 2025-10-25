@@ -132,4 +132,24 @@ class BuiltinTrainingRepository {
       weightLeft: weights?.customWeightLeft,
     );
   }
+
+  /// Get all pinned builtin training IDs.
+  Future<List<int>> getPinnedBuiltinTrainingIds() async {
+    return await _database.getPinnedBuiltinTrainingIds();
+  }
+
+  /// Pin a builtin training to the home screen.
+  Future<void> pinBuiltinTraining(int builtinTrainingId) async {
+    await _database.pinBuiltinTraining(builtinTrainingId);
+  }
+
+  /// Unpin a builtin training from the home screen.
+  Future<void> unpinBuiltinTraining(int builtinTrainingId) async {
+    await _database.unpinBuiltinTraining(builtinTrainingId);
+  }
+
+  /// Check if a builtin training is pinned.
+  Future<bool> isBuiltinTrainingPinned(int builtinTrainingId) async {
+    return await _database.isBuiltinTrainingPinned(builtinTrainingId);
+  }
 }

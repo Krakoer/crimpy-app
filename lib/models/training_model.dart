@@ -418,12 +418,14 @@ class TrainingListItem {
   final BuiltinTrainingModel? builtinTraining;
   final bool isAvailable;
   final List<AssessmentRequirement> missingAssessments;
+  final bool isPinned;
 
   TrainingListItem._({
     this.training,
     this.builtinTraining,
     required this.isAvailable,
     required this.missingAssessments,
+    required this.isPinned,
   });
 
   /// Create a regular training item.
@@ -432,6 +434,7 @@ class TrainingListItem {
       training: training,
       isAvailable: true,
       missingAssessments: [],
+      isPinned: training.isFav,
     );
   }
 
@@ -441,12 +444,14 @@ class TrainingListItem {
     bool isAvailable,
     List<AssessmentRequirement> missingAssessments,
     TrainingWithReps? generatedTraining,
+    bool isPinned,
   ) {
     return TrainingListItem._(
       builtinTraining: builtinTraining,
       training: generatedTraining,
       isAvailable: isAvailable,
       missingAssessments: missingAssessments,
+      isPinned: isPinned,
     );
   }
 
