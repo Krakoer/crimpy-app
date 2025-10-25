@@ -38,10 +38,15 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
   @override
   Widget build(BuildContext context) {
     final color = Color(widget.session.sessionType.colorValue);
+    final isCrimpySession = widget.session.sessionType == SessionType.crimpy;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit ${widget.session.sessionType.displayName}'),
+        title: Text(
+          isCrimpySession
+              ? 'Edit Notes'
+              : 'Edit ${widget.session.sessionType.displayName}',
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -50,21 +55,49 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Date picker
+              // Info message for Crimpy sessions
+              if (isCrimpySession) ...[
+                Card(
+                  color: color.withValues(alpha: 0.1),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: color, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Only notes can be edited for Crimpy training sessions',
+                            style: TextStyle(fontSize: 13, color: color),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
+              // Date picker (disabled for Crimpy sessions)
               Card(
                 child: ListTile(
-                  leading: Icon(Icons.calendar_today, color: color),
+                  enabled: !isCrimpySession,
+                  leading: Icon(
+                    Icons.calendar_today,
+                    color: isCrimpySession ? Colors.grey : color,
+                  ),
                   title: const Text('Date'),
                   subtitle: Text(
                     DateFormat('EEEE, MMMM d, y').format(_selectedDate),
                   ),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: _selectDate,
+                  trailing:
+                      isCrimpySession ? null : const Icon(Icons.chevron_right),
+                  onTap: isCrimpySession ? null : _selectDate,
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Duration input
+              // Duration input (disabled for Crimpy sessions)
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -73,7 +106,10 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.timer, color: color),
+                          Icon(
+                            Icons.timer,
+                            color: isCrimpySession ? Colors.grey : color,
+                          ),
                           const SizedBox(width: 8),
                           const Text(
                             'Duration',
@@ -86,6 +122,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
+                        enabled: !isCrimpySession,
                         initialValue: _durationMinutes.toString(),
                         decoration: const InputDecoration(
                           labelText: 'Duration (minutes)',
@@ -95,18 +132,23 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                         ],
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a duration';
-                          }
-                          final minutes = int.tryParse(value);
-                          if (minutes == null || minutes <= 0) {
-                            return 'Please enter a valid duration';
-                          }
-                          return null;
-                        },
+                        validator:
+                            isCrimpySession
+                                ? null
+                                : (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter a duration';
+                                  }
+                                  final minutes = int.tryParse(value);
+                                  if (minutes == null || minutes <= 0) {
+                                    return 'Please enter a valid duration';
+                                  }
+                                  return null;
+                                },
                         onSaved: (value) {
-                          _durationMinutes = int.parse(value!);
+                          if (!isCrimpySession) {
+                            _durationMinutes = int.parse(value!);
+                          }
                         },
                       ),
                     ],
@@ -158,9 +200,12 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   backgroundColor: color,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text(
-                  'Update Session',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                child: Text(
+                  isCrimpySession ? 'Update Notes' : 'Update Session',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],

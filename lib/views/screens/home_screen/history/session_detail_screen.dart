@@ -24,27 +24,25 @@ class SessionDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(session.name),
         actions: [
-          // Show edit button for non-crimpy sessions
-          if (session.sessionType != SessionType.crimpy)
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () => _handleMenuAction(context, 'edit', ref),
-            ),
+          // Show edit button for all sessions
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () => _handleMenuAction(context, 'edit', ref),
+          ),
           PopupMenuButton<String>(
             onSelected: (value) => _handleMenuAction(context, value, ref),
             itemBuilder:
                 (context) => [
-                  if (session.sessionType != SessionType.crimpy)
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit),
-                          SizedBox(width: 8),
-                          Text('Edit'),
-                        ],
-                      ),
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit),
+                        SizedBox(width: 8),
+                        Text('Edit'),
+                      ],
                     ),
+                  ),
                   const PopupMenuItem(
                     value: 'share',
                     child: Row(
