@@ -27,36 +27,33 @@ class TrainingScreen extends ConsumerWidget {
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+    return Stack(
       children: [
-        Expanded(
-          child: switch (templates) {
-            AsyncData(:final value) => Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ListView(
-                children:
-                    value
-                        .map(
-                          (item) => TrainingListItemWidget(
-                            item: item,
-                            onMissingAssessments:
-                                () => showMissingAssessmentsDialog(
-                                  item.missingAssessments,
-                                ),
-                          ),
-                        )
-                        .toList(),
-              ),
+        switch (templates) {
+          AsyncData(:final value) => ListView(
+            padding: const EdgeInsets.only(
+              left: 16.0,
+              right: 16.0,
+              top: 16.0,
+              bottom: 80.0, // Extra padding for FAB
             ),
-            AsyncError(:final error) => Text('Oops $error'),
-            _ => const Center(child: CircularProgressIndicator()),
-          },
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0, bottom: 16.0),
-          child: CreateTrainingFab(),
-        ),
+            children:
+                value
+                    .map(
+                      (item) => TrainingListItemWidget(
+                        item: item,
+                        onMissingAssessments:
+                            () => showMissingAssessmentsDialog(
+                              item.missingAssessments,
+                            ),
+                      ),
+                    )
+                    .toList(),
+          ),
+          AsyncError(:final error) => Text('Oops $error'),
+          _ => const Center(child: CircularProgressIndicator()),
+        },
+        Positioned(right: 16.0, bottom: 16.0, child: CreateTrainingFab()),
       ],
     );
   }
