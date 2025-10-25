@@ -142,6 +142,8 @@ class TrainingRepository {
           date: t.date,
           reps: reps,
           isAssessment: t.isAssessment,
+          sessionType: SessionType.values[t.sessionType],
+          durationInSeconds: t.duration,
         ),
       );
     }
@@ -161,5 +163,10 @@ class TrainingRepository {
     List<BleDataPoint>? data,
   }) async {
     return await gDatabase.saveSession(session, reps, points: data);
+  }
+
+  /// Update an existing session in the DB.
+  Future<void> updateSession(SessionModel session) async {
+    return await gDatabase.updateSession(session);
   }
 }

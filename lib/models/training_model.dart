@@ -14,6 +14,8 @@ class SessionModel {
   final List<BleDataPoint>? dataPoints;
   final List<RepData>? reps;
   final bool isAssessment;
+  final SessionType sessionType;
+  final int? durationInSeconds;
 
   SessionModel({
     this.id,
@@ -22,11 +24,14 @@ class SessionModel {
     this.reps,
     required this.name,
     required this.isAssessment,
+    this.sessionType = SessionType.crimpy,
+    this.durationInSeconds,
     date,
   }) : date = date ?? DateTime.now();
 
   int get duration =>
-      reps == null ? 0 : reps!.fold(0, (prev, r) => prev + r.duration);
+      durationInSeconds ??
+      (reps == null ? 0 : reps!.fold(0, (prev, r) => prev + r.duration));
 }
 
 class RepModel {

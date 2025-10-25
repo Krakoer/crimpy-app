@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/history/session_detail_screen.dart';
@@ -151,28 +152,28 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
   Widget _buildSessionCard(SessionModel session) {
     final duration = Duration(seconds: session.duration);
     final formattedTime = DateFormat('HH:mm').format(session.date);
+    final sessionColor = Color(session.sessionType.colorValue);
+    final sessionIcon = _getSessionIcon(session.sessionType);
 
-    return session.isAssessment
-        ? CrimpyCards.assessment(
-          margin: const EdgeInsets.only(bottom: 8),
-          onTap: () => _onSessionTap(session),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: () => _onSessionTap(session),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
           child: Row(
             children: [
               // Session type icon
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: CrimpyTheme.assessmentColor.withValues(alpha: 0.2),
+                  color: sessionColor.withValues(alpha: 0.2),
                   border: Border.all(
-                    color: CrimpyTheme.assessmentColor.withValues(alpha: 0.3),
+                    color: sessionColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
-                child: Icon(
-                  Icons.assessment,
-                  color: CrimpyTheme.assessmentColor,
-                  size: 20,
-                ),
+                child: Icon(sessionIcon, color: sessionColor, size: 20),
               ),
               const SizedBox(width: 16),
               // Session details
@@ -236,91 +237,18 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
               Icon(Icons.chevron_right, color: CrimpyTheme.gray400),
             ],
           ),
-        )
-        : CrimpyCards.training(
-          margin: const EdgeInsets.only(bottom: 8),
-          onTap: () => _onSessionTap(session),
-          child: Row(
-            children: [
-              // Session type icon
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: CrimpyTheme.trainingColor.withValues(alpha: 0.2),
-                  border: Border.all(
-                    color: CrimpyTheme.trainingColor.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Icon(
-                  Icons.fitness_center,
-                  color: CrimpyTheme.trainingColor,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Session details
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      session.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.schedule,
-                          size: 14,
-                          color: CrimpyTheme.gray600,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          formattedTime,
-                          style: TextStyle(
-                            color: CrimpyTheme.gray600,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Icon(Icons.timer, size: 14, color: CrimpyTheme.gray600),
-                        const SizedBox(width: 4),
-                        Text(
-                          _formatDuration(duration),
-                          style: TextStyle(
-                            color: CrimpyTheme.gray600,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (session.notes != null && session.notes!.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        session.notes!,
-                        style: TextStyle(
-                          color: CrimpyTheme.gray700,
-                          fontSize: 12,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              // Arrow indicator
-              Icon(Icons.chevron_right, color: CrimpyTheme.gray400),
-            ],
-          ),
-        );
+        ),
+      ),
+    );
+  }
+
+  IconData _getSessionIcon(SessionType sessionType) {
+    return switch (sessionType) {
+      SessionType.crimpy => Icons.fitness_center,
+      SessionType.climbing => Icons.terrain,
+      SessionType.stretching => Icons.self_improvement,
+      SessionType.workout => Icons.fitness_center,
+    };
   }
 
   Widget _buildErrorState(String error) {

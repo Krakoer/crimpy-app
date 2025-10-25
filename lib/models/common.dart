@@ -30,3 +30,26 @@ extension GripPositionExtension on GripPosition {
     GripPosition.openHand => "OH",
   };
 }
+
+enum SessionType {
+  crimpy, // Crimpy training (cannot be logged manually)
+  climbing, // Climbing session
+  stretching, // Stretching session
+  workout, // Workout session (abs, pullups, etc)
+}
+
+extension SessionTypeExtension on SessionType {
+  String get displayName => switch (this) {
+    SessionType.crimpy => "Crimpy Training",
+    SessionType.climbing => "Climbing",
+    SessionType.stretching => "Stretching",
+    SessionType.workout => "Workout",
+  };
+
+  int get colorValue => switch (this) {
+    SessionType.crimpy => 0xFFC6613F, // Orange
+    SessionType.climbing => 0xFFD4A644, // Yellow
+    SessionType.stretching => 0xFF5A8C5A, // Green
+    SessionType.workout => 0xFF8B6B9E, // Purple
+  };
+}

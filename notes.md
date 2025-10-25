@@ -17,14 +17,14 @@
 - [x] Add profile page
 - [x] Add MVC 3FD assessment
 - [x] Add critical force assessment
-- [ ] Create trainings based on profile
-- [ ] Allow logging climbing/stretching/workout sessions
-- [ ] Add sessions history screen & session details screen
+- [x] Create trainings based on profile
+- [x] Allow logging climbing/stretching/workout sessions
+- [x] Add sessions history screen & session details screen
 - [ ] Histogram modes (monday to sunday vs 3 days before 3 days after)
 - [ ] Add tutorials before assessment
-- [ ] Cleanup UI
-- [ ] Write docs and comment code
-- [ ] Reorganise whole rep
+- [x] Cleanup UI
+- [x] Write docs and comment code
+- [x] Reorganise whole rep
 ---------------- V1 merge in main
 
 Future work/ideas:

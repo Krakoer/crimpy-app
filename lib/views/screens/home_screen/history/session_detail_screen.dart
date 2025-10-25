@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
+import 'package:crimpy/views/screens/home_screen/edit_session_screen.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:intl/intl.dart';
 
@@ -22,10 +24,27 @@ class SessionDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(session.name),
         actions: [
+          // Show edit button for non-crimpy sessions
+          if (session.sessionType != SessionType.crimpy)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () => _handleMenuAction(context, 'edit', ref),
+            ),
           PopupMenuButton<String>(
-            onSelected: (value) => _handleMenuAction(context, value),
+            onSelected: (value) => _handleMenuAction(context, value, ref),
             itemBuilder:
                 (context) => [
+                  if (session.sessionType != SessionType.crimpy)
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit),
+                          SizedBox(width: 8),
+                          Text('Edit'),
+                        ],
+                      ),
+                    ),
                   const PopupMenuItem(
                     value: 'share',
                     child: Row(
@@ -108,192 +127,108 @@ class SessionDetailScreen extends ConsumerWidget {
 
   Widget _buildOverviewCard(BuildContext context, SessionModel session) {
     final duration = Duration(seconds: session.duration);
+    final sessionColor = Color(session.sessionType.colorValue);
+    final sessionIcon = _getSessionIcon(session.sessionType);
 
-    return session.isAssessment
-        ? CrimpyCards.assessment(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: CrimpyTheme.assessmentColor.withValues(alpha: 0.2),
-                      border: Border.all(
-                        color: CrimpyTheme.assessmentColor.withValues(
-                          alpha: 0.3,
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: sessionColor.withValues(alpha: 0.2),
+                    border: Border.all(
+                      color: sessionColor.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Icon(sessionIcon, color: sessionColor, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        session.sessionType.displayName,
+                        style: TextStyle(
+                          color: CrimpyTheme.gray600,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
                         ),
-                        width: 1,
                       ),
-                    ),
-                    child: Icon(
-                      Icons.assessment,
-                      color: CrimpyTheme.assessmentColor,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Assessment',
-                          style: TextStyle(
-                            color: CrimpyTheme.gray600,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
+                      Text(
+                        session.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                        Text(
-                          session.name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatItem(
-                      context,
-                      'Date',
-                      DateFormat('MMM d, yyyy').format(session.date),
-                      Icons.calendar_today,
-                    ),
-                  ),
-                  Expanded(
-                    child: _buildStatItem(
-                      context,
-                      'Time',
-                      DateFormat('HH:mm').format(session.date),
-                      Icons.access_time,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatItem(
-                      context,
-                      'Duration',
-                      _formatDuration(duration),
-                      Icons.timer,
-                    ),
-                  ),
-                  Expanded(
-                    child: _buildStatItem(
-                      context,
-                      'Reps',
-                      session.reps?.length.toString() ?? 'N/A',
-                      Icons.repeat,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        )
-        : CrimpyCards.training(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: CrimpyTheme.trainingColor.withValues(alpha: 0.2),
-                      border: Border.all(
-                        color: CrimpyTheme.trainingColor.withValues(alpha: 0.3),
-                        width: 1,
                       ),
-                    ),
-                    child: Icon(
-                      Icons.fitness_center,
-                      color: CrimpyTheme.trainingColor,
-                      size: 24,
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Training',
-                          style: TextStyle(
-                            color: CrimpyTheme.gray600,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          session.name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatItem(
+                    context,
+                    'Date',
+                    DateFormat('MMM d, yyyy').format(session.date),
+                    Icons.calendar_today,
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatItem(
-                      context,
-                      'Date',
-                      DateFormat('MMM d, yyyy').format(session.date),
-                      Icons.calendar_today,
-                    ),
+                ),
+                Expanded(
+                  child: _buildStatItem(
+                    context,
+                    'Time',
+                    DateFormat('HH:mm').format(session.date),
+                    Icons.access_time,
                   ),
-                  Expanded(
-                    child: _buildStatItem(
-                      context,
-                      'Time',
-                      DateFormat('HH:mm').format(session.date),
-                      Icons.access_time,
-                    ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildStatItem(
+                    context,
+                    'Duration',
+                    _formatDuration(duration),
+                    Icons.timer,
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatItem(
-                      context,
-                      'Duration',
-                      _formatDuration(duration),
-                      Icons.timer,
-                    ),
+                ),
+                Expanded(
+                  child: _buildStatItem(
+                    context,
+                    'Reps',
+                    session.reps?.length.toString() ?? 'N/A',
+                    Icons.repeat,
                   ),
-                  Expanded(
-                    child: _buildStatItem(
-                      context,
-                      'Reps',
-                      session.reps?.length.toString() ?? 'N/A',
-                      Icons.repeat,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _getSessionIcon(SessionType sessionType) {
+    return switch (sessionType) {
+      SessionType.crimpy => Icons.fitness_center,
+      SessionType.climbing => Icons.terrain,
+      SessionType.stretching => Icons.self_improvement,
+      SessionType.workout => Icons.fitness_center,
+    };
   }
 
   Widget _buildStatItem(
@@ -412,6 +347,7 @@ class SessionDetailScreen extends ConsumerWidget {
 
   Widget _buildRepsCard(BuildContext context, SessionModel session) {
     final reps = session.reps!;
+    final sessionColor = Color(session.sessionType.colorValue);
 
     return CrimpyCard.simple(
       child: Column(
@@ -437,7 +373,7 @@ class SessionDetailScreen extends ConsumerWidget {
                     backgroundColor:
                         rep.isRest
                             ? CrimpyTheme.gray300
-                            : CrimpyTheme.trainingColor.withValues(alpha: 0.6),
+                            : sessionColor.withValues(alpha: 0.6),
                     child: Text(
                       '${index + 1}',
                       style: const TextStyle(
@@ -468,7 +404,7 @@ class SessionDetailScreen extends ConsumerWidget {
                           : Icon(
                             Icons.fitness_center,
                             size: 16,
-                            color: CrimpyTheme.trainingColor,
+                            color: sessionColor,
                           ),
                 );
               },
@@ -576,8 +512,15 @@ class SessionDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _handleMenuAction(BuildContext context, String action) {
+  void _handleMenuAction(BuildContext context, String action, WidgetRef ref) {
     switch (action) {
+      case 'edit':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => EditSessionScreen(session: session),
+          ),
+        );
+        break;
       case 'share':
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Share functionality coming soon!')),

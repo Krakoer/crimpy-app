@@ -204,6 +204,19 @@ class SessionsNotifier
   Future<SessionModel?> getSession(int id) async {
     return _trainingRepository.getSessionWithData(id);
   }
+
+  /// Update an existing session.
+  Future<void> updateSession(SessionModel session) async {
+    state = const AsyncValue.loading();
+    try {
+      await _trainingRepository.updateSession(session);
+      ref.invalidate(sessionsProvider);
+      await future;
+    } catch (e, stackTrace) {
+      state = AsyncValue.error(e, stackTrace);
+      rethrow;
+    }
+  }
 }
 
 /// Provider for getting a single session with full data by ID.

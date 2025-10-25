@@ -1,0 +1,218 @@
+import 'package:crimpy/models/common.dart';
+import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/viewmodels/training_view_model.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+
+class LogSessionScreen extends ConsumerStatefulWidget {
+  final SessionType sessionType;
+
+  const LogSessionScreen({super.key, required this.sessionType});
+
+  @override
+  ConsumerState<LogSessionScreen> createState() => _LogSessionScreenState();
+}
+
+class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _notesController = TextEditingController();
+  DateTime _selectedDate = DateTime.now();
+  int _durationMinutes = 60;
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Color(widget.sessionType.colorValue);
+
+    return Scaffold(
+      appBar: AppBar(title: Text('Log ${widget.sessionType.displayName}')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Date picker
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.calendar_today, color: color),
+                  title: const Text('Date'),
+                  subtitle: Text(
+                    DateFormat('EEEE, MMMM d, y').format(_selectedDate),
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: _selectDate,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Duration input
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.timer, color: color),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Duration',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        initialValue: _durationMinutes.toString(),
+                        decoration: const InputDecoration(
+                          labelText: 'Duration (minutes)',
+                          suffixText: 'min',
+                        ),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a duration';
+                          }
+                          final minutes = int.tryParse(value);
+                          if (minutes == null || minutes <= 0) {
+                            return 'Please enter a valid duration';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) {
+                          _durationMinutes = int.parse(value!);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Notes input
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.notes, color: color),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Notes',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _notesController,
+                        decoration: const InputDecoration(
+                          labelText: 'Notes (optional)',
+                          hintText: 'Add any details about your session...',
+                        ),
+                        maxLines: 4,
+                        textCapitalization: TextCapitalization.sentences,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Save button
+              ElevatedButton(
+                onPressed: _saveSession,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: color,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text(
+                  'Save Session',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  Future<void> _saveSession() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    _formKey.currentState!.save();
+
+    final session = SessionModel(
+      name: widget.sessionType.displayName,
+      isAssessment: false,
+      sessionType: widget.sessionType,
+      durationInSeconds: _durationMinutes * 60,
+      date: _selectedDate,
+      notes: _notesController.text.isEmpty ? null : _notesController.text,
+    );
+
+    try {
+      // Use the provider's saveSession method to properly invalidate and refresh
+      await ref.read(sessionsProvider(null).notifier).saveSession(session, []);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${widget.sessionType.displayName} session logged!'),
+            backgroundColor: Color(widget.sessionType.colorValue),
+          ),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving session: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+}

@@ -75,6 +75,30 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _sessionTypeMeta = const VerificationMeta(
+    'sessionType',
+  );
+  @override
+  late final GeneratedColumn<int> sessionType = GeneratedColumn<int>(
+    'session_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _durationMeta = const VerificationMeta(
+    'duration',
+  );
+  @override
+  late final GeneratedColumn<int> duration = GeneratedColumn<int>(
+    'duration',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -83,6 +107,8 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     date,
     dataPath,
     isAssessment,
+    sessionType,
+    duration,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -138,6 +164,21 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         ),
       );
     }
+    if (data.containsKey('session_type')) {
+      context.handle(
+        _sessionTypeMeta,
+        sessionType.isAcceptableOrUnknown(
+          data['session_type']!,
+          _sessionTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('duration')) {
+      context.handle(
+        _durationMeta,
+        duration.isAcceptableOrUnknown(data['duration']!, _durationMeta),
+      );
+    }
     return context;
   }
 
@@ -177,6 +218,16 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
             DriftSqlType.bool,
             data['${effectivePrefix}is_assessment'],
           )!,
+      sessionType:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}session_type'],
+          )!,
+      duration:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}duration'],
+          )!,
     );
   }
 
@@ -193,6 +244,8 @@ class Session extends DataClass implements Insertable<Session> {
   final DateTime date;
   final String dataPath;
   final bool isAssessment;
+  final int sessionType;
+  final int duration;
   const Session({
     required this.id,
     required this.name,
@@ -200,6 +253,8 @@ class Session extends DataClass implements Insertable<Session> {
     required this.date,
     required this.dataPath,
     required this.isAssessment,
+    required this.sessionType,
+    required this.duration,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -210,6 +265,8 @@ class Session extends DataClass implements Insertable<Session> {
     map['date'] = Variable<DateTime>(date);
     map['data_path'] = Variable<String>(dataPath);
     map['is_assessment'] = Variable<bool>(isAssessment);
+    map['session_type'] = Variable<int>(sessionType);
+    map['duration'] = Variable<int>(duration);
     return map;
   }
 
@@ -221,6 +278,8 @@ class Session extends DataClass implements Insertable<Session> {
       date: Value(date),
       dataPath: Value(dataPath),
       isAssessment: Value(isAssessment),
+      sessionType: Value(sessionType),
+      duration: Value(duration),
     );
   }
 
@@ -236,6 +295,8 @@ class Session extends DataClass implements Insertable<Session> {
       date: serializer.fromJson<DateTime>(json['date']),
       dataPath: serializer.fromJson<String>(json['dataPath']),
       isAssessment: serializer.fromJson<bool>(json['isAssessment']),
+      sessionType: serializer.fromJson<int>(json['sessionType']),
+      duration: serializer.fromJson<int>(json['duration']),
     );
   }
   @override
@@ -248,6 +309,8 @@ class Session extends DataClass implements Insertable<Session> {
       'date': serializer.toJson<DateTime>(date),
       'dataPath': serializer.toJson<String>(dataPath),
       'isAssessment': serializer.toJson<bool>(isAssessment),
+      'sessionType': serializer.toJson<int>(sessionType),
+      'duration': serializer.toJson<int>(duration),
     };
   }
 
@@ -258,6 +321,8 @@ class Session extends DataClass implements Insertable<Session> {
     DateTime? date,
     String? dataPath,
     bool? isAssessment,
+    int? sessionType,
+    int? duration,
   }) => Session(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -265,6 +330,8 @@ class Session extends DataClass implements Insertable<Session> {
     date: date ?? this.date,
     dataPath: dataPath ?? this.dataPath,
     isAssessment: isAssessment ?? this.isAssessment,
+    sessionType: sessionType ?? this.sessionType,
+    duration: duration ?? this.duration,
   );
   Session copyWithCompanion(SessionsCompanion data) {
     return Session(
@@ -277,6 +344,9 @@ class Session extends DataClass implements Insertable<Session> {
           data.isAssessment.present
               ? data.isAssessment.value
               : this.isAssessment,
+      sessionType:
+          data.sessionType.present ? data.sessionType.value : this.sessionType,
+      duration: data.duration.present ? data.duration.value : this.duration,
     );
   }
 
@@ -288,14 +358,24 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('notes: $notes, ')
           ..write('date: $date, ')
           ..write('dataPath: $dataPath, ')
-          ..write('isAssessment: $isAssessment')
+          ..write('isAssessment: $isAssessment, ')
+          ..write('sessionType: $sessionType, ')
+          ..write('duration: $duration')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, notes, date, dataPath, isAssessment);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    notes,
+    date,
+    dataPath,
+    isAssessment,
+    sessionType,
+    duration,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -305,7 +385,9 @@ class Session extends DataClass implements Insertable<Session> {
           other.notes == this.notes &&
           other.date == this.date &&
           other.dataPath == this.dataPath &&
-          other.isAssessment == this.isAssessment);
+          other.isAssessment == this.isAssessment &&
+          other.sessionType == this.sessionType &&
+          other.duration == this.duration);
 }
 
 class SessionsCompanion extends UpdateCompanion<Session> {
@@ -315,6 +397,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<DateTime> date;
   final Value<String> dataPath;
   final Value<bool> isAssessment;
+  final Value<int> sessionType;
+  final Value<int> duration;
   const SessionsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -322,6 +406,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.date = const Value.absent(),
     this.dataPath = const Value.absent(),
     this.isAssessment = const Value.absent(),
+    this.sessionType = const Value.absent(),
+    this.duration = const Value.absent(),
   });
   SessionsCompanion.insert({
     this.id = const Value.absent(),
@@ -330,6 +416,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.date = const Value.absent(),
     required String dataPath,
     this.isAssessment = const Value.absent(),
+    this.sessionType = const Value.absent(),
+    this.duration = const Value.absent(),
   }) : name = Value(name),
        notes = Value(notes),
        dataPath = Value(dataPath);
@@ -340,6 +428,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<DateTime>? date,
     Expression<String>? dataPath,
     Expression<bool>? isAssessment,
+    Expression<int>? sessionType,
+    Expression<int>? duration,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -348,6 +438,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (date != null) 'date': date,
       if (dataPath != null) 'data_path': dataPath,
       if (isAssessment != null) 'is_assessment': isAssessment,
+      if (sessionType != null) 'session_type': sessionType,
+      if (duration != null) 'duration': duration,
     });
   }
 
@@ -358,6 +450,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<DateTime>? date,
     Value<String>? dataPath,
     Value<bool>? isAssessment,
+    Value<int>? sessionType,
+    Value<int>? duration,
   }) {
     return SessionsCompanion(
       id: id ?? this.id,
@@ -366,6 +460,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       date: date ?? this.date,
       dataPath: dataPath ?? this.dataPath,
       isAssessment: isAssessment ?? this.isAssessment,
+      sessionType: sessionType ?? this.sessionType,
+      duration: duration ?? this.duration,
     );
   }
 
@@ -390,6 +486,12 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (isAssessment.present) {
       map['is_assessment'] = Variable<bool>(isAssessment.value);
     }
+    if (sessionType.present) {
+      map['session_type'] = Variable<int>(sessionType.value);
+    }
+    if (duration.present) {
+      map['duration'] = Variable<int>(duration.value);
+    }
     return map;
   }
 
@@ -401,7 +503,9 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('notes: $notes, ')
           ..write('date: $date, ')
           ..write('dataPath: $dataPath, ')
-          ..write('isAssessment: $isAssessment')
+          ..write('isAssessment: $isAssessment, ')
+          ..write('sessionType: $sessionType, ')
+          ..write('duration: $duration')
           ..write(')'))
         .toString();
   }
@@ -3785,6 +3889,8 @@ typedef $$SessionsTableCreateCompanionBuilder =
       Value<DateTime> date,
       required String dataPath,
       Value<bool> isAssessment,
+      Value<int> sessionType,
+      Value<int> duration,
     });
 typedef $$SessionsTableUpdateCompanionBuilder =
     SessionsCompanion Function({
@@ -3794,6 +3900,8 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<DateTime> date,
       Value<String> dataPath,
       Value<bool> isAssessment,
+      Value<int> sessionType,
+      Value<int> duration,
     });
 
 final class $$SessionsTableReferences
@@ -3874,6 +3982,16 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<bool> get isAssessment => $composableBuilder(
     column: $table.isAssessment,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sessionType => $composableBuilder(
+    column: $table.sessionType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get duration => $composableBuilder(
+    column: $table.duration,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3966,6 +4084,16 @@ class $$SessionsTableOrderingComposer
     column: $table.isAssessment,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get sessionType => $composableBuilder(
+    column: $table.sessionType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get duration => $composableBuilder(
+    column: $table.duration,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SessionsTableAnnotationComposer
@@ -3996,6 +4124,14 @@ class $$SessionsTableAnnotationComposer
     column: $table.isAssessment,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get sessionType => $composableBuilder(
+    column: $table.sessionType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get duration =>
+      $composableBuilder(column: $table.duration, builder: (column) => column);
 
   Expression<T> assessmentsRefs<T extends Object>(
     Expression<T> Function($$AssessmentsTableAnnotationComposer a) f,
@@ -4082,6 +4218,8 @@ class $$SessionsTableTableManager
                 Value<DateTime> date = const Value.absent(),
                 Value<String> dataPath = const Value.absent(),
                 Value<bool> isAssessment = const Value.absent(),
+                Value<int> sessionType = const Value.absent(),
+                Value<int> duration = const Value.absent(),
               }) => SessionsCompanion(
                 id: id,
                 name: name,
@@ -4089,6 +4227,8 @@ class $$SessionsTableTableManager
                 date: date,
                 dataPath: dataPath,
                 isAssessment: isAssessment,
+                sessionType: sessionType,
+                duration: duration,
               ),
           createCompanionCallback:
               ({
@@ -4098,6 +4238,8 @@ class $$SessionsTableTableManager
                 Value<DateTime> date = const Value.absent(),
                 required String dataPath,
                 Value<bool> isAssessment = const Value.absent(),
+                Value<int> sessionType = const Value.absent(),
+                Value<int> duration = const Value.absent(),
               }) => SessionsCompanion.insert(
                 id: id,
                 name: name,
@@ -4105,6 +4247,8 @@ class $$SessionsTableTableManager
                 date: date,
                 dataPath: dataPath,
                 isAssessment: isAssessment,
+                sessionType: sessionType,
+                duration: duration,
               ),
           withReferenceMapper:
               (p0) =>

@@ -1,5 +1,6 @@
 import 'package:crimpy/views/screens/home_screen/history/week_histogram_card.dart';
 import 'package:crimpy/views/screens/home_screen/favorite_training.dart';
+import 'package:crimpy/views/screens/home_screen/widgets/log_session_buttons.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -14,6 +15,8 @@ class HomeScreen extends StatelessWidget {
           children: [
             // Weekly session histogram.
             WeekHistogramCard(maxBarHeight: 75),
+            // Log session buttons.
+            LogSessionButtons(),
             // Favorite training list.
             FavoriteTrainingList(),
           ],
