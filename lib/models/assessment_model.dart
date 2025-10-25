@@ -41,6 +41,7 @@ class AssessmentTrainingModel {
   final IconData icon;
   final String description;
   final int trainingId;
+  final GripPosition? gripPosition;
 
   AssessmentTrainingModel({
     required this.trainingId,
@@ -48,7 +49,21 @@ class AssessmentTrainingModel {
     required this.type,
     required this.icon,
     required this.description,
+    this.gripPosition,
   });
+
+  /// Get the grip position for this assessment.
+  /// Returns the explicitly set gripPosition, or tries to get it from the first non-rest rep.
+  GripPosition? getGripPosition() {
+    if (gripPosition != null) {
+      return gripPosition;
+    }
+    try {
+      return training.reps.firstWhere((r) => !r.isRest).gripPosition;
+    } catch (_) {
+      return null;
+    }
+  }
 }
 
 class AssessmentResultModel {

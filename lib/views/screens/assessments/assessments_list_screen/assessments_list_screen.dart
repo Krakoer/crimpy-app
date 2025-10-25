@@ -9,6 +9,8 @@ import 'package:crimpy/views/screens/assessments/critical_force/critical_force_r
 import 'package:crimpy/views/screens/assessments/endurance_60/endurance_60_run_screen.dart';
 import 'package:crimpy/views/widgets/ble/connection_dialog.dart';
 import 'package:crimpy/views/widgets/ble/tare_dialog.dart';
+import 'package:crimpy/views/widgets/assessment_tutorial_dialog.dart';
+import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/assessment_model.dart';
@@ -29,6 +31,7 @@ class AssessmentsScreen extends ConsumerWidget {
       AssessmentTrainingModel model,
       HandSide? handSide, {
       double? mvcValue,
+      GripPosition? gripPosition,
     }) {
       ref.read(bleSessionProvider.notifier).reset();
       Navigator.of(context).push(
@@ -46,6 +49,7 @@ class AssessmentsScreen extends ConsumerWidget {
                 AssessmentType.endurance60 => Endurance60RunScreen(
                   hand: handSide!,
                   mvcValue: mvcValue!,
+                  gripPosition: gripPosition ?? model.getGripPosition()!,
                 ),
               },
         ),
@@ -75,12 +79,22 @@ class AssessmentsScreen extends ConsumerWidget {
             builder:
                 (ctx) => ConfirmRedoAssessmentDialog(
                   runAssessment:
-                      () => runAssessment(model, handSide, mvcValue: mvcValue),
+                      () => runAssessment(
+                        model,
+                        handSide,
+                        mvcValue: mvcValue,
+                        gripPosition: gripPosition,
+                      ),
                 ),
           );
         }
       } else {
-        runAssessment(model, handSide, mvcValue: mvcValue);
+        runAssessment(
+          model,
+          handSide,
+          mvcValue: mvcValue,
+          gripPosition: gripPosition,
+        );
       }
     }
 
@@ -110,20 +124,36 @@ class AssessmentsScreen extends ConsumerWidget {
                                     builder:
                                         (ctx) => SelectGripPositionDialog(),
                                   );
-                              if (gripPosition != null) {
-                                // Generate the assessment with the selected grip position
-                                final builtinModel = builtinAssessments
-                                    .firstWhere(
-                                      (a) => a.type == AssessmentType.mvc,
+                              if (gripPosition != null && context.mounted) {
+                                // Show tutorial before running assessment
+                                final shouldProceed =
+                                    await showTutorialIfNeeded(
+                                      context: context,
+                                      content:
+                                          AssessmentTutorials.getMvcTutorial(
+                                            gripPosition,
+                                          ),
+                                      tutorialId:
+                                          AssessmentTutorials.getMvcTutorialId(
+                                            gripPosition,
+                                          ),
                                     );
-                                final assessmentWithGrip = builtinModel
-                                    .generateAssessment(
-                                      gripPosition: gripPosition,
-                                    );
-                                checkAndRunAssessment(
-                                  assessmentWithGrip,
-                                  gripPosition: gripPosition,
-                                );
+
+                                if (shouldProceed && context.mounted) {
+                                  // Generate the assessment with the selected grip position
+                                  final builtinModel = builtinAssessments
+                                      .firstWhere(
+                                        (a) => a.type == AssessmentType.mvc,
+                                      );
+                                  final assessmentWithGrip = builtinModel
+                                      .generateAssessment(
+                                        gripPosition: gripPosition,
+                                      );
+                                  checkAndRunAssessment(
+                                    assessmentWithGrip,
+                                    gripPosition: gripPosition,
+                                  );
+                                }
                               }
                               break;
                             case AssessmentType.criticalForce:
@@ -132,26 +162,55 @@ class AssessmentsScreen extends ConsumerWidget {
                                 context: context,
                                 builder: (ctx) => SelectHandDialog(),
                               );
-                              if (hand != null) {
-                                checkAndRunAssessment(template, handSide: hand);
+                              if (hand != null && context.mounted) {
+                                // Get the grip position from the assessment
+                                final gripPosition = template.getGripPosition();
+                                if (gripPosition == null) break;
+
+                                // Show tutorial before running assessment
+                                final shouldProceed = await showTutorialIfNeeded(
+                                  context: context,
+                                  content:
+                                      AssessmentTutorials.getCriticalForceTutorial(
+                                        hand,
+                                        gripPosition,
+                                      ),
+                                  tutorialId:
+                                      AssessmentTutorials.getCriticalForceTutorialId(
+                                        gripPosition,
+                                      ),
+                                );
+
+                                if (shouldProceed && context.mounted) {
+                                  checkAndRunAssessment(
+                                    template,
+                                    handSide: hand,
+                                  );
+                                }
                               }
                               break;
                             case AssessmentType.endurance60:
-                              // First get the hand to test
+                              // Force half crimp grip position for 60% assessment
+                              const gripPosition = GripPosition.halfCrimp;
+
+                              // Get the hand to test
                               final HandSide? hand = await showDialog(
                                 context: context,
                                 builder: (ctx) => SelectHandDialog(),
                               );
                               if (hand == null) break;
 
-                              // Check if MVC has been done for this hand
+                              // Check if MVC has been done for this hand and grip position
                               final mvcValue = await ref
                                   .read(
                                     assessmentsProvider(
                                       AssessmentType.mvc,
                                     ).notifier,
                                   )
-                                  .getLastValueForHand(hand);
+                                  .getLastValueForHand(
+                                    hand,
+                                    gripPosition: gripPosition,
+                                  );
 
                               if (mvcValue == null || mvcValue <= 0) {
                                 // Show error dialog - no MVC available
@@ -162,7 +221,7 @@ class AssessmentsScreen extends ConsumerWidget {
                                         (ctx) => AlertDialog(
                                           title: Text("MVC Required"),
                                           content: Text(
-                                            "You must complete an MVC assessment for your ${hand.isRightHand ? 'right' : 'left'} hand before running this assessment.",
+                                            "You must complete an MVC assessment for your ${hand.isRightHand ? 'right' : 'left'} hand with ${gripPosition.displayName} grip before running this assessment.",
                                           ),
                                           actions: [
                                             TextButton(
@@ -177,12 +236,38 @@ class AssessmentsScreen extends ConsumerWidget {
                                         ),
                                   );
                                 }
-                              } else {
-                                checkAndRunAssessment(
-                                  template,
-                                  handSide: hand,
-                                  mvcValue: mvcValue,
+                              } else if (context.mounted) {
+                                // Generate the assessment with the half crimp grip position
+                                final builtinModel = builtinAssessments
+                                    .firstWhere(
+                                      (a) =>
+                                          a.type == AssessmentType.endurance60,
+                                    );
+                                final assessmentWithGrip = builtinModel
+                                    .generateAssessment(
+                                      gripPosition: gripPosition,
+                                    );
+
+                                // Show tutorial before running assessment
+                                final shouldProceed = await showTutorialIfNeeded(
+                                  context: context,
+                                  content:
+                                      AssessmentTutorials.get60PercentTutorial(
+                                        hand,
+                                        gripPosition,
+                                      ),
+                                  tutorialId:
+                                      AssessmentTutorials.get60PercentTutorialId(),
                                 );
+
+                                if (shouldProceed && context.mounted) {
+                                  checkAndRunAssessment(
+                                    assessmentWithGrip,
+                                    handSide: hand,
+                                    mvcValue: mvcValue,
+                                    gripPosition: gripPosition,
+                                  );
+                                }
                               }
                               break;
                           }

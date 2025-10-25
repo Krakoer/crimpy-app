@@ -1,4 +1,5 @@
 import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
@@ -8,6 +9,7 @@ import 'package:crimpy/views/screens/assessments/critical_force/analysis.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/analysis_error_screen.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/critical_force_result_screen.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/minimalist_graph.dart';
+import 'package:crimpy/views/widgets/assessment_tutorial_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -174,7 +176,45 @@ class _CriticalForceRunScreenState
         }
       },
       child: Scaffold(
-        appBar: AppBar(title: Text("Critical Force Test")),
+        appBar: AppBar(
+          title: Text("Critical Force Test"),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.help_outline),
+              onPressed: () {
+                // Pause timer while showing tutorial
+                setState(() {
+                  timer.stop();
+                });
+
+                // Get grip position from first non-rest rep
+                final gripPosition =
+                    widget.reps.firstWhere((r) => !r.isRest).gripPosition;
+
+                // Show tutorial (forced, no "don't show again")
+                showTutorialIfNeeded(
+                  context: context,
+                  content: AssessmentTutorials.getCriticalForceTutorial(
+                    widget.hand,
+                    gripPosition,
+                  ),
+                  tutorialId: AssessmentTutorials.getCriticalForceTutorialId(
+                    gripPosition,
+                  ),
+                  forceShow: true,
+                ).then((_) {
+                  // Resume timer after tutorial is closed
+                  if (mounted) {
+                    setState(() {
+                      timer.play();
+                    });
+                  }
+                });
+              },
+              tooltip: 'Show tutorial',
+            ),
+          ],
+        ),
         body: SafeArea(
           child: Stack(
             alignment: Alignment.bottomCenter,

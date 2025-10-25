@@ -38,6 +38,7 @@ class BuiltinAssessmentModel {
       type: type,
       icon: icon,
       description: description,
+      gripPosition: gripPosition,
     );
   }
 }
@@ -100,7 +101,8 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
   BuiltinAssessmentModel(
     id: 3 << 32,
     name: "Critical Force",
-    description: "Measure your Critical Force",
+    description:
+        "Measure your Critical Force, the force you can exerce for an extended time period.",
     type: AssessmentType.criticalForce,
     icon: FontAwesomeIcons.clock,
     trainingGenerator:
@@ -140,7 +142,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
   BuiltinAssessmentModel(
     id: 4 << 32,
     name: "60% Endurance",
-    description: "Measure how long you can maintain 60% of your MVC",
+    description: "Measure how long you can maintain 60% of your MVC.",
     type: AssessmentType.endurance60,
     icon: FontAwesomeIcons.hourglass,
     trainingGenerator:

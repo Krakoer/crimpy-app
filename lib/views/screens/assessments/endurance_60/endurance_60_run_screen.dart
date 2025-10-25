@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/screens/assessments/post_assessment_screen.dart';
+import 'package:crimpy/views/widgets/assessment_tutorial_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -16,10 +18,12 @@ import 'package:crimpy/models/ble_data_model.dart';
 class Endurance60RunScreen extends ConsumerStatefulWidget {
   final HandSide hand;
   final double mvcValue;
+  final GripPosition gripPosition;
 
   const Endurance60RunScreen({
     required this.hand,
     required this.mvcValue,
+    required this.gripPosition,
     super.key,
   });
 
@@ -126,13 +130,14 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen> {
     // Get previous value
     final previousValue = await ref
         .read(assessmentsProvider(AssessmentType.endurance60).notifier)
-        .getLastValueForHand(widget.hand);
+        .getLastValueForHand(widget.hand, gripPosition: widget.gripPosition);
 
     // Create assessment result
     final saveAssessment = AssessmentResultModel(
       type: AssessmentType.endurance60,
       rightValue: widget.hand.isRightHand ? durationSeconds : null,
       leftValue: !widget.hand.isRightHand ? durationSeconds : null,
+      gripPosition: widget.gripPosition,
     );
 
     // Create session model
@@ -222,7 +227,35 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(title: Text("60% Endurance Test")),
+        appBar: AppBar(
+          title: Text("60% Endurance Test"),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.help_outline),
+              onPressed: () {
+                // Pause stopwatch while showing tutorial
+                _stopwatch.stop();
+
+                // Show tutorial (forced, no "don't show again")
+                showTutorialIfNeeded(
+                  context: context,
+                  content: AssessmentTutorials.get60PercentTutorial(
+                    widget.hand,
+                    widget.gripPosition,
+                  ),
+                  tutorialId: AssessmentTutorials.get60PercentTutorialId(),
+                  forceShow: true,
+                ).then((_) {
+                  // Resume stopwatch after tutorial is closed
+                  if (_assessmentStarted && !_assessmentEnded && mounted) {
+                    _stopwatch.start();
+                  }
+                });
+              },
+              tooltip: 'Show tutorial',
+            ),
+          ],
+        ),
         body: SafeArea(
           child: Stack(
             alignment: Alignment.center,
