@@ -22,6 +22,9 @@ class Sessions extends Table {
   late final TextColumn dataPath = text()();
   late final BoolColumn isAssessment =
       boolean().withDefault(const Constant(false))();
+  late final IntColumn sessionType =
+      integer().withDefault(const Constant(0))(); // 0 = crimpy (default)
+  late final IntColumn duration = integer().withDefault(const Constant(0))();
 }
 
 // Stores the assessments the user has done, with the results.
@@ -148,6 +151,8 @@ class AppDatabase extends _$AppDatabase {
       notes: session.notes,
       dataPoints: dataPoints,
       isAssessment: session.isAssessment,
+      sessionType: SessionType.values[session.sessionType],
+      durationInSeconds: session.duration,
     );
   }
 
@@ -202,6 +207,11 @@ class AppDatabase extends _$AppDatabase {
       await File(dataPath).writeAsString(jsonEncode(points));
     }
 
+    // Calculate duration from reps or use provided duration
+    final int sessionDuration =
+        session.durationInSeconds ??
+        reps.fold(0, (prev, r) => prev + r.duration);
+
     final sessionId = await into(sessions).insert(
       SessionsCompanion(
         dataPath: Value(dataPath),
@@ -209,6 +219,8 @@ class AppDatabase extends _$AppDatabase {
         notes: Value(session.notes ?? ""),
         name: Value(session.name),
         isAssessment: Value(session.isAssessment),
+        sessionType: Value(session.sessionType.index),
+        duration: Value(sessionDuration),
       ),
     );
     final companions =
@@ -232,6 +244,31 @@ class AppDatabase extends _$AppDatabase {
     });
 
     return sessionId;
+  }
+
+  /// Update an existing session.
+  /// Only updates basic fields (date, notes, duration, sessionType).
+  /// Does not modify reps or data points.
+  Future<void> updateSession(SessionModel session) async {
+    if (session.id == null) {
+      throw ArgumentError('Session ID is required for update');
+    }
+
+    final int sessionDuration =
+        session.durationInSeconds ??
+        (session.reps != null
+            ? session.reps!.fold(0, (prev, r) => prev + r.duration)
+            : 0);
+
+    await (update(sessions)..where((s) => s.id.equals(session.id!))).write(
+      SessionsCompanion(
+        date: Value(session.date),
+        notes: Value(session.notes ?? ""),
+        name: Value(session.name),
+        sessionType: Value(session.sessionType.index),
+        duration: Value(sessionDuration),
+      ),
+    );
   }
 
   // ------------------------------------- TRAININGS -------------------------------------
@@ -567,7 +604,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -588,6 +625,11 @@ class AppDatabase extends _$AppDatabase {
       if (from <= 3 && to >= 4) {
         // Migration to schema version 4: Add gripPosition to repeaters
         await m.addColumn(repeaters, repeaters.gripPosition);
+      }
+      if (from <= 4 && to >= 5) {
+        // Migration to schema version 5: Add sessionType and duration to sessions
+        await m.addColumn(sessions, sessions.sessionType);
+        await m.addColumn(sessions, sessions.duration);
       }
     },
   );
