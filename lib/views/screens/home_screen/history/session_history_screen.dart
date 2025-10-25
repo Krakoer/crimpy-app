@@ -31,7 +31,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Session History'),
+        title: const Text('Session History', style: TextStyle(fontSize: 32)),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
