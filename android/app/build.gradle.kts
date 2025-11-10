@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.crimpy"
+    namespace = "com.crimpyclimbing.crimpy"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,8 +20,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.crimpy"
+        applicationId = "com.crimpyclimbing.crimpy"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -54,7 +53,7 @@ android {
                 type = "string",
                 name = "app_name",
                 value = "Crimpy")
-            applicationIdSuffix = ".prod"
+            // Production uses base applicationId without suffix
         }
     }
 }

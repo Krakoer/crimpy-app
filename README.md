@@ -2,6 +2,11 @@
 
 A Flutter mobile application for climbing training and performance assessment using Bluetooth-connected force sensors.
 
+See the other repo of the project for more info:
+- https://github.com/Krakoer/crimpy-firmware: An ESP32c3 firmware for the open source force sensor
+- https://github.com/Krakoer/crimpy-simulator: Windows app to emulate BLE data
+- TODO: 3D models & PCB KiCad blueprints
+
 ## Overview
 
 Crimpy helps climbers track and improve their performance through:
@@ -152,9 +157,9 @@ Crimpy connects to external force sensors via Bluetooth Low Energy for real-time
 - [x] Session history and data visualization
 - [x] Profile management
 - [x] Training favorites
+- [x] Training recommendations based on user profile
 
 ### Future Features
-- [ ] Training recommendations based on user profile
 - [ ] Session planning and scheduling
 - [ ] Advanced analytics and progress tracking
 - [ ] Cloud synchronization
@@ -171,11 +176,8 @@ Crimpy connects to external force sensors via Bluetooth Low Energy for real-time
 
 ## License
 
-This project is private and not currently licensed for public use.
+This project is licensed under the terms specified by Crimpy Climbing.
 
-## Debug Commands
+## Support
 
-**Extract Critical Force Data**
-```bash
-adb -d shell "run-as com.example.crimpy.beta cat /data/user/0/com.example.crimpy.beta/app_flutter/1757075795797" > data.json
-```
+For support, bug reports, or feature requests, please contact crimpyclimbing@proton.me

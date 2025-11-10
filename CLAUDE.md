@@ -17,7 +17,8 @@ Crimpy is a Flutter mobile application for climbing training and assessment usin
 
 ### Testing & Debugging
 - `adb install -r .\build\app\outputs\flutter-apk\app-prod-release.apk` - Install APK without losing data
-- `adb -d shell "run-as com.example.crimpy.beta cat /data/user/0/com.example.crimpy.beta/app_flutter/1757075795797" > data.json` - Debug critical force data extraction
+- `adb -d shell "run-as com.crimpyclimbing.crimpy.beta cat /data/user/0/com.crimpyclimbing.crimpy.beta/app_flutter/<filename>" > data.json` - Debug data extraction (beta)
+- `adb -d shell "run-as com.crimpyclimbing.crimpy cat /data/user/0/com.crimpyclimbing.crimpy/app_flutter/<filename>" > data.json` - Debug data extraction (prod)
 
 ## Architecture Overview
 
