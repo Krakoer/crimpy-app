@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 jobs:
-  build:
+  build-mobile:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,24 +20,28 @@ jobs:
 
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
+      working-directory: ./mobile
       with:
         channel: stable
         flutter-version-file: pubspec.yaml
 
     - name: Install dependencies
+      working-directory: ./mobile
       run: flutter pub get
 
     - name: Generate code
+      working-directory: ./mobile
       run: dart run build_runner build --delete-conflicting-outputs
 
     - name: Build Android APK
+      working-directory: ./mobile
       run: flutter build apk --flavor prod --debug
 
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          build/app/outputs/flutter-apk/app-prod-debug.apk
+          ./mobile/build/app/outputs/flutter-apk/app-prod-debug.apk
         draft: false
         prerelease: false
         generate_release_notes: true
