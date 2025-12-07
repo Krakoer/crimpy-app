@@ -20,10 +20,9 @@ jobs:
 
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
-      working-directory: ./mobile
       with:
         channel: stable
-        flutter-version-file: pubspec.yaml
+        flutter-version-file: ./mobile/pubspec.yaml
 
     - name: Install dependencies
       working-directory: ./mobile
