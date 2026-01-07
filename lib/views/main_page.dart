@@ -148,7 +148,7 @@ class _MainPageState extends ConsumerState<MainPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   FaIcon(
-                    FontAwesomeIcons.userLarge,
+                    FontAwesomeIcons.user,
                     size: 20,
                     color:
                         currentPageIndex == 3

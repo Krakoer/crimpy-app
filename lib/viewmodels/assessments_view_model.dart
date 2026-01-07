@@ -38,15 +38,15 @@ final assessmentsProvider = AsyncNotifierProvider.autoDispose
       AssessmentNotifier.new,
     );
 
-class AssessmentNotifier
-    extends FamilyAsyncNotifier<List<AssessmentModel>, AssessmentType?> {
+class AssessmentNotifier extends AsyncNotifier<List<AssessmentModel>> {
+  AssessmentNotifier(this.type);
+  final AssessmentType? type;
+
   late AssessmentRepository _assessmentRepository;
-  late AssessmentType? _type;
 
   @override
-  Future<List<AssessmentModel>> build(AssessmentType? type) {
+  Future<List<AssessmentModel>> build() {
     _assessmentRepository = ref.watch(assessmentRepositoryProvider);
-    _type = type;
     return _assessmentRepository.getAssessments(type: type);
   }
 
@@ -94,12 +94,12 @@ class AssessmentNotifier
     HandSide handSide, {
     GripPosition? gripPosition,
   }) async {
-    if (_type == null) {
+    if (type == null) {
       AppLoggerHelper.warning("Called getLastValueForHand with a type null.");
       return 0;
     }
     return _assessmentRepository.getLastValueForHand(
-      _type!,
+      type!,
       handSide,
       gripPosition: gripPosition,
     );
@@ -111,13 +111,13 @@ class AssessmentNotifier
     HandSide? handSide,
     GripPosition? gripPosition,
   }) async {
-    if (_type == null) {
+    if (type == null) {
       AppLoggerHelper.warning("Called getSameDayAssessment with a type null.");
       return 0;
     }
     final prevAssessment =
         (await _assessmentRepository.getAssessments(
-          type: _type,
+          type: type,
           handSide: handSide,
           gripPosition: gripPosition,
         )).lastOrNull;

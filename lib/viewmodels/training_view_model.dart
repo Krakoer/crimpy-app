@@ -162,18 +162,18 @@ class SessionFilter {
 }
 
 /// Returns the list of sessions, and allows the creation of new sessions.
-final sessionsProvider = AsyncNotifierProvider.family<
-  SessionsNotifier,
-  List<SessionModel>,
-  SessionFilter?
->(SessionsNotifier.new);
+final sessionsProvider = AsyncNotifierProvider.autoDispose
+    .family<SessionsNotifier, List<SessionModel>, SessionFilter?>(
+      SessionsNotifier.new,
+    );
 
-class SessionsNotifier
-    extends FamilyAsyncNotifier<List<SessionModel>, SessionFilter?> {
+class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
+  SessionsNotifier(this.filters);
+  final SessionFilter? filters;
   late TrainingRepository _trainingRepository;
 
   @override
-  Future<List<SessionModel>> build(SessionFilter? filters) {
+  Future<List<SessionModel>> build() {
     _trainingRepository = ref.watch(trainingRepositoryProvider);
     return _trainingRepository.getAllSessionsWithReps(filters: filters);
   }
@@ -210,6 +210,18 @@ class SessionsNotifier
     state = const AsyncValue.loading();
     try {
       await _trainingRepository.updateSession(session);
+      ref.invalidate(sessionsProvider);
+      await future;
+    } catch (e, stackTrace) {
+      state = AsyncValue.error(e, stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<void> deleteSession(int sessionId) async {
+    state = const AsyncValue.loading();
+    try {
+      await _trainingRepository.deleteSession(sessionId);
       ref.invalidate(sessionsProvider);
       await future;
     } catch (e, stackTrace) {

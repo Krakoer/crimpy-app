@@ -43,6 +43,19 @@ class SessionDetailScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.delete_forever,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        SizedBox(width: 8),
+                        Text('Delete'),
+                      ],
+                    ),
+                  ),
                   const PopupMenuItem(
                     value: 'share',
                     child: Row(
@@ -517,6 +530,55 @@ class SessionDetailScreen extends ConsumerWidget {
           MaterialPageRoute(
             builder: (context) => EditSessionScreen(session: session),
           ),
+        );
+        break;
+      case 'delete':
+        showDialog(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: const Text('Delete Session'),
+                content: Text(
+                  'Are you sure you want to delete this session?\nThis action cannot be undone.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      Navigator.of(context).pop();
+                      try {
+                        await ref
+                            .read(sessionsProvider(null).notifier)
+                            .deleteSession(session.id!);
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Session deleted successfully'),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error deleting session: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    child: const Text('Delete'),
+                  ),
+                ],
+              ),
         );
         break;
       case 'share':

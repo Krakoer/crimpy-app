@@ -169,4 +169,9 @@ class TrainingRepository {
   Future<void> updateSession(SessionModel session) async {
     return await gDatabase.updateSession(session);
   }
+
+  /// Delete a session by its ID.
+  Future<void> deleteSession(int sessionId) async {
+    gDatabase.deleteSession(sessionId);
+  }
 }

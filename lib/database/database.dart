@@ -280,6 +280,10 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
+  /// Delete a session.
+  Future<void> deleteSession(int sessionId) =>
+      (delete(sessions)..where((t) => t.id.equals(sessionId))).go();
+
   // ------------------------------------- TRAININGS -------------------------------------
   /// Save a training with its repetitions.
   Future<int> saveTrainingWithReps(String name, List<RepModel> reps) async {
