@@ -81,6 +81,11 @@ Crimpy helps climbers track and improve their performance through:
 flutter build apk --flavor prod --release
 ```
 
+**Android AAB (Store release)**
+```bash
+flutter build appbundle --flavor prod --release --obfuscate --split-debug-info=./out/android
+```
+
 **Install without losing data**
 ```bash
 adb install -r .\build\app\outputs\flutter-apk\app-prod-release.apk
