@@ -4,9 +4,12 @@ import 'package:crimpy/views/screens/settings_screen/widgets/calibration/start_c
 import 'package:crimpy/views/screens/settings_screen/widgets/create_sensor_config_dialog.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/sensor_settings_list.dart';
 import 'package:drift/drift.dart' as dr;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
+import 'package:crimpy/utils/dummy_data_generator.dart';
+import 'package:crimpy/repositories/training_repository.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   /// Screen that allow the user to manage the app settings, including:
@@ -145,6 +148,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         // List of saved presets.
         SensorSettingsList(),
+        // Debug section - only visible in debug mode
+        if (kDebugMode) ...[
+          const Divider(thickness: 2, height: 32),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Debug Tools',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Generate dummy data for testing and screenshots',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: _generateDummyData,
+                  icon: const Icon(Icons.data_array),
+                  label: const Text('Generate Dummy Data'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ElevatedButton.icon(
+                  onPressed: _clearAllData,
+                  icon: const Icon(Icons.delete_sweep),
+                  label: const Text('Clear All Data'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -182,6 +227,140 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     );
               },
             ),
+      );
+    }
+  }
+
+  /// Generate dummy data for testing and screenshots (debug mode only).
+  void _generateDummyData() async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Generate Dummy Data'),
+            content: const Text(
+              'This will populate your database with sample sessions, trainings, and assessments. '
+              'This is useful for testing and taking screenshots.\n\n'
+              'Continue?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Generate'),
+              ),
+            ],
+          ),
+    );
+
+    if (confirmed != true) return;
+
+    // Show loading indicator
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final trainingRepository = TrainingRepository();
+      final generator = DummyDataGenerator(trainingRepository);
+      await generator.generateAllDummyData();
+
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Close loading dialog
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Dummy data generated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Close loading dialog
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error generating dummy data: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Clear all data from the database (debug mode only).
+  void _clearAllData() async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('Clear All Data'),
+            content: const Text(
+              'This will DELETE all sessions and custom trainings from your database. '
+              'This action cannot be undone!\n\n'
+              'Are you sure you want to continue?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Clear All'),
+              ),
+            ],
+          ),
+    );
+
+    if (confirmed != true) return;
+
+    // Show loading indicator
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final trainingRepository = TrainingRepository();
+      final generator = DummyDataGenerator(trainingRepository);
+      await generator.clearAllData();
+
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Close loading dialog
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('All data cleared successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Close loading dialog
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error clearing data: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
