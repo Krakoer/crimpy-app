@@ -21,6 +21,13 @@ class MainPage extends ConsumerStatefulWidget {
 
 class _MainPageState extends ConsumerState<MainPage> {
   int currentPageIndex = 0;
+  final _pageViewController = PageController();
+
+  @override
+  void dispose() {
+    _pageViewController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,9 +47,11 @@ class _MainPageState extends ConsumerState<MainPage> {
         child: NavigationBar(
           height: 60,
           onDestinationSelected: (int index) {
-            setState(() {
-              currentPageIndex = index;
-            });
+            _pageViewController.animateToPage(
+              index,
+              duration: Duration(milliseconds: 300),
+              curve: Curves.ease,
+            );
           },
           selectedIndex: currentPageIndex,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
@@ -227,20 +236,29 @@ class _MainPageState extends ConsumerState<MainPage> {
           ),
         ],
       ),
-      body: SafeArea(
-        child:
-            <Widget>[
-              HomeScreen(),
-              TrainingScreen(
-                goToAssessments:
-                    () => setState(() {
-                      currentPageIndex = 2;
-                    }),
-              ),
-              AssessmentsScreen(),
-              ClimbingProfileScreen(),
-              SettingsScreen(),
-            ][currentPageIndex],
+      body: PageView(
+        controller: _pageViewController,
+        onPageChanged: (index) {
+          setState(() {
+            currentPageIndex = index;
+          });
+        },
+        children: <Widget>[
+          HomeScreen(),
+          TrainingScreen(
+            goToAssessments:
+                () => setState(() {
+                  _pageViewController.animateToPage(
+                    2,
+                    duration: Duration(milliseconds: 250),
+                    curve: Curves.ease,
+                  );
+                }),
+          ),
+          AssessmentsScreen(),
+          ClimbingProfileScreen(),
+          SettingsScreen(),
+        ],
       ),
     );
   }
