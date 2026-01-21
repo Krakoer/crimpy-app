@@ -24,6 +24,39 @@ class AssessmentRequirement {
   int get hashCode => Object.hash(type, gripPosition);
 }
 
+/// Stores repeater configuration for a session.
+/// This is saved with the session so we can properly display sets later,
+/// even if the original training template is modified or deleted.
+class RepeaterConfig {
+  final int sets;
+  final int repsPerSet;
+  final int workTime;
+  final int restTime;
+  final int setRest;
+  final bool splitHand;
+
+  const RepeaterConfig({
+    required this.sets,
+    required this.repsPerSet,
+    required this.workTime,
+    required this.restTime,
+    required this.setRest,
+    required this.splitHand,
+  });
+
+  /// Create from RepeaterModel
+  factory RepeaterConfig.fromRepeaterModel(RepeaterModel model) {
+    return RepeaterConfig(
+      sets: model.sets,
+      repsPerSet: model.repsBySet,
+      workTime: model.workTime,
+      restTime: model.restTime,
+      setRest: model.restBteweenSets,
+      splitHand: model.splitHand,
+    );
+  }
+}
+
 class SessionModel {
   final int? id;
   final String name;
@@ -34,6 +67,7 @@ class SessionModel {
   final bool isAssessment;
   final SessionType sessionType;
   final int? durationInSeconds;
+  final RepeaterConfig? repeaterConfig;
 
   SessionModel({
     this.id,
@@ -44,6 +78,7 @@ class SessionModel {
     required this.isAssessment,
     this.sessionType = SessionType.crimpy,
     this.durationInSeconds,
+    this.repeaterConfig,
     date,
   }) : date = date ?? DateTime.now();
 

@@ -25,6 +25,14 @@ class Sessions extends Table {
   late final IntColumn sessionType =
       integer().withDefault(const Constant(0))(); // 0 = crimpy (default)
   late final IntColumn duration = integer().withDefault(const Constant(0))();
+
+  // Repeater configuration (if session was a repeater workout)
+  late final IntColumn repeaterSets = integer().nullable()();
+  late final IntColumn repeaterReps = integer().nullable()();
+  late final IntColumn repeaterWorkTime = integer().nullable()();
+  late final IntColumn repeaterRestTime = integer().nullable()();
+  late final IntColumn repeaterSetRest = integer().nullable()();
+  late final BoolColumn repeaterSplitHand = boolean().nullable()();
 }
 
 // Stores the assessments the user has done, with the results.
@@ -153,6 +161,25 @@ class AppDatabase extends _$AppDatabase {
 
     final List<BleDataPoint> dataPoints =
         session.dataPath.isEmpty ? [] : await getSessionData(session.dataPath);
+
+    // Build repeater config if available
+    RepeaterConfig? repeaterConfig;
+    if (session.repeaterSets != null &&
+        session.repeaterReps != null &&
+        session.repeaterWorkTime != null &&
+        session.repeaterRestTime != null &&
+        session.repeaterSetRest != null &&
+        session.repeaterSplitHand != null) {
+      repeaterConfig = RepeaterConfig(
+        sets: session.repeaterSets!,
+        repsPerSet: session.repeaterReps!,
+        workTime: session.repeaterWorkTime!,
+        restTime: session.repeaterRestTime!,
+        setRest: session.repeaterSetRest!,
+        splitHand: session.repeaterSplitHand!,
+      );
+    }
+
     return SessionModel(
       name: session.name,
       date: session.date,
@@ -162,6 +189,7 @@ class AppDatabase extends _$AppDatabase {
       isAssessment: session.isAssessment,
       sessionType: SessionType.values[session.sessionType],
       durationInSeconds: session.duration,
+      repeaterConfig: repeaterConfig,
     );
   }
 
@@ -230,6 +258,12 @@ class AppDatabase extends _$AppDatabase {
         isAssessment: Value(session.isAssessment),
         sessionType: Value(session.sessionType.index),
         duration: Value(sessionDuration),
+        repeaterSets: Value(session.repeaterConfig?.sets),
+        repeaterReps: Value(session.repeaterConfig?.repsPerSet),
+        repeaterWorkTime: Value(session.repeaterConfig?.workTime),
+        repeaterRestTime: Value(session.repeaterConfig?.restTime),
+        repeaterSetRest: Value(session.repeaterConfig?.setRest),
+        repeaterSplitHand: Value(session.repeaterConfig?.splitHand),
       ),
     );
     final companions =
@@ -649,7 +683,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -679,6 +713,15 @@ class AppDatabase extends _$AppDatabase {
       if (from <= 5 && to >= 6) {
         // Migration to schema version 6: Add PinnedBuiltinTrainings table
         await m.createTable(pinnedBuiltinTrainings);
+      }
+      if (from <= 6 && to >= 7) {
+        // Migration to schema version 7: Add repeater configuration fields to sessions
+        await m.addColumn(sessions, sessions.repeaterSets);
+        await m.addColumn(sessions, sessions.repeaterReps);
+        await m.addColumn(sessions, sessions.repeaterWorkTime);
+        await m.addColumn(sessions, sessions.repeaterRestTime);
+        await m.addColumn(sessions, sessions.repeaterSetRest);
+        await m.addColumn(sessions, sessions.repeaterSplitHand);
       }
     },
   );

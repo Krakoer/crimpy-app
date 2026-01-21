@@ -134,6 +134,25 @@ class TrainingRepository {
 
     for (final t in trainings) {
       final reps = await gDatabase.getRepsForSession(t.id);
+
+      // Build repeater config if available
+      RepeaterConfig? repeaterConfig;
+      if (t.repeaterSets != null &&
+          t.repeaterReps != null &&
+          t.repeaterWorkTime != null &&
+          t.repeaterRestTime != null &&
+          t.repeaterSetRest != null &&
+          t.repeaterSplitHand != null) {
+        repeaterConfig = RepeaterConfig(
+          sets: t.repeaterSets!,
+          repsPerSet: t.repeaterReps!,
+          workTime: t.repeaterWorkTime!,
+          restTime: t.repeaterRestTime!,
+          setRest: t.repeaterSetRest!,
+          splitHand: t.repeaterSplitHand!,
+        );
+      }
+
       res.add(
         SessionModel(
           id: t.id,
@@ -144,6 +163,7 @@ class TrainingRepository {
           isAssessment: t.isAssessment,
           sessionType: SessionType.values[t.sessionType],
           durationInSeconds: t.duration,
+          repeaterConfig: repeaterConfig,
         ),
       );
     }
