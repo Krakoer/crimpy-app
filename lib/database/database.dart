@@ -556,7 +556,7 @@ class AppDatabase extends _$AppDatabase {
     // Join on sessions to get the date of the assessment.
     final res =
         await query.join([
-          innerJoin(sessions, sessions.id.equalsExp(assessments.id)),
+          innerJoin(sessions, sessions.id.equalsExp(assessments.sessionId)),
         ]).get();
 
     return res.map((row) {
