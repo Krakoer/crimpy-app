@@ -42,15 +42,24 @@ class SetsViewWidget extends StatelessWidget {
           setAvgTarget /= workReps.length;
         }
 
+        // For repeaters with hand separation, determine which hand this sub-set belongs to
+        // Even indices (0, 2, 4...) = right hand, odd indices (1, 3, 5...) = left hand
+        // Both split and non-split modes now separate hands in visualization
+        final bool isRightHand = setIndex % 2 == 0;
+        final int actualSetNumber = (setIndex ~/ 2) + 1;
+
         return Column(
           children: [
             SetCardWidget(
-              setNumber: setIndex + 1,
+              setNumber: actualSetNumber,
               workReps: workReps,
               successCount: setSuccessCount,
               avgWeight: setAvgWeight,
               avgTarget: setAvgTarget,
               sessionColor: sessionColor,
+              isSplitHand:
+                  true, // Always show hand indicator since we separate hands
+              isRightHand: isRightHand,
             ),
             if (setIndex < sets.length - 1) const SizedBox(height: 12),
           ],
@@ -67,6 +76,8 @@ class SetCardWidget extends StatelessWidget {
   final double avgWeight;
   final double avgTarget;
   final Color sessionColor;
+  final bool isSplitHand;
+  final bool isRightHand;
 
   const SetCardWidget({
     super.key,
@@ -76,6 +87,8 @@ class SetCardWidget extends StatelessWidget {
     required this.avgWeight,
     required this.avgTarget,
     required this.sessionColor,
+    this.isSplitHand = false,
+    this.isRightHand = true,
   });
 
   @override
@@ -107,13 +120,35 @@ class SetCardWidget extends StatelessWidget {
                   color: sessionColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(
-                  'Set $setNumber',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: sessionColor,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Set $setNumber',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: sessionColor,
+                      ),
+                    ),
+                    if (isSplitHand) ...[
+                      const SizedBox(width: 6),
+                      Icon(
+                        isRightHand ? Icons.front_hand : Icons.back_hand,
+                        size: 14,
+                        color: sessionColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        isRightHand ? 'Right Hand' : 'Left Hand',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: sessionColor,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
               const SizedBox(width: 8),

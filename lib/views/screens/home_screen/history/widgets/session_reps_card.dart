@@ -212,40 +212,54 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
         }
       }
     } else {
-      // Non-split hand: original logic
+      // Non-split hand: separate right and left hand reps within each set
+      // In the actual workout, they alternate (R, L, R, L...), but we display them grouped
       for (int set = 0; set < repeaterConfig.sets; set++) {
-        final List<RepData> currentSet = [];
+        final List<RepData> rightHandReps = [];
+        final List<RepData> leftHandReps = [];
         int workRepsCollected = 0;
+        final int expectedTotalWorkReps =
+            repeaterConfig.repsPerSet * 2; // Both hands
 
-        while (repIndex < reps.length) {
+        // Collect all reps for this set
+        while (repIndex < reps.length &&
+            workRepsCollected < expectedTotalWorkReps) {
           final rep = reps[repIndex];
 
-          // If this is a long rest and we've collected all work reps, this is the set rest
-          if (rep.isRest &&
-              rep.duration >= repeaterConfig.setRest &&
-              workRepsCollected == repeaterConfig.repsPerSet) {
-            // Include the long rest in this set's data
-            currentSet.add(rep);
-            repIndex++;
+          // Stop if we hit the long set rest
+          if (rep.isRest && rep.duration >= repeaterConfig.setRest) {
             break;
           }
 
-          currentSet.add(rep);
+          // Separate by hand
+          if (rep.rightHand) {
+            rightHandReps.add(rep);
+          } else {
+            leftHandReps.add(rep);
+          }
 
           if (!rep.isRest) {
             workRepsCollected++;
           }
 
           repIndex++;
-
-          // If we've collected all work reps, check if we should stop
-          if (workRepsCollected == repeaterConfig.repsPerSet) {
-            continue;
-          }
         }
 
-        if (currentSet.isNotEmpty) {
-          sets.add(currentSet);
+        // Add right hand reps as first sub-set
+        if (rightHandReps.isNotEmpty) {
+          sets.add(rightHandReps);
+        }
+
+        // Add left hand reps as second sub-set
+        if (leftHandReps.isNotEmpty) {
+          sets.add(leftHandReps);
+        }
+
+        // Skip the long set rest
+        if (repIndex < reps.length &&
+            reps[repIndex].isRest &&
+            reps[repIndex].duration >= repeaterConfig.setRest) {
+          repIndex++;
         }
       }
     }

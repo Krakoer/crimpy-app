@@ -321,16 +321,16 @@ class RepeaterModel {
         }
       }
     } else {
-      // Non-split hand logic remains the same
+      // Non-split hand: each rep is performed with both hands (right, then left)
       for (int set = 0; set < sets; set++) {
         for (int rep = 0; rep < repsBySet; rep++) {
-          // Both hands work rep
+          // Right hand work rep
           reps.add(
             RepTemplate(
               duration: workTime,
               isRest: false,
-              handSide: HandSide.right, // Default to right hand when not split
-              targetWeight: weightRight ?? weightLeft ?? 0.0,
+              handSide: HandSide.right,
+              targetWeight: weightRight ?? 0.0,
               index: currentIndex++,
               id: 0,
               trainingId: 0,
@@ -338,7 +338,34 @@ class RepeaterModel {
             ),
           );
 
-          // Rest between reps (if not the last rep of the set)
+          // Rest after right hand
+          reps.add(
+            RepTemplate(
+              duration: restTime,
+              isRest: true,
+              handSide: HandSide.right,
+              targetWeight: 0.0,
+              index: currentIndex++,
+              id: 0,
+              trainingId: 0,
+            ),
+          );
+
+          // Left hand work rep
+          reps.add(
+            RepTemplate(
+              duration: workTime,
+              isRest: false,
+              handSide: HandSide.left,
+              targetWeight: weightLeft ?? 0.0,
+              index: currentIndex++,
+              id: 0,
+              trainingId: 0,
+              gripPosition: gripPosition,
+            ),
+          );
+
+          // Rest after left hand (if not the last rep of the set)
           if (rep < repsBySet - 1) {
             reps.add(
               RepTemplate(
@@ -360,7 +387,7 @@ class RepeaterModel {
             RepTemplate(
               duration: restBteweenSets,
               isRest: true,
-              handSide: HandSide.left,
+              handSide: HandSide.right,
               targetWeight: 0.0,
               index: currentIndex++,
               id: 0,
