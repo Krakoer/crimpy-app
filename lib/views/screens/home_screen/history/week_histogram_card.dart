@@ -17,9 +17,13 @@ class WeekHistogramCard extends ConsumerStatefulWidget {
 }
 
 class _HistoryScreenState extends ConsumerState<WeekHistogramCard> {
+  int _weekOffset = 0; // 0 = current week, -1 = previous week, +1 = next week
+
   @override
   Widget build(BuildContext context) {
-    final startOfTheWeek = getStartOfWeek(DateTime.now());
+    final startOfTheWeek = getStartOfWeek(
+      DateTime.now(),
+    ).add(Duration(days: 7 * _weekOffset));
     // Get the sessions of the week
     final asyncSessions = ref.watch(
       sessionsProvider(
@@ -29,24 +33,59 @@ class _HistoryScreenState extends ConsumerState<WeekHistogramCard> {
         ),
       ),
     );
+
+    final endOfWeek = startOfTheWeek.add(Duration(days: 6));
+    final String weekTitle =
+        _weekOffset == 0
+            ? "This Week"
+            : "${startOfTheWeek.day}/${startOfTheWeek.month} - ${endOfWeek.day}/${endOfWeek.month}";
+
     return HomeCard(
-      title: "This Week",
+      title: weekTitle,
       onTap: () => _navigateToSessionHistory(context),
       topLeft: Row(
         children: [
-          Text('View All', style: Theme.of(context).textTheme.bodySmall),
-          const SizedBox(width: 4),
-          const Icon(Icons.chevron_right, size: 16),
+          // Navigation buttons
+          IconButton(
+            icon: const Icon(Icons.chevron_left, size: 20),
+            onPressed: () {
+              setState(() {
+                _weekOffset--;
+              });
+            },
+            tooltip: 'Previous week',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.chevron_right, size: 20),
+            onPressed:
+                _weekOffset < 0
+                    ? () {
+                      setState(() {
+                        _weekOffset++;
+                      });
+                    }
+                    : null, // Disable if we're at current week or future
+            tooltip: 'Next week',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
         ],
       ),
-      child: switch (asyncSessions) {
-        AsyncData(:final value) => WeekHistogramWidget(
-          sessions: value,
-          maxBarHeight: widget.maxBarHeight,
-        ),
-        AsyncError(:final error) => Text('Error: $error'),
-        _ => const Center(child: CircularProgressIndicator()),
-      },
+      child: SizedBox(
+        height: widget.maxBarHeight + 66, // Fixed height to prevent flickering
+        child: switch (asyncSessions) {
+          AsyncData(:final value) => WeekHistogramWidget(
+            sessions: value,
+            maxBarHeight: widget.maxBarHeight,
+            startOfWeek: startOfTheWeek,
+          ),
+          AsyncError(:final error) => Center(child: Text('Error: $error')),
+          _ => const Center(child: CircularProgressIndicator()),
+        },
+      ),
     );
   }
 

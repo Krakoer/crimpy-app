@@ -10,6 +10,7 @@ class WeekHistogramWidget extends StatelessWidget {
   final Color barColor;
   final Color textColor;
   final double maxBarHeight;
+  final DateTime? startOfWeek;
 
   /// Widget that displays the given sessions as a week histogram, from monday to sunday.
   const WeekHistogramWidget({
@@ -18,12 +19,12 @@ class WeekHistogramWidget extends StatelessWidget {
     this.barColor = CrimpyTheme.accentOrange,
     this.textColor = CrimpyTheme.primaryBlack,
     this.maxBarHeight = 200.0,
+    this.startOfWeek,
   });
 
   @override
   Widget build(BuildContext context) {
-    final DateTime now = DateTime.now();
-    final DateTime monday = getStartOfWeek(now);
+    final DateTime monday = startOfWeek ?? getStartOfWeek(DateTime.now());
 
     // Compute duration for each day of the week, grouped by session type
     final List<Map<SessionType, Duration>> durationsPerDay =
