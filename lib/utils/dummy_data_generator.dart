@@ -452,9 +452,12 @@ class DummyDataGenerator {
     final sessionFatigue = 0.05; // 5% performance drop per set
 
     if (trainingName == 'Beginner Repeaters') {
+      // Non-split hand: each rep is performed with both hands
       for (int set = 0; set < 3; set++) {
         for (int rep = 0; rep < 5; rep++) {
           final performance = basePerformance - (set * sessionFatigue);
+
+          // Right hand work rep
           reps.add(
             _createWorkRep(
               index: index++,
@@ -464,6 +467,20 @@ class DummyDataGenerator {
               handSide: HandSide.right,
             ),
           );
+          // Rest after right hand
+          reps.add(_createRestRep(index: index++, duration: 3));
+
+          // Left hand work rep
+          reps.add(
+            _createWorkRep(
+              index: index++,
+              duration: 7,
+              targetWeight: 13.0, // Slightly weaker left hand
+              performance: performance * 0.95,
+              handSide: HandSide.left,
+            ),
+          );
+          // Rest after left hand (if not last rep)
           if (rep < 4) {
             reps.add(_createRestRep(index: index++, duration: 3));
           }
@@ -473,9 +490,12 @@ class DummyDataGenerator {
         }
       }
     } else if (trainingName == 'Advanced Hangs') {
+      // Non-split hand: each rep is performed with both hands
       for (int set = 0; set < 5; set++) {
         for (int rep = 0; rep < 20; rep++) {
           final performance = basePerformance - (set * sessionFatigue);
+
+          // Right hand work rep
           reps.add(
             _createWorkRep(
               index: index++,
@@ -485,6 +505,20 @@ class DummyDataGenerator {
               handSide: HandSide.right,
             ),
           );
+          // Rest after right hand
+          reps.add(_createRestRep(index: index++, duration: 5));
+
+          // Left hand work rep
+          reps.add(
+            _createWorkRep(
+              index: index++,
+              duration: 10,
+              targetWeight: 22.0, // Slightly weaker left hand
+              performance: performance * 0.93,
+              handSide: HandSide.left,
+            ),
+          );
+          // Rest after left hand (if not last rep)
           if (rep < 19) {
             reps.add(_createRestRep(index: index++, duration: 5));
           }
@@ -494,9 +528,12 @@ class DummyDataGenerator {
         }
       }
     } else if (trainingName == 'Max Hangs') {
+      // Non-split hand: each rep is performed with both hands
       for (int set = 0; set < 4; set++) {
         for (int rep = 0; rep < 3; rep++) {
           final performance = basePerformance - (set * sessionFatigue * 1.2);
+
+          // Right hand work rep
           reps.add(
             _createWorkRep(
               index: index++,
@@ -506,6 +543,20 @@ class DummyDataGenerator {
               handSide: HandSide.right,
             ),
           );
+          // Rest after right hand
+          reps.add(_createRestRep(index: index++, duration: 10));
+
+          // Left hand work rep
+          reps.add(
+            _createWorkRep(
+              index: index++,
+              duration: 10,
+              targetWeight: 32.0, // Slightly weaker left hand
+              performance: performance * 0.92,
+              handSide: HandSide.left,
+            ),
+          );
+          // Rest after left hand (if not last rep)
           if (rep < 2) {
             reps.add(_createRestRep(index: index++, duration: 10));
           }
@@ -572,32 +623,28 @@ class DummyDataGenerator {
         }
       }
     } else {
-      // Endurance Workout
-      for (int round = 0; round < 3; round++) {
-        final performance = basePerformance - (round * sessionFatigue);
-        reps.add(
-          _createWorkRep(
-            index: index++,
-            duration: 30,
-            targetWeight: 20.0,
-            performance: performance,
-            handSide: HandSide.right,
-          ),
-        );
-        reps.add(_createRestRep(index: index++, duration: 10));
-        reps.add(
-          _createWorkRep(
-            index: index++,
-            duration: 30,
-            targetWeight: 20.0,
-            performance: performance - 0.05,
-            handSide: HandSide.left,
-          ),
-        );
-        if (round < 2) {
-          reps.add(_createRestRep(index: index++, duration: 120));
-        }
-      }
+      // Endurance Workout - single round matching the training definition
+      final performance = basePerformance;
+      reps.add(
+        _createWorkRep(
+          index: index++,
+          duration: 30,
+          targetWeight: 20.0,
+          performance: performance,
+          handSide: HandSide.right,
+        ),
+      );
+      reps.add(_createRestRep(index: index++, duration: 10));
+      reps.add(
+        _createWorkRep(
+          index: index++,
+          duration: 30,
+          targetWeight: 20.0,
+          performance: performance - 0.05,
+          handSide: HandSide.left,
+        ),
+      );
+      reps.add(_createRestRep(index: index++, duration: 120));
     }
 
     return reps;
