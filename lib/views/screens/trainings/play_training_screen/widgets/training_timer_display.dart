@@ -4,12 +4,14 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 class TrainingTimerDisplay extends StatelessWidget {
   final int secondsRemaining;
   final bool isRest;
+  final bool isPrep;
   final double fontSize;
 
   const TrainingTimerDisplay({
     super.key,
     required this.secondsRemaining,
     required this.isRest,
+    required this.isPrep,
     required this.fontSize,
   });
 
@@ -30,7 +32,11 @@ class TrainingTimerDisplay extends StatelessWidget {
         const SizedBox(height: 12),
         // Status label
         Text(
-          isRest ? 'REST' : 'WORK',
+          isPrep
+              ? "PREPARATION"
+              : isRest
+              ? 'REST'
+              : 'WORK',
           style: Theme.of(context).textTheme.headlineSmall!.copyWith(
             color: isRest ? CrimpyTheme.accentTeal : CrimpyTheme.accentYellow,
             fontWeight: FontWeight.bold,

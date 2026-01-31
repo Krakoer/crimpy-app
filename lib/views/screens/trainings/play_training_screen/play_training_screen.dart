@@ -260,6 +260,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                             secondsRemaining: timer.currentRepRemaining,
                             isRest: timer.currentRep.isRest,
                             fontSize: timerFontSize * 1.4,
+                            isPrep: timer.currentRepIndex == 0,
                           ),
                           // Next rep preview (during rest)
                           if (timer.currentRep.isRest &&
