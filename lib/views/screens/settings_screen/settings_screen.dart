@@ -34,12 +34,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _calibrationController.text = settings.calibration.toStringAsFixed(2);
 
     return Scaffold(
-      floatingActionButton: ElevatedButton.icon(
+      floatingActionButton: FloatingActionButton(
         onPressed: () {
           SentryFeedbackWidget.show(context);
         },
-        icon: Icon(FontAwesomeIcons.bullhorn, size: 40),
-        label: Text("Report a bug"),
+        tooltip: 'Report a bug',
+        child: const Icon(FontAwesomeIcons.bullhorn),
       ),
       body: Column(
         children: [

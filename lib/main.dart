@@ -7,7 +7,7 @@ import 'theme/crimpy_theme.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  SentryWidgetsFlutterBinding.ensureInitialized();
   FlutterBluePlus.setLogLevel(LogLevel.warning, color: true);
   AppLoggerHelper.initialize();
   await SentryFlutter.init(
