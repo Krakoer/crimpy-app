@@ -8,6 +8,7 @@ import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/trai
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/widgets/gauge.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen.dart';
@@ -34,25 +35,47 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// List of the average weights done during the training.
   List<RepDataModel> repResults = [];
 
+  /// Duration of the preparation rest in seconds
+  static const int _preparationDuration = 10;
+
+  /// Get reps with a 10-second preparation rest prepended
+  List<RepModel> get _repsWithPreparation {
+    return [
+      RepModel(
+        durationInSeconds: _preparationDuration,
+        isRest: true,
+        handSide: HandSide.left,
+        targetWeight: 0.0,
+        index: -1,
+        gripPosition: GripPosition.halfCrimp,
+      ),
+      ...widget.training.reps,
+    ];
+  }
+
   // Setup the workout timer
   late WorkoutTimer timer = WorkoutTimer(
-    repetitions: widget.training.reps,
+    repetitions: _repsWithPreparation,
     // Set state each second to update the UI.
     onSecondChange: () => setState(() {}),
     onNextRep: (nextRepDuration) {
-      repResults.add(
-        RepDataModel(
-          handSide: timer.currentRep.handSide,
-          targetWeight: timer.currentRep.targetWeight,
-          // Add avg if it was not a rest
-          averageWeight:
-              timer.currentRep.isRest ? 0 : ref.read(bleSessionProvider).avg,
-          duration: timer.currentRep.durationInSeconds,
-          index: timer.currentRep.index,
-          isRest: timer.currentRep.isRest,
-          gripPosition: timer.currentRep.gripPosition,
-        ),
-      );
+      // Only save rep results for actual training reps (not the preparation rest)
+      // The preparation rest has index -1
+      if (timer.currentRep.index >= 0) {
+        repResults.add(
+          RepDataModel(
+            handSide: timer.currentRep.handSide,
+            targetWeight: timer.currentRep.targetWeight,
+            // Add avg if it was not a rest
+            averageWeight:
+                timer.currentRep.isRest ? 0 : ref.read(bleSessionProvider).avg,
+            duration: timer.currentRep.durationInSeconds,
+            index: timer.currentRep.index,
+            isRest: timer.currentRep.isRest,
+            gripPosition: timer.currentRep.gripPosition,
+          ),
+        );
+      }
 
       // Setup the animation controller for the next rep.
       _serieController.duration = Duration(seconds: nextRepDuration);
@@ -65,20 +88,22 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     },
     onFinished: () async {
       _serieController.stop();
-      // Add the final average.
-      repResults.add(
-        RepDataModel(
-          handSide: timer.currentRep.handSide,
-          targetWeight: timer.currentRep.targetWeight,
-          // Add avg if it was not a rest
-          averageWeight:
-              timer.currentRep.isRest ? 0 : ref.read(bleSessionProvider).avg,
-          duration: timer.currentRep.durationInSeconds,
-          index: timer.currentRep.index,
-          isRest: timer.currentRep.isRest,
-          gripPosition: timer.currentRep.gripPosition,
-        ),
-      );
+      // Add the final average (only if it's an actual training rep, not preparation)
+      if (timer.currentRep.index >= 0) {
+        repResults.add(
+          RepDataModel(
+            handSide: timer.currentRep.handSide,
+            targetWeight: timer.currentRep.targetWeight,
+            // Add avg if it was not a rest
+            averageWeight:
+                timer.currentRep.isRest ? 0 : ref.read(bleSessionProvider).avg,
+            duration: timer.currentRep.durationInSeconds,
+            index: timer.currentRep.index,
+            isRest: timer.currentRep.isRest,
+            gripPosition: timer.currentRep.gripPosition,
+          ),
+        );
+      }
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -193,7 +218,8 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                   TrainingHeader(
                     elapsedMilliseconds: timer.elapsedMilliseconds,
                     remainingMilliseconds:
-                        widget.training.totalDuration.inMilliseconds -
+                        widget.training.totalDuration.inMilliseconds +
+                        (_preparationDuration * 1000) -
                         timer.elapsedMilliseconds,
                   ),
                   // Main content area with gauge
@@ -248,9 +274,14 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                     ),
                   ),
                   // Progress info
+                  // Adjust indices: preparation rep is at index 0, actual training starts at index 1
+                  // So we subtract 1 to show the correct rep number relative to the actual training
                   TrainingProgressInfo(
-                    currentRepIndex: timer.currentRepIndex,
-                    totalReps: timer.repetitions.length,
+                    currentRepIndex:
+                        timer.currentRepIndex > 0
+                            ? timer.currentRepIndex - 1
+                            : 0,
+                    totalReps: widget.training.reps.length,
                     repeater: widget.training.repeater,
                   ),
                   const SizedBox(height: 8),
