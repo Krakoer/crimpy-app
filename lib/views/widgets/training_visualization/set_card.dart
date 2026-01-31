@@ -42,7 +42,10 @@ class RepeaterDescriptionCard extends StatelessWidget {
               SizedBox(width: 15),
               Text(
                 "${repeater.sets} sets structured\nas follows.",
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: CrimpyTheme.textSecondary,
+                ),
               ),
             ],
           ),
