@@ -54,6 +54,7 @@ dependencies:
   riverpod_annotation: ^3.0.0-dev.17
   shared_preferences: ^2.5.3
   syncfusion_flutter_charts: ^30.2.7
+  syncfusion_flutter_calendar: ^30.2.7
   collection: ^1.19.1
 
 dev_dependencies:

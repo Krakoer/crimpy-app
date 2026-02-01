@@ -89,7 +89,7 @@ flutter pub run sentry_dart_plugin
 
 **Install without losing data**
 ```bash
-adb install -r .\build\app\outputs\flutter-apk\app-prod-release.apk
+adb install -r ./build/app/outputs/flutter-apk/app-prod-release.apk
 ```
 
 ## Development

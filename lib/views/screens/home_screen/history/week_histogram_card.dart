@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/week_histogram_widget.dart';
-import 'package:crimpy/views/screens/home_screen/history/session_history_screen.dart';
+import 'package:crimpy/views/screens/home_screen/history/session_history_screen/session_history_screen.dart';
 
 class WeekHistogramCard extends ConsumerStatefulWidget {
   final double maxBarHeight;
