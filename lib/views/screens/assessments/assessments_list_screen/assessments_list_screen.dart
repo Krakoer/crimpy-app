@@ -19,11 +19,21 @@ import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/screens/assessments/mvc_run_screen.dart';
 
 /// Screen to show and run the available assessments.
-class AssessmentsScreen extends ConsumerWidget {
+class AssessmentsScreen extends ConsumerStatefulWidget {
   const AssessmentsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AssessmentsScreen> createState() => _AssessmentsScreenState();
+}
+
+class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
     final assessmentTemplates = ref.watch(assessmentTrainingsProvider);
 
     /// Run the assessment given its type and hand.

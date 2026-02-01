@@ -4,11 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../theme/crimpy_theme.dart';
 
-class ClimbingProfileScreen extends ConsumerWidget {
+class ClimbingProfileScreen extends ConsumerStatefulWidget {
   const ClimbingProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ClimbingProfileScreen> createState() =>
+      _ClimbingProfileScreenState();
+}
+
+class _ClimbingProfileScreenState extends ConsumerState<ClimbingProfileScreen>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
     final asyncAssessments = ref.watch(assessmentsProvider(null));
 
     final Color accentLeft = CrimpyTheme.accentOrange;

@@ -22,13 +22,18 @@ class SettingsScreen extends ConsumerStatefulWidget {
   ConsumerState<ConsumerStatefulWidget> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen>
+    with AutomaticKeepAliveClientMixin {
   final _tareController = TextEditingController();
   final _calibrationController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final settings = ref.watch(bleConfigProvider);
     _tareController.text = settings.tare.toStringAsFixed(2);
     _calibrationController.text = settings.calibration.toStringAsFixed(2);

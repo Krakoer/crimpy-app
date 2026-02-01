@@ -12,6 +12,49 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../viewmodels/ble_view_model.dart';
 import 'widgets/ble/connection_dialog.dart';
 
+// Custom navigation destination widget to reduce rebuilds
+class _NavDestination extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+
+  const _NavDestination({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        isSelected
+            ? Theme.of(context).colorScheme.primary
+            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
+
+    return NavigationDestination(
+      icon: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FaIcon(icon, size: 20, color: color),
+          const SizedBox(height: 4),
+          Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color:
+                  isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.transparent,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ],
+      ),
+      label: label,
+    );
+  }
+}
+
 class MainPage extends ConsumerStatefulWidget {
   const MainPage({super.key});
 
@@ -47,11 +90,7 @@ class _MainPageState extends ConsumerState<MainPage> {
         child: NavigationBar(
           height: 60,
           onDestinationSelected: (int index) {
-            _pageViewController.animateToPage(
-              index,
-              duration: Duration(milliseconds: 300),
-              curve: Curves.ease,
-            );
+            _pageViewController.jumpToPage(index);
           },
           selectedIndex: currentPageIndex,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
@@ -62,155 +101,30 @@ class _MainPageState extends ConsumerState<MainPage> {
             borderRadius: BorderRadius.zero,
           ),
           destinations: <Widget>[
-            NavigationDestination(
-              icon: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.house,
-                    size: 20,
-                    color:
-                        currentPageIndex == 0
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color:
-                          currentPageIndex == 0
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
+            _NavDestination(
+              icon: FontAwesomeIcons.house,
               label: 'Home',
+              isSelected: currentPageIndex == 0,
             ),
-            NavigationDestination(
-              icon: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.fire,
-                    size: 20,
-                    color:
-                        currentPageIndex == 1
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color:
-                          currentPageIndex == 1
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
+            _NavDestination(
+              icon: FontAwesomeIcons.fire,
               label: 'Trainings',
+              isSelected: currentPageIndex == 1,
             ),
-            NavigationDestination(
-              icon: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.chartSimple,
-                    size: 20,
-                    color:
-                        currentPageIndex == 2
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color:
-                          currentPageIndex == 2
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
+            _NavDestination(
+              icon: FontAwesomeIcons.chartSimple,
               label: 'Assessments',
+              isSelected: currentPageIndex == 2,
             ),
-            NavigationDestination(
-              icon: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.user,
-                    size: 20,
-                    color:
-                        currentPageIndex == 3
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color:
-                          currentPageIndex == 3
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
+            _NavDestination(
+              icon: FontAwesomeIcons.user,
               label: 'Profile',
+              isSelected: currentPageIndex == 3,
             ),
-            NavigationDestination(
-              icon: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.gear,
-                    size: 20,
-                    color:
-                        currentPageIndex == 4
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color:
-                          currentPageIndex == 4
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
+            _NavDestination(
+              icon: FontAwesomeIcons.gear,
               label: 'Settings',
+              isSelected: currentPageIndex == 4,
             ),
           ],
         ),
@@ -246,14 +160,7 @@ class _MainPageState extends ConsumerState<MainPage> {
         children: <Widget>[
           HomeScreen(),
           TrainingScreen(
-            goToAssessments:
-                () => setState(() {
-                  _pageViewController.animateToPage(
-                    2,
-                    duration: Duration(milliseconds: 250),
-                    curve: Curves.ease,
-                  );
-                }),
+            goToAssessments: () => _pageViewController.jumpToPage(2),
           ),
           AssessmentsScreen(),
           ClimbingProfileScreen(),
