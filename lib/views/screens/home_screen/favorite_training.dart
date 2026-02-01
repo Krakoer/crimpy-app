@@ -11,7 +11,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 class FavoriteTrainingList extends ConsumerWidget {
   /// Displays the list of favorite training as cards.
   /// Cards are clickable and allow the user to start trainings.
-  /// The user can edit the favorite trainings by clicking the `Favorite a training` button.
+  /// The user can edit the favorite trainings by clicking the `Pin a training` button.
   const FavoriteTrainingList({super.key});
 
   @override
@@ -100,7 +100,7 @@ class FavoriteTrainingList extends ConsumerWidget {
                           ),
                           SizedBox(width: 8),
                           Text(
-                            "Favorite a training",
+                            "Pin a training",
                             style: TextStyle(
                               fontSize: 18,
                               color: CrimpyTheme.primaryBlack,
