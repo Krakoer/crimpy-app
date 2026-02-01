@@ -18,72 +18,67 @@ class _SensorSettingsListState extends ConsumerState<SensorSettingsList> {
     // Get all configs from DB.
     final configs = ref.watch(sensorConfigsProvider);
     return switch (configs) {
-      AsyncData(:final value) => SingleChildScrollView(
-        child:
-            value.isEmpty
-                ? Padding(
-                  padding: const EdgeInsets.all(30.0),
-                  child: Text("No preset saved yet."),
-                )
-                : Column(
-                  children:
-                      value
-                          .map(
-                            (config) => Dismissible(
-                              background: Container(
-                                color: CrimpyTheme.errorColor,
-                              ),
-                              key: ValueKey<int>(config.index),
-                              // Setting card
-                              child: CrimpyCard.simple(
-                                margin: EdgeInsets.all(16),
-                                child: ListTile(
-                                  title: Text(config.name),
-                                  // The subtitle prints the config settings (tare & coef)
-                                  subtitle: Padding(
-                                    padding: const EdgeInsets.only(left: 16),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "Tare: ${config.tare.toStringAsFixed(2)}",
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: CrimpyTheme.gray600,
-                                          ),
-                                        ),
-                                        Text(
-                                          "Coef: ${config.coef.toStringAsFixed(2)}",
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: CrimpyTheme.gray600,
-                                          ),
-                                        ),
-                                      ],
+      AsyncData(:final value) =>
+        value.isEmpty
+            ? Padding(
+              padding: const EdgeInsets.all(30.0),
+              child: Text("No preset saved yet."),
+            )
+            : Column(
+              children:
+                  value
+                      .map(
+                        (config) => Dismissible(
+                          background: Container(color: CrimpyTheme.errorColor),
+                          key: ValueKey<int>(config.index),
+                          // Setting card
+                          child: CrimpyCard.simple(
+                            margin: EdgeInsets.all(16),
+                            child: ListTile(
+                              title: Text(config.name),
+                              // The subtitle prints the config settings (tare & coef)
+                              subtitle: Padding(
+                                padding: const EdgeInsets.only(left: 16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Tare: ${config.tare.toStringAsFixed(2)}",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: CrimpyTheme.gray600,
+                                      ),
                                     ),
-                                  ),
-                                  // Trailing "load" button
-                                  trailing: ElevatedButton(
-                                    onPressed: () {
-                                      ref
-                                          .read(bleConfigProvider.notifier)
-                                          .loadConfig(config);
-                                    },
-                                    child: Text("Load"),
-                                  ),
+                                    Text(
+                                      "Coef: ${config.coef.toStringAsFixed(2)}",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: CrimpyTheme.gray600,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              onDismissed: (direction) {
-                                ref
-                                    .read(sensorConfigsProvider.notifier)
-                                    .deleteSensorConfig(config.id);
-                              },
+                              // Trailing "load" button
+                              trailing: ElevatedButton(
+                                onPressed: () {
+                                  ref
+                                      .read(bleConfigProvider.notifier)
+                                      .loadConfig(config);
+                                },
+                                child: Text("Load"),
+                              ),
                             ),
-                          )
-                          .toList(),
-                ),
-      ),
+                          ),
+                          onDismissed: (direction) {
+                            ref
+                                .read(sensorConfigsProvider.notifier)
+                                .deleteSensorConfig(config.id);
+                          },
+                        ),
+                      )
+                      .toList(),
+            ),
       AsyncError() => const Text('Oops, something unexpected happened'),
       _ => const CircularProgressIndicator(),
     };

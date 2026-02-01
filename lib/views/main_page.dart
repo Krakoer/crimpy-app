@@ -10,7 +10,9 @@ import 'package:crimpy/views/screens/home_screen/home_screen.dart';
 import 'package:crimpy/views/screens/settings_screen/settings_screen.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../viewmodels/ble_view_model.dart';
+import '../viewmodels/app_info_view_model.dart';
 import 'widgets/ble/connection_dialog.dart';
+import 'widgets/whats_new_dialog.dart';
 
 // Custom navigation destination widget to reduce rebuilds
 class _NavDestination extends StatelessWidget {
@@ -67,9 +69,33 @@ class _MainPageState extends ConsumerState<MainPage> {
   final _pageViewController = PageController();
 
   @override
+  void initState() {
+    super.initState();
+    // Check if we should show the "What's New" dialog after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForUpdates();
+    });
+  }
+
+  @override
   void dispose() {
     _pageViewController.dispose();
     super.dispose();
+  }
+
+  /// Check if the app has been updated and show the "What's New" dialog
+  Future<void> _checkForUpdates() async {
+    final whatsNewManager = ref.read(whatsNewProvider);
+    final shouldShow = await whatsNewManager.shouldShowWhatsNew();
+
+    if (shouldShow && mounted) {
+      await showDialog(
+        context: context,
+        builder: (context) => const WhatsNewDialog(),
+      );
+      // Mark this version as seen
+      await whatsNewManager.markVersionSeen();
+    }
   }
 
   @override
