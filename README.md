@@ -83,8 +83,8 @@ flutter build apk --flavor prod --release
 
 **Android AAB (Store release)**
 ```bash
-flutter build appbundle --flavor prod --release --obfuscate --split-debug-info=build/debug-info
-flutter pub run sentry_dart_plugin
+flutter build appbundle --flavor prod --release --obfuscate --split-debug-info=build/debug-info --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json
+dart run sentry_dart_plugin
 ```
 
 **Install without losing data**
