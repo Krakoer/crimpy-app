@@ -85,7 +85,7 @@ class WorkoutTimer {
           if (!currentRep.isRest) {
             repCount += 1;
           }
-          startCurrentRep = _stopwatch.elapsedMilliseconds;
+          startCurrentRep += currentRep.durationInSeconds * 1000;
           playerBiiip.resume();
           if (onNextRep != null) {
             onNextRep!(nextRep!.durationInSeconds);
