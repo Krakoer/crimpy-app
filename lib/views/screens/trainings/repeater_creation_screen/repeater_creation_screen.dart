@@ -53,6 +53,11 @@ class _RepeaterCreationScreenState
         seconds: widget.originalTemplate!.repeater!.restBteweenSets,
       );
       _gripPosition = widget.originalTemplate!.repeater!.gripPosition;
+      _splitHand = widget.originalTemplate!.repeater!.splitHand;
+      _rightHandWeightController.text =
+          (widget.originalTemplate!.repeater!.weightRight ?? 10.0).toString();
+      _leftHandWeightController.text =
+          (widget.originalTemplate!.repeater!.weightLeft ?? 10.0).toString();
     }
     super.initState();
   }
@@ -150,6 +155,181 @@ class _RepeaterCreationScreenState
     return null;
   }
 
+  void _showSplitHandExplanation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.info_outline, color: CrimpyTheme.primaryOrange),
+              const SizedBox(width: 8),
+              Text('Split Hand Mode'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Non-Split Hand Mode',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: CrimpyTheme.gray700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Each rep is performed with both hands: right hand, then left hand.',
+                  style: TextStyle(color: CrimpyTheme.gray700),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: CrimpyTheme.gray100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Example: 2 sets, 2 reps/set',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: CrimpyTheme.gray700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Rep 1:',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: CrimpyTheme.gray600,
+                        ),
+                      ),
+                      _buildExampleStep(Icons.front_hand, 'Right hand', '7s'),
+                      _buildExampleStep(Icons.pause, 'Rest', '3s'),
+                      _buildExampleStep(Icons.back_hand, 'Left hand', '7s'),
+                      _buildExampleStep(Icons.pause, 'Rest', '3s'),
+                      Text(
+                        'Rep 2:',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: CrimpyTheme.gray600,
+                        ),
+                      ),
+                      _buildExampleStep(Icons.front_hand, 'Right hand', '7s'),
+                      _buildExampleStep(Icons.pause, 'Rest', '3s'),
+                      _buildExampleStep(Icons.back_hand, 'Left hand', '7s'),
+                      _buildExampleStep(Icons.bedtime, 'Set rest', '1min'),
+                      Text(
+                        '... repeat for set 2',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                          color: CrimpyTheme.gray600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Split Hand Mode',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: CrimpyTheme.gray700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Complete all reps for one hand, then switch to the other hand.',
+                  style: TextStyle(color: CrimpyTheme.gray700),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: CrimpyTheme.gray100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Example: 2 sets, 2 reps/set',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                          color: CrimpyTheme.gray700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      _buildExampleStep(Icons.front_hand, 'Right hand', '7s'),
+                      _buildExampleStep(Icons.pause, 'Rest', '3s'),
+                      _buildExampleStep(Icons.front_hand, 'Right hand', '7s'),
+                      _buildExampleStep(Icons.swap_horiz, 'Hand switch', '~3s'),
+                      _buildExampleStep(Icons.back_hand, 'Left hand', '7s'),
+                      _buildExampleStep(Icons.pause, 'Rest', '3s'),
+                      _buildExampleStep(Icons.back_hand, 'Left hand', '7s'),
+                      _buildExampleStep(Icons.bedtime, 'Set rest', '1min'),
+                      Text(
+                        '... repeat for set 2',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                          color: CrimpyTheme.gray600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Got it!'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildExampleStep(IconData icon, String label, String duration) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: CrimpyTheme.gray600),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(fontSize: 12, color: CrimpyTheme.gray700),
+          ),
+          const Spacer(),
+          Text(
+            duration,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: CrimpyTheme.gray700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -193,19 +373,33 @@ class _RepeaterCreationScreenState
                 const SizedBox(height: 20),
                 // Weight configuration
                 WeightConfigurationSection(
-                  splitHand: _splitHand,
                   rightHandWeightController: _rightHandWeightController,
                   leftHandWeightController: _leftHandWeightController,
                   weightValidator: _weightValidator,
                 ),
                 const SizedBox(height: 20),
                 // Split hand toggle
-                SplitHandToggle(
-                  value: _splitHand,
-                  onChanged:
-                      (newVal) => setState(() {
-                        _splitHand = newVal;
-                      }),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SplitHandToggle(
+                        value: _splitHand,
+                        onChanged:
+                            (newVal) => setState(() {
+                              _splitHand = newVal;
+                            }),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: Icon(
+                        Icons.help_outline,
+                        color: CrimpyTheme.gray600,
+                      ),
+                      onPressed: () => _showSplitHandExplanation(context),
+                      tooltip: 'What is Split Hand mode?',
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 // Grip position selector

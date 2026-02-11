@@ -10,7 +10,52 @@ import 'package:crimpy/views/screens/home_screen/home_screen.dart';
 import 'package:crimpy/views/screens/settings_screen/settings_screen.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../viewmodels/ble_view_model.dart';
+import '../viewmodels/app_info_view_model.dart';
 import 'widgets/ble/connection_dialog.dart';
+import 'widgets/whats_new_dialog.dart';
+
+// Custom navigation destination widget to reduce rebuilds
+class _NavDestination extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+
+  const _NavDestination({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        isSelected
+            ? Theme.of(context).colorScheme.primary
+            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
+
+    return NavigationDestination(
+      icon: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FaIcon(icon, size: 20, color: color),
+          const SizedBox(height: 4),
+          Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color:
+                  isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.transparent,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ],
+      ),
+      label: label,
+    );
+  }
+}
 
 class MainPage extends ConsumerStatefulWidget {
   const MainPage({super.key});
@@ -21,6 +66,37 @@ class MainPage extends ConsumerStatefulWidget {
 
 class _MainPageState extends ConsumerState<MainPage> {
   int currentPageIndex = 0;
+  final _pageViewController = PageController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Check if we should show the "What's New" dialog after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForUpdates();
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageViewController.dispose();
+    super.dispose();
+  }
+
+  /// Check if the app has been updated and show the "What's New" dialog
+  Future<void> _checkForUpdates() async {
+    final whatsNewManager = ref.read(whatsNewProvider);
+    final shouldShow = await whatsNewManager.shouldShowWhatsNew();
+
+    if (shouldShow && mounted) {
+      await showDialog(
+        context: context,
+        builder: (context) => const WhatsNewDialog(),
+      );
+      // Mark this version as seen
+      await whatsNewManager.markVersionSeen();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,9 +116,7 @@ class _MainPageState extends ConsumerState<MainPage> {
         child: NavigationBar(
           height: 60,
           onDestinationSelected: (int index) {
-            setState(() {
-              currentPageIndex = index;
-            });
+            _pageViewController.jumpToPage(index);
           },
           selectedIndex: currentPageIndex,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
@@ -53,155 +127,30 @@ class _MainPageState extends ConsumerState<MainPage> {
             borderRadius: BorderRadius.zero,
           ),
           destinations: <Widget>[
-            NavigationDestination(
-              icon: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.house,
-                    size: 20,
-                    color:
-                        currentPageIndex == 0
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color:
-                          currentPageIndex == 0
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
+            _NavDestination(
+              icon: FontAwesomeIcons.house,
               label: 'Home',
+              isSelected: currentPageIndex == 0,
             ),
-            NavigationDestination(
-              icon: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.fire,
-                    size: 20,
-                    color:
-                        currentPageIndex == 1
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color:
-                          currentPageIndex == 1
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
+            _NavDestination(
+              icon: FontAwesomeIcons.fire,
               label: 'Trainings',
+              isSelected: currentPageIndex == 1,
             ),
-            NavigationDestination(
-              icon: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.chartSimple,
-                    size: 20,
-                    color:
-                        currentPageIndex == 2
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color:
-                          currentPageIndex == 2
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
+            _NavDestination(
+              icon: FontAwesomeIcons.chartSimple,
               label: 'Assessments',
+              isSelected: currentPageIndex == 2,
             ),
-            NavigationDestination(
-              icon: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.userLarge,
-                    size: 20,
-                    color:
-                        currentPageIndex == 3
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color:
-                          currentPageIndex == 3
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
+            _NavDestination(
+              icon: FontAwesomeIcons.user,
               label: 'Profile',
+              isSelected: currentPageIndex == 3,
             ),
-            NavigationDestination(
-              icon: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FaIcon(
-                    FontAwesomeIcons.gear,
-                    size: 20,
-                    color:
-                        currentPageIndex == 4
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color:
-                          currentPageIndex == 4
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
-              ),
+            _NavDestination(
+              icon: FontAwesomeIcons.gear,
               label: 'Settings',
+              isSelected: currentPageIndex == 4,
             ),
           ],
         ),
@@ -227,20 +176,22 @@ class _MainPageState extends ConsumerState<MainPage> {
           ),
         ],
       ),
-      body: SafeArea(
-        child:
-            <Widget>[
-              HomeScreen(),
-              TrainingScreen(
-                goToAssessments:
-                    () => setState(() {
-                      currentPageIndex = 2;
-                    }),
-              ),
-              AssessmentsScreen(),
-              ClimbingProfileScreen(),
-              SettingsScreen(),
-            ][currentPageIndex],
+      body: PageView(
+        controller: _pageViewController,
+        onPageChanged: (index) {
+          setState(() {
+            currentPageIndex = index;
+          });
+        },
+        children: <Widget>[
+          HomeScreen(),
+          TrainingScreen(
+            goToAssessments: () => _pageViewController.jumpToPage(2),
+          ),
+          AssessmentsScreen(),
+          ClimbingProfileScreen(),
+          SettingsScreen(),
+        ],
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/views/widgets/training_visualization/repeater_visualization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
@@ -13,18 +14,25 @@ class TrainingDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isRepeater = template.repeater != null;
+
     return Scaffold(
       appBar: AppBar(title: Text(template.name)),
       body: SafeArea(
-        child: ListView.builder(
-          itemCount: template.reps.length,
-          itemBuilder:
-              (ctx, i) => RepListItem(
-                key: ValueKey(i),
-                rep: template.reps[i],
-                index: i,
-              ),
-        ),
+        child:
+            isRepeater
+                ? SingleChildScrollView(
+                  child: RepeaterVisualization(training: template),
+                )
+                : ListView.builder(
+                  itemCount: template.reps.length,
+                  itemBuilder:
+                      (ctx, i) => RepListItem(
+                        key: ValueKey(i),
+                        rep: template.reps[i],
+                        index: i,
+                      ),
+                ),
       ),
       floatingActionButton: IconButton(
         onPressed:

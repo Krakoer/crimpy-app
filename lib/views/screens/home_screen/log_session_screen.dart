@@ -19,6 +19,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _notesController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
   int _durationMinutes = 60;
 
   @override
@@ -50,6 +51,18 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
                   ),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: _selectDate,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Time picker
+              Card(
+                child: ListTile(
+                  leading: Icon(Icons.access_time, color: color),
+                  title: const Text('Time'),
+                  subtitle: Text(_selectedTime.format(context)),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: _selectTime,
                 ),
               ),
               const SizedBox(height: 16),
@@ -175,6 +188,19 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
     }
   }
 
+  Future<void> _selectTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+
+    if (picked != null && picked != _selectedTime) {
+      setState(() {
+        _selectedTime = picked;
+      });
+    }
+  }
+
   Future<void> _saveSession() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -182,12 +208,21 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
 
     _formKey.currentState!.save();
 
+    // Combine selected date with selected time
+    final sessionDateTime = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
+    );
+
     final session = SessionModel(
       name: widget.sessionType.displayName,
       isAssessment: false,
       sessionType: widget.sessionType,
       durationInSeconds: _durationMinutes * 60,
-      date: _selectedDate,
+      date: sessionDateTime,
       notes: _notesController.text.isEmpty ? null : _notesController.text,
     );
 

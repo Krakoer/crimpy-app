@@ -24,6 +24,39 @@ class AssessmentRequirement {
   int get hashCode => Object.hash(type, gripPosition);
 }
 
+/// Stores repeater configuration for a session.
+/// This is saved with the session so we can properly display sets later,
+/// even if the original training template is modified or deleted.
+class RepeaterConfig {
+  final int sets;
+  final int repsPerSet;
+  final int workTime;
+  final int restTime;
+  final int setRest;
+  final bool splitHand;
+
+  const RepeaterConfig({
+    required this.sets,
+    required this.repsPerSet,
+    required this.workTime,
+    required this.restTime,
+    required this.setRest,
+    required this.splitHand,
+  });
+
+  /// Create from RepeaterModel
+  factory RepeaterConfig.fromRepeaterModel(RepeaterModel model) {
+    return RepeaterConfig(
+      sets: model.sets,
+      repsPerSet: model.repsBySet,
+      workTime: model.workTime,
+      restTime: model.restTime,
+      setRest: model.restBteweenSets,
+      splitHand: model.splitHand,
+    );
+  }
+}
+
 class SessionModel {
   final int? id;
   final String name;
@@ -34,6 +67,7 @@ class SessionModel {
   final bool isAssessment;
   final SessionType sessionType;
   final int? durationInSeconds;
+  final RepeaterConfig? repeaterConfig;
 
   SessionModel({
     this.id,
@@ -44,6 +78,7 @@ class SessionModel {
     required this.isAssessment,
     this.sessionType = SessionType.crimpy,
     this.durationInSeconds,
+    this.repeaterConfig,
     date,
   }) : date = date ?? DateTime.now();
 
@@ -286,16 +321,16 @@ class RepeaterModel {
         }
       }
     } else {
-      // Non-split hand logic remains the same
+      // Non-split hand: each rep is performed with both hands (right, then left)
       for (int set = 0; set < sets; set++) {
         for (int rep = 0; rep < repsBySet; rep++) {
-          // Both hands work rep
+          // Right hand work rep
           reps.add(
             RepTemplate(
               duration: workTime,
               isRest: false,
-              handSide: HandSide.right, // Default to right hand when not split
-              targetWeight: weightRight ?? weightLeft ?? 0.0,
+              handSide: HandSide.right,
+              targetWeight: weightRight ?? 0.0,
               index: currentIndex++,
               id: 0,
               trainingId: 0,
@@ -303,7 +338,34 @@ class RepeaterModel {
             ),
           );
 
-          // Rest between reps (if not the last rep of the set)
+          // Rest after right hand
+          reps.add(
+            RepTemplate(
+              duration: restTime,
+              isRest: true,
+              handSide: HandSide.right,
+              targetWeight: 0.0,
+              index: currentIndex++,
+              id: 0,
+              trainingId: 0,
+            ),
+          );
+
+          // Left hand work rep
+          reps.add(
+            RepTemplate(
+              duration: workTime,
+              isRest: false,
+              handSide: HandSide.left,
+              targetWeight: weightLeft ?? 0.0,
+              index: currentIndex++,
+              id: 0,
+              trainingId: 0,
+              gripPosition: gripPosition,
+            ),
+          );
+
+          // Rest after left hand (if not the last rep of the set)
           if (rep < repsBySet - 1) {
             reps.add(
               RepTemplate(
@@ -325,7 +387,7 @@ class RepeaterModel {
             RepTemplate(
               duration: restBteweenSets,
               isRest: true,
-              handSide: HandSide.left,
+              handSide: HandSide.right,
               targetWeight: 0.0,
               index: currentIndex++,
               id: 0,

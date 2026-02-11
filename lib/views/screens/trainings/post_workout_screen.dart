@@ -171,6 +171,14 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
           style: null,
           onPressed: () {
             if (_formKey.currentState!.validate()) {
+              // If this is a repeater workout, save the config with the session
+              RepeaterConfig? repeaterConfig;
+              if (widget.template.repeater != null) {
+                repeaterConfig = RepeaterConfig.fromRepeaterModel(
+                  widget.template.repeater!,
+                );
+              }
+
               ref
                   .read(sessionsProvider(null).notifier)
                   .saveSession(
@@ -179,6 +187,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                       date: DateTime.now(),
                       notes: _noteController.text,
                       isAssessment: false,
+                      repeaterConfig: repeaterConfig,
                     ),
                     widget.results,
                   );

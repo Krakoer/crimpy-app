@@ -19,6 +19,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _notesController;
   late DateTime _selectedDate;
+  late TimeOfDay _selectedTime;
   late int _durationMinutes;
 
   @override
@@ -26,6 +27,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
     super.initState();
     _notesController = TextEditingController(text: widget.session.notes ?? '');
     _selectedDate = widget.session.date;
+    _selectedTime = TimeOfDay.fromDateTime(widget.session.date);
     _durationMinutes = widget.session.duration ~/ 60;
   }
 
@@ -93,6 +95,23 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   trailing:
                       isCrimpySession ? null : const Icon(Icons.chevron_right),
                   onTap: isCrimpySession ? null : _selectDate,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Time picker (disabled for Crimpy sessions)
+              Card(
+                child: ListTile(
+                  enabled: !isCrimpySession,
+                  leading: Icon(
+                    Icons.access_time,
+                    color: isCrimpySession ? Colors.grey : color,
+                  ),
+                  title: const Text('Time'),
+                  subtitle: Text(_selectedTime.format(context)),
+                  trailing:
+                      isCrimpySession ? null : const Icon(Icons.chevron_right),
+                  onTap: isCrimpySession ? null : _selectTime,
                 ),
               ),
               const SizedBox(height: 16),
@@ -230,6 +249,19 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
     }
   }
 
+  Future<void> _selectTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+
+    if (picked != null && picked != _selectedTime) {
+      setState(() {
+        _selectedTime = picked;
+      });
+    }
+  }
+
   Future<void> _updateSession() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -237,13 +269,22 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
 
     _formKey.currentState!.save();
 
+    // Combine selected date with selected time
+    final sessionDateTime = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
+    );
+
     final updatedSession = SessionModel(
       id: widget.session.id,
       name: widget.session.name,
       isAssessment: widget.session.isAssessment,
       sessionType: widget.session.sessionType,
       durationInSeconds: _durationMinutes * 60,
-      date: _selectedDate,
+      date: sessionDateTime,
       notes: _notesController.text.isEmpty ? null : _notesController.text,
       reps: widget.session.reps,
       dataPoints: widget.session.dataPoints,

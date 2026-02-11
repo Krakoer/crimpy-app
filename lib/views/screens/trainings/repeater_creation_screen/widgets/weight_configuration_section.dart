@@ -5,14 +5,12 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/views/widgets/mvc_weight_input_field.dart';
 
 class WeightConfigurationSection extends ConsumerWidget {
-  final bool splitHand;
   final TextEditingController rightHandWeightController;
   final TextEditingController leftHandWeightController;
   final String? Function(String?) weightValidator;
 
   const WeightConfigurationSection({
     super.key,
-    required this.splitHand,
     required this.rightHandWeightController,
     required this.leftHandWeightController,
     required this.weightValidator,
@@ -38,28 +36,19 @@ class WeightConfigurationSection extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-          if (!splitHand)
-            MvcWeightInputField(
-              label: 'Weight',
-              controller: rightHandWeightController,
-              validator: weightValidator,
-              handSide: HandSide.right,
-            )
-          else ...[
-            MvcWeightInputField(
-              label: 'Right hand',
-              controller: rightHandWeightController,
-              validator: weightValidator,
-              handSide: HandSide.right,
-            ),
-            const SizedBox(height: 12),
-            MvcWeightInputField(
-              label: 'Left hand',
-              controller: leftHandWeightController,
-              validator: weightValidator,
-              handSide: HandSide.left,
-            ),
-          ],
+          MvcWeightInputField(
+            label: 'Right hand',
+            controller: rightHandWeightController,
+            validator: weightValidator,
+            handSide: HandSide.right,
+          ),
+          const SizedBox(height: 12),
+          MvcWeightInputField(
+            label: 'Left hand',
+            controller: leftHandWeightController,
+            validator: weightValidator,
+            handSide: HandSide.left,
+          ),
         ],
       ),
     );

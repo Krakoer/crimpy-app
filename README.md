@@ -81,9 +81,15 @@ Crimpy helps climbers track and improve their performance through:
 flutter build apk --flavor prod --release
 ```
 
+**Android AAB (Store release)**
+```bash
+flutter build appbundle --flavor prod --release --obfuscate --split-debug-info=build/debug-info --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json
+dart run sentry_dart_plugin
+```
+
 **Install without losing data**
 ```bash
-adb install -r .\build\app\outputs\flutter-apk\app-prod-release.apk
+adb install -r ./build/app/outputs/flutter-apk/app-prod-release.apk
 ```
 
 ## Development

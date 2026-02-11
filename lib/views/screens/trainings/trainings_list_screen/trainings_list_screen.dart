@@ -6,12 +6,22 @@ import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/mis
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/training_list_item.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/create_training_fab.dart';
 
-class TrainingScreen extends ConsumerWidget {
+class TrainingScreen extends ConsumerStatefulWidget {
   final VoidCallback goToAssessments;
   const TrainingScreen({required this.goToAssessments, super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TrainingScreen> createState() => _TrainingScreenState();
+}
+
+class _TrainingScreenState extends ConsumerState<TrainingScreen>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
     final templates = ref.watch(allTrainingsProvider);
 
     void showMissingAssessmentsDialog(
@@ -22,7 +32,7 @@ class TrainingScreen extends ConsumerWidget {
         builder:
             (context) => MissingAssessmentsDialog(
               missingAssessments: missingAssessments,
-              onGoToAssessments: goToAssessments,
+              onGoToAssessments: widget.goToAssessments,
             ),
       );
     }
