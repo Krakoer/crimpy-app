@@ -192,10 +192,12 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
         data: data,
       );
       ref.invalidate(sessionsProvider);
-      await future;
+      if (ref.mounted) await future;
       return id;
     } catch (e, stackTrace) {
-      state = AsyncValue.error(e, stackTrace);
+      if (ref.mounted) {
+        state = AsyncValue.error(e, stackTrace);
+      }
       return -1;
     }
   }
@@ -211,9 +213,11 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
     try {
       await _trainingRepository.updateSession(session);
       ref.invalidate(sessionsProvider);
-      await future;
+      if (ref.mounted) await future;
     } catch (e, stackTrace) {
-      state = AsyncValue.error(e, stackTrace);
+      if (ref.mounted) {
+        state = AsyncValue.error(e, stackTrace);
+      }
       rethrow;
     }
   }

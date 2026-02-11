@@ -36,6 +36,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen> {
   // Assessment state
   bool _isInTargetZone = false;
   DateTime? _targetZoneEntryTime;
+  DateTime? _outOfZoneTime;
   bool _assessmentStarted = false;
   bool _assessmentEnded = false;
 
@@ -52,8 +53,8 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen> {
   void initState() {
     super.initState();
     _targetForce = widget.mvcValue * 0.6;
-    _minForce = _targetForce - (widget.mvcValue * 0.1); // 60% - 10%
-    _maxForce = _targetForce + (widget.mvcValue * 0.1); // 60% + 10%
+    _minForce = _targetForce - (widget.mvcValue * 0.05); // 60% - 5%
+    _maxForce = _targetForce + (widget.mvcValue * 0.05); // 60% + 5%
 
     // Start a timer to update UI every 100ms
     _timer = Timer.periodic(Duration(milliseconds: 100), (_) {
@@ -76,32 +77,29 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen> {
     final now = DateTime.now();
     final isInZone = lastValue >= _minForce && lastValue <= _maxForce;
 
-    // Check if we entered or left the target zone
     if (isInZone && !_isInTargetZone) {
       // Entered target zone
       _isInTargetZone = true;
       _targetZoneEntryTime = now;
+      _outOfZoneTime = null;
     } else if (!isInZone && _isInTargetZone) {
       // Left target zone
       _isInTargetZone = false;
-
-      // Check if we were in the zone for more than 1s
-      if (_targetZoneEntryTime != null) {
-        final duration = now.difference(_targetZoneEntryTime!);
-
-        if (duration.inMilliseconds >= 1000) {
-          if (_assessmentStarted && !_assessmentEnded) {
-            // Assessment was running, now it ends
-            _endAssessment();
-          }
-        }
-      }
-
       _targetZoneEntryTime = null;
+      _outOfZoneTime = now;
+    } else if (!isInZone &&
+        _outOfZoneTime != null &&
+        _assessmentStarted &&
+        !_assessmentEnded) {
+      // Still out of zone — check if out for more than 1s to end
+      final duration = now.difference(_outOfZoneTime!);
+      if (duration.inMilliseconds >= 1000) {
+        _endAssessment();
+      }
     } else if (isInZone &&
         _targetZoneEntryTime != null &&
         !_assessmentStarted) {
-      // Check if we've been in the zone for more than 1s to start
+      // In zone — check if in for more than 1s to start
       final duration = now.difference(_targetZoneEntryTime!);
       if (duration.inMilliseconds >= 1000) {
         _startAssessment();
