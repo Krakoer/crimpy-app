@@ -1,10 +1,51 @@
 import 'dart:async';
 import 'package:crimpy/database/database.dart';
+import 'package:crimpy/logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/config.dart';
 import '../models/ble_data_model.dart';
 import '../repositories/ble_repository.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+
+/// Returns battery percentage (0–100) from ADC voltage in millivolts.
+/// Piecewise linear interpolation from empirical discharge data.
+int batteryPercentage(int voltageMv) {
+  const table = [
+    (mv: 2075, pct: 100),
+    (mv: 2050, pct: 99),
+    (mv: 2025, pct: 95),
+    (mv: 2000, pct: 87),
+    (mv: 1975, pct: 74),
+    (mv: 1950, pct: 64),
+    (mv: 1925, pct: 54),
+    (mv: 1900, pct: 40),
+    (mv: 1875, pct: 29),
+    (mv: 1850, pct: 23),
+    (mv: 1825, pct: 19),
+    (mv: 1800, pct: 16),
+    (mv: 1775, pct: 13),
+    (mv: 1750, pct: 10),
+    (mv: 1725, pct: 6),
+    (mv: 1700, pct: 4),
+    (mv: 1650, pct: 3),
+    (mv: 1600, pct: 2),
+    (mv: 1550, pct: 1),
+    (mv: 1500, pct: 0),
+  ];
+
+  if (voltageMv >= table.first.mv) return 100;
+  if (voltageMv <= table.last.mv) return 0;
+
+  for (int i = 0; i < table.length - 1; i++) {
+    if (voltageMv <= table[i].mv && voltageMv >= table[i + 1].mv) {
+      final hi = table[i];
+      final lo = table[i + 1];
+      return lo.pct +
+          ((voltageMv - lo.mv) * (hi.pct - lo.pct)) ~/ (hi.mv - lo.mv);
+    }
+  }
+  return 0;
+}
 
 /// Main provider, gives access to the BLE repository.
 final bleRepositoryProvider = Provider<BleRepository>((ref) {
@@ -93,6 +134,74 @@ class ScanResultsNotifier extends AsyncNotifier<List<BluetoothDevice>> {
     final bleRepository = ref.watch(bleRepositoryProvider);
     state = AsyncValue.loading();
     return await bleRepository.scanForDevices();
+  }
+}
+
+/// Battery level as a percentage (0-100), or null if unsupported/disconnected.
+final batteryLevelProvider = NotifierProvider<BatteryLevelNotifier, double?>(
+  BatteryLevelNotifier.new,
+);
+
+class BatteryLevelNotifier extends Notifier<double?> {
+  Timer? _timer;
+  bool _supportsBattery = false;
+
+  @override
+  double? build() {
+    final connectionState = ref.watch(connectionStateProvider);
+    final bleRepository = ref.watch(bleRepositoryProvider);
+
+    if (connectionState == BleConnectionState.connected) {
+      // Query firmware version and start polling on connect
+      _startPolling(bleRepository);
+    } else {
+      _stopPolling();
+      _supportsBattery = false;
+      return null;
+    }
+
+    ref.onDispose(() => _stopPolling());
+    return null;
+  }
+
+  Future<void> _startPolling(BleRepository repo) async {
+    // Wait for BLE service discovery to complete before reading characteristics
+    await repo.waitForServicesDiscovered();
+
+    // Check firmware version first
+    final version = await repo.getFirmwareVersion();
+
+    _supportsBattery = version != null && version >= 1000;
+
+    if (!_supportsBattery) {
+      state = null;
+      AppLoggerHelper.warning(
+        "The firmware version ($version) does not support battery level.",
+      );
+      return;
+    }
+    AppLoggerHelper.debug(
+      "The firmware supports battery level, starting to poll...",
+    );
+
+    // Initial read
+    await _readBattery(repo);
+
+    // Poll every 60 seconds
+    _timer?.cancel();
+    _timer = Timer.periodic(Duration(seconds: 60), (_) => _readBattery(repo));
+  }
+
+  Future<void> _readBattery(BleRepository repo) async {
+    final voltage = await repo.getBatteryVoltage();
+    AppLoggerHelper.debug("Battery level is $voltage");
+    if (voltage == null) return;
+    state = batteryPercentage(voltage).clamp(0, 100).toDouble();
+  }
+
+  void _stopPolling() {
+    _timer?.cancel();
+    _timer = null;
   }
 }
 

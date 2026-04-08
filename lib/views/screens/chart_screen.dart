@@ -4,6 +4,7 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 import '../../models/ble_data_model.dart';
 import '../../theme/crimpy_theme.dart';
 import '../../viewmodels/ble_view_model.dart';
+import '../widgets/ble/battery_bluetooth_indicator.dart';
 import '../widgets/ble/connection_dialog.dart';
 
 class ChartScreen extends ConsumerWidget {
@@ -18,10 +19,10 @@ class ChartScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Live Chart'),
         actions: [
-          // Connection status icon in app bar
-          IconButton(
-            icon: Icon(_getConnectionIcon(connectionState)),
-            onPressed: () => _showConnectionDialog(context, ref),
+          // Battery level and connection status
+          BatteryBluetoothIndicator(
+            connectionState: connectionState,
+            onBluetoothPressed: () => _showConnectionDialog(context, ref),
           ),
         ],
       ),

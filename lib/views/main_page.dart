@@ -11,6 +11,7 @@ import 'package:crimpy/views/screens/settings_screen/settings_screen.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../viewmodels/ble_view_model.dart';
 import '../viewmodels/app_info_view_model.dart';
+import 'widgets/ble/battery_bluetooth_indicator.dart';
 import 'widgets/ble/connection_dialog.dart';
 import 'widgets/whats_new_dialog.dart';
 
@@ -169,10 +170,10 @@ class _MainPageState extends ConsumerState<MainPage> {
                     ).push(MaterialPageRoute(builder: (ctx) => ChartScreen())),
             icon: Icon(FontAwesomeIcons.chartLine),
           ),
-          // Connection status icon in app bar
-          IconButton(
-            icon: Icon(_getConnectionIcon(connectionState)),
-            onPressed: () => _showConnectionDialog(context),
+          // Battery level and connection status
+          BatteryBluetoothIndicator(
+            connectionState: connectionState,
+            onBluetoothPressed: () => _showConnectionDialog(context),
           ),
         ],
       ),
@@ -194,19 +195,6 @@ class _MainPageState extends ConsumerState<MainPage> {
         ],
       ),
     );
-  }
-
-  IconData _getConnectionIcon(BleConnectionState state) {
-    switch (state) {
-      case BleConnectionState.connected:
-        return Icons.bluetooth_connected;
-      case BleConnectionState.connecting:
-        return Icons.bluetooth_searching;
-      case BleConnectionState.failed:
-        return Icons.bluetooth_disabled;
-      case BleConnectionState.disconnected:
-        return Icons.bluetooth_disabled;
-    }
   }
 
   void _showConnectionDialog(BuildContext context) async {

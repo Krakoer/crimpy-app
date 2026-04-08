@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:crimpy/logger.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../models/ble_data_model.dart';
 import '../database/database.dart';
@@ -13,6 +14,10 @@ class BleRepository {
   // ignore: non_constant_identifier_names
   static Guid CHARACTERISTIC_UUID = Guid.fromString(
     "7e4e1702-1ea6-40c9-9dcc-13d34ffead57",
+  );
+  // ignore: non_constant_identifier_names
+  static Guid WRITE_CHARACTERISTIC_UUID = Guid.fromString(
+    "7e4e1703-1ea6-40c9-9dcc-13d34ffead57",
   );
 
   // ------------------------------------- BLE DEVICE -------------------------------------
@@ -42,8 +47,14 @@ class BleRepository {
   /// Stores the connected device.
   BluetoothDevice? _device;
 
-  /// Stores the connected BLE characteristic.
+  /// Stores the connected BLE notify characteristic.
   BluetoothCharacteristic? _characteristic;
+
+  /// Stores the connected BLE write characteristic.
+  BluetoothCharacteristic? _writeCharacteristic;
+
+  /// Completes when service discovery finishes and characteristics are ready.
+  Completer<void>? _servicesDiscovered;
 
   /// returns whether a device is connected and a characteristic is listened to.
   bool get isConnected => _device != null && _characteristic != null;
@@ -79,6 +90,7 @@ class BleRepository {
   Future<bool> connectToDevice(BluetoothDevice device) async {
     try {
       _connectionStateController.add(BleConnectionState.connecting);
+      _servicesDiscovered = Completer<void>();
       await device.connect();
       _device = device;
 
@@ -103,9 +115,12 @@ class BleRepository {
       // Find our service
       for (BluetoothService service in services) {
         if (service.uuid == SERVICE_UUID) {
-          // Find our characteristic
+          // Find our characteristics
           for (BluetoothCharacteristic characteristic
               in service.characteristics) {
+            if (characteristic.uuid == WRITE_CHARACTERISTIC_UUID) {
+              _writeCharacteristic = characteristic;
+            }
             if (characteristic.uuid == CHARACTERISTIC_UUID) {
               _characteristic = characteristic;
 
@@ -145,6 +160,7 @@ class BleRepository {
                   }
                 }
               });
+              _servicesDiscovered?.complete();
               return true;
             }
           }
@@ -152,10 +168,12 @@ class BleRepository {
       }
 
       // If we reach here, we didn't find our service/characteristic
+      _servicesDiscovered?.complete();
       await device.disconnect();
       _device = null;
       return false;
     } catch (e) {
+      _servicesDiscovered?.complete();
       _device = null;
       _connectionStateController.add(BleConnectionState.failed);
       return false;
@@ -176,11 +194,52 @@ class BleRepository {
     if (_device != null) {
       if (_characteristic != null && _device!.isConnected) {
         _characteristic = null;
+        _writeCharacteristic = null;
       }
+      _servicesDiscovered = null;
       await _device!.disconnect();
       _device = null;
     }
     _connectionStateController.add(BleConnectionState.disconnected);
+  }
+
+  /// Waits until BLE service discovery has completed.
+  Future<void> waitForServicesDiscovered() async {
+    await _servicesDiscovered?.future;
+  }
+
+  // ------------------------------------- FIRMWARE & BATTERY -------------------------------------
+
+  /// Request the firmware version from the sensor.
+  /// Returns the version as an integer (e.g. 1000 for v1.0), or null if
+  /// the sensor doesn't support the version command (old firmware).
+  Future<int?> getFirmwareVersion() async {
+    if (_writeCharacteristic == null) return null;
+    try {
+      await _writeCharacteristic!.write([0x6B]);
+      final value = await _writeCharacteristic!.read();
+      if (value.isEmpty) return null;
+      final byteData = ByteData.sublistView(Uint8List.fromList(value));
+      return byteData.getUint32(0, Endian.little);
+    } catch (e) {
+      AppLoggerHelper.warning("Cannot read firmware version: $e");
+      return null;
+    }
+  }
+
+  /// Request the battery voltage from the sensor in millivolts.
+  /// Returns null if the command fails or is unsupported.
+  Future<int?> getBatteryVoltage() async {
+    if (_writeCharacteristic == null) return null;
+    try {
+      await _writeCharacteristic!.write([0x6F]);
+      final value = await _writeCharacteristic!.read();
+      if (value.isEmpty) return null;
+      final byteData = ByteData.sublistView(Uint8List.fromList(value));
+      return byteData.getUint32(0, Endian.little);
+    } catch (_) {
+      return null;
+    }
   }
 
   // ------------------------------------- SENSOR VALUES -------------------------------------
