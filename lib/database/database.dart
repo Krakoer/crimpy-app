@@ -135,6 +135,42 @@ class BuiltinTrainingWeights extends Table {
       dateTime().withDefault(currentDateAndTime)();
 }
 
+// Stores sync metadata for tracking backend synchronization.
+class SyncMetadata extends Table {
+  late final IntColumn id = integer().autoIncrement()();
+  late final TextColumn entityTable = text()();
+  late final IntColumn localId = integer()();
+  late final IntColumn remoteId = integer().nullable()();
+  late final DateTimeColumn lastSyncedAt = dateTime().nullable()();
+  late final BoolColumn needsUpload =
+      boolean().withDefault(const Constant(false))();
+  late final BoolColumn needsDownload =
+      boolean().withDefault(const Constant(false))();
+  late final TextColumn pendingOperation = text().nullable()();
+}
+
+// Stores offline operations queue for sync retry logic.
+class OfflineQueue extends Table {
+  late final IntColumn id = integer().autoIncrement()();
+  late final TextColumn operation = text()();
+  late final TextColumn payload = text()();
+  late final DateTimeColumn createdAt =
+      dateTime().withDefault(currentDateAndTime)();
+  late final IntColumn retryCount = integer().withDefault(const Constant(0))();
+}
+
+// Stores authenticated user profile information.
+class UserProfile extends Table {
+  late final TextColumn id = text()();
+  late final TextColumn email = text()();
+  late final TextColumn firstname = text().nullable()();
+  late final TextColumn lastname = text().nullable()();
+  late final DateTimeColumn createdAt = dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     Sessions,
@@ -146,6 +182,9 @@ class BuiltinTrainingWeights extends Table {
     SensorConfigs,
     BuiltinTrainingWeights,
     PinnedBuiltinTrainings,
+    SyncMetadata,
+    OfflineQueue,
+    UserProfile,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -683,7 +722,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -722,6 +761,12 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(sessions, sessions.repeaterRestTime);
         await m.addColumn(sessions, sessions.repeaterSetRest);
         await m.addColumn(sessions, sessions.repeaterSplitHand);
+      }
+      if (from <= 7 && to >= 8) {
+        // Migration to schema version 8: Add cloud sync tables
+        await m.createTable(syncMetadata);
+        await m.createTable(offlineQueue);
+        await m.createTable(userProfile);
       }
     },
   );

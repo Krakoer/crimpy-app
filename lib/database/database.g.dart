@@ -4346,6 +4346,1274 @@ class PinnedBuiltinTrainingsCompanion
   }
 }
 
+class $SyncMetadataTable extends SyncMetadata
+    with TableInfo<$SyncMetadataTable, SyncMetadataData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncMetadataTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _entityTableMeta = const VerificationMeta(
+    'entityTable',
+  );
+  @override
+  late final GeneratedColumn<String> entityTable = GeneratedColumn<String>(
+    'entity_table',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _localIdMeta = const VerificationMeta(
+    'localId',
+  );
+  @override
+  late final GeneratedColumn<int> localId = GeneratedColumn<int>(
+    'local_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<int> remoteId = GeneratedColumn<int>(
+    'remote_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastSyncedAtMeta = const VerificationMeta(
+    'lastSyncedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastSyncedAt = GeneratedColumn<DateTime>(
+    'last_synced_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _needsUploadMeta = const VerificationMeta(
+    'needsUpload',
+  );
+  @override
+  late final GeneratedColumn<bool> needsUpload = GeneratedColumn<bool>(
+    'needs_upload',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("needs_upload" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _needsDownloadMeta = const VerificationMeta(
+    'needsDownload',
+  );
+  @override
+  late final GeneratedColumn<bool> needsDownload = GeneratedColumn<bool>(
+    'needs_download',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("needs_download" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _pendingOperationMeta = const VerificationMeta(
+    'pendingOperation',
+  );
+  @override
+  late final GeneratedColumn<String> pendingOperation = GeneratedColumn<String>(
+    'pending_operation',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    entityTable,
+    localId,
+    remoteId,
+    lastSyncedAt,
+    needsUpload,
+    needsDownload,
+    pendingOperation,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_metadata';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncMetadataData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('entity_table')) {
+      context.handle(
+        _entityTableMeta,
+        entityTable.isAcceptableOrUnknown(
+          data['entity_table']!,
+          _entityTableMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_entityTableMeta);
+    }
+    if (data.containsKey('local_id')) {
+      context.handle(
+        _localIdMeta,
+        localId.isAcceptableOrUnknown(data['local_id']!, _localIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_localIdMeta);
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+        _lastSyncedAtMeta,
+        lastSyncedAt.isAcceptableOrUnknown(
+          data['last_synced_at']!,
+          _lastSyncedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('needs_upload')) {
+      context.handle(
+        _needsUploadMeta,
+        needsUpload.isAcceptableOrUnknown(
+          data['needs_upload']!,
+          _needsUploadMeta,
+        ),
+      );
+    }
+    if (data.containsKey('needs_download')) {
+      context.handle(
+        _needsDownloadMeta,
+        needsDownload.isAcceptableOrUnknown(
+          data['needs_download']!,
+          _needsDownloadMeta,
+        ),
+      );
+    }
+    if (data.containsKey('pending_operation')) {
+      context.handle(
+        _pendingOperationMeta,
+        pendingOperation.isAcceptableOrUnknown(
+          data['pending_operation']!,
+          _pendingOperationMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SyncMetadataData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncMetadataData(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      entityTable:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}entity_table'],
+          )!,
+      localId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}local_id'],
+          )!,
+      remoteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}remote_id'],
+      ),
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_synced_at'],
+      ),
+      needsUpload:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}needs_upload'],
+          )!,
+      needsDownload:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}needs_download'],
+          )!,
+      pendingOperation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pending_operation'],
+      ),
+    );
+  }
+
+  @override
+  $SyncMetadataTable createAlias(String alias) {
+    return $SyncMetadataTable(attachedDatabase, alias);
+  }
+}
+
+class SyncMetadataData extends DataClass
+    implements Insertable<SyncMetadataData> {
+  final int id;
+  final String entityTable;
+  final int localId;
+  final int? remoteId;
+  final DateTime? lastSyncedAt;
+  final bool needsUpload;
+  final bool needsDownload;
+  final String? pendingOperation;
+  const SyncMetadataData({
+    required this.id,
+    required this.entityTable,
+    required this.localId,
+    this.remoteId,
+    this.lastSyncedAt,
+    required this.needsUpload,
+    required this.needsDownload,
+    this.pendingOperation,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['entity_table'] = Variable<String>(entityTable);
+    map['local_id'] = Variable<int>(localId);
+    if (!nullToAbsent || remoteId != null) {
+      map['remote_id'] = Variable<int>(remoteId);
+    }
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    }
+    map['needs_upload'] = Variable<bool>(needsUpload);
+    map['needs_download'] = Variable<bool>(needsDownload);
+    if (!nullToAbsent || pendingOperation != null) {
+      map['pending_operation'] = Variable<String>(pendingOperation);
+    }
+    return map;
+  }
+
+  SyncMetadataCompanion toCompanion(bool nullToAbsent) {
+    return SyncMetadataCompanion(
+      id: Value(id),
+      entityTable: Value(entityTable),
+      localId: Value(localId),
+      remoteId:
+          remoteId == null && nullToAbsent
+              ? const Value.absent()
+              : Value(remoteId),
+      lastSyncedAt:
+          lastSyncedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(lastSyncedAt),
+      needsUpload: Value(needsUpload),
+      needsDownload: Value(needsDownload),
+      pendingOperation:
+          pendingOperation == null && nullToAbsent
+              ? const Value.absent()
+              : Value(pendingOperation),
+    );
+  }
+
+  factory SyncMetadataData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncMetadataData(
+      id: serializer.fromJson<int>(json['id']),
+      entityTable: serializer.fromJson<String>(json['entityTable']),
+      localId: serializer.fromJson<int>(json['localId']),
+      remoteId: serializer.fromJson<int?>(json['remoteId']),
+      lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
+      needsUpload: serializer.fromJson<bool>(json['needsUpload']),
+      needsDownload: serializer.fromJson<bool>(json['needsDownload']),
+      pendingOperation: serializer.fromJson<String?>(json['pendingOperation']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'entityTable': serializer.toJson<String>(entityTable),
+      'localId': serializer.toJson<int>(localId),
+      'remoteId': serializer.toJson<int?>(remoteId),
+      'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
+      'needsUpload': serializer.toJson<bool>(needsUpload),
+      'needsDownload': serializer.toJson<bool>(needsDownload),
+      'pendingOperation': serializer.toJson<String?>(pendingOperation),
+    };
+  }
+
+  SyncMetadataData copyWith({
+    int? id,
+    String? entityTable,
+    int? localId,
+    Value<int?> remoteId = const Value.absent(),
+    Value<DateTime?> lastSyncedAt = const Value.absent(),
+    bool? needsUpload,
+    bool? needsDownload,
+    Value<String?> pendingOperation = const Value.absent(),
+  }) => SyncMetadataData(
+    id: id ?? this.id,
+    entityTable: entityTable ?? this.entityTable,
+    localId: localId ?? this.localId,
+    remoteId: remoteId.present ? remoteId.value : this.remoteId,
+    lastSyncedAt: lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+    needsUpload: needsUpload ?? this.needsUpload,
+    needsDownload: needsDownload ?? this.needsDownload,
+    pendingOperation:
+        pendingOperation.present
+            ? pendingOperation.value
+            : this.pendingOperation,
+  );
+  SyncMetadataData copyWithCompanion(SyncMetadataCompanion data) {
+    return SyncMetadataData(
+      id: data.id.present ? data.id.value : this.id,
+      entityTable:
+          data.entityTable.present ? data.entityTable.value : this.entityTable,
+      localId: data.localId.present ? data.localId.value : this.localId,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
+      lastSyncedAt:
+          data.lastSyncedAt.present
+              ? data.lastSyncedAt.value
+              : this.lastSyncedAt,
+      needsUpload:
+          data.needsUpload.present ? data.needsUpload.value : this.needsUpload,
+      needsDownload:
+          data.needsDownload.present
+              ? data.needsDownload.value
+              : this.needsDownload,
+      pendingOperation:
+          data.pendingOperation.present
+              ? data.pendingOperation.value
+              : this.pendingOperation,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncMetadataData(')
+          ..write('id: $id, ')
+          ..write('entityTable: $entityTable, ')
+          ..write('localId: $localId, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('needsUpload: $needsUpload, ')
+          ..write('needsDownload: $needsDownload, ')
+          ..write('pendingOperation: $pendingOperation')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    entityTable,
+    localId,
+    remoteId,
+    lastSyncedAt,
+    needsUpload,
+    needsDownload,
+    pendingOperation,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncMetadataData &&
+          other.id == this.id &&
+          other.entityTable == this.entityTable &&
+          other.localId == this.localId &&
+          other.remoteId == this.remoteId &&
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.needsUpload == this.needsUpload &&
+          other.needsDownload == this.needsDownload &&
+          other.pendingOperation == this.pendingOperation);
+}
+
+class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
+  final Value<int> id;
+  final Value<String> entityTable;
+  final Value<int> localId;
+  final Value<int?> remoteId;
+  final Value<DateTime?> lastSyncedAt;
+  final Value<bool> needsUpload;
+  final Value<bool> needsDownload;
+  final Value<String?> pendingOperation;
+  const SyncMetadataCompanion({
+    this.id = const Value.absent(),
+    this.entityTable = const Value.absent(),
+    this.localId = const Value.absent(),
+    this.remoteId = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.needsUpload = const Value.absent(),
+    this.needsDownload = const Value.absent(),
+    this.pendingOperation = const Value.absent(),
+  });
+  SyncMetadataCompanion.insert({
+    this.id = const Value.absent(),
+    required String entityTable,
+    required int localId,
+    this.remoteId = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.needsUpload = const Value.absent(),
+    this.needsDownload = const Value.absent(),
+    this.pendingOperation = const Value.absent(),
+  }) : entityTable = Value(entityTable),
+       localId = Value(localId);
+  static Insertable<SyncMetadataData> custom({
+    Expression<int>? id,
+    Expression<String>? entityTable,
+    Expression<int>? localId,
+    Expression<int>? remoteId,
+    Expression<DateTime>? lastSyncedAt,
+    Expression<bool>? needsUpload,
+    Expression<bool>? needsDownload,
+    Expression<String>? pendingOperation,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (entityTable != null) 'entity_table': entityTable,
+      if (localId != null) 'local_id': localId,
+      if (remoteId != null) 'remote_id': remoteId,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (needsUpload != null) 'needs_upload': needsUpload,
+      if (needsDownload != null) 'needs_download': needsDownload,
+      if (pendingOperation != null) 'pending_operation': pendingOperation,
+    });
+  }
+
+  SyncMetadataCompanion copyWith({
+    Value<int>? id,
+    Value<String>? entityTable,
+    Value<int>? localId,
+    Value<int?>? remoteId,
+    Value<DateTime?>? lastSyncedAt,
+    Value<bool>? needsUpload,
+    Value<bool>? needsDownload,
+    Value<String?>? pendingOperation,
+  }) {
+    return SyncMetadataCompanion(
+      id: id ?? this.id,
+      entityTable: entityTable ?? this.entityTable,
+      localId: localId ?? this.localId,
+      remoteId: remoteId ?? this.remoteId,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      needsUpload: needsUpload ?? this.needsUpload,
+      needsDownload: needsDownload ?? this.needsDownload,
+      pendingOperation: pendingOperation ?? this.pendingOperation,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (entityTable.present) {
+      map['entity_table'] = Variable<String>(entityTable.value);
+    }
+    if (localId.present) {
+      map['local_id'] = Variable<int>(localId.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<int>(remoteId.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
+    }
+    if (needsUpload.present) {
+      map['needs_upload'] = Variable<bool>(needsUpload.value);
+    }
+    if (needsDownload.present) {
+      map['needs_download'] = Variable<bool>(needsDownload.value);
+    }
+    if (pendingOperation.present) {
+      map['pending_operation'] = Variable<String>(pendingOperation.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncMetadataCompanion(')
+          ..write('id: $id, ')
+          ..write('entityTable: $entityTable, ')
+          ..write('localId: $localId, ')
+          ..write('remoteId: $remoteId, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('needsUpload: $needsUpload, ')
+          ..write('needsDownload: $needsDownload, ')
+          ..write('pendingOperation: $pendingOperation')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $OfflineQueueTable extends OfflineQueue
+    with TableInfo<$OfflineQueueTable, OfflineQueueData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OfflineQueueTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _operationMeta = const VerificationMeta(
+    'operation',
+  );
+  @override
+  late final GeneratedColumn<String> operation = GeneratedColumn<String>(
+    'operation',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _retryCountMeta = const VerificationMeta(
+    'retryCount',
+  );
+  @override
+  late final GeneratedColumn<int> retryCount = GeneratedColumn<int>(
+    'retry_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    operation,
+    payload,
+    createdAt,
+    retryCount,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'offline_queue';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OfflineQueueData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('operation')) {
+      context.handle(
+        _operationMeta,
+        operation.isAcceptableOrUnknown(data['operation']!, _operationMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_operationMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('retry_count')) {
+      context.handle(
+        _retryCountMeta,
+        retryCount.isAcceptableOrUnknown(data['retry_count']!, _retryCountMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  OfflineQueueData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OfflineQueueData(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      operation:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}operation'],
+          )!,
+      payload:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}payload'],
+          )!,
+      createdAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}created_at'],
+          )!,
+      retryCount:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}retry_count'],
+          )!,
+    );
+  }
+
+  @override
+  $OfflineQueueTable createAlias(String alias) {
+    return $OfflineQueueTable(attachedDatabase, alias);
+  }
+}
+
+class OfflineQueueData extends DataClass
+    implements Insertable<OfflineQueueData> {
+  final int id;
+  final String operation;
+  final String payload;
+  final DateTime createdAt;
+  final int retryCount;
+  const OfflineQueueData({
+    required this.id,
+    required this.operation,
+    required this.payload,
+    required this.createdAt,
+    required this.retryCount,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['operation'] = Variable<String>(operation);
+    map['payload'] = Variable<String>(payload);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['retry_count'] = Variable<int>(retryCount);
+    return map;
+  }
+
+  OfflineQueueCompanion toCompanion(bool nullToAbsent) {
+    return OfflineQueueCompanion(
+      id: Value(id),
+      operation: Value(operation),
+      payload: Value(payload),
+      createdAt: Value(createdAt),
+      retryCount: Value(retryCount),
+    );
+  }
+
+  factory OfflineQueueData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OfflineQueueData(
+      id: serializer.fromJson<int>(json['id']),
+      operation: serializer.fromJson<String>(json['operation']),
+      payload: serializer.fromJson<String>(json['payload']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      retryCount: serializer.fromJson<int>(json['retryCount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'operation': serializer.toJson<String>(operation),
+      'payload': serializer.toJson<String>(payload),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'retryCount': serializer.toJson<int>(retryCount),
+    };
+  }
+
+  OfflineQueueData copyWith({
+    int? id,
+    String? operation,
+    String? payload,
+    DateTime? createdAt,
+    int? retryCount,
+  }) => OfflineQueueData(
+    id: id ?? this.id,
+    operation: operation ?? this.operation,
+    payload: payload ?? this.payload,
+    createdAt: createdAt ?? this.createdAt,
+    retryCount: retryCount ?? this.retryCount,
+  );
+  OfflineQueueData copyWithCompanion(OfflineQueueCompanion data) {
+    return OfflineQueueData(
+      id: data.id.present ? data.id.value : this.id,
+      operation: data.operation.present ? data.operation.value : this.operation,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      retryCount:
+          data.retryCount.present ? data.retryCount.value : this.retryCount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OfflineQueueData(')
+          ..write('id: $id, ')
+          ..write('operation: $operation, ')
+          ..write('payload: $payload, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('retryCount: $retryCount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, operation, payload, createdAt, retryCount);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OfflineQueueData &&
+          other.id == this.id &&
+          other.operation == this.operation &&
+          other.payload == this.payload &&
+          other.createdAt == this.createdAt &&
+          other.retryCount == this.retryCount);
+}
+
+class OfflineQueueCompanion extends UpdateCompanion<OfflineQueueData> {
+  final Value<int> id;
+  final Value<String> operation;
+  final Value<String> payload;
+  final Value<DateTime> createdAt;
+  final Value<int> retryCount;
+  const OfflineQueueCompanion({
+    this.id = const Value.absent(),
+    this.operation = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.retryCount = const Value.absent(),
+  });
+  OfflineQueueCompanion.insert({
+    this.id = const Value.absent(),
+    required String operation,
+    required String payload,
+    this.createdAt = const Value.absent(),
+    this.retryCount = const Value.absent(),
+  }) : operation = Value(operation),
+       payload = Value(payload);
+  static Insertable<OfflineQueueData> custom({
+    Expression<int>? id,
+    Expression<String>? operation,
+    Expression<String>? payload,
+    Expression<DateTime>? createdAt,
+    Expression<int>? retryCount,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (operation != null) 'operation': operation,
+      if (payload != null) 'payload': payload,
+      if (createdAt != null) 'created_at': createdAt,
+      if (retryCount != null) 'retry_count': retryCount,
+    });
+  }
+
+  OfflineQueueCompanion copyWith({
+    Value<int>? id,
+    Value<String>? operation,
+    Value<String>? payload,
+    Value<DateTime>? createdAt,
+    Value<int>? retryCount,
+  }) {
+    return OfflineQueueCompanion(
+      id: id ?? this.id,
+      operation: operation ?? this.operation,
+      payload: payload ?? this.payload,
+      createdAt: createdAt ?? this.createdAt,
+      retryCount: retryCount ?? this.retryCount,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (operation.present) {
+      map['operation'] = Variable<String>(operation.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (retryCount.present) {
+      map['retry_count'] = Variable<int>(retryCount.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OfflineQueueCompanion(')
+          ..write('id: $id, ')
+          ..write('operation: $operation, ')
+          ..write('payload: $payload, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('retryCount: $retryCount')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UserProfileTable extends UserProfile
+    with TableInfo<$UserProfileTable, UserProfileData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserProfileTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+    'email',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _firstnameMeta = const VerificationMeta(
+    'firstname',
+  );
+  @override
+  late final GeneratedColumn<String> firstname = GeneratedColumn<String>(
+    'firstname',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastnameMeta = const VerificationMeta(
+    'lastname',
+  );
+  @override
+  late final GeneratedColumn<String> lastname = GeneratedColumn<String>(
+    'lastname',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    email,
+    firstname,
+    lastname,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_profile';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UserProfileData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+        _emailMeta,
+        email.isAcceptableOrUnknown(data['email']!, _emailMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_emailMeta);
+    }
+    if (data.containsKey('firstname')) {
+      context.handle(
+        _firstnameMeta,
+        firstname.isAcceptableOrUnknown(data['firstname']!, _firstnameMeta),
+      );
+    }
+    if (data.containsKey('lastname')) {
+      context.handle(
+        _lastnameMeta,
+        lastname.isAcceptableOrUnknown(data['lastname']!, _lastnameMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  UserProfileData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserProfileData(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}id'],
+          )!,
+      email:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}email'],
+          )!,
+      firstname: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}firstname'],
+      ),
+      lastname: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lastname'],
+      ),
+      createdAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}created_at'],
+          )!,
+    );
+  }
+
+  @override
+  $UserProfileTable createAlias(String alias) {
+    return $UserProfileTable(attachedDatabase, alias);
+  }
+}
+
+class UserProfileData extends DataClass implements Insertable<UserProfileData> {
+  final String id;
+  final String email;
+  final String? firstname;
+  final String? lastname;
+  final DateTime createdAt;
+  const UserProfileData({
+    required this.id,
+    required this.email,
+    this.firstname,
+    this.lastname,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['email'] = Variable<String>(email);
+    if (!nullToAbsent || firstname != null) {
+      map['firstname'] = Variable<String>(firstname);
+    }
+    if (!nullToAbsent || lastname != null) {
+      map['lastname'] = Variable<String>(lastname);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  UserProfileCompanion toCompanion(bool nullToAbsent) {
+    return UserProfileCompanion(
+      id: Value(id),
+      email: Value(email),
+      firstname:
+          firstname == null && nullToAbsent
+              ? const Value.absent()
+              : Value(firstname),
+      lastname:
+          lastname == null && nullToAbsent
+              ? const Value.absent()
+              : Value(lastname),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory UserProfileData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserProfileData(
+      id: serializer.fromJson<String>(json['id']),
+      email: serializer.fromJson<String>(json['email']),
+      firstname: serializer.fromJson<String?>(json['firstname']),
+      lastname: serializer.fromJson<String?>(json['lastname']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'email': serializer.toJson<String>(email),
+      'firstname': serializer.toJson<String?>(firstname),
+      'lastname': serializer.toJson<String?>(lastname),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  UserProfileData copyWith({
+    String? id,
+    String? email,
+    Value<String?> firstname = const Value.absent(),
+    Value<String?> lastname = const Value.absent(),
+    DateTime? createdAt,
+  }) => UserProfileData(
+    id: id ?? this.id,
+    email: email ?? this.email,
+    firstname: firstname.present ? firstname.value : this.firstname,
+    lastname: lastname.present ? lastname.value : this.lastname,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  UserProfileData copyWithCompanion(UserProfileCompanion data) {
+    return UserProfileData(
+      id: data.id.present ? data.id.value : this.id,
+      email: data.email.present ? data.email.value : this.email,
+      firstname: data.firstname.present ? data.firstname.value : this.firstname,
+      lastname: data.lastname.present ? data.lastname.value : this.lastname,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserProfileData(')
+          ..write('id: $id, ')
+          ..write('email: $email, ')
+          ..write('firstname: $firstname, ')
+          ..write('lastname: $lastname, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, email, firstname, lastname, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserProfileData &&
+          other.id == this.id &&
+          other.email == this.email &&
+          other.firstname == this.firstname &&
+          other.lastname == this.lastname &&
+          other.createdAt == this.createdAt);
+}
+
+class UserProfileCompanion extends UpdateCompanion<UserProfileData> {
+  final Value<String> id;
+  final Value<String> email;
+  final Value<String?> firstname;
+  final Value<String?> lastname;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const UserProfileCompanion({
+    this.id = const Value.absent(),
+    this.email = const Value.absent(),
+    this.firstname = const Value.absent(),
+    this.lastname = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserProfileCompanion.insert({
+    required String id,
+    required String email,
+    this.firstname = const Value.absent(),
+    this.lastname = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       email = Value(email),
+       createdAt = Value(createdAt);
+  static Insertable<UserProfileData> custom({
+    Expression<String>? id,
+    Expression<String>? email,
+    Expression<String>? firstname,
+    Expression<String>? lastname,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (email != null) 'email': email,
+      if (firstname != null) 'firstname': firstname,
+      if (lastname != null) 'lastname': lastname,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserProfileCompanion copyWith({
+    Value<String>? id,
+    Value<String>? email,
+    Value<String?>? firstname,
+    Value<String?>? lastname,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return UserProfileCompanion(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      firstname: firstname ?? this.firstname,
+      lastname: lastname ?? this.lastname,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
+    if (firstname.present) {
+      map['firstname'] = Variable<String>(firstname.value);
+    }
+    if (lastname.present) {
+      map['lastname'] = Variable<String>(lastname.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserProfileCompanion(')
+          ..write('id: $id, ')
+          ..write('email: $email, ')
+          ..write('firstname: $firstname, ')
+          ..write('lastname: $lastname, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4360,6 +5628,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $BuiltinTrainingWeightsTable(this);
   late final $PinnedBuiltinTrainingsTable pinnedBuiltinTrainings =
       $PinnedBuiltinTrainingsTable(this);
+  late final $SyncMetadataTable syncMetadata = $SyncMetadataTable(this);
+  late final $OfflineQueueTable offlineQueue = $OfflineQueueTable(this);
+  late final $UserProfileTable userProfile = $UserProfileTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4374,6 +5645,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sensorConfigs,
     builtinTrainingWeights,
     pinnedBuiltinTrainings,
+    syncMetadata,
+    offlineQueue,
+    userProfile,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -7732,6 +9006,687 @@ typedef $$PinnedBuiltinTrainingsTableProcessedTableManager =
       PinnedBuiltinTraining,
       PrefetchHooks Function()
     >;
+typedef $$SyncMetadataTableCreateCompanionBuilder =
+    SyncMetadataCompanion Function({
+      Value<int> id,
+      required String entityTable,
+      required int localId,
+      Value<int?> remoteId,
+      Value<DateTime?> lastSyncedAt,
+      Value<bool> needsUpload,
+      Value<bool> needsDownload,
+      Value<String?> pendingOperation,
+    });
+typedef $$SyncMetadataTableUpdateCompanionBuilder =
+    SyncMetadataCompanion Function({
+      Value<int> id,
+      Value<String> entityTable,
+      Value<int> localId,
+      Value<int?> remoteId,
+      Value<DateTime?> lastSyncedAt,
+      Value<bool> needsUpload,
+      Value<bool> needsDownload,
+      Value<String?> pendingOperation,
+    });
+
+class $$SyncMetadataTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityTable => $composableBuilder(
+    column: $table.entityTable,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get localId => $composableBuilder(
+    column: $table.localId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get needsUpload => $composableBuilder(
+    column: $table.needsUpload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get needsDownload => $composableBuilder(
+    column: $table.needsDownload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pendingOperation => $composableBuilder(
+    column: $table.pendingOperation,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SyncMetadataTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityTable => $composableBuilder(
+    column: $table.entityTable,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get localId => $composableBuilder(
+    column: $table.localId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get needsUpload => $composableBuilder(
+    column: $table.needsUpload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get needsDownload => $composableBuilder(
+    column: $table.needsDownload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pendingOperation => $composableBuilder(
+    column: $table.pendingOperation,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SyncMetadataTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get entityTable => $composableBuilder(
+    column: $table.entityTable,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get localId =>
+      $composableBuilder(column: $table.localId, builder: (column) => column);
+
+  GeneratedColumn<int> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSyncedAt => $composableBuilder(
+    column: $table.lastSyncedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get needsUpload => $composableBuilder(
+    column: $table.needsUpload,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get needsDownload => $composableBuilder(
+    column: $table.needsDownload,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get pendingOperation => $composableBuilder(
+    column: $table.pendingOperation,
+    builder: (column) => column,
+  );
+}
+
+class $$SyncMetadataTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SyncMetadataTable,
+          SyncMetadataData,
+          $$SyncMetadataTableFilterComposer,
+          $$SyncMetadataTableOrderingComposer,
+          $$SyncMetadataTableAnnotationComposer,
+          $$SyncMetadataTableCreateCompanionBuilder,
+          $$SyncMetadataTableUpdateCompanionBuilder,
+          (
+            SyncMetadataData,
+            BaseReferences<_$AppDatabase, $SyncMetadataTable, SyncMetadataData>,
+          ),
+          SyncMetadataData,
+          PrefetchHooks Function()
+        > {
+  $$SyncMetadataTableTableManager(_$AppDatabase db, $SyncMetadataTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$SyncMetadataTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$SyncMetadataTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () =>
+                  $$SyncMetadataTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> entityTable = const Value.absent(),
+                Value<int> localId = const Value.absent(),
+                Value<int?> remoteId = const Value.absent(),
+                Value<DateTime?> lastSyncedAt = const Value.absent(),
+                Value<bool> needsUpload = const Value.absent(),
+                Value<bool> needsDownload = const Value.absent(),
+                Value<String?> pendingOperation = const Value.absent(),
+              }) => SyncMetadataCompanion(
+                id: id,
+                entityTable: entityTable,
+                localId: localId,
+                remoteId: remoteId,
+                lastSyncedAt: lastSyncedAt,
+                needsUpload: needsUpload,
+                needsDownload: needsDownload,
+                pendingOperation: pendingOperation,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String entityTable,
+                required int localId,
+                Value<int?> remoteId = const Value.absent(),
+                Value<DateTime?> lastSyncedAt = const Value.absent(),
+                Value<bool> needsUpload = const Value.absent(),
+                Value<bool> needsDownload = const Value.absent(),
+                Value<String?> pendingOperation = const Value.absent(),
+              }) => SyncMetadataCompanion.insert(
+                id: id,
+                entityTable: entityTable,
+                localId: localId,
+                remoteId: remoteId,
+                lastSyncedAt: lastSyncedAt,
+                needsUpload: needsUpload,
+                needsDownload: needsDownload,
+                pendingOperation: pendingOperation,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SyncMetadataTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SyncMetadataTable,
+      SyncMetadataData,
+      $$SyncMetadataTableFilterComposer,
+      $$SyncMetadataTableOrderingComposer,
+      $$SyncMetadataTableAnnotationComposer,
+      $$SyncMetadataTableCreateCompanionBuilder,
+      $$SyncMetadataTableUpdateCompanionBuilder,
+      (
+        SyncMetadataData,
+        BaseReferences<_$AppDatabase, $SyncMetadataTable, SyncMetadataData>,
+      ),
+      SyncMetadataData,
+      PrefetchHooks Function()
+    >;
+typedef $$OfflineQueueTableCreateCompanionBuilder =
+    OfflineQueueCompanion Function({
+      Value<int> id,
+      required String operation,
+      required String payload,
+      Value<DateTime> createdAt,
+      Value<int> retryCount,
+    });
+typedef $$OfflineQueueTableUpdateCompanionBuilder =
+    OfflineQueueCompanion Function({
+      Value<int> id,
+      Value<String> operation,
+      Value<String> payload,
+      Value<DateTime> createdAt,
+      Value<int> retryCount,
+    });
+
+class $$OfflineQueueTableFilterComposer
+    extends Composer<_$AppDatabase, $OfflineQueueTable> {
+  $$OfflineQueueTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get operation => $composableBuilder(
+    column: $table.operation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$OfflineQueueTableOrderingComposer
+    extends Composer<_$AppDatabase, $OfflineQueueTable> {
+  $$OfflineQueueTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get operation => $composableBuilder(
+    column: $table.operation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$OfflineQueueTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OfflineQueueTable> {
+  $$OfflineQueueTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get operation =>
+      $composableBuilder(column: $table.operation, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get retryCount => $composableBuilder(
+    column: $table.retryCount,
+    builder: (column) => column,
+  );
+}
+
+class $$OfflineQueueTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OfflineQueueTable,
+          OfflineQueueData,
+          $$OfflineQueueTableFilterComposer,
+          $$OfflineQueueTableOrderingComposer,
+          $$OfflineQueueTableAnnotationComposer,
+          $$OfflineQueueTableCreateCompanionBuilder,
+          $$OfflineQueueTableUpdateCompanionBuilder,
+          (
+            OfflineQueueData,
+            BaseReferences<_$AppDatabase, $OfflineQueueTable, OfflineQueueData>,
+          ),
+          OfflineQueueData,
+          PrefetchHooks Function()
+        > {
+  $$OfflineQueueTableTableManager(_$AppDatabase db, $OfflineQueueTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$OfflineQueueTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$OfflineQueueTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () =>
+                  $$OfflineQueueTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> operation = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> retryCount = const Value.absent(),
+              }) => OfflineQueueCompanion(
+                id: id,
+                operation: operation,
+                payload: payload,
+                createdAt: createdAt,
+                retryCount: retryCount,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String operation,
+                required String payload,
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> retryCount = const Value.absent(),
+              }) => OfflineQueueCompanion.insert(
+                id: id,
+                operation: operation,
+                payload: payload,
+                createdAt: createdAt,
+                retryCount: retryCount,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$OfflineQueueTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OfflineQueueTable,
+      OfflineQueueData,
+      $$OfflineQueueTableFilterComposer,
+      $$OfflineQueueTableOrderingComposer,
+      $$OfflineQueueTableAnnotationComposer,
+      $$OfflineQueueTableCreateCompanionBuilder,
+      $$OfflineQueueTableUpdateCompanionBuilder,
+      (
+        OfflineQueueData,
+        BaseReferences<_$AppDatabase, $OfflineQueueTable, OfflineQueueData>,
+      ),
+      OfflineQueueData,
+      PrefetchHooks Function()
+    >;
+typedef $$UserProfileTableCreateCompanionBuilder =
+    UserProfileCompanion Function({
+      required String id,
+      required String email,
+      Value<String?> firstname,
+      Value<String?> lastname,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$UserProfileTableUpdateCompanionBuilder =
+    UserProfileCompanion Function({
+      Value<String> id,
+      Value<String> email,
+      Value<String?> firstname,
+      Value<String?> lastname,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$UserProfileTableFilterComposer
+    extends Composer<_$AppDatabase, $UserProfileTable> {
+  $$UserProfileTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get firstname => $composableBuilder(
+    column: $table.firstname,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastname => $composableBuilder(
+    column: $table.lastname,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$UserProfileTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserProfileTable> {
+  $$UserProfileTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get firstname => $composableBuilder(
+    column: $table.firstname,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastname => $composableBuilder(
+    column: $table.lastname,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$UserProfileTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserProfileTable> {
+  $$UserProfileTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get firstname =>
+      $composableBuilder(column: $table.firstname, builder: (column) => column);
+
+  GeneratedColumn<String> get lastname =>
+      $composableBuilder(column: $table.lastname, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$UserProfileTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UserProfileTable,
+          UserProfileData,
+          $$UserProfileTableFilterComposer,
+          $$UserProfileTableOrderingComposer,
+          $$UserProfileTableAnnotationComposer,
+          $$UserProfileTableCreateCompanionBuilder,
+          $$UserProfileTableUpdateCompanionBuilder,
+          (
+            UserProfileData,
+            BaseReferences<_$AppDatabase, $UserProfileTable, UserProfileData>,
+          ),
+          UserProfileData,
+          PrefetchHooks Function()
+        > {
+  $$UserProfileTableTableManager(_$AppDatabase db, $UserProfileTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$UserProfileTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$UserProfileTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () =>
+                  $$UserProfileTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> email = const Value.absent(),
+                Value<String?> firstname = const Value.absent(),
+                Value<String?> lastname = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserProfileCompanion(
+                id: id,
+                email: email,
+                firstname: firstname,
+                lastname: lastname,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String email,
+                Value<String?> firstname = const Value.absent(),
+                Value<String?> lastname = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => UserProfileCompanion.insert(
+                id: id,
+                email: email,
+                firstname: firstname,
+                lastname: lastname,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$UserProfileTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UserProfileTable,
+      UserProfileData,
+      $$UserProfileTableFilterComposer,
+      $$UserProfileTableOrderingComposer,
+      $$UserProfileTableAnnotationComposer,
+      $$UserProfileTableCreateCompanionBuilder,
+      $$UserProfileTableUpdateCompanionBuilder,
+      (
+        UserProfileData,
+        BaseReferences<_$AppDatabase, $UserProfileTable, UserProfileData>,
+      ),
+      UserProfileData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7760,4 +9715,10 @@ class $AppDatabaseManager {
         _db,
         _db.pinnedBuiltinTrainings,
       );
+  $$SyncMetadataTableTableManager get syncMetadata =>
+      $$SyncMetadataTableTableManager(_db, _db.syncMetadata);
+  $$OfflineQueueTableTableManager get offlineQueue =>
+      $$OfflineQueueTableTableManager(_db, _db.offlineQueue);
+  $$UserProfileTableTableManager get userProfile =>
+      $$UserProfileTableTableManager(_db, _db.userProfile);
 }
