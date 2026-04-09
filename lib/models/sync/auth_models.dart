@@ -3,7 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'auth_models.freezed.dart';
 part 'auth_models.g.dart';
 
-@Freezed(toJson: true, fromJson: true)
+@freezed
 class LoginRequest with _$LoginRequest {
   const factory LoginRequest({
     required String email,
@@ -14,7 +14,7 @@ class LoginRequest with _$LoginRequest {
       _$LoginRequestFromJson(json);
 }
 
-@Freezed(toJson: true, fromJson: true)
+@freezed
 class RegisterRequest with _$RegisterRequest {
   const factory RegisterRequest({
     required String email,
@@ -27,10 +27,11 @@ class RegisterRequest with _$RegisterRequest {
       _$RegisterRequestFromJson(json);
 }
 
-@Freezed(toJson: true, fromJson: true)
+@freezed
 class AuthResponse with _$AuthResponse {
   const factory AuthResponse({
     required String token,
+    // ignore: invalid_annotation_target
     @JsonKey(name: 'user_id') required String userId,
   }) = _AuthResponse;
 

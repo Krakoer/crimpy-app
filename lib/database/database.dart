@@ -727,11 +727,9 @@ class AppDatabase extends _$AppDatabase {
     String tableName,
     int localId,
   ) async {
-    return await (select(syncMetadata)
-          ..where(
-            (s) => s.entityTable.equals(tableName) & s.localId.equals(localId),
-          ))
-        .getSingleOrNull();
+    return await (select(syncMetadata)..where(
+      (s) => s.entityTable.equals(tableName) & s.localId.equals(localId),
+    )).getSingleOrNull();
   }
 
   /// Save or update sync metadata
@@ -747,25 +745,23 @@ class AppDatabase extends _$AppDatabase {
     final existing = await getSyncMetadata(tableName, localId);
 
     if (existing != null) {
-      await (update(syncMetadata)
-            ..where(
-              (s) =>
-                  s.entityTable.equals(tableName) & s.localId.equals(localId),
-            ))
-          .write(
+      await (update(syncMetadata)..where(
+        (s) => s.entityTable.equals(tableName) & s.localId.equals(localId),
+      )).write(
         SyncMetadataCompanion(
           remoteId: remoteId != null ? Value(remoteId) : const Value.absent(),
-          lastSyncedAt: lastSyncedAt != null
-              ? Value(lastSyncedAt)
-              : const Value.absent(),
+          lastSyncedAt:
+              lastSyncedAt != null ? Value(lastSyncedAt) : const Value.absent(),
           needsUpload:
               needsUpload != null ? Value(needsUpload) : const Value.absent(),
-          needsDownload: needsDownload != null
-              ? Value(needsDownload)
-              : const Value.absent(),
-          pendingOperation: pendingOperation != null
-              ? Value(pendingOperation)
-              : const Value.absent(),
+          needsDownload:
+              needsDownload != null
+                  ? Value(needsDownload)
+                  : const Value.absent(),
+          pendingOperation:
+              pendingOperation != null
+                  ? Value(pendingOperation)
+                  : const Value.absent(),
         ),
       );
     } else {
@@ -786,8 +782,7 @@ class AppDatabase extends _$AppDatabase {
   /// Get all entities that need upload
   Future<List<SyncMetadataData>> getEntitiesNeedingUpload() async {
     return await (select(syncMetadata)
-          ..where((s) => s.needsUpload.equals(true)))
-        .get();
+      ..where((s) => s.needsUpload.equals(true))).get();
   }
 
   /// Mark entity for upload
@@ -821,8 +816,7 @@ class AppDatabase extends _$AppDatabase {
   /// Get all queued operations
   Future<List<OfflineQueueData>> getQueuedOperations() async {
     return await (select(offlineQueue)
-          ..orderBy([(o) => OrderingTerm.asc(o.createdAt)]))
-        .get();
+      ..orderBy([(o) => OrderingTerm.asc(o.createdAt)])).get();
   }
 
   /// Remove operation from queue
@@ -832,11 +826,11 @@ class AppDatabase extends _$AppDatabase {
 
   /// Increment retry count
   Future<void> incrementRetryCount(int id) async {
-    final entry = await (select(offlineQueue)..where((o) => o.id.equals(id)))
-        .getSingle();
-    await (update(offlineQueue)..where((o) => o.id.equals(id))).write(
-      OfflineQueueCompanion(retryCount: Value(entry.retryCount + 1)),
-    );
+    final entry =
+        await (select(offlineQueue)..where((o) => o.id.equals(id))).getSingle();
+    await (update(offlineQueue)..where(
+      (o) => o.id.equals(id),
+    )).write(OfflineQueueCompanion(retryCount: Value(entry.retryCount + 1)));
   }
 
   // ------------------------------------- USER PROFILE -------------------------------------

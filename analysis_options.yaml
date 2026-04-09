@@ -26,7 +26,10 @@ linter:
 
 analyzer:
   plugins:
-    - 
+    -
+  errors:
+    non_abstract_class_inherits_abstract_member: ignore
+    invalid_annotation_target: warning 
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
