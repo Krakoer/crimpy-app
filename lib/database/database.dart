@@ -721,6 +721,154 @@ class AppDatabase extends _$AppDatabase {
     return result != null;
   }
 
+  // ------------------------------------- SYNC METADATA -------------------------------------
+  /// Get sync metadata for a specific entity
+  Future<SyncMetadataData?> getSyncMetadata(
+    String tableName,
+    int localId,
+  ) async {
+    return await (select(syncMetadata)
+          ..where(
+            (s) => s.entityTable.equals(tableName) & s.localId.equals(localId),
+          ))
+        .getSingleOrNull();
+  }
+
+  /// Save or update sync metadata
+  Future<void> upsertSyncMetadata({
+    required String tableName,
+    required int localId,
+    int? remoteId,
+    DateTime? lastSyncedAt,
+    bool? needsUpload,
+    bool? needsDownload,
+    String? pendingOperation,
+  }) async {
+    final existing = await getSyncMetadata(tableName, localId);
+
+    if (existing != null) {
+      await (update(syncMetadata)
+            ..where(
+              (s) =>
+                  s.entityTable.equals(tableName) & s.localId.equals(localId),
+            ))
+          .write(
+        SyncMetadataCompanion(
+          remoteId: remoteId != null ? Value(remoteId) : const Value.absent(),
+          lastSyncedAt: lastSyncedAt != null
+              ? Value(lastSyncedAt)
+              : const Value.absent(),
+          needsUpload:
+              needsUpload != null ? Value(needsUpload) : const Value.absent(),
+          needsDownload: needsDownload != null
+              ? Value(needsDownload)
+              : const Value.absent(),
+          pendingOperation: pendingOperation != null
+              ? Value(pendingOperation)
+              : const Value.absent(),
+        ),
+      );
+    } else {
+      await into(syncMetadata).insert(
+        SyncMetadataCompanion.insert(
+          entityTable: tableName,
+          localId: localId,
+          remoteId: Value(remoteId),
+          lastSyncedAt: Value(lastSyncedAt),
+          needsUpload: Value(needsUpload ?? false),
+          needsDownload: Value(needsDownload ?? false),
+          pendingOperation: Value(pendingOperation),
+        ),
+      );
+    }
+  }
+
+  /// Get all entities that need upload
+  Future<List<SyncMetadataData>> getEntitiesNeedingUpload() async {
+    return await (select(syncMetadata)
+          ..where((s) => s.needsUpload.equals(true)))
+        .get();
+  }
+
+  /// Mark entity for upload
+  Future<void> markForUpload(
+    String tableName,
+    int localId,
+    String operation,
+  ) async {
+    await upsertSyncMetadata(
+      tableName: tableName,
+      localId: localId,
+      needsUpload: true,
+      pendingOperation: operation,
+    );
+  }
+
+  // ------------------------------------- OFFLINE QUEUE -------------------------------------
+  /// Add operation to offline queue
+  Future<int> enqueueOfflineOperation({
+    required String operation,
+    required Map<String, dynamic> payload,
+  }) async {
+    return await into(offlineQueue).insert(
+      OfflineQueueCompanion.insert(
+        operation: operation,
+        payload: jsonEncode(payload),
+      ),
+    );
+  }
+
+  /// Get all queued operations
+  Future<List<OfflineQueueData>> getQueuedOperations() async {
+    return await (select(offlineQueue)
+          ..orderBy([(o) => OrderingTerm.asc(o.createdAt)]))
+        .get();
+  }
+
+  /// Remove operation from queue
+  Future<void> dequeueOperation(int id) async {
+    await (delete(offlineQueue)..where((o) => o.id.equals(id))).go();
+  }
+
+  /// Increment retry count
+  Future<void> incrementRetryCount(int id) async {
+    final entry = await (select(offlineQueue)..where((o) => o.id.equals(id)))
+        .getSingle();
+    await (update(offlineQueue)..where((o) => o.id.equals(id))).write(
+      OfflineQueueCompanion(retryCount: Value(entry.retryCount + 1)),
+    );
+  }
+
+  // ------------------------------------- USER PROFILE -------------------------------------
+  /// Save user profile
+  Future<void> saveUserProfile({
+    required String id,
+    required String email,
+    String? firstname,
+    String? lastname,
+  }) async {
+    await into(userProfile).insert(
+      UserProfileCompanion.insert(
+        id: id,
+        email: email,
+        firstname: Value(firstname),
+        lastname: Value(lastname),
+        createdAt: DateTime.now(),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  /// Get user profile
+  Future<UserProfileData?> getUserProfile() async {
+    return await select(userProfile).getSingleOrNull();
+  }
+
+  /// Delete user profile (on logout)
+  Future<void> deleteUserProfile() async {
+    await delete(userProfile).go();
+  }
+
   @override
   int get schemaVersion => 8;
 
