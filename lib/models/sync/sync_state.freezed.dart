@@ -116,10 +116,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _SyncState():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -178,10 +175,7 @@ return $default(_that.isSyncing,_that.lastSyncTime,_that.pendingChanges,_that.er
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isSyncing,  DateTime? lastSyncTime,  int pendingChanges,  String? error,  SyncPhase phase)  $default,) {final _that = this;
 switch (_that) {
 case _SyncState():
-return $default(_that.isSyncing,_that.lastSyncTime,_that.pendingChanges,_that.error,_that.phase);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.isSyncing,_that.lastSyncTime,_that.pendingChanges,_that.error,_that.phase);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///

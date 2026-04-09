@@ -3,7 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'sync_state.freezed.dart';
 
 @freezed
-abstract class SyncState with _$SyncState {
+sealed class SyncState with _$SyncState {
   const factory SyncState({
     @Default(false) bool isSyncing,
     DateTime? lastSyncTime,

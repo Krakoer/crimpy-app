@@ -4,7 +4,7 @@ part 'auth_models.freezed.dart';
 part 'auth_models.g.dart';
 
 @freezed
-class LoginRequest with _$LoginRequest {
+sealed class LoginRequest with _$LoginRequest {
   const factory LoginRequest({
     required String email,
     required String password,
@@ -15,7 +15,7 @@ class LoginRequest with _$LoginRequest {
 }
 
 @freezed
-class RegisterRequest with _$RegisterRequest {
+sealed class RegisterRequest with _$RegisterRequest {
   const factory RegisterRequest({
     required String email,
     required String password,
@@ -28,7 +28,7 @@ class RegisterRequest with _$RegisterRequest {
 }
 
 @freezed
-class AuthResponse with _$AuthResponse {
+sealed class AuthResponse with _$AuthResponse {
   const factory AuthResponse({
     required String token,
     // ignore: invalid_annotation_target
@@ -40,7 +40,7 @@ class AuthResponse with _$AuthResponse {
 }
 
 @freezed
-class AuthState with _$AuthState {
+sealed class AuthState with _$AuthState {
   const factory AuthState({
     @Default(false) bool isAuthenticated,
     String? userId,
