@@ -107,6 +107,10 @@ class TrainingsNotifier extends AsyncNotifier<List<TrainingWithReps>> {
     state = const AsyncValue.loading();
     try {
       await _trainingRepository.saveTraining(name, reps);
+
+      // Note: Cloud sync for trainings will be implemented when training IDs are available
+      // For now, trainings are local-only until we modify the repository to return IDs
+
       ref.invalidate(allTrainingsProvider);
       ref.invalidateSelf();
       await future;
