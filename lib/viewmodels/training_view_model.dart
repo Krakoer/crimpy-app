@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
@@ -191,6 +192,14 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
         reps,
         data: data,
       );
+
+      // Mark for cloud sync
+      await gDatabase.markForUpload(
+        'sessions',
+        id,
+        session.id == null ? 'create' : 'update',
+      );
+
       ref.invalidate(sessionsProvider);
       if (ref.mounted) await future;
       return id;

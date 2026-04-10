@@ -3,6 +3,7 @@ import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/calibration/start_calibration_dialog.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/create_sensor_config_dialog.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/sensor_settings_list.dart';
+import 'package:crimpy/views/widgets/sync/cloud_sync_card.dart';
 import 'package:crimpy/views/widgets/whats_new_dialog.dart';
 import 'package:drift/drift.dart' as dr;
 import 'package:flutter/foundation.dart';
@@ -51,6 +52,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // Cloud Sync Card
+            const CloudSyncCard(),
             // Form for manually editting tare and calibration values.
             Form(
               key: _formKey,
