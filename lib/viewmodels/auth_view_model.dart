@@ -41,15 +41,22 @@ class AuthViewModel extends _$AuthViewModel {
       final response = await _authService.login(request);
 
       await _apiClient.saveToken(response.token);
-      await _database.saveUserProfile(id: response.userId, email: email);
+      await _database.saveUserProfile(
+        id: response.user.id,
+        email: response.user.email,
+        firstname: response.user.firstname,
+        lastname: response.user.lastname,
+      );
 
       state = AuthState(
         isAuthenticated: true,
-        userId: response.userId,
-        email: email,
+        userId: response.user.id,
+        email: response.user.email,
+        firstname: response.user.firstname,
+        lastname: response.user.lastname,
       );
 
-      AppLoggerHelper.info('Login successful for user: $email');
+      AppLoggerHelper.info('Login successful for user: ${response.user.email}');
     } catch (e) {
       AppLoggerHelper.error('Login failed: $e');
       rethrow;
@@ -73,21 +80,23 @@ class AuthViewModel extends _$AuthViewModel {
 
       await _apiClient.saveToken(response.token);
       await _database.saveUserProfile(
-        id: response.userId,
-        email: email,
-        firstname: firstname,
-        lastname: lastname,
+        id: response.user.id,
+        email: response.user.email,
+        firstname: response.user.firstname,
+        lastname: response.user.lastname,
       );
 
       state = AuthState(
         isAuthenticated: true,
-        userId: response.userId,
-        email: email,
-        firstname: firstname,
-        lastname: lastname,
+        userId: response.user.id,
+        email: response.user.email,
+        firstname: response.user.firstname,
+        lastname: response.user.lastname,
       );
 
-      AppLoggerHelper.info('Registration successful for user: $email');
+      AppLoggerHelper.info(
+        'Registration successful for user: ${response.user.email}',
+      );
     } catch (e) {
       AppLoggerHelper.error('Registration failed: $e');
       rethrow;

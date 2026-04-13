@@ -28,11 +28,25 @@ sealed class RegisterRequest with _$RegisterRequest {
 }
 
 @freezed
+sealed class User with _$User {
+  const factory User({
+    required String id,
+    required String email,
+    String? firstname,
+    String? lastname,
+    // ignore: invalid_annotation_target
+    @JsonKey(name: 'created_at') required String createdAt,
+  }) = _User;
+
+  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+}
+
+@freezed
 sealed class AuthResponse with _$AuthResponse {
   const factory AuthResponse({
+    required String message,
     required String token,
-    // ignore: invalid_annotation_target
-    @JsonKey(name: 'user_id') required String userId,
+    required User user,
   }) = _AuthResponse;
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) =>

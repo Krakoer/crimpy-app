@@ -40,13 +40,28 @@ void main() {
       expect(json['lastname'], 'Doe');
     });
 
-    test('AuthResponse deserializes with snake_case fields', () {
-      final json = {'token': 'test_token_123', 'user_id': 'user_456'};
+    test('AuthResponse deserializes with nested user object', () {
+      final json = {
+        'message': 'Login successful',
+        'token': 'test_token_123',
+        'user': {
+          'id': 'user_456',
+          'email': 'test@example.com',
+          'firstname': 'John',
+          'lastname': 'Doe',
+          'created_at': '2026-04-10 08:32:30.366837 +0000 UTC',
+        },
+      };
 
       final response = AuthResponse.fromJson(json);
 
+      expect(response.message, 'Login successful');
       expect(response.token, 'test_token_123');
-      expect(response.userId, 'user_456');
+      expect(response.user.id, 'user_456');
+      expect(response.user.email, 'test@example.com');
+      expect(response.user.firstname, 'John');
+      expect(response.user.lastname, 'Doe');
+      expect(response.user.createdAt, '2026-04-10 08:32:30.366837 +0000 UTC');
     });
 
     test('AuthState has correct default values', () {

@@ -10,6 +10,9 @@ class SessionApiService {
   Future<List<SessionResponse>> getAllSessions() async {
     try {
       final response = await _apiClient.dio.get('/api/sessions');
+      if (response.data == null) {
+        return List.empty();
+      }
       return (response.data as List)
           .map((json) => SessionResponse.fromJson(json))
           .toList();
