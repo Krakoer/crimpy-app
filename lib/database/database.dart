@@ -9,6 +9,7 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:uuid/uuid.dart';
 import '../models/ble_data_model.dart';
 
 part 'database.g.dart';
@@ -33,6 +34,16 @@ class Sessions extends Table {
   late final IntColumn repeaterRestTime = integer().nullable()();
   late final IntColumn repeaterSetRest = integer().nullable()();
   late final BoolColumn repeaterSplitHand = boolean().nullable()();
+
+  // Sync columns as per SYNC_SPEC.md
+  late final TextColumn syncId = text().nullable()();
+  late final DateTimeColumn createdAt = dateTime().nullable()();
+  late final DateTimeColumn updatedAt = dateTime().nullable()();
+  late final DateTimeColumn deletedAt = dateTime().nullable()();
+  late final TextColumn deviceId = text().nullable()();
+  late final IntColumn syncVersion = integer().withDefault(const Constant(0))();
+  late final BoolColumn isDirty =
+      boolean().withDefault(const Constant(false))();
 }
 
 // Stores the assessments the user has done, with the results.
@@ -62,6 +73,16 @@ class Trainings extends Table {
       boolean().withDefault(const Constant(false))();
   late final BoolColumn isAssessment =
       boolean().withDefault(const Constant(false))();
+
+  // Sync columns as per SYNC_SPEC.md
+  late final TextColumn syncId = text().nullable()();
+  late final DateTimeColumn createdAt = dateTime().nullable()();
+  late final DateTimeColumn updatedAt = dateTime().nullable()();
+  late final DateTimeColumn deletedAt = dateTime().nullable()();
+  late final TextColumn deviceId = text().nullable()();
+  late final IntColumn syncVersion = integer().withDefault(const Constant(0))();
+  late final BoolColumn isDirty =
+      boolean().withDefault(const Constant(false))();
 }
 
 // Stores the repeaters trainings, including builtins and assessments.
@@ -77,6 +98,16 @@ class Repeaters extends Table {
   late final BoolColumn splitHand = boolean()();
   late final IntColumn gripPosition =
       integer().withDefault(const Constant(0))(); // 0 = halfCrimp (default)
+
+  // Sync columns as per SYNC_SPEC.md
+  late final TextColumn syncId = text().nullable()();
+  late final DateTimeColumn createdAt = dateTime().nullable()();
+  late final DateTimeColumn updatedAt = dateTime().nullable()();
+  late final DateTimeColumn deletedAt = dateTime().nullable()();
+  late final TextColumn deviceId = text().nullable()();
+  late final IntColumn syncVersion = integer().withDefault(const Constant(0))();
+  late final BoolColumn isDirty =
+      boolean().withDefault(const Constant(false))();
 }
 
 // Stores the repetitions for the trainings.
@@ -159,6 +190,15 @@ class OfflineQueue extends Table {
   late final IntColumn retryCount = integer().withDefault(const Constant(0))();
 }
 
+// Stores global sync state metadata as per SYNC_SPEC.md
+class SyncMeta extends Table {
+  late final TextColumn key = text()();
+  late final TextColumn value = text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {key};
+}
+
 // Stores authenticated user profile information.
 class UserProfile extends Table {
   late final TextColumn id = text()();
@@ -184,6 +224,7 @@ class UserProfile extends Table {
     PinnedBuiltinTrainings,
     SyncMetadata,
     OfflineQueue,
+    SyncMeta,
     UserProfile,
   ],
 )
@@ -863,13 +904,42 @@ class AppDatabase extends _$AppDatabase {
     await delete(userProfile).go();
   }
 
+  // ------------------------------------- SYNC META -------------------------------------
+  /// Get a value from the SyncMeta table
+  Future<String?> getSyncMetaValue(String key) async {
+    final result =
+        await (select(syncMeta)
+          ..where((t) => t.key.equals(key))).getSingleOrNull();
+    return result?.value;
+  }
+
+  /// Set a value in the SyncMeta table
+  Future<void> setSyncMetaValue(String key, String? value) async {
+    await into(syncMeta).insert(
+      SyncMetaCompanion.insert(key: key, value: Value(value)),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  /// Get last sync version
+  Future<int> getLastSyncVersion() async {
+    final value = await getSyncMetaValue('last_sync_version');
+    return int.tryParse(value ?? '0') ?? 0;
+  }
+
+  /// Set last sync version
+  Future<void> setLastSyncVersion(int version) async {
+    await setSyncMetaValue('last_sync_version', version.toString());
+  }
+
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
+      await _initializeSyncMeta();
     },
     onUpgrade: (Migrator m, int from, int to) async {
       if (from == 1 && to == 2) {
@@ -910,8 +980,123 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(offlineQueue);
         await m.createTable(userProfile);
       }
+      if (from <= 8 && to >= 9) {
+        // Migration to schema version 9: Add sync columns per SYNC_SPEC.md
+        await m.createTable(syncMeta);
+
+        // Add sync columns to Sessions table
+        await m.addColumn(sessions, sessions.syncId);
+        await m.addColumn(sessions, sessions.createdAt);
+        await m.addColumn(sessions, sessions.updatedAt);
+        await m.addColumn(sessions, sessions.deletedAt);
+        await m.addColumn(sessions, sessions.deviceId);
+        await m.addColumn(sessions, sessions.syncVersion);
+        await m.addColumn(sessions, sessions.isDirty);
+
+        // Add sync columns to Trainings table
+        await m.addColumn(trainings, trainings.syncId);
+        await m.addColumn(trainings, trainings.createdAt);
+        await m.addColumn(trainings, trainings.updatedAt);
+        await m.addColumn(trainings, trainings.deletedAt);
+        await m.addColumn(trainings, trainings.deviceId);
+        await m.addColumn(trainings, trainings.syncVersion);
+        await m.addColumn(trainings, trainings.isDirty);
+
+        // Add sync columns to Repeaters table
+        await m.addColumn(repeaters, repeaters.syncId);
+        await m.addColumn(repeaters, repeaters.createdAt);
+        await m.addColumn(repeaters, repeaters.updatedAt);
+        await m.addColumn(repeaters, repeaters.deletedAt);
+        await m.addColumn(repeaters, repeaters.deviceId);
+        await m.addColumn(repeaters, repeaters.syncVersion);
+        await m.addColumn(repeaters, repeaters.isDirty);
+
+        // Initialize sync metadata
+        await _initializeSyncMeta();
+
+        // Populate sync columns for existing records
+        await _populateExistingSyncData();
+      }
     },
   );
+
+  /// Initialize SyncMeta table with default values
+  Future<void> _initializeSyncMeta() async {
+    final uuid = const Uuid();
+    final deviceId = uuid.v4();
+
+    await into(syncMeta).insert(
+      SyncMetaCompanion.insert(key: 'device_id', value: Value(deviceId)),
+      mode: InsertMode.insertOrIgnore,
+    );
+
+    await into(syncMeta).insert(
+      SyncMetaCompanion.insert(
+        key: 'last_sync_version',
+        value: const Value('0'),
+      ),
+      mode: InsertMode.insertOrIgnore,
+    );
+
+    await into(syncMeta).insert(
+      SyncMetaCompanion.insert(key: 'account_id', value: const Value(null)),
+      mode: InsertMode.insertOrIgnore,
+    );
+
+    await into(syncMeta).insert(
+      SyncMetaCompanion.insert(key: 'last_synced_at', value: const Value(null)),
+      mode: InsertMode.insertOrIgnore,
+    );
+  }
+
+  /// Populate sync columns for existing records during migration
+  Future<void> _populateExistingSyncData() async {
+    final uuid = const Uuid();
+    final now = DateTime.now();
+    final deviceIdRecord = await getSyncMetaValue('device_id');
+
+    // Update existing sessions with sync data
+    final existingSessions = await select(sessions).get();
+    for (final session in existingSessions) {
+      await (update(sessions)..where((s) => s.id.equals(session.id))).write(
+        SessionsCompanion(
+          syncId: Value(uuid.v4()),
+          createdAt: Value(session.date),
+          updatedAt: Value(now),
+          deviceId: Value(deviceIdRecord),
+          isDirty: const Value(false),
+        ),
+      );
+    }
+
+    // Update existing trainings with sync data
+    final existingTrainings = await select(trainings).get();
+    for (final training in existingTrainings) {
+      await (update(trainings)..where((t) => t.id.equals(training.id))).write(
+        TrainingsCompanion(
+          syncId: Value(uuid.v4()),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+          deviceId: Value(deviceIdRecord),
+          isDirty: const Value(false),
+        ),
+      );
+    }
+
+    // Update existing repeaters with sync data
+    final existingRepeaters = await select(repeaters).get();
+    for (final repeater in existingRepeaters) {
+      await (update(repeaters)..where((r) => r.id.equals(repeater.id))).write(
+        RepeatersCompanion(
+          syncId: Value(uuid.v4()),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+          deviceId: Value(deviceIdRecord),
+          isDirty: const Value(false),
+        ),
+      );
+    }
+  }
 }
 
 /// Helper function that given a file path, will read its content as JSON

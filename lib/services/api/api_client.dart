@@ -1,8 +1,9 @@
+import 'package:crimpy/database/database.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ApiClient {
-  static const String baseUrl = 'https://api.portfolio-online.ovh';
+  static const String baseUrl = 'https://devapi.crimpy.app';
   final Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
@@ -25,6 +26,13 @@ class ApiClient {
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
+
+          // Add device ID header for sync endpoints
+          final deviceId = await gDatabase.getSyncMetaValue('device_id');
+          if (deviceId != null) {
+            options.headers['X-Device-ID'] = deviceId;
+          }
+
           return handler.next(options);
         },
         onError: (error, handler) async {
