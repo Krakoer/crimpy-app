@@ -168,6 +168,54 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
       'CHECK ("repeater_split_hand" IN (0, 1))',
     ),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -184,6 +232,10 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     repeaterRestTime,
     repeaterSetRest,
     repeaterSplitHand,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -308,6 +360,30 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
     return context;
   }
 
@@ -381,6 +457,25 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.bool,
         data['${effectivePrefix}repeater_split_hand'],
       ),
+      updatedAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}updated_at'],
+          )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}dirty'],
+          )!,
+      remoteId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}remote_id'],
+          )!,
     );
   }
 
@@ -405,6 +500,10 @@ class Session extends DataClass implements Insertable<Session> {
   final int? repeaterRestTime;
   final int? repeaterSetRest;
   final bool? repeaterSplitHand;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
+  final String remoteId;
   const Session({
     required this.id,
     required this.name,
@@ -420,6 +519,10 @@ class Session extends DataClass implements Insertable<Session> {
     this.repeaterRestTime,
     this.repeaterSetRest,
     this.repeaterSplitHand,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
+    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -450,6 +553,12 @@ class Session extends DataClass implements Insertable<Session> {
     if (!nullToAbsent || repeaterSplitHand != null) {
       map['repeater_split_hand'] = Variable<bool>(repeaterSplitHand);
     }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
+    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -487,6 +596,13 @@ class Session extends DataClass implements Insertable<Session> {
           repeaterSplitHand == null && nullToAbsent
               ? const Value.absent()
               : Value(repeaterSplitHand),
+      updatedAt: Value(updatedAt),
+      deletedAt:
+          deletedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(deletedAt),
+      dirty: Value(dirty),
+      remoteId: Value(remoteId),
     );
   }
 
@@ -510,6 +626,10 @@ class Session extends DataClass implements Insertable<Session> {
       repeaterRestTime: serializer.fromJson<int?>(json['repeaterRestTime']),
       repeaterSetRest: serializer.fromJson<int?>(json['repeaterSetRest']),
       repeaterSplitHand: serializer.fromJson<bool?>(json['repeaterSplitHand']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
@@ -530,6 +650,10 @@ class Session extends DataClass implements Insertable<Session> {
       'repeaterRestTime': serializer.toJson<int?>(repeaterRestTime),
       'repeaterSetRest': serializer.toJson<int?>(repeaterSetRest),
       'repeaterSplitHand': serializer.toJson<bool?>(repeaterSplitHand),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
@@ -548,6 +672,10 @@ class Session extends DataClass implements Insertable<Session> {
     Value<int?> repeaterRestTime = const Value.absent(),
     Value<int?> repeaterSetRest = const Value.absent(),
     Value<bool?> repeaterSplitHand = const Value.absent(),
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
+    String? remoteId,
   }) => Session(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -573,6 +701,10 @@ class Session extends DataClass implements Insertable<Session> {
         repeaterSplitHand.present
             ? repeaterSplitHand.value
             : this.repeaterSplitHand,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
+    remoteId: remoteId ?? this.remoteId,
   );
   Session copyWithCompanion(SessionsCompanion data) {
     return Session(
@@ -612,6 +744,10 @@ class Session extends DataClass implements Insertable<Session> {
           data.repeaterSplitHand.present
               ? data.repeaterSplitHand.value
               : this.repeaterSplitHand,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -631,7 +767,11 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('repeaterWorkTime: $repeaterWorkTime, ')
           ..write('repeaterRestTime: $repeaterRestTime, ')
           ..write('repeaterSetRest: $repeaterSetRest, ')
-          ..write('repeaterSplitHand: $repeaterSplitHand')
+          ..write('repeaterSplitHand: $repeaterSplitHand, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
@@ -652,6 +792,10 @@ class Session extends DataClass implements Insertable<Session> {
     repeaterRestTime,
     repeaterSetRest,
     repeaterSplitHand,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -670,7 +814,11 @@ class Session extends DataClass implements Insertable<Session> {
           other.repeaterWorkTime == this.repeaterWorkTime &&
           other.repeaterRestTime == this.repeaterRestTime &&
           other.repeaterSetRest == this.repeaterSetRest &&
-          other.repeaterSplitHand == this.repeaterSplitHand);
+          other.repeaterSplitHand == this.repeaterSplitHand &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty &&
+          other.remoteId == this.remoteId);
 }
 
 class SessionsCompanion extends UpdateCompanion<Session> {
@@ -688,6 +836,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<int?> repeaterRestTime;
   final Value<int?> repeaterSetRest;
   final Value<bool?> repeaterSplitHand;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<String> remoteId;
   const SessionsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -703,6 +855,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.repeaterRestTime = const Value.absent(),
     this.repeaterSetRest = const Value.absent(),
     this.repeaterSplitHand = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   });
   SessionsCompanion.insert({
     this.id = const Value.absent(),
@@ -719,6 +875,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.repeaterRestTime = const Value.absent(),
     this.repeaterSetRest = const Value.absent(),
     this.repeaterSplitHand = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   }) : name = Value(name),
        notes = Value(notes),
        dataPath = Value(dataPath);
@@ -737,6 +897,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<int>? repeaterRestTime,
     Expression<int>? repeaterSetRest,
     Expression<bool>? repeaterSplitHand,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<String>? remoteId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -753,6 +917,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (repeaterRestTime != null) 'repeater_rest_time': repeaterRestTime,
       if (repeaterSetRest != null) 'repeater_set_rest': repeaterSetRest,
       if (repeaterSplitHand != null) 'repeater_split_hand': repeaterSplitHand,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (remoteId != null) 'remote_id': remoteId,
     });
   }
 
@@ -771,6 +939,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<int?>? repeaterRestTime,
     Value<int?>? repeaterSetRest,
     Value<bool?>? repeaterSplitHand,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<String>? remoteId,
   }) {
     return SessionsCompanion(
       id: id ?? this.id,
@@ -787,6 +959,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       repeaterRestTime: repeaterRestTime ?? this.repeaterRestTime,
       repeaterSetRest: repeaterSetRest ?? this.repeaterSetRest,
       repeaterSplitHand: repeaterSplitHand ?? this.repeaterSplitHand,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      remoteId: remoteId ?? this.remoteId,
     );
   }
 
@@ -835,6 +1011,18 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (repeaterSplitHand.present) {
       map['repeater_split_hand'] = Variable<bool>(repeaterSplitHand.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
     return map;
   }
 
@@ -854,7 +1042,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('repeaterWorkTime: $repeaterWorkTime, ')
           ..write('repeaterRestTime: $repeaterRestTime, ')
           ..write('repeaterSetRest: $repeaterSetRest, ')
-          ..write('repeaterSplitHand: $repeaterSplitHand')
+          ..write('repeaterSplitHand: $repeaterSplitHand, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
@@ -936,6 +1128,54 @@ class $AssessmentsTable extends Assessments
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -944,6 +1184,10 @@ class $AssessmentsTable extends Assessments
     leftValue,
     sessionId,
     gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -997,6 +1241,30 @@ class $AssessmentsTable extends Assessments
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
     return context;
   }
 
@@ -1033,6 +1301,25 @@ class $AssessmentsTable extends Assessments
         DriftSqlType.int,
         data['${effectivePrefix}grip_position'],
       ),
+      updatedAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}updated_at'],
+          )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}dirty'],
+          )!,
+      remoteId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}remote_id'],
+          )!,
     );
   }
 
@@ -1049,6 +1336,10 @@ class Assessment extends DataClass implements Insertable<Assessment> {
   final double? leftValue;
   final int sessionId;
   final int? gripPosition;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
+  final String remoteId;
   const Assessment({
     required this.id,
     required this.type,
@@ -1056,6 +1347,10 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     this.leftValue,
     required this.sessionId,
     this.gripPosition,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
+    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1072,6 +1367,12 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     if (!nullToAbsent || gripPosition != null) {
       map['grip_position'] = Variable<int>(gripPosition);
     }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
+    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -1092,6 +1393,13 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           gripPosition == null && nullToAbsent
               ? const Value.absent()
               : Value(gripPosition),
+      updatedAt: Value(updatedAt),
+      deletedAt:
+          deletedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(deletedAt),
+      dirty: Value(dirty),
+      remoteId: Value(remoteId),
     );
   }
 
@@ -1107,6 +1415,10 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       leftValue: serializer.fromJson<double?>(json['leftValue']),
       sessionId: serializer.fromJson<int>(json['sessionId']),
       gripPosition: serializer.fromJson<int?>(json['gripPosition']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
@@ -1119,6 +1431,10 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       'leftValue': serializer.toJson<double?>(leftValue),
       'sessionId': serializer.toJson<int>(sessionId),
       'gripPosition': serializer.toJson<int?>(gripPosition),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
@@ -1129,6 +1445,10 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     Value<double?> leftValue = const Value.absent(),
     int? sessionId,
     Value<int?> gripPosition = const Value.absent(),
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
+    String? remoteId,
   }) => Assessment(
     id: id ?? this.id,
     type: type ?? this.type,
@@ -1136,6 +1456,10 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     leftValue: leftValue.present ? leftValue.value : this.leftValue,
     sessionId: sessionId ?? this.sessionId,
     gripPosition: gripPosition.present ? gripPosition.value : this.gripPosition,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
+    remoteId: remoteId ?? this.remoteId,
   );
   Assessment copyWithCompanion(AssessmentsCompanion data) {
     return Assessment(
@@ -1149,6 +1473,10 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           data.gripPosition.present
               ? data.gripPosition.value
               : this.gripPosition,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -1160,14 +1488,28 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           ..write('rightValue: $rightValue, ')
           ..write('leftValue: $leftValue, ')
           ..write('sessionId: $sessionId, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, type, rightValue, leftValue, sessionId, gripPosition);
+  int get hashCode => Object.hash(
+    id,
+    type,
+    rightValue,
+    leftValue,
+    sessionId,
+    gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1177,7 +1519,11 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           other.rightValue == this.rightValue &&
           other.leftValue == this.leftValue &&
           other.sessionId == this.sessionId &&
-          other.gripPosition == this.gripPosition);
+          other.gripPosition == this.gripPosition &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty &&
+          other.remoteId == this.remoteId);
 }
 
 class AssessmentsCompanion extends UpdateCompanion<Assessment> {
@@ -1187,6 +1533,10 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
   final Value<double?> leftValue;
   final Value<int> sessionId;
   final Value<int?> gripPosition;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<String> remoteId;
   const AssessmentsCompanion({
     this.id = const Value.absent(),
     this.type = const Value.absent(),
@@ -1194,6 +1544,10 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     this.leftValue = const Value.absent(),
     this.sessionId = const Value.absent(),
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   });
   AssessmentsCompanion.insert({
     this.id = const Value.absent(),
@@ -1202,6 +1556,10 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     this.leftValue = const Value.absent(),
     required int sessionId,
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   }) : type = Value(type),
        sessionId = Value(sessionId);
   static Insertable<Assessment> custom({
@@ -1211,6 +1569,10 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     Expression<double>? leftValue,
     Expression<int>? sessionId,
     Expression<int>? gripPosition,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<String>? remoteId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1219,6 +1581,10 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
       if (leftValue != null) 'left_value': leftValue,
       if (sessionId != null) 'session_id': sessionId,
       if (gripPosition != null) 'grip_position': gripPosition,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (remoteId != null) 'remote_id': remoteId,
     });
   }
 
@@ -1229,6 +1595,10 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     Value<double?>? leftValue,
     Value<int>? sessionId,
     Value<int?>? gripPosition,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<String>? remoteId,
   }) {
     return AssessmentsCompanion(
       id: id ?? this.id,
@@ -1237,6 +1607,10 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
       leftValue: leftValue ?? this.leftValue,
       sessionId: sessionId ?? this.sessionId,
       gripPosition: gripPosition ?? this.gripPosition,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      remoteId: remoteId ?? this.remoteId,
     );
   }
 
@@ -1261,6 +1635,18 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     if (gripPosition.present) {
       map['grip_position'] = Variable<int>(gripPosition.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
     return map;
   }
 
@@ -1272,7 +1658,11 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
           ..write('rightValue: $rightValue, ')
           ..write('leftValue: $leftValue, ')
           ..write('sessionId: $sessionId, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
@@ -1397,6 +1787,54 @@ class $RepeatersTable extends Repeaters
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1409,6 +1847,10 @@ class $RepeatersTable extends Repeaters
     targetWeigthLeft,
     splitHand,
     gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1500,6 +1942,30 @@ class $RepeatersTable extends Repeaters
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
     return context;
   }
 
@@ -1557,6 +2023,25 @@ class $RepeatersTable extends Repeaters
             DriftSqlType.int,
             data['${effectivePrefix}grip_position'],
           )!,
+      updatedAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}updated_at'],
+          )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}dirty'],
+          )!,
+      remoteId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}remote_id'],
+          )!,
     );
   }
 
@@ -1577,6 +2062,10 @@ class Repeater extends DataClass implements Insertable<Repeater> {
   final double? targetWeigthLeft;
   final bool splitHand;
   final int gripPosition;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
+  final String remoteId;
   const Repeater({
     required this.id,
     required this.sets,
@@ -1588,6 +2077,10 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     this.targetWeigthLeft,
     required this.splitHand,
     required this.gripPosition,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
+    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1606,6 +2099,12 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     }
     map['split_hand'] = Variable<bool>(splitHand);
     map['grip_position'] = Variable<int>(gripPosition);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
+    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -1627,6 +2126,13 @@ class Repeater extends DataClass implements Insertable<Repeater> {
               : Value(targetWeigthLeft),
       splitHand: Value(splitHand),
       gripPosition: Value(gripPosition),
+      updatedAt: Value(updatedAt),
+      deletedAt:
+          deletedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(deletedAt),
+      dirty: Value(dirty),
+      remoteId: Value(remoteId),
     );
   }
 
@@ -1648,6 +2154,10 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       targetWeigthLeft: serializer.fromJson<double?>(json['targetWeigthLeft']),
       splitHand: serializer.fromJson<bool>(json['splitHand']),
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
@@ -1664,6 +2174,10 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       'targetWeigthLeft': serializer.toJson<double?>(targetWeigthLeft),
       'splitHand': serializer.toJson<bool>(splitHand),
       'gripPosition': serializer.toJson<int>(gripPosition),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
@@ -1678,6 +2192,10 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     Value<double?> targetWeigthLeft = const Value.absent(),
     bool? splitHand,
     int? gripPosition,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
+    String? remoteId,
   }) => Repeater(
     id: id ?? this.id,
     sets: sets ?? this.sets,
@@ -1695,6 +2213,10 @@ class Repeater extends DataClass implements Insertable<Repeater> {
             : this.targetWeigthLeft,
     splitHand: splitHand ?? this.splitHand,
     gripPosition: gripPosition ?? this.gripPosition,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
+    remoteId: remoteId ?? this.remoteId,
   );
   Repeater copyWithCompanion(RepeatersCompanion data) {
     return Repeater(
@@ -1717,6 +2239,10 @@ class Repeater extends DataClass implements Insertable<Repeater> {
           data.gripPosition.present
               ? data.gripPosition.value
               : this.gripPosition,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -1732,7 +2258,11 @@ class Repeater extends DataClass implements Insertable<Repeater> {
           ..write('targetWeigthRight: $targetWeigthRight, ')
           ..write('targetWeigthLeft: $targetWeigthLeft, ')
           ..write('splitHand: $splitHand, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
@@ -1749,6 +2279,10 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     targetWeigthLeft,
     splitHand,
     gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -1763,7 +2297,11 @@ class Repeater extends DataClass implements Insertable<Repeater> {
           other.targetWeigthRight == this.targetWeigthRight &&
           other.targetWeigthLeft == this.targetWeigthLeft &&
           other.splitHand == this.splitHand &&
-          other.gripPosition == this.gripPosition);
+          other.gripPosition == this.gripPosition &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty &&
+          other.remoteId == this.remoteId);
 }
 
 class RepeatersCompanion extends UpdateCompanion<Repeater> {
@@ -1777,6 +2315,10 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
   final Value<double?> targetWeigthLeft;
   final Value<bool> splitHand;
   final Value<int> gripPosition;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<String> remoteId;
   const RepeatersCompanion({
     this.id = const Value.absent(),
     this.sets = const Value.absent(),
@@ -1788,6 +2330,10 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     this.targetWeigthLeft = const Value.absent(),
     this.splitHand = const Value.absent(),
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   });
   RepeatersCompanion.insert({
     this.id = const Value.absent(),
@@ -1800,6 +2346,10 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     this.targetWeigthLeft = const Value.absent(),
     required bool splitHand,
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   }) : sets = Value(sets),
        reps = Value(reps),
        worktime = Value(worktime),
@@ -1817,6 +2367,10 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     Expression<double>? targetWeigthLeft,
     Expression<bool>? splitHand,
     Expression<int>? gripPosition,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<String>? remoteId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1829,6 +2383,10 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
       if (targetWeigthLeft != null) 'target_weigth_left': targetWeigthLeft,
       if (splitHand != null) 'split_hand': splitHand,
       if (gripPosition != null) 'grip_position': gripPosition,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (remoteId != null) 'remote_id': remoteId,
     });
   }
 
@@ -1843,6 +2401,10 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     Value<double?>? targetWeigthLeft,
     Value<bool>? splitHand,
     Value<int>? gripPosition,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<String>? remoteId,
   }) {
     return RepeatersCompanion(
       id: id ?? this.id,
@@ -1855,6 +2417,10 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
       targetWeigthLeft: targetWeigthLeft ?? this.targetWeigthLeft,
       splitHand: splitHand ?? this.splitHand,
       gripPosition: gripPosition ?? this.gripPosition,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      remoteId: remoteId ?? this.remoteId,
     );
   }
 
@@ -1891,6 +2457,18 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     if (gripPosition.present) {
       map['grip_position'] = Variable<int>(gripPosition.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
     return map;
   }
 
@@ -1906,7 +2484,11 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
           ..write('targetWeigthRight: $targetWeigthRight, ')
           ..write('targetWeigthLeft: $targetWeigthLeft, ')
           ..write('splitHand: $splitHand, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
@@ -1999,6 +2581,54 @@ class $TrainingsTable extends Trainings
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2007,6 +2637,10 @@ class $TrainingsTable extends Trainings
     isBuiltin,
     isFavorite,
     isAssessment,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2058,6 +2692,30 @@ class $TrainingsTable extends Trainings
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
     return context;
   }
 
@@ -2096,6 +2754,25 @@ class $TrainingsTable extends Trainings
             DriftSqlType.bool,
             data['${effectivePrefix}is_assessment'],
           )!,
+      updatedAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}updated_at'],
+          )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}dirty'],
+          )!,
+      remoteId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}remote_id'],
+          )!,
     );
   }
 
@@ -2112,6 +2789,10 @@ class Training extends DataClass implements Insertable<Training> {
   final bool isBuiltin;
   final bool isFavorite;
   final bool isAssessment;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
+  final String remoteId;
   const Training({
     required this.id,
     required this.name,
@@ -2119,6 +2800,10 @@ class Training extends DataClass implements Insertable<Training> {
     required this.isBuiltin,
     required this.isFavorite,
     required this.isAssessment,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
+    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2131,6 +2816,12 @@ class Training extends DataClass implements Insertable<Training> {
     map['is_builtin'] = Variable<bool>(isBuiltin);
     map['is_favorite'] = Variable<bool>(isFavorite);
     map['is_assessment'] = Variable<bool>(isAssessment);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
+    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -2145,6 +2836,13 @@ class Training extends DataClass implements Insertable<Training> {
       isBuiltin: Value(isBuiltin),
       isFavorite: Value(isFavorite),
       isAssessment: Value(isAssessment),
+      updatedAt: Value(updatedAt),
+      deletedAt:
+          deletedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(deletedAt),
+      dirty: Value(dirty),
+      remoteId: Value(remoteId),
     );
   }
 
@@ -2160,6 +2858,10 @@ class Training extends DataClass implements Insertable<Training> {
       isBuiltin: serializer.fromJson<bool>(json['isBuiltin']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       isAssessment: serializer.fromJson<bool>(json['isAssessment']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
@@ -2172,6 +2874,10 @@ class Training extends DataClass implements Insertable<Training> {
       'isBuiltin': serializer.toJson<bool>(isBuiltin),
       'isFavorite': serializer.toJson<bool>(isFavorite),
       'isAssessment': serializer.toJson<bool>(isAssessment),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
@@ -2182,6 +2888,10 @@ class Training extends DataClass implements Insertable<Training> {
     bool? isBuiltin,
     bool? isFavorite,
     bool? isAssessment,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
+    String? remoteId,
   }) => Training(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -2189,6 +2899,10 @@ class Training extends DataClass implements Insertable<Training> {
     isBuiltin: isBuiltin ?? this.isBuiltin,
     isFavorite: isFavorite ?? this.isFavorite,
     isAssessment: isAssessment ?? this.isAssessment,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
+    remoteId: remoteId ?? this.remoteId,
   );
   Training copyWithCompanion(TrainingsCompanion data) {
     return Training(
@@ -2203,6 +2917,10 @@ class Training extends DataClass implements Insertable<Training> {
           data.isAssessment.present
               ? data.isAssessment.value
               : this.isAssessment,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -2214,14 +2932,28 @@ class Training extends DataClass implements Insertable<Training> {
           ..write('repeaterId: $repeaterId, ')
           ..write('isBuiltin: $isBuiltin, ')
           ..write('isFavorite: $isFavorite, ')
-          ..write('isAssessment: $isAssessment')
+          ..write('isAssessment: $isAssessment, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, repeaterId, isBuiltin, isFavorite, isAssessment);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    repeaterId,
+    isBuiltin,
+    isFavorite,
+    isAssessment,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2231,7 +2963,11 @@ class Training extends DataClass implements Insertable<Training> {
           other.repeaterId == this.repeaterId &&
           other.isBuiltin == this.isBuiltin &&
           other.isFavorite == this.isFavorite &&
-          other.isAssessment == this.isAssessment);
+          other.isAssessment == this.isAssessment &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty &&
+          other.remoteId == this.remoteId);
 }
 
 class TrainingsCompanion extends UpdateCompanion<Training> {
@@ -2241,6 +2977,10 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
   final Value<bool> isBuiltin;
   final Value<bool> isFavorite;
   final Value<bool> isAssessment;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<String> remoteId;
   const TrainingsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -2248,6 +2988,10 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     this.isBuiltin = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.isAssessment = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   });
   TrainingsCompanion.insert({
     this.id = const Value.absent(),
@@ -2256,6 +3000,10 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     this.isBuiltin = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.isAssessment = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Training> custom({
     Expression<int>? id,
@@ -2264,6 +3012,10 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     Expression<bool>? isBuiltin,
     Expression<bool>? isFavorite,
     Expression<bool>? isAssessment,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<String>? remoteId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2272,6 +3024,10 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
       if (isBuiltin != null) 'is_builtin': isBuiltin,
       if (isFavorite != null) 'is_favorite': isFavorite,
       if (isAssessment != null) 'is_assessment': isAssessment,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (remoteId != null) 'remote_id': remoteId,
     });
   }
 
@@ -2282,6 +3038,10 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     Value<bool>? isBuiltin,
     Value<bool>? isFavorite,
     Value<bool>? isAssessment,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<String>? remoteId,
   }) {
     return TrainingsCompanion(
       id: id ?? this.id,
@@ -2290,6 +3050,10 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
       isBuiltin: isBuiltin ?? this.isBuiltin,
       isFavorite: isFavorite ?? this.isFavorite,
       isAssessment: isAssessment ?? this.isAssessment,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      remoteId: remoteId ?? this.remoteId,
     );
   }
 
@@ -2314,6 +3078,18 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     if (isAssessment.present) {
       map['is_assessment'] = Variable<bool>(isAssessment.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
     return map;
   }
 
@@ -2325,7 +3101,11 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
           ..write('repeaterId: $repeaterId, ')
           ..write('isBuiltin: $isBuiltin, ')
           ..write('isFavorite: $isFavorite, ')
-          ..write('isAssessment: $isAssessment')
+          ..write('isAssessment: $isAssessment, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
@@ -2433,6 +3213,54 @@ class $RepTemplatesTable extends RepTemplates
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2443,6 +3271,10 @@ class $RepTemplatesTable extends RepTemplates
     targetWeight,
     index,
     gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2519,6 +3351,30 @@ class $RepTemplatesTable extends RepTemplates
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
     return context;
   }
 
@@ -2568,6 +3424,25 @@ class $RepTemplatesTable extends RepTemplates
             DriftSqlType.int,
             data['${effectivePrefix}grip_position'],
           )!,
+      updatedAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}updated_at'],
+          )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}dirty'],
+          )!,
+      remoteId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}remote_id'],
+          )!,
     );
   }
 
@@ -2586,6 +3461,10 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
   final double targetWeight;
   final int index;
   final int gripPosition;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
+  final String remoteId;
   const RepTemplate({
     required this.id,
     required this.isRest,
@@ -2595,6 +3474,10 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     required this.targetWeight,
     required this.index,
     required this.gripPosition,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
+    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2607,6 +3490,12 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     map['target_weight'] = Variable<double>(targetWeight);
     map['index'] = Variable<int>(index);
     map['grip_position'] = Variable<int>(gripPosition);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
+    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -2620,6 +3509,13 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       targetWeight: Value(targetWeight),
       index: Value(index),
       gripPosition: Value(gripPosition),
+      updatedAt: Value(updatedAt),
+      deletedAt:
+          deletedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(deletedAt),
+      dirty: Value(dirty),
+      remoteId: Value(remoteId),
     );
   }
 
@@ -2637,6 +3533,10 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       targetWeight: serializer.fromJson<double>(json['targetWeight']),
       index: serializer.fromJson<int>(json['index']),
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
@@ -2651,6 +3551,10 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       'targetWeight': serializer.toJson<double>(targetWeight),
       'index': serializer.toJson<int>(index),
       'gripPosition': serializer.toJson<int>(gripPosition),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
@@ -2663,6 +3567,10 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     double? targetWeight,
     int? index,
     int? gripPosition,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
+    String? remoteId,
   }) => RepTemplate(
     id: id ?? this.id,
     isRest: isRest ?? this.isRest,
@@ -2672,6 +3580,10 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     targetWeight: targetWeight ?? this.targetWeight,
     index: index ?? this.index,
     gripPosition: gripPosition ?? this.gripPosition,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
+    remoteId: remoteId ?? this.remoteId,
   );
   RepTemplate copyWithCompanion(RepTemplatesCompanion data) {
     return RepTemplate(
@@ -2690,6 +3602,10 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
           data.gripPosition.present
               ? data.gripPosition.value
               : this.gripPosition,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -2703,7 +3619,11 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
           ..write('trainingId: $trainingId, ')
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
@@ -2718,6 +3638,10 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     targetWeight,
     index,
     gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -2730,7 +3654,11 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
           other.trainingId == this.trainingId &&
           other.targetWeight == this.targetWeight &&
           other.index == this.index &&
-          other.gripPosition == this.gripPosition);
+          other.gripPosition == this.gripPosition &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty &&
+          other.remoteId == this.remoteId);
 }
 
 class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
@@ -2742,6 +3670,10 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
   final Value<double> targetWeight;
   final Value<int> index;
   final Value<int> gripPosition;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<String> remoteId;
   const RepTemplatesCompanion({
     this.id = const Value.absent(),
     this.isRest = const Value.absent(),
@@ -2751,6 +3683,10 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     this.targetWeight = const Value.absent(),
     this.index = const Value.absent(),
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   });
   RepTemplatesCompanion.insert({
     this.id = const Value.absent(),
@@ -2761,6 +3697,10 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     required double targetWeight,
     required int index,
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   }) : isRest = Value(isRest),
        rightHand = Value(rightHand),
        duration = Value(duration),
@@ -2776,6 +3716,10 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     Expression<double>? targetWeight,
     Expression<int>? index,
     Expression<int>? gripPosition,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<String>? remoteId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2786,6 +3730,10 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
       if (targetWeight != null) 'target_weight': targetWeight,
       if (index != null) 'index': index,
       if (gripPosition != null) 'grip_position': gripPosition,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (remoteId != null) 'remote_id': remoteId,
     });
   }
 
@@ -2798,6 +3746,10 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     Value<double>? targetWeight,
     Value<int>? index,
     Value<int>? gripPosition,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<String>? remoteId,
   }) {
     return RepTemplatesCompanion(
       id: id ?? this.id,
@@ -2808,6 +3760,10 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
       targetWeight: targetWeight ?? this.targetWeight,
       index: index ?? this.index,
       gripPosition: gripPosition ?? this.gripPosition,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      remoteId: remoteId ?? this.remoteId,
     );
   }
 
@@ -2838,6 +3794,18 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     if (gripPosition.present) {
       map['grip_position'] = Variable<int>(gripPosition.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
     return map;
   }
 
@@ -2851,7 +3819,11 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
           ..write('trainingId: $trainingId, ')
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
@@ -2969,6 +3941,54 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2980,6 +4000,10 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     targetWeight,
     index,
     gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3067,6 +4091,30 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
     return context;
   }
 
@@ -3121,6 +4169,25 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
             DriftSqlType.int,
             data['${effectivePrefix}grip_position'],
           )!,
+      updatedAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}updated_at'],
+          )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}dirty'],
+          )!,
+      remoteId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}remote_id'],
+          )!,
     );
   }
 
@@ -3140,6 +4207,10 @@ class RepData extends DataClass implements Insertable<RepData> {
   final double targetWeight;
   final int index;
   final int gripPosition;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
+  final String remoteId;
   const RepData({
     required this.id,
     required this.averageWeight,
@@ -3150,6 +4221,10 @@ class RepData extends DataClass implements Insertable<RepData> {
     required this.targetWeight,
     required this.index,
     required this.gripPosition,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
+    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3163,6 +4238,12 @@ class RepData extends DataClass implements Insertable<RepData> {
     map['target_weight'] = Variable<double>(targetWeight);
     map['index'] = Variable<int>(index);
     map['grip_position'] = Variable<int>(gripPosition);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
+    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -3177,6 +4258,13 @@ class RepData extends DataClass implements Insertable<RepData> {
       targetWeight: Value(targetWeight),
       index: Value(index),
       gripPosition: Value(gripPosition),
+      updatedAt: Value(updatedAt),
+      deletedAt:
+          deletedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(deletedAt),
+      dirty: Value(dirty),
+      remoteId: Value(remoteId),
     );
   }
 
@@ -3195,6 +4283,10 @@ class RepData extends DataClass implements Insertable<RepData> {
       targetWeight: serializer.fromJson<double>(json['targetWeight']),
       index: serializer.fromJson<int>(json['index']),
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
@@ -3210,6 +4302,10 @@ class RepData extends DataClass implements Insertable<RepData> {
       'targetWeight': serializer.toJson<double>(targetWeight),
       'index': serializer.toJson<int>(index),
       'gripPosition': serializer.toJson<int>(gripPosition),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
@@ -3223,6 +4319,10 @@ class RepData extends DataClass implements Insertable<RepData> {
     double? targetWeight,
     int? index,
     int? gripPosition,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
+    String? remoteId,
   }) => RepData(
     id: id ?? this.id,
     averageWeight: averageWeight ?? this.averageWeight,
@@ -3233,6 +4333,10 @@ class RepData extends DataClass implements Insertable<RepData> {
     targetWeight: targetWeight ?? this.targetWeight,
     index: index ?? this.index,
     gripPosition: gripPosition ?? this.gripPosition,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
+    remoteId: remoteId ?? this.remoteId,
   );
   RepData copyWithCompanion(RepDatasCompanion data) {
     return RepData(
@@ -3254,6 +4358,10 @@ class RepData extends DataClass implements Insertable<RepData> {
           data.gripPosition.present
               ? data.gripPosition.value
               : this.gripPosition,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -3268,7 +4376,11 @@ class RepData extends DataClass implements Insertable<RepData> {
           ..write('duration: $duration, ')
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
@@ -3284,6 +4396,10 @@ class RepData extends DataClass implements Insertable<RepData> {
     targetWeight,
     index,
     gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -3297,7 +4413,11 @@ class RepData extends DataClass implements Insertable<RepData> {
           other.duration == this.duration &&
           other.targetWeight == this.targetWeight &&
           other.index == this.index &&
-          other.gripPosition == this.gripPosition);
+          other.gripPosition == this.gripPosition &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty &&
+          other.remoteId == this.remoteId);
 }
 
 class RepDatasCompanion extends UpdateCompanion<RepData> {
@@ -3310,6 +4430,10 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
   final Value<double> targetWeight;
   final Value<int> index;
   final Value<int> gripPosition;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<String> remoteId;
   const RepDatasCompanion({
     this.id = const Value.absent(),
     this.averageWeight = const Value.absent(),
@@ -3320,6 +4444,10 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     this.targetWeight = const Value.absent(),
     this.index = const Value.absent(),
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   });
   RepDatasCompanion.insert({
     this.id = const Value.absent(),
@@ -3331,6 +4459,10 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     required double targetWeight,
     required int index,
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   }) : averageWeight = Value(averageWeight),
        sessionId = Value(sessionId),
        isRest = Value(isRest),
@@ -3348,6 +4480,10 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     Expression<double>? targetWeight,
     Expression<int>? index,
     Expression<int>? gripPosition,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<String>? remoteId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3359,6 +4495,10 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       if (targetWeight != null) 'target_weight': targetWeight,
       if (index != null) 'index': index,
       if (gripPosition != null) 'grip_position': gripPosition,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (remoteId != null) 'remote_id': remoteId,
     });
   }
 
@@ -3372,6 +4512,10 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     Value<double>? targetWeight,
     Value<int>? index,
     Value<int>? gripPosition,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<String>? remoteId,
   }) {
     return RepDatasCompanion(
       id: id ?? this.id,
@@ -3383,6 +4527,10 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       targetWeight: targetWeight ?? this.targetWeight,
       index: index ?? this.index,
       gripPosition: gripPosition ?? this.gripPosition,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      remoteId: remoteId ?? this.remoteId,
     );
   }
 
@@ -3416,6 +4564,18 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     if (gripPosition.present) {
       map['grip_position'] = Variable<int>(gripPosition.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
     return map;
   }
 
@@ -3430,7 +4590,11 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
           ..write('duration: $duration, ')
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
@@ -3491,8 +4655,66 @@ class $SensorConfigsTable extends SensorConfigs
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, name, index, tare, coef];
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    index,
+    tare,
+    coef,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3540,6 +4762,30 @@ class $SensorConfigsTable extends SensorConfigs
     } else if (isInserting) {
       context.missing(_coefMeta);
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
     return context;
   }
 
@@ -3574,6 +4820,25 @@ class $SensorConfigsTable extends SensorConfigs
             DriftSqlType.double,
             data['${effectivePrefix}coef'],
           )!,
+      updatedAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}updated_at'],
+          )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}dirty'],
+          )!,
+      remoteId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}remote_id'],
+          )!,
     );
   }
 
@@ -3589,12 +4854,20 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
   final int index;
   final double tare;
   final double coef;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
+  final String remoteId;
   const SensorConfig({
     required this.id,
     required this.name,
     required this.index,
     required this.tare,
     required this.coef,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
+    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3604,6 +4877,12 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
     map['index'] = Variable<int>(index);
     map['tare'] = Variable<double>(tare);
     map['coef'] = Variable<double>(coef);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
+    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -3614,6 +4893,13 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       index: Value(index),
       tare: Value(tare),
       coef: Value(coef),
+      updatedAt: Value(updatedAt),
+      deletedAt:
+          deletedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(deletedAt),
+      dirty: Value(dirty),
+      remoteId: Value(remoteId),
     );
   }
 
@@ -3628,6 +4914,10 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       index: serializer.fromJson<int>(json['index']),
       tare: serializer.fromJson<double>(json['tare']),
       coef: serializer.fromJson<double>(json['coef']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
@@ -3639,6 +4929,10 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       'index': serializer.toJson<int>(index),
       'tare': serializer.toJson<double>(tare),
       'coef': serializer.toJson<double>(coef),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
@@ -3648,12 +4942,20 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
     int? index,
     double? tare,
     double? coef,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
+    String? remoteId,
   }) => SensorConfig(
     id: id ?? this.id,
     name: name ?? this.name,
     index: index ?? this.index,
     tare: tare ?? this.tare,
     coef: coef ?? this.coef,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
+    remoteId: remoteId ?? this.remoteId,
   );
   SensorConfig copyWithCompanion(SensorConfigsCompanion data) {
     return SensorConfig(
@@ -3662,6 +4964,10 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       index: data.index.present ? data.index.value : this.index,
       tare: data.tare.present ? data.tare.value : this.tare,
       coef: data.coef.present ? data.coef.value : this.coef,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -3672,13 +4978,27 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
           ..write('name: $name, ')
           ..write('index: $index, ')
           ..write('tare: $tare, ')
-          ..write('coef: $coef')
+          ..write('coef: $coef, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, index, tare, coef);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    index,
+    tare,
+    coef,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3687,7 +5007,11 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
           other.name == this.name &&
           other.index == this.index &&
           other.tare == this.tare &&
-          other.coef == this.coef);
+          other.coef == this.coef &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty &&
+          other.remoteId == this.remoteId);
 }
 
 class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
@@ -3696,12 +5020,20 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
   final Value<int> index;
   final Value<double> tare;
   final Value<double> coef;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<String> remoteId;
   const SensorConfigsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.index = const Value.absent(),
     this.tare = const Value.absent(),
     this.coef = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   });
   SensorConfigsCompanion.insert({
     this.id = const Value.absent(),
@@ -3709,6 +5041,10 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     required int index,
     required double tare,
     required double coef,
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   }) : name = Value(name),
        index = Value(index),
        tare = Value(tare),
@@ -3719,6 +5055,10 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     Expression<int>? index,
     Expression<double>? tare,
     Expression<double>? coef,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<String>? remoteId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3726,6 +5066,10 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
       if (index != null) 'index': index,
       if (tare != null) 'tare': tare,
       if (coef != null) 'coef': coef,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (remoteId != null) 'remote_id': remoteId,
     });
   }
 
@@ -3735,6 +5079,10 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     Value<int>? index,
     Value<double>? tare,
     Value<double>? coef,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<String>? remoteId,
   }) {
     return SensorConfigsCompanion(
       id: id ?? this.id,
@@ -3742,6 +5090,10 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
       index: index ?? this.index,
       tare: tare ?? this.tare,
       coef: coef ?? this.coef,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      remoteId: remoteId ?? this.remoteId,
     );
   }
 
@@ -3763,6 +5115,18 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     if (coef.present) {
       map['coef'] = Variable<double>(coef.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
     return map;
   }
 
@@ -3773,7 +5137,11 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
           ..write('name: $name, ')
           ..write('index: $index, ')
           ..write('tare: $tare, ')
-          ..write('coef: $coef')
+          ..write('coef: $coef, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
@@ -3847,6 +5215,42 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3854,6 +5258,9 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
     customWeightRight,
     customWeightLeft,
     updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3905,6 +5312,24 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
     return context;
   }
 
@@ -3937,6 +5362,20 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
             DriftSqlType.dateTime,
             data['${effectivePrefix}updated_at'],
           )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}dirty'],
+          )!,
+      remoteId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}remote_id'],
+          )!,
     );
   }
 
@@ -3953,12 +5392,18 @@ class BuiltinTrainingWeight extends DataClass
   final double? customWeightRight;
   final double? customWeightLeft;
   final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
+  final String remoteId;
   const BuiltinTrainingWeight({
     required this.id,
     required this.builtinTrainingId,
     this.customWeightRight,
     this.customWeightLeft,
     required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
+    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3972,6 +5417,11 @@ class BuiltinTrainingWeight extends DataClass
       map['custom_weight_left'] = Variable<double>(customWeightLeft);
     }
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
+    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -3988,6 +5438,12 @@ class BuiltinTrainingWeight extends DataClass
               ? const Value.absent()
               : Value(customWeightLeft),
       updatedAt: Value(updatedAt),
+      deletedAt:
+          deletedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(deletedAt),
+      dirty: Value(dirty),
+      remoteId: Value(remoteId),
     );
   }
 
@@ -4004,6 +5460,9 @@ class BuiltinTrainingWeight extends DataClass
       ),
       customWeightLeft: serializer.fromJson<double?>(json['customWeightLeft']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
@@ -4015,6 +5474,9 @@ class BuiltinTrainingWeight extends DataClass
       'customWeightRight': serializer.toJson<double?>(customWeightRight),
       'customWeightLeft': serializer.toJson<double?>(customWeightLeft),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
@@ -4024,6 +5486,9 @@ class BuiltinTrainingWeight extends DataClass
     Value<double?> customWeightRight = const Value.absent(),
     Value<double?> customWeightLeft = const Value.absent(),
     DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
+    String? remoteId,
   }) => BuiltinTrainingWeight(
     id: id ?? this.id,
     builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
@@ -4036,6 +5501,9 @@ class BuiltinTrainingWeight extends DataClass
             ? customWeightLeft.value
             : this.customWeightLeft,
     updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
+    remoteId: remoteId ?? this.remoteId,
   );
   BuiltinTrainingWeight copyWithCompanion(
     BuiltinTrainingWeightsCompanion data,
@@ -4055,6 +5523,9 @@ class BuiltinTrainingWeight extends DataClass
               ? data.customWeightLeft.value
               : this.customWeightLeft,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -4065,7 +5536,10 @@ class BuiltinTrainingWeight extends DataClass
           ..write('builtinTrainingId: $builtinTrainingId, ')
           ..write('customWeightRight: $customWeightRight, ')
           ..write('customWeightLeft: $customWeightLeft, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
@@ -4077,6 +5551,9 @@ class BuiltinTrainingWeight extends DataClass
     customWeightRight,
     customWeightLeft,
     updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -4086,7 +5563,10 @@ class BuiltinTrainingWeight extends DataClass
           other.builtinTrainingId == this.builtinTrainingId &&
           other.customWeightRight == this.customWeightRight &&
           other.customWeightLeft == this.customWeightLeft &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty &&
+          other.remoteId == this.remoteId);
 }
 
 class BuiltinTrainingWeightsCompanion
@@ -4096,12 +5576,18 @@ class BuiltinTrainingWeightsCompanion
   final Value<double?> customWeightRight;
   final Value<double?> customWeightLeft;
   final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<String> remoteId;
   const BuiltinTrainingWeightsCompanion({
     this.id = const Value.absent(),
     this.builtinTrainingId = const Value.absent(),
     this.customWeightRight = const Value.absent(),
     this.customWeightLeft = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   });
   BuiltinTrainingWeightsCompanion.insert({
     this.id = const Value.absent(),
@@ -4109,6 +5595,9 @@ class BuiltinTrainingWeightsCompanion
     this.customWeightRight = const Value.absent(),
     this.customWeightLeft = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   }) : builtinTrainingId = Value(builtinTrainingId);
   static Insertable<BuiltinTrainingWeight> custom({
     Expression<int>? id,
@@ -4116,6 +5605,9 @@ class BuiltinTrainingWeightsCompanion
     Expression<double>? customWeightRight,
     Expression<double>? customWeightLeft,
     Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<String>? remoteId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -4123,6 +5615,9 @@ class BuiltinTrainingWeightsCompanion
       if (customWeightRight != null) 'custom_weight_right': customWeightRight,
       if (customWeightLeft != null) 'custom_weight_left': customWeightLeft,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (remoteId != null) 'remote_id': remoteId,
     });
   }
 
@@ -4132,6 +5627,9 @@ class BuiltinTrainingWeightsCompanion
     Value<double?>? customWeightRight,
     Value<double?>? customWeightLeft,
     Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<String>? remoteId,
   }) {
     return BuiltinTrainingWeightsCompanion(
       id: id ?? this.id,
@@ -4139,6 +5637,9 @@ class BuiltinTrainingWeightsCompanion
       customWeightRight: customWeightRight ?? this.customWeightRight,
       customWeightLeft: customWeightLeft ?? this.customWeightLeft,
       updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      remoteId: remoteId ?? this.remoteId,
     );
   }
 
@@ -4160,6 +5661,15 @@ class BuiltinTrainingWeightsCompanion
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
     return map;
   }
 
@@ -4170,7 +5680,10 @@ class BuiltinTrainingWeightsCompanion
           ..write('builtinTrainingId: $builtinTrainingId, ')
           ..write('customWeightRight: $customWeightRight, ')
           ..write('customWeightLeft: $customWeightLeft, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
@@ -4193,8 +5706,62 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
-  List<GeneratedColumn> get $columns => [builtinTrainingId];
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
+    'remoteId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
+    'remote_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => const Uuid().v4(),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    builtinTrainingId,
+    updatedAt,
+    deletedAt,
+    dirty,
+    remoteId,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4216,6 +5783,30 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('remote_id')) {
+      context.handle(
+        _remoteIdMeta,
+        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
+      );
+    }
     return context;
   }
 
@@ -4230,6 +5821,25 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
             DriftSqlType.int,
             data['${effectivePrefix}builtin_training_id'],
           )!,
+      updatedAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}updated_at'],
+          )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}dirty'],
+          )!,
+      remoteId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}remote_id'],
+          )!,
     );
   }
 
@@ -4242,17 +5852,40 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
 class PinnedBuiltinTraining extends DataClass
     implements Insertable<PinnedBuiltinTraining> {
   final int builtinTrainingId;
-  const PinnedBuiltinTraining({required this.builtinTrainingId});
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
+  final String remoteId;
+  const PinnedBuiltinTraining({
+    required this.builtinTrainingId,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
+    required this.remoteId,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['builtin_training_id'] = Variable<int>(builtinTrainingId);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
+    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
   PinnedBuiltinTrainingsCompanion toCompanion(bool nullToAbsent) {
     return PinnedBuiltinTrainingsCompanion(
       builtinTrainingId: Value(builtinTrainingId),
+      updatedAt: Value(updatedAt),
+      deletedAt:
+          deletedAt == null && nullToAbsent
+              ? const Value.absent()
+              : Value(deletedAt),
+      dirty: Value(dirty),
+      remoteId: Value(remoteId),
     );
   }
 
@@ -4263,6 +5896,10 @@ class PinnedBuiltinTraining extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PinnedBuiltinTraining(
       builtinTrainingId: serializer.fromJson<int>(json['builtinTrainingId']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
@@ -4270,13 +5907,26 @@ class PinnedBuiltinTraining extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'builtinTrainingId': serializer.toJson<int>(builtinTrainingId),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
-  PinnedBuiltinTraining copyWith({int? builtinTrainingId}) =>
-      PinnedBuiltinTraining(
-        builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
-      );
+  PinnedBuiltinTraining copyWith({
+    int? builtinTrainingId,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
+    String? remoteId,
+  }) => PinnedBuiltinTraining(
+    builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
+    remoteId: remoteId ?? this.remoteId,
+  );
   PinnedBuiltinTraining copyWithCompanion(
     PinnedBuiltinTrainingsCompanion data,
   ) {
@@ -4285,46 +5935,89 @@ class PinnedBuiltinTraining extends DataClass
           data.builtinTrainingId.present
               ? data.builtinTrainingId.value
               : this.builtinTrainingId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('PinnedBuiltinTraining(')
-          ..write('builtinTrainingId: $builtinTrainingId')
+          ..write('builtinTrainingId: $builtinTrainingId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => builtinTrainingId.hashCode;
+  int get hashCode =>
+      Object.hash(builtinTrainingId, updatedAt, deletedAt, dirty, remoteId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is PinnedBuiltinTraining &&
-          other.builtinTrainingId == this.builtinTrainingId);
+          other.builtinTrainingId == this.builtinTrainingId &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty &&
+          other.remoteId == this.remoteId);
 }
 
 class PinnedBuiltinTrainingsCompanion
     extends UpdateCompanion<PinnedBuiltinTraining> {
   final Value<int> builtinTrainingId;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<String> remoteId;
   const PinnedBuiltinTrainingsCompanion({
     this.builtinTrainingId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   });
   PinnedBuiltinTrainingsCompanion.insert({
     this.builtinTrainingId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.remoteId = const Value.absent(),
   });
   static Insertable<PinnedBuiltinTraining> custom({
     Expression<int>? builtinTrainingId,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<String>? remoteId,
   }) {
     return RawValuesInsertable({
       if (builtinTrainingId != null) 'builtin_training_id': builtinTrainingId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (remoteId != null) 'remote_id': remoteId,
     });
   }
 
-  PinnedBuiltinTrainingsCompanion copyWith({Value<int>? builtinTrainingId}) {
+  PinnedBuiltinTrainingsCompanion copyWith({
+    Value<int>? builtinTrainingId,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<String>? remoteId,
+  }) {
     return PinnedBuiltinTrainingsCompanion(
       builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      remoteId: remoteId ?? this.remoteId,
     );
   }
 
@@ -4334,13 +6027,29 @@ class PinnedBuiltinTrainingsCompanion
     if (builtinTrainingId.present) {
       map['builtin_training_id'] = Variable<int>(builtinTrainingId.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (remoteId.present) {
+      map['remote_id'] = Variable<String>(remoteId.value);
+    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('PinnedBuiltinTrainingsCompanion(')
-          ..write('builtinTrainingId: $builtinTrainingId')
+          ..write('builtinTrainingId: $builtinTrainingId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('remoteId: $remoteId')
           ..write(')'))
         .toString();
   }
@@ -4419,6 +6128,10 @@ typedef $$SessionsTableCreateCompanionBuilder =
       Value<int?> repeaterRestTime,
       Value<int?> repeaterSetRest,
       Value<bool?> repeaterSplitHand,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 typedef $$SessionsTableUpdateCompanionBuilder =
     SessionsCompanion Function({
@@ -4436,6 +6149,10 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<int?> repeaterRestTime,
       Value<int?> repeaterSetRest,
       Value<bool?> repeaterSplitHand,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 
 final class $$SessionsTableReferences
@@ -4556,6 +6273,26 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<bool> get repeaterSplitHand => $composableBuilder(
     column: $table.repeaterSplitHand,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4688,6 +6425,26 @@ class $$SessionsTableOrderingComposer
     column: $table.repeaterSplitHand,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SessionsTableAnnotationComposer
@@ -4756,6 +6513,18 @@ class $$SessionsTableAnnotationComposer
     column: $table.repeaterSplitHand,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
 
   Expression<T> assessmentsRefs<T extends Object>(
     Expression<T> Function($$AssessmentsTableAnnotationComposer a) f,
@@ -4850,6 +6619,10 @@ class $$SessionsTableTableManager
                 Value<int?> repeaterRestTime = const Value.absent(),
                 Value<int?> repeaterSetRest = const Value.absent(),
                 Value<bool?> repeaterSplitHand = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => SessionsCompanion(
                 id: id,
                 name: name,
@@ -4865,6 +6638,10 @@ class $$SessionsTableTableManager
                 repeaterRestTime: repeaterRestTime,
                 repeaterSetRest: repeaterSetRest,
                 repeaterSplitHand: repeaterSplitHand,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           createCompanionCallback:
               ({
@@ -4882,6 +6659,10 @@ class $$SessionsTableTableManager
                 Value<int?> repeaterRestTime = const Value.absent(),
                 Value<int?> repeaterSetRest = const Value.absent(),
                 Value<bool?> repeaterSplitHand = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => SessionsCompanion.insert(
                 id: id,
                 name: name,
@@ -4897,6 +6678,10 @@ class $$SessionsTableTableManager
                 repeaterRestTime: repeaterRestTime,
                 repeaterSetRest: repeaterSetRest,
                 repeaterSplitHand: repeaterSplitHand,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           withReferenceMapper:
               (p0) =>
@@ -4991,6 +6776,10 @@ typedef $$AssessmentsTableCreateCompanionBuilder =
       Value<double?> leftValue,
       required int sessionId,
       Value<int?> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 typedef $$AssessmentsTableUpdateCompanionBuilder =
     AssessmentsCompanion Function({
@@ -5000,6 +6789,10 @@ typedef $$AssessmentsTableUpdateCompanionBuilder =
       Value<double?> leftValue,
       Value<int> sessionId,
       Value<int?> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 
 final class $$AssessmentsTableReferences
@@ -5057,6 +6850,26 @@ class $$AssessmentsTableFilterComposer
 
   ColumnFilters<int> get gripPosition => $composableBuilder(
     column: $table.gripPosition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5118,6 +6931,26 @@ class $$AssessmentsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$SessionsTableOrderingComposer get sessionId {
     final $$SessionsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -5169,6 +7002,18 @@ class $$AssessmentsTableAnnotationComposer
     column: $table.gripPosition,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
 
   $$SessionsTableAnnotationComposer get sessionId {
     final $$SessionsTableAnnotationComposer composer = $composerBuilder(
@@ -5229,6 +7074,10 @@ class $$AssessmentsTableTableManager
                 Value<double?> leftValue = const Value.absent(),
                 Value<int> sessionId = const Value.absent(),
                 Value<int?> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => AssessmentsCompanion(
                 id: id,
                 type: type,
@@ -5236,6 +7085,10 @@ class $$AssessmentsTableTableManager
                 leftValue: leftValue,
                 sessionId: sessionId,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           createCompanionCallback:
               ({
@@ -5245,6 +7098,10 @@ class $$AssessmentsTableTableManager
                 Value<double?> leftValue = const Value.absent(),
                 required int sessionId,
                 Value<int?> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => AssessmentsCompanion.insert(
                 id: id,
                 type: type,
@@ -5252,6 +7109,10 @@ class $$AssessmentsTableTableManager
                 leftValue: leftValue,
                 sessionId: sessionId,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           withReferenceMapper:
               (p0) =>
@@ -5334,6 +7195,10 @@ typedef $$RepeatersTableCreateCompanionBuilder =
       Value<double?> targetWeigthLeft,
       required bool splitHand,
       Value<int> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 typedef $$RepeatersTableUpdateCompanionBuilder =
     RepeatersCompanion Function({
@@ -5347,6 +7212,10 @@ typedef $$RepeatersTableUpdateCompanionBuilder =
       Value<double?> targetWeigthLeft,
       Value<bool> splitHand,
       Value<int> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 
 final class $$RepeatersTableReferences
@@ -5428,6 +7297,26 @@ class $$RepeatersTableFilterComposer
 
   ColumnFilters<int> get gripPosition => $composableBuilder(
     column: $table.gripPosition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5515,6 +7404,26 @@ class $$RepeatersTableOrderingComposer
     column: $table.gripPosition,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RepeatersTableAnnotationComposer
@@ -5561,6 +7470,18 @@ class $$RepeatersTableAnnotationComposer
     column: $table.gripPosition,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
 
   Expression<T> trainingsRefs<T extends Object>(
     Expression<T> Function($$TrainingsTableAnnotationComposer a) f,
@@ -5626,6 +7547,10 @@ class $$RepeatersTableTableManager
                 Value<double?> targetWeigthLeft = const Value.absent(),
                 Value<bool> splitHand = const Value.absent(),
                 Value<int> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => RepeatersCompanion(
                 id: id,
                 sets: sets,
@@ -5637,6 +7562,10 @@ class $$RepeatersTableTableManager
                 targetWeigthLeft: targetWeigthLeft,
                 splitHand: splitHand,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           createCompanionCallback:
               ({
@@ -5650,6 +7579,10 @@ class $$RepeatersTableTableManager
                 Value<double?> targetWeigthLeft = const Value.absent(),
                 required bool splitHand,
                 Value<int> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => RepeatersCompanion.insert(
                 id: id,
                 sets: sets,
@@ -5661,6 +7594,10 @@ class $$RepeatersTableTableManager
                 targetWeigthLeft: targetWeigthLeft,
                 splitHand: splitHand,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           withReferenceMapper:
               (p0) =>
@@ -5731,6 +7668,10 @@ typedef $$TrainingsTableCreateCompanionBuilder =
       Value<bool> isBuiltin,
       Value<bool> isFavorite,
       Value<bool> isAssessment,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 typedef $$TrainingsTableUpdateCompanionBuilder =
     TrainingsCompanion Function({
@@ -5740,6 +7681,10 @@ typedef $$TrainingsTableUpdateCompanionBuilder =
       Value<bool> isBuiltin,
       Value<bool> isFavorite,
       Value<bool> isAssessment,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 
 final class $$TrainingsTableReferences
@@ -5846,6 +7791,26 @@ class $$TrainingsTableFilterComposer
 
   ColumnFilters<bool> get isAssessment => $composableBuilder(
     column: $table.isAssessment,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5958,6 +7923,26 @@ class $$TrainingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$RepeatersTableOrderingComposer get repeaterId {
     final $$RepeatersTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -6009,6 +7994,18 @@ class $$TrainingsTableAnnotationComposer
     column: $table.isAssessment,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
 
   $$RepeatersTableAnnotationComposer get repeaterId {
     final $$RepeatersTableAnnotationComposer composer = $composerBuilder(
@@ -6123,6 +8120,10 @@ class $$TrainingsTableTableManager
                 Value<bool> isBuiltin = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<bool> isAssessment = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => TrainingsCompanion(
                 id: id,
                 name: name,
@@ -6130,6 +8131,10 @@ class $$TrainingsTableTableManager
                 isBuiltin: isBuiltin,
                 isFavorite: isFavorite,
                 isAssessment: isAssessment,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           createCompanionCallback:
               ({
@@ -6139,6 +8144,10 @@ class $$TrainingsTableTableManager
                 Value<bool> isBuiltin = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<bool> isAssessment = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => TrainingsCompanion.insert(
                 id: id,
                 name: name,
@@ -6146,6 +8155,10 @@ class $$TrainingsTableTableManager
                 isBuiltin: isBuiltin,
                 isFavorite: isFavorite,
                 isAssessment: isAssessment,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           withReferenceMapper:
               (p0) =>
@@ -6282,6 +8295,10 @@ typedef $$RepTemplatesTableCreateCompanionBuilder =
       required double targetWeight,
       required int index,
       Value<int> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 typedef $$RepTemplatesTableUpdateCompanionBuilder =
     RepTemplatesCompanion Function({
@@ -6293,6 +8310,10 @@ typedef $$RepTemplatesTableUpdateCompanionBuilder =
       Value<double> targetWeight,
       Value<int> index,
       Value<int> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 
 final class $$RepTemplatesTableReferences
@@ -6360,6 +8381,26 @@ class $$RepTemplatesTableFilterComposer
 
   ColumnFilters<int> get gripPosition => $composableBuilder(
     column: $table.gripPosition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6431,6 +8472,26 @@ class $$RepTemplatesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$TrainingsTableOrderingComposer get trainingId {
     final $$TrainingsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -6488,6 +8549,18 @@ class $$RepTemplatesTableAnnotationComposer
     column: $table.gripPosition,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
 
   $$TrainingsTableAnnotationComposer get trainingId {
     final $$TrainingsTableAnnotationComposer composer = $composerBuilder(
@@ -6550,6 +8623,10 @@ class $$RepTemplatesTableTableManager
                 Value<double> targetWeight = const Value.absent(),
                 Value<int> index = const Value.absent(),
                 Value<int> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => RepTemplatesCompanion(
                 id: id,
                 isRest: isRest,
@@ -6559,6 +8636,10 @@ class $$RepTemplatesTableTableManager
                 targetWeight: targetWeight,
                 index: index,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           createCompanionCallback:
               ({
@@ -6570,6 +8651,10 @@ class $$RepTemplatesTableTableManager
                 required double targetWeight,
                 required int index,
                 Value<int> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => RepTemplatesCompanion.insert(
                 id: id,
                 isRest: isRest,
@@ -6579,6 +8664,10 @@ class $$RepTemplatesTableTableManager
                 targetWeight: targetWeight,
                 index: index,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           withReferenceMapper:
               (p0) =>
@@ -6660,6 +8749,10 @@ typedef $$RepDatasTableCreateCompanionBuilder =
       required double targetWeight,
       required int index,
       Value<int> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 typedef $$RepDatasTableUpdateCompanionBuilder =
     RepDatasCompanion Function({
@@ -6672,6 +8765,10 @@ typedef $$RepDatasTableUpdateCompanionBuilder =
       Value<double> targetWeight,
       Value<int> index,
       Value<int> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 
 final class $$RepDatasTableReferences
@@ -6742,6 +8839,26 @@ class $$RepDatasTableFilterComposer
 
   ColumnFilters<int> get gripPosition => $composableBuilder(
     column: $table.gripPosition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6818,6 +8935,26 @@ class $$RepDatasTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$SessionsTableOrderingComposer get sessionId {
     final $$SessionsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -6881,6 +9018,18 @@ class $$RepDatasTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
+
   $$SessionsTableAnnotationComposer get sessionId {
     final $$SessionsTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -6942,6 +9091,10 @@ class $$RepDatasTableTableManager
                 Value<double> targetWeight = const Value.absent(),
                 Value<int> index = const Value.absent(),
                 Value<int> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => RepDatasCompanion(
                 id: id,
                 averageWeight: averageWeight,
@@ -6952,6 +9105,10 @@ class $$RepDatasTableTableManager
                 targetWeight: targetWeight,
                 index: index,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           createCompanionCallback:
               ({
@@ -6964,6 +9121,10 @@ class $$RepDatasTableTableManager
                 required double targetWeight,
                 required int index,
                 Value<int> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => RepDatasCompanion.insert(
                 id: id,
                 averageWeight: averageWeight,
@@ -6974,6 +9135,10 @@ class $$RepDatasTableTableManager
                 targetWeight: targetWeight,
                 index: index,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           withReferenceMapper:
               (p0) =>
@@ -7051,6 +9216,10 @@ typedef $$SensorConfigsTableCreateCompanionBuilder =
       required int index,
       required double tare,
       required double coef,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 typedef $$SensorConfigsTableUpdateCompanionBuilder =
     SensorConfigsCompanion Function({
@@ -7059,6 +9228,10 @@ typedef $$SensorConfigsTableUpdateCompanionBuilder =
       Value<int> index,
       Value<double> tare,
       Value<double> coef,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 
 class $$SensorConfigsTableFilterComposer
@@ -7092,6 +9265,26 @@ class $$SensorConfigsTableFilterComposer
 
   ColumnFilters<double> get coef => $composableBuilder(
     column: $table.coef,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7129,6 +9322,26 @@ class $$SensorConfigsTableOrderingComposer
     column: $table.coef,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SensorConfigsTableAnnotationComposer
@@ -7154,6 +9367,18 @@ class $$SensorConfigsTableAnnotationComposer
 
   GeneratedColumn<double> get coef =>
       $composableBuilder(column: $table.coef, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
 }
 
 class $$SensorConfigsTableTableManager
@@ -7196,12 +9421,20 @@ class $$SensorConfigsTableTableManager
                 Value<int> index = const Value.absent(),
                 Value<double> tare = const Value.absent(),
                 Value<double> coef = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => SensorConfigsCompanion(
                 id: id,
                 name: name,
                 index: index,
                 tare: tare,
                 coef: coef,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           createCompanionCallback:
               ({
@@ -7210,12 +9443,20 @@ class $$SensorConfigsTableTableManager
                 required int index,
                 required double tare,
                 required double coef,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => SensorConfigsCompanion.insert(
                 id: id,
                 name: name,
                 index: index,
                 tare: tare,
                 coef: coef,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           withReferenceMapper:
               (p0) =>
@@ -7256,6 +9497,9 @@ typedef $$BuiltinTrainingWeightsTableCreateCompanionBuilder =
       Value<double?> customWeightRight,
       Value<double?> customWeightLeft,
       Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 typedef $$BuiltinTrainingWeightsTableUpdateCompanionBuilder =
     BuiltinTrainingWeightsCompanion Function({
@@ -7264,6 +9508,9 @@ typedef $$BuiltinTrainingWeightsTableUpdateCompanionBuilder =
       Value<double?> customWeightRight,
       Value<double?> customWeightLeft,
       Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
     });
 
 final class $$BuiltinTrainingWeightsTableReferences
@@ -7331,6 +9578,21 @@ class $$BuiltinTrainingWeightsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$TrainingsTableFilterComposer get builtinTrainingId {
     final $$TrainingsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -7384,6 +9646,21 @@ class $$BuiltinTrainingWeightsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$TrainingsTableOrderingComposer get builtinTrainingId {
     final $$TrainingsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -7432,6 +9709,15 @@ class $$BuiltinTrainingWeightsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
 
   $$TrainingsTableAnnotationComposer get builtinTrainingId {
     final $$TrainingsTableAnnotationComposer composer = $composerBuilder(
@@ -7501,12 +9787,18 @@ class $$BuiltinTrainingWeightsTableTableManager
                 Value<double?> customWeightRight = const Value.absent(),
                 Value<double?> customWeightLeft = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => BuiltinTrainingWeightsCompanion(
                 id: id,
                 builtinTrainingId: builtinTrainingId,
                 customWeightRight: customWeightRight,
                 customWeightLeft: customWeightLeft,
                 updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           createCompanionCallback:
               ({
@@ -7515,12 +9807,18 @@ class $$BuiltinTrainingWeightsTableTableManager
                 Value<double?> customWeightRight = const Value.absent(),
                 Value<double?> customWeightLeft = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
               }) => BuiltinTrainingWeightsCompanion.insert(
                 id: id,
                 builtinTrainingId: builtinTrainingId,
                 customWeightRight: customWeightRight,
                 customWeightLeft: customWeightLeft,
                 updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
               ),
           withReferenceMapper:
               (p0) =>
@@ -7593,9 +9891,21 @@ typedef $$BuiltinTrainingWeightsTableProcessedTableManager =
       PrefetchHooks Function({bool builtinTrainingId})
     >;
 typedef $$PinnedBuiltinTrainingsTableCreateCompanionBuilder =
-    PinnedBuiltinTrainingsCompanion Function({Value<int> builtinTrainingId});
+    PinnedBuiltinTrainingsCompanion Function({
+      Value<int> builtinTrainingId,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
+    });
 typedef $$PinnedBuiltinTrainingsTableUpdateCompanionBuilder =
-    PinnedBuiltinTrainingsCompanion Function({Value<int> builtinTrainingId});
+    PinnedBuiltinTrainingsCompanion Function({
+      Value<int> builtinTrainingId,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<String> remoteId,
+    });
 
 class $$PinnedBuiltinTrainingsTableFilterComposer
     extends Composer<_$AppDatabase, $PinnedBuiltinTrainingsTable> {
@@ -7608,6 +9918,26 @@ class $$PinnedBuiltinTrainingsTableFilterComposer
   });
   ColumnFilters<int> get builtinTrainingId => $composableBuilder(
     column: $table.builtinTrainingId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7625,6 +9955,26 @@ class $$PinnedBuiltinTrainingsTableOrderingComposer
     column: $table.builtinTrainingId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remoteId => $composableBuilder(
+    column: $table.remoteId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PinnedBuiltinTrainingsTableAnnotationComposer
@@ -7640,6 +9990,18 @@ class $$PinnedBuiltinTrainingsTableAnnotationComposer
     column: $table.builtinTrainingId,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<String> get remoteId =>
+      $composableBuilder(column: $table.remoteId, builder: (column) => column);
 }
 
 class $$PinnedBuiltinTrainingsTableTableManager
@@ -7687,15 +10049,33 @@ class $$PinnedBuiltinTrainingsTableTableManager
                 $table: table,
               ),
           updateCompanionCallback:
-              ({Value<int> builtinTrainingId = const Value.absent()}) =>
-                  PinnedBuiltinTrainingsCompanion(
-                    builtinTrainingId: builtinTrainingId,
-                  ),
+              ({
+                Value<int> builtinTrainingId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
+              }) => PinnedBuiltinTrainingsCompanion(
+                builtinTrainingId: builtinTrainingId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
+              ),
           createCompanionCallback:
-              ({Value<int> builtinTrainingId = const Value.absent()}) =>
-                  PinnedBuiltinTrainingsCompanion.insert(
-                    builtinTrainingId: builtinTrainingId,
-                  ),
+              ({
+                Value<int> builtinTrainingId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<String> remoteId = const Value.absent(),
+              }) => PinnedBuiltinTrainingsCompanion.insert(
+                builtinTrainingId: builtinTrainingId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                remoteId: remoteId,
+              ),
           withReferenceMapper:
               (p0) =>
                   p0

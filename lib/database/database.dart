@@ -9,6 +9,7 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:uuid/uuid.dart';
 import '../models/ble_data_model.dart';
 
 part 'database.g.dart';
@@ -33,6 +34,14 @@ class Sessions extends Table {
   late final IntColumn repeaterRestTime = integer().nullable()();
   late final IntColumn repeaterSetRest = integer().nullable()();
   late final BoolColumn repeaterSplitHand = boolean().nullable()();
+
+  // Sync columns
+  late final DateTimeColumn updatedAt =
+      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn deletedAt = dateTime().nullable()();
+  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
+  late final TextColumn remoteId =
+      text().clientDefault(() => const Uuid().v4())();
 }
 
 // Stores the assessments the user has done, with the results.
@@ -46,6 +55,14 @@ class Assessments extends Table {
       integer().nullable().withDefault(
         const Constant(0),
       )(); // 0 = halfCrimp (default)
+
+  // Sync columns
+  late final DateTimeColumn updatedAt =
+      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn deletedAt = dateTime().nullable()();
+  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
+  late final TextColumn remoteId =
+      text().clientDefault(() => const Uuid().v4())();
 }
 
 // Stores the available trainings, including builtins and assessments.
@@ -62,6 +79,14 @@ class Trainings extends Table {
       boolean().withDefault(const Constant(false))();
   late final BoolColumn isAssessment =
       boolean().withDefault(const Constant(false))();
+
+  // Sync columns
+  late final DateTimeColumn updatedAt =
+      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn deletedAt = dateTime().nullable()();
+  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
+  late final TextColumn remoteId =
+      text().clientDefault(() => const Uuid().v4())();
 }
 
 // Stores the repeaters trainings, including builtins and assessments.
@@ -77,6 +102,14 @@ class Repeaters extends Table {
   late final BoolColumn splitHand = boolean()();
   late final IntColumn gripPosition =
       integer().withDefault(const Constant(0))(); // 0 = halfCrimp (default)
+
+  // Sync columns
+  late final DateTimeColumn updatedAt =
+      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn deletedAt = dateTime().nullable()();
+  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
+  late final TextColumn remoteId =
+      text().clientDefault(() => const Uuid().v4())();
 }
 
 // Stores the repetitions for the trainings.
@@ -91,6 +124,14 @@ class RepTemplates extends Table {
   late final IntColumn index = integer()();
   late final IntColumn gripPosition =
       integer().withDefault(const Constant(0))(); // 0 = halfCrimp (default)
+
+  // Sync columns
+  late final DateTimeColumn updatedAt =
+      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn deletedAt = dateTime().nullable()();
+  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
+  late final TextColumn remoteId =
+      text().clientDefault(() => const Uuid().v4())();
 }
 
 // Stores the data for the repetitions done during a session.
@@ -105,6 +146,14 @@ class RepDatas extends Table {
   late final IntColumn index = integer()();
   late final IntColumn gripPosition =
       integer().withDefault(const Constant(0))(); // 0 = halfCrimp (default)
+
+  // Sync columns
+  late final DateTimeColumn updatedAt =
+      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn deletedAt = dateTime().nullable()();
+  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
+  late final TextColumn remoteId =
+      text().clientDefault(() => const Uuid().v4())();
 }
 
 // Stores the IDs of pinned builtin trainings
@@ -113,6 +162,14 @@ class PinnedBuiltinTrainings extends Table {
 
   @override
   Set<Column> get primaryKey => {builtinTrainingId};
+
+  // Sync columns
+  late final DateTimeColumn updatedAt =
+      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn deletedAt = dateTime().nullable()();
+  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
+  late final TextColumn remoteId =
+      text().clientDefault(() => const Uuid().v4())();
 }
 
 // Stores the saved sensor configs.
@@ -122,6 +179,14 @@ class SensorConfigs extends Table {
   late final IntColumn index = integer()();
   late final RealColumn tare = real()();
   late final RealColumn coef = real()();
+
+  // Sync columns
+  late final DateTimeColumn updatedAt =
+      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn deletedAt = dateTime().nullable()();
+  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
+  late final TextColumn remoteId =
+      text().clientDefault(() => const Uuid().v4())();
 }
 
 // Stores custom weights for builtin trainings per user.
@@ -133,6 +198,12 @@ class BuiltinTrainingWeights extends Table {
   late final RealColumn customWeightLeft = real().nullable()();
   late final DateTimeColumn updatedAt =
       dateTime().withDefault(currentDateAndTime)();
+
+  // Sync columns
+  late final DateTimeColumn deletedAt = dateTime().nullable()();
+  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
+  late final TextColumn remoteId =
+      text().clientDefault(() => const Uuid().v4())();
 }
 
 @DriftDatabase(
