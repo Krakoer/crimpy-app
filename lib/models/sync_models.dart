@@ -3,11 +3,13 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'sync_models.freezed.dart';
 part 'sync_models.g.dart';
 
+// ignore_for_file: invalid_annotation_target
+
 @freezed
 abstract class SyncSummaryResponse with _$SyncSummaryResponse {
   const factory SyncSummaryResponse({
-    required String userId,
-    required int lastSyncVersion,
+    @JsonKey(name: 'user_id') required String userId,
+    @JsonKey(name: 'last_sync_version') required int lastSyncVersion,
     required Map<String, int> collections,
   }) = _SyncSummaryResponse;
 
@@ -32,7 +34,7 @@ abstract class PushResponse with _$PushResponse {
   const factory PushResponse({
     required List<String> accepted,
     required List<String> rejected,
-    required int serverVersion,
+    @JsonKey(name: 'server_version') required int serverVersion,
   }) = _PushResponse;
 
   factory PushResponse.fromJson(Map<String, dynamic> json) =>
@@ -43,7 +45,7 @@ abstract class PushResponse with _$PushResponse {
 abstract class PullResponse with _$PullResponse {
   const factory PullResponse({
     required Map<String, dynamic> records,
-    required int serverVersion,
+    @JsonKey(name: 'server_version') required int serverVersion,
   }) = _PullResponse;
 
   factory PullResponse.fromJson(Map<String, dynamic> json) =>

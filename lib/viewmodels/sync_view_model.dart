@@ -33,11 +33,15 @@ class SyncViewModel extends _$SyncViewModel {
   }
 
   Future<void> performSync() async {
+    await future;
+
     state = AsyncData(state.value!.copyWith(status: SyncStatus.syncing));
 
     try {
       final repository = ref.read(syncRepositoryProvider);
       await repository.performSync();
+
+      if (!ref.mounted) return;
 
       final metadata = await gDatabase.getSyncMetadata();
       state = AsyncData(
@@ -52,22 +56,28 @@ class SyncViewModel extends _$SyncViewModel {
       AppLoggerHelper.info('Sync completed successfully');
     } catch (e) {
       AppLoggerHelper.error('Sync failed: $e');
-      state = AsyncData(
-        state.value!.copyWith(
-          status: SyncStatus.error,
-          errorMessage: e.toString(),
-        ),
-      );
+      if (ref.mounted) {
+        state = AsyncData(
+          state.value!.copyWith(
+            status: SyncStatus.error,
+            errorMessage: e.toString(),
+          ),
+        );
+      }
       rethrow;
     }
   }
 
   Future<void> handleFirstLogin() async {
+    await future;
+
     state = AsyncData(state.value!.copyWith(status: SyncStatus.syncing));
 
     try {
       final repository = ref.read(syncRepositoryProvider);
       await repository.handleFirstLogin();
+
+      if (!ref.mounted) return;
 
       final metadata = await gDatabase.getSyncMetadata();
       state = AsyncData(
@@ -80,14 +90,16 @@ class SyncViewModel extends _$SyncViewModel {
       );
 
       AppLoggerHelper.info('First login sync completed successfully');
-    } catch (e) {
-      AppLoggerHelper.error('First login sync failed: $e');
-      state = AsyncData(
-        state.value!.copyWith(
-          status: SyncStatus.error,
-          errorMessage: e.toString(),
-        ),
-      );
+    } catch (e, s) {
+      AppLoggerHelper.error('First login sync failed: $e, stacktrace: $s');
+      if (ref.mounted) {
+        state = AsyncData(
+          state.value!.copyWith(
+            status: SyncStatus.error,
+            errorMessage: e.toString(),
+          ),
+        );
+      }
       rethrow;
     }
   }

@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SyncSummaryResponse {
 
- String get userId; int get lastSyncVersion; Map<String, int> get collections;
+@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'last_sync_version') int get lastSyncVersion; Map<String, int> get collections;
 /// Create a copy of SyncSummaryResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $SyncSummaryResponseCopyWith<$Res>  {
   factory $SyncSummaryResponseCopyWith(SyncSummaryResponse value, $Res Function(SyncSummaryResponse) _then) = _$SyncSummaryResponseCopyWithImpl;
 @useResult
 $Res call({
- String userId, int lastSyncVersion, Map<String, int> collections
+@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'last_sync_version') int lastSyncVersion, Map<String, int> collections
 });
 
 
@@ -155,7 +155,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String userId,  int lastSyncVersion,  Map<String, int> collections)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'last_sync_version')  int lastSyncVersion,  Map<String, int> collections)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SyncSummaryResponse() when $default != null:
 return $default(_that.userId,_that.lastSyncVersion,_that.collections);case _:
@@ -176,7 +176,7 @@ return $default(_that.userId,_that.lastSyncVersion,_that.collections);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String userId,  int lastSyncVersion,  Map<String, int> collections)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'last_sync_version')  int lastSyncVersion,  Map<String, int> collections)  $default,) {final _that = this;
 switch (_that) {
 case _SyncSummaryResponse():
 return $default(_that.userId,_that.lastSyncVersion,_that.collections);case _:
@@ -196,7 +196,7 @@ return $default(_that.userId,_that.lastSyncVersion,_that.collections);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String userId,  int lastSyncVersion,  Map<String, int> collections)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'last_sync_version')  int lastSyncVersion,  Map<String, int> collections)?  $default,) {final _that = this;
 switch (_that) {
 case _SyncSummaryResponse() when $default != null:
 return $default(_that.userId,_that.lastSyncVersion,_that.collections);case _:
@@ -211,11 +211,11 @@ return $default(_that.userId,_that.lastSyncVersion,_that.collections);case _:
 @JsonSerializable()
 
 class _SyncSummaryResponse implements SyncSummaryResponse {
-  const _SyncSummaryResponse({required this.userId, required this.lastSyncVersion, required final  Map<String, int> collections}): _collections = collections;
+  const _SyncSummaryResponse({@JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'last_sync_version') required this.lastSyncVersion, required final  Map<String, int> collections}): _collections = collections;
   factory _SyncSummaryResponse.fromJson(Map<String, dynamic> json) => _$SyncSummaryResponseFromJson(json);
 
-@override final  String userId;
-@override final  int lastSyncVersion;
+@override@JsonKey(name: 'user_id') final  String userId;
+@override@JsonKey(name: 'last_sync_version') final  int lastSyncVersion;
  final  Map<String, int> _collections;
 @override Map<String, int> get collections {
   if (_collections is EqualUnmodifiableMapView) return _collections;
@@ -257,7 +257,7 @@ abstract mixin class _$SyncSummaryResponseCopyWith<$Res> implements $SyncSummary
   factory _$SyncSummaryResponseCopyWith(_SyncSummaryResponse value, $Res Function(_SyncSummaryResponse) _then) = __$SyncSummaryResponseCopyWithImpl;
 @override @useResult
 $Res call({
- String userId, int lastSyncVersion, Map<String, int> collections
+@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'last_sync_version') int lastSyncVersion, Map<String, int> collections
 });
 
 
@@ -559,7 +559,7 @@ as Map<String, dynamic>,
 /// @nodoc
 mixin _$PushResponse {
 
- List<String> get accepted; List<String> get rejected; int get serverVersion;
+ List<String> get accepted; List<String> get rejected;@JsonKey(name: 'server_version') int get serverVersion;
 /// Create a copy of PushResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -592,7 +592,7 @@ abstract mixin class $PushResponseCopyWith<$Res>  {
   factory $PushResponseCopyWith(PushResponse value, $Res Function(PushResponse) _then) = _$PushResponseCopyWithImpl;
 @useResult
 $Res call({
- List<String> accepted, List<String> rejected, int serverVersion
+ List<String> accepted, List<String> rejected,@JsonKey(name: 'server_version') int serverVersion
 });
 
 
@@ -699,7 +699,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<String> accepted,  List<String> rejected,  int serverVersion)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<String> accepted,  List<String> rejected, @JsonKey(name: 'server_version')  int serverVersion)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PushResponse() when $default != null:
 return $default(_that.accepted,_that.rejected,_that.serverVersion);case _:
@@ -720,7 +720,7 @@ return $default(_that.accepted,_that.rejected,_that.serverVersion);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<String> accepted,  List<String> rejected,  int serverVersion)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<String> accepted,  List<String> rejected, @JsonKey(name: 'server_version')  int serverVersion)  $default,) {final _that = this;
 switch (_that) {
 case _PushResponse():
 return $default(_that.accepted,_that.rejected,_that.serverVersion);case _:
@@ -740,7 +740,7 @@ return $default(_that.accepted,_that.rejected,_that.serverVersion);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<String> accepted,  List<String> rejected,  int serverVersion)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<String> accepted,  List<String> rejected, @JsonKey(name: 'server_version')  int serverVersion)?  $default,) {final _that = this;
 switch (_that) {
 case _PushResponse() when $default != null:
 return $default(_that.accepted,_that.rejected,_that.serverVersion);case _:
@@ -755,7 +755,7 @@ return $default(_that.accepted,_that.rejected,_that.serverVersion);case _:
 @JsonSerializable()
 
 class _PushResponse implements PushResponse {
-  const _PushResponse({required final  List<String> accepted, required final  List<String> rejected, required this.serverVersion}): _accepted = accepted,_rejected = rejected;
+  const _PushResponse({required final  List<String> accepted, required final  List<String> rejected, @JsonKey(name: 'server_version') required this.serverVersion}): _accepted = accepted,_rejected = rejected;
   factory _PushResponse.fromJson(Map<String, dynamic> json) => _$PushResponseFromJson(json);
 
  final  List<String> _accepted;
@@ -772,7 +772,7 @@ class _PushResponse implements PushResponse {
   return EqualUnmodifiableListView(_rejected);
 }
 
-@override final  int serverVersion;
+@override@JsonKey(name: 'server_version') final  int serverVersion;
 
 /// Create a copy of PushResponse
 /// with the given fields replaced by the non-null parameter values.
@@ -807,7 +807,7 @@ abstract mixin class _$PushResponseCopyWith<$Res> implements $PushResponseCopyWi
   factory _$PushResponseCopyWith(_PushResponse value, $Res Function(_PushResponse) _then) = __$PushResponseCopyWithImpl;
 @override @useResult
 $Res call({
- List<String> accepted, List<String> rejected, int serverVersion
+ List<String> accepted, List<String> rejected,@JsonKey(name: 'server_version') int serverVersion
 });
 
 
@@ -840,7 +840,7 @@ as int,
 /// @nodoc
 mixin _$PullResponse {
 
- Map<String, dynamic> get records; int get serverVersion;
+ Map<String, dynamic> get records;@JsonKey(name: 'server_version') int get serverVersion;
 /// Create a copy of PullResponse
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -873,7 +873,7 @@ abstract mixin class $PullResponseCopyWith<$Res>  {
   factory $PullResponseCopyWith(PullResponse value, $Res Function(PullResponse) _then) = _$PullResponseCopyWithImpl;
 @useResult
 $Res call({
- Map<String, dynamic> records, int serverVersion
+ Map<String, dynamic> records,@JsonKey(name: 'server_version') int serverVersion
 });
 
 
@@ -979,7 +979,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Map<String, dynamic> records,  int serverVersion)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Map<String, dynamic> records, @JsonKey(name: 'server_version')  int serverVersion)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PullResponse() when $default != null:
 return $default(_that.records,_that.serverVersion);case _:
@@ -1000,7 +1000,7 @@ return $default(_that.records,_that.serverVersion);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Map<String, dynamic> records,  int serverVersion)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Map<String, dynamic> records, @JsonKey(name: 'server_version')  int serverVersion)  $default,) {final _that = this;
 switch (_that) {
 case _PullResponse():
 return $default(_that.records,_that.serverVersion);case _:
@@ -1020,7 +1020,7 @@ return $default(_that.records,_that.serverVersion);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Map<String, dynamic> records,  int serverVersion)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Map<String, dynamic> records, @JsonKey(name: 'server_version')  int serverVersion)?  $default,) {final _that = this;
 switch (_that) {
 case _PullResponse() when $default != null:
 return $default(_that.records,_that.serverVersion);case _:
@@ -1035,7 +1035,7 @@ return $default(_that.records,_that.serverVersion);case _:
 @JsonSerializable()
 
 class _PullResponse implements PullResponse {
-  const _PullResponse({required final  Map<String, dynamic> records, required this.serverVersion}): _records = records;
+  const _PullResponse({required final  Map<String, dynamic> records, @JsonKey(name: 'server_version') required this.serverVersion}): _records = records;
   factory _PullResponse.fromJson(Map<String, dynamic> json) => _$PullResponseFromJson(json);
 
  final  Map<String, dynamic> _records;
@@ -1045,7 +1045,7 @@ class _PullResponse implements PullResponse {
   return EqualUnmodifiableMapView(_records);
 }
 
-@override final  int serverVersion;
+@override@JsonKey(name: 'server_version') final  int serverVersion;
 
 /// Create a copy of PullResponse
 /// with the given fields replaced by the non-null parameter values.
@@ -1080,7 +1080,7 @@ abstract mixin class _$PullResponseCopyWith<$Res> implements $PullResponseCopyWi
   factory _$PullResponseCopyWith(_PullResponse value, $Res Function(_PullResponse) _then) = __$PullResponseCopyWithImpl;
 @override @useResult
 $Res call({
- Map<String, dynamic> records, int serverVersion
+ Map<String, dynamic> records,@JsonKey(name: 'server_version') int serverVersion
 });
 
 

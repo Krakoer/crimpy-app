@@ -52,8 +52,8 @@ class AuthState extends _$AuthState {
       await syncViewModel.handleFirstLogin();
 
       AppLoggerHelper.info('Login successful');
-    } catch (e) {
-      AppLoggerHelper.error('Login error: $e');
+    } catch (e, s) {
+      AppLoggerHelper.error('Login error: $e (stacktrace: $s)');
       rethrow;
     }
   }

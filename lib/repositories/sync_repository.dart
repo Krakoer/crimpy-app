@@ -294,13 +294,13 @@ class SyncRepository {
   Future<void> _wipeLocalDatabase() async {
     AppLoggerHelper.info('Wiping local database');
 
-    await _database.delete(_database.sessions).go();
     await _database.delete(_database.assessments).go();
     await _database.delete(_database.repDatas).go();
+    await _database.delete(_database.sessions).go();
 
+    await _database.delete(_database.repTemplates).go();
     await (_database.delete(_database.trainings)
       ..where((t) => t.isBuiltin.equals(false))).go();
-    await _database.delete(_database.repTemplates).go();
     await _database.delete(_database.repeaters).go();
     await _database.delete(_database.sensorConfigs).go();
     await _database.delete(_database.builtinTrainingWeights).go();

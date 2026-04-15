@@ -12,8 +12,10 @@ class SyncService {
       AppLoggerHelper.info('Fetching sync summary');
       final response = await _apiClient.get('/api/sync/summary');
       return SyncSummaryResponse.fromJson(response.data);
-    } catch (e) {
-      AppLoggerHelper.error('Failed to fetch sync summary: $e');
+    } catch (e, s) {
+      AppLoggerHelper.error(
+        'Failed to fetch sync summary: $e (stacktrace: $s)',
+      );
       rethrow;
     }
   }

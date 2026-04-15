@@ -8,16 +8,16 @@ part of 'sync_models.dart';
 
 _SyncSummaryResponse _$SyncSummaryResponseFromJson(Map<String, dynamic> json) =>
     _SyncSummaryResponse(
-      userId: json['userId'] as String,
-      lastSyncVersion: (json['lastSyncVersion'] as num).toInt(),
+      userId: json['user_id'] as String,
+      lastSyncVersion: (json['last_sync_version'] as num).toInt(),
       collections: Map<String, int>.from(json['collections'] as Map),
     );
 
 Map<String, dynamic> _$SyncSummaryResponseToJson(
   _SyncSummaryResponse instance,
 ) => <String, dynamic>{
-  'userId': instance.userId,
-  'lastSyncVersion': instance.lastSyncVersion,
+  'user_id': instance.userId,
+  'last_sync_version': instance.lastSyncVersion,
   'collections': instance.collections,
 };
 
@@ -33,26 +33,26 @@ _PushResponse _$PushResponseFromJson(Map<String, dynamic> json) =>
           (json['accepted'] as List<dynamic>).map((e) => e as String).toList(),
       rejected:
           (json['rejected'] as List<dynamic>).map((e) => e as String).toList(),
-      serverVersion: (json['serverVersion'] as num).toInt(),
+      serverVersion: (json['server_version'] as num).toInt(),
     );
 
 Map<String, dynamic> _$PushResponseToJson(_PushResponse instance) =>
     <String, dynamic>{
       'accepted': instance.accepted,
       'rejected': instance.rejected,
-      'serverVersion': instance.serverVersion,
+      'server_version': instance.serverVersion,
     };
 
 _PullResponse _$PullResponseFromJson(Map<String, dynamic> json) =>
     _PullResponse(
       records: json['records'] as Map<String, dynamic>,
-      serverVersion: (json['serverVersion'] as num).toInt(),
+      serverVersion: (json['server_version'] as num).toInt(),
     );
 
 Map<String, dynamic> _$PullResponseToJson(_PullResponse instance) =>
     <String, dynamic>{
       'records': instance.records,
-      'serverVersion': instance.serverVersion,
+      'server_version': instance.serverVersion,
     };
 
 _SyncRecord _$SyncRecordFromJson(Map<String, dynamic> json) => _SyncRecord(
