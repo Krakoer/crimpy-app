@@ -206,6 +206,27 @@ class BuiltinTrainingWeights extends Table {
       text().clientDefault(() => const Uuid().v4())();
 }
 
+// Stores the currently authenticated user information.
+class Users extends Table {
+  late final TextColumn id = text()();
+  late final TextColumn email = text()();
+  late final TextColumn firstname = text()();
+  late final TextColumn lastname = text()();
+  late final BoolColumn emailVerified =
+      boolean().withDefault(const Constant(false))();
+  late final BoolColumn isAdmin =
+      boolean().withDefault(const Constant(false))();
+  late final BoolColumn isCoach =
+      boolean().withDefault(const Constant(false))();
+  late final BoolColumn coachValidated =
+      boolean().withDefault(const Constant(false))();
+  late final DateTimeColumn createdAt =
+      dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(
   tables: [
     Sessions,
@@ -217,6 +238,7 @@ class BuiltinTrainingWeights extends Table {
     SensorConfigs,
     BuiltinTrainingWeights,
     PinnedBuiltinTrainings,
+    Users,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -753,8 +775,24 @@ class AppDatabase extends _$AppDatabase {
     return result != null;
   }
 
+  // ------------------------------------- USERS -------------------------------------
+  /// Get the currently logged-in user.
+  Future<User?> getCurrentUser() async {
+    return await (select(users)).getSingleOrNull();
+  }
+
+  /// Save or update the current user.
+  Future<void> saveCurrentUser(UsersCompanion user) async {
+    await into(users).insertOnConflictUpdate(user);
+  }
+
+  /// Delete the current user (on logout).
+  Future<void> deleteCurrentUser() async {
+    await delete(users).go();
+  }
+
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -793,6 +831,10 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(sessions, sessions.repeaterRestTime);
         await m.addColumn(sessions, sessions.repeaterSetRest);
         await m.addColumn(sessions, sessions.repeaterSplitHand);
+      }
+      if (from <= 7 && to >= 8) {
+        // Migration to schema version 8: Add Users table
+        await m.createTable(users);
       }
     },
   );

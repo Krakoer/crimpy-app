@@ -6055,6 +6055,586 @@ class PinnedBuiltinTrainingsCompanion
   }
 }
 
+class $UsersTable extends Users with TableInfo<$UsersTable, User> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UsersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+    'email',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _firstnameMeta = const VerificationMeta(
+    'firstname',
+  );
+  @override
+  late final GeneratedColumn<String> firstname = GeneratedColumn<String>(
+    'firstname',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastnameMeta = const VerificationMeta(
+    'lastname',
+  );
+  @override
+  late final GeneratedColumn<String> lastname = GeneratedColumn<String>(
+    'lastname',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _emailVerifiedMeta = const VerificationMeta(
+    'emailVerified',
+  );
+  @override
+  late final GeneratedColumn<bool> emailVerified = GeneratedColumn<bool>(
+    'email_verified',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("email_verified" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isAdminMeta = const VerificationMeta(
+    'isAdmin',
+  );
+  @override
+  late final GeneratedColumn<bool> isAdmin = GeneratedColumn<bool>(
+    'is_admin',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_admin" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isCoachMeta = const VerificationMeta(
+    'isCoach',
+  );
+  @override
+  late final GeneratedColumn<bool> isCoach = GeneratedColumn<bool>(
+    'is_coach',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_coach" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _coachValidatedMeta = const VerificationMeta(
+    'coachValidated',
+  );
+  @override
+  late final GeneratedColumn<bool> coachValidated = GeneratedColumn<bool>(
+    'coach_validated',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("coach_validated" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    email,
+    firstname,
+    lastname,
+    emailVerified,
+    isAdmin,
+    isCoach,
+    coachValidated,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'users';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<User> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+        _emailMeta,
+        email.isAcceptableOrUnknown(data['email']!, _emailMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_emailMeta);
+    }
+    if (data.containsKey('firstname')) {
+      context.handle(
+        _firstnameMeta,
+        firstname.isAcceptableOrUnknown(data['firstname']!, _firstnameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_firstnameMeta);
+    }
+    if (data.containsKey('lastname')) {
+      context.handle(
+        _lastnameMeta,
+        lastname.isAcceptableOrUnknown(data['lastname']!, _lastnameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lastnameMeta);
+    }
+    if (data.containsKey('email_verified')) {
+      context.handle(
+        _emailVerifiedMeta,
+        emailVerified.isAcceptableOrUnknown(
+          data['email_verified']!,
+          _emailVerifiedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_admin')) {
+      context.handle(
+        _isAdminMeta,
+        isAdmin.isAcceptableOrUnknown(data['is_admin']!, _isAdminMeta),
+      );
+    }
+    if (data.containsKey('is_coach')) {
+      context.handle(
+        _isCoachMeta,
+        isCoach.isAcceptableOrUnknown(data['is_coach']!, _isCoachMeta),
+      );
+    }
+    if (data.containsKey('coach_validated')) {
+      context.handle(
+        _coachValidatedMeta,
+        coachValidated.isAcceptableOrUnknown(
+          data['coach_validated']!,
+          _coachValidatedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  User map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return User(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}id'],
+          )!,
+      email:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}email'],
+          )!,
+      firstname:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}firstname'],
+          )!,
+      lastname:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}lastname'],
+          )!,
+      emailVerified:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}email_verified'],
+          )!,
+      isAdmin:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_admin'],
+          )!,
+      isCoach:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_coach'],
+          )!,
+      coachValidated:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}coach_validated'],
+          )!,
+      createdAt:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.dateTime,
+            data['${effectivePrefix}created_at'],
+          )!,
+    );
+  }
+
+  @override
+  $UsersTable createAlias(String alias) {
+    return $UsersTable(attachedDatabase, alias);
+  }
+}
+
+class User extends DataClass implements Insertable<User> {
+  final String id;
+  final String email;
+  final String firstname;
+  final String lastname;
+  final bool emailVerified;
+  final bool isAdmin;
+  final bool isCoach;
+  final bool coachValidated;
+  final DateTime createdAt;
+  const User({
+    required this.id,
+    required this.email,
+    required this.firstname,
+    required this.lastname,
+    required this.emailVerified,
+    required this.isAdmin,
+    required this.isCoach,
+    required this.coachValidated,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['email'] = Variable<String>(email);
+    map['firstname'] = Variable<String>(firstname);
+    map['lastname'] = Variable<String>(lastname);
+    map['email_verified'] = Variable<bool>(emailVerified);
+    map['is_admin'] = Variable<bool>(isAdmin);
+    map['is_coach'] = Variable<bool>(isCoach);
+    map['coach_validated'] = Variable<bool>(coachValidated);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  UsersCompanion toCompanion(bool nullToAbsent) {
+    return UsersCompanion(
+      id: Value(id),
+      email: Value(email),
+      firstname: Value(firstname),
+      lastname: Value(lastname),
+      emailVerified: Value(emailVerified),
+      isAdmin: Value(isAdmin),
+      isCoach: Value(isCoach),
+      coachValidated: Value(coachValidated),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory User.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return User(
+      id: serializer.fromJson<String>(json['id']),
+      email: serializer.fromJson<String>(json['email']),
+      firstname: serializer.fromJson<String>(json['firstname']),
+      lastname: serializer.fromJson<String>(json['lastname']),
+      emailVerified: serializer.fromJson<bool>(json['emailVerified']),
+      isAdmin: serializer.fromJson<bool>(json['isAdmin']),
+      isCoach: serializer.fromJson<bool>(json['isCoach']),
+      coachValidated: serializer.fromJson<bool>(json['coachValidated']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'email': serializer.toJson<String>(email),
+      'firstname': serializer.toJson<String>(firstname),
+      'lastname': serializer.toJson<String>(lastname),
+      'emailVerified': serializer.toJson<bool>(emailVerified),
+      'isAdmin': serializer.toJson<bool>(isAdmin),
+      'isCoach': serializer.toJson<bool>(isCoach),
+      'coachValidated': serializer.toJson<bool>(coachValidated),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  User copyWith({
+    String? id,
+    String? email,
+    String? firstname,
+    String? lastname,
+    bool? emailVerified,
+    bool? isAdmin,
+    bool? isCoach,
+    bool? coachValidated,
+    DateTime? createdAt,
+  }) => User(
+    id: id ?? this.id,
+    email: email ?? this.email,
+    firstname: firstname ?? this.firstname,
+    lastname: lastname ?? this.lastname,
+    emailVerified: emailVerified ?? this.emailVerified,
+    isAdmin: isAdmin ?? this.isAdmin,
+    isCoach: isCoach ?? this.isCoach,
+    coachValidated: coachValidated ?? this.coachValidated,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  User copyWithCompanion(UsersCompanion data) {
+    return User(
+      id: data.id.present ? data.id.value : this.id,
+      email: data.email.present ? data.email.value : this.email,
+      firstname: data.firstname.present ? data.firstname.value : this.firstname,
+      lastname: data.lastname.present ? data.lastname.value : this.lastname,
+      emailVerified:
+          data.emailVerified.present
+              ? data.emailVerified.value
+              : this.emailVerified,
+      isAdmin: data.isAdmin.present ? data.isAdmin.value : this.isAdmin,
+      isCoach: data.isCoach.present ? data.isCoach.value : this.isCoach,
+      coachValidated:
+          data.coachValidated.present
+              ? data.coachValidated.value
+              : this.coachValidated,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('User(')
+          ..write('id: $id, ')
+          ..write('email: $email, ')
+          ..write('firstname: $firstname, ')
+          ..write('lastname: $lastname, ')
+          ..write('emailVerified: $emailVerified, ')
+          ..write('isAdmin: $isAdmin, ')
+          ..write('isCoach: $isCoach, ')
+          ..write('coachValidated: $coachValidated, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    email,
+    firstname,
+    lastname,
+    emailVerified,
+    isAdmin,
+    isCoach,
+    coachValidated,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is User &&
+          other.id == this.id &&
+          other.email == this.email &&
+          other.firstname == this.firstname &&
+          other.lastname == this.lastname &&
+          other.emailVerified == this.emailVerified &&
+          other.isAdmin == this.isAdmin &&
+          other.isCoach == this.isCoach &&
+          other.coachValidated == this.coachValidated &&
+          other.createdAt == this.createdAt);
+}
+
+class UsersCompanion extends UpdateCompanion<User> {
+  final Value<String> id;
+  final Value<String> email;
+  final Value<String> firstname;
+  final Value<String> lastname;
+  final Value<bool> emailVerified;
+  final Value<bool> isAdmin;
+  final Value<bool> isCoach;
+  final Value<bool> coachValidated;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const UsersCompanion({
+    this.id = const Value.absent(),
+    this.email = const Value.absent(),
+    this.firstname = const Value.absent(),
+    this.lastname = const Value.absent(),
+    this.emailVerified = const Value.absent(),
+    this.isAdmin = const Value.absent(),
+    this.isCoach = const Value.absent(),
+    this.coachValidated = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UsersCompanion.insert({
+    required String id,
+    required String email,
+    required String firstname,
+    required String lastname,
+    this.emailVerified = const Value.absent(),
+    this.isAdmin = const Value.absent(),
+    this.isCoach = const Value.absent(),
+    this.coachValidated = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       email = Value(email),
+       firstname = Value(firstname),
+       lastname = Value(lastname);
+  static Insertable<User> custom({
+    Expression<String>? id,
+    Expression<String>? email,
+    Expression<String>? firstname,
+    Expression<String>? lastname,
+    Expression<bool>? emailVerified,
+    Expression<bool>? isAdmin,
+    Expression<bool>? isCoach,
+    Expression<bool>? coachValidated,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (email != null) 'email': email,
+      if (firstname != null) 'firstname': firstname,
+      if (lastname != null) 'lastname': lastname,
+      if (emailVerified != null) 'email_verified': emailVerified,
+      if (isAdmin != null) 'is_admin': isAdmin,
+      if (isCoach != null) 'is_coach': isCoach,
+      if (coachValidated != null) 'coach_validated': coachValidated,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UsersCompanion copyWith({
+    Value<String>? id,
+    Value<String>? email,
+    Value<String>? firstname,
+    Value<String>? lastname,
+    Value<bool>? emailVerified,
+    Value<bool>? isAdmin,
+    Value<bool>? isCoach,
+    Value<bool>? coachValidated,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return UsersCompanion(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      firstname: firstname ?? this.firstname,
+      lastname: lastname ?? this.lastname,
+      emailVerified: emailVerified ?? this.emailVerified,
+      isAdmin: isAdmin ?? this.isAdmin,
+      isCoach: isCoach ?? this.isCoach,
+      coachValidated: coachValidated ?? this.coachValidated,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
+    if (firstname.present) {
+      map['firstname'] = Variable<String>(firstname.value);
+    }
+    if (lastname.present) {
+      map['lastname'] = Variable<String>(lastname.value);
+    }
+    if (emailVerified.present) {
+      map['email_verified'] = Variable<bool>(emailVerified.value);
+    }
+    if (isAdmin.present) {
+      map['is_admin'] = Variable<bool>(isAdmin.value);
+    }
+    if (isCoach.present) {
+      map['is_coach'] = Variable<bool>(isCoach.value);
+    }
+    if (coachValidated.present) {
+      map['coach_validated'] = Variable<bool>(coachValidated.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UsersCompanion(')
+          ..write('id: $id, ')
+          ..write('email: $email, ')
+          ..write('firstname: $firstname, ')
+          ..write('lastname: $lastname, ')
+          ..write('emailVerified: $emailVerified, ')
+          ..write('isAdmin: $isAdmin, ')
+          ..write('isCoach: $isCoach, ')
+          ..write('coachValidated: $coachValidated, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -6069,6 +6649,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $BuiltinTrainingWeightsTable(this);
   late final $PinnedBuiltinTrainingsTable pinnedBuiltinTrainings =
       $PinnedBuiltinTrainingsTable(this);
+  late final $UsersTable users = $UsersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6083,6 +6664,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sensorConfigs,
     builtinTrainingWeights,
     pinnedBuiltinTrainings,
+    users,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -10112,6 +10694,286 @@ typedef $$PinnedBuiltinTrainingsTableProcessedTableManager =
       PinnedBuiltinTraining,
       PrefetchHooks Function()
     >;
+typedef $$UsersTableCreateCompanionBuilder =
+    UsersCompanion Function({
+      required String id,
+      required String email,
+      required String firstname,
+      required String lastname,
+      Value<bool> emailVerified,
+      Value<bool> isAdmin,
+      Value<bool> isCoach,
+      Value<bool> coachValidated,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$UsersTableUpdateCompanionBuilder =
+    UsersCompanion Function({
+      Value<String> id,
+      Value<String> email,
+      Value<String> firstname,
+      Value<String> lastname,
+      Value<bool> emailVerified,
+      Value<bool> isAdmin,
+      Value<bool> isCoach,
+      Value<bool> coachValidated,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
+  $$UsersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get firstname => $composableBuilder(
+    column: $table.firstname,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastname => $composableBuilder(
+    column: $table.lastname,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get emailVerified => $composableBuilder(
+    column: $table.emailVerified,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isAdmin => $composableBuilder(
+    column: $table.isAdmin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCoach => $composableBuilder(
+    column: $table.isCoach,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get coachValidated => $composableBuilder(
+    column: $table.coachValidated,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$UsersTableOrderingComposer
+    extends Composer<_$AppDatabase, $UsersTable> {
+  $$UsersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get firstname => $composableBuilder(
+    column: $table.firstname,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastname => $composableBuilder(
+    column: $table.lastname,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get emailVerified => $composableBuilder(
+    column: $table.emailVerified,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isAdmin => $composableBuilder(
+    column: $table.isAdmin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCoach => $composableBuilder(
+    column: $table.isCoach,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get coachValidated => $composableBuilder(
+    column: $table.coachValidated,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$UsersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UsersTable> {
+  $$UsersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get firstname =>
+      $composableBuilder(column: $table.firstname, builder: (column) => column);
+
+  GeneratedColumn<String> get lastname =>
+      $composableBuilder(column: $table.lastname, builder: (column) => column);
+
+  GeneratedColumn<bool> get emailVerified => $composableBuilder(
+    column: $table.emailVerified,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isAdmin =>
+      $composableBuilder(column: $table.isAdmin, builder: (column) => column);
+
+  GeneratedColumn<bool> get isCoach =>
+      $composableBuilder(column: $table.isCoach, builder: (column) => column);
+
+  GeneratedColumn<bool> get coachValidated => $composableBuilder(
+    column: $table.coachValidated,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$UsersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UsersTable,
+          User,
+          $$UsersTableFilterComposer,
+          $$UsersTableOrderingComposer,
+          $$UsersTableAnnotationComposer,
+          $$UsersTableCreateCompanionBuilder,
+          $$UsersTableUpdateCompanionBuilder,
+          (User, BaseReferences<_$AppDatabase, $UsersTable, User>),
+          User,
+          PrefetchHooks Function()
+        > {
+  $$UsersTableTableManager(_$AppDatabase db, $UsersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$UsersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$UsersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$UsersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> email = const Value.absent(),
+                Value<String> firstname = const Value.absent(),
+                Value<String> lastname = const Value.absent(),
+                Value<bool> emailVerified = const Value.absent(),
+                Value<bool> isAdmin = const Value.absent(),
+                Value<bool> isCoach = const Value.absent(),
+                Value<bool> coachValidated = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UsersCompanion(
+                id: id,
+                email: email,
+                firstname: firstname,
+                lastname: lastname,
+                emailVerified: emailVerified,
+                isAdmin: isAdmin,
+                isCoach: isCoach,
+                coachValidated: coachValidated,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String email,
+                required String firstname,
+                required String lastname,
+                Value<bool> emailVerified = const Value.absent(),
+                Value<bool> isAdmin = const Value.absent(),
+                Value<bool> isCoach = const Value.absent(),
+                Value<bool> coachValidated = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UsersCompanion.insert(
+                id: id,
+                email: email,
+                firstname: firstname,
+                lastname: lastname,
+                emailVerified: emailVerified,
+                isAdmin: isAdmin,
+                isCoach: isCoach,
+                coachValidated: coachValidated,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$UsersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UsersTable,
+      User,
+      $$UsersTableFilterComposer,
+      $$UsersTableOrderingComposer,
+      $$UsersTableAnnotationComposer,
+      $$UsersTableCreateCompanionBuilder,
+      $$UsersTableUpdateCompanionBuilder,
+      (User, BaseReferences<_$AppDatabase, $UsersTable, User>),
+      User,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -10140,4 +11002,6 @@ class $AppDatabaseManager {
         _db,
         _db.pinnedBuiltinTrainings,
       );
+  $$UsersTableTableManager get users =>
+      $$UsersTableTableManager(_db, _db.users);
 }
