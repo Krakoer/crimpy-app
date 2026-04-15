@@ -1,8 +1,11 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/screens/assessments/pre_run_screen.dart';
+import 'package:crimpy/views/screens/auth/login_screen.dart';
+import 'package:crimpy/views/screens/auth/registration_screen.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/stat_content.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/mvc_grip_position_stat_content.dart';
 import 'package:flutter/material.dart';
@@ -45,10 +48,132 @@ class ProfileContent extends ConsumerWidget {
         assessments.where((a) => a.type == AssessmentType.endurance60).toList()
           ..sort((a, b) => a.date.compareTo(b.date));
 
+    final authState = ref.watch(authStateProvider);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          authState.when(
+            data: (user) {
+              if (user == null) {
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Cloud Sync',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text('Sign in to sync your data across devices'),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => const LoginScreen(),
+                                    ),
+                                  );
+                                },
+                                child: const Text('Login'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) =>
+                                              const RegistrationScreen(),
+                                    ),
+                                  );
+                                },
+                                child: const Text('Register'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              } else {
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          child: Text(
+                            user.firstname[0].toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${user.firstname} ${user.lastname}',
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                user.email,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              if (!user.emailVerified)
+                                Text(
+                                  'Email not verified',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(color: Colors.orange),
+                                ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.logout),
+                          onPressed: () async {
+                            await ref.read(authStateProvider.notifier).logout();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+            },
+            loading:
+                () => const Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+            error:
+                (error, stack) => Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text('Error: $error'),
+                  ),
+                ),
+          ),
+          const SizedBox(height: 16),
+
           // Max Force Section with Grip Position Selection
           MvcGripPositionStatContent(
             mvcByGripPosition: mvcByGripPosition,
