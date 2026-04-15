@@ -368,8 +368,11 @@ class AppDatabase extends _$AppDatabase {
         repeaterRestTime: Value(session.repeaterConfig?.restTime),
         repeaterSetRest: Value(session.repeaterConfig?.setRest),
         repeaterSplitHand: Value(session.repeaterConfig?.splitHand),
+        dirty: const Value(true),
+        updatedAt: Value(DateTime.now()),
       ),
     );
+    await incrementPendingChanges();
     final companions =
         reps.indexed
             .map(
@@ -414,20 +417,36 @@ class AppDatabase extends _$AppDatabase {
         name: Value(session.name),
         sessionType: Value(session.sessionType.index),
         duration: Value(sessionDuration),
+        dirty: const Value(true),
+        updatedAt: Value(DateTime.now()),
       ),
     );
+    await incrementPendingChanges();
   }
 
   /// Delete a session.
-  Future<void> deleteSession(int sessionId) =>
-      (delete(sessions)..where((t) => t.id.equals(sessionId))).go();
+  Future<void> deleteSession(int sessionId) async {
+    await (update(sessions)..where((s) => s.id.equals(sessionId))).write(
+      SessionsCompanion(
+        dirty: const Value(true),
+        updatedAt: Value(DateTime.now()),
+        deletedAt: Value(DateTime.now()),
+      ),
+    );
+    await incrementPendingChanges();
+  }
 
   // ------------------------------------- TRAININGS -------------------------------------
   /// Save a training with its repetitions.
   Future<int> saveTrainingWithReps(String name, List<RepModel> reps) async {
-    final trainingId = await into(
-      trainings,
-    ).insert(TrainingsCompanion(name: Value(name)));
+    final trainingId = await into(trainings).insert(
+      TrainingsCompanion(
+        name: Value(name),
+        dirty: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+    await incrementPendingChanges();
 
     final companions =
         reps
@@ -462,9 +481,14 @@ class AppDatabase extends _$AppDatabase {
         (await (select(trainings)
               ..where((t) => t.id.equals(trainingId))).getSingle())
             .isFavorite;
-    await (update(trainings)..where(
-      (t) => t.id.equals(trainingId),
-    )).write(TrainingsCompanion(isFavorite: Value(!oldFav)));
+    await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
+      TrainingsCompanion(
+        isFavorite: Value(!oldFav),
+        dirty: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+    await incrementPendingChanges();
   }
 
   /// Edit a repetitions along with its reps.
@@ -477,9 +501,14 @@ class AppDatabase extends _$AppDatabase {
   }) async {
     // First update the name if given.
     if (name != null) {
-      await (update(trainings)..where(
-        (t) => t.id.equals(trainingId),
-      )).write(TrainingsCompanion(name: Value(name)));
+      await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
+        TrainingsCompanion(
+          name: Value(name),
+          dirty: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+      await incrementPendingChanges();
     }
 
     // Then delete and recreate the reps, if any.
@@ -509,6 +538,16 @@ class AppDatabase extends _$AppDatabase {
       await batch((batch) {
         batch.insertAll(repTemplates, companions);
       });
+
+      if (name == null) {
+        await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
+          TrainingsCompanion(
+            dirty: const Value(true),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+        await incrementPendingChanges();
+      }
     }
   }
 
@@ -520,9 +559,14 @@ class AppDatabase extends _$AppDatabase {
   }) async {
     // First update the name if any.
     if (name != null) {
-      await (update(trainings)..where(
-        (t) => t.id.equals(trainingId),
-      )).write(TrainingsCompanion(name: Value(name)));
+      await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
+        TrainingsCompanion(
+          name: Value(name),
+          dirty: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+      await incrementPendingChanges();
     }
 
     if (model != null) {
@@ -550,8 +594,20 @@ class AppDatabase extends _$AppDatabase {
           targetWeigthRight: Value(model.weightRight),
           worktime: Value(model.workTime),
           gripPosition: Value(model.gripPosition.index),
+          dirty: const Value(true),
+          updatedAt: Value(DateTime.now()),
         ),
       );
+
+      if (name == null) {
+        await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
+          TrainingsCompanion(
+            dirty: const Value(true),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+        await incrementPendingChanges();
+      }
     }
   }
 
@@ -568,12 +624,21 @@ class AppDatabase extends _$AppDatabase {
         targetWeigthRight: Value(model.weightRight),
         worktime: Value(model.workTime),
         gripPosition: Value(model.gripPosition.index),
+        dirty: const Value(true),
+        updatedAt: Value(DateTime.now()),
       ),
     );
 
-    return await into(trainings).insert(
-      TrainingsCompanion(name: Value(name), repeaterId: Value(repeaterId)),
+    final trainingId = await into(trainings).insert(
+      TrainingsCompanion(
+        name: Value(name),
+        repeaterId: Value(repeaterId),
+        dirty: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ),
     );
+    await incrementPendingChanges();
+    return trainingId;
   }
 
   /// Get a repeater training.
@@ -601,8 +666,16 @@ class AppDatabase extends _$AppDatabase {
           .get();
 
   /// Delete a training.
-  Future<void> deleteTraining(int trainingId) =>
-      (delete(trainings)..where((t) => t.id.equals(trainingId))).go();
+  Future<void> deleteTraining(int trainingId) async {
+    await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
+      TrainingsCompanion(
+        dirty: const Value(true),
+        updatedAt: Value(DateTime.now()),
+        deletedAt: Value(DateTime.now()),
+      ),
+    );
+    await incrementPendingChanges();
+  }
 
   // ------------------------------------- ASSESSMENTS -------------------------------------
   /// Given an assessment with the results and a sessionId, store the assessment into DB.
@@ -616,14 +689,26 @@ class AppDatabase extends _$AppDatabase {
       type: Value(assessment.type.index),
       sessionId: Value(sessionId),
       gripPosition: Value(assessment.gripPosition?.index),
+      dirty: const Value(true),
+      updatedAt: Value(DateTime.now()),
     );
 
-    return await into(assessments).insert(companion);
+    final assessmentId = await into(assessments).insert(companion);
+    await incrementPendingChanges();
+    return assessmentId;
   }
 
   /// Delete an assessment.
-  Future<void> deleteAssessment(int id) =>
-      (delete(assessments)..where((t) => t.id.equals(id))).go();
+  Future<void> deleteAssessment(int id) async {
+    await (update(assessments)..where((a) => a.id.equals(id))).write(
+      AssessmentsCompanion(
+        dirty: const Value(true),
+        updatedAt: Value(DateTime.now()),
+        deletedAt: Value(DateTime.now()),
+      ),
+    );
+    await incrementPendingChanges();
+  }
 
   /// Get the assessments done.
   /// Allow to filter on `type`.
