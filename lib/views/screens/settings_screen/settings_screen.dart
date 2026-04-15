@@ -3,6 +3,7 @@ import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/calibration/start_calibration_dialog.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/create_sensor_config_dialog.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/sensor_settings_list.dart';
+import 'package:crimpy/views/screens/settings_screen/widgets/sync_status_widget.dart';
 import 'package:crimpy/views/widgets/whats_new_dialog.dart';
 import 'package:drift/drift.dart' as dr;
 import 'package:flutter/foundation.dart';
@@ -167,6 +168,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ),
             // List of saved presets.
             SensorSettingsList(),
+            // Sync status section
+            const Divider(thickness: 2, height: 32),
+            const SyncStatusWidget(),
             // App version section
             const Divider(thickness: 2, height: 32),
             Padding(
