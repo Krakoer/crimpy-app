@@ -792,51 +792,18 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
     },
-    onUpgrade: (Migrator m, int from, int to) async {
-      if (from == 1 && to == 2) {
-        // Migration from schema version 1 to 2: Add BuiltinTrainingWeights table
-        await m.createTable(builtinTrainingWeights);
-      }
-      if (from <= 2 && to >= 3) {
-        // Migration to schema version 3: Add gripPosition columns
-        await m.addColumn(repTemplates, repTemplates.gripPosition);
-        await m.addColumn(repDatas, repDatas.gripPosition);
-        await m.addColumn(assessments, assessments.gripPosition);
-      }
-      if (from <= 3 && to >= 4) {
-        // Migration to schema version 4: Add gripPosition to repeaters
-        await m.addColumn(repeaters, repeaters.gripPosition);
-      }
-      if (from <= 4 && to >= 5) {
-        // Migration to schema version 5: Add sessionType and duration to sessions
-        await m.addColumn(sessions, sessions.sessionType);
-        await m.addColumn(sessions, sessions.duration);
-      }
-      if (from <= 5 && to >= 6) {
-        // Migration to schema version 6: Add PinnedBuiltinTrainings table
-        await m.createTable(pinnedBuiltinTrainings);
-      }
-      if (from <= 6 && to >= 7) {
-        // Migration to schema version 7: Add repeater configuration fields to sessions
-        await m.addColumn(sessions, sessions.repeaterSets);
-        await m.addColumn(sessions, sessions.repeaterReps);
-        await m.addColumn(sessions, sessions.repeaterWorkTime);
-        await m.addColumn(sessions, sessions.repeaterRestTime);
-        await m.addColumn(sessions, sessions.repeaterSetRest);
-        await m.addColumn(sessions, sessions.repeaterSplitHand);
-      }
-      if (from <= 7 && to >= 8) {
-        // Migration to schema version 8: Add Users table
-        await m.createTable(users);
-      }
-    },
+    // onUpgrade: stepByStep(
+    //   from1To2: (m, schema) async {
+    //     await m.addColumn(schema.sessions, schema.sessions.test);
+    //   },
+    // ),
   );
 }
 
