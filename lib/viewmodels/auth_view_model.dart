@@ -63,15 +63,13 @@ class AuthState extends _$AuthState {
   }) async {
     try {
       final authService = ref.read(authServiceProvider);
-      final authResponse = await authService.register(
+      await authService.register(
         email: email,
         password: password,
         firstname: firstname,
         lastname: lastname,
-        isCoach: isCoach,
       );
 
-      await _saveUserToDb(authResponse.user);
       ref.invalidateSelf();
 
       AppLoggerHelper.info('Registration successful');
@@ -156,7 +154,10 @@ class AuthState extends _$AuthState {
         isAdmin: drift.Value(user.isAdmin),
         isCoach: drift.Value(user.isCoach),
         coachValidated: drift.Value(user.coachValidated),
-        createdAt: drift.Value(DateTime.parse(user.createdAt)),
+        // DateTime are in format "2006-01-02 15:04:05.999999999 +0000 UTC"
+        createdAt: drift.Value(
+          DateTime.parse(user.createdAt.replaceAll(" +0000 UTC", "")),
+        ),
       ),
     );
   }

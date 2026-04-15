@@ -1,3 +1,4 @@
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
@@ -48,30 +49,6 @@ class _EmailVerificationScreenState
     }
   }
 
-  Future<void> _handleContinue() async {
-    await ref.read(authStateProvider.notifier).refreshUser();
-
-    final authState = await ref.read(authStateProvider.future);
-
-    if (mounted) {
-      if (authState?.emailVerified == true) {
-        Navigator.of(context).popUntil((route) => route.isFirst);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email verified successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email not yet verified. Please check your inbox.'),
-          ),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,15 +86,8 @@ class _EmailVerificationScreenState
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              Container(
+              CrimpyCard.simple(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withAlpha(25),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Theme.of(context).primaryColor.withAlpha(77),
-                  ),
-                ),
                 child: Column(
                   children: [
                     Icon(
@@ -136,7 +106,7 @@ class _EmailVerificationScreenState
                     const Text(
                       '1. Open the verification email\n'
                       '2. Click the verification link\n'
-                      '3. Return to the app after verification',
+                      '3. Return to the app and log in',
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -173,13 +143,6 @@ class _EmailVerificationScreenState
                 ),
               if (_errorMessage != null || _successMessage != null)
                 const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _handleContinue,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text('I\'ve Verified My Email'),
-              ),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -197,13 +160,6 @@ class _EmailVerificationScreenState
                             : const Text('Resend'),
                   ),
                 ],
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).popUntil((route) => route.isFirst);
-                },
-                child: const Text('Skip for now'),
               ),
             ],
           ),

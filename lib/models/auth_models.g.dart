@@ -57,6 +57,15 @@ Map<String, dynamic> _$RegisterRequestToJson(_RegisterRequest instance) =>
       'is_coach': instance.isCoach,
     };
 
+_RegisterResponse _$RegisterResponseFromJson(Map<String, dynamic> json) =>
+    _RegisterResponse(
+      message: json['message'] as String,
+      user: User.fromJson(json['user'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$RegisterResponseToJson(_RegisterResponse instance) =>
+    <String, dynamic>{'message': instance.message, 'user': instance.user};
+
 _AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) =>
     _AuthResponse(
       token: json['token'] as String,

@@ -48,6 +48,17 @@ sealed class RegisterRequest with _$RegisterRequest {
 }
 
 @Freezed(toJson: true)
+sealed class RegisterResponse with _$RegisterResponse {
+  const factory RegisterResponse({
+    required String message,
+    required User user,
+  }) = _RegisterResponse;
+
+  factory RegisterResponse.fromJson(Map<String, dynamic> json) =>
+      _$RegisterResponseFromJson(json);
+}
+
+@Freezed(toJson: true)
 sealed class AuthResponse with _$AuthResponse {
   const factory AuthResponse({required String token, required User user}) =
       _AuthResponse;

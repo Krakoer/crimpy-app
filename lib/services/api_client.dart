@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:crimpy/logger.dart';
+import 'package:crimpy/services/api_exception.dart';
 
 class ApiClient {
   static const String baseUrl = 'https://devapi.crimpy.app';
@@ -77,6 +78,43 @@ class ApiClient {
 
   Dio get dio => _dio;
 
+  String _extractErrorMessage(DioException e) {
+    if (e.response?.data != null) {
+      if (e.response!.data is Map && e.response!.data['error'] != null) {
+        return e.response!.data['error'].toString();
+      }
+      if (e.response!.data is Map && e.response!.data['message'] != null) {
+        return e.response!.data['message'].toString();
+      }
+    }
+
+    switch (e.response?.statusCode) {
+      case 400:
+        return 'Invalid request. Please check your input.';
+      case 401:
+        return 'Invalid credentials. Please try again.';
+      case 403:
+        return 'Access denied.';
+      case 404:
+        return 'Resource not found.';
+      case 409:
+        return 'This email is already registered.';
+      case 429:
+        return 'Too many requests. Please try again later.';
+      case 500:
+        return 'Server error. Please try again later.';
+      default:
+        if (e.type == DioExceptionType.connectionTimeout ||
+            e.type == DioExceptionType.receiveTimeout) {
+          return 'Connection timeout. Please check your internet connection.';
+        }
+        if (e.type == DioExceptionType.connectionError) {
+          return 'Connection error. Please check your internet connection.';
+        }
+        return 'An unexpected error occurred. Please try again.';
+    }
+  }
+
   Future<Response> get(
     String path, {
     Map<String, dynamic>? queryParameters,
@@ -89,8 +127,9 @@ class ApiClient {
         options: options,
       );
     } on DioException catch (e) {
-      AppLoggerHelper.error('GET $path failed: ${e.message}');
-      rethrow;
+      final message = _extractErrorMessage(e);
+      AppLoggerHelper.error('GET $path failed: $message');
+      throw ApiException(message, statusCode: e.response?.statusCode);
     }
   }
 
@@ -108,8 +147,9 @@ class ApiClient {
         options: options,
       );
     } on DioException catch (e) {
-      AppLoggerHelper.error('POST $path failed: ${e.message}');
-      rethrow;
+      final message = _extractErrorMessage(e);
+      AppLoggerHelper.error('POST $path failed: $message');
+      throw ApiException(message, statusCode: e.response?.statusCode);
     }
   }
 
@@ -127,8 +167,9 @@ class ApiClient {
         options: options,
       );
     } on DioException catch (e) {
-      AppLoggerHelper.error('PUT $path failed: ${e.message}');
-      rethrow;
+      final message = _extractErrorMessage(e);
+      AppLoggerHelper.error('PUT $path failed: $message');
+      throw ApiException(message, statusCode: e.response?.statusCode);
     }
   }
 
@@ -146,8 +187,9 @@ class ApiClient {
         options: options,
       );
     } on DioException catch (e) {
-      AppLoggerHelper.error('DELETE $path failed: ${e.message}');
-      rethrow;
+      final message = _extractErrorMessage(e);
+      AppLoggerHelper.error('DELETE $path failed: $message');
+      throw ApiException(message, statusCode: e.response?.statusCode);
     }
   }
 }
