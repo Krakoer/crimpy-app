@@ -313,4 +313,9 @@ class SyncRepository {
     final metadata = await _database.getSyncMetadata();
     return metadata?.pendingChanges ?? 0;
   }
+
+  Future<void> wipeLocalDatabase() async {
+    await _wipeLocalDatabase();
+    await _database.delete(_database.syncMetadata).go();
+  }
 }

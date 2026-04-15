@@ -3,6 +3,7 @@ import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/auth_models.dart' as auth_models;
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/auth_service.dart';
+import 'package:crimpy/viewmodels/sync_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -46,6 +47,9 @@ class AuthState extends _$AuthState {
 
       await _saveUserToDb(authResponse.user);
       ref.invalidateSelf();
+
+      final syncViewModel = ref.read(syncViewModelProvider.notifier);
+      await syncViewModel.handleFirstLogin();
 
       AppLoggerHelper.info('Login successful');
     } catch (e) {
@@ -133,6 +137,10 @@ class AuthState extends _$AuthState {
     try {
       final authService = ref.read(authServiceProvider);
       await authService.logout();
+
+      final syncRepository = ref.read(syncRepositoryProvider);
+      await syncRepository.wipeLocalDatabase();
+
       await gDatabase.deleteCurrentUser();
       ref.invalidateSelf();
 
