@@ -227,6 +227,16 @@ class Users extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// Stores sync metadata for tracking sync state.
+class SyncMetadata extends Table {
+  late final IntColumn id = integer().autoIncrement()();
+  late final IntColumn lastSyncVersion =
+      integer().withDefault(const Constant(0))();
+  late final DateTimeColumn lastSyncTime = dateTime().nullable()();
+  late final IntColumn pendingChanges =
+      integer().withDefault(const Constant(0))();
+}
+
 @DriftDatabase(
   tables: [
     Sessions,
@@ -239,6 +249,7 @@ class Users extends Table {
     BuiltinTrainingWeights,
     PinnedBuiltinTrainings,
     Users,
+    SyncMetadata,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -789,6 +800,62 @@ class AppDatabase extends _$AppDatabase {
   /// Delete the current user (on logout).
   Future<void> deleteCurrentUser() async {
     await delete(users).go();
+  }
+
+  // ------------------------------------- SYNC METADATA -------------------------------------
+  /// Get the sync metadata.
+  Future<SyncMetadataData?> getSyncMetadata() async {
+    return await (select(syncMetadata)).getSingleOrNull();
+  }
+
+  /// Save or update sync metadata.
+  Future<void> saveSyncMetadata({
+    required int lastSyncVersion,
+    DateTime? lastSyncTime,
+    int? pendingChanges,
+  }) async {
+    final existing = await getSyncMetadata();
+    if (existing != null) {
+      await (update(syncMetadata)
+        ..where((s) => s.id.equals(existing.id))).write(
+        SyncMetadataCompanion(
+          lastSyncVersion: Value(lastSyncVersion),
+          lastSyncTime: Value(lastSyncTime),
+          pendingChanges: Value(pendingChanges ?? existing.pendingChanges),
+        ),
+      );
+    } else {
+      await into(syncMetadata).insert(
+        SyncMetadataCompanion.insert(
+          lastSyncVersion: Value(lastSyncVersion),
+          lastSyncTime: Value(lastSyncTime),
+          pendingChanges: Value(pendingChanges ?? 0),
+        ),
+      );
+    }
+  }
+
+  /// Increment pending changes count.
+  Future<void> incrementPendingChanges() async {
+    final existing = await getSyncMetadata();
+    final currentCount = existing?.pendingChanges ?? 0;
+    await saveSyncMetadata(
+      lastSyncVersion: existing?.lastSyncVersion ?? 0,
+      lastSyncTime: existing?.lastSyncTime,
+      pendingChanges: currentCount + 1,
+    );
+  }
+
+  /// Reset pending changes count.
+  Future<void> resetPendingChanges() async {
+    final existing = await getSyncMetadata();
+    if (existing != null) {
+      await saveSyncMetadata(
+        lastSyncVersion: existing.lastSyncVersion,
+        lastSyncTime: existing.lastSyncTime,
+        pendingChanges: 0,
+      );
+    }
   }
 
   @override

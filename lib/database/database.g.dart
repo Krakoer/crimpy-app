@@ -6635,6 +6635,333 @@ class UsersCompanion extends UpdateCompanion<User> {
   }
 }
 
+class $SyncMetadataTable extends SyncMetadata
+    with TableInfo<$SyncMetadataTable, SyncMetadataData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncMetadataTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _lastSyncVersionMeta = const VerificationMeta(
+    'lastSyncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> lastSyncVersion = GeneratedColumn<int>(
+    'last_sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastSyncTimeMeta = const VerificationMeta(
+    'lastSyncTime',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastSyncTime = GeneratedColumn<DateTime>(
+    'last_sync_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _pendingChangesMeta = const VerificationMeta(
+    'pendingChanges',
+  );
+  @override
+  late final GeneratedColumn<int> pendingChanges = GeneratedColumn<int>(
+    'pending_changes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    lastSyncVersion,
+    lastSyncTime,
+    pendingChanges,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_metadata';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncMetadataData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('last_sync_version')) {
+      context.handle(
+        _lastSyncVersionMeta,
+        lastSyncVersion.isAcceptableOrUnknown(
+          data['last_sync_version']!,
+          _lastSyncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_sync_time')) {
+      context.handle(
+        _lastSyncTimeMeta,
+        lastSyncTime.isAcceptableOrUnknown(
+          data['last_sync_time']!,
+          _lastSyncTimeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('pending_changes')) {
+      context.handle(
+        _pendingChangesMeta,
+        pendingChanges.isAcceptableOrUnknown(
+          data['pending_changes']!,
+          _pendingChangesMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SyncMetadataData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncMetadataData(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}id'],
+          )!,
+      lastSyncVersion:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}last_sync_version'],
+          )!,
+      lastSyncTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_sync_time'],
+      ),
+      pendingChanges:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}pending_changes'],
+          )!,
+    );
+  }
+
+  @override
+  $SyncMetadataTable createAlias(String alias) {
+    return $SyncMetadataTable(attachedDatabase, alias);
+  }
+}
+
+class SyncMetadataData extends DataClass
+    implements Insertable<SyncMetadataData> {
+  final int id;
+  final int lastSyncVersion;
+  final DateTime? lastSyncTime;
+  final int pendingChanges;
+  const SyncMetadataData({
+    required this.id,
+    required this.lastSyncVersion,
+    this.lastSyncTime,
+    required this.pendingChanges,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['last_sync_version'] = Variable<int>(lastSyncVersion);
+    if (!nullToAbsent || lastSyncTime != null) {
+      map['last_sync_time'] = Variable<DateTime>(lastSyncTime);
+    }
+    map['pending_changes'] = Variable<int>(pendingChanges);
+    return map;
+  }
+
+  SyncMetadataCompanion toCompanion(bool nullToAbsent) {
+    return SyncMetadataCompanion(
+      id: Value(id),
+      lastSyncVersion: Value(lastSyncVersion),
+      lastSyncTime:
+          lastSyncTime == null && nullToAbsent
+              ? const Value.absent()
+              : Value(lastSyncTime),
+      pendingChanges: Value(pendingChanges),
+    );
+  }
+
+  factory SyncMetadataData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncMetadataData(
+      id: serializer.fromJson<int>(json['id']),
+      lastSyncVersion: serializer.fromJson<int>(json['lastSyncVersion']),
+      lastSyncTime: serializer.fromJson<DateTime?>(json['lastSyncTime']),
+      pendingChanges: serializer.fromJson<int>(json['pendingChanges']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'lastSyncVersion': serializer.toJson<int>(lastSyncVersion),
+      'lastSyncTime': serializer.toJson<DateTime?>(lastSyncTime),
+      'pendingChanges': serializer.toJson<int>(pendingChanges),
+    };
+  }
+
+  SyncMetadataData copyWith({
+    int? id,
+    int? lastSyncVersion,
+    Value<DateTime?> lastSyncTime = const Value.absent(),
+    int? pendingChanges,
+  }) => SyncMetadataData(
+    id: id ?? this.id,
+    lastSyncVersion: lastSyncVersion ?? this.lastSyncVersion,
+    lastSyncTime: lastSyncTime.present ? lastSyncTime.value : this.lastSyncTime,
+    pendingChanges: pendingChanges ?? this.pendingChanges,
+  );
+  SyncMetadataData copyWithCompanion(SyncMetadataCompanion data) {
+    return SyncMetadataData(
+      id: data.id.present ? data.id.value : this.id,
+      lastSyncVersion:
+          data.lastSyncVersion.present
+              ? data.lastSyncVersion.value
+              : this.lastSyncVersion,
+      lastSyncTime:
+          data.lastSyncTime.present
+              ? data.lastSyncTime.value
+              : this.lastSyncTime,
+      pendingChanges:
+          data.pendingChanges.present
+              ? data.pendingChanges.value
+              : this.pendingChanges,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncMetadataData(')
+          ..write('id: $id, ')
+          ..write('lastSyncVersion: $lastSyncVersion, ')
+          ..write('lastSyncTime: $lastSyncTime, ')
+          ..write('pendingChanges: $pendingChanges')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, lastSyncVersion, lastSyncTime, pendingChanges);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncMetadataData &&
+          other.id == this.id &&
+          other.lastSyncVersion == this.lastSyncVersion &&
+          other.lastSyncTime == this.lastSyncTime &&
+          other.pendingChanges == this.pendingChanges);
+}
+
+class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
+  final Value<int> id;
+  final Value<int> lastSyncVersion;
+  final Value<DateTime?> lastSyncTime;
+  final Value<int> pendingChanges;
+  const SyncMetadataCompanion({
+    this.id = const Value.absent(),
+    this.lastSyncVersion = const Value.absent(),
+    this.lastSyncTime = const Value.absent(),
+    this.pendingChanges = const Value.absent(),
+  });
+  SyncMetadataCompanion.insert({
+    this.id = const Value.absent(),
+    this.lastSyncVersion = const Value.absent(),
+    this.lastSyncTime = const Value.absent(),
+    this.pendingChanges = const Value.absent(),
+  });
+  static Insertable<SyncMetadataData> custom({
+    Expression<int>? id,
+    Expression<int>? lastSyncVersion,
+    Expression<DateTime>? lastSyncTime,
+    Expression<int>? pendingChanges,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (lastSyncVersion != null) 'last_sync_version': lastSyncVersion,
+      if (lastSyncTime != null) 'last_sync_time': lastSyncTime,
+      if (pendingChanges != null) 'pending_changes': pendingChanges,
+    });
+  }
+
+  SyncMetadataCompanion copyWith({
+    Value<int>? id,
+    Value<int>? lastSyncVersion,
+    Value<DateTime?>? lastSyncTime,
+    Value<int>? pendingChanges,
+  }) {
+    return SyncMetadataCompanion(
+      id: id ?? this.id,
+      lastSyncVersion: lastSyncVersion ?? this.lastSyncVersion,
+      lastSyncTime: lastSyncTime ?? this.lastSyncTime,
+      pendingChanges: pendingChanges ?? this.pendingChanges,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (lastSyncVersion.present) {
+      map['last_sync_version'] = Variable<int>(lastSyncVersion.value);
+    }
+    if (lastSyncTime.present) {
+      map['last_sync_time'] = Variable<DateTime>(lastSyncTime.value);
+    }
+    if (pendingChanges.present) {
+      map['pending_changes'] = Variable<int>(pendingChanges.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncMetadataCompanion(')
+          ..write('id: $id, ')
+          ..write('lastSyncVersion: $lastSyncVersion, ')
+          ..write('lastSyncTime: $lastSyncTime, ')
+          ..write('pendingChanges: $pendingChanges')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -6650,6 +6977,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PinnedBuiltinTrainingsTable pinnedBuiltinTrainings =
       $PinnedBuiltinTrainingsTable(this);
   late final $UsersTable users = $UsersTable(this);
+  late final $SyncMetadataTable syncMetadata = $SyncMetadataTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6665,6 +6993,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     builtinTrainingWeights,
     pinnedBuiltinTrainings,
     users,
+    syncMetadata,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -10974,6 +11303,195 @@ typedef $$UsersTableProcessedTableManager =
       User,
       PrefetchHooks Function()
     >;
+typedef $$SyncMetadataTableCreateCompanionBuilder =
+    SyncMetadataCompanion Function({
+      Value<int> id,
+      Value<int> lastSyncVersion,
+      Value<DateTime?> lastSyncTime,
+      Value<int> pendingChanges,
+    });
+typedef $$SyncMetadataTableUpdateCompanionBuilder =
+    SyncMetadataCompanion Function({
+      Value<int> id,
+      Value<int> lastSyncVersion,
+      Value<DateTime?> lastSyncTime,
+      Value<int> pendingChanges,
+    });
+
+class $$SyncMetadataTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastSyncVersion => $composableBuilder(
+    column: $table.lastSyncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSyncTime => $composableBuilder(
+    column: $table.lastSyncTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pendingChanges => $composableBuilder(
+    column: $table.pendingChanges,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SyncMetadataTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastSyncVersion => $composableBuilder(
+    column: $table.lastSyncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSyncTime => $composableBuilder(
+    column: $table.lastSyncTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pendingChanges => $composableBuilder(
+    column: $table.pendingChanges,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SyncMetadataTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get lastSyncVersion => $composableBuilder(
+    column: $table.lastSyncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastSyncTime => $composableBuilder(
+    column: $table.lastSyncTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get pendingChanges => $composableBuilder(
+    column: $table.pendingChanges,
+    builder: (column) => column,
+  );
+}
+
+class $$SyncMetadataTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SyncMetadataTable,
+          SyncMetadataData,
+          $$SyncMetadataTableFilterComposer,
+          $$SyncMetadataTableOrderingComposer,
+          $$SyncMetadataTableAnnotationComposer,
+          $$SyncMetadataTableCreateCompanionBuilder,
+          $$SyncMetadataTableUpdateCompanionBuilder,
+          (
+            SyncMetadataData,
+            BaseReferences<_$AppDatabase, $SyncMetadataTable, SyncMetadataData>,
+          ),
+          SyncMetadataData,
+          PrefetchHooks Function()
+        > {
+  $$SyncMetadataTableTableManager(_$AppDatabase db, $SyncMetadataTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$SyncMetadataTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$SyncMetadataTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () =>
+                  $$SyncMetadataTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> lastSyncVersion = const Value.absent(),
+                Value<DateTime?> lastSyncTime = const Value.absent(),
+                Value<int> pendingChanges = const Value.absent(),
+              }) => SyncMetadataCompanion(
+                id: id,
+                lastSyncVersion: lastSyncVersion,
+                lastSyncTime: lastSyncTime,
+                pendingChanges: pendingChanges,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> lastSyncVersion = const Value.absent(),
+                Value<DateTime?> lastSyncTime = const Value.absent(),
+                Value<int> pendingChanges = const Value.absent(),
+              }) => SyncMetadataCompanion.insert(
+                id: id,
+                lastSyncVersion: lastSyncVersion,
+                lastSyncTime: lastSyncTime,
+                pendingChanges: pendingChanges,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          BaseReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SyncMetadataTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SyncMetadataTable,
+      SyncMetadataData,
+      $$SyncMetadataTableFilterComposer,
+      $$SyncMetadataTableOrderingComposer,
+      $$SyncMetadataTableAnnotationComposer,
+      $$SyncMetadataTableCreateCompanionBuilder,
+      $$SyncMetadataTableUpdateCompanionBuilder,
+      (
+        SyncMetadataData,
+        BaseReferences<_$AppDatabase, $SyncMetadataTable, SyncMetadataData>,
+      ),
+      SyncMetadataData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -11004,4 +11522,6 @@ class $AppDatabaseManager {
       );
   $$UsersTableTableManager get users =>
       $$UsersTableTableManager(_db, _db.users);
+  $$SyncMetadataTableTableManager get syncMetadata =>
+      $$SyncMetadataTableTableManager(_db, _db.syncMetadata);
 }
