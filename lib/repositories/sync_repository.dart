@@ -18,10 +18,10 @@ class SyncRepository {
 
       await _pushLocalChanges();
 
-      await _pullRemoteChanges(lastSyncVersion);
+      final newServerVersion = await _pullRemoteChanges(lastSyncVersion);
 
       await _database.saveSyncMetadata(
-        lastSyncVersion: lastSyncVersion,
+        lastSyncVersion: newServerVersion,
         lastSyncTime: DateTime.now(),
       );
       await _database.resetPendingChanges();
@@ -113,18 +113,19 @@ class SyncRepository {
     await _clearDirtyFlags(response.rejected);
   }
 
-  Future<void> _pullRemoteChanges(int sinceVersion) async {
+  Future<int> _pullRemoteChanges(int sinceVersion) async {
     final pullResponse = await _syncService.pullChanges(
       sinceVersion: sinceVersion,
     );
 
     if ((pullResponse.records as Map).isEmpty) {
       AppLoggerHelper.info('No remote changes to pull');
-      return;
+      return pullResponse.serverVersion;
     }
 
     await _applyRemoteRecords(pullResponse.records);
     AppLoggerHelper.info('Remote changes applied');
+    return pullResponse.serverVersion;
   }
 
   Future<Map<String, dynamic>> _collectAllLocalRecords() async {
