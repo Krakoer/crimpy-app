@@ -184,6 +184,60 @@ class SyncRepository {
   Future<Map<String, dynamic>> _collectDirtyRecords() async {
     final Map<String, dynamic> collections = {};
 
+    final repeaters =
+        await (_database.select(_database.repeaters)
+          ..where((r) => r.dirty.equals(true))).get();
+    if (repeaters.isNotEmpty) {
+      collections['repeaters'] =
+          repeaters
+              .map(
+                (r) => {
+                  'id': r.remoteId,
+                  'sets': r.sets,
+                  'reps': r.reps,
+                  'worktime': r.worktime,
+                  'resttime': r.resttime,
+                  'set_rest': r.setRest,
+                  'target_weight_right': r.targetWeigthRight,
+                  'target_weight_left': r.targetWeigthLeft,
+                  'split_hand': r.splitHand,
+                  'grip_position': r.gripPosition,
+                  'updated_at': r.updatedAt.toIso8601String(),
+                  'deleted_at': r.deletedAt?.toIso8601String(),
+                  'created_at': r.createdAt?.toIso8601String(),
+                },
+              )
+              .toList();
+    }
+
+    final trainings =
+        await (_database.select(_database.trainings)..where(
+          (t) => t.dirty.equals(true) & t.isBuiltin.equals(false),
+        )).get();
+    if (trainings.isNotEmpty) {
+      final trainingMaps = <Map<String, dynamic>>[];
+      for (final t in trainings) {
+        String? repeaterRemoteId;
+        if (t.repeaterId != null) {
+          final repeater =
+              await (_database.select(_database.repeaters)
+                ..where((r) => r.id.equals(t.repeaterId!))).getSingleOrNull();
+          repeaterRemoteId = repeater?.remoteId;
+        }
+        trainingMaps.add({
+          'id': t.remoteId,
+          'name': t.name,
+          'repeater_id': repeaterRemoteId,
+          'is_favorite': t.isFavorite,
+          'is_assessment': t.isAssessment,
+          'updated_at': t.updatedAt.toIso8601String(),
+          'deleted_at': t.deletedAt?.toIso8601String(),
+          'created_at': t.createdAt?.toIso8601String(),
+        });
+      }
+      collections['trainings'] = trainingMaps;
+    }
+
     final sessions =
         await (_database.select(_database.sessions)
           ..where((s) => s.dirty.equals(true))).get();
@@ -214,23 +268,149 @@ class SyncRepository {
               .toList();
     }
 
-    final trainings =
-        await (_database.select(_database.trainings)..where(
-          (t) => t.dirty.equals(true) & t.isBuiltin.equals(false),
-        )).get();
-    if (trainings.isNotEmpty) {
-      collections['trainings'] =
-          trainings
+    final repTemplates =
+        await (_database.select(_database.repTemplates)
+          ..where((r) => r.dirty.equals(true))).get();
+    if (repTemplates.isNotEmpty) {
+      final repTemplateMaps = <Map<String, dynamic>>[];
+      for (final r in repTemplates) {
+        final training =
+            await (_database.select(_database.trainings)
+              ..where((t) => t.id.equals(r.trainingId))).getSingleOrNull();
+        if (training != null) {
+          repTemplateMaps.add({
+            'id': r.remoteId,
+            'training_id': training.remoteId,
+            'is_rest': r.isRest,
+            'right_hand': r.rightHand,
+            'duration': r.duration,
+            'target_weight': r.targetWeight,
+            'index': r.index,
+            'grip_position': r.gripPosition,
+            'updated_at': r.updatedAt.toIso8601String(),
+            'deleted_at': r.deletedAt?.toIso8601String(),
+            'created_at': r.createdAt?.toIso8601String(),
+          });
+        }
+      }
+      if (repTemplateMaps.isNotEmpty) {
+        collections['rep_templates'] = repTemplateMaps;
+      }
+    }
+
+    final repDatas =
+        await (_database.select(_database.repDatas)
+          ..where((r) => r.dirty.equals(true))).get();
+    if (repDatas.isNotEmpty) {
+      final repDataMaps = <Map<String, dynamic>>[];
+      for (final r in repDatas) {
+        final session =
+            await (_database.select(_database.sessions)
+              ..where((s) => s.id.equals(r.sessionId))).getSingleOrNull();
+        if (session != null) {
+          repDataMaps.add({
+            'id': r.remoteId,
+            'session_id': session.remoteId,
+            'average_weight': r.averageWeight,
+            'is_rest': r.isRest,
+            'right_hand': r.rightHand,
+            'duration': r.duration,
+            'target_weight': r.targetWeight,
+            'index': r.index,
+            'grip_position': r.gripPosition,
+            'updated_at': r.updatedAt.toIso8601String(),
+            'deleted_at': r.deletedAt?.toIso8601String(),
+            'created_at': r.createdAt?.toIso8601String(),
+          });
+        }
+      }
+      if (repDataMaps.isNotEmpty) {
+        collections['rep_datas'] = repDataMaps;
+      }
+    }
+
+    final assessments =
+        await (_database.select(_database.assessments)
+          ..where((a) => a.dirty.equals(true))).get();
+    if (assessments.isNotEmpty) {
+      final assessmentMaps = <Map<String, dynamic>>[];
+      for (final a in assessments) {
+        final session =
+            await (_database.select(_database.sessions)
+              ..where((s) => s.id.equals(a.sessionId))).getSingleOrNull();
+        if (session != null) {
+          assessmentMaps.add({
+            'id': a.remoteId,
+            'session_id': session.remoteId,
+            'type': a.type,
+            'right_value': a.rightValue,
+            'left_value': a.leftValue,
+            'grip_position': a.gripPosition,
+            'updated_at': a.updatedAt.toIso8601String(),
+            'deleted_at': a.deletedAt?.toIso8601String(),
+            'created_at': a.createdAt?.toIso8601String(),
+          });
+        }
+      }
+      if (assessmentMaps.isNotEmpty) {
+        collections['assessments'] = assessmentMaps;
+      }
+    }
+
+    final sensorConfigs =
+        await (_database.select(_database.sensorConfigs)
+          ..where((s) => s.dirty.equals(true))).get();
+    if (sensorConfigs.isNotEmpty) {
+      collections['sensor_configs'] =
+          sensorConfigs
               .map(
-                (t) => {
-                  'id': t.remoteId,
-                  'name': t.name,
-                  'repeater_id': t.repeaterId,
-                  'is_favorite': t.isFavorite,
-                  'is_assessment': t.isAssessment,
-                  'updated_at': t.updatedAt.toIso8601String(),
-                  'deleted_at': t.deletedAt?.toIso8601String(),
-                  'created_at': t.createdAt?.toIso8601String(),
+                (s) => {
+                  'id': s.remoteId,
+                  'name': s.name,
+                  'index': s.index,
+                  'tare': s.tare,
+                  'coef': s.coef,
+                  'updated_at': s.updatedAt.toIso8601String(),
+                  'deleted_at': s.deletedAt?.toIso8601String(),
+                  'created_at': s.createdAt?.toIso8601String(),
+                },
+              )
+              .toList();
+    }
+
+    final builtinTrainingWeights =
+        await (_database.select(_database.builtinTrainingWeights)
+          ..where((w) => w.dirty.equals(true))).get();
+    if (builtinTrainingWeights.isNotEmpty) {
+      collections['builtin_training_weights'] =
+          builtinTrainingWeights
+              .map(
+                (w) => {
+                  'id': w.remoteId,
+                  'builtin_training_id': w.builtinTrainingId,
+                  'custom_weight_right': w.customWeightRight,
+                  'custom_weight_left': w.customWeightLeft,
+                  'updated_at': w.updatedAt.toIso8601String(),
+                  'deleted_at': w.deletedAt?.toIso8601String(),
+                  'created_at': w.createdAt.toIso8601String(),
+                },
+              )
+              .toList();
+    }
+
+    final pinnedBuiltinTrainings =
+        await (_database.select(_database.pinnedBuiltinTrainings)
+          ..where((p) => p.dirty.equals(true))).get();
+    if (pinnedBuiltinTrainings.isNotEmpty) {
+      collections['pinned_builtin_trainings'] =
+          pinnedBuiltinTrainings
+              .map(
+                (p) => {
+                  'id': p.remoteId,
+                  'builtin_training_id': p.builtinTrainingId,
+                  'updated_at': p.updatedAt.toIso8601String(),
+                  'deleted_at': p.deletedAt?.toIso8601String(),
+                  'created_at': p.createdAt?.toIso8601String(),
                 },
               )
               .toList();
