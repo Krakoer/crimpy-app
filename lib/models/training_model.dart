@@ -58,7 +58,7 @@ class RepeaterConfig {
 }
 
 class SessionModel {
-  final int? id;
+  final String? id;
   final String name;
   final String? notes;
   final DateTime date;
@@ -88,7 +88,7 @@ class SessionModel {
 }
 
 class RepModel {
-  int? id;
+  String? id;
   int durationInSeconds;
   bool isRest;
   HandSide handSide;
@@ -108,7 +108,7 @@ class RepModel {
 }
 
 class TrainingWithReps {
-  final int id;
+  final String id;
   final String name;
   final List<RepModel> reps;
   final RepeaterModel? repeater;
@@ -239,7 +239,7 @@ class RepeaterModel {
               handSide: HandSide.right,
               targetWeight: weightRight ?? 0.0,
               index: currentIndex++,
-              id: 0,
+              id: "",
               trainingId: 0,
               gripPosition: gripPosition,
             ),
@@ -254,7 +254,7 @@ class RepeaterModel {
                 handSide: HandSide.left,
                 targetWeight: 0.0,
                 index: currentIndex++,
-                id: 0,
+                id: "",
                 trainingId: 0,
               ),
             );
@@ -269,7 +269,7 @@ class RepeaterModel {
             handSide: HandSide.left,
             targetWeight: 0.0,
             index: currentIndex++,
-            id: 0,
+            id: "",
             trainingId: 0,
           ),
         );
@@ -283,7 +283,7 @@ class RepeaterModel {
               handSide: HandSide.left,
               targetWeight: weightLeft ?? 0.0,
               index: currentIndex++,
-              id: 0,
+              id: "",
               trainingId: 0,
               gripPosition: gripPosition,
             ),
@@ -298,7 +298,7 @@ class RepeaterModel {
                 handSide: HandSide.left,
                 targetWeight: 0.0,
                 index: currentIndex++,
-                id: 0,
+                id: "",
                 trainingId: 0,
               ),
             );
@@ -314,7 +314,7 @@ class RepeaterModel {
               handSide: HandSide.left,
               targetWeight: 0.0,
               index: currentIndex++,
-              id: 0,
+              id: "",
               trainingId: 0,
             ),
           );
@@ -332,7 +332,7 @@ class RepeaterModel {
               handSide: HandSide.right,
               targetWeight: weightRight ?? 0.0,
               index: currentIndex++,
-              id: 0,
+              id: "",
               trainingId: 0,
               gripPosition: gripPosition,
             ),
@@ -346,7 +346,7 @@ class RepeaterModel {
               handSide: HandSide.right,
               targetWeight: 0.0,
               index: currentIndex++,
-              id: 0,
+              id: "",
               trainingId: 0,
             ),
           );
@@ -359,7 +359,7 @@ class RepeaterModel {
               handSide: HandSide.left,
               targetWeight: weightLeft ?? 0.0,
               index: currentIndex++,
-              id: 0,
+              id: "",
               trainingId: 0,
               gripPosition: gripPosition,
             ),
@@ -374,7 +374,7 @@ class RepeaterModel {
                 handSide: HandSide.left,
                 targetWeight: 0.0,
                 index: currentIndex++,
-                id: 0,
+                id: "",
                 trainingId: 0,
               ),
             );
@@ -390,7 +390,7 @@ class RepeaterModel {
               handSide: HandSide.right,
               targetWeight: 0.0,
               index: currentIndex++,
-              id: 0,
+              id: "",
               trainingId: 0,
             ),
           );
@@ -404,7 +404,7 @@ class RepeaterModel {
 
 /// Represents a built-in training with assessment requirements.
 class BuiltinTrainingModel {
-  final int id;
+  final String id;
   final String name;
   final String description;
   final List<AssessmentRequirement> requiredAssessments;
@@ -523,7 +523,7 @@ class TrainingListItem {
   String get name => training?.name ?? builtinTraining?.name ?? '';
   String get description => builtinTraining?.description ?? '';
   Duration get totalDuration => training?.totalDuration ?? Duration.zero;
-  int get id => training?.id ?? builtinTraining?.id ?? 0;
+  String get id => training?.id ?? builtinTraining?.id ?? "";
 }
 
 /// Template for a rep in a training (used for generation).
@@ -533,7 +533,7 @@ class RepTemplate {
   final HandSide handSide;
   final double targetWeight;
   final int index;
-  final int id;
+  final String id;
   final int trainingId;
   final GripPosition gripPosition;
 

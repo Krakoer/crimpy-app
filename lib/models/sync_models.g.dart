@@ -55,26 +55,6 @@ Map<String, dynamic> _$PullResponseToJson(_PullResponse instance) =>
       'server_version': instance.serverVersion,
     };
 
-_SyncRecord _$SyncRecordFromJson(Map<String, dynamic> json) => _SyncRecord(
-  id: json['id'] as String,
-  remoteId: json['remoteId'] as String,
-  data: json['data'] as Map<String, dynamic>,
-  updatedAt: DateTime.parse(json['updatedAt'] as String),
-  deletedAt:
-      json['deletedAt'] == null
-          ? null
-          : DateTime.parse(json['deletedAt'] as String),
-);
-
-Map<String, dynamic> _$SyncRecordToJson(_SyncRecord instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'remoteId': instance.remoteId,
-      'data': instance.data,
-      'updatedAt': instance.updatedAt.toIso8601String(),
-      'deletedAt': instance.deletedAt?.toIso8601String(),
-    };
-
 _SyncState _$SyncStateFromJson(Map<String, dynamic> json) => _SyncState(
   status:
       $enumDecodeNullable(_$SyncStatusEnumMap, json['status']) ??

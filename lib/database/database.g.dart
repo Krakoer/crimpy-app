@@ -10,16 +10,13 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
   $SessionsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -216,18 +213,6 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
-    'remoteId',
-  );
-  @override
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    clientDefault: () => const Uuid().v4(),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -248,7 +233,6 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -397,12 +381,6 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
       );
     }
-    if (data.containsKey('remote_id')) {
-      context.handle(
-        _remoteIdMeta,
-        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
-      );
-    }
     return context;
   }
 
@@ -414,7 +392,7 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     return Session(
       id:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
+            DriftSqlType.string,
             data['${effectivePrefix}id'],
           )!,
       name:
@@ -494,11 +472,6 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
             DriftSqlType.bool,
             data['${effectivePrefix}dirty'],
           )!,
-      remoteId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}remote_id'],
-          )!,
     );
   }
 
@@ -509,7 +482,7 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
 }
 
 class Session extends DataClass implements Insertable<Session> {
-  final int id;
+  final String id;
   final String name;
   final String notes;
   final DateTime date;
@@ -527,7 +500,6 @@ class Session extends DataClass implements Insertable<Session> {
   final DateTime updatedAt;
   final DateTime? deletedAt;
   final bool dirty;
-  final String remoteId;
   const Session({
     required this.id,
     required this.name,
@@ -547,12 +519,11 @@ class Session extends DataClass implements Insertable<Session> {
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['notes'] = Variable<String>(notes);
     map['date'] = Variable<DateTime>(date);
@@ -586,7 +557,6 @@ class Session extends DataClass implements Insertable<Session> {
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     map['dirty'] = Variable<bool>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -634,7 +604,6 @@ class Session extends DataClass implements Insertable<Session> {
               ? const Value.absent()
               : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -644,7 +613,7 @@ class Session extends DataClass implements Insertable<Session> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Session(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       notes: serializer.fromJson<String>(json['notes']),
       date: serializer.fromJson<DateTime>(json['date']),
@@ -662,14 +631,13 @@ class Session extends DataClass implements Insertable<Session> {
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       dirty: serializer.fromJson<bool>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'notes': serializer.toJson<String>(notes),
       'date': serializer.toJson<DateTime>(date),
@@ -687,12 +655,11 @@ class Session extends DataClass implements Insertable<Session> {
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'dirty': serializer.toJson<bool>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   Session copyWith({
-    int? id,
+    String? id,
     String? name,
     String? notes,
     DateTime? date,
@@ -710,7 +677,6 @@ class Session extends DataClass implements Insertable<Session> {
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
     bool? dirty,
-    String? remoteId,
   }) => Session(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -740,7 +706,6 @@ class Session extends DataClass implements Insertable<Session> {
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   Session copyWithCompanion(SessionsCompanion data) {
     return Session(
@@ -784,7 +749,6 @@ class Session extends DataClass implements Insertable<Session> {
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -808,8 +772,7 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -834,7 +797,6 @@ class Session extends DataClass implements Insertable<Session> {
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -857,12 +819,11 @@ class Session extends DataClass implements Insertable<Session> {
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class SessionsCompanion extends UpdateCompanion<Session> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> name;
   final Value<String> notes;
   final Value<DateTime> date;
@@ -880,7 +841,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
   final Value<bool> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const SessionsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -900,7 +861,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   SessionsCompanion.insert({
     this.id = const Value.absent(),
@@ -921,12 +882,12 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : name = Value(name),
        notes = Value(notes),
        dataPath = Value(dataPath);
   static Insertable<Session> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? name,
     Expression<String>? notes,
     Expression<DateTime>? date,
@@ -944,7 +905,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
     Expression<bool>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -965,12 +926,12 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   SessionsCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<String>? name,
     Value<String>? notes,
     Value<DateTime>? date,
@@ -988,7 +949,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
     Value<bool>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return SessionsCompanion(
       id: id ?? this.id,
@@ -1009,7 +970,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1017,7 +978,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -1070,8 +1031,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (dirty.present) {
       map['dirty'] = Variable<bool>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -1097,7 +1058,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1111,16 +1072,13 @@ class $AssessmentsTable extends Assessments
   $AssessmentsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
@@ -1157,15 +1115,12 @@ class $AssessmentsTable extends Assessments
     'sessionId',
   );
   @override
-  late final GeneratedColumn<int> sessionId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
     'session_id',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES sessions (id)',
-    ),
   );
   static const VerificationMeta _gripPositionMeta = const VerificationMeta(
     'gripPosition',
@@ -1227,18 +1182,6 @@ class $AssessmentsTable extends Assessments
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
-    'remoteId',
-  );
-  @override
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    clientDefault: () => const Uuid().v4(),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1251,7 +1194,6 @@ class $AssessmentsTable extends Assessments
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1329,12 +1271,6 @@ class $AssessmentsTable extends Assessments
         dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
       );
     }
-    if (data.containsKey('remote_id')) {
-      context.handle(
-        _remoteIdMeta,
-        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
-      );
-    }
     return context;
   }
 
@@ -1346,7 +1282,7 @@ class $AssessmentsTable extends Assessments
     return Assessment(
       id:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
+            DriftSqlType.string,
             data['${effectivePrefix}id'],
           )!,
       type:
@@ -1364,7 +1300,7 @@ class $AssessmentsTable extends Assessments
       ),
       sessionId:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
+            DriftSqlType.string,
             data['${effectivePrefix}session_id'],
           )!,
       gripPosition: attachedDatabase.typeMapping.read(
@@ -1389,11 +1325,6 @@ class $AssessmentsTable extends Assessments
             DriftSqlType.bool,
             data['${effectivePrefix}dirty'],
           )!,
-      remoteId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}remote_id'],
-          )!,
     );
   }
 
@@ -1404,17 +1335,16 @@ class $AssessmentsTable extends Assessments
 }
 
 class Assessment extends DataClass implements Insertable<Assessment> {
-  final int id;
+  final String id;
   final int type;
   final double? rightValue;
   final double? leftValue;
-  final int sessionId;
+  final String sessionId;
   final int? gripPosition;
   final DateTime? createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
   final bool dirty;
-  final String remoteId;
   const Assessment({
     required this.id,
     required this.type,
@@ -1426,12 +1356,11 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['type'] = Variable<int>(type);
     if (!nullToAbsent || rightValue != null) {
       map['right_value'] = Variable<double>(rightValue);
@@ -1439,7 +1368,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     if (!nullToAbsent || leftValue != null) {
       map['left_value'] = Variable<double>(leftValue);
     }
-    map['session_id'] = Variable<int>(sessionId);
+    map['session_id'] = Variable<String>(sessionId);
     if (!nullToAbsent || gripPosition != null) {
       map['grip_position'] = Variable<int>(gripPosition);
     }
@@ -1451,7 +1380,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     map['dirty'] = Variable<bool>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -1482,7 +1410,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
               ? const Value.absent()
               : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -1492,49 +1419,46 @@ class Assessment extends DataClass implements Insertable<Assessment> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Assessment(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       type: serializer.fromJson<int>(json['type']),
       rightValue: serializer.fromJson<double?>(json['rightValue']),
       leftValue: serializer.fromJson<double?>(json['leftValue']),
-      sessionId: serializer.fromJson<int>(json['sessionId']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
       gripPosition: serializer.fromJson<int?>(json['gripPosition']),
       createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       dirty: serializer.fromJson<bool>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'type': serializer.toJson<int>(type),
       'rightValue': serializer.toJson<double?>(rightValue),
       'leftValue': serializer.toJson<double?>(leftValue),
-      'sessionId': serializer.toJson<int>(sessionId),
+      'sessionId': serializer.toJson<String>(sessionId),
       'gripPosition': serializer.toJson<int?>(gripPosition),
       'createdAt': serializer.toJson<DateTime?>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'dirty': serializer.toJson<bool>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   Assessment copyWith({
-    int? id,
+    String? id,
     int? type,
     Value<double?> rightValue = const Value.absent(),
     Value<double?> leftValue = const Value.absent(),
-    int? sessionId,
+    String? sessionId,
     Value<int?> gripPosition = const Value.absent(),
     Value<DateTime?> createdAt = const Value.absent(),
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
     bool? dirty,
-    String? remoteId,
   }) => Assessment(
     id: id ?? this.id,
     type: type ?? this.type,
@@ -1546,7 +1470,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   Assessment copyWithCompanion(AssessmentsCompanion data) {
     return Assessment(
@@ -1564,7 +1487,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -1580,8 +1502,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -1598,7 +1519,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -1613,22 +1533,21 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class AssessmentsCompanion extends UpdateCompanion<Assessment> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<int> type;
   final Value<double?> rightValue;
   final Value<double?> leftValue;
-  final Value<int> sessionId;
+  final Value<String> sessionId;
   final Value<int?> gripPosition;
   final Value<DateTime?> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
   final Value<bool> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const AssessmentsCompanion({
     this.id = const Value.absent(),
     this.type = const Value.absent(),
@@ -1640,34 +1559,34 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   AssessmentsCompanion.insert({
     this.id = const Value.absent(),
     required int type,
     this.rightValue = const Value.absent(),
     this.leftValue = const Value.absent(),
-    required int sessionId,
+    required String sessionId,
     this.gripPosition = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : type = Value(type),
        sessionId = Value(sessionId);
   static Insertable<Assessment> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<int>? type,
     Expression<double>? rightValue,
     Expression<double>? leftValue,
-    Expression<int>? sessionId,
+    Expression<String>? sessionId,
     Expression<int>? gripPosition,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
     Expression<bool>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1680,22 +1599,22 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   AssessmentsCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<int>? type,
     Value<double?>? rightValue,
     Value<double?>? leftValue,
-    Value<int>? sessionId,
+    Value<String>? sessionId,
     Value<int?>? gripPosition,
     Value<DateTime?>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
     Value<bool>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return AssessmentsCompanion(
       id: id ?? this.id,
@@ -1708,7 +1627,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1716,7 +1635,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (type.present) {
       map['type'] = Variable<int>(type.value);
@@ -1728,7 +1647,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
       map['left_value'] = Variable<double>(leftValue.value);
     }
     if (sessionId.present) {
-      map['session_id'] = Variable<int>(sessionId.value);
+      map['session_id'] = Variable<String>(sessionId.value);
     }
     if (gripPosition.present) {
       map['grip_position'] = Variable<int>(gripPosition.value);
@@ -1745,8 +1664,8 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     if (dirty.present) {
       map['dirty'] = Variable<bool>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -1764,7 +1683,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1778,16 +1697,13 @@ class $RepeatersTable extends Repeaters
   $RepeatersTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _setsMeta = const VerificationMeta('sets');
   @override
@@ -1937,18 +1853,6 @@ class $RepeatersTable extends Repeaters
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
-    'remoteId',
-  );
-  @override
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    clientDefault: () => const Uuid().v4(),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1965,7 +1869,6 @@ class $RepeatersTable extends Repeaters
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2081,12 +1984,6 @@ class $RepeatersTable extends Repeaters
         dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
       );
     }
-    if (data.containsKey('remote_id')) {
-      context.handle(
-        _remoteIdMeta,
-        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
-      );
-    }
     return context;
   }
 
@@ -2098,7 +1995,7 @@ class $RepeatersTable extends Repeaters
     return Repeater(
       id:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
+            DriftSqlType.string,
             data['${effectivePrefix}id'],
           )!,
       sets:
@@ -2162,11 +2059,6 @@ class $RepeatersTable extends Repeaters
             DriftSqlType.bool,
             data['${effectivePrefix}dirty'],
           )!,
-      remoteId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}remote_id'],
-          )!,
     );
   }
 
@@ -2177,7 +2069,7 @@ class $RepeatersTable extends Repeaters
 }
 
 class Repeater extends DataClass implements Insertable<Repeater> {
-  final int id;
+  final String id;
   final int sets;
   final int reps;
   final int worktime;
@@ -2191,7 +2083,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
   final DateTime updatedAt;
   final DateTime? deletedAt;
   final bool dirty;
-  final String remoteId;
   const Repeater({
     required this.id,
     required this.sets,
@@ -2207,12 +2098,11 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['sets'] = Variable<int>(sets);
     map['reps'] = Variable<int>(reps);
     map['worktime'] = Variable<int>(worktime);
@@ -2234,7 +2124,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     map['dirty'] = Variable<bool>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -2266,7 +2155,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
               ? const Value.absent()
               : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -2276,7 +2164,7 @@ class Repeater extends DataClass implements Insertable<Repeater> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Repeater(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       sets: serializer.fromJson<int>(json['sets']),
       reps: serializer.fromJson<int>(json['reps']),
       worktime: serializer.fromJson<int>(json['worktime']),
@@ -2292,14 +2180,13 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       dirty: serializer.fromJson<bool>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'sets': serializer.toJson<int>(sets),
       'reps': serializer.toJson<int>(reps),
       'worktime': serializer.toJson<int>(worktime),
@@ -2313,12 +2200,11 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'dirty': serializer.toJson<bool>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   Repeater copyWith({
-    int? id,
+    String? id,
     int? sets,
     int? reps,
     int? worktime,
@@ -2332,7 +2218,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
     bool? dirty,
-    String? remoteId,
   }) => Repeater(
     id: id ?? this.id,
     sets: sets ?? this.sets,
@@ -2354,7 +2239,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   Repeater copyWithCompanion(RepeatersCompanion data) {
     return Repeater(
@@ -2381,7 +2265,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -2401,8 +2284,7 @@ class Repeater extends DataClass implements Insertable<Repeater> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -2423,7 +2305,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -2442,12 +2323,11 @@ class Repeater extends DataClass implements Insertable<Repeater> {
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class RepeatersCompanion extends UpdateCompanion<Repeater> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<int> sets;
   final Value<int> reps;
   final Value<int> worktime;
@@ -2461,7 +2341,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
   final Value<bool> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const RepeatersCompanion({
     this.id = const Value.absent(),
     this.sets = const Value.absent(),
@@ -2477,7 +2357,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   RepeatersCompanion.insert({
     this.id = const Value.absent(),
@@ -2494,7 +2374,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : sets = Value(sets),
        reps = Value(reps),
        worktime = Value(worktime),
@@ -2502,7 +2382,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
        setRest = Value(setRest),
        splitHand = Value(splitHand);
   static Insertable<Repeater> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<int>? sets,
     Expression<int>? reps,
     Expression<int>? worktime,
@@ -2516,7 +2396,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
     Expression<bool>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2533,12 +2413,12 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   RepeatersCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<int>? sets,
     Value<int>? reps,
     Value<int>? worktime,
@@ -2552,7 +2432,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
     Value<bool>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return RepeatersCompanion(
       id: id ?? this.id,
@@ -2569,7 +2449,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -2577,7 +2457,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (sets.present) {
       map['sets'] = Variable<int>(sets.value);
@@ -2618,8 +2498,8 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     if (dirty.present) {
       map['dirty'] = Variable<bool>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -2641,7 +2521,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -2655,16 +2535,13 @@ class $TrainingsTable extends Trainings
   $TrainingsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -2679,15 +2556,12 @@ class $TrainingsTable extends Trainings
     'repeaterId',
   );
   @override
-  late final GeneratedColumn<int> repeaterId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> repeaterId = GeneratedColumn<String>(
     'repeater_id',
     aliasedName,
     true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES repeaters (id) ON DELETE CASCADE',
-    ),
   );
   static const VerificationMeta _isBuiltinMeta = const VerificationMeta(
     'isBuiltin',
@@ -2782,18 +2656,6 @@ class $TrainingsTable extends Trainings
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
-    'remoteId',
-  );
-  @override
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    clientDefault: () => const Uuid().v4(),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2806,7 +2668,6 @@ class $TrainingsTable extends Trainings
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2882,12 +2743,6 @@ class $TrainingsTable extends Trainings
         dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
       );
     }
-    if (data.containsKey('remote_id')) {
-      context.handle(
-        _remoteIdMeta,
-        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
-      );
-    }
     return context;
   }
 
@@ -2899,7 +2754,7 @@ class $TrainingsTable extends Trainings
     return Training(
       id:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
+            DriftSqlType.string,
             data['${effectivePrefix}id'],
           )!,
       name:
@@ -2908,7 +2763,7 @@ class $TrainingsTable extends Trainings
             data['${effectivePrefix}name'],
           )!,
       repeaterId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}repeater_id'],
       ),
       isBuiltin:
@@ -2944,11 +2799,6 @@ class $TrainingsTable extends Trainings
             DriftSqlType.bool,
             data['${effectivePrefix}dirty'],
           )!,
-      remoteId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}remote_id'],
-          )!,
     );
   }
 
@@ -2959,9 +2809,9 @@ class $TrainingsTable extends Trainings
 }
 
 class Training extends DataClass implements Insertable<Training> {
-  final int id;
+  final String id;
   final String name;
-  final int? repeaterId;
+  final String? repeaterId;
   final bool isBuiltin;
   final bool isFavorite;
   final bool isAssessment;
@@ -2969,7 +2819,6 @@ class Training extends DataClass implements Insertable<Training> {
   final DateTime updatedAt;
   final DateTime? deletedAt;
   final bool dirty;
-  final String remoteId;
   const Training({
     required this.id,
     required this.name,
@@ -2981,15 +2830,14 @@ class Training extends DataClass implements Insertable<Training> {
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || repeaterId != null) {
-      map['repeater_id'] = Variable<int>(repeaterId);
+      map['repeater_id'] = Variable<String>(repeaterId);
     }
     map['is_builtin'] = Variable<bool>(isBuiltin);
     map['is_favorite'] = Variable<bool>(isFavorite);
@@ -3002,7 +2850,6 @@ class Training extends DataClass implements Insertable<Training> {
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     map['dirty'] = Variable<bool>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -3027,7 +2874,6 @@ class Training extends DataClass implements Insertable<Training> {
               ? const Value.absent()
               : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -3037,9 +2883,9 @@ class Training extends DataClass implements Insertable<Training> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Training(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
-      repeaterId: serializer.fromJson<int?>(json['repeaterId']),
+      repeaterId: serializer.fromJson<String?>(json['repeaterId']),
       isBuiltin: serializer.fromJson<bool>(json['isBuiltin']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       isAssessment: serializer.fromJson<bool>(json['isAssessment']),
@@ -3047,16 +2893,15 @@ class Training extends DataClass implements Insertable<Training> {
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       dirty: serializer.fromJson<bool>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
-      'repeaterId': serializer.toJson<int?>(repeaterId),
+      'repeaterId': serializer.toJson<String?>(repeaterId),
       'isBuiltin': serializer.toJson<bool>(isBuiltin),
       'isFavorite': serializer.toJson<bool>(isFavorite),
       'isAssessment': serializer.toJson<bool>(isAssessment),
@@ -3064,14 +2909,13 @@ class Training extends DataClass implements Insertable<Training> {
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'dirty': serializer.toJson<bool>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   Training copyWith({
-    int? id,
+    String? id,
     String? name,
-    Value<int?> repeaterId = const Value.absent(),
+    Value<String?> repeaterId = const Value.absent(),
     bool? isBuiltin,
     bool? isFavorite,
     bool? isAssessment,
@@ -3079,7 +2923,6 @@ class Training extends DataClass implements Insertable<Training> {
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
     bool? dirty,
-    String? remoteId,
   }) => Training(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -3091,7 +2934,6 @@ class Training extends DataClass implements Insertable<Training> {
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   Training copyWithCompanion(TrainingsCompanion data) {
     return Training(
@@ -3110,7 +2952,6 @@ class Training extends DataClass implements Insertable<Training> {
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -3126,8 +2967,7 @@ class Training extends DataClass implements Insertable<Training> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -3144,7 +2984,6 @@ class Training extends DataClass implements Insertable<Training> {
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -3159,14 +2998,13 @@ class Training extends DataClass implements Insertable<Training> {
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class TrainingsCompanion extends UpdateCompanion<Training> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> name;
-  final Value<int?> repeaterId;
+  final Value<String?> repeaterId;
   final Value<bool> isBuiltin;
   final Value<bool> isFavorite;
   final Value<bool> isAssessment;
@@ -3174,7 +3012,7 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
   final Value<bool> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const TrainingsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -3186,7 +3024,7 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   TrainingsCompanion.insert({
     this.id = const Value.absent(),
@@ -3199,12 +3037,12 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Training> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? name,
-    Expression<int>? repeaterId,
+    Expression<String>? repeaterId,
     Expression<bool>? isBuiltin,
     Expression<bool>? isFavorite,
     Expression<bool>? isAssessment,
@@ -3212,7 +3050,7 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
     Expression<bool>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3225,14 +3063,14 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   TrainingsCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<String>? name,
-    Value<int?>? repeaterId,
+    Value<String?>? repeaterId,
     Value<bool>? isBuiltin,
     Value<bool>? isFavorite,
     Value<bool>? isAssessment,
@@ -3240,7 +3078,7 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
     Value<bool>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return TrainingsCompanion(
       id: id ?? this.id,
@@ -3253,7 +3091,7 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -3261,13 +3099,13 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
     if (repeaterId.present) {
-      map['repeater_id'] = Variable<int>(repeaterId.value);
+      map['repeater_id'] = Variable<String>(repeaterId.value);
     }
     if (isBuiltin.present) {
       map['is_builtin'] = Variable<bool>(isBuiltin.value);
@@ -3290,8 +3128,8 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     if (dirty.present) {
       map['dirty'] = Variable<bool>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -3309,7 +3147,7 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -3323,16 +3161,13 @@ class $RepTemplatesTable extends RepTemplates
   $RepTemplatesTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _isRestMeta = const VerificationMeta('isRest');
   @override
@@ -3375,15 +3210,12 @@ class $RepTemplatesTable extends RepTemplates
     'trainingId',
   );
   @override
-  late final GeneratedColumn<int> trainingId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> trainingId = GeneratedColumn<String>(
     'training_id',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES trainings (id) ON DELETE CASCADE',
-    ),
   );
   static const VerificationMeta _targetWeightMeta = const VerificationMeta(
     'targetWeight',
@@ -3465,18 +3297,6 @@ class $RepTemplatesTable extends RepTemplates
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
-    'remoteId',
-  );
-  @override
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    clientDefault: () => const Uuid().v4(),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3491,7 +3311,6 @@ class $RepTemplatesTable extends RepTemplates
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3592,12 +3411,6 @@ class $RepTemplatesTable extends RepTemplates
         dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
       );
     }
-    if (data.containsKey('remote_id')) {
-      context.handle(
-        _remoteIdMeta,
-        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
-      );
-    }
     return context;
   }
 
@@ -3609,7 +3422,7 @@ class $RepTemplatesTable extends RepTemplates
     return RepTemplate(
       id:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
+            DriftSqlType.string,
             data['${effectivePrefix}id'],
           )!,
       isRest:
@@ -3629,7 +3442,7 @@ class $RepTemplatesTable extends RepTemplates
           )!,
       trainingId:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
+            DriftSqlType.string,
             data['${effectivePrefix}training_id'],
           )!,
       targetWeight:
@@ -3665,11 +3478,6 @@ class $RepTemplatesTable extends RepTemplates
             DriftSqlType.bool,
             data['${effectivePrefix}dirty'],
           )!,
-      remoteId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}remote_id'],
-          )!,
     );
   }
 
@@ -3680,11 +3488,11 @@ class $RepTemplatesTable extends RepTemplates
 }
 
 class RepTemplate extends DataClass implements Insertable<RepTemplate> {
-  final int id;
+  final String id;
   final bool isRest;
   final bool rightHand;
   final int duration;
-  final int trainingId;
+  final String trainingId;
   final double targetWeight;
   final int index;
   final int gripPosition;
@@ -3692,7 +3500,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
   final DateTime updatedAt;
   final DateTime? deletedAt;
   final bool dirty;
-  final String remoteId;
   const RepTemplate({
     required this.id,
     required this.isRest,
@@ -3706,16 +3513,15 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['is_rest'] = Variable<bool>(isRest);
     map['right_hand'] = Variable<bool>(rightHand);
     map['duration'] = Variable<int>(duration);
-    map['training_id'] = Variable<int>(trainingId);
+    map['training_id'] = Variable<String>(trainingId);
     map['target_weight'] = Variable<double>(targetWeight);
     map['index'] = Variable<int>(index);
     map['grip_position'] = Variable<int>(gripPosition);
@@ -3727,7 +3533,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     map['dirty'] = Variable<bool>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -3751,7 +3556,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
               ? const Value.absent()
               : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -3761,11 +3565,11 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RepTemplate(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       isRest: serializer.fromJson<bool>(json['isRest']),
       rightHand: serializer.fromJson<bool>(json['rightHand']),
       duration: serializer.fromJson<int>(json['duration']),
-      trainingId: serializer.fromJson<int>(json['trainingId']),
+      trainingId: serializer.fromJson<String>(json['trainingId']),
       targetWeight: serializer.fromJson<double>(json['targetWeight']),
       index: serializer.fromJson<int>(json['index']),
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
@@ -3773,18 +3577,17 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       dirty: serializer.fromJson<bool>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'isRest': serializer.toJson<bool>(isRest),
       'rightHand': serializer.toJson<bool>(rightHand),
       'duration': serializer.toJson<int>(duration),
-      'trainingId': serializer.toJson<int>(trainingId),
+      'trainingId': serializer.toJson<String>(trainingId),
       'targetWeight': serializer.toJson<double>(targetWeight),
       'index': serializer.toJson<int>(index),
       'gripPosition': serializer.toJson<int>(gripPosition),
@@ -3792,16 +3595,15 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'dirty': serializer.toJson<bool>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   RepTemplate copyWith({
-    int? id,
+    String? id,
     bool? isRest,
     bool? rightHand,
     int? duration,
-    int? trainingId,
+    String? trainingId,
     double? targetWeight,
     int? index,
     int? gripPosition,
@@ -3809,7 +3611,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
     bool? dirty,
-    String? remoteId,
   }) => RepTemplate(
     id: id ?? this.id,
     isRest: isRest ?? this.isRest,
@@ -3823,7 +3624,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   RepTemplate copyWithCompanion(RepTemplatesCompanion data) {
     return RepTemplate(
@@ -3846,7 +3646,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -3864,8 +3663,7 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -3884,7 +3682,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -3901,16 +3698,15 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<bool> isRest;
   final Value<bool> rightHand;
   final Value<int> duration;
-  final Value<int> trainingId;
+  final Value<String> trainingId;
   final Value<double> targetWeight;
   final Value<int> index;
   final Value<int> gripPosition;
@@ -3918,7 +3714,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
   final Value<bool> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const RepTemplatesCompanion({
     this.id = const Value.absent(),
     this.isRest = const Value.absent(),
@@ -3932,14 +3728,14 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   RepTemplatesCompanion.insert({
     this.id = const Value.absent(),
     required bool isRest,
     required bool rightHand,
     required int duration,
-    required int trainingId,
+    required String trainingId,
     required double targetWeight,
     required int index,
     this.gripPosition = const Value.absent(),
@@ -3947,7 +3743,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : isRest = Value(isRest),
        rightHand = Value(rightHand),
        duration = Value(duration),
@@ -3955,11 +3751,11 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
        targetWeight = Value(targetWeight),
        index = Value(index);
   static Insertable<RepTemplate> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<bool>? isRest,
     Expression<bool>? rightHand,
     Expression<int>? duration,
-    Expression<int>? trainingId,
+    Expression<String>? trainingId,
     Expression<double>? targetWeight,
     Expression<int>? index,
     Expression<int>? gripPosition,
@@ -3967,7 +3763,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
     Expression<bool>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3982,16 +3778,16 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   RepTemplatesCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<bool>? isRest,
     Value<bool>? rightHand,
     Value<int>? duration,
-    Value<int>? trainingId,
+    Value<String>? trainingId,
     Value<double>? targetWeight,
     Value<int>? index,
     Value<int>? gripPosition,
@@ -3999,7 +3795,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
     Value<bool>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return RepTemplatesCompanion(
       id: id ?? this.id,
@@ -4014,7 +3810,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -4022,7 +3818,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (isRest.present) {
       map['is_rest'] = Variable<bool>(isRest.value);
@@ -4034,7 +3830,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
       map['duration'] = Variable<int>(duration.value);
     }
     if (trainingId.present) {
-      map['training_id'] = Variable<int>(trainingId.value);
+      map['training_id'] = Variable<String>(trainingId.value);
     }
     if (targetWeight.present) {
       map['target_weight'] = Variable<double>(targetWeight.value);
@@ -4057,8 +3853,8 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     if (dirty.present) {
       map['dirty'] = Variable<bool>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -4078,7 +3874,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -4091,16 +3887,13 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
   $RepDatasTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _averageWeightMeta = const VerificationMeta(
     'averageWeight',
@@ -4117,15 +3910,12 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     'sessionId',
   );
   @override
-  late final GeneratedColumn<int> sessionId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
     'session_id',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES sessions (id)',
-    ),
   );
   static const VerificationMeta _isRestMeta = const VerificationMeta('isRest');
   @override
@@ -4244,18 +4034,6 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
-    'remoteId',
-  );
-  @override
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    clientDefault: () => const Uuid().v4(),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4271,7 +4049,6 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4383,12 +4160,6 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
         dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
       );
     }
-    if (data.containsKey('remote_id')) {
-      context.handle(
-        _remoteIdMeta,
-        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
-      );
-    }
     return context;
   }
 
@@ -4400,7 +4171,7 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     return RepData(
       id:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
+            DriftSqlType.string,
             data['${effectivePrefix}id'],
           )!,
       averageWeight:
@@ -4410,7 +4181,7 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
           )!,
       sessionId:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
+            DriftSqlType.string,
             data['${effectivePrefix}session_id'],
           )!,
       isRest:
@@ -4461,11 +4232,6 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
             DriftSqlType.bool,
             data['${effectivePrefix}dirty'],
           )!,
-      remoteId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}remote_id'],
-          )!,
     );
   }
 
@@ -4476,9 +4242,9 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
 }
 
 class RepData extends DataClass implements Insertable<RepData> {
-  final int id;
+  final String id;
   final double averageWeight;
-  final int sessionId;
+  final String sessionId;
   final bool isRest;
   final bool rightHand;
   final int duration;
@@ -4489,7 +4255,6 @@ class RepData extends DataClass implements Insertable<RepData> {
   final DateTime updatedAt;
   final DateTime? deletedAt;
   final bool dirty;
-  final String remoteId;
   const RepData({
     required this.id,
     required this.averageWeight,
@@ -4504,14 +4269,13 @@ class RepData extends DataClass implements Insertable<RepData> {
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['average_weight'] = Variable<double>(averageWeight);
-    map['session_id'] = Variable<int>(sessionId);
+    map['session_id'] = Variable<String>(sessionId);
     map['is_rest'] = Variable<bool>(isRest);
     map['right_hand'] = Variable<bool>(rightHand);
     map['duration'] = Variable<int>(duration);
@@ -4526,7 +4290,6 @@ class RepData extends DataClass implements Insertable<RepData> {
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     map['dirty'] = Variable<bool>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -4551,7 +4314,6 @@ class RepData extends DataClass implements Insertable<RepData> {
               ? const Value.absent()
               : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -4561,9 +4323,9 @@ class RepData extends DataClass implements Insertable<RepData> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RepData(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       averageWeight: serializer.fromJson<double>(json['averageWeight']),
-      sessionId: serializer.fromJson<int>(json['sessionId']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
       isRest: serializer.fromJson<bool>(json['isRest']),
       rightHand: serializer.fromJson<bool>(json['rightHand']),
       duration: serializer.fromJson<int>(json['duration']),
@@ -4574,16 +4336,15 @@ class RepData extends DataClass implements Insertable<RepData> {
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       dirty: serializer.fromJson<bool>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'averageWeight': serializer.toJson<double>(averageWeight),
-      'sessionId': serializer.toJson<int>(sessionId),
+      'sessionId': serializer.toJson<String>(sessionId),
       'isRest': serializer.toJson<bool>(isRest),
       'rightHand': serializer.toJson<bool>(rightHand),
       'duration': serializer.toJson<int>(duration),
@@ -4594,14 +4355,13 @@ class RepData extends DataClass implements Insertable<RepData> {
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'dirty': serializer.toJson<bool>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   RepData copyWith({
-    int? id,
+    String? id,
     double? averageWeight,
-    int? sessionId,
+    String? sessionId,
     bool? isRest,
     bool? rightHand,
     int? duration,
@@ -4612,7 +4372,6 @@ class RepData extends DataClass implements Insertable<RepData> {
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
     bool? dirty,
-    String? remoteId,
   }) => RepData(
     id: id ?? this.id,
     averageWeight: averageWeight ?? this.averageWeight,
@@ -4627,7 +4386,6 @@ class RepData extends DataClass implements Insertable<RepData> {
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   RepData copyWithCompanion(RepDatasCompanion data) {
     return RepData(
@@ -4653,7 +4411,6 @@ class RepData extends DataClass implements Insertable<RepData> {
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -4672,8 +4429,7 @@ class RepData extends DataClass implements Insertable<RepData> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -4693,7 +4449,6 @@ class RepData extends DataClass implements Insertable<RepData> {
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -4711,14 +4466,13 @@ class RepData extends DataClass implements Insertable<RepData> {
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class RepDatasCompanion extends UpdateCompanion<RepData> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<double> averageWeight;
-  final Value<int> sessionId;
+  final Value<String> sessionId;
   final Value<bool> isRest;
   final Value<bool> rightHand;
   final Value<int> duration;
@@ -4729,7 +4483,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
   final Value<bool> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const RepDatasCompanion({
     this.id = const Value.absent(),
     this.averageWeight = const Value.absent(),
@@ -4744,12 +4498,12 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   RepDatasCompanion.insert({
     this.id = const Value.absent(),
     required double averageWeight,
-    required int sessionId,
+    required String sessionId,
     required bool isRest,
     required bool rightHand,
     required int duration,
@@ -4760,7 +4514,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : averageWeight = Value(averageWeight),
        sessionId = Value(sessionId),
        isRest = Value(isRest),
@@ -4769,9 +4523,9 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
        targetWeight = Value(targetWeight),
        index = Value(index);
   static Insertable<RepData> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<double>? averageWeight,
-    Expression<int>? sessionId,
+    Expression<String>? sessionId,
     Expression<bool>? isRest,
     Expression<bool>? rightHand,
     Expression<int>? duration,
@@ -4782,7 +4536,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
     Expression<bool>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -4798,14 +4552,14 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   RepDatasCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<double>? averageWeight,
-    Value<int>? sessionId,
+    Value<String>? sessionId,
     Value<bool>? isRest,
     Value<bool>? rightHand,
     Value<int>? duration,
@@ -4816,7 +4570,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
     Value<bool>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return RepDatasCompanion(
       id: id ?? this.id,
@@ -4832,7 +4586,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -4840,13 +4594,13 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (averageWeight.present) {
       map['average_weight'] = Variable<double>(averageWeight.value);
     }
     if (sessionId.present) {
-      map['session_id'] = Variable<int>(sessionId.value);
+      map['session_id'] = Variable<String>(sessionId.value);
     }
     if (isRest.present) {
       map['is_rest'] = Variable<bool>(isRest.value);
@@ -4878,8 +4632,8 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     if (dirty.present) {
       map['dirty'] = Variable<bool>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -4900,7 +4654,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -4914,16 +4668,13 @@ class $SensorConfigsTable extends SensorConfigs
   $SensorConfigsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -5009,18 +4760,6 @@ class $SensorConfigsTable extends SensorConfigs
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
-    'remoteId',
-  );
-  @override
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    clientDefault: () => const Uuid().v4(),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5032,7 +4771,6 @@ class $SensorConfigsTable extends SensorConfigs
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5105,12 +4843,6 @@ class $SensorConfigsTable extends SensorConfigs
         dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
       );
     }
-    if (data.containsKey('remote_id')) {
-      context.handle(
-        _remoteIdMeta,
-        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
-      );
-    }
     return context;
   }
 
@@ -5122,7 +4854,7 @@ class $SensorConfigsTable extends SensorConfigs
     return SensorConfig(
       id:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
+            DriftSqlType.string,
             data['${effectivePrefix}id'],
           )!,
       name:
@@ -5163,11 +4895,6 @@ class $SensorConfigsTable extends SensorConfigs
             DriftSqlType.bool,
             data['${effectivePrefix}dirty'],
           )!,
-      remoteId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}remote_id'],
-          )!,
     );
   }
 
@@ -5178,7 +4905,7 @@ class $SensorConfigsTable extends SensorConfigs
 }
 
 class SensorConfig extends DataClass implements Insertable<SensorConfig> {
-  final int id;
+  final String id;
   final String name;
   final int index;
   final double tare;
@@ -5187,7 +4914,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
   final DateTime updatedAt;
   final DateTime? deletedAt;
   final bool dirty;
-  final String remoteId;
   const SensorConfig({
     required this.id,
     required this.name,
@@ -5198,12 +4924,11 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['index'] = Variable<int>(index);
     map['tare'] = Variable<double>(tare);
@@ -5216,7 +4941,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     map['dirty'] = Variable<bool>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -5237,7 +4961,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
               ? const Value.absent()
               : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -5247,7 +4970,7 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SensorConfig(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       index: serializer.fromJson<int>(json['index']),
       tare: serializer.fromJson<double>(json['tare']),
@@ -5256,14 +4979,13 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       dirty: serializer.fromJson<bool>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'index': serializer.toJson<int>(index),
       'tare': serializer.toJson<double>(tare),
@@ -5272,12 +4994,11 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'dirty': serializer.toJson<bool>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   SensorConfig copyWith({
-    int? id,
+    String? id,
     String? name,
     int? index,
     double? tare,
@@ -5286,7 +5007,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
     bool? dirty,
-    String? remoteId,
   }) => SensorConfig(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -5297,7 +5017,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   SensorConfig copyWithCompanion(SensorConfigsCompanion data) {
     return SensorConfig(
@@ -5310,7 +5029,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -5325,8 +5043,7 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -5342,7 +5059,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -5356,12 +5072,11 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> name;
   final Value<int> index;
   final Value<double> tare;
@@ -5370,7 +5085,7 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
   final Value<bool> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const SensorConfigsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -5381,7 +5096,7 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   SensorConfigsCompanion.insert({
     this.id = const Value.absent(),
@@ -5393,13 +5108,13 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : name = Value(name),
        index = Value(index),
        tare = Value(tare),
        coef = Value(coef);
   static Insertable<SensorConfig> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? name,
     Expression<int>? index,
     Expression<double>? tare,
@@ -5408,7 +5123,7 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
     Expression<bool>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -5420,12 +5135,12 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   SensorConfigsCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<String>? name,
     Value<int>? index,
     Value<double>? tare,
@@ -5434,7 +5149,7 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
     Value<bool>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return SensorConfigsCompanion(
       id: id ?? this.id,
@@ -5446,7 +5161,7 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -5454,7 +5169,7 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -5480,8 +5195,8 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     if (dirty.present) {
       map['dirty'] = Variable<bool>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -5498,7 +5213,7 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -5512,31 +5227,26 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
   $BuiltinTrainingWeightsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _builtinTrainingIdMeta = const VerificationMeta(
     'builtinTrainingId',
   );
   @override
-  late final GeneratedColumn<int> builtinTrainingId = GeneratedColumn<int>(
-    'builtin_training_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES trainings (id) ON DELETE CASCADE',
-    ),
-  );
+  late final GeneratedColumn<String> builtinTrainingId =
+      GeneratedColumn<String>(
+        'builtin_training_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
   static const VerificationMeta _customWeightRightMeta = const VerificationMeta(
     'customWeightRight',
   );
@@ -5608,18 +5318,6 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
-    'remoteId',
-  );
-  @override
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    clientDefault: () => const Uuid().v4(),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5630,7 +5328,6 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5700,12 +5397,6 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
         dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
       );
     }
-    if (data.containsKey('remote_id')) {
-      context.handle(
-        _remoteIdMeta,
-        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
-      );
-    }
     return context;
   }
 
@@ -5717,12 +5408,12 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
     return BuiltinTrainingWeight(
       id:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
+            DriftSqlType.string,
             data['${effectivePrefix}id'],
           )!,
       builtinTrainingId:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
+            DriftSqlType.string,
             data['${effectivePrefix}builtin_training_id'],
           )!,
       customWeightRight: attachedDatabase.typeMapping.read(
@@ -5752,11 +5443,6 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
             DriftSqlType.bool,
             data['${effectivePrefix}dirty'],
           )!,
-      remoteId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}remote_id'],
-          )!,
     );
   }
 
@@ -5768,15 +5454,14 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
 
 class BuiltinTrainingWeight extends DataClass
     implements Insertable<BuiltinTrainingWeight> {
-  final int id;
-  final int builtinTrainingId;
+  final String id;
+  final String builtinTrainingId;
   final double? customWeightRight;
   final double? customWeightLeft;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
   final bool dirty;
-  final String remoteId;
   const BuiltinTrainingWeight({
     required this.id,
     required this.builtinTrainingId,
@@ -5786,13 +5471,12 @@ class BuiltinTrainingWeight extends DataClass
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['builtin_training_id'] = Variable<int>(builtinTrainingId);
+    map['id'] = Variable<String>(id);
+    map['builtin_training_id'] = Variable<String>(builtinTrainingId);
     if (!nullToAbsent || customWeightRight != null) {
       map['custom_weight_right'] = Variable<double>(customWeightRight);
     }
@@ -5805,7 +5489,6 @@ class BuiltinTrainingWeight extends DataClass
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     map['dirty'] = Variable<bool>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -5828,7 +5511,6 @@ class BuiltinTrainingWeight extends DataClass
               ? const Value.absent()
               : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -5838,8 +5520,8 @@ class BuiltinTrainingWeight extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return BuiltinTrainingWeight(
-      id: serializer.fromJson<int>(json['id']),
-      builtinTrainingId: serializer.fromJson<int>(json['builtinTrainingId']),
+      id: serializer.fromJson<String>(json['id']),
+      builtinTrainingId: serializer.fromJson<String>(json['builtinTrainingId']),
       customWeightRight: serializer.fromJson<double?>(
         json['customWeightRight'],
       ),
@@ -5848,35 +5530,32 @@ class BuiltinTrainingWeight extends DataClass
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       dirty: serializer.fromJson<bool>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'builtinTrainingId': serializer.toJson<int>(builtinTrainingId),
+      'id': serializer.toJson<String>(id),
+      'builtinTrainingId': serializer.toJson<String>(builtinTrainingId),
       'customWeightRight': serializer.toJson<double?>(customWeightRight),
       'customWeightLeft': serializer.toJson<double?>(customWeightLeft),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'dirty': serializer.toJson<bool>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   BuiltinTrainingWeight copyWith({
-    int? id,
-    int? builtinTrainingId,
+    String? id,
+    String? builtinTrainingId,
     Value<double?> customWeightRight = const Value.absent(),
     Value<double?> customWeightLeft = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
     bool? dirty,
-    String? remoteId,
   }) => BuiltinTrainingWeight(
     id: id ?? this.id,
     builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
@@ -5892,7 +5571,6 @@ class BuiltinTrainingWeight extends DataClass
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   BuiltinTrainingWeight copyWithCompanion(
     BuiltinTrainingWeightsCompanion data,
@@ -5915,7 +5593,6 @@ class BuiltinTrainingWeight extends DataClass
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -5929,8 +5606,7 @@ class BuiltinTrainingWeight extends DataClass
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -5945,7 +5621,6 @@ class BuiltinTrainingWeight extends DataClass
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -5958,21 +5633,20 @@ class BuiltinTrainingWeight extends DataClass
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class BuiltinTrainingWeightsCompanion
     extends UpdateCompanion<BuiltinTrainingWeight> {
-  final Value<int> id;
-  final Value<int> builtinTrainingId;
+  final Value<String> id;
+  final Value<String> builtinTrainingId;
   final Value<double?> customWeightRight;
   final Value<double?> customWeightLeft;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
   final Value<bool> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const BuiltinTrainingWeightsCompanion({
     this.id = const Value.absent(),
     this.builtinTrainingId = const Value.absent(),
@@ -5982,29 +5656,29 @@ class BuiltinTrainingWeightsCompanion
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   BuiltinTrainingWeightsCompanion.insert({
     this.id = const Value.absent(),
-    required int builtinTrainingId,
+    required String builtinTrainingId,
     this.customWeightRight = const Value.absent(),
     this.customWeightLeft = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : builtinTrainingId = Value(builtinTrainingId);
   static Insertable<BuiltinTrainingWeight> custom({
-    Expression<int>? id,
-    Expression<int>? builtinTrainingId,
+    Expression<String>? id,
+    Expression<String>? builtinTrainingId,
     Expression<double>? customWeightRight,
     Expression<double>? customWeightLeft,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
     Expression<bool>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -6015,20 +5689,20 @@ class BuiltinTrainingWeightsCompanion
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   BuiltinTrainingWeightsCompanion copyWith({
-    Value<int>? id,
-    Value<int>? builtinTrainingId,
+    Value<String>? id,
+    Value<String>? builtinTrainingId,
     Value<double?>? customWeightRight,
     Value<double?>? customWeightLeft,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
     Value<bool>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return BuiltinTrainingWeightsCompanion(
       id: id ?? this.id,
@@ -6039,7 +5713,7 @@ class BuiltinTrainingWeightsCompanion
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -6047,10 +5721,10 @@ class BuiltinTrainingWeightsCompanion
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (builtinTrainingId.present) {
-      map['builtin_training_id'] = Variable<int>(builtinTrainingId.value);
+      map['builtin_training_id'] = Variable<String>(builtinTrainingId.value);
     }
     if (customWeightRight.present) {
       map['custom_weight_right'] = Variable<double>(customWeightRight.value);
@@ -6070,8 +5744,8 @@ class BuiltinTrainingWeightsCompanion
     if (dirty.present) {
       map['dirty'] = Variable<bool>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -6087,7 +5761,7 @@ class BuiltinTrainingWeightsCompanion
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -6103,13 +5777,14 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
     'builtinTrainingId',
   );
   @override
-  late final GeneratedColumn<int> builtinTrainingId = GeneratedColumn<int>(
-    'builtin_training_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
+  late final GeneratedColumn<String> builtinTrainingId =
+      GeneratedColumn<String>(
+        'builtin_training_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -6158,18 +5833,6 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _remoteIdMeta = const VerificationMeta(
-    'remoteId',
-  );
-  @override
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    clientDefault: () => const Uuid().v4(),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     builtinTrainingId,
@@ -6177,7 +5840,6 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6199,6 +5861,8 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
           _builtinTrainingIdMeta,
         ),
       );
+    } else if (isInserting) {
+      context.missing(_builtinTrainingIdMeta);
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -6224,12 +5888,6 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
         dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
       );
     }
-    if (data.containsKey('remote_id')) {
-      context.handle(
-        _remoteIdMeta,
-        remoteId.isAcceptableOrUnknown(data['remote_id']!, _remoteIdMeta),
-      );
-    }
     return context;
   }
 
@@ -6241,7 +5899,7 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
     return PinnedBuiltinTraining(
       builtinTrainingId:
           attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
+            DriftSqlType.string,
             data['${effectivePrefix}builtin_training_id'],
           )!,
       createdAt: attachedDatabase.typeMapping.read(
@@ -6262,11 +5920,6 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
             DriftSqlType.bool,
             data['${effectivePrefix}dirty'],
           )!,
-      remoteId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}remote_id'],
-          )!,
     );
   }
 
@@ -6278,24 +5931,22 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
 
 class PinnedBuiltinTraining extends DataClass
     implements Insertable<PinnedBuiltinTraining> {
-  final int builtinTrainingId;
+  final String builtinTrainingId;
   final DateTime? createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
   final bool dirty;
-  final String remoteId;
   const PinnedBuiltinTraining({
     required this.builtinTrainingId,
     this.createdAt,
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['builtin_training_id'] = Variable<int>(builtinTrainingId);
+    map['builtin_training_id'] = Variable<String>(builtinTrainingId);
     if (!nullToAbsent || createdAt != null) {
       map['created_at'] = Variable<DateTime>(createdAt);
     }
@@ -6304,7 +5955,6 @@ class PinnedBuiltinTraining extends DataClass
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     map['dirty'] = Variable<bool>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -6321,7 +5971,6 @@ class PinnedBuiltinTraining extends DataClass
               ? const Value.absent()
               : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -6331,41 +5980,37 @@ class PinnedBuiltinTraining extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PinnedBuiltinTraining(
-      builtinTrainingId: serializer.fromJson<int>(json['builtinTrainingId']),
+      builtinTrainingId: serializer.fromJson<String>(json['builtinTrainingId']),
       createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       dirty: serializer.fromJson<bool>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'builtinTrainingId': serializer.toJson<int>(builtinTrainingId),
+      'builtinTrainingId': serializer.toJson<String>(builtinTrainingId),
       'createdAt': serializer.toJson<DateTime?>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'dirty': serializer.toJson<bool>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   PinnedBuiltinTraining copyWith({
-    int? builtinTrainingId,
+    String? builtinTrainingId,
     Value<DateTime?> createdAt = const Value.absent(),
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
     bool? dirty,
-    String? remoteId,
   }) => PinnedBuiltinTraining(
     builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   PinnedBuiltinTraining copyWithCompanion(
     PinnedBuiltinTrainingsCompanion data,
@@ -6379,7 +6024,6 @@ class PinnedBuiltinTraining extends DataClass
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -6390,21 +6034,14 @@ class PinnedBuiltinTraining extends DataClass
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-    builtinTrainingId,
-    createdAt,
-    updatedAt,
-    deletedAt,
-    dirty,
-    remoteId,
-  );
+  int get hashCode =>
+      Object.hash(builtinTrainingId, createdAt, updatedAt, deletedAt, dirty);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -6413,41 +6050,40 @@ class PinnedBuiltinTraining extends DataClass
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class PinnedBuiltinTrainingsCompanion
     extends UpdateCompanion<PinnedBuiltinTraining> {
-  final Value<int> builtinTrainingId;
+  final Value<String> builtinTrainingId;
   final Value<DateTime?> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
   final Value<bool> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const PinnedBuiltinTrainingsCompanion({
     this.builtinTrainingId = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   PinnedBuiltinTrainingsCompanion.insert({
-    this.builtinTrainingId = const Value.absent(),
+    required String builtinTrainingId,
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
-  });
+    this.rowid = const Value.absent(),
+  }) : builtinTrainingId = Value(builtinTrainingId);
   static Insertable<PinnedBuiltinTraining> custom({
-    Expression<int>? builtinTrainingId,
+    Expression<String>? builtinTrainingId,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
     Expression<bool>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (builtinTrainingId != null) 'builtin_training_id': builtinTrainingId,
@@ -6455,17 +6091,17 @@ class PinnedBuiltinTrainingsCompanion
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   PinnedBuiltinTrainingsCompanion copyWith({
-    Value<int>? builtinTrainingId,
+    Value<String>? builtinTrainingId,
     Value<DateTime?>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
     Value<bool>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return PinnedBuiltinTrainingsCompanion(
       builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
@@ -6473,7 +6109,7 @@ class PinnedBuiltinTrainingsCompanion
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -6481,7 +6117,7 @@ class PinnedBuiltinTrainingsCompanion
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (builtinTrainingId.present) {
-      map['builtin_training_id'] = Variable<int>(builtinTrainingId.value);
+      map['builtin_training_id'] = Variable<String>(builtinTrainingId.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -6495,8 +6131,8 @@ class PinnedBuiltinTrainingsCompanion
     if (dirty.present) {
       map['dirty'] = Variable<bool>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -6509,7 +6145,7 @@ class PinnedBuiltinTrainingsCompanion
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -7455,37 +7091,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     users,
     syncMetadata,
   ];
-  @override
-  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'repeaters',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('trainings', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'trainings',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('rep_templates', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'trainings',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [
-        TableUpdate('builtin_training_weights', kind: UpdateKind.delete),
-      ],
-    ),
-  ]);
 }
 
 typedef $$SessionsTableCreateCompanionBuilder =
     SessionsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required String name,
       required String notes,
       Value<DateTime> date,
@@ -7503,11 +7113,11 @@ typedef $$SessionsTableCreateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
 typedef $$SessionsTableUpdateCompanionBuilder =
     SessionsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<String> name,
       Value<String> notes,
       Value<DateTime> date,
@@ -7525,50 +7135,8 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
-
-final class $$SessionsTableReferences
-    extends BaseReferences<_$AppDatabase, $SessionsTable, Session> {
-  $$SessionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$AssessmentsTable, List<Assessment>>
-  _assessmentsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.assessments,
-    aliasName: $_aliasNameGenerator(db.sessions.id, db.assessments.sessionId),
-  );
-
-  $$AssessmentsTableProcessedTableManager get assessmentsRefs {
-    final manager = $$AssessmentsTableTableManager(
-      $_db,
-      $_db.assessments,
-    ).filter((f) => f.sessionId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_assessmentsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
-  static MultiTypedResultKey<$RepDatasTable, List<RepData>> _repDatasRefsTable(
-    _$AppDatabase db,
-  ) => MultiTypedResultKey.fromTable(
-    db.repDatas,
-    aliasName: $_aliasNameGenerator(db.sessions.id, db.repDatas.sessionId),
-  );
-
-  $$RepDatasTableProcessedTableManager get repDatasRefs {
-    final manager = $$RepDatasTableTableManager(
-      $_db,
-      $_db.repDatas,
-    ).filter((f) => f.sessionId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_repDatasRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
 
 class $$SessionsTableFilterComposer
     extends Composer<_$AppDatabase, $SessionsTable> {
@@ -7579,7 +7147,7 @@ class $$SessionsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -7668,61 +7236,6 @@ class $$SessionsTableFilterComposer
     column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
-
-  ColumnFilters<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  Expression<bool> assessmentsRefs(
-    Expression<bool> Function($$AssessmentsTableFilterComposer f) f,
-  ) {
-    final $$AssessmentsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.assessments,
-      getReferencedColumn: (t) => t.sessionId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AssessmentsTableFilterComposer(
-            $db: $db,
-            $table: $db.assessments,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<bool> repDatasRefs(
-    Expression<bool> Function($$RepDatasTableFilterComposer f) f,
-  ) {
-    final $$RepDatasTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.repDatas,
-      getReferencedColumn: (t) => t.sessionId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$RepDatasTableFilterComposer(
-            $db: $db,
-            $table: $db.repDatas,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$SessionsTableOrderingComposer
@@ -7734,7 +7247,7 @@ class $$SessionsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -7823,11 +7336,6 @@ class $$SessionsTableOrderingComposer
     column: $table.dirty,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$SessionsTableAnnotationComposer
@@ -7839,7 +7347,7 @@ class $$SessionsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
@@ -7908,59 +7416,6 @@ class $$SessionsTableAnnotationComposer
 
   GeneratedColumn<bool> get dirty =>
       $composableBuilder(column: $table.dirty, builder: (column) => column);
-
-  GeneratedColumn<String> get remoteId =>
-      $composableBuilder(column: $table.remoteId, builder: (column) => column);
-
-  Expression<T> assessmentsRefs<T extends Object>(
-    Expression<T> Function($$AssessmentsTableAnnotationComposer a) f,
-  ) {
-    final $$AssessmentsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.assessments,
-      getReferencedColumn: (t) => t.sessionId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AssessmentsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.assessments,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<T> repDatasRefs<T extends Object>(
-    Expression<T> Function($$RepDatasTableAnnotationComposer a) f,
-  ) {
-    final $$RepDatasTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.repDatas,
-      getReferencedColumn: (t) => t.sessionId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$RepDatasTableAnnotationComposer(
-            $db: $db,
-            $table: $db.repDatas,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$SessionsTableTableManager
@@ -7974,9 +7429,9 @@ class $$SessionsTableTableManager
           $$SessionsTableAnnotationComposer,
           $$SessionsTableCreateCompanionBuilder,
           $$SessionsTableUpdateCompanionBuilder,
-          (Session, $$SessionsTableReferences),
+          (Session, BaseReferences<_$AppDatabase, $SessionsTable, Session>),
           Session,
-          PrefetchHooks Function({bool assessmentsRefs, bool repDatasRefs})
+          PrefetchHooks Function()
         > {
   $$SessionsTableTableManager(_$AppDatabase db, $SessionsTable table)
     : super(
@@ -7991,7 +7446,7 @@ class $$SessionsTableTableManager
               () => $$SessionsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> notes = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
@@ -8009,7 +7464,7 @@ class $$SessionsTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion(
                 id: id,
                 name: name,
@@ -8029,11 +7484,11 @@ class $$SessionsTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required String name,
                 required String notes,
                 Value<DateTime> date = const Value.absent(),
@@ -8051,7 +7506,7 @@ class $$SessionsTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion.insert(
                 id: id,
                 name: name,
@@ -8071,7 +7526,7 @@ class $$SessionsTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           withReferenceMapper:
               (p0) =>
@@ -8079,67 +7534,11 @@ class $$SessionsTableTableManager
                       .map(
                         (e) => (
                           e.readTable(table),
-                          $$SessionsTableReferences(db, table, e),
+                          BaseReferences(db, table, e),
                         ),
                       )
                       .toList(),
-          prefetchHooksCallback: ({
-            assessmentsRefs = false,
-            repDatasRefs = false,
-          }) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (assessmentsRefs) db.assessments,
-                if (repDatasRefs) db.repDatas,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (assessmentsRefs)
-                    await $_getPrefetchedData<
-                      Session,
-                      $SessionsTable,
-                      Assessment
-                    >(
-                      currentTable: table,
-                      referencedTable: $$SessionsTableReferences
-                          ._assessmentsRefsTable(db),
-                      managerFromTypedResult:
-                          (p0) =>
-                              $$SessionsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).assessmentsRefs,
-                      referencedItemsForCurrentItem:
-                          (item, referencedItems) => referencedItems.where(
-                            (e) => e.sessionId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                  if (repDatasRefs)
-                    await $_getPrefetchedData<Session, $SessionsTable, RepData>(
-                      currentTable: table,
-                      referencedTable: $$SessionsTableReferences
-                          ._repDatasRefsTable(db),
-                      managerFromTypedResult:
-                          (p0) =>
-                              $$SessionsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).repDatasRefs,
-                      referencedItemsForCurrentItem:
-                          (item, referencedItems) => referencedItems.where(
-                            (e) => e.sessionId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -8154,62 +7553,38 @@ typedef $$SessionsTableProcessedTableManager =
       $$SessionsTableAnnotationComposer,
       $$SessionsTableCreateCompanionBuilder,
       $$SessionsTableUpdateCompanionBuilder,
-      (Session, $$SessionsTableReferences),
+      (Session, BaseReferences<_$AppDatabase, $SessionsTable, Session>),
       Session,
-      PrefetchHooks Function({bool assessmentsRefs, bool repDatasRefs})
+      PrefetchHooks Function()
     >;
 typedef $$AssessmentsTableCreateCompanionBuilder =
     AssessmentsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required int type,
       Value<double?> rightValue,
       Value<double?> leftValue,
-      required int sessionId,
+      required String sessionId,
       Value<int?> gripPosition,
       Value<DateTime?> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
 typedef $$AssessmentsTableUpdateCompanionBuilder =
     AssessmentsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<int> type,
       Value<double?> rightValue,
       Value<double?> leftValue,
-      Value<int> sessionId,
+      Value<String> sessionId,
       Value<int?> gripPosition,
       Value<DateTime?> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
-
-final class $$AssessmentsTableReferences
-    extends BaseReferences<_$AppDatabase, $AssessmentsTable, Assessment> {
-  $$AssessmentsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $SessionsTable _sessionIdTable(_$AppDatabase db) =>
-      db.sessions.createAlias(
-        $_aliasNameGenerator(db.assessments.sessionId, db.sessions.id),
-      );
-
-  $$SessionsTableProcessedTableManager get sessionId {
-    final $_column = $_itemColumn<int>('session_id')!;
-
-    final manager = $$SessionsTableTableManager(
-      $_db,
-      $_db.sessions,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
 
 class $$AssessmentsTableFilterComposer
     extends Composer<_$AppDatabase, $AssessmentsTable> {
@@ -8220,7 +7595,7 @@ class $$AssessmentsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -8237,6 +7612,11 @@ class $$AssessmentsTableFilterComposer
 
   ColumnFilters<double> get leftValue => $composableBuilder(
     column: $table.leftValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8264,34 +7644,6 @@ class $$AssessmentsTableFilterComposer
     column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
-
-  ColumnFilters<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  $$SessionsTableFilterComposer get sessionId {
-    final $$SessionsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.sessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SessionsTableFilterComposer(
-            $db: $db,
-            $table: $db.sessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$AssessmentsTableOrderingComposer
@@ -8303,7 +7655,7 @@ class $$AssessmentsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -8320,6 +7672,11 @@ class $$AssessmentsTableOrderingComposer
 
   ColumnOrderings<double> get leftValue => $composableBuilder(
     column: $table.leftValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -8347,34 +7704,6 @@ class $$AssessmentsTableOrderingComposer
     column: $table.dirty,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  $$SessionsTableOrderingComposer get sessionId {
-    final $$SessionsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.sessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SessionsTableOrderingComposer(
-            $db: $db,
-            $table: $db.sessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$AssessmentsTableAnnotationComposer
@@ -8386,7 +7715,7 @@ class $$AssessmentsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<int> get type =>
@@ -8399,6 +7728,9 @@ class $$AssessmentsTableAnnotationComposer
 
   GeneratedColumn<double> get leftValue =>
       $composableBuilder(column: $table.leftValue, builder: (column) => column);
+
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
 
   GeneratedColumn<int> get gripPosition => $composableBuilder(
     column: $table.gripPosition,
@@ -8416,32 +7748,6 @@ class $$AssessmentsTableAnnotationComposer
 
   GeneratedColumn<bool> get dirty =>
       $composableBuilder(column: $table.dirty, builder: (column) => column);
-
-  GeneratedColumn<String> get remoteId =>
-      $composableBuilder(column: $table.remoteId, builder: (column) => column);
-
-  $$SessionsTableAnnotationComposer get sessionId {
-    final $$SessionsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.sessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SessionsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.sessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$AssessmentsTableTableManager
@@ -8455,9 +7761,12 @@ class $$AssessmentsTableTableManager
           $$AssessmentsTableAnnotationComposer,
           $$AssessmentsTableCreateCompanionBuilder,
           $$AssessmentsTableUpdateCompanionBuilder,
-          (Assessment, $$AssessmentsTableReferences),
+          (
+            Assessment,
+            BaseReferences<_$AppDatabase, $AssessmentsTable, Assessment>,
+          ),
           Assessment,
-          PrefetchHooks Function({bool sessionId})
+          PrefetchHooks Function()
         > {
   $$AssessmentsTableTableManager(_$AppDatabase db, $AssessmentsTable table)
     : super(
@@ -8473,17 +7782,17 @@ class $$AssessmentsTableTableManager
                   $$AssessmentsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<int> type = const Value.absent(),
                 Value<double?> rightValue = const Value.absent(),
                 Value<double?> leftValue = const Value.absent(),
-                Value<int> sessionId = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
                 Value<int?> gripPosition = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => AssessmentsCompanion(
                 id: id,
                 type: type,
@@ -8495,21 +7804,21 @@ class $$AssessmentsTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required int type,
                 Value<double?> rightValue = const Value.absent(),
                 Value<double?> leftValue = const Value.absent(),
-                required int sessionId,
+                required String sessionId,
                 Value<int?> gripPosition = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => AssessmentsCompanion.insert(
                 id: id,
                 type: type,
@@ -8521,7 +7830,7 @@ class $$AssessmentsTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           withReferenceMapper:
               (p0) =>
@@ -8529,51 +7838,11 @@ class $$AssessmentsTableTableManager
                       .map(
                         (e) => (
                           e.readTable(table),
-                          $$AssessmentsTableReferences(db, table, e),
+                          BaseReferences(db, table, e),
                         ),
                       )
                       .toList(),
-          prefetchHooksCallback: ({sessionId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                T extends TableManagerState<
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic
-                >
-              >(state) {
-                if (sessionId) {
-                  state =
-                      state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.sessionId,
-                            referencedTable: $$AssessmentsTableReferences
-                                ._sessionIdTable(db),
-                            referencedColumn:
-                                $$AssessmentsTableReferences
-                                    ._sessionIdTable(db)
-                                    .id,
-                          )
-                          as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -8588,13 +7857,16 @@ typedef $$AssessmentsTableProcessedTableManager =
       $$AssessmentsTableAnnotationComposer,
       $$AssessmentsTableCreateCompanionBuilder,
       $$AssessmentsTableUpdateCompanionBuilder,
-      (Assessment, $$AssessmentsTableReferences),
+      (
+        Assessment,
+        BaseReferences<_$AppDatabase, $AssessmentsTable, Assessment>,
+      ),
       Assessment,
-      PrefetchHooks Function({bool sessionId})
+      PrefetchHooks Function()
     >;
 typedef $$RepeatersTableCreateCompanionBuilder =
     RepeatersCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required int sets,
       required int reps,
       required int worktime,
@@ -8608,11 +7880,11 @@ typedef $$RepeatersTableCreateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
 typedef $$RepeatersTableUpdateCompanionBuilder =
     RepeatersCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<int> sets,
       Value<int> reps,
       Value<int> worktime,
@@ -8626,31 +7898,8 @@ typedef $$RepeatersTableUpdateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
-
-final class $$RepeatersTableReferences
-    extends BaseReferences<_$AppDatabase, $RepeatersTable, Repeater> {
-  $$RepeatersTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$TrainingsTable, List<Training>>
-  _trainingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.trainings,
-    aliasName: $_aliasNameGenerator(db.repeaters.id, db.trainings.repeaterId),
-  );
-
-  $$TrainingsTableProcessedTableManager get trainingsRefs {
-    final manager = $$TrainingsTableTableManager(
-      $_db,
-      $_db.trainings,
-    ).filter((f) => f.repeaterId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_trainingsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
 
 class $$RepeatersTableFilterComposer
     extends Composer<_$AppDatabase, $RepeatersTable> {
@@ -8661,7 +7910,7 @@ class $$RepeatersTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -8730,36 +7979,6 @@ class $$RepeatersTableFilterComposer
     column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
-
-  ColumnFilters<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  Expression<bool> trainingsRefs(
-    Expression<bool> Function($$TrainingsTableFilterComposer f) f,
-  ) {
-    final $$TrainingsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.repeaterId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableFilterComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$RepeatersTableOrderingComposer
@@ -8771,7 +7990,7 @@ class $$RepeatersTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -8840,11 +8059,6 @@ class $$RepeatersTableOrderingComposer
     column: $table.dirty,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$RepeatersTableAnnotationComposer
@@ -8856,7 +8070,7 @@ class $$RepeatersTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<int> get sets =>
@@ -8903,34 +8117,6 @@ class $$RepeatersTableAnnotationComposer
 
   GeneratedColumn<bool> get dirty =>
       $composableBuilder(column: $table.dirty, builder: (column) => column);
-
-  GeneratedColumn<String> get remoteId =>
-      $composableBuilder(column: $table.remoteId, builder: (column) => column);
-
-  Expression<T> trainingsRefs<T extends Object>(
-    Expression<T> Function($$TrainingsTableAnnotationComposer a) f,
-  ) {
-    final $$TrainingsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.repeaterId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$RepeatersTableTableManager
@@ -8944,9 +8130,9 @@ class $$RepeatersTableTableManager
           $$RepeatersTableAnnotationComposer,
           $$RepeatersTableCreateCompanionBuilder,
           $$RepeatersTableUpdateCompanionBuilder,
-          (Repeater, $$RepeatersTableReferences),
+          (Repeater, BaseReferences<_$AppDatabase, $RepeatersTable, Repeater>),
           Repeater,
-          PrefetchHooks Function({bool trainingsRefs})
+          PrefetchHooks Function()
         > {
   $$RepeatersTableTableManager(_$AppDatabase db, $RepeatersTable table)
     : super(
@@ -8961,7 +8147,7 @@ class $$RepeatersTableTableManager
               () => $$RepeatersTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<int> sets = const Value.absent(),
                 Value<int> reps = const Value.absent(),
                 Value<int> worktime = const Value.absent(),
@@ -8975,7 +8161,7 @@ class $$RepeatersTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => RepeatersCompanion(
                 id: id,
                 sets: sets,
@@ -8991,11 +8177,11 @@ class $$RepeatersTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required int sets,
                 required int reps,
                 required int worktime,
@@ -9009,7 +8195,7 @@ class $$RepeatersTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => RepeatersCompanion.insert(
                 id: id,
                 sets: sets,
@@ -9025,7 +8211,7 @@ class $$RepeatersTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           withReferenceMapper:
               (p0) =>
@@ -9033,43 +8219,11 @@ class $$RepeatersTableTableManager
                       .map(
                         (e) => (
                           e.readTable(table),
-                          $$RepeatersTableReferences(db, table, e),
+                          BaseReferences(db, table, e),
                         ),
                       )
                       .toList(),
-          prefetchHooksCallback: ({trainingsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (trainingsRefs) db.trainings],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (trainingsRefs)
-                    await $_getPrefetchedData<
-                      Repeater,
-                      $RepeatersTable,
-                      Training
-                    >(
-                      currentTable: table,
-                      referencedTable: $$RepeatersTableReferences
-                          ._trainingsRefsTable(db),
-                      managerFromTypedResult:
-                          (p0) =>
-                              $$RepeatersTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).trainingsRefs,
-                      referencedItemsForCurrentItem:
-                          (item, referencedItems) => referencedItems.where(
-                            (e) => e.repeaterId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -9084,15 +8238,15 @@ typedef $$RepeatersTableProcessedTableManager =
       $$RepeatersTableAnnotationComposer,
       $$RepeatersTableCreateCompanionBuilder,
       $$RepeatersTableUpdateCompanionBuilder,
-      (Repeater, $$RepeatersTableReferences),
+      (Repeater, BaseReferences<_$AppDatabase, $RepeatersTable, Repeater>),
       Repeater,
-      PrefetchHooks Function({bool trainingsRefs})
+      PrefetchHooks Function()
     >;
 typedef $$TrainingsTableCreateCompanionBuilder =
     TrainingsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required String name,
-      Value<int?> repeaterId,
+      Value<String?> repeaterId,
       Value<bool> isBuiltin,
       Value<bool> isFavorite,
       Value<bool> isAssessment,
@@ -9100,13 +8254,13 @@ typedef $$TrainingsTableCreateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
 typedef $$TrainingsTableUpdateCompanionBuilder =
     TrainingsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<String> name,
-      Value<int?> repeaterId,
+      Value<String?> repeaterId,
       Value<bool> isBuiltin,
       Value<bool> isFavorite,
       Value<bool> isAssessment,
@@ -9114,81 +8268,8 @@ typedef $$TrainingsTableUpdateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
-
-final class $$TrainingsTableReferences
-    extends BaseReferences<_$AppDatabase, $TrainingsTable, Training> {
-  $$TrainingsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $RepeatersTable _repeaterIdTable(_$AppDatabase db) =>
-      db.repeaters.createAlias(
-        $_aliasNameGenerator(db.trainings.repeaterId, db.repeaters.id),
-      );
-
-  $$RepeatersTableProcessedTableManager? get repeaterId {
-    final $_column = $_itemColumn<int>('repeater_id');
-    if ($_column == null) return null;
-    final manager = $$RepeatersTableTableManager(
-      $_db,
-      $_db.repeaters,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_repeaterIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static MultiTypedResultKey<$RepTemplatesTable, List<RepTemplate>>
-  _repTemplatesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.repTemplates,
-    aliasName: $_aliasNameGenerator(
-      db.trainings.id,
-      db.repTemplates.trainingId,
-    ),
-  );
-
-  $$RepTemplatesTableProcessedTableManager get repTemplatesRefs {
-    final manager = $$RepTemplatesTableTableManager(
-      $_db,
-      $_db.repTemplates,
-    ).filter((f) => f.trainingId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_repTemplatesRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
-  static MultiTypedResultKey<
-    $BuiltinTrainingWeightsTable,
-    List<BuiltinTrainingWeight>
-  >
-  _builtinTrainingWeightsRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.builtinTrainingWeights,
-        aliasName: $_aliasNameGenerator(
-          db.trainings.id,
-          db.builtinTrainingWeights.builtinTrainingId,
-        ),
-      );
-
-  $$BuiltinTrainingWeightsTableProcessedTableManager
-  get builtinTrainingWeightsRefs {
-    final manager = $$BuiltinTrainingWeightsTableTableManager(
-      $_db,
-      $_db.builtinTrainingWeights,
-    ).filter((f) => f.builtinTrainingId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(
-      _builtinTrainingWeightsRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
 
 class $$TrainingsTableFilterComposer
     extends Composer<_$AppDatabase, $TrainingsTable> {
@@ -9199,13 +8280,18 @@ class $$TrainingsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get repeaterId => $composableBuilder(
+    column: $table.repeaterId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9243,85 +8329,6 @@ class $$TrainingsTableFilterComposer
     column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
-
-  ColumnFilters<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  $$RepeatersTableFilterComposer get repeaterId {
-    final $$RepeatersTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.repeaterId,
-      referencedTable: $db.repeaters,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$RepeatersTableFilterComposer(
-            $db: $db,
-            $table: $db.repeaters,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  Expression<bool> repTemplatesRefs(
-    Expression<bool> Function($$RepTemplatesTableFilterComposer f) f,
-  ) {
-    final $$RepTemplatesTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.repTemplates,
-      getReferencedColumn: (t) => t.trainingId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$RepTemplatesTableFilterComposer(
-            $db: $db,
-            $table: $db.repTemplates,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<bool> builtinTrainingWeightsRefs(
-    Expression<bool> Function($$BuiltinTrainingWeightsTableFilterComposer f) f,
-  ) {
-    final $$BuiltinTrainingWeightsTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.builtinTrainingWeights,
-          getReferencedColumn: (t) => t.builtinTrainingId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$BuiltinTrainingWeightsTableFilterComposer(
-                $db: $db,
-                $table: $db.builtinTrainingWeights,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
-    return f(composer);
-  }
 }
 
 class $$TrainingsTableOrderingComposer
@@ -9333,13 +8340,18 @@ class $$TrainingsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
 
   ColumnOrderings<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get repeaterId => $composableBuilder(
+    column: $table.repeaterId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -9377,34 +8389,6 @@ class $$TrainingsTableOrderingComposer
     column: $table.dirty,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  $$RepeatersTableOrderingComposer get repeaterId {
-    final $$RepeatersTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.repeaterId,
-      referencedTable: $db.repeaters,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$RepeatersTableOrderingComposer(
-            $db: $db,
-            $table: $db.repeaters,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$TrainingsTableAnnotationComposer
@@ -9416,11 +8400,16 @@ class $$TrainingsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get repeaterId => $composableBuilder(
+    column: $table.repeaterId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isBuiltin =>
       $composableBuilder(column: $table.isBuiltin, builder: (column) => column);
@@ -9446,83 +8435,6 @@ class $$TrainingsTableAnnotationComposer
 
   GeneratedColumn<bool> get dirty =>
       $composableBuilder(column: $table.dirty, builder: (column) => column);
-
-  GeneratedColumn<String> get remoteId =>
-      $composableBuilder(column: $table.remoteId, builder: (column) => column);
-
-  $$RepeatersTableAnnotationComposer get repeaterId {
-    final $$RepeatersTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.repeaterId,
-      referencedTable: $db.repeaters,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$RepeatersTableAnnotationComposer(
-            $db: $db,
-            $table: $db.repeaters,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  Expression<T> repTemplatesRefs<T extends Object>(
-    Expression<T> Function($$RepTemplatesTableAnnotationComposer a) f,
-  ) {
-    final $$RepTemplatesTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.repTemplates,
-      getReferencedColumn: (t) => t.trainingId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$RepTemplatesTableAnnotationComposer(
-            $db: $db,
-            $table: $db.repTemplates,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<T> builtinTrainingWeightsRefs<T extends Object>(
-    Expression<T> Function($$BuiltinTrainingWeightsTableAnnotationComposer a) f,
-  ) {
-    final $$BuiltinTrainingWeightsTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.builtinTrainingWeights,
-          getReferencedColumn: (t) => t.builtinTrainingId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$BuiltinTrainingWeightsTableAnnotationComposer(
-                $db: $db,
-                $table: $db.builtinTrainingWeights,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
-    return f(composer);
-  }
 }
 
 class $$TrainingsTableTableManager
@@ -9536,13 +8448,9 @@ class $$TrainingsTableTableManager
           $$TrainingsTableAnnotationComposer,
           $$TrainingsTableCreateCompanionBuilder,
           $$TrainingsTableUpdateCompanionBuilder,
-          (Training, $$TrainingsTableReferences),
+          (Training, BaseReferences<_$AppDatabase, $TrainingsTable, Training>),
           Training,
-          PrefetchHooks Function({
-            bool repeaterId,
-            bool repTemplatesRefs,
-            bool builtinTrainingWeightsRefs,
-          })
+          PrefetchHooks Function()
         > {
   $$TrainingsTableTableManager(_$AppDatabase db, $TrainingsTable table)
     : super(
@@ -9557,9 +8465,9 @@ class $$TrainingsTableTableManager
               () => $$TrainingsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
-                Value<int?> repeaterId = const Value.absent(),
+                Value<String?> repeaterId = const Value.absent(),
                 Value<bool> isBuiltin = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<bool> isAssessment = const Value.absent(),
@@ -9567,7 +8475,7 @@ class $$TrainingsTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => TrainingsCompanion(
                 id: id,
                 name: name,
@@ -9579,13 +8487,13 @@ class $$TrainingsTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required String name,
-                Value<int?> repeaterId = const Value.absent(),
+                Value<String?> repeaterId = const Value.absent(),
                 Value<bool> isBuiltin = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<bool> isAssessment = const Value.absent(),
@@ -9593,7 +8501,7 @@ class $$TrainingsTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => TrainingsCompanion.insert(
                 id: id,
                 name: name,
@@ -9605,7 +8513,7 @@ class $$TrainingsTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           withReferenceMapper:
               (p0) =>
@@ -9613,103 +8521,11 @@ class $$TrainingsTableTableManager
                       .map(
                         (e) => (
                           e.readTable(table),
-                          $$TrainingsTableReferences(db, table, e),
+                          BaseReferences(db, table, e),
                         ),
                       )
                       .toList(),
-          prefetchHooksCallback: ({
-            repeaterId = false,
-            repTemplatesRefs = false,
-            builtinTrainingWeightsRefs = false,
-          }) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (repTemplatesRefs) db.repTemplates,
-                if (builtinTrainingWeightsRefs) db.builtinTrainingWeights,
-              ],
-              addJoins: <
-                T extends TableManagerState<
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic
-                >
-              >(state) {
-                if (repeaterId) {
-                  state =
-                      state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.repeaterId,
-                            referencedTable: $$TrainingsTableReferences
-                                ._repeaterIdTable(db),
-                            referencedColumn:
-                                $$TrainingsTableReferences
-                                    ._repeaterIdTable(db)
-                                    .id,
-                          )
-                          as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (repTemplatesRefs)
-                    await $_getPrefetchedData<
-                      Training,
-                      $TrainingsTable,
-                      RepTemplate
-                    >(
-                      currentTable: table,
-                      referencedTable: $$TrainingsTableReferences
-                          ._repTemplatesRefsTable(db),
-                      managerFromTypedResult:
-                          (p0) =>
-                              $$TrainingsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).repTemplatesRefs,
-                      referencedItemsForCurrentItem:
-                          (item, referencedItems) => referencedItems.where(
-                            (e) => e.trainingId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                  if (builtinTrainingWeightsRefs)
-                    await $_getPrefetchedData<
-                      Training,
-                      $TrainingsTable,
-                      BuiltinTrainingWeight
-                    >(
-                      currentTable: table,
-                      referencedTable: $$TrainingsTableReferences
-                          ._builtinTrainingWeightsRefsTable(db),
-                      managerFromTypedResult:
-                          (p0) =>
-                              $$TrainingsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).builtinTrainingWeightsRefs,
-                      referencedItemsForCurrentItem:
-                          (item, referencedItems) => referencedItems.where(
-                            (e) => e.builtinTrainingId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -9724,21 +8540,17 @@ typedef $$TrainingsTableProcessedTableManager =
       $$TrainingsTableAnnotationComposer,
       $$TrainingsTableCreateCompanionBuilder,
       $$TrainingsTableUpdateCompanionBuilder,
-      (Training, $$TrainingsTableReferences),
+      (Training, BaseReferences<_$AppDatabase, $TrainingsTable, Training>),
       Training,
-      PrefetchHooks Function({
-        bool repeaterId,
-        bool repTemplatesRefs,
-        bool builtinTrainingWeightsRefs,
-      })
+      PrefetchHooks Function()
     >;
 typedef $$RepTemplatesTableCreateCompanionBuilder =
     RepTemplatesCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required bool isRest,
       required bool rightHand,
       required int duration,
-      required int trainingId,
+      required String trainingId,
       required double targetWeight,
       required int index,
       Value<int> gripPosition,
@@ -9746,15 +8558,15 @@ typedef $$RepTemplatesTableCreateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
 typedef $$RepTemplatesTableUpdateCompanionBuilder =
     RepTemplatesCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<bool> isRest,
       Value<bool> rightHand,
       Value<int> duration,
-      Value<int> trainingId,
+      Value<String> trainingId,
       Value<double> targetWeight,
       Value<int> index,
       Value<int> gripPosition,
@@ -9762,32 +8574,8 @@ typedef $$RepTemplatesTableUpdateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
-
-final class $$RepTemplatesTableReferences
-    extends BaseReferences<_$AppDatabase, $RepTemplatesTable, RepTemplate> {
-  $$RepTemplatesTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $TrainingsTable _trainingIdTable(_$AppDatabase db) =>
-      db.trainings.createAlias(
-        $_aliasNameGenerator(db.repTemplates.trainingId, db.trainings.id),
-      );
-
-  $$TrainingsTableProcessedTableManager get trainingId {
-    final $_column = $_itemColumn<int>('training_id')!;
-
-    final manager = $$TrainingsTableTableManager(
-      $_db,
-      $_db.trainings,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_trainingIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
 
 class $$RepTemplatesTableFilterComposer
     extends Composer<_$AppDatabase, $RepTemplatesTable> {
@@ -9798,7 +8586,7 @@ class $$RepTemplatesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -9815,6 +8603,11 @@ class $$RepTemplatesTableFilterComposer
 
   ColumnFilters<int> get duration => $composableBuilder(
     column: $table.duration,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get trainingId => $composableBuilder(
+    column: $table.trainingId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9852,34 +8645,6 @@ class $$RepTemplatesTableFilterComposer
     column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
-
-  ColumnFilters<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  $$TrainingsTableFilterComposer get trainingId {
-    final $$TrainingsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.trainingId,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableFilterComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$RepTemplatesTableOrderingComposer
@@ -9891,7 +8656,7 @@ class $$RepTemplatesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -9908,6 +8673,11 @@ class $$RepTemplatesTableOrderingComposer
 
   ColumnOrderings<int> get duration => $composableBuilder(
     column: $table.duration,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get trainingId => $composableBuilder(
+    column: $table.trainingId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -9945,34 +8715,6 @@ class $$RepTemplatesTableOrderingComposer
     column: $table.dirty,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  $$TrainingsTableOrderingComposer get trainingId {
-    final $$TrainingsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.trainingId,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableOrderingComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$RepTemplatesTableAnnotationComposer
@@ -9984,7 +8726,7 @@ class $$RepTemplatesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<bool> get isRest =>
@@ -9995,6 +8737,11 @@ class $$RepTemplatesTableAnnotationComposer
 
   GeneratedColumn<int> get duration =>
       $composableBuilder(column: $table.duration, builder: (column) => column);
+
+  GeneratedColumn<String> get trainingId => $composableBuilder(
+    column: $table.trainingId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<double> get targetWeight => $composableBuilder(
     column: $table.targetWeight,
@@ -10020,32 +8767,6 @@ class $$RepTemplatesTableAnnotationComposer
 
   GeneratedColumn<bool> get dirty =>
       $composableBuilder(column: $table.dirty, builder: (column) => column);
-
-  GeneratedColumn<String> get remoteId =>
-      $composableBuilder(column: $table.remoteId, builder: (column) => column);
-
-  $$TrainingsTableAnnotationComposer get trainingId {
-    final $$TrainingsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.trainingId,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$RepTemplatesTableTableManager
@@ -10059,9 +8780,12 @@ class $$RepTemplatesTableTableManager
           $$RepTemplatesTableAnnotationComposer,
           $$RepTemplatesTableCreateCompanionBuilder,
           $$RepTemplatesTableUpdateCompanionBuilder,
-          (RepTemplate, $$RepTemplatesTableReferences),
+          (
+            RepTemplate,
+            BaseReferences<_$AppDatabase, $RepTemplatesTable, RepTemplate>,
+          ),
           RepTemplate,
-          PrefetchHooks Function({bool trainingId})
+          PrefetchHooks Function()
         > {
   $$RepTemplatesTableTableManager(_$AppDatabase db, $RepTemplatesTable table)
     : super(
@@ -10077,11 +8801,11 @@ class $$RepTemplatesTableTableManager
                   $$RepTemplatesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<bool> isRest = const Value.absent(),
                 Value<bool> rightHand = const Value.absent(),
                 Value<int> duration = const Value.absent(),
-                Value<int> trainingId = const Value.absent(),
+                Value<String> trainingId = const Value.absent(),
                 Value<double> targetWeight = const Value.absent(),
                 Value<int> index = const Value.absent(),
                 Value<int> gripPosition = const Value.absent(),
@@ -10089,7 +8813,7 @@ class $$RepTemplatesTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => RepTemplatesCompanion(
                 id: id,
                 isRest: isRest,
@@ -10103,15 +8827,15 @@ class $$RepTemplatesTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required bool isRest,
                 required bool rightHand,
                 required int duration,
-                required int trainingId,
+                required String trainingId,
                 required double targetWeight,
                 required int index,
                 Value<int> gripPosition = const Value.absent(),
@@ -10119,7 +8843,7 @@ class $$RepTemplatesTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => RepTemplatesCompanion.insert(
                 id: id,
                 isRest: isRest,
@@ -10133,7 +8857,7 @@ class $$RepTemplatesTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           withReferenceMapper:
               (p0) =>
@@ -10141,51 +8865,11 @@ class $$RepTemplatesTableTableManager
                       .map(
                         (e) => (
                           e.readTable(table),
-                          $$RepTemplatesTableReferences(db, table, e),
+                          BaseReferences(db, table, e),
                         ),
                       )
                       .toList(),
-          prefetchHooksCallback: ({trainingId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                T extends TableManagerState<
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic
-                >
-              >(state) {
-                if (trainingId) {
-                  state =
-                      state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.trainingId,
-                            referencedTable: $$RepTemplatesTableReferences
-                                ._trainingIdTable(db),
-                            referencedColumn:
-                                $$RepTemplatesTableReferences
-                                    ._trainingIdTable(db)
-                                    .id,
-                          )
-                          as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -10200,15 +8884,18 @@ typedef $$RepTemplatesTableProcessedTableManager =
       $$RepTemplatesTableAnnotationComposer,
       $$RepTemplatesTableCreateCompanionBuilder,
       $$RepTemplatesTableUpdateCompanionBuilder,
-      (RepTemplate, $$RepTemplatesTableReferences),
+      (
+        RepTemplate,
+        BaseReferences<_$AppDatabase, $RepTemplatesTable, RepTemplate>,
+      ),
       RepTemplate,
-      PrefetchHooks Function({bool trainingId})
+      PrefetchHooks Function()
     >;
 typedef $$RepDatasTableCreateCompanionBuilder =
     RepDatasCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required double averageWeight,
-      required int sessionId,
+      required String sessionId,
       required bool isRest,
       required bool rightHand,
       required int duration,
@@ -10219,13 +8906,13 @@ typedef $$RepDatasTableCreateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
 typedef $$RepDatasTableUpdateCompanionBuilder =
     RepDatasCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<double> averageWeight,
-      Value<int> sessionId,
+      Value<String> sessionId,
       Value<bool> isRest,
       Value<bool> rightHand,
       Value<int> duration,
@@ -10236,30 +8923,8 @@ typedef $$RepDatasTableUpdateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
-
-final class $$RepDatasTableReferences
-    extends BaseReferences<_$AppDatabase, $RepDatasTable, RepData> {
-  $$RepDatasTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $SessionsTable _sessionIdTable(_$AppDatabase db) => db.sessions
-      .createAlias($_aliasNameGenerator(db.repDatas.sessionId, db.sessions.id));
-
-  $$SessionsTableProcessedTableManager get sessionId {
-    final $_column = $_itemColumn<int>('session_id')!;
-
-    final manager = $$SessionsTableTableManager(
-      $_db,
-      $_db.sessions,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
 
 class $$RepDatasTableFilterComposer
     extends Composer<_$AppDatabase, $RepDatasTable> {
@@ -10270,13 +8935,18 @@ class $$RepDatasTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
 
   ColumnFilters<double> get averageWeight => $composableBuilder(
     column: $table.averageWeight,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10329,34 +8999,6 @@ class $$RepDatasTableFilterComposer
     column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
-
-  ColumnFilters<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  $$SessionsTableFilterComposer get sessionId {
-    final $$SessionsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.sessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SessionsTableFilterComposer(
-            $db: $db,
-            $table: $db.sessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$RepDatasTableOrderingComposer
@@ -10368,13 +9010,18 @@ class $$RepDatasTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
 
   ColumnOrderings<double> get averageWeight => $composableBuilder(
     column: $table.averageWeight,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -10427,34 +9074,6 @@ class $$RepDatasTableOrderingComposer
     column: $table.dirty,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  $$SessionsTableOrderingComposer get sessionId {
-    final $$SessionsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.sessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SessionsTableOrderingComposer(
-            $db: $db,
-            $table: $db.sessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$RepDatasTableAnnotationComposer
@@ -10466,13 +9085,16 @@ class $$RepDatasTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<double> get averageWeight => $composableBuilder(
     column: $table.averageWeight,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
 
   GeneratedColumn<bool> get isRest =>
       $composableBuilder(column: $table.isRest, builder: (column) => column);
@@ -10507,32 +9129,6 @@ class $$RepDatasTableAnnotationComposer
 
   GeneratedColumn<bool> get dirty =>
       $composableBuilder(column: $table.dirty, builder: (column) => column);
-
-  GeneratedColumn<String> get remoteId =>
-      $composableBuilder(column: $table.remoteId, builder: (column) => column);
-
-  $$SessionsTableAnnotationComposer get sessionId {
-    final $$SessionsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.sessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SessionsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.sessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$RepDatasTableTableManager
@@ -10546,9 +9142,9 @@ class $$RepDatasTableTableManager
           $$RepDatasTableAnnotationComposer,
           $$RepDatasTableCreateCompanionBuilder,
           $$RepDatasTableUpdateCompanionBuilder,
-          (RepData, $$RepDatasTableReferences),
+          (RepData, BaseReferences<_$AppDatabase, $RepDatasTable, RepData>),
           RepData,
-          PrefetchHooks Function({bool sessionId})
+          PrefetchHooks Function()
         > {
   $$RepDatasTableTableManager(_$AppDatabase db, $RepDatasTable table)
     : super(
@@ -10563,9 +9159,9 @@ class $$RepDatasTableTableManager
               () => $$RepDatasTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<double> averageWeight = const Value.absent(),
-                Value<int> sessionId = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
                 Value<bool> isRest = const Value.absent(),
                 Value<bool> rightHand = const Value.absent(),
                 Value<int> duration = const Value.absent(),
@@ -10576,7 +9172,7 @@ class $$RepDatasTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => RepDatasCompanion(
                 id: id,
                 averageWeight: averageWeight,
@@ -10591,13 +9187,13 @@ class $$RepDatasTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required double averageWeight,
-                required int sessionId,
+                required String sessionId,
                 required bool isRest,
                 required bool rightHand,
                 required int duration,
@@ -10608,7 +9204,7 @@ class $$RepDatasTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => RepDatasCompanion.insert(
                 id: id,
                 averageWeight: averageWeight,
@@ -10623,7 +9219,7 @@ class $$RepDatasTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           withReferenceMapper:
               (p0) =>
@@ -10631,51 +9227,11 @@ class $$RepDatasTableTableManager
                       .map(
                         (e) => (
                           e.readTable(table),
-                          $$RepDatasTableReferences(db, table, e),
+                          BaseReferences(db, table, e),
                         ),
                       )
                       .toList(),
-          prefetchHooksCallback: ({sessionId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                T extends TableManagerState<
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic
-                >
-              >(state) {
-                if (sessionId) {
-                  state =
-                      state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.sessionId,
-                            referencedTable: $$RepDatasTableReferences
-                                ._sessionIdTable(db),
-                            referencedColumn:
-                                $$RepDatasTableReferences
-                                    ._sessionIdTable(db)
-                                    .id,
-                          )
-                          as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -10690,13 +9246,13 @@ typedef $$RepDatasTableProcessedTableManager =
       $$RepDatasTableAnnotationComposer,
       $$RepDatasTableCreateCompanionBuilder,
       $$RepDatasTableUpdateCompanionBuilder,
-      (RepData, $$RepDatasTableReferences),
+      (RepData, BaseReferences<_$AppDatabase, $RepDatasTable, RepData>),
       RepData,
-      PrefetchHooks Function({bool sessionId})
+      PrefetchHooks Function()
     >;
 typedef $$SensorConfigsTableCreateCompanionBuilder =
     SensorConfigsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required String name,
       required int index,
       required double tare,
@@ -10705,11 +9261,11 @@ typedef $$SensorConfigsTableCreateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
 typedef $$SensorConfigsTableUpdateCompanionBuilder =
     SensorConfigsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<String> name,
       Value<int> index,
       Value<double> tare,
@@ -10718,7 +9274,7 @@ typedef $$SensorConfigsTableUpdateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
 
 class $$SensorConfigsTableFilterComposer
@@ -10730,7 +9286,7 @@ class $$SensorConfigsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -10774,11 +9330,6 @@ class $$SensorConfigsTableFilterComposer
     column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
-
-  ColumnFilters<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnFilters(column),
-  );
 }
 
 class $$SensorConfigsTableOrderingComposer
@@ -10790,7 +9341,7 @@ class $$SensorConfigsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -10834,11 +9385,6 @@ class $$SensorConfigsTableOrderingComposer
     column: $table.dirty,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$SensorConfigsTableAnnotationComposer
@@ -10850,7 +9396,7 @@ class $$SensorConfigsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
@@ -10876,9 +9422,6 @@ class $$SensorConfigsTableAnnotationComposer
 
   GeneratedColumn<bool> get dirty =>
       $composableBuilder(column: $table.dirty, builder: (column) => column);
-
-  GeneratedColumn<String> get remoteId =>
-      $composableBuilder(column: $table.remoteId, builder: (column) => column);
 }
 
 class $$SensorConfigsTableTableManager
@@ -10916,7 +9459,7 @@ class $$SensorConfigsTableTableManager
               ),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<int> index = const Value.absent(),
                 Value<double> tare = const Value.absent(),
@@ -10925,7 +9468,7 @@ class $$SensorConfigsTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => SensorConfigsCompanion(
                 id: id,
                 name: name,
@@ -10936,11 +9479,11 @@ class $$SensorConfigsTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required String name,
                 required int index,
                 required double tare,
@@ -10949,7 +9492,7 @@ class $$SensorConfigsTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => SensorConfigsCompanion.insert(
                 id: id,
                 name: name,
@@ -10960,7 +9503,7 @@ class $$SensorConfigsTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           withReferenceMapper:
               (p0) =>
@@ -10996,64 +9539,28 @@ typedef $$SensorConfigsTableProcessedTableManager =
     >;
 typedef $$BuiltinTrainingWeightsTableCreateCompanionBuilder =
     BuiltinTrainingWeightsCompanion Function({
-      Value<int> id,
-      required int builtinTrainingId,
+      Value<String> id,
+      required String builtinTrainingId,
       Value<double?> customWeightRight,
       Value<double?> customWeightLeft,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
 typedef $$BuiltinTrainingWeightsTableUpdateCompanionBuilder =
     BuiltinTrainingWeightsCompanion Function({
-      Value<int> id,
-      Value<int> builtinTrainingId,
+      Value<String> id,
+      Value<String> builtinTrainingId,
       Value<double?> customWeightRight,
       Value<double?> customWeightLeft,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
-
-final class $$BuiltinTrainingWeightsTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $BuiltinTrainingWeightsTable,
-          BuiltinTrainingWeight
-        > {
-  $$BuiltinTrainingWeightsTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
-
-  static $TrainingsTable _builtinTrainingIdTable(_$AppDatabase db) =>
-      db.trainings.createAlias(
-        $_aliasNameGenerator(
-          db.builtinTrainingWeights.builtinTrainingId,
-          db.trainings.id,
-        ),
-      );
-
-  $$TrainingsTableProcessedTableManager get builtinTrainingId {
-    final $_column = $_itemColumn<int>('builtin_training_id')!;
-
-    final manager = $$TrainingsTableTableManager(
-      $_db,
-      $_db.trainings,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_builtinTrainingIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
 
 class $$BuiltinTrainingWeightsTableFilterComposer
     extends Composer<_$AppDatabase, $BuiltinTrainingWeightsTable> {
@@ -11064,8 +9571,13 @@ class $$BuiltinTrainingWeightsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get builtinTrainingId => $composableBuilder(
+    column: $table.builtinTrainingId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11098,34 +9610,6 @@ class $$BuiltinTrainingWeightsTableFilterComposer
     column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
-
-  ColumnFilters<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  $$TrainingsTableFilterComposer get builtinTrainingId {
-    final $$TrainingsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.builtinTrainingId,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableFilterComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$BuiltinTrainingWeightsTableOrderingComposer
@@ -11137,8 +9621,13 @@ class $$BuiltinTrainingWeightsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get builtinTrainingId => $composableBuilder(
+    column: $table.builtinTrainingId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -11171,34 +9660,6 @@ class $$BuiltinTrainingWeightsTableOrderingComposer
     column: $table.dirty,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  $$TrainingsTableOrderingComposer get builtinTrainingId {
-    final $$TrainingsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.builtinTrainingId,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableOrderingComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$BuiltinTrainingWeightsTableAnnotationComposer
@@ -11210,8 +9671,13 @@ class $$BuiltinTrainingWeightsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get builtinTrainingId => $composableBuilder(
+    column: $table.builtinTrainingId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<double> get customWeightRight => $composableBuilder(
     column: $table.customWeightRight,
@@ -11234,32 +9700,6 @@ class $$BuiltinTrainingWeightsTableAnnotationComposer
 
   GeneratedColumn<bool> get dirty =>
       $composableBuilder(column: $table.dirty, builder: (column) => column);
-
-  GeneratedColumn<String> get remoteId =>
-      $composableBuilder(column: $table.remoteId, builder: (column) => column);
-
-  $$TrainingsTableAnnotationComposer get builtinTrainingId {
-    final $$TrainingsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.builtinTrainingId,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$BuiltinTrainingWeightsTableTableManager
@@ -11273,9 +9713,16 @@ class $$BuiltinTrainingWeightsTableTableManager
           $$BuiltinTrainingWeightsTableAnnotationComposer,
           $$BuiltinTrainingWeightsTableCreateCompanionBuilder,
           $$BuiltinTrainingWeightsTableUpdateCompanionBuilder,
-          (BuiltinTrainingWeight, $$BuiltinTrainingWeightsTableReferences),
+          (
+            BuiltinTrainingWeight,
+            BaseReferences<
+              _$AppDatabase,
+              $BuiltinTrainingWeightsTable,
+              BuiltinTrainingWeight
+            >,
+          ),
           BuiltinTrainingWeight,
-          PrefetchHooks Function({bool builtinTrainingId})
+          PrefetchHooks Function()
         > {
   $$BuiltinTrainingWeightsTableTableManager(
     _$AppDatabase db,
@@ -11301,15 +9748,15 @@ class $$BuiltinTrainingWeightsTableTableManager
               ),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
-                Value<int> builtinTrainingId = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> builtinTrainingId = const Value.absent(),
                 Value<double?> customWeightRight = const Value.absent(),
                 Value<double?> customWeightLeft = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => BuiltinTrainingWeightsCompanion(
                 id: id,
                 builtinTrainingId: builtinTrainingId,
@@ -11319,19 +9766,19 @@ class $$BuiltinTrainingWeightsTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
-                required int builtinTrainingId,
+                Value<String> id = const Value.absent(),
+                required String builtinTrainingId,
                 Value<double?> customWeightRight = const Value.absent(),
                 Value<double?> customWeightLeft = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => BuiltinTrainingWeightsCompanion.insert(
                 id: id,
                 builtinTrainingId: builtinTrainingId,
@@ -11341,7 +9788,7 @@ class $$BuiltinTrainingWeightsTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           withReferenceMapper:
               (p0) =>
@@ -11349,52 +9796,11 @@ class $$BuiltinTrainingWeightsTableTableManager
                       .map(
                         (e) => (
                           e.readTable(table),
-                          $$BuiltinTrainingWeightsTableReferences(db, table, e),
+                          BaseReferences(db, table, e),
                         ),
                       )
                       .toList(),
-          prefetchHooksCallback: ({builtinTrainingId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                T extends TableManagerState<
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic
-                >
-              >(state) {
-                if (builtinTrainingId) {
-                  state =
-                      state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.builtinTrainingId,
-                            referencedTable:
-                                $$BuiltinTrainingWeightsTableReferences
-                                    ._builtinTrainingIdTable(db),
-                            referencedColumn:
-                                $$BuiltinTrainingWeightsTableReferences
-                                    ._builtinTrainingIdTable(db)
-                                    .id,
-                          )
-                          as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -11409,27 +9815,34 @@ typedef $$BuiltinTrainingWeightsTableProcessedTableManager =
       $$BuiltinTrainingWeightsTableAnnotationComposer,
       $$BuiltinTrainingWeightsTableCreateCompanionBuilder,
       $$BuiltinTrainingWeightsTableUpdateCompanionBuilder,
-      (BuiltinTrainingWeight, $$BuiltinTrainingWeightsTableReferences),
+      (
+        BuiltinTrainingWeight,
+        BaseReferences<
+          _$AppDatabase,
+          $BuiltinTrainingWeightsTable,
+          BuiltinTrainingWeight
+        >,
+      ),
       BuiltinTrainingWeight,
-      PrefetchHooks Function({bool builtinTrainingId})
+      PrefetchHooks Function()
     >;
 typedef $$PinnedBuiltinTrainingsTableCreateCompanionBuilder =
     PinnedBuiltinTrainingsCompanion Function({
-      Value<int> builtinTrainingId,
+      required String builtinTrainingId,
       Value<DateTime?> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
 typedef $$PinnedBuiltinTrainingsTableUpdateCompanionBuilder =
     PinnedBuiltinTrainingsCompanion Function({
-      Value<int> builtinTrainingId,
+      Value<String> builtinTrainingId,
       Value<DateTime?> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
       Value<bool> dirty,
-      Value<String> remoteId,
+      Value<int> rowid,
     });
 
 class $$PinnedBuiltinTrainingsTableFilterComposer
@@ -11441,7 +9854,7 @@ class $$PinnedBuiltinTrainingsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get builtinTrainingId => $composableBuilder(
+  ColumnFilters<String> get builtinTrainingId => $composableBuilder(
     column: $table.builtinTrainingId,
     builder: (column) => ColumnFilters(column),
   );
@@ -11465,11 +9878,6 @@ class $$PinnedBuiltinTrainingsTableFilterComposer
     column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
-
-  ColumnFilters<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnFilters(column),
-  );
 }
 
 class $$PinnedBuiltinTrainingsTableOrderingComposer
@@ -11481,7 +9889,7 @@ class $$PinnedBuiltinTrainingsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get builtinTrainingId => $composableBuilder(
+  ColumnOrderings<String> get builtinTrainingId => $composableBuilder(
     column: $table.builtinTrainingId,
     builder: (column) => ColumnOrderings(column),
   );
@@ -11505,11 +9913,6 @@ class $$PinnedBuiltinTrainingsTableOrderingComposer
     column: $table.dirty,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<String> get remoteId => $composableBuilder(
-    column: $table.remoteId,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$PinnedBuiltinTrainingsTableAnnotationComposer
@@ -11521,7 +9924,7 @@ class $$PinnedBuiltinTrainingsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get builtinTrainingId => $composableBuilder(
+  GeneratedColumn<String> get builtinTrainingId => $composableBuilder(
     column: $table.builtinTrainingId,
     builder: (column) => column,
   );
@@ -11537,9 +9940,6 @@ class $$PinnedBuiltinTrainingsTableAnnotationComposer
 
   GeneratedColumn<bool> get dirty =>
       $composableBuilder(column: $table.dirty, builder: (column) => column);
-
-  GeneratedColumn<String> get remoteId =>
-      $composableBuilder(column: $table.remoteId, builder: (column) => column);
 }
 
 class $$PinnedBuiltinTrainingsTableTableManager
@@ -11588,35 +9988,35 @@ class $$PinnedBuiltinTrainingsTableTableManager
               ),
           updateCompanionCallback:
               ({
-                Value<int> builtinTrainingId = const Value.absent(),
+                Value<String> builtinTrainingId = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => PinnedBuiltinTrainingsCompanion(
                 builtinTrainingId: builtinTrainingId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> builtinTrainingId = const Value.absent(),
+                required String builtinTrainingId,
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
-                Value<String> remoteId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => PinnedBuiltinTrainingsCompanion.insert(
                 builtinTrainingId: builtinTrainingId,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 dirty: dirty,
-                remoteId: remoteId,
+                rowid: rowid,
               ),
           withReferenceMapper:
               (p0) =>

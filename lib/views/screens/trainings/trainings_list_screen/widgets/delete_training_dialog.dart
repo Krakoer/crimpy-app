@@ -4,7 +4,7 @@ import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 
 class DeleteTrainingDialog extends ConsumerWidget {
-  final int trainingId;
+  final String trainingId;
 
   const DeleteTrainingDialog({required this.trainingId, super.key});
 

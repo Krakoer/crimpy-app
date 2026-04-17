@@ -15,9 +15,11 @@ import '../models/ble_data_model.dart';
 
 part 'database.g.dart';
 
+// ignore_for_file: experimental_member_use
+
 // Stores the training sessions the user has done.
 class Sessions extends Table {
-  late final IntColumn id = integer().autoIncrement()();
+  late final TextColumn id = text().clientDefault(() => Uuid().v4())();
   late final TextColumn name = text()();
   late final TextColumn notes = text()();
   late final DateTimeColumn date = dateTime().withDefault(currentDateAndTime)();
@@ -43,17 +45,19 @@ class Sessions extends Table {
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
-  late final TextColumn remoteId =
-      text().clientDefault(() => const Uuid().v4())();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 // Stores the assessments the user has done, with the results.
 class Assessments extends Table {
-  late final IntColumn id = integer().autoIncrement()();
+  late final TextColumn id = text().clientDefault(() => Uuid().v4())();
+
   late final IntColumn type = integer()();
   late final RealColumn rightValue = real().nullable()();
   late final RealColumn leftValue = real().nullable()();
-  late final IntColumn sessionId = integer().references(Sessions, #id)();
+  late final TextColumn sessionId = text()();
   late final IntColumn gripPosition =
       integer().nullable().withDefault(
         const Constant(0),
@@ -66,18 +70,22 @@ class Assessments extends Table {
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
-  late final TextColumn remoteId =
-      text().clientDefault(() => const Uuid().v4())();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE',
+  ];
 }
 
 // Stores the available trainings, including builtins and assessments.
 class Trainings extends Table {
-  late final IntColumn id = integer().autoIncrement()();
+  late final TextColumn id = text().clientDefault(() => Uuid().v4())();
+
   late final TextColumn name = text()();
-  late final IntColumn repeaterId =
-      integer()
-          .references(Repeaters, #id, onDelete: KeyAction.cascade)
-          .nullable()();
+  late final TextColumn repeaterId = text().nullable()();
   late final BoolColumn isBuiltin =
       boolean().withDefault(const Constant(false))();
   late final BoolColumn isFavorite =
@@ -92,13 +100,20 @@ class Trainings extends Table {
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
-  late final TextColumn remoteId =
-      text().clientDefault(() => const Uuid().v4())();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (repeater_id) REFERENCES repeaters(id) ON DELETE CASCADE',
+  ];
 }
 
 // Stores the repeaters trainings, including builtins and assessments.
 class Repeaters extends Table {
-  late final IntColumn id = integer().autoIncrement()();
+  late final TextColumn id = text().clientDefault(() => Uuid().v4())();
+
   late final IntColumn sets = integer()();
   late final IntColumn reps = integer()();
   late final IntColumn worktime = integer()();
@@ -117,18 +132,19 @@ class Repeaters extends Table {
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
-  late final TextColumn remoteId =
-      text().clientDefault(() => const Uuid().v4())();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 // Stores the repetitions for the trainings.
 class RepTemplates extends Table {
-  late final IntColumn id = integer().autoIncrement()();
+  late final TextColumn id = text().clientDefault(() => Uuid().v4())();
+
   late final BoolColumn isRest = boolean()();
   late final BoolColumn rightHand = boolean()();
   late final IntColumn duration = integer()();
-  late final IntColumn trainingId =
-      integer().references(Trainings, #id, onDelete: KeyAction.cascade)();
+  late final TextColumn trainingId = text()();
   late final RealColumn targetWeight = real()();
   late final IntColumn index = integer()();
   late final IntColumn gripPosition =
@@ -141,15 +157,22 @@ class RepTemplates extends Table {
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
-  late final TextColumn remoteId =
-      text().clientDefault(() => const Uuid().v4())();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (training_id) REFERENCES trainings(id) ON DELETE CASCADE',
+  ];
 }
 
 // Stores the data for the repetitions done during a session.
 class RepDatas extends Table {
-  late final IntColumn id = integer().autoIncrement()();
+  late final TextColumn id = text().clientDefault(() => Uuid().v4())();
+
   late final RealColumn averageWeight = real()();
-  late final IntColumn sessionId = integer().references(Sessions, #id)();
+  late final TextColumn sessionId = text()();
   late final BoolColumn isRest = boolean()();
   late final BoolColumn rightHand = boolean()();
   late final IntColumn duration = integer()();
@@ -165,13 +188,19 @@ class RepDatas extends Table {
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
-  late final TextColumn remoteId =
-      text().clientDefault(() => const Uuid().v4())();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE',
+  ];
 }
 
 // Stores the IDs of pinned builtin trainings
 class PinnedBuiltinTrainings extends Table {
-  late final IntColumn builtinTrainingId = integer()();
+  late final TextColumn builtinTrainingId = text()();
 
   @override
   Set<Column> get primaryKey => {builtinTrainingId};
@@ -183,13 +212,12 @@ class PinnedBuiltinTrainings extends Table {
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
-  late final TextColumn remoteId =
-      text().clientDefault(() => const Uuid().v4())();
 }
 
 // Stores the saved sensor configs.
 class SensorConfigs extends Table {
-  late final IntColumn id = integer().autoIncrement()();
+  late final TextColumn id = text().clientDefault(() => Uuid().v4())();
+
   late final TextColumn name = text()();
   late final IntColumn index = integer()();
   late final RealColumn tare = real()();
@@ -202,27 +230,34 @@ class SensorConfigs extends Table {
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
-  late final TextColumn remoteId =
-      text().clientDefault(() => const Uuid().v4())();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 // Stores custom weights for builtin trainings per user.
 class BuiltinTrainingWeights extends Table {
-  late final IntColumn id = integer().autoIncrement()();
-  late final IntColumn builtinTrainingId =
-      integer().references(Trainings, #id, onDelete: KeyAction.cascade)();
+  late final TextColumn id = text().clientDefault(() => Uuid().v4())();
+
+  late final TextColumn builtinTrainingId = text()();
   late final RealColumn customWeightRight = real().nullable()();
   late final RealColumn customWeightLeft = real().nullable()();
+
+  // Sync columns
   late final DateTimeColumn createdAt =
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn updatedAt =
       dateTime().withDefault(currentDateAndTime)();
-
-  // Sync columns
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
-  late final TextColumn remoteId =
-      text().clientDefault(() => const Uuid().v4())();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (builtin_training_id) REFERENCES trainings(id) ON DELETE CASCADE',
+  ];
 }
 
 // Stores the currently authenticated user information.
@@ -276,7 +311,7 @@ class AppDatabase extends _$AppDatabase {
 
   // ------------------------------------- SESSIONS -------------------------------------
   /// Get a session with its data points.
-  Future<SessionModel?> getSessionWithData(int sessionId) async {
+  Future<SessionModel?> getSessionWithData(String sessionId) async {
     final session =
         await (select(sessions)
           ..where((s) => s.id.equals(sessionId))).getSingleOrNull();
@@ -344,7 +379,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Get the repetitions data for a given session.
-  Future<List<RepData>> getRepsForSession(int sessionId) =>
+  Future<List<RepData>> getRepsForSession(String sessionId) =>
       (select(repDatas)
             ..where((r) => r.sessionId.equals(sessionId))
             ..orderBy([(r) => OrderingTerm(expression: r.index)]))
@@ -353,7 +388,7 @@ class AppDatabase extends _$AppDatabase {
   /// Save a session with its reps.
   /// If the `points` argument is not null, it will save
   /// the data onto the disk.
-  Future<int> saveSession(
+  Future<String> saveSession(
     SessionModel session,
     List<RepDataModel> reps, {
     List<BleDataPoint>? points,
@@ -372,7 +407,7 @@ class AppDatabase extends _$AppDatabase {
         session.durationInSeconds ??
         reps.fold(0, (prev, r) => prev + r.duration);
 
-    final sessionId = await into(sessions).insert(
+    final sessionRowId = await into(sessions).insert(
       SessionsCompanion(
         dataPath: Value(dataPath),
         date: Value(session.date),
@@ -391,6 +426,11 @@ class AppDatabase extends _$AppDatabase {
         updatedAt: Value(DateTime.now()),
       ),
     );
+    final sessionId =
+        (await (select(sessions)
+              ..where((s) => s.rowId.equals(sessionRowId))).getSingle())
+            .id;
+
     await incrementPendingChanges();
     final companions =
         reps.indexed
@@ -444,7 +484,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Delete a session.
-  Future<void> deleteSession(int sessionId) async {
+  Future<void> deleteSession(String sessionId) async {
     await (update(sessions)..where((s) => s.id.equals(sessionId))).write(
       SessionsCompanion(
         dirty: const Value(true),
@@ -457,14 +497,18 @@ class AppDatabase extends _$AppDatabase {
 
   // ------------------------------------- TRAININGS -------------------------------------
   /// Save a training with its repetitions.
-  Future<int> saveTrainingWithReps(String name, List<RepModel> reps) async {
-    final trainingId = await into(trainings).insert(
+  Future<String> saveTrainingWithReps(String name, List<RepModel> reps) async {
+    final trainingRowId = await into(trainings).insert(
       TrainingsCompanion(
         name: Value(name),
         dirty: const Value(true),
         updatedAt: Value(DateTime.now()),
       ),
     );
+    final trainingId =
+        (await (select(trainings)
+              ..where((t) => t.rowId.equals(trainingRowId))).getSingle())
+            .id;
     await incrementPendingChanges();
 
     final companions =
@@ -495,7 +539,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Toggle the favorite status of a training.
-  Future<void> toggleFav(int trainingId) async {
+  Future<void> toggleFav(String trainingId) async {
     final oldFav =
         (await (select(trainings)
               ..where((t) => t.id.equals(trainingId))).getSingle())
@@ -514,7 +558,7 @@ class AppDatabase extends _$AppDatabase {
   /// While being inneficient, instead of recomputing rep index etc., all reps are deleted and recreated.
   /// For a repeater training, use `editRepeaterTraining`
   Future<void> editTrainingWithReps(
-    int trainingId, {
+    String trainingId, {
     String? name,
     List<RepModel>? reps,
   }) async {
@@ -572,7 +616,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// Edit a repeater training.
   Future<void> editRepeaterTraining(
-    int trainingId, {
+    String trainingId, {
     String? name,
     RepeaterModel? model,
   }) async {
@@ -631,8 +675,8 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Save a repeater training given a model.
-  Future<int> saveRepeaterTraining(String name, RepeaterModel model) async {
-    final repeaterId = await into(repeaters).insert(
+  Future<String> saveRepeaterTraining(String name, RepeaterModel model) async {
+    final repeaterRowId = await into(repeaters).insert(
       RepeatersCompanion(
         reps: Value(model.repsBySet),
         sets: Value(model.sets),
@@ -647,8 +691,12 @@ class AppDatabase extends _$AppDatabase {
         updatedAt: Value(DateTime.now()),
       ),
     );
+    final repeaterId =
+        (await (select(repeaters)
+              ..where((r) => r.rowId.equals(repeaterRowId))).getSingle())
+            .id;
 
-    final trainingId = await into(trainings).insert(
+    final trainingRowId = await into(trainings).insert(
       TrainingsCompanion(
         name: Value(name),
         repeaterId: Value(repeaterId),
@@ -656,12 +704,16 @@ class AppDatabase extends _$AppDatabase {
         updatedAt: Value(DateTime.now()),
       ),
     );
+    final trainingId =
+        (await (select(trainings)
+              ..where((t) => t.rowId.equals(trainingRowId))).getSingle())
+            .id;
     await incrementPendingChanges();
     return trainingId;
   }
 
   /// Get a repeater training.
-  Future<Repeater?> getRepeater(int rId) =>
+  Future<Repeater?> getRepeater(String rId) =>
       (select(repeaters)..where((s) => s.id.equals(rId))).getSingleOrNull();
 
   /// Get all the trainings without the assessments.
@@ -678,14 +730,14 @@ class AppDatabase extends _$AppDatabase {
       (select(trainings)..where((t) => t.isFavorite)).get();
 
   /// Get the rep templates associated with a training.
-  Future<List<RepTemplate>> getRepsForTraining(int trainingId) =>
+  Future<List<RepTemplate>> getRepsForTraining(String trainingId) =>
       (select(repTemplates)
             ..where((r) => r.trainingId.equals(trainingId))
             ..orderBy([(r) => OrderingTerm(expression: r.index)]))
           .get();
 
   /// Delete a training.
-  Future<void> deleteTraining(int trainingId) async {
+  Future<void> deleteTraining(String trainingId) async {
     await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
       TrainingsCompanion(
         dirty: const Value(true),
@@ -698,9 +750,9 @@ class AppDatabase extends _$AppDatabase {
 
   // ------------------------------------- ASSESSMENTS -------------------------------------
   /// Given an assessment with the results and a sessionId, store the assessment into DB.
-  Future<int> saveAssessment(
+  Future<String> saveAssessment(
     AssessmentResultModel assessment,
-    int sessionId,
+    String sessionId,
   ) async {
     final companion = AssessmentsCompanion(
       rightValue: Value(assessment.rightValue),
@@ -712,13 +764,17 @@ class AppDatabase extends _$AppDatabase {
       updatedAt: Value(DateTime.now()),
     );
 
-    final assessmentId = await into(assessments).insert(companion);
+    final assessmentRowId = await into(assessments).insert(companion);
+    final assessmentId =
+        (await (select(assessments)
+              ..where((a) => a.rowId.equals(assessmentRowId))).getSingle())
+            .id;
     await incrementPendingChanges();
     return assessmentId;
   }
 
   /// Delete an assessment.
-  Future<void> deleteAssessment(int id) async {
+  Future<void> deleteAssessment(String id) async {
     await (update(assessments)..where((a) => a.id.equals(id))).write(
       AssessmentsCompanion(
         dirty: const Value(true),
@@ -814,13 +870,13 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Delete a new sensor config.
-  Future<void> deleteSensorConfig(int id) async =>
+  Future<void> deleteSensorConfig(String id) async =>
       (delete(sensorConfigs)..where((t) => t.id.equals(id))).go();
 
   // ------------------------------------- BUILTIN TRAINING WEIGHTS -------------------------------------
   /// Get custom weights for a builtin training.
   Future<BuiltinTrainingWeight?> getBuiltinTrainingWeights(
-    int builtinTrainingId,
+    String builtinTrainingId,
   ) async =>
       (select(builtinTrainingWeights)
             ..where((w) => w.builtinTrainingId.equals(builtinTrainingId))
@@ -829,7 +885,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// Save or update custom weights for a builtin training.
   Future<void> saveBuiltinTrainingWeights({
-    required int builtinTrainingId,
+    required String builtinTrainingId,
     double? customWeightRight,
     double? customWeightLeft,
   }) async {
@@ -860,14 +916,14 @@ class AppDatabase extends _$AppDatabase {
 
   // ------------------------------------- PINNED BUILTIN TRAININGS -------------------------------------
   /// Get all pinned builtin training IDs.
-  Future<List<int>> getPinnedBuiltinTrainingIds() async {
+  Future<List<String>> getPinnedBuiltinTrainingIds() async {
     return (await select(pinnedBuiltinTrainings).get())
         .map((row) => row.builtinTrainingId)
         .toList();
   }
 
   /// Pin a builtin training to the home screen.
-  Future<void> pinBuiltinTraining(int builtinTrainingId) async {
+  Future<void> pinBuiltinTraining(String builtinTrainingId) async {
     await into(pinnedBuiltinTrainings).insert(
       PinnedBuiltinTrainingsCompanion(
         builtinTrainingId: Value(builtinTrainingId),
@@ -876,13 +932,13 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Unpin a builtin training from the home screen.
-  Future<void> unpinBuiltinTraining(int builtinTrainingId) async {
+  Future<void> unpinBuiltinTraining(String builtinTrainingId) async {
     await (delete(pinnedBuiltinTrainings)
       ..where((t) => t.builtinTrainingId.equals(builtinTrainingId))).go();
   }
 
   /// Check if a builtin training is pinned.
-  Future<bool> isBuiltinTrainingPinned(int builtinTrainingId) async {
+  Future<bool> isBuiltinTrainingPinned(String builtinTrainingId) async {
     final result =
         await (select(pinnedBuiltinTrainings)..where(
           (t) => t.builtinTrainingId.equals(builtinTrainingId),
@@ -963,7 +1019,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -990,6 +1046,84 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(
           schema.pinnedBuiltinTrainings,
           schema.pinnedBuiltinTrainings.createdAt,
+        );
+      },
+      from3To4: (m, schema) async {
+        await m.alterTable(
+          TableMigration(
+            schema.sessions,
+            columnTransformer: {
+              sessions.id: Schema3(database: m.database).sessions.remoteId,
+            },
+          ),
+        );
+        await m.alterTable(
+          TableMigration(
+            schema.assessments,
+            columnTransformer: {
+              sessions.id: Schema3(database: m.database).sessions.remoteId,
+            },
+          ),
+        );
+        await m.alterTable(
+          TableMigration(
+            schema.trainings,
+            columnTransformer: {
+              trainings.id: Schema3(database: m.database).trainings.remoteId,
+            },
+          ),
+        );
+        await m.alterTable(
+          TableMigration(
+            schema.repDatas,
+            columnTransformer: {
+              repDatas.id: Schema3(database: m.database).repDatas.remoteId,
+            },
+          ),
+        );
+        await m.alterTable(
+          TableMigration(
+            schema.repeaters,
+            columnTransformer: {
+              repeaters.id: Schema3(database: m.database).repeaters.remoteId,
+            },
+          ),
+        );
+        await m.alterTable(
+          TableMigration(
+            schema.sensorConfigs,
+            columnTransformer: {
+              sensorConfigs.id:
+                  Schema3(database: m.database).sensorConfigs.remoteId,
+            },
+          ),
+        );
+        await m.alterTable(
+          TableMigration(
+            schema.repTemplates,
+            columnTransformer: {
+              repTemplates.id:
+                  Schema3(database: m.database).repTemplates.remoteId,
+            },
+          ),
+        );
+        await m.alterTable(
+          TableMigration(
+            schema.builtinTrainingWeights,
+            columnTransformer: {
+              builtinTrainingWeights.id:
+                  Schema3(database: m.database).builtinTrainingWeights.remoteId,
+            },
+          ),
+        );
+        await m.alterTable(
+          TableMigration(
+            schema.pinnedBuiltinTrainings,
+            columnTransformer: {
+              pinnedBuiltinTrainings.builtinTrainingId:
+                  Schema3(database: m.database).pinnedBuiltinTrainings.remoteId,
+            },
+          ),
         );
       },
     ),

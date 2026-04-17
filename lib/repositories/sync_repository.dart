@@ -137,7 +137,7 @@ class SyncRepository {
           repeaters
               .map(
                 (r) => {
-                  'id': r.remoteId,
+                  'id': r.id,
                   'sets': r.sets,
                   'reps': r.reps,
                   'worktime': r.worktime,
@@ -160,17 +160,17 @@ class SyncRepository {
     if (customTrainings.isNotEmpty) {
       final trainingMaps = <Map<String, dynamic>>[];
       for (final t in customTrainings) {
-        String? repeaterRemoteId;
+        String? repeaterId;
         if (t.repeaterId != null) {
           final repeater =
               await (_database.select(_database.repeaters)
                 ..where((r) => r.id.equals(t.repeaterId!))).getSingleOrNull();
-          repeaterRemoteId = repeater?.remoteId;
+          repeaterId = repeater?.id;
         }
         trainingMaps.add({
-          'id': t.remoteId,
+          'id': t.id,
           'name': t.name,
-          'repeater_id': repeaterRemoteId,
+          'repeater_id': repeaterId,
           'is_favorite': t.isFavorite,
           'is_assessment': t.isAssessment,
           'updated_at': t.updatedAt.toIso8601String(),
@@ -187,7 +187,7 @@ class SyncRepository {
           sessions
               .map(
                 (s) => {
-                  'id': s.remoteId,
+                  'id': s.id,
                   'name': s.name,
                   'notes': s.notes,
                   'date': s.date.toIso8601String(),
@@ -218,8 +218,8 @@ class SyncRepository {
               ..where((t) => t.id.equals(r.trainingId))).getSingleOrNull();
         if (training != null && !training.isBuiltin) {
           repTemplateMaps.add({
-            'id': r.remoteId,
-            'training_id': training.remoteId,
+            'id': r.id,
+            'training_id': training.id,
             'is_rest': r.isRest,
             'right_hand': r.rightHand,
             'duration': r.duration,
@@ -246,8 +246,8 @@ class SyncRepository {
               ..where((s) => s.id.equals(r.sessionId))).getSingleOrNull();
         if (session != null) {
           repDataMaps.add({
-            'id': r.remoteId,
-            'session_id': session.remoteId,
+            'id': r.id,
+            'session_id': session.id,
             'average_weight': r.averageWeight,
             'is_rest': r.isRest,
             'right_hand': r.rightHand,
@@ -275,8 +275,8 @@ class SyncRepository {
               ..where((s) => s.id.equals(a.sessionId))).getSingleOrNull();
         if (session != null) {
           assessmentMaps.add({
-            'id': a.remoteId,
-            'session_id': session.remoteId,
+            'id': a.id,
+            'session_id': session.id,
             'type': a.type,
             'right_value': a.rightValue,
             'left_value': a.leftValue,
@@ -298,7 +298,7 @@ class SyncRepository {
           sensorConfigs
               .map(
                 (s) => {
-                  'id': s.remoteId,
+                  'id': s.id,
                   'name': s.name,
                   'index': s.index,
                   'tare': s.tare,
@@ -318,7 +318,7 @@ class SyncRepository {
           builtinTrainingWeights
               .map(
                 (w) => {
-                  'id': w.remoteId,
+                  'id': w.id,
                   'builtin_training_id': w.builtinTrainingId,
                   'custom_weight_right': w.customWeightRight,
                   'custom_weight_left': w.customWeightLeft,
@@ -337,7 +337,6 @@ class SyncRepository {
           pinnedBuiltinTrainings
               .map(
                 (p) => {
-                  'id': p.remoteId,
                   'builtin_training_id': p.builtinTrainingId,
                   'updated_at': p.updatedAt.toIso8601String(),
                   'deleted_at': p.deletedAt?.toIso8601String(),
@@ -361,7 +360,7 @@ class SyncRepository {
           repeaters
               .map(
                 (r) => {
-                  'id': r.remoteId,
+                  'id': r.id,
                   'sets': r.sets,
                   'reps': r.reps,
                   'worktime': r.worktime,
@@ -386,17 +385,17 @@ class SyncRepository {
     if (trainings.isNotEmpty) {
       final trainingMaps = <Map<String, dynamic>>[];
       for (final t in trainings) {
-        String? repeaterRemoteId;
+        String? repeaterId;
         if (t.repeaterId != null) {
           final repeater =
               await (_database.select(_database.repeaters)
                 ..where((r) => r.id.equals(t.repeaterId!))).getSingleOrNull();
-          repeaterRemoteId = repeater?.remoteId;
+          repeaterId = repeater?.id;
         }
         trainingMaps.add({
-          'id': t.remoteId,
+          'id': t.id,
           'name': t.name,
-          'repeater_id': repeaterRemoteId,
+          'repeater_id': repeaterId,
           'is_favorite': t.isFavorite,
           'is_assessment': t.isAssessment,
           'updated_at': t.updatedAt.toIso8601String(),
@@ -415,7 +414,7 @@ class SyncRepository {
           sessions
               .map(
                 (s) => {
-                  'id': s.remoteId,
+                  'id': s.id,
                   'name': s.name,
                   'notes': s.notes,
                   'date': s.date.toIso8601String(),
@@ -448,8 +447,8 @@ class SyncRepository {
               ..where((t) => t.id.equals(r.trainingId))).getSingleOrNull();
         if (training != null) {
           repTemplateMaps.add({
-            'id': r.remoteId,
-            'training_id': training.remoteId,
+            'id': r.id,
+            'training_id': training.id,
             'is_rest': r.isRest,
             'right_hand': r.rightHand,
             'duration': r.duration,
@@ -478,8 +477,8 @@ class SyncRepository {
               ..where((s) => s.id.equals(r.sessionId))).getSingleOrNull();
         if (session != null) {
           repDataMaps.add({
-            'id': r.remoteId,
-            'session_id': session.remoteId,
+            'id': r.id,
+            'session_id': session.id,
             'average_weight': r.averageWeight,
             'is_rest': r.isRest,
             'right_hand': r.rightHand,
@@ -509,8 +508,8 @@ class SyncRepository {
               ..where((s) => s.id.equals(a.sessionId))).getSingleOrNull();
         if (session != null) {
           assessmentMaps.add({
-            'id': a.remoteId,
-            'session_id': session.remoteId,
+            'id': a.id,
+            'session_id': session.id,
             'type': a.type,
             'right_value': a.rightValue,
             'left_value': a.leftValue,
@@ -534,7 +533,7 @@ class SyncRepository {
           sensorConfigs
               .map(
                 (s) => {
-                  'id': s.remoteId,
+                  'id': s.id,
                   'name': s.name,
                   'index': s.index,
                   'tare': s.tare,
@@ -555,7 +554,7 @@ class SyncRepository {
           builtinTrainingWeights
               .map(
                 (w) => {
-                  'id': w.remoteId,
+                  'id': w.id,
                   'builtin_training_id': w.builtinTrainingId,
                   'custom_weight_right': w.customWeightRight,
                   'custom_weight_left': w.customWeightLeft,
@@ -575,7 +574,6 @@ class SyncRepository {
           pinnedBuiltinTrainings
               .map(
                 (p) => {
-                  'id': p.remoteId,
                   'builtin_training_id': p.builtinTrainingId,
                   'updated_at': p.updatedAt.toIso8601String(),
                   'deleted_at': p.deletedAt?.toIso8601String(),
@@ -634,7 +632,7 @@ class SyncRepository {
 
   Future<void> _applyRepeaters(List<dynamic> repeaters) async {
     for (final record in repeaters) {
-      final remoteId = record['id'] as String;
+      final id = record['id'] as String;
       final deletedAt =
           record['deleted_at'] != null
               ? DateTime.parse(record['deleted_at'] as String)
@@ -642,7 +640,7 @@ class SyncRepository {
 
       final existing =
           await (_database.select(_database.repeaters)
-            ..where((r) => r.remoteId.equals(remoteId))).getSingleOrNull();
+            ..where((r) => r.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -661,7 +659,7 @@ class SyncRepository {
         targetWeigthLeft: Value(record['target_weight_left'] as double?),
         splitHand: Value(record['split_hand'] as bool),
         gripPosition: Value(record['grip_position'] as int),
-        remoteId: Value(remoteId),
+        id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
         createdAt: Value(
           record['created_at'] != null
@@ -683,7 +681,7 @@ class SyncRepository {
 
   Future<void> _applyTrainings(List<dynamic> trainings) async {
     for (final record in trainings) {
-      final remoteId = record['id'] as String;
+      final id = record['id'] as String;
       final deletedAt =
           record['deleted_at'] != null
               ? DateTime.parse(record['deleted_at'] as String)
@@ -691,7 +689,7 @@ class SyncRepository {
 
       final existing =
           await (_database.select(_database.trainings)
-            ..where((t) => t.remoteId.equals(remoteId))).getSingleOrNull();
+            ..where((t) => t.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -700,15 +698,7 @@ class SyncRepository {
         continue;
       }
 
-      int? repeaterId;
-      if (record['repeater_id'] != null) {
-        final repeaterRemoteId = record['repeater_id'] as String;
-        final repeater =
-            await (_database.select(_database.repeaters)..where(
-              (r) => r.remoteId.equals(repeaterRemoteId),
-            )).getSingleOrNull();
-        repeaterId = repeater?.id;
-      }
+      String? repeaterId = record['repeater_id'];
 
       final companion = TrainingsCompanion(
         name: Value(record['name'] as String),
@@ -716,7 +706,7 @@ class SyncRepository {
         isFavorite: Value(record['is_favorite'] as bool),
         isAssessment: Value(record['is_assessment'] as bool),
         isBuiltin: const Value(false),
-        remoteId: Value(remoteId),
+        id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
         createdAt: Value(
           record['created_at'] != null
@@ -739,7 +729,7 @@ class SyncRepository {
 
   Future<void> _applySessions(List<dynamic> sessions) async {
     for (final record in sessions) {
-      final remoteId = record['id'] as String;
+      final id = record['id'] as String;
       final deletedAt =
           record['deleted_at'] != null
               ? DateTime.parse(record['deleted_at'] as String)
@@ -747,7 +737,7 @@ class SyncRepository {
 
       final existing =
           await (_database.select(_database.sessions)
-            ..where((s) => s.remoteId.equals(remoteId))).getSingleOrNull();
+            ..where((s) => s.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -770,7 +760,7 @@ class SyncRepository {
         repeaterRestTime: Value(record['repeater_rest_time'] as int?),
         repeaterSetRest: Value(record['repeater_set_rest'] as int?),
         repeaterSplitHand: Value(record['repeater_split_hand'] as bool?),
-        remoteId: Value(remoteId),
+        id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
         createdAt: Value(
           record['created_at'] != null
@@ -793,7 +783,7 @@ class SyncRepository {
 
   Future<void> _applyRepTemplates(List<dynamic> repTemplates) async {
     for (final record in repTemplates) {
-      final remoteId = record['id'] as String;
+      final id = record['id'] as String;
       final deletedAt =
           record['deleted_at'] != null
               ? DateTime.parse(record['deleted_at'] as String)
@@ -801,7 +791,7 @@ class SyncRepository {
 
       final existing =
           await (_database.select(_database.repTemplates)
-            ..where((r) => r.remoteId.equals(remoteId))).getSingleOrNull();
+            ..where((r) => r.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -810,15 +800,14 @@ class SyncRepository {
         continue;
       }
 
-      final trainingRemoteId = record['training_id'] as String;
+      final trainingId = record['training_id'] as String;
       final training =
-          await (_database.select(_database.trainings)..where(
-            (t) => t.remoteId.equals(trainingRemoteId),
-          )).getSingleOrNull();
+          await (_database.select(_database.trainings)
+            ..where((t) => t.id.equals(trainingId))).getSingleOrNull();
 
       if (training == null) {
         AppLoggerHelper.warning(
-          'Training not found for rep_template $remoteId, skipping',
+          'Training not found for rep_template $id, skipping',
         );
         continue;
       }
@@ -831,7 +820,7 @@ class SyncRepository {
         targetWeight: Value(record['target_weight'] as double),
         index: Value(record['index'] as int),
         gripPosition: Value(record['grip_position'] as int),
-        remoteId: Value(remoteId),
+        id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
         createdAt: Value(
           record['created_at'] != null
@@ -854,7 +843,7 @@ class SyncRepository {
 
   Future<void> _applyRepDatas(List<dynamic> repDatas) async {
     for (final record in repDatas) {
-      final remoteId = record['id'] as String;
+      final id = record['id'] as String;
       final deletedAt =
           record['deleted_at'] != null
               ? DateTime.parse(record['deleted_at'] as String)
@@ -862,7 +851,7 @@ class SyncRepository {
 
       final existing =
           await (_database.select(_database.repDatas)
-            ..where((r) => r.remoteId.equals(remoteId))).getSingleOrNull();
+            ..where((r) => r.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -871,16 +860,13 @@ class SyncRepository {
         continue;
       }
 
-      final sessionRemoteId = record['session_id'] as String;
+      final sessionId = record['session_id'] as String;
       final session =
-          await (_database.select(_database.sessions)..where(
-            (s) => s.remoteId.equals(sessionRemoteId),
-          )).getSingleOrNull();
+          await (_database.select(_database.sessions)
+            ..where((s) => s.id.equals(sessionId))).getSingleOrNull();
 
       if (session == null) {
-        AppLoggerHelper.warning(
-          'Session not found for rep_data $remoteId, skipping',
-        );
+        AppLoggerHelper.warning('Session not found for rep_data $id, skipping');
         continue;
       }
 
@@ -893,7 +879,7 @@ class SyncRepository {
         targetWeight: Value(record['target_weight'] as double),
         index: Value(record['index'] as int),
         gripPosition: Value(record['grip_position'] as int),
-        remoteId: Value(remoteId),
+        id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
         createdAt: Value(
           record['created_at'] != null
@@ -916,7 +902,7 @@ class SyncRepository {
 
   Future<void> _applyAssessments(List<dynamic> assessments) async {
     for (final record in assessments) {
-      final remoteId = record['id'] as String;
+      final id = record['id'] as String;
       final deletedAt =
           record['deleted_at'] != null
               ? DateTime.parse(record['deleted_at'] as String)
@@ -924,7 +910,7 @@ class SyncRepository {
 
       final existing =
           await (_database.select(_database.assessments)
-            ..where((a) => a.remoteId.equals(remoteId))).getSingleOrNull();
+            ..where((a) => a.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -933,15 +919,14 @@ class SyncRepository {
         continue;
       }
 
-      final sessionRemoteId = record['session_id'] as String;
+      final sessionId = record['session_id'] as String;
       final session =
-          await (_database.select(_database.sessions)..where(
-            (s) => s.remoteId.equals(sessionRemoteId),
-          )).getSingleOrNull();
+          await (_database.select(_database.sessions)
+            ..where((s) => s.id.equals(sessionId))).getSingleOrNull();
 
       if (session == null) {
         AppLoggerHelper.warning(
-          'Session not found for assessment $remoteId, skipping',
+          'Session not found for assessment $id, skipping',
         );
         continue;
       }
@@ -952,7 +937,7 @@ class SyncRepository {
         leftValue: Value(record['left_value'] as double?),
         sessionId: Value(session.id),
         gripPosition: Value(record['grip_position'] as int?),
-        remoteId: Value(remoteId),
+        id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
         createdAt: Value(
           record['created_at'] != null
@@ -975,7 +960,7 @@ class SyncRepository {
 
   Future<void> _applySensorConfigs(List<dynamic> sensorConfigs) async {
     for (final record in sensorConfigs) {
-      final remoteId = record['id'] as String;
+      final id = record['id'] as String;
       final deletedAt =
           record['deleted_at'] != null
               ? DateTime.parse(record['deleted_at'] as String)
@@ -983,7 +968,7 @@ class SyncRepository {
 
       final existing =
           await (_database.select(_database.sensorConfigs)
-            ..where((s) => s.remoteId.equals(remoteId))).getSingleOrNull();
+            ..where((s) => s.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -997,7 +982,7 @@ class SyncRepository {
         index: Value(record['index'] as int),
         tare: Value(record['tare'] as double),
         coef: Value(record['coef'] as double),
-        remoteId: Value(remoteId),
+        id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
         createdAt: Value(
           record['created_at'] != null
@@ -1024,7 +1009,7 @@ class SyncRepository {
     List<dynamic> builtinTrainingWeights,
   ) async {
     for (final record in builtinTrainingWeights) {
-      final remoteId = record['id'] as String;
+      final id = record['id'] as String;
       final deletedAt =
           record['deleted_at'] != null
               ? DateTime.parse(record['deleted_at'] as String)
@@ -1032,7 +1017,7 @@ class SyncRepository {
 
       final existing =
           await (_database.select(_database.builtinTrainingWeights)
-            ..where((w) => w.remoteId.equals(remoteId))).getSingleOrNull();
+            ..where((w) => w.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -1043,13 +1028,13 @@ class SyncRepository {
         continue;
       }
 
-      final builtinTrainingId = record['builtin_training_id'] as int;
+      final builtinTrainingId = record['builtin_training_id'] as String;
 
       final companion = BuiltinTrainingWeightsCompanion(
         builtinTrainingId: Value(builtinTrainingId),
         customWeightRight: Value(record['custom_weight_right'] as double?),
         customWeightLeft: Value(record['custom_weight_left'] as double?),
-        remoteId: Value(remoteId),
+        id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
         createdAt: Value(DateTime.parse(record['created_at'] as String)),
         deletedAt: Value(deletedAt),
@@ -1074,7 +1059,7 @@ class SyncRepository {
     List<dynamic> pinnedBuiltinTrainings,
   ) async {
     for (final record in pinnedBuiltinTrainings) {
-      final remoteId = record['id'] as String;
+      final id = record['id'] as String;
       final deletedAt =
           record['deleted_at'] != null
               ? DateTime.parse(record['deleted_at'] as String)
@@ -1082,7 +1067,7 @@ class SyncRepository {
 
       final existing =
           await (_database.select(_database.pinnedBuiltinTrainings)
-            ..where((p) => p.remoteId.equals(remoteId))).getSingleOrNull();
+            ..where((p) => p.builtinTrainingId.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -1093,11 +1078,10 @@ class SyncRepository {
         continue;
       }
 
-      final builtinTrainingId = record['builtin_training_id'] as int;
+      final builtinTrainingId = record['builtin_training_id'] as String;
 
       final companion = PinnedBuiltinTrainingsCompanion(
         builtinTrainingId: Value(builtinTrainingId),
-        remoteId: Value(remoteId),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
         createdAt: Value(
           record['created_at'] != null
@@ -1125,39 +1109,39 @@ class SyncRepository {
 
   Future<void> _clearDirtyFlags(List<String> rejected) async {
     await (_database.update(_database.sessions)..where(
-      (s) => s.dirty.equals(true) & s.remoteId.isNotIn(rejected),
+      (s) => s.dirty.equals(true) & s.id.isNotIn(rejected),
     )).write(SessionsCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.trainings)..where(
-      (t) => t.dirty.equals(true) & t.remoteId.isNotIn(rejected),
+      (t) => t.dirty.equals(true) & t.id.isNotIn(rejected),
     )).write(TrainingsCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.assessments)..where(
-      (a) => a.dirty.equals(true) & a.remoteId.isNotIn(rejected),
+      (a) => a.dirty.equals(true) & a.id.isNotIn(rejected),
     )).write(AssessmentsCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.repeaters)..where(
-      (r) => r.dirty.equals(true) & r.remoteId.isNotIn(rejected),
+      (r) => r.dirty.equals(true) & r.id.isNotIn(rejected),
     )).write(RepeatersCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.repTemplates)..where(
-      (r) => r.dirty.equals(true) & r.remoteId.isNotIn(rejected),
+      (r) => r.dirty.equals(true) & r.id.isNotIn(rejected),
     )).write(RepTemplatesCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.repDatas)..where(
-      (r) => r.dirty.equals(true) & r.remoteId.isNotIn(rejected),
+      (r) => r.dirty.equals(true) & r.id.isNotIn(rejected),
     )).write(RepDatasCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.sensorConfigs)..where(
-      (s) => s.dirty.equals(true) & s.remoteId.isNotIn(rejected),
+      (s) => s.dirty.equals(true) & s.id.isNotIn(rejected),
     )).write(SensorConfigsCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.builtinTrainingWeights)..where(
-      (w) => w.dirty.equals(true) & w.remoteId.isNotIn(rejected),
+      (w) => w.dirty.equals(true) & w.id.isNotIn(rejected),
     )).write(BuiltinTrainingWeightsCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.pinnedBuiltinTrainings)..where(
-      (p) => p.dirty.equals(true) & p.remoteId.isNotIn(rejected),
+      (p) => p.dirty.equals(true) & p.builtinTrainingId.isNotIn(rejected),
     )).write(PinnedBuiltinTrainingsCompanion(dirty: const Value(false)));
   }
 

@@ -35,7 +35,7 @@ class FavTrainingsNotifier extends AsyncNotifier<List<TrainingWithReps>> {
   }
 
   /// Toggle the favorite status for a given training.
-  Future<void> toggleFav(int trainingId) async {
+  Future<void> toggleFav(String trainingId) async {
     await _trainingRepository.toggleFav(trainingId);
     ref.invalidate(trainingsProvider);
     ref.invalidateSelf();
@@ -59,7 +59,7 @@ class TrainingsNotifier extends AsyncNotifier<List<TrainingWithReps>> {
 
   /// Edit a training's name and/or reps.
   Future<void> editTraining(
-    int trainingId, {
+    String trainingId, {
     String? newName,
     List<RepModel>? newReps,
   }) async {
@@ -81,7 +81,7 @@ class TrainingsNotifier extends AsyncNotifier<List<TrainingWithReps>> {
 
   /// Edit a repeater training's name and/or model.
   Future<void> editRepeaterTraining(
-    int trainingId, {
+    String trainingId, {
     String? newName,
     RepeaterModel? model,
   }) async {
@@ -128,7 +128,7 @@ class TrainingsNotifier extends AsyncNotifier<List<TrainingWithReps>> {
   }
 
   /// Delete a training.
-  Future<void> deleteTraining(int trainingId) async {
+  Future<void> deleteTraining(String trainingId) async {
     state = const AsyncValue.loading();
     try {
       await _trainingRepository.deleteTraining(trainingId);
@@ -179,7 +179,7 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
   }
 
   /// Save a session and its repetitions data.
-  Future<int> saveSession(
+  Future<String> saveSession(
     SessionModel session,
     List<RepDataModel> reps, {
     List<BleDataPoint>? data,
@@ -198,12 +198,12 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
       if (ref.mounted) {
         state = AsyncValue.error(e, stackTrace);
       }
-      return -1;
+      return "";
     }
   }
 
   /// Get a session by its ID.
-  Future<SessionModel?> getSession(int id) async {
+  Future<SessionModel?> getSession(String id) async {
     return _trainingRepository.getSessionWithData(id);
   }
 
@@ -222,7 +222,7 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
     }
   }
 
-  Future<void> deleteSession(int sessionId) async {
+  Future<void> deleteSession(String sessionId) async {
     state = const AsyncValue.loading();
     try {
       await _trainingRepository.deleteSession(sessionId);
@@ -236,7 +236,7 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
 }
 
 /// Provider for getting a single session with full data by ID.
-final sessionWithDataProvider = FutureProvider.family<SessionModel?, int>((
+final sessionWithDataProvider = FutureProvider.family<SessionModel?, String>((
   ref,
   sessionId,
 ) {
@@ -303,7 +303,7 @@ class PinnedTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
   }
 
   /// Toggle pin status for a builtin training.
-  Future<void> togglePin(int builtinTrainingId) async {
+  Future<void> togglePin(String builtinTrainingId) async {
     final isPinned = await _builtinTrainingRepository.isBuiltinTrainingPinned(
       builtinTrainingId,
     );

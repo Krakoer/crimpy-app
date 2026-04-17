@@ -52,20 +52,6 @@ abstract class PullResponse with _$PullResponse {
       _$PullResponseFromJson(json);
 }
 
-@freezed
-abstract class SyncRecord with _$SyncRecord {
-  const factory SyncRecord({
-    required String id,
-    required String remoteId,
-    required Map<String, dynamic> data,
-    required DateTime updatedAt,
-    DateTime? deletedAt,
-  }) = _SyncRecord;
-
-  factory SyncRecord.fromJson(Map<String, dynamic> json) =>
-      _$SyncRecordFromJson(json);
-}
-
 enum SyncStatus { idle, syncing, success, error }
 
 @freezed

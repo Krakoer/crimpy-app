@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 /// Builtin Assessment Model - similar to BuiltinTrainingModel
 /// Dynamically generates assessment trainings at runtime without DB storage
 class BuiltinAssessmentModel {
-  final int id;
+  final String id;
   final String name;
   final String description;
   final AssessmentType type;
@@ -46,7 +46,7 @@ class BuiltinAssessmentModel {
 // Stores the built-ins assessment definitions (dynamically generated, not stored in DB)
 final List<BuiltinAssessmentModel> builtinAssessments = [
   BuiltinAssessmentModel(
-    id: 1 << 32,
+    id: "f7954158-63ba-4f0b-a125-6ef195fa6442",
     name: "Max Force",
     description: "Measure your Maximum Voluntary Contraction (MVC)",
     type: AssessmentType.mvc,
@@ -54,12 +54,12 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
     trainingGenerator: ({GripPosition? gripPosition}) {
       final grip = gripPosition ?? GripPosition.halfCrimp;
       return TrainingWithReps(
-        id: 1 << 32,
+        id: "248a87c4-039e-464a-a351-b883ff68c147",
         name: "Max Force",
         isFav: false,
         reps: [
           RepModel(
-            id: 1 << 32,
+            id: "",
             durationInSeconds: 10,
             isRest: true,
             handSide: HandSide.left,
@@ -68,7 +68,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
             gripPosition: grip,
           ),
           RepModel(
-            id: 2 << 32,
+            id: "",
             durationInSeconds: 5,
             isRest: false,
             handSide: HandSide.right,
@@ -77,7 +77,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
             gripPosition: grip,
           ),
           RepModel(
-            id: 3 << 32,
+            id: "",
             durationInSeconds: 10,
             isRest: true,
             handSide: HandSide.left,
@@ -86,7 +86,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
             gripPosition: grip,
           ),
           RepModel(
-            id: 4 << 32,
+            id: "",
             durationInSeconds: 5,
             isRest: false,
             handSide: HandSide.left,
@@ -99,7 +99,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
     },
   ),
   BuiltinAssessmentModel(
-    id: 3 << 32,
+    id: "55970ac0-4544-4945-80cd-4841f7c58fe5",
     name: "Critical Force",
     description:
         "Measure your Critical Force, the force you can exerce for an extended time period.",
@@ -107,7 +107,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
     icon: FontAwesomeIcons.clock,
     trainingGenerator:
         ({GripPosition? gripPosition}) => TrainingWithReps(
-          id: 3 << 32,
+          id: "55970ac0-4544-4945-80cd-4841f7c58fe5",
           name: "Critical Force",
           isFav: false,
           reps: [
@@ -117,7 +117,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
               handSide: HandSide.right,
               targetWeight: 0,
               index: 0,
-              id: 9 << 32,
+              id: "",
             ),
             ...RepeaterModel(
               repsBySet: 24,
@@ -133,21 +133,21 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
                 handSide: rep.handSide,
                 targetWeight: rep.targetWeight,
                 index: index + 1,
-                id: (index + 10) << 32,
+                id: "",
               ),
             ),
           ],
         ),
   ),
   BuiltinAssessmentModel(
-    id: 4 << 32,
+    id: "493acbdd-6fe7-4f25-987c-575ccf433293",
     name: "60% Endurance",
     description: "Measure how long you can maintain 60% of your MVC.",
     type: AssessmentType.endurance60,
     icon: FontAwesomeIcons.hourglass,
     trainingGenerator:
         ({GripPosition? gripPosition}) => TrainingWithReps(
-          id: 4 << 32,
+          id: "493acbdd-6fe7-4f25-987c-575ccf433293",
           name: "60% Endurance",
           isFav: false,
           reps: [],
@@ -158,7 +158,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
 /// Built-in trainings that require assessment values to be available.
 final List<BuiltinTrainingModel> builtinTrainings = [
   BuiltinTrainingModel(
-    id: 1000,
+    id: "311cf821-156d-4d2f-a196-ee9a04d1634f",
     name: "Power Endurance",
     description: "3 sets of 10 7/3 repeaters at 65% of max force.",
     requiredAssessments: [
@@ -261,7 +261,7 @@ final List<BuiltinTrainingModel> builtinTrainings = [
     },
   ),
   BuiltinTrainingModel(
-    id: 1001,
+    id: "c14dc18b-5575-46e4-8758-158a08d32d9e",
     name: "Max Force",
     description: "Max force training at 85% of max force.",
     requiredAssessments: [
@@ -364,7 +364,7 @@ final List<BuiltinTrainingModel> builtinTrainings = [
     },
   ),
   BuiltinTrainingModel(
-    id: 1003,
+    id: "877b39e6-9718-4388-9d27-ed9d70704828",
     name: "Warmup",
     description:
         "Progressive warmup through all grip positions at 20%, 35%, 50%, 60%, 75%, and 95% of MVC.",

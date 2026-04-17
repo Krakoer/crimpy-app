@@ -13,13 +13,13 @@ class AssessmentRepository {
   /// Save an assessment given its model and a session ID.
   Future<void> saveAssessment(
     AssessmentResultModel assessment,
-    int sessionId,
+    String sessionId,
   ) async {
     await gDatabase.saveAssessment(assessment, sessionId);
   }
 
   /// Delete an assessment.
-  Future<void> deleteAssessment(int id) async {
+  Future<void> deleteAssessment(String id) async {
     await gDatabase.deleteAssessment(id);
   }
 

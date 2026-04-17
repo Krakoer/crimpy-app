@@ -262,7 +262,7 @@ class BleRepository {
   }
 
   /// Delete a sensor config by its ID.
-  Future<void> deleteSensorConfig(int id) async {
+  Future<void> deleteSensorConfig(String id) async {
     await gDatabase.deleteSensorConfig(id);
   }
 
