@@ -54,8 +54,8 @@ class SyncViewModel extends _$SyncViewModel {
       );
 
       AppLoggerHelper.info('Sync completed successfully');
-    } catch (e) {
-      AppLoggerHelper.error('Sync failed: $e');
+    } catch (e, s) {
+      AppLoggerHelper.error('Sync failed: $e ($s)');
       if (ref.mounted) {
         state = AsyncData(
           state.value!.copyWith(

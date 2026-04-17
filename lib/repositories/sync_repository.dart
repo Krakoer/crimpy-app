@@ -80,7 +80,7 @@ class SyncRepository {
       );
     }
 
-    await _clearDirtyFlags();
+    await _clearDirtyFlags(response.rejected);
   }
 
   Future<void> _replaceLocalWithRemote() async {
@@ -110,7 +110,7 @@ class SyncRepository {
       );
     }
 
-    await _clearDirtyFlags();
+    await _clearDirtyFlags(response.rejected);
   }
 
   Future<void> _pullRemoteChanges(int sinceVersion) async {
@@ -136,7 +136,7 @@ class SyncRepository {
           sessions
               .map(
                 (s) => {
-                  'remote_id': s.remoteId,
+                  'id': s.remoteId,
                   'name': s.name,
                   'notes': s.notes,
                   'date': s.date.toIso8601String(),
@@ -152,6 +152,7 @@ class SyncRepository {
                   'repeater_split_hand': s.repeaterSplitHand,
                   'updated_at': s.updatedAt.toIso8601String(),
                   'deleted_at': s.deletedAt?.toIso8601String(),
+                  'created_at': s.createdAt?.toIso8601String(),
                 },
               )
               .toList();
@@ -164,13 +165,14 @@ class SyncRepository {
           customTrainings
               .map(
                 (t) => {
-                  'remote_id': t.remoteId,
+                  'id': t.remoteId,
                   'name': t.name,
                   'repeater_id': t.repeaterId,
                   'is_favorite': t.isFavorite,
                   'is_assessment': t.isAssessment,
                   'updated_at': t.updatedAt.toIso8601String(),
                   'deleted_at': t.deletedAt?.toIso8601String(),
+                  'created_at': t.createdAt?.toIso8601String(),
                 },
               )
               .toList();
@@ -190,7 +192,7 @@ class SyncRepository {
           sessions
               .map(
                 (s) => {
-                  'remote_id': s.remoteId,
+                  'id': s.remoteId,
                   'name': s.name,
                   'notes': s.notes,
                   'date': s.date.toIso8601String(),
@@ -206,6 +208,7 @@ class SyncRepository {
                   'repeater_split_hand': s.repeaterSplitHand,
                   'updated_at': s.updatedAt.toIso8601String(),
                   'deleted_at': s.deletedAt?.toIso8601String(),
+                  'created_at': s.createdAt?.toIso8601String(),
                 },
               )
               .toList();
@@ -220,13 +223,14 @@ class SyncRepository {
           trainings
               .map(
                 (t) => {
-                  'remote_id': t.remoteId,
+                  'id': t.remoteId,
                   'name': t.name,
                   'repeater_id': t.repeaterId,
                   'is_favorite': t.isFavorite,
                   'is_assessment': t.isAssessment,
                   'updated_at': t.updatedAt.toIso8601String(),
                   'deleted_at': t.deletedAt?.toIso8601String(),
+                  'created_at': t.createdAt?.toIso8601String(),
                 },
               )
               .toList();
@@ -253,41 +257,41 @@ class SyncRepository {
     }
   }
 
-  Future<void> _clearDirtyFlags() async {
+  Future<void> _clearDirtyFlags(List<String> rejected) async {
     await (_database.update(_database.sessions)..where(
-      (s) => s.dirty.equals(true),
+      (s) => s.dirty.equals(true) & s.remoteId.isNotIn(rejected),
     )).write(SessionsCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.trainings)..where(
-      (t) => t.dirty.equals(true),
+      (t) => t.dirty.equals(true) & t.remoteId.isNotIn(rejected),
     )).write(TrainingsCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.assessments)..where(
-      (a) => a.dirty.equals(true),
+      (a) => a.dirty.equals(true) & a.remoteId.isNotIn(rejected),
     )).write(AssessmentsCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.repeaters)..where(
-      (r) => r.dirty.equals(true),
+      (r) => r.dirty.equals(true) & r.remoteId.isNotIn(rejected),
     )).write(RepeatersCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.repTemplates)..where(
-      (r) => r.dirty.equals(true),
+      (r) => r.dirty.equals(true) & r.remoteId.isNotIn(rejected),
     )).write(RepTemplatesCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.repDatas)..where(
-      (r) => r.dirty.equals(true),
+      (r) => r.dirty.equals(true) & r.remoteId.isNotIn(rejected),
     )).write(RepDatasCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.sensorConfigs)..where(
-      (s) => s.dirty.equals(true),
+      (s) => s.dirty.equals(true) & s.remoteId.isNotIn(rejected),
     )).write(SensorConfigsCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.builtinTrainingWeights)..where(
-      (w) => w.dirty.equals(true),
+      (w) => w.dirty.equals(true) & w.remoteId.isNotIn(rejected),
     )).write(BuiltinTrainingWeightsCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.pinnedBuiltinTrainings)..where(
-      (p) => p.dirty.equals(true),
+      (p) => p.dirty.equals(true) & p.remoteId.isNotIn(rejected),
     )).write(PinnedBuiltinTrainingsCompanion(dirty: const Value(false)));
   }
 

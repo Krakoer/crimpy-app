@@ -37,6 +37,8 @@ class Sessions extends Table {
   late final BoolColumn repeaterSplitHand = boolean().nullable()();
 
   // Sync columns
+  late final DateTimeColumn createdAt =
+      dateTime().nullable().clientDefault(() => DateTime.now())();
   late final DateTimeColumn updatedAt =
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
@@ -58,6 +60,8 @@ class Assessments extends Table {
       )(); // 0 = halfCrimp (default)
 
   // Sync columns
+  late final DateTimeColumn createdAt =
+      dateTime().nullable().clientDefault(() => DateTime.now())();
   late final DateTimeColumn updatedAt =
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
@@ -82,6 +86,8 @@ class Trainings extends Table {
       boolean().withDefault(const Constant(false))();
 
   // Sync columns
+  late final DateTimeColumn createdAt =
+      dateTime().nullable().clientDefault(() => DateTime.now())();
   late final DateTimeColumn updatedAt =
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
@@ -105,6 +111,8 @@ class Repeaters extends Table {
       integer().withDefault(const Constant(0))(); // 0 = halfCrimp (default)
 
   // Sync columns
+  late final DateTimeColumn createdAt =
+      dateTime().nullable().clientDefault(() => DateTime.now())();
   late final DateTimeColumn updatedAt =
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
@@ -127,6 +135,8 @@ class RepTemplates extends Table {
       integer().withDefault(const Constant(0))(); // 0 = halfCrimp (default)
 
   // Sync columns
+  late final DateTimeColumn createdAt =
+      dateTime().nullable().clientDefault(() => DateTime.now())();
   late final DateTimeColumn updatedAt =
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
@@ -149,6 +159,8 @@ class RepDatas extends Table {
       integer().withDefault(const Constant(0))(); // 0 = halfCrimp (default)
 
   // Sync columns
+  late final DateTimeColumn createdAt =
+      dateTime().nullable().clientDefault(() => DateTime.now())();
   late final DateTimeColumn updatedAt =
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
@@ -165,6 +177,8 @@ class PinnedBuiltinTrainings extends Table {
   Set<Column> get primaryKey => {builtinTrainingId};
 
   // Sync columns
+  late final DateTimeColumn createdAt =
+      dateTime().nullable().clientDefault(() => DateTime.now())();
   late final DateTimeColumn updatedAt =
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
@@ -182,6 +196,8 @@ class SensorConfigs extends Table {
   late final RealColumn coef = real()();
 
   // Sync columns
+  late final DateTimeColumn createdAt =
+      dateTime().nullable().clientDefault(() => DateTime.now())();
   late final DateTimeColumn updatedAt =
       dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
@@ -197,6 +213,8 @@ class BuiltinTrainingWeights extends Table {
       integer().references(Trainings, #id, onDelete: KeyAction.cascade)();
   late final RealColumn customWeightRight = real().nullable()();
   late final RealColumn customWeightLeft = real().nullable()();
+  late final DateTimeColumn createdAt =
+      dateTime().withDefault(currentDateAndTime)();
   late final DateTimeColumn updatedAt =
       dateTime().withDefault(currentDateAndTime)();
 
@@ -945,7 +963,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -956,6 +974,23 @@ class AppDatabase extends _$AppDatabase {
       from1To2: (m, schema) async {
         await m.createTable(schema.users);
         await m.createTable(schema.syncMetadata);
+      },
+      from2To3: (m, schema) async {
+        await m.addColumn(schema.sessions, schema.sessions.createdAt);
+        await m.addColumn(schema.assessments, schema.assessments.createdAt);
+        await m.addColumn(schema.repDatas, schema.repDatas.createdAt);
+        await m.addColumn(
+          schema.builtinTrainingWeights,
+          schema.builtinTrainingWeights.createdAt,
+        );
+        await m.addColumn(schema.sensorConfigs, schema.sensorConfigs.createdAt);
+        await m.addColumn(schema.repTemplates, schema.repTemplates.createdAt);
+        await m.addColumn(schema.trainings, schema.trainings.createdAt);
+        await m.addColumn(schema.repeaters, schema.repeaters.createdAt);
+        await m.addColumn(
+          schema.pinnedBuiltinTrainings,
+          schema.pinnedBuiltinTrainings.createdAt,
+        );
       },
     ),
   );
