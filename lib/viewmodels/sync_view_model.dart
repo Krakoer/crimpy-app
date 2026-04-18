@@ -4,6 +4,8 @@ import 'package:crimpy/models/sync_models.dart';
 import 'package:crimpy/repositories/sync_repository.dart';
 import 'package:crimpy/services/sync_service.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
+import 'package:crimpy/viewmodels/training_view_model.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'sync_view_model.g.dart';
@@ -40,6 +42,8 @@ class SyncViewModel extends _$SyncViewModel {
     try {
       final repository = ref.read(syncRepositoryProvider);
       await repository.performSync();
+
+      _invalidateDataProviders();
 
       if (!ref.mounted) return;
 
@@ -110,5 +114,15 @@ class SyncViewModel extends _$SyncViewModel {
     state = AsyncData(
       state.value!.copyWith(pendingChanges: metadata?.pendingChanges ?? 0),
     );
+  }
+
+  void _invalidateDataProviders() {
+    ref.invalidate(sessionsProvider);
+    ref.invalidate(trainingsProvider);
+    ref.invalidate(favTrainingsProvider);
+    ref.invalidate(allTrainingsProvider);
+    ref.invalidate(pinnedTrainingsProvider);
+    ref.invalidate(assessmentsProvider);
+    AppLoggerHelper.info('Data providers invalidated after sync');
   }
 }

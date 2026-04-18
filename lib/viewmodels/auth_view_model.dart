@@ -4,6 +4,8 @@ import 'package:crimpy/models/auth_models.dart' as auth_models;
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/auth_service.dart';
 import 'package:crimpy/viewmodels/sync_view_model.dart';
+import 'package:crimpy/viewmodels/training_view_model.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -51,7 +53,14 @@ class AuthState extends _$AuthState {
       final syncViewModel = ref.read(syncViewModelProvider.notifier);
       await syncViewModel.handleFirstLogin();
 
-      AppLoggerHelper.info('Login successful');
+      ref.invalidate(sessionsProvider);
+      ref.invalidate(trainingsProvider);
+      ref.invalidate(favTrainingsProvider);
+      ref.invalidate(allTrainingsProvider);
+      ref.invalidate(pinnedTrainingsProvider);
+      ref.invalidate(assessmentsProvider);
+
+      AppLoggerHelper.info('Login successful, data providers invalidated');
     } catch (e, s) {
       AppLoggerHelper.error('Login error: $e (stacktrace: $s)');
       rethrow;
@@ -142,9 +151,16 @@ class AuthState extends _$AuthState {
       await syncRepository.wipeLocalDatabase();
 
       await gDatabase.deleteCurrentUser();
+
+      ref.invalidate(sessionsProvider);
+      ref.invalidate(trainingsProvider);
+      ref.invalidate(favTrainingsProvider);
+      ref.invalidate(allTrainingsProvider);
+      ref.invalidate(pinnedTrainingsProvider);
+      ref.invalidate(assessmentsProvider);
       ref.invalidateSelf();
 
-      AppLoggerHelper.info('Logout successful');
+      AppLoggerHelper.info('Logout successful, data providers invalidated');
     } catch (e) {
       AppLoggerHelper.error('Logout error: $e');
       rethrow;
