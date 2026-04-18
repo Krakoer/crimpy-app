@@ -9,6 +9,14 @@ class SyncRepository {
 
   SyncRepository(this._syncService, this._database);
 
+  double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
   Future<void> performSync() async {
     try {
       AppLoggerHelper.info('Starting sync process');
@@ -655,8 +663,8 @@ class SyncRepository {
         worktime: Value(record['worktime'] as int),
         resttime: Value(record['resttime'] as int),
         setRest: Value(record['set_rest'] as int),
-        targetWeigthRight: Value(record['target_weight_right'] as double?),
-        targetWeigthLeft: Value(record['target_weight_left'] as double?),
+        targetWeigthRight: Value(_toDouble(record['target_weight_right'])),
+        targetWeigthLeft: Value(_toDouble(record['target_weight_left'])),
         splitHand: Value(record['split_hand'] as bool),
         gripPosition: Value(record['grip_position'] as int),
         id: Value(id),
@@ -817,7 +825,7 @@ class SyncRepository {
         rightHand: Value(record['right_hand'] as bool),
         duration: Value(record['duration'] as int),
         trainingId: Value(training.id),
-        targetWeight: Value(record['target_weight'] as double),
+        targetWeight: Value(_toDouble(record['target_weight'])!),
         index: Value(record['index'] as int),
         gripPosition: Value(record['grip_position'] as int),
         id: Value(id),
@@ -871,12 +879,12 @@ class SyncRepository {
       }
 
       final companion = RepDatasCompanion(
-        averageWeight: Value(record['average_weight'] as double),
+        averageWeight: Value(_toDouble(record['average_weight'])!),
         sessionId: Value(session.id),
         isRest: Value(record['is_rest'] as bool),
         rightHand: Value(record['right_hand'] as bool),
         duration: Value(record['duration'] as int),
-        targetWeight: Value(record['target_weight'] as double),
+        targetWeight: Value(_toDouble(record['target_weight'])!),
         index: Value(record['index'] as int),
         gripPosition: Value(record['grip_position'] as int),
         id: Value(id),
@@ -933,8 +941,8 @@ class SyncRepository {
 
       final companion = AssessmentsCompanion(
         type: Value(record['type'] as int),
-        rightValue: Value(record['right_value'] as double?),
-        leftValue: Value(record['left_value'] as double?),
+        rightValue: Value(_toDouble(record['right_value'])),
+        leftValue: Value(_toDouble(record['left_value'])),
         sessionId: Value(session.id),
         gripPosition: Value(record['grip_position'] as int?),
         id: Value(id),
@@ -980,8 +988,8 @@ class SyncRepository {
       final companion = SensorConfigsCompanion(
         name: Value(record['name'] as String),
         index: Value(record['index'] as int),
-        tare: Value(record['tare'] as double),
-        coef: Value(record['coef'] as double),
+        tare: Value(_toDouble(record['tare'])!),
+        coef: Value(_toDouble(record['coef'])!),
         id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
         createdAt: Value(
@@ -1032,8 +1040,8 @@ class SyncRepository {
 
       final companion = BuiltinTrainingWeightsCompanion(
         builtinTrainingId: Value(builtinTrainingId),
-        customWeightRight: Value(record['custom_weight_right'] as double?),
-        customWeightLeft: Value(record['custom_weight_left'] as double?),
+        customWeightRight: Value(_toDouble(record['custom_weight_right'])),
+        customWeightLeft: Value(_toDouble(record['custom_weight_left'])),
         id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
         createdAt: Value(DateTime.parse(record['created_at'] as String)),

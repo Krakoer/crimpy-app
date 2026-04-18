@@ -525,6 +525,8 @@ class AppDatabase extends _$AppDatabase {
                   trainingId: Value(trainingId),
                   targetWeight: Value(rep.targetWeight),
                   gripPosition: Value(rep.gripPosition.index),
+                  dirty: const Value(true),
+                  updatedAt: Value(DateTime.now()),
                 ),
               ),
             )
@@ -534,6 +536,7 @@ class AppDatabase extends _$AppDatabase {
     batch((batch) {
       batch.insertAll(repTemplates, companions);
     });
+    await incrementPendingChanges();
 
     return trainingId;
   }
@@ -592,6 +595,8 @@ class AppDatabase extends _$AppDatabase {
                     trainingId: Value(trainingId),
                     targetWeight: Value(rep.targetWeight),
                     gripPosition: Value(rep.gripPosition.index),
+                    dirty: const Value(true),
+                    updatedAt: Value(DateTime.now()),
                   ),
                 ),
               )
@@ -601,6 +606,7 @@ class AppDatabase extends _$AppDatabase {
       await batch((batch) {
         batch.insertAll(repTemplates, companions);
       });
+      await incrementPendingChanges();
 
       if (name == null) {
         await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
