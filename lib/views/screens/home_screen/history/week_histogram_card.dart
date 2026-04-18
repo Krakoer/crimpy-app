@@ -26,7 +26,7 @@ class _HistoryScreenState extends ConsumerState<WeekHistogramCard> {
     ).add(Duration(days: 7 * _weekOffset));
     // Get the sessions of the week
     final asyncSessions = ref.watch(
-      sessionsProvider(
+      filteredSessionsProvider(
         SessionFilter(
           startDate: startOfTheWeek,
           endDate: startOfTheWeek.add(Duration(days: 7)),

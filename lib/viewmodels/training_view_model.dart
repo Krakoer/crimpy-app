@@ -141,7 +141,7 @@ class TrainingsNotifier extends AsyncNotifier<List<TrainingWithReps>> {
   }
 }
 
-/// Represents the filters available for the `sessionsProvider` family.
+/// Represents the filters available for filtering sessions.
 class SessionFilter {
   final DateTime? startDate;
   final DateTime? endDate;
@@ -159,23 +159,34 @@ class SessionFilter {
 
   @override
   int get hashCode => Object.hash(startDate, endDate, isAssessment);
+
+  bool matchesSession(SessionModel session) {
+    if (isAssessment != null && session.isAssessment != isAssessment) {
+      return false;
+    }
+    if (startDate != null && session.date.isBefore(startDate!)) {
+      return false;
+    }
+    if (endDate != null && session.date.isAfter(endDate!)) {
+      return false;
+    }
+    return true;
+  }
 }
 
-/// Returns the list of sessions, and allows the creation of new sessions.
-final sessionsProvider = AsyncNotifierProvider.autoDispose
-    .family<SessionsNotifier, List<SessionModel>, SessionFilter?>(
+/// Returns the list of all sessions, and allows the creation of new sessions.
+final sessionsProvider =
+    AsyncNotifierProvider<SessionsNotifier, List<SessionModel>>(
       SessionsNotifier.new,
     );
 
 class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
-  SessionsNotifier(this.filters);
-  final SessionFilter? filters;
   late TrainingRepository _trainingRepository;
 
   @override
   Future<List<SessionModel>> build() {
     _trainingRepository = ref.watch(trainingRepositoryProvider);
-    return _trainingRepository.getAllSessionsWithReps(filters: filters);
+    return _trainingRepository.getAllSessionsWithReps(filters: null);
   }
 
   /// Save a session and its repetitions data.
@@ -191,7 +202,7 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
         reps,
         data: data,
       );
-      ref.invalidate(sessionsProvider);
+      ref.invalidateSelf();
       if (ref.mounted) await future;
       return id;
     } catch (e, stackTrace) {
@@ -212,7 +223,7 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
     state = const AsyncValue.loading();
     try {
       await _trainingRepository.updateSession(session);
-      ref.invalidate(sessionsProvider);
+      ref.invalidateSelf();
       if (ref.mounted) await future;
     } catch (e, stackTrace) {
       if (ref.mounted) {
@@ -226,7 +237,7 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
     state = const AsyncValue.loading();
     try {
       await _trainingRepository.deleteSession(sessionId);
-      ref.invalidate(sessionsProvider);
+      ref.invalidateSelf();
       await future;
     } catch (e, stackTrace) {
       state = AsyncValue.error(e, stackTrace);
@@ -243,6 +254,22 @@ final sessionWithDataProvider = FutureProvider.family<SessionModel?, String>((
   final trainingRepository = ref.watch(trainingRepositoryProvider);
   return trainingRepository.getSessionWithData(sessionId);
 });
+
+/// Provider that returns filtered sessions based on a given filter.
+/// This provider watches the base sessions provider and applies client-side filtering.
+final filteredSessionsProvider =
+    FutureProvider.family<List<SessionModel>, SessionFilter?>((
+      ref,
+      filter,
+    ) async {
+      final allSessions = await ref.watch(sessionsProvider.future);
+      if (filter == null) {
+        return allSessions;
+      }
+      return allSessions
+          .where((session) => filter.matchesSession(session))
+          .toList();
+    });
 
 /// Provider for pinned builtin trainings (with favorites).
 final pinnedTrainingsProvider =

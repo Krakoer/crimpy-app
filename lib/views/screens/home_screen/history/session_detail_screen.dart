@@ -212,7 +212,7 @@ class SessionDetailScreen extends ConsumerWidget {
                       Navigator.of(context).pop();
                       try {
                         await ref
-                            .read(sessionsProvider(null).notifier)
+                            .read(sessionsProvider.notifier)
                             .deleteSession(session.id!);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(

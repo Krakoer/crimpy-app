@@ -68,7 +68,7 @@ class AssessmentNotifier extends AsyncNotifier<List<AssessmentModel>> {
 
     // Save the session
     final sessionId = await ref
-        .read(sessionsProvider(null).notifier)
+        .read(sessionsProvider.notifier)
         .saveSession(session, reps, data: data);
     if (sessionId != "") {
       // Save the assessment

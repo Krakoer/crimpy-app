@@ -292,9 +292,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
 
     try {
       // Update session in database
-      await ref
-          .read(sessionsProvider(null).notifier)
-          .updateSession(updatedSession);
+      await ref.read(sessionsProvider.notifier).updateSession(updatedSession);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

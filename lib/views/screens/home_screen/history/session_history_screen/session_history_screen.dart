@@ -32,7 +32,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final asyncSessions = ref.watch(sessionsProvider(_currentFilter));
+    final asyncSessions = ref.watch(filteredSessionsProvider(_currentFilter));
 
     return Scaffold(
       appBar: AppBar(

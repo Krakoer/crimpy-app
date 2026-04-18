@@ -100,7 +100,7 @@ class _CriticalForceRunScreenState
       } catch (exception) {
         // On error, save the session data for debugging purposes
         ref
-            .read(sessionsProvider(null).notifier)
+            .read(sessionsProvider.notifier)
             .saveSession(saveSession, [], data: data);
         // Show error screen
         if (mounted) {

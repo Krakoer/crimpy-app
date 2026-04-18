@@ -180,7 +180,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
               }
 
               ref
-                  .read(sessionsProvider(null).notifier)
+                  .read(sessionsProvider.notifier)
                   .saveSession(
                     SessionModel(
                       name: _trainingNameController.text,

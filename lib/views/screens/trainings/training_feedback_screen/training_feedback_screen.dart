@@ -313,7 +313,7 @@ class _TrainingFeedbackScreenState
 
                 // Save the session
                 ref
-                    .read(sessionsProvider(null).notifier)
+                    .read(sessionsProvider.notifier)
                     .saveSession(
                       SessionModel(
                         name: _trainingNameController.text,

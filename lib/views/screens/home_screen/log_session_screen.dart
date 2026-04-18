@@ -228,7 +228,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
 
     try {
       // Use the provider's saveSession method to properly invalidate and refresh
-      await ref.read(sessionsProvider(null).notifier).saveSession(session, []);
+      await ref.read(sessionsProvider.notifier).saveSession(session, []);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
