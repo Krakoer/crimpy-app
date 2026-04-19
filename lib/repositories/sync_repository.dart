@@ -154,9 +154,9 @@ class SyncRepository {
               'target_weight_left': r.targetWeigthLeft,
               'split_hand': r.splitHand,
               'grip_position': r.gripPosition,
-              'updated_at': r.updatedAt.toIso8601String(),
-              'deleted_at': r.deletedAt?.toIso8601String(),
-              'created_at': r.createdAt?.toIso8601String(),
+              'updated_at': r.updatedAt.toUtc().toIso8601String(),
+              'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
+              'created_at': r.createdAt?.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -180,9 +180,9 @@ class SyncRepository {
           'repeater_id': repeaterId,
           'is_favorite': t.isFavorite,
           'is_assessment': t.isAssessment,
-          'updated_at': t.updatedAt.toIso8601String(),
-          'deleted_at': t.deletedAt?.toIso8601String(),
-          'created_at': t.createdAt?.toIso8601String(),
+          'updated_at': t.updatedAt.toUtc().toIso8601String(),
+          'deleted_at': t.deletedAt?.toUtc().toIso8601String(),
+          'created_at': t.createdAt?.toUtc().toIso8601String(),
         });
       }
       collections['trainings'] = trainingMaps;
@@ -196,7 +196,7 @@ class SyncRepository {
               'id': s.id,
               'name': s.name,
               'notes': s.notes,
-              'date': s.date.toIso8601String(),
+              'date': s.date.toUtc().toIso8601String(),
               'data_path': s.dataPath,
               'is_assessment': s.isAssessment,
               'session_type': s.sessionType,
@@ -207,9 +207,9 @@ class SyncRepository {
               'repeater_rest_time': s.repeaterRestTime,
               'repeater_set_rest': s.repeaterSetRest,
               'repeater_split_hand': s.repeaterSplitHand,
-              'updated_at': s.updatedAt.toIso8601String(),
-              'deleted_at': s.deletedAt?.toIso8601String(),
-              'created_at': s.createdAt?.toIso8601String(),
+              'updated_at': s.updatedAt.toUtc().toIso8601String(),
+              'deleted_at': s.deletedAt?.toUtc().toIso8601String(),
+              'created_at': s.createdAt?.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -232,9 +232,9 @@ class SyncRepository {
             'target_weight': r.targetWeight,
             'index': r.index,
             'grip_position': r.gripPosition,
-            'updated_at': r.updatedAt.toIso8601String(),
-            'deleted_at': r.deletedAt?.toIso8601String(),
-            'created_at': r.createdAt?.toIso8601String(),
+            'updated_at': r.updatedAt.toUtc().toIso8601String(),
+            'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
+            'created_at': r.createdAt?.toUtc().toIso8601String(),
           });
         }
       }
@@ -261,9 +261,9 @@ class SyncRepository {
             'target_weight': r.targetWeight,
             'index': r.index,
             'grip_position': r.gripPosition,
-            'updated_at': r.updatedAt.toIso8601String(),
-            'deleted_at': r.deletedAt?.toIso8601String(),
-            'created_at': r.createdAt?.toIso8601String(),
+            'updated_at': r.updatedAt.toUtc().toIso8601String(),
+            'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
+            'created_at': r.createdAt?.toUtc().toIso8601String(),
           });
         }
       }
@@ -287,9 +287,9 @@ class SyncRepository {
             'right_value': a.rightValue,
             'left_value': a.leftValue,
             'grip_position': a.gripPosition,
-            'updated_at': a.updatedAt.toIso8601String(),
-            'deleted_at': a.deletedAt?.toIso8601String(),
-            'created_at': a.createdAt?.toIso8601String(),
+            'updated_at': a.updatedAt.toUtc().toIso8601String(),
+            'deleted_at': a.deletedAt?.toUtc().toIso8601String(),
+            'created_at': a.createdAt?.toUtc().toIso8601String(),
           });
         }
       }
@@ -308,9 +308,9 @@ class SyncRepository {
               'index': s.index,
               'tare': s.tare,
               'coef': s.coef,
-              'updated_at': s.updatedAt.toIso8601String(),
-              'deleted_at': s.deletedAt?.toIso8601String(),
-              'created_at': s.createdAt?.toIso8601String(),
+              'updated_at': s.updatedAt.toUtc().toIso8601String(),
+              'deleted_at': s.deletedAt?.toUtc().toIso8601String(),
+              'created_at': s.createdAt?.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -327,9 +327,9 @@ class SyncRepository {
               'builtin_training_id': w.builtinTrainingId,
               'custom_weight_right': w.customWeightRight,
               'custom_weight_left': w.customWeightLeft,
-              'updated_at': w.updatedAt.toIso8601String(),
-              'deleted_at': w.deletedAt?.toIso8601String(),
-              'created_at': w.createdAt.toIso8601String(),
+              'updated_at': w.updatedAt.toUtc().toIso8601String(),
+              'deleted_at': w.deletedAt?.toUtc().toIso8601String(),
+              'created_at': w.createdAt.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -367,9 +367,9 @@ class SyncRepository {
               'target_weight_left': r.targetWeigthLeft,
               'split_hand': r.splitHand,
               'grip_position': r.gripPosition,
-              'updated_at': r.updatedAt.toIso8601String(),
-              'deleted_at': r.deletedAt?.toIso8601String(),
-              'created_at': r.createdAt?.toIso8601String(),
+              'updated_at': r.updatedAt.toUtc().toIso8601String(),
+              'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
+              'created_at': r.createdAt?.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -394,9 +394,9 @@ class SyncRepository {
           'repeater_id': repeaterId,
           'is_favorite': t.isFavorite,
           'is_assessment': t.isAssessment,
-          'updated_at': t.updatedAt.toIso8601String(),
-          'deleted_at': t.deletedAt?.toIso8601String(),
-          'created_at': t.createdAt?.toIso8601String(),
+          'updated_at': t.updatedAt.toUtc().toIso8601String(),
+          'deleted_at': t.deletedAt?.toUtc().toIso8601String(),
+          'created_at': t.createdAt?.toUtc().toIso8601String(),
         });
       }
       collections['trainings'] = trainingMaps;
@@ -412,7 +412,7 @@ class SyncRepository {
               'id': s.id,
               'name': s.name,
               'notes': s.notes,
-              'date': s.date.toIso8601String(),
+              'date': s.date.toUtc().toIso8601String(),
               'data_path': s.dataPath,
               'is_assessment': s.isAssessment,
               'session_type': s.sessionType,
@@ -423,9 +423,9 @@ class SyncRepository {
               'repeater_rest_time': s.repeaterRestTime,
               'repeater_set_rest': s.repeaterSetRest,
               'repeater_split_hand': s.repeaterSplitHand,
-              'updated_at': s.updatedAt.toIso8601String(),
-              'deleted_at': s.deletedAt?.toIso8601String(),
-              'created_at': s.createdAt?.toIso8601String(),
+              'updated_at': s.updatedAt.toUtc().toIso8601String(),
+              'deleted_at': s.deletedAt?.toUtc().toIso8601String(),
+              'created_at': s.createdAt?.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -450,9 +450,9 @@ class SyncRepository {
             'target_weight': r.targetWeight,
             'index': r.index,
             'grip_position': r.gripPosition,
-            'updated_at': r.updatedAt.toIso8601String(),
-            'deleted_at': r.deletedAt?.toIso8601String(),
-            'created_at': r.createdAt?.toIso8601String(),
+            'updated_at': r.updatedAt.toUtc().toIso8601String(),
+            'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
+            'created_at': r.createdAt?.toUtc().toIso8601String(),
           });
         }
       }
@@ -481,9 +481,9 @@ class SyncRepository {
             'target_weight': r.targetWeight,
             'index': r.index,
             'grip_position': r.gripPosition,
-            'updated_at': r.updatedAt.toIso8601String(),
-            'deleted_at': r.deletedAt?.toIso8601String(),
-            'created_at': r.createdAt?.toIso8601String(),
+            'updated_at': r.updatedAt.toUtc().toIso8601String(),
+            'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
+            'created_at': r.createdAt?.toUtc().toIso8601String(),
           });
         }
       }
@@ -509,9 +509,9 @@ class SyncRepository {
             'right_value': a.rightValue,
             'left_value': a.leftValue,
             'grip_position': a.gripPosition,
-            'updated_at': a.updatedAt.toIso8601String(),
-            'deleted_at': a.deletedAt?.toIso8601String(),
-            'created_at': a.createdAt?.toIso8601String(),
+            'updated_at': a.updatedAt.toUtc().toIso8601String(),
+            'deleted_at': a.deletedAt?.toUtc().toIso8601String(),
+            'created_at': a.createdAt?.toUtc().toIso8601String(),
           });
         }
       }
@@ -532,9 +532,9 @@ class SyncRepository {
               'index': s.index,
               'tare': s.tare,
               'coef': s.coef,
-              'updated_at': s.updatedAt.toIso8601String(),
-              'deleted_at': s.deletedAt?.toIso8601String(),
-              'created_at': s.createdAt?.toIso8601String(),
+              'updated_at': s.updatedAt.toUtc().toIso8601String(),
+              'deleted_at': s.deletedAt?.toUtc().toIso8601String(),
+              'created_at': s.createdAt?.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -551,9 +551,9 @@ class SyncRepository {
               'builtin_training_id': w.builtinTrainingId,
               'custom_weight_right': w.customWeightRight,
               'custom_weight_left': w.customWeightLeft,
-              'updated_at': w.updatedAt.toIso8601String(),
-              'deleted_at': w.deletedAt?.toIso8601String(),
-              'created_at': w.createdAt.toIso8601String(),
+              'updated_at': w.updatedAt.toUtc().toIso8601String(),
+              'deleted_at': w.deletedAt?.toUtc().toIso8601String(),
+              'created_at': w.createdAt.toUtc().toIso8601String(),
             },
           )
           .toList();
