@@ -558,7 +558,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Edit a repetitions along with its reps.
-  /// While being inneficient, instead of recomputing rep index etc., all reps are deleted and recreated.
+  /// Updates existing reps in place to preserve IDs for sync.
   /// For a repeater training, use `editRepeaterTraining`
   Future<void> editTrainingWithReps(
     String trainingId, {
@@ -577,43 +577,55 @@ class AppDatabase extends _$AppDatabase {
       await incrementPendingChanges();
     }
 
-    // Then delete and recreate the reps, if any.
     if (reps != null) {
-      await (delete(repTemplates)
-        ..where((r) => r.trainingId.equals(trainingId))).go();
-      final companions =
-          reps
-              .asMap()
-              .map(
-                (index, rep) => MapEntry(
-                  index,
-                  RepTemplatesCompanion(
-                    duration: Value(rep.durationInSeconds),
-                    index: Value(index),
-                    isRest: Value(rep.isRest),
-                    rightHand: Value(rep.handSide.isRightHand),
-                    trainingId: Value(trainingId),
-                    targetWeight: Value(rep.targetWeight),
-                    gripPosition: Value(rep.gripPosition.index),
-                    dirty: const Value(true),
-                    updatedAt: Value(DateTime.now()),
-                  ),
-                ),
-              )
-              .values
-              .toList();
+      final existingReps =
+          await (select(repTemplates)
+                ..where((r) => r.trainingId.equals(trainingId))
+                ..orderBy([(r) => OrderingTerm(expression: r.index)]))
+              .get();
 
-      await batch((batch) {
-        batch.insertAll(repTemplates, companions);
-      });
+      final now = DateTime.now();
+
+      // Update existing reps or insert new ones, preserving IDs where possible
+      for (var i = 0; i < reps.length; i++) {
+        final rep = reps[i];
+        final companion = RepTemplatesCompanion(
+          duration: Value(rep.durationInSeconds),
+          index: Value(i),
+          isRest: Value(rep.isRest),
+          rightHand: Value(rep.handSide.isRightHand),
+          trainingId: Value(trainingId),
+          targetWeight: Value(rep.targetWeight),
+          gripPosition: Value(rep.gripPosition.index),
+          dirty: const Value(true),
+          updatedAt: Value(now),
+        );
+
+        if (i < existingReps.length) {
+          await (update(repTemplates)
+            ..where((r) => r.id.equals(existingReps[i].id))).write(companion);
+        } else {
+          await into(repTemplates).insert(companion);
+        }
+      }
+
+      // Soft delete any excess reps that were removed
+      for (var i = reps.length; i < existingReps.length; i++) {
+        await (update(repTemplates)
+          ..where((r) => r.id.equals(existingReps[i].id))).write(
+          RepTemplatesCompanion(
+            dirty: const Value(true),
+            updatedAt: Value(now),
+            deletedAt: Value(now),
+          ),
+        );
+      }
+
       await incrementPendingChanges();
 
       if (name == null) {
         await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
-          TrainingsCompanion(
-            dirty: const Value(true),
-            updatedAt: Value(DateTime.now()),
-          ),
+          TrainingsCompanion(dirty: const Value(true), updatedAt: Value(now)),
         );
         await incrementPendingChanges();
       }
@@ -738,7 +750,9 @@ class AppDatabase extends _$AppDatabase {
   /// Get the rep templates associated with a training.
   Future<List<RepTemplate>> getRepsForTraining(String trainingId) =>
       (select(repTemplates)
-            ..where((r) => r.trainingId.equals(trainingId))
+            ..where(
+              (r) => r.trainingId.equals(trainingId) & r.deletedAt.isNull(),
+            )
             ..orderBy([(r) => OrderingTerm(expression: r.index)]))
           .get();
 
