@@ -150,14 +150,13 @@ class _EmailVerificationScreenState
                   const Text("Didn't receive the email? "),
                   TextButton(
                     onPressed: _isResending ? null : _handleResend,
-                    child:
-                        _isResending
-                            ? const SizedBox(
-                              height: 16,
-                              width: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                            : const Text('Resend'),
+                    child: _isResending
+                        ? const SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Resend'),
                   ),
                 ],
               ),

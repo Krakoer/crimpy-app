@@ -19,33 +19,31 @@ class TrainingDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(template.name)),
       body: SafeArea(
-        child:
-            isRepeater
-                ? SingleChildScrollView(
-                  child: RepeaterVisualization(training: template),
-                )
-                : ListView.builder(
-                  itemCount: template.reps.length,
-                  itemBuilder:
-                      (ctx, i) => RepListItem(
-                        key: ValueKey(i),
-                        rep: template.reps[i],
-                        index: i,
-                      ),
+        child: isRepeater
+            ? SingleChildScrollView(
+                child: RepeaterVisualization(training: template),
+              )
+            : ListView.builder(
+                itemCount: template.reps.length,
+                itemBuilder: (ctx, i) => RepListItem(
+                  key: ValueKey(i),
+                  rep: template.reps[i],
+                  index: i,
                 ),
+              ),
       ),
       floatingActionButton: IconButton(
         onPressed:
             ref.watch(connectionStateProvider) != BleConnectionState.connected
-                ? null
-                : () {
-                  ref.read(bleSessionProvider.notifier).reset();
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (ctx) => PlayTrainingScreen(template),
-                    ),
-                  );
-                },
+            ? null
+            : () {
+                ref.read(bleSessionProvider.notifier).reset();
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (ctx) => PlayTrainingScreen(template),
+                  ),
+                );
+              },
         icon: Icon(Icons.play_arrow),
       ),
     );
@@ -72,8 +70,9 @@ class RepListItem extends StatelessWidget {
       padding: const EdgeInsets.all(0),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor:
-              rep.isRest ? CrimpyTheme.successColor : CrimpyTheme.errorColor,
+          backgroundColor: rep.isRest
+              ? CrimpyTheme.successColor
+              : CrimpyTheme.errorColor,
           child: Text('${index + 1}'),
         ),
         title: Text(rep.isRest ? "Rest" : "Pull"),

@@ -16,15 +16,14 @@ class PreRunScreen extends ConsumerWidget {
         next.whenData((data) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder:
-                  (ctx) => switch (type) {
-                    AssessmentType.mvc => MvcRunScreen(
-                      reps: data.training.reps,
-                      type: type,
-                    ),
-                    AssessmentType.criticalForce => Text("NOT IMPL"),
-                    AssessmentType.endurance60 => Text("NOT IMPL"),
-                  },
+              builder: (ctx) => switch (type) {
+                AssessmentType.mvc => MvcRunScreen(
+                  reps: data.training.reps,
+                  type: type,
+                ),
+                AssessmentType.criticalForce => Text("NOT IMPL"),
+                AssessmentType.endurance60 => Text("NOT IMPL"),
+              },
             ),
           );
         });

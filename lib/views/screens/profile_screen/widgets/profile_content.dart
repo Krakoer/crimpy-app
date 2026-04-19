@@ -91,9 +91,8 @@ class ProfileContent extends ConsumerWidget {
                                 onPressed: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder:
-                                          (context) =>
-                                              const RegistrationScreen(),
+                                      builder: (context) =>
+                                          const RegistrationScreen(),
                                     ),
                                   );
                                 },
@@ -157,20 +156,18 @@ class ProfileContent extends ConsumerWidget {
                 );
               }
             },
-            loading:
-                () => const Card(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ),
-            error:
-                (error, stack) => Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text('Error: $error'),
-                  ),
-                ),
+            loading: () => const Card(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ),
+            error: (error, stack) => Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text('Error: $error'),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
 
@@ -181,25 +178,24 @@ class ProfileContent extends ConsumerWidget {
             accentRight: accentRight,
             onStartAssessment:
                 ref.watch(connectionStateProvider) ==
-                        BleConnectionState.connected
-                    ? () async {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder:
-                              (ctx) => PreRunScreen(type: AssessmentType.mvc),
-                        ),
-                      );
-                    }
-                    : () => showDialog(
-                      builder:
-                          (context) => AlertDialog(
-                            title: Text("No BLE device connected"),
-                            content: Text(
-                              "You must connect to a BLE device to run an assessment",
-                            ),
-                          ),
-                      context: context,
+                    BleConnectionState.connected
+                ? () async {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (ctx) =>
+                            PreRunScreen(type: AssessmentType.mvc),
+                      ),
+                    );
+                  }
+                : () => showDialog(
+                    builder: (context) => AlertDialog(
+                      title: Text("No BLE device connected"),
+                      content: Text(
+                        "You must connect to a BLE device to run an assessment",
+                      ),
                     ),
+                    context: context,
+                  ),
           ),
 
           const SizedBox(height: 32),
@@ -215,40 +211,34 @@ class ProfileContent extends ConsumerWidget {
                 .fold<double>(0, (prev, el) => el > prev ? el : prev),
             accentLeft: accentLeft,
             accentRight: accentRight,
-            leftData:
-                criticalForce
-                    .where((a) => a.leftValue != null)
-                    .map((a) => (a.date, a.leftValue!))
-                    .toList(),
-            rightData:
-                criticalForce
-                    .where((a) => a.rightValue != null)
-                    .map((a) => (a.date, a.rightValue!))
-                    .toList(),
-            onStartAssessment:
-                () =>
-                    ref.watch(connectionStateProvider) ==
-                            BleConnectionState.connected
-                        ? () async {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder:
-                                  (ctx) => PreRunScreen(
-                                    type: AssessmentType.criticalForce,
-                                  ),
-                            ),
-                          );
-                        }
-                        : () => showDialog(
-                          builder:
-                              (context) => AlertDialog(
-                                title: Text("No BLE device connected"),
-                                content: Text(
-                                  "You must connect to a BLE device to run an assessment",
-                                ),
-                              ),
-                          context: context,
-                        ),
+            leftData: criticalForce
+                .where((a) => a.leftValue != null)
+                .map((a) => (a.date, a.leftValue!))
+                .toList(),
+            rightData: criticalForce
+                .where((a) => a.rightValue != null)
+                .map((a) => (a.date, a.rightValue!))
+                .toList(),
+            onStartAssessment: () =>
+                ref.watch(connectionStateProvider) ==
+                    BleConnectionState.connected
+                ? () async {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (ctx) =>
+                            PreRunScreen(type: AssessmentType.criticalForce),
+                      ),
+                    );
+                  }
+                : () => showDialog(
+                    builder: (context) => AlertDialog(
+                      title: Text("No BLE device connected"),
+                      content: Text(
+                        "You must connect to a BLE device to run an assessment",
+                      ),
+                    ),
+                    context: context,
+                  ),
           ),
 
           SizedBox(height: 32),
@@ -264,41 +254,35 @@ class ProfileContent extends ConsumerWidget {
                 .fold<double>(0, (prev, el) => el > prev ? el : prev),
             accentLeft: accentLeft,
             accentRight: accentRight,
-            leftData:
-                endurance60
-                    .where((a) => a.leftValue != null)
-                    .map((a) => (a.date, a.leftValue!))
-                    .toList(),
-            rightData:
-                endurance60
-                    .where((a) => a.rightValue != null)
-                    .map((a) => (a.date, a.rightValue!))
-                    .toList(),
+            leftData: endurance60
+                .where((a) => a.leftValue != null)
+                .map((a) => (a.date, a.leftValue!))
+                .toList(),
+            rightData: endurance60
+                .where((a) => a.rightValue != null)
+                .map((a) => (a.date, a.rightValue!))
+                .toList(),
             unit: AssessmentUnit.seconds,
-            onStartAssessment:
-                () =>
-                    ref.watch(connectionStateProvider) ==
-                            BleConnectionState.connected
-                        ? () async {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder:
-                                  (ctx) => PreRunScreen(
-                                    type: AssessmentType.endurance60,
-                                  ),
-                            ),
-                          );
-                        }
-                        : () => showDialog(
-                          builder:
-                              (context) => AlertDialog(
-                                title: Text("No BLE device connected"),
-                                content: Text(
-                                  "You must connect to a BLE device to run an assessment",
-                                ),
-                              ),
-                          context: context,
-                        ),
+            onStartAssessment: () =>
+                ref.watch(connectionStateProvider) ==
+                    BleConnectionState.connected
+                ? () async {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (ctx) =>
+                            PreRunScreen(type: AssessmentType.endurance60),
+                      ),
+                    );
+                  }
+                : () => showDialog(
+                    builder: (context) => AlertDialog(
+                      title: Text("No BLE device connected"),
+                      content: Text(
+                        "You must connect to a BLE device to run an assessment",
+                      ),
+                    ),
+                    context: context,
+                  ),
           ),
         ],
       ),

@@ -47,26 +47,19 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
             onSelected: (value) => _applyFilter(value),
-            itemBuilder:
-                (context) => [
-                  const PopupMenuItem(
-                    value: 'all',
-                    child: Text('All Sessions'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'assessments',
-                    child: Text('Assessments Only'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'trainings',
-                    child: Text('Trainings Only'),
-                  ),
-                  const PopupMenuItem(value: 'week', child: Text('This Week')),
-                  const PopupMenuItem(
-                    value: 'month',
-                    child: Text('This Month'),
-                  ),
-                ],
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'all', child: Text('All Sessions')),
+              const PopupMenuItem(
+                value: 'assessments',
+                child: Text('Assessments Only'),
+              ),
+              const PopupMenuItem(
+                value: 'trainings',
+                child: Text('Trainings Only'),
+              ),
+              const PopupMenuItem(value: 'week', child: Text('This Week')),
+              const PopupMenuItem(value: 'month', child: Text('This Month')),
+            ],
           ),
         ],
       ),
@@ -85,12 +78,11 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
 
   Widget _buildSessionList(List<SessionModel> sessions) {
     // Filter sessions by selected date if one is selected
-    final filteredSessions =
-        _selectedDate != null
-            ? sessions.where((session) {
-              return DateUtils.isSameDay(session.date, _selectedDate);
-            }).toList()
-            : sessions;
+    final filteredSessions = _selectedDate != null
+        ? sessions.where((session) {
+            return DateUtils.isSameDay(session.date, _selectedDate);
+          }).toList()
+        : sessions;
 
     if (filteredSessions.isEmpty) {
       return Padding(
@@ -121,8 +113,8 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
     }
 
     // Sort dates in descending order
-    final sortedDates =
-        groupedSessions.keys.toList()..sort((a, b) => b.compareTo(a));
+    final sortedDates = groupedSessions.keys.toList()
+      ..sort((a, b) => b.compareTo(a));
 
     return ListView.builder(
       controller: _scrollController,

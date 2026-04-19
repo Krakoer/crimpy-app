@@ -46,12 +46,11 @@ class AssessmentRepository {
     HandSide handSide, {
     GripPosition? gripPosition,
   }) async {
-    final assessment =
-        (await gDatabase.getAssessments(
-          type: type,
-          handSide: handSide,
-          gripPosition: gripPosition,
-        )).lastOrNull;
+    final assessment = (await gDatabase.getAssessments(
+      type: type,
+      handSide: handSide,
+      gripPosition: gripPosition,
+    )).lastOrNull;
     return handSide.isRightHand
         ? assessment?.rightValue
         : assessment?.leftValue;

@@ -53,10 +53,8 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder:
-                (context) => EmailVerificationScreen(
-                  email: _emailController.text.trim(),
-                ),
+            builder: (context) =>
+                EmailVerificationScreen(email: _emailController.text.trim()),
           ),
         );
       }
@@ -217,14 +215,13 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child:
-                      _isLoading
-                          ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                          : const Text('Register'),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Register'),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -232,12 +229,11 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   children: [
                     const Text('Already have an account? '),
                     TextButton(
-                      onPressed:
-                          _isLoading
-                              ? null
-                              : () {
-                                Navigator.of(context).pop();
-                              },
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                              Navigator.of(context).pop();
+                            },
                       child: const Text('Login'),
                     ),
                   ],

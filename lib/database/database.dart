@@ -24,10 +24,12 @@ class Sessions extends Table {
   late final TextColumn notes = text()();
   late final DateTimeColumn date = dateTime().withDefault(currentDateAndTime)();
   late final TextColumn dataPath = text()();
-  late final BoolColumn isAssessment =
-      boolean().withDefault(const Constant(false))();
-  late final IntColumn sessionType =
-      integer().withDefault(const Constant(0))(); // 0 = crimpy (default)
+  late final BoolColumn isAssessment = boolean().withDefault(
+    const Constant(false),
+  )();
+  late final IntColumn sessionType = integer().withDefault(
+    const Constant(0),
+  )(); // 0 = crimpy (default)
   late final IntColumn duration = integer().withDefault(const Constant(0))();
 
   // Repeater configuration (if session was a repeater workout)
@@ -39,10 +41,12 @@ class Sessions extends Table {
   late final BoolColumn repeaterSplitHand = boolean().nullable()();
 
   // Sync columns
-  late final DateTimeColumn createdAt =
-      dateTime().nullable().clientDefault(() => DateTime.now())();
-  late final DateTimeColumn updatedAt =
-      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn createdAt = dateTime().nullable().clientDefault(
+    () => DateTime.now(),
+  )();
+  late final DateTimeColumn updatedAt = dateTime().withDefault(
+    currentDateAndTime,
+  )();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
@@ -58,16 +62,17 @@ class Assessments extends Table {
   late final RealColumn rightValue = real().nullable()();
   late final RealColumn leftValue = real().nullable()();
   late final TextColumn sessionId = text()();
-  late final IntColumn gripPosition =
-      integer().nullable().withDefault(
-        const Constant(0),
-      )(); // 0 = halfCrimp (default)
+  late final IntColumn gripPosition = integer().nullable().withDefault(
+    const Constant(0),
+  )(); // 0 = halfCrimp (default)
 
   // Sync columns
-  late final DateTimeColumn createdAt =
-      dateTime().nullable().clientDefault(() => DateTime.now())();
-  late final DateTimeColumn updatedAt =
-      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn createdAt = dateTime().nullable().clientDefault(
+    () => DateTime.now(),
+  )();
+  late final DateTimeColumn updatedAt = dateTime().withDefault(
+    currentDateAndTime,
+  )();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
@@ -86,18 +91,23 @@ class Trainings extends Table {
 
   late final TextColumn name = text()();
   late final TextColumn repeaterId = text().nullable()();
-  late final BoolColumn isBuiltin =
-      boolean().withDefault(const Constant(false))();
-  late final BoolColumn isFavorite =
-      boolean().withDefault(const Constant(false))();
-  late final BoolColumn isAssessment =
-      boolean().withDefault(const Constant(false))();
+  late final BoolColumn isBuiltin = boolean().withDefault(
+    const Constant(false),
+  )();
+  late final BoolColumn isFavorite = boolean().withDefault(
+    const Constant(false),
+  )();
+  late final BoolColumn isAssessment = boolean().withDefault(
+    const Constant(false),
+  )();
 
   // Sync columns
-  late final DateTimeColumn createdAt =
-      dateTime().nullable().clientDefault(() => DateTime.now())();
-  late final DateTimeColumn updatedAt =
-      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn createdAt = dateTime().nullable().clientDefault(
+    () => DateTime.now(),
+  )();
+  late final DateTimeColumn updatedAt = dateTime().withDefault(
+    currentDateAndTime,
+  )();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
@@ -122,14 +132,17 @@ class Repeaters extends Table {
   late final RealColumn targetWeigthRight = real().nullable()();
   late final RealColumn targetWeigthLeft = real().nullable()();
   late final BoolColumn splitHand = boolean()();
-  late final IntColumn gripPosition =
-      integer().withDefault(const Constant(0))(); // 0 = halfCrimp (default)
+  late final IntColumn gripPosition = integer().withDefault(
+    const Constant(0),
+  )(); // 0 = halfCrimp (default)
 
   // Sync columns
-  late final DateTimeColumn createdAt =
-      dateTime().nullable().clientDefault(() => DateTime.now())();
-  late final DateTimeColumn updatedAt =
-      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn createdAt = dateTime().nullable().clientDefault(
+    () => DateTime.now(),
+  )();
+  late final DateTimeColumn updatedAt = dateTime().withDefault(
+    currentDateAndTime,
+  )();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
@@ -147,14 +160,17 @@ class RepTemplates extends Table {
   late final TextColumn trainingId = text()();
   late final RealColumn targetWeight = real()();
   late final IntColumn index = integer()();
-  late final IntColumn gripPosition =
-      integer().withDefault(const Constant(0))(); // 0 = halfCrimp (default)
+  late final IntColumn gripPosition = integer().withDefault(
+    const Constant(0),
+  )(); // 0 = halfCrimp (default)
 
   // Sync columns
-  late final DateTimeColumn createdAt =
-      dateTime().nullable().clientDefault(() => DateTime.now())();
-  late final DateTimeColumn updatedAt =
-      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn createdAt = dateTime().nullable().clientDefault(
+    () => DateTime.now(),
+  )();
+  late final DateTimeColumn updatedAt = dateTime().withDefault(
+    currentDateAndTime,
+  )();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
@@ -178,14 +194,17 @@ class RepDatas extends Table {
   late final IntColumn duration = integer()();
   late final RealColumn targetWeight = real()();
   late final IntColumn index = integer()();
-  late final IntColumn gripPosition =
-      integer().withDefault(const Constant(0))(); // 0 = halfCrimp (default)
+  late final IntColumn gripPosition = integer().withDefault(
+    const Constant(0),
+  )(); // 0 = halfCrimp (default)
 
   // Sync columns
-  late final DateTimeColumn createdAt =
-      dateTime().nullable().clientDefault(() => DateTime.now())();
-  late final DateTimeColumn updatedAt =
-      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn createdAt = dateTime().nullable().clientDefault(
+    () => DateTime.now(),
+  )();
+  late final DateTimeColumn updatedAt = dateTime().withDefault(
+    currentDateAndTime,
+  )();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
@@ -206,11 +225,6 @@ class PinnedBuiltinTrainings extends Table {
   Set<Column> get primaryKey => {builtinTrainingId};
 
   // Sync columns
-  late final DateTimeColumn createdAt =
-      dateTime().nullable().clientDefault(() => DateTime.now())();
-  late final DateTimeColumn updatedAt =
-      dateTime().withDefault(currentDateAndTime)();
-  late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 }
 
@@ -224,10 +238,12 @@ class SensorConfigs extends Table {
   late final RealColumn coef = real()();
 
   // Sync columns
-  late final DateTimeColumn createdAt =
-      dateTime().nullable().clientDefault(() => DateTime.now())();
-  late final DateTimeColumn updatedAt =
-      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn createdAt = dateTime().nullable().clientDefault(
+    () => DateTime.now(),
+  )();
+  late final DateTimeColumn updatedAt = dateTime().withDefault(
+    currentDateAndTime,
+  )();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
@@ -244,10 +260,12 @@ class BuiltinTrainingWeights extends Table {
   late final RealColumn customWeightLeft = real().nullable()();
 
   // Sync columns
-  late final DateTimeColumn createdAt =
-      dateTime().withDefault(currentDateAndTime)();
-  late final DateTimeColumn updatedAt =
-      dateTime().withDefault(currentDateAndTime)();
+  late final DateTimeColumn createdAt = dateTime().withDefault(
+    currentDateAndTime,
+  )();
+  late final DateTimeColumn updatedAt = dateTime().withDefault(
+    currentDateAndTime,
+  )();
   late final DateTimeColumn deletedAt = dateTime().nullable()();
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
@@ -266,16 +284,21 @@ class Users extends Table {
   late final TextColumn email = text()();
   late final TextColumn firstname = text()();
   late final TextColumn lastname = text()();
-  late final BoolColumn emailVerified =
-      boolean().withDefault(const Constant(false))();
-  late final BoolColumn isAdmin =
-      boolean().withDefault(const Constant(false))();
-  late final BoolColumn isCoach =
-      boolean().withDefault(const Constant(false))();
-  late final BoolColumn coachValidated =
-      boolean().withDefault(const Constant(false))();
-  late final DateTimeColumn createdAt =
-      dateTime().withDefault(currentDateAndTime)();
+  late final BoolColumn emailVerified = boolean().withDefault(
+    const Constant(false),
+  )();
+  late final BoolColumn isAdmin = boolean().withDefault(
+    const Constant(false),
+  )();
+  late final BoolColumn isCoach = boolean().withDefault(
+    const Constant(false),
+  )();
+  late final BoolColumn coachValidated = boolean().withDefault(
+    const Constant(false),
+  )();
+  late final DateTimeColumn createdAt = dateTime().withDefault(
+    currentDateAndTime,
+  )();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -284,11 +307,13 @@ class Users extends Table {
 // Stores sync metadata for tracking sync state.
 class SyncMetadata extends Table {
   late final IntColumn id = integer().autoIncrement()();
-  late final IntColumn lastSyncVersion =
-      integer().withDefault(const Constant(0))();
+  late final IntColumn lastSyncVersion = integer().withDefault(
+    const Constant(0),
+  )();
   late final DateTimeColumn lastSyncTime = dateTime().nullable()();
-  late final IntColumn pendingChanges =
-      integer().withDefault(const Constant(0))();
+  late final IntColumn pendingChanges = integer().withDefault(
+    const Constant(0),
+  )();
 }
 
 @DriftDatabase(
@@ -312,13 +337,14 @@ class AppDatabase extends _$AppDatabase {
   // ------------------------------------- SESSIONS -------------------------------------
   /// Get a session with its data points.
   Future<SessionModel?> getSessionWithData(String sessionId) async {
-    final session =
-        await (select(sessions)
-          ..where((s) => s.id.equals(sessionId))).getSingleOrNull();
+    final session = await (select(
+      sessions,
+    )..where((s) => s.id.equals(sessionId))).getSingleOrNull();
     if (session == null) return null;
 
-    final List<BleDataPoint> dataPoints =
-        session.dataPath.isEmpty ? [] : await getSessionData(session.dataPath);
+    final List<BleDataPoint> dataPoints = session.dataPath.isEmpty
+        ? []
+        : await getSessionData(session.dataPath);
 
     // Build repeater config if available
     RepeaterConfig? repeaterConfig;
@@ -357,22 +383,22 @@ class AppDatabase extends _$AppDatabase {
     // Handle date filters
     if (filters != null) {
       if (filters.startDate != null) {
-        query =
-            query..where(
-              (session) => session.date.isBiggerThanValue(filters.startDate!),
-            );
+        query = query
+          ..where(
+            (session) => session.date.isBiggerThanValue(filters.startDate!),
+          );
       }
       if (filters.endDate != null) {
-        query =
-            query..where(
-              (session) => session.date.isSmallerThanValue(filters.endDate!),
-            );
+        query = query
+          ..where(
+            (session) => session.date.isSmallerThanValue(filters.endDate!),
+          );
       }
       if (filters.isAssessment != null) {
-        query =
-            query..where(
-              (session) => session.isAssessment.equals(filters.isAssessment!),
-            );
+        query = query
+          ..where(
+            (session) => session.isAssessment.equals(filters.isAssessment!),
+          );
       }
     }
     return query.get();
@@ -426,27 +452,25 @@ class AppDatabase extends _$AppDatabase {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    final sessionId =
-        (await (select(sessions)
-              ..where((s) => s.rowId.equals(sessionRowId))).getSingle())
-            .id;
+    final sessionId = (await (select(
+      sessions,
+    )..where((s) => s.rowId.equals(sessionRowId))).getSingle()).id;
 
     await incrementPendingChanges();
-    final companions =
-        reps.indexed
-            .map(
-              (index) => RepDatasCompanion(
-                duration: Value(index.$2.duration),
-                index: Value(index.$1),
-                isRest: Value(index.$2.isRest),
-                rightHand: Value(index.$2.handSide.isRightHand),
-                sessionId: Value(sessionId),
-                targetWeight: Value(index.$2.targetWeight),
-                averageWeight: Value(index.$2.averageWeight),
-                gripPosition: Value(index.$2.gripPosition.index),
-              ),
-            )
-            .toList();
+    final companions = reps.indexed
+        .map(
+          (index) => RepDatasCompanion(
+            duration: Value(index.$2.duration),
+            index: Value(index.$1),
+            isRest: Value(index.$2.isRest),
+            rightHand: Value(index.$2.handSide.isRightHand),
+            sessionId: Value(sessionId),
+            targetWeight: Value(index.$2.targetWeight),
+            averageWeight: Value(index.$2.averageWeight),
+            gripPosition: Value(index.$2.gripPosition.index),
+          ),
+        )
+        .toList();
 
     batch((batch) {
       batch.insertAll(repDatas, companions);
@@ -505,33 +529,31 @@ class AppDatabase extends _$AppDatabase {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    final trainingId =
-        (await (select(trainings)
-              ..where((t) => t.rowId.equals(trainingRowId))).getSingle())
-            .id;
+    final trainingId = (await (select(
+      trainings,
+    )..where((t) => t.rowId.equals(trainingRowId))).getSingle()).id;
     await incrementPendingChanges();
 
-    final companions =
-        reps
-            .asMap()
-            .map(
-              (index, rep) => MapEntry(
-                index,
-                RepTemplatesCompanion(
-                  duration: Value(rep.durationInSeconds),
-                  index: Value(index),
-                  isRest: Value(rep.isRest),
-                  rightHand: Value(rep.handSide.isRightHand),
-                  trainingId: Value(trainingId),
-                  targetWeight: Value(rep.targetWeight),
-                  gripPosition: Value(rep.gripPosition.index),
-                  dirty: const Value(true),
-                  updatedAt: Value(DateTime.now()),
-                ),
-              ),
-            )
-            .values
-            .toList();
+    final companions = reps
+        .asMap()
+        .map(
+          (index, rep) => MapEntry(
+            index,
+            RepTemplatesCompanion(
+              duration: Value(rep.durationInSeconds),
+              index: Value(index),
+              isRest: Value(rep.isRest),
+              rightHand: Value(rep.handSide.isRightHand),
+              trainingId: Value(trainingId),
+              targetWeight: Value(rep.targetWeight),
+              gripPosition: Value(rep.gripPosition.index),
+              dirty: const Value(true),
+              updatedAt: Value(DateTime.now()),
+            ),
+          ),
+        )
+        .values
+        .toList();
 
     batch((batch) {
       batch.insertAll(repTemplates, companions);
@@ -543,10 +565,9 @@ class AppDatabase extends _$AppDatabase {
 
   /// Toggle the favorite status of a training.
   Future<void> toggleFav(String trainingId) async {
-    final oldFav =
-        (await (select(trainings)
-              ..where((t) => t.id.equals(trainingId))).getSingle())
-            .isFavorite;
+    final oldFav = (await (select(
+      trainings,
+    )..where((t) => t.id.equals(trainingId))).getSingle()).isFavorite;
     await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
       TrainingsCompanion(
         isFavorite: Value(!oldFav),
@@ -602,8 +623,9 @@ class AppDatabase extends _$AppDatabase {
         );
 
         if (i < existingReps.length) {
-          await (update(repTemplates)
-            ..where((r) => r.id.equals(existingReps[i].id))).write(companion);
+          await (update(
+            repTemplates,
+          )..where((r) => r.id.equals(existingReps[i].id))).write(companion);
         } else {
           await into(repTemplates).insert(companion);
         }
@@ -611,8 +633,9 @@ class AppDatabase extends _$AppDatabase {
 
       // Soft delete any excess reps that were removed
       for (var i = reps.length; i < existingReps.length; i++) {
-        await (update(repTemplates)
-          ..where((r) => r.id.equals(existingReps[i].id))).write(
+        await (update(
+          repTemplates,
+        )..where((r) => r.id.equals(existingReps[i].id))).write(
           RepTemplatesCompanion(
             dirty: const Value(true),
             updatedAt: Value(now),
@@ -652,9 +675,9 @@ class AppDatabase extends _$AppDatabase {
 
     if (model != null) {
       // Get repeater ID
-      var r =
-          await (select(trainings)
-            ..where((t) => t.id.equals(trainingId))).getSingle();
+      var r = await (select(
+        trainings,
+      )..where((t) => t.id.equals(trainingId))).getSingle();
 
       // Make sure the template has a repeater Id
       if (r.repeaterId == null) {
@@ -663,8 +686,9 @@ class AppDatabase extends _$AppDatabase {
       }
 
       // Then update the repeater template
-      await (update(repeaters)
-        ..where((tbl) => tbl.id.equals(r.repeaterId!))).write(
+      await (update(
+        repeaters,
+      )..where((tbl) => tbl.id.equals(r.repeaterId!))).write(
         RepeatersCompanion(
           reps: Value(model.repsBySet),
           sets: Value(model.sets),
@@ -709,10 +733,9 @@ class AppDatabase extends _$AppDatabase {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    final repeaterId =
-        (await (select(repeaters)
-              ..where((r) => r.rowId.equals(repeaterRowId))).getSingle())
-            .id;
+    final repeaterId = (await (select(
+      repeaters,
+    )..where((r) => r.rowId.equals(repeaterRowId))).getSingle()).id;
 
     final trainingRowId = await into(trainings).insert(
       TrainingsCompanion(
@@ -722,10 +745,9 @@ class AppDatabase extends _$AppDatabase {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    final trainingId =
-        (await (select(trainings)
-              ..where((t) => t.rowId.equals(trainingRowId))).getSingle())
-            .id;
+    final trainingId = (await (select(
+      trainings,
+    )..where((t) => t.rowId.equals(trainingRowId))).getSingle()).id;
     await incrementPendingChanges();
     return trainingId;
   }
@@ -737,19 +759,22 @@ class AppDatabase extends _$AppDatabase {
   /// Get all the trainings without the assessments.
   Future<List<Training>> getAllTrainingsWithoutAssessments() =>
       (select(trainings)..where(
-        (training) => training.isAssessment.not() & training.deletedAt.isNull(),
-      )).get();
+            (training) =>
+                training.isAssessment.not() & training.deletedAt.isNull(),
+          ))
+          .get();
 
   /// Get all the assessment trainings.
   Future<List<Training>> getAllAssessmentTrainings() =>
       (select(trainings)..where(
-        (training) => training.isAssessment & training.deletedAt.isNull(),
-      )).get();
+            (training) => training.isAssessment & training.deletedAt.isNull(),
+          ))
+          .get();
 
   /// Get all favorite trainings.
-  Future<List<Training>> getFavTrainings() =>
-      (select(trainings)
-        ..where((t) => t.isFavorite & t.deletedAt.isNull())).get();
+  Future<List<Training>> getFavTrainings() => (select(
+    trainings,
+  )..where((t) => t.isFavorite & t.deletedAt.isNull())).get();
 
   /// Get the rep templates associated with a training.
   Future<List<RepTemplate>> getRepsForTraining(String trainingId) =>
@@ -789,10 +814,9 @@ class AppDatabase extends _$AppDatabase {
     );
 
     final assessmentRowId = await into(assessments).insert(companion);
-    final assessmentId =
-        (await (select(assessments)
-              ..where((a) => a.rowId.equals(assessmentRowId))).getSingle())
-            .id;
+    final assessmentId = (await (select(
+      assessments,
+    )..where((a) => a.rowId.equals(assessmentRowId))).getSingle()).id;
     await incrementPendingChanges();
     return assessmentId;
   }
@@ -825,31 +849,29 @@ class AppDatabase extends _$AppDatabase {
     }
     // Add filter if hand was provided.
     if (handSide != null) {
-      query =
-          query..where(
-            (assessment) =>
-                handSide.isRightHand
-                    ? assessment.rightValue.isNotNull()
-                    : assessment.leftValue.isNotNull(),
-          );
+      query = query
+        ..where(
+          (assessment) => handSide.isRightHand
+              ? assessment.rightValue.isNotNull()
+              : assessment.leftValue.isNotNull(),
+        );
     }
     // Add filter if grip position was provided.
     if (gripPosition != null) {
-      query =
-          query..where(
-            (assessment) => assessment.gripPosition.equals(gripPosition.index),
-          );
+      query = query
+        ..where(
+          (assessment) => assessment.gripPosition.equals(gripPosition.index),
+        );
     }
 
     // Join on sessions to get the date of the assessment.
-    final res =
-        await query.join([
-          innerJoin(
-            sessions,
-            sessions.id.equalsExp(assessments.sessionId) &
-                sessions.deletedAt.isNull(),
-          ),
-        ]).get();
+    final res = await query.join([
+      innerJoin(
+        sessions,
+        sessions.id.equalsExp(assessments.sessionId) &
+            sessions.deletedAt.isNull(),
+      ),
+    ]).get();
 
     return res.map((row) {
       final assessment = row.readTable(assessments);
@@ -861,25 +883,24 @@ class AppDatabase extends _$AppDatabase {
         leftValue: assessment.leftValue,
         rightValue: assessment.rightValue,
         id: assessment.id,
-        gripPosition:
-            assessment.gripPosition != null
-                ? GripPosition.values[assessment.gripPosition!]
-                : null,
+        gripPosition: assessment.gripPosition != null
+            ? GripPosition.values[assessment.gripPosition!]
+            : null,
       );
     }).toList();
   }
 
   // ------------------------------------- SENSOR CONFIGS -------------------------------------
   /// Get the saved sensor configs.
-  Future<List<SensorConfig>> getSensorConfigs() async =>
-      (select(sensorConfigs)
-        ..orderBy([(r) => OrderingTerm.desc(r.index)])).get();
+  Future<List<SensorConfig>> getSensorConfigs() async => (select(
+    sensorConfigs,
+  )..orderBy([(r) => OrderingTerm.desc(r.index)])).get();
 
   /// Save a new sensor config.
   Future<int> addSensorConfig(SensorConfigsCompanion config) async {
-    final maxConfIndex =
-        await (select(sensorConfigs)
-          ..orderBy([(u) => OrderingTerm.desc(u.index)])).getSingleOrNull();
+    final maxConfIndex = await (select(
+      sensorConfigs,
+    )..orderBy([(u) => OrderingTerm.desc(u.index)])).getSingleOrNull();
     final newIndex = maxConfIndex == null ? 1 : maxConfIndex.index + 1;
     final newConf = SensorConfigsCompanion(
       coef: config.coef,
@@ -922,8 +943,9 @@ class AppDatabase extends _$AppDatabase {
 
     if (existing != null) {
       // Update existing weights
-      await (update(builtinTrainingWeights)
-        ..where((w) => w.id.equals(existing.id))).write(
+      await (update(
+        builtinTrainingWeights,
+      )..where((w) => w.id.equals(existing.id))).write(
         BuiltinTrainingWeightsCompanion(
           customWeightRight: Value(customWeightRight),
           customWeightLeft: Value(customWeightLeft),
@@ -945,9 +967,9 @@ class AppDatabase extends _$AppDatabase {
   // ------------------------------------- PINNED BUILTIN TRAININGS -------------------------------------
   /// Get all pinned builtin training IDs.
   Future<List<String>> getPinnedBuiltinTrainingIds() async {
-    return (await select(pinnedBuiltinTrainings).get())
-        .map((row) => row.builtinTrainingId)
-        .toList();
+    return (await select(
+      pinnedBuiltinTrainings,
+    ).get()).map((row) => row.builtinTrainingId).toList();
   }
 
   /// Pin a builtin training to the home screen.
@@ -961,16 +983,17 @@ class AppDatabase extends _$AppDatabase {
 
   /// Unpin a builtin training from the home screen.
   Future<void> unpinBuiltinTraining(String builtinTrainingId) async {
-    await (delete(pinnedBuiltinTrainings)
-      ..where((t) => t.builtinTrainingId.equals(builtinTrainingId))).go();
+    await (delete(
+      pinnedBuiltinTrainings,
+    )..where((t) => t.builtinTrainingId.equals(builtinTrainingId))).go();
   }
 
   /// Check if a builtin training is pinned.
   Future<bool> isBuiltinTrainingPinned(String builtinTrainingId) async {
     final result =
-        await (select(pinnedBuiltinTrainings)..where(
-          (t) => t.builtinTrainingId.equals(builtinTrainingId),
-        )).getSingleOrNull();
+        await (select(pinnedBuiltinTrainings)
+              ..where((t) => t.builtinTrainingId.equals(builtinTrainingId)))
+            .getSingleOrNull();
     return result != null;
   }
 
@@ -1004,8 +1027,9 @@ class AppDatabase extends _$AppDatabase {
   }) async {
     final existing = await getSyncMetadata();
     if (existing != null) {
-      await (update(syncMetadata)
-        ..where((s) => s.id.equals(existing.id))).write(
+      await (update(
+        syncMetadata,
+      )..where((s) => s.id.equals(existing.id))).write(
         SyncMetadataCompanion(
           lastSyncVersion: Value(lastSyncVersion),
           lastSyncTime: Value(lastSyncTime),
@@ -1047,7 +1071,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1121,8 +1145,9 @@ class AppDatabase extends _$AppDatabase {
           TableMigration(
             schema.sensorConfigs,
             columnTransformer: {
-              sensorConfigs.id:
-                  Schema3(database: m.database).sensorConfigs.remoteId,
+              sensorConfigs.id: Schema3(
+                database: m.database,
+              ).sensorConfigs.remoteId,
             },
           ),
         );
@@ -1130,8 +1155,9 @@ class AppDatabase extends _$AppDatabase {
           TableMigration(
             schema.repTemplates,
             columnTransformer: {
-              repTemplates.id:
-                  Schema3(database: m.database).repTemplates.remoteId,
+              repTemplates.id: Schema3(
+                database: m.database,
+              ).repTemplates.remoteId,
             },
           ),
         );
@@ -1139,8 +1165,9 @@ class AppDatabase extends _$AppDatabase {
           TableMigration(
             schema.builtinTrainingWeights,
             columnTransformer: {
-              builtinTrainingWeights.id:
-                  Schema3(database: m.database).builtinTrainingWeights.remoteId,
+              builtinTrainingWeights.id: Schema3(
+                database: m.database,
+              ).builtinTrainingWeights.remoteId,
             },
           ),
         );
@@ -1148,11 +1175,16 @@ class AppDatabase extends _$AppDatabase {
           TableMigration(
             schema.pinnedBuiltinTrainings,
             columnTransformer: {
-              pinnedBuiltinTrainings.builtinTrainingId:
-                  Schema3(database: m.database).pinnedBuiltinTrainings.remoteId,
+              pinnedBuiltinTrainings.builtinTrainingId: Schema3(
+                database: m.database,
+              ).pinnedBuiltinTrainings.remoteId,
             },
           ),
         );
+      },
+      from4To5: (m, schema) async {
+        // Drop useless sync columns
+        await m.alterTable(TableMigration(schema.pinnedBuiltinTrainings));
       },
     ),
   );

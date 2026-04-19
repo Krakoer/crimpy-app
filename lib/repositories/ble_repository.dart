@@ -34,10 +34,9 @@ class BleRepository {
   Stream<BleConnectionState> get connectionStateStream =>
       _connectionStateController.stream;
 
-  BleConnectionState get currentConnectionState =>
-      _device == null
-          ? BleConnectionState.disconnected
-          : BleConnectionState.connected;
+  BleConnectionState get currentConnectionState => _device == null
+      ? BleConnectionState.disconnected
+      : BleConnectionState.connected;
 
   /// Stores the connected device.
   BluetoothDevice? _device;

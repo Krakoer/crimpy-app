@@ -156,21 +156,18 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen> {
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder:
-              (ctx) => PostAssessmentScreen(
-                type: AssessmentType.endurance60,
-                rightHandResults:
-                    widget.hand.isRightHand
-                        ? (previousValue, durationSeconds)
-                        : null,
-                leftHandResults:
-                    !widget.hand.isRightHand
-                        ? (previousValue, durationSeconds)
-                        : null,
-                saveAssessment: saveAssessment,
-                saveTraining: saveSession,
-                saveReps: [],
-              ),
+          builder: (ctx) => PostAssessmentScreen(
+            type: AssessmentType.endurance60,
+            rightHandResults: widget.hand.isRightHand
+                ? (previousValue, durationSeconds)
+                : null,
+            leftHandResults: !widget.hand.isRightHand
+                ? (previousValue, durationSeconds)
+                : null,
+            saveAssessment: saveAssessment,
+            saveTraining: saveSession,
+            saveReps: [],
+          ),
         ),
       );
     }
@@ -201,23 +198,22 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen> {
         // Ask user if they want to leave assessment
         final shouldPop = await showDialog<bool>(
           context: context,
-          builder:
-              (context) => AlertDialog(
-                title: Text('Leave the assessment?'),
-                content: Text(
-                  'If you leave this assessment, you will lose your progress.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: Text('No'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: Text('Yes'),
-                  ),
-                ],
+          builder: (context) => AlertDialog(
+            title: Text('Leave the assessment?'),
+            content: Text(
+              'If you leave this assessment, you will lose your progress.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('No'),
               ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text('Yes'),
+              ),
+            ],
+          ),
         );
 
         if (shouldPop ?? false) {
@@ -317,12 +313,9 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen> {
                         dataSource: data,
                         xValueMapper: (BleDataPoint p, _) => p.timestamp,
                         yValueMapper: (BleDataPoint p, _) => p.value,
-                        color:
-                            _isInTargetZone
-                                ? Colors.green
-                                : CrimpyTheme.accentYellow.withValues(
-                                  alpha: 0.8,
-                                ),
+                        color: _isInTargetZone
+                            ? Colors.green
+                            : CrimpyTheme.accentYellow.withValues(alpha: 0.8),
                         width: 3,
                         markerSettings: const MarkerSettings(isVisible: false),
                         animationDuration: 0,
@@ -340,10 +333,9 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen> {
                 child: Container(
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color:
-                        _assessmentStarted
-                            ? Colors.green.withValues(alpha: 0.9)
-                            : CrimpyTheme.accentYellow.withValues(alpha: 0.9),
+                    color: _assessmentStarted
+                        ? Colors.green.withValues(alpha: 0.9)
+                        : CrimpyTheme.accentYellow.withValues(alpha: 0.9),
                     border: Border.all(
                       color: CrimpyTheme.borderDefault,
                       width: 2,

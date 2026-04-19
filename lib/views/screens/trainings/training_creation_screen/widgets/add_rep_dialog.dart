@@ -31,8 +31,8 @@ class RepFormDialogState extends ConsumerState<RepFormDialog> {
     super.initState();
     // If editing an existing rep, load its values
     if (widget.initialRep != null) {
-      _durationController.text =
-          widget.initialRep!.durationInSeconds.toString();
+      _durationController.text = widget.initialRep!.durationInSeconds
+          .toString();
       _weightController.text = widget.initialRep!.targetWeight.toString();
       _isRest = widget.initialRep!.isRest;
       _handSide = widget.initialRep!.handSide;
@@ -136,8 +136,9 @@ class RepFormDialogState extends ConsumerState<RepFormDialog> {
                       selected: {_handSide.isRightHand},
                       onSelectionChanged: (Set<bool> selected) {
                         setState(() {
-                          _handSide =
-                              selected.first ? HandSide.right : HandSide.left;
+                          _handSide = selected.first
+                              ? HandSide.right
+                              : HandSide.left;
                         });
                       },
                     ),
@@ -155,23 +156,21 @@ class RepFormDialogState extends ConsumerState<RepFormDialog> {
                     vertical: 8,
                   ),
                 ),
-                items:
-                    GripPosition.values.map((position) {
-                      return DropdownMenuItem(
-                        value: position,
-                        child: Text(position.displayName),
-                      );
-                    }).toList(),
-                onChanged:
-                    !_isRest
-                        ? (newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              _gripPosition = newValue;
-                            });
-                          }
+                items: GripPosition.values.map((position) {
+                  return DropdownMenuItem(
+                    value: position,
+                    child: Text(position.displayName),
+                  );
+                }).toList(),
+                onChanged: !_isRest
+                    ? (newValue) {
+                        if (newValue != null) {
+                          setState(() {
+                            _gripPosition = newValue;
+                          });
                         }
-                        : null,
+                      }
+                    : null,
               ),
             ],
           ),
@@ -189,8 +188,9 @@ class RepFormDialogState extends ConsumerState<RepFormDialog> {
                 durationInSeconds: int.parse(_durationController.text),
                 isRest: _isRest,
                 handSide: _handSide,
-                targetWeight:
-                    _isRest ? 0 : double.parse(_weightController.text),
+                targetWeight: _isRest
+                    ? 0
+                    : double.parse(_weightController.text),
                 index: -1,
                 gripPosition: _gripPosition,
               );

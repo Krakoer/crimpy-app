@@ -162,8 +162,9 @@ class MixedHandRepeaterWaveformPainter extends CustomPainter {
     if (i == 0 || i == 1) {
       final weight = isRight ? rightWeight : leftWeight;
       final handLabel = isRight ? 'R' : 'L';
-      final handColor =
-          isRight ? CrimpyTheme.accentOrange : CrimpyTheme.accentTeal;
+      final handColor = isRight
+          ? CrimpyTheme.accentOrange
+          : CrimpyTheme.accentTeal;
 
       // Draw hand side label
       final handLabelStyle = WaveformStyles.createLabelStyle().copyWith(

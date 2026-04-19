@@ -115,12 +115,11 @@ class AssessmentNotifier extends AsyncNotifier<List<AssessmentModel>> {
       AppLoggerHelper.warning("Called getSameDayAssessment with a type null.");
       return "";
     }
-    final prevAssessment =
-        (await _assessmentRepository.getAssessments(
-          type: type,
-          handSide: handSide,
-          gripPosition: gripPosition,
-        )).lastOrNull;
+    final prevAssessment = (await _assessmentRepository.getAssessments(
+      type: type,
+      handSide: handSide,
+      gripPosition: gripPosition,
+    )).lastOrNull;
     if (prevAssessment == null) {
       return null;
     }

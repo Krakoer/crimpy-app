@@ -47,13 +47,9 @@ class _CriticalForceRunScreenState
       try {
         // Calculate critical force from the data
         final startTime = data[0].timestamp.millisecondsSinceEpoch;
-        final timestamps =
-            data
-                .map(
-                  (e) =>
-                      (e.timestamp.millisecondsSinceEpoch - startTime) / 1000,
-                )
-                .toList();
+        final timestamps = data
+            .map((e) => (e.timestamp.millisecondsSinceEpoch - startTime) / 1000)
+            .toList();
         final forces = data.map((e) => e.value).toList();
         final results = analyseData(timestamps, forces, 7, 3, start: 9.5);
         final criticalLoad = results.criticalLoad;
@@ -69,31 +65,29 @@ class _CriticalForceRunScreenState
           leftValue: !widget.hand.isRightHand ? criticalLoad : null,
         );
         // Create rep models
-        final saveReps =
-            widget.reps
-                .map(
-                  (r) => RepDataModel(
-                    averageWeight: 0,
-                    duration: r.durationInSeconds,
-                    index: r.index,
-                    isRest: r.isRest,
-                    handSide: r.handSide,
-                    targetWeight: r.targetWeight,
-                  ),
-                )
-                .toList();
+        final saveReps = widget.reps
+            .map(
+              (r) => RepDataModel(
+                averageWeight: 0,
+                duration: r.durationInSeconds,
+                index: r.index,
+                isRest: r.isRest,
+                handSide: r.handSide,
+                targetWeight: r.targetWeight,
+              ),
+            )
+            .toList();
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder:
-                  (context) => CriticalForceResultScreen(
-                    data: data,
-                    results: results,
-                    previousCriticalForce: previousCriticalForce,
-                    saveAssessment: saveAssessment,
-                    saveSession: saveSession,
-                    saveReps: saveReps,
-                  ),
+              builder: (context) => CriticalForceResultScreen(
+                data: data,
+                results: results,
+                previousCriticalForce: previousCriticalForce,
+                saveAssessment: saveAssessment,
+                saveSession: saveSession,
+                saveReps: saveReps,
+              ),
             ),
           );
         }
@@ -106,11 +100,10 @@ class _CriticalForceRunScreenState
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder:
-                  (context) => AnalysisErrorScreen(
-                    errorMessage: exception.toString(),
-                    onDiscard: () => Navigator.of(context).pop(),
-                  ),
+              builder: (context) => AnalysisErrorScreen(
+                errorMessage: exception.toString(),
+                onDiscard: () => Navigator.of(context).pop(),
+              ),
             ),
           );
         }
@@ -146,28 +139,27 @@ class _CriticalForceRunScreenState
         // Ask user if they want to leave assessment
         final shouldPop = await showDialog<bool>(
           context: context,
-          builder:
-              (context) => AlertDialog(
-                title: Text('Leave the workout?'),
-                content: Text(
-                  'If you leave this workout, you will lose your progress.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        timer.play();
-                      });
-                      Navigator.of(context).pop(false);
-                    },
-                    child: Text('No'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: Text('Yes'),
-                  ),
-                ],
+          builder: (context) => AlertDialog(
+            title: Text('Leave the workout?'),
+            content: Text(
+              'If you leave this workout, you will lose your progress.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    timer.play();
+                  });
+                  Navigator.of(context).pop(false);
+                },
+                child: Text('No'),
               ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text('Yes'),
+              ),
+            ],
+          ),
         );
 
         // If user clicked on `Yes`, leave workout.
@@ -188,8 +180,9 @@ class _CriticalForceRunScreenState
                 });
 
                 // Get grip position from first non-rest rep
-                final gripPosition =
-                    widget.reps.firstWhere((r) => !r.isRest).gripPosition;
+                final gripPosition = widget.reps
+                    .firstWhere((r) => !r.isRest)
+                    .gripPosition;
 
                 // Show tutorial (forced, no "don't show again")
                 showTutorialIfNeeded(
@@ -242,36 +235,35 @@ class _CriticalForceRunScreenState
                         ),
                       ],
                     ),
-                    child:
-                        !timer.currentRep.isRest
-                            ? Text(
-                              "Pull!\n${timer.currentRepRemaining}",
-                              style: TextStyle(
-                                fontSize: 39,
-                                color: CrimpyTheme.primaryWhite,
-                              ),
-                              textAlign: TextAlign.center,
-                            )
-                            : Column(
-                              children: [
-                                Text(
-                                  "Pulling in",
-                                  style: TextStyle(
-                                    fontSize: 29,
-                                    color: CrimpyTheme.primaryWhite,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                Text(
-                                  "${timer.currentRepRemaining}",
-                                  style: TextStyle(
-                                    fontSize: 39,
-                                    color: CrimpyTheme.primaryWhite,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
+                    child: !timer.currentRep.isRest
+                        ? Text(
+                            "Pull!\n${timer.currentRepRemaining}",
+                            style: TextStyle(
+                              fontSize: 39,
+                              color: CrimpyTheme.primaryWhite,
                             ),
+                            textAlign: TextAlign.center,
+                          )
+                        : Column(
+                            children: [
+                              Text(
+                                "Pulling in",
+                                style: TextStyle(
+                                  fontSize: 29,
+                                  color: CrimpyTheme.primaryWhite,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                "${timer.currentRepRemaining}",
+                                style: TextStyle(
+                                  fontSize: 39,
+                                  color: CrimpyTheme.primaryWhite,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                   ),
                 ),
               ),

@@ -72,53 +72,47 @@ class MissingAssessmentsDialog extends StatelessWidget {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children:
-                    missingAssessments
-                        .map(
-                          (requirement) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6.0),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  FontAwesomeIcons.circleCheck,
-                                  color: CrimpyTheme.assessmentColor,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        assessmentTypeToString(
-                                          requirement.type,
-                                        ),
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyLarge?.copyWith(
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      if (requirement.gripPosition != null) ...[
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          'Grip: ${requirement.gripPosition!.displayName}',
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodySmall?.copyWith(
+                children: missingAssessments
+                    .map(
+                      (requirement) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6.0),
+                        child: Row(
+                          children: [
+                            Icon(
+                              FontAwesomeIcons.circleCheck,
+                              color: CrimpyTheme.assessmentColor,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    assessmentTypeToString(requirement.type),
+                                    style: Theme.of(context).textTheme.bodyLarge
+                                        ?.copyWith(fontWeight: FontWeight.w500),
+                                  ),
+                                  if (requirement.gripPosition != null) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Grip: ${requirement.gripPosition!.displayName}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
                                             color: CrimpyTheme.textSecondary,
                                           ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                              ],
+                                    ),
+                                  ],
+                                ],
+                              ),
                             ),
-                          ),
-                        )
-                        .toList(),
+                          ],
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
             ),
             const SizedBox(height: 24),

@@ -95,8 +95,9 @@ class SetCardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool allSuccess =
         workReps.isNotEmpty && successCount == workReps.length;
-    final Color statusColor =
-        allSuccess ? Colors.green.shade600 : Colors.orange.shade600;
+    final Color statusColor = allSuccess
+        ? Colors.green.shade600
+        : Colors.orange.shade600;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -239,18 +240,18 @@ class SetPerformanceBar extends StatelessWidget {
       children: List.generate(workReps.length, (index) {
         final rep = workReps[index];
         final bool hasTarget = rep.targetWeight > 0;
-        final double successRate =
-            hasTarget ? rep.averageWeight / rep.targetWeight : 1.0;
+        final double successRate = hasTarget
+            ? rep.averageWeight / rep.targetWeight
+            : 1.0;
         final bool isSuccess = successRate >= 0.9;
 
-        final Color repColor =
-            !hasTarget
-                ? sessionColor.withValues(alpha: 0.3)
-                : isSuccess
-                ? Colors.green.shade600
-                : successRate >= 0.75
-                ? Colors.orange.shade600
-                : Colors.red.shade600;
+        final Color repColor = !hasTarget
+            ? sessionColor.withValues(alpha: 0.3)
+            : isSuccess
+            ? Colors.green.shade600
+            : successRate >= 0.75
+            ? Colors.orange.shade600
+            : Colors.red.shade600;
 
         return Container(
           width: 48,
@@ -261,17 +262,16 @@ class SetPerformanceBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
           ),
           child: Center(
-            child:
-                hasTarget
-                    ? Text(
-                      '${(successRate * 100).toStringAsFixed(0)}%',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: repColor,
-                      ),
-                    )
-                    : Icon(Icons.fitness_center, size: 12, color: repColor),
+            child: hasTarget
+                ? Text(
+                    '${(successRate * 100).toStringAsFixed(0)}%',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: repColor,
+                    ),
+                  )
+                : Icon(Icons.fitness_center, size: 12, color: repColor),
           ),
         );
       }),

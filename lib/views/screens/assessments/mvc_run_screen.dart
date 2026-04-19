@@ -56,8 +56,9 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
       // Get previous values for printing results screen.
       // Not ideal, if it takes time the screen will just freeze.
       // TODO: Move this logic to PostAssessmentScreen and show progress indicator/error text accordingly.
-      final gripPosition =
-          widget.reps.firstWhere((r) => !r.isRest).gripPosition;
+      final gripPosition = widget.reps
+          .firstWhere((r) => !r.isRest)
+          .gripPosition;
       final prevValueRight = await ref
           .read(assessmentsProvider(widget.type).notifier)
           .getLastValueForHand(HandSide.right, gripPosition: gripPosition);
@@ -69,25 +70,25 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
         // Push result screen
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder:
-                (ctx) => PostAssessmentScreen(
-                  type: widget.type,
-                  rightHandResults: (prevValueRight, rightMax),
-                  leftHandResults: (prevValueLeft, leftMax),
-                  saveAssessment: AssessmentResultModel(
-                    type: widget.type,
-                    rightValue: rightMax,
-                    leftValue: leftMax,
-                    gripPosition:
-                        widget.reps.firstWhere((r) => !r.isRest).gripPosition,
-                  ),
-                  saveTraining: SessionModel(
-                    name:
-                        "MVC assessment (${widget.reps.firstWhere((r) => !r.isRest).gripPosition.shortName}) - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}",
-                    isAssessment: true,
-                  ),
-                  saveReps: buildRepsData([rightMax, leftMax], widget.reps),
-                ),
+            builder: (ctx) => PostAssessmentScreen(
+              type: widget.type,
+              rightHandResults: (prevValueRight, rightMax),
+              leftHandResults: (prevValueLeft, leftMax),
+              saveAssessment: AssessmentResultModel(
+                type: widget.type,
+                rightValue: rightMax,
+                leftValue: leftMax,
+                gripPosition: widget.reps
+                    .firstWhere((r) => !r.isRest)
+                    .gripPosition,
+              ),
+              saveTraining: SessionModel(
+                name:
+                    "MVC assessment (${widget.reps.firstWhere((r) => !r.isRest).gripPosition.shortName}) - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}",
+                isAssessment: true,
+              ),
+              saveReps: buildRepsData([rightMax, leftMax], widget.reps),
+            ),
           ),
         );
       }
@@ -141,28 +142,27 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
         // Ask user if they want to leave assessment
         final shouldPop = await showDialog<bool>(
           context: context,
-          builder:
-              (context) => AlertDialog(
-                title: Text('Leave the workout?'),
-                content: Text(
-                  'If you leave this workout, you will lose your progress.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      setState(() {
-                        timer.play();
-                      });
-                      Navigator.of(context).pop(false);
-                    },
-                    child: Text('No'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: Text('Yes'),
-                  ),
-                ],
+          builder: (context) => AlertDialog(
+            title: Text('Leave the workout?'),
+            content: Text(
+              'If you leave this workout, you will lose your progress.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    timer.play();
+                  });
+                  Navigator.of(context).pop(false);
+                },
+                child: Text('No'),
               ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text('Yes'),
+              ),
+            ],
+          ),
         );
 
         // If user clicked on `Yes`, leave workout.
@@ -183,8 +183,9 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
                 });
 
                 // Get grip position from first non-rest rep
-                final gripPosition =
-                    widget.reps.firstWhere((r) => !r.isRest).gripPosition;
+                final gripPosition = widget.reps
+                    .firstWhere((r) => !r.isRest)
+                    .gripPosition;
 
                 // Show tutorial (forced, no "don't show again")
                 showTutorialIfNeeded(
@@ -233,10 +234,9 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       shape: BoxShape.rectangle,
-                      color:
-                          timer.currentRep.isRest
-                              ? Colors.transparent
-                              : CrimpyTheme.accentYellow.withValues(alpha: 0.5),
+                      color: timer.currentRep.isRest
+                          ? Colors.transparent
+                          : CrimpyTheme.accentYellow.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -264,36 +264,35 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
                         ),
                       ],
                     ),
-                    child:
-                        !timer.currentRep.isRest
-                            ? Text(
-                              "Pull!\n${timer.currentRepRemaining}",
-                              style: TextStyle(
-                                fontSize: 39,
-                                color: CrimpyTheme.primaryWhite,
-                              ),
-                              textAlign: TextAlign.center,
-                            )
-                            : Column(
-                              children: [
-                                Text(
-                                  "Pulling with ${timer.currentRepIndex == 0 ? "right" : "left"} hand in",
-                                  style: TextStyle(
-                                    fontSize: 29,
-                                    color: CrimpyTheme.primaryWhite,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                Text(
-                                  "${timer.currentRepRemaining}",
-                                  style: TextStyle(
-                                    fontSize: 39,
-                                    color: CrimpyTheme.primaryWhite,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
+                    child: !timer.currentRep.isRest
+                        ? Text(
+                            "Pull!\n${timer.currentRepRemaining}",
+                            style: TextStyle(
+                              fontSize: 39,
+                              color: CrimpyTheme.primaryWhite,
                             ),
+                            textAlign: TextAlign.center,
+                          )
+                        : Column(
+                            children: [
+                              Text(
+                                "Pulling with ${timer.currentRepIndex == 0 ? "right" : "left"} hand in",
+                                style: TextStyle(
+                                  fontSize: 29,
+                                  color: CrimpyTheme.primaryWhite,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                "${timer.currentRepRemaining}",
+                                style: TextStyle(
+                                  fontSize: 39,
+                                  color: CrimpyTheme.primaryWhite,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
                   ),
                 ),
               ),
@@ -309,12 +308,11 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
                         padding: const EdgeInsets.only(left: 8.0),
                         child: Text(
                           "${bleSession.max.toStringAsFixed(2)} kg",
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyLarge!.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontSize: 27,
-                          ),
+                          style: Theme.of(context).textTheme.bodyLarge!
+                              .copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontSize: 27,
+                              ),
                         ),
                       ),
                       SizedBox(

@@ -29,8 +29,9 @@ class RepListItem extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor:
-              rep.isRest ? CrimpyTheme.successColor : CrimpyTheme.errorColor,
+          backgroundColor: rep.isRest
+              ? CrimpyTheme.successColor
+              : CrimpyTheme.errorColor,
           child: Text('${index + 1}'),
         ),
         title: Text(rep.isRest ? "Rest" : "Pull"),

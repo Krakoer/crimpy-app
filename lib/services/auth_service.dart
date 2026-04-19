@@ -30,14 +30,13 @@ class AuthService {
   }) async {
     final response = await _apiClient.post(
       '/auth/register',
-      data:
-          RegisterRequest(
-            email: email,
-            password: password,
-            firstname: firstname,
-            lastname: lastname,
-            isCoach: false,
-          ).toJson(),
+      data: RegisterRequest(
+        email: email,
+        password: password,
+        firstname: firstname,
+        lastname: lastname,
+        isCoach: false,
+      ).toJson(),
     );
 
     final registerResponse = RegisterResponse.fromJson(response.data);

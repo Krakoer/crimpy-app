@@ -141,26 +141,25 @@ class SyncRepository {
 
     final repeaters = await _database.select(_database.repeaters).get();
     if (repeaters.isNotEmpty) {
-      collections['repeaters'] =
-          repeaters
-              .map(
-                (r) => {
-                  'id': r.id,
-                  'sets': r.sets,
-                  'reps': r.reps,
-                  'worktime': r.worktime,
-                  'resttime': r.resttime,
-                  'set_rest': r.setRest,
-                  'target_weight_right': r.targetWeigthRight,
-                  'target_weight_left': r.targetWeigthLeft,
-                  'split_hand': r.splitHand,
-                  'grip_position': r.gripPosition,
-                  'updated_at': r.updatedAt.toIso8601String(),
-                  'deleted_at': r.deletedAt?.toIso8601String(),
-                  'created_at': r.createdAt?.toIso8601String(),
-                },
-              )
-              .toList();
+      collections['repeaters'] = repeaters
+          .map(
+            (r) => {
+              'id': r.id,
+              'sets': r.sets,
+              'reps': r.reps,
+              'worktime': r.worktime,
+              'resttime': r.resttime,
+              'set_rest': r.setRest,
+              'target_weight_right': r.targetWeigthRight,
+              'target_weight_left': r.targetWeigthLeft,
+              'split_hand': r.splitHand,
+              'grip_position': r.gripPosition,
+              'updated_at': r.updatedAt.toIso8601String(),
+              'deleted_at': r.deletedAt?.toIso8601String(),
+              'created_at': r.createdAt?.toIso8601String(),
+            },
+          )
+          .toList();
     }
 
     final trainings = await _database.getAllTrainingsWithoutAssessments();
@@ -170,9 +169,9 @@ class SyncRepository {
       for (final t in customTrainings) {
         String? repeaterId;
         if (t.repeaterId != null) {
-          final repeater =
-              await (_database.select(_database.repeaters)
-                ..where((r) => r.id.equals(t.repeaterId!))).getSingleOrNull();
+          final repeater = await (_database.select(
+            _database.repeaters,
+          )..where((r) => r.id.equals(t.repeaterId!))).getSingleOrNull();
           repeaterId = repeater?.id;
         }
         trainingMaps.add({
@@ -191,39 +190,38 @@ class SyncRepository {
 
     final sessions = await _database.getAllSessions();
     if (sessions.isNotEmpty) {
-      collections['sessions'] =
-          sessions
-              .map(
-                (s) => {
-                  'id': s.id,
-                  'name': s.name,
-                  'notes': s.notes,
-                  'date': s.date.toIso8601String(),
-                  'data_path': s.dataPath,
-                  'is_assessment': s.isAssessment,
-                  'session_type': s.sessionType,
-                  'duration': s.duration,
-                  'repeater_sets': s.repeaterSets,
-                  'repeater_reps': s.repeaterReps,
-                  'repeater_work_time': s.repeaterWorkTime,
-                  'repeater_rest_time': s.repeaterRestTime,
-                  'repeater_set_rest': s.repeaterSetRest,
-                  'repeater_split_hand': s.repeaterSplitHand,
-                  'updated_at': s.updatedAt.toIso8601String(),
-                  'deleted_at': s.deletedAt?.toIso8601String(),
-                  'created_at': s.createdAt?.toIso8601String(),
-                },
-              )
-              .toList();
+      collections['sessions'] = sessions
+          .map(
+            (s) => {
+              'id': s.id,
+              'name': s.name,
+              'notes': s.notes,
+              'date': s.date.toIso8601String(),
+              'data_path': s.dataPath,
+              'is_assessment': s.isAssessment,
+              'session_type': s.sessionType,
+              'duration': s.duration,
+              'repeater_sets': s.repeaterSets,
+              'repeater_reps': s.repeaterReps,
+              'repeater_work_time': s.repeaterWorkTime,
+              'repeater_rest_time': s.repeaterRestTime,
+              'repeater_set_rest': s.repeaterSetRest,
+              'repeater_split_hand': s.repeaterSplitHand,
+              'updated_at': s.updatedAt.toIso8601String(),
+              'deleted_at': s.deletedAt?.toIso8601String(),
+              'created_at': s.createdAt?.toIso8601String(),
+            },
+          )
+          .toList();
     }
 
     final repTemplates = await _database.select(_database.repTemplates).get();
     if (repTemplates.isNotEmpty) {
       final repTemplateMaps = <Map<String, dynamic>>[];
       for (final r in repTemplates) {
-        final training =
-            await (_database.select(_database.trainings)
-              ..where((t) => t.id.equals(r.trainingId))).getSingleOrNull();
+        final training = await (_database.select(
+          _database.trainings,
+        )..where((t) => t.id.equals(r.trainingId))).getSingleOrNull();
         if (training != null && !training.isBuiltin) {
           repTemplateMaps.add({
             'id': r.id,
@@ -249,9 +247,9 @@ class SyncRepository {
     if (repDatas.isNotEmpty) {
       final repDataMaps = <Map<String, dynamic>>[];
       for (final r in repDatas) {
-        final session =
-            await (_database.select(_database.sessions)
-              ..where((s) => s.id.equals(r.sessionId))).getSingleOrNull();
+        final session = await (_database.select(
+          _database.sessions,
+        )..where((s) => s.id.equals(r.sessionId))).getSingleOrNull();
         if (session != null) {
           repDataMaps.add({
             'id': r.id,
@@ -278,9 +276,9 @@ class SyncRepository {
     if (assessments.isNotEmpty) {
       final assessmentMaps = <Map<String, dynamic>>[];
       for (final a in assessments) {
-        final session =
-            await (_database.select(_database.sessions)
-              ..where((s) => s.id.equals(a.sessionId))).getSingleOrNull();
+        final session = await (_database.select(
+          _database.sessions,
+        )..where((s) => s.id.equals(a.sessionId))).getSingleOrNull();
         if (session != null) {
           assessmentMaps.add({
             'id': a.id,
@@ -302,56 +300,48 @@ class SyncRepository {
 
     final sensorConfigs = await _database.select(_database.sensorConfigs).get();
     if (sensorConfigs.isNotEmpty) {
-      collections['sensor_configs'] =
-          sensorConfigs
-              .map(
-                (s) => {
-                  'id': s.id,
-                  'name': s.name,
-                  'index': s.index,
-                  'tare': s.tare,
-                  'coef': s.coef,
-                  'updated_at': s.updatedAt.toIso8601String(),
-                  'deleted_at': s.deletedAt?.toIso8601String(),
-                  'created_at': s.createdAt?.toIso8601String(),
-                },
-              )
-              .toList();
+      collections['sensor_configs'] = sensorConfigs
+          .map(
+            (s) => {
+              'id': s.id,
+              'name': s.name,
+              'index': s.index,
+              'tare': s.tare,
+              'coef': s.coef,
+              'updated_at': s.updatedAt.toIso8601String(),
+              'deleted_at': s.deletedAt?.toIso8601String(),
+              'created_at': s.createdAt?.toIso8601String(),
+            },
+          )
+          .toList();
     }
 
-    final builtinTrainingWeights =
-        await _database.select(_database.builtinTrainingWeights).get();
+    final builtinTrainingWeights = await _database
+        .select(_database.builtinTrainingWeights)
+        .get();
     if (builtinTrainingWeights.isNotEmpty) {
-      collections['builtin_training_weights'] =
-          builtinTrainingWeights
-              .map(
-                (w) => {
-                  'id': w.id,
-                  'builtin_training_id': w.builtinTrainingId,
-                  'custom_weight_right': w.customWeightRight,
-                  'custom_weight_left': w.customWeightLeft,
-                  'updated_at': w.updatedAt.toIso8601String(),
-                  'deleted_at': w.deletedAt?.toIso8601String(),
-                  'created_at': w.createdAt.toIso8601String(),
-                },
-              )
-              .toList();
+      collections['builtin_training_weights'] = builtinTrainingWeights
+          .map(
+            (w) => {
+              'id': w.id,
+              'builtin_training_id': w.builtinTrainingId,
+              'custom_weight_right': w.customWeightRight,
+              'custom_weight_left': w.customWeightLeft,
+              'updated_at': w.updatedAt.toIso8601String(),
+              'deleted_at': w.deletedAt?.toIso8601String(),
+              'created_at': w.createdAt.toIso8601String(),
+            },
+          )
+          .toList();
     }
 
-    final pinnedBuiltinTrainings =
-        await _database.select(_database.pinnedBuiltinTrainings).get();
+    final pinnedBuiltinTrainings = await _database
+        .select(_database.pinnedBuiltinTrainings)
+        .get();
     if (pinnedBuiltinTrainings.isNotEmpty) {
-      collections['pinned_builtin_trainings'] =
-          pinnedBuiltinTrainings
-              .map(
-                (p) => {
-                  'builtin_training_id': p.builtinTrainingId,
-                  'updated_at': p.updatedAt.toIso8601String(),
-                  'deleted_at': p.deletedAt?.toIso8601String(),
-                  'created_at': p.createdAt?.toIso8601String(),
-                },
-              )
-              .toList();
+      collections['pinned_builtin_trainings'] = pinnedBuiltinTrainings
+          .map((p) => {'builtin_training_id': p.builtinTrainingId})
+          .toList();
     }
 
     return collections;
@@ -360,44 +350,42 @@ class SyncRepository {
   Future<Map<String, dynamic>> _collectDirtyRecords() async {
     final Map<String, dynamic> collections = {};
 
-    final repeaters =
-        await (_database.select(_database.repeaters)
-          ..where((r) => r.dirty.equals(true))).get();
+    final repeaters = await (_database.select(
+      _database.repeaters,
+    )..where((r) => r.dirty.equals(true))).get();
     if (repeaters.isNotEmpty) {
-      collections['repeaters'] =
-          repeaters
-              .map(
-                (r) => {
-                  'id': r.id,
-                  'sets': r.sets,
-                  'reps': r.reps,
-                  'worktime': r.worktime,
-                  'resttime': r.resttime,
-                  'set_rest': r.setRest,
-                  'target_weight_right': r.targetWeigthRight,
-                  'target_weight_left': r.targetWeigthLeft,
-                  'split_hand': r.splitHand,
-                  'grip_position': r.gripPosition,
-                  'updated_at': r.updatedAt.toIso8601String(),
-                  'deleted_at': r.deletedAt?.toIso8601String(),
-                  'created_at': r.createdAt?.toIso8601String(),
-                },
-              )
-              .toList();
+      collections['repeaters'] = repeaters
+          .map(
+            (r) => {
+              'id': r.id,
+              'sets': r.sets,
+              'reps': r.reps,
+              'worktime': r.worktime,
+              'resttime': r.resttime,
+              'set_rest': r.setRest,
+              'target_weight_right': r.targetWeigthRight,
+              'target_weight_left': r.targetWeigthLeft,
+              'split_hand': r.splitHand,
+              'grip_position': r.gripPosition,
+              'updated_at': r.updatedAt.toIso8601String(),
+              'deleted_at': r.deletedAt?.toIso8601String(),
+              'created_at': r.createdAt?.toIso8601String(),
+            },
+          )
+          .toList();
     }
 
-    final trainings =
-        await (_database.select(_database.trainings)..where(
-          (t) => t.dirty.equals(true) & t.isBuiltin.equals(false),
-        )).get();
+    final trainings = await (_database.select(
+      _database.trainings,
+    )..where((t) => t.dirty.equals(true) & t.isBuiltin.equals(false))).get();
     if (trainings.isNotEmpty) {
       final trainingMaps = <Map<String, dynamic>>[];
       for (final t in trainings) {
         String? repeaterId;
         if (t.repeaterId != null) {
-          final repeater =
-              await (_database.select(_database.repeaters)
-                ..where((r) => r.id.equals(t.repeaterId!))).getSingleOrNull();
+          final repeater = await (_database.select(
+            _database.repeaters,
+          )..where((r) => r.id.equals(t.repeaterId!))).getSingleOrNull();
           repeaterId = repeater?.id;
         }
         trainingMaps.add({
@@ -414,45 +402,44 @@ class SyncRepository {
       collections['trainings'] = trainingMaps;
     }
 
-    final sessions =
-        await (_database.select(_database.sessions)
-          ..where((s) => s.dirty.equals(true))).get();
+    final sessions = await (_database.select(
+      _database.sessions,
+    )..where((s) => s.dirty.equals(true))).get();
     if (sessions.isNotEmpty) {
-      collections['sessions'] =
-          sessions
-              .map(
-                (s) => {
-                  'id': s.id,
-                  'name': s.name,
-                  'notes': s.notes,
-                  'date': s.date.toIso8601String(),
-                  'data_path': s.dataPath,
-                  'is_assessment': s.isAssessment,
-                  'session_type': s.sessionType,
-                  'duration': s.duration,
-                  'repeater_sets': s.repeaterSets,
-                  'repeater_reps': s.repeaterReps,
-                  'repeater_work_time': s.repeaterWorkTime,
-                  'repeater_rest_time': s.repeaterRestTime,
-                  'repeater_set_rest': s.repeaterSetRest,
-                  'repeater_split_hand': s.repeaterSplitHand,
-                  'updated_at': s.updatedAt.toIso8601String(),
-                  'deleted_at': s.deletedAt?.toIso8601String(),
-                  'created_at': s.createdAt?.toIso8601String(),
-                },
-              )
-              .toList();
+      collections['sessions'] = sessions
+          .map(
+            (s) => {
+              'id': s.id,
+              'name': s.name,
+              'notes': s.notes,
+              'date': s.date.toIso8601String(),
+              'data_path': s.dataPath,
+              'is_assessment': s.isAssessment,
+              'session_type': s.sessionType,
+              'duration': s.duration,
+              'repeater_sets': s.repeaterSets,
+              'repeater_reps': s.repeaterReps,
+              'repeater_work_time': s.repeaterWorkTime,
+              'repeater_rest_time': s.repeaterRestTime,
+              'repeater_set_rest': s.repeaterSetRest,
+              'repeater_split_hand': s.repeaterSplitHand,
+              'updated_at': s.updatedAt.toIso8601String(),
+              'deleted_at': s.deletedAt?.toIso8601String(),
+              'created_at': s.createdAt?.toIso8601String(),
+            },
+          )
+          .toList();
     }
 
-    final repTemplates =
-        await (_database.select(_database.repTemplates)
-          ..where((r) => r.dirty.equals(true))).get();
+    final repTemplates = await (_database.select(
+      _database.repTemplates,
+    )..where((r) => r.dirty.equals(true))).get();
     if (repTemplates.isNotEmpty) {
       final repTemplateMaps = <Map<String, dynamic>>[];
       for (final r in repTemplates) {
-        final training =
-            await (_database.select(_database.trainings)
-              ..where((t) => t.id.equals(r.trainingId))).getSingleOrNull();
+        final training = await (_database.select(
+          _database.trainings,
+        )..where((t) => t.id.equals(r.trainingId))).getSingleOrNull();
         if (training != null) {
           repTemplateMaps.add({
             'id': r.id,
@@ -474,15 +461,15 @@ class SyncRepository {
       }
     }
 
-    final repDatas =
-        await (_database.select(_database.repDatas)
-          ..where((r) => r.dirty.equals(true))).get();
+    final repDatas = await (_database.select(
+      _database.repDatas,
+    )..where((r) => r.dirty.equals(true))).get();
     if (repDatas.isNotEmpty) {
       final repDataMaps = <Map<String, dynamic>>[];
       for (final r in repDatas) {
-        final session =
-            await (_database.select(_database.sessions)
-              ..where((s) => s.id.equals(r.sessionId))).getSingleOrNull();
+        final session = await (_database.select(
+          _database.sessions,
+        )..where((s) => s.id.equals(r.sessionId))).getSingleOrNull();
         if (session != null) {
           repDataMaps.add({
             'id': r.id,
@@ -505,15 +492,15 @@ class SyncRepository {
       }
     }
 
-    final assessments =
-        await (_database.select(_database.assessments)
-          ..where((a) => a.dirty.equals(true))).get();
+    final assessments = await (_database.select(
+      _database.assessments,
+    )..where((a) => a.dirty.equals(true))).get();
     if (assessments.isNotEmpty) {
       final assessmentMaps = <Map<String, dynamic>>[];
       for (final a in assessments) {
-        final session =
-            await (_database.select(_database.sessions)
-              ..where((s) => s.id.equals(a.sessionId))).getSingleOrNull();
+        final session = await (_database.select(
+          _database.sessions,
+        )..where((s) => s.id.equals(a.sessionId))).getSingleOrNull();
         if (session != null) {
           assessmentMaps.add({
             'id': a.id,
@@ -533,62 +520,52 @@ class SyncRepository {
       }
     }
 
-    final sensorConfigs =
-        await (_database.select(_database.sensorConfigs)
-          ..where((s) => s.dirty.equals(true))).get();
+    final sensorConfigs = await (_database.select(
+      _database.sensorConfigs,
+    )..where((s) => s.dirty.equals(true))).get();
     if (sensorConfigs.isNotEmpty) {
-      collections['sensor_configs'] =
-          sensorConfigs
-              .map(
-                (s) => {
-                  'id': s.id,
-                  'name': s.name,
-                  'index': s.index,
-                  'tare': s.tare,
-                  'coef': s.coef,
-                  'updated_at': s.updatedAt.toIso8601String(),
-                  'deleted_at': s.deletedAt?.toIso8601String(),
-                  'created_at': s.createdAt?.toIso8601String(),
-                },
-              )
-              .toList();
+      collections['sensor_configs'] = sensorConfigs
+          .map(
+            (s) => {
+              'id': s.id,
+              'name': s.name,
+              'index': s.index,
+              'tare': s.tare,
+              'coef': s.coef,
+              'updated_at': s.updatedAt.toIso8601String(),
+              'deleted_at': s.deletedAt?.toIso8601String(),
+              'created_at': s.createdAt?.toIso8601String(),
+            },
+          )
+          .toList();
     }
 
-    final builtinTrainingWeights =
-        await (_database.select(_database.builtinTrainingWeights)
-          ..where((w) => w.dirty.equals(true))).get();
+    final builtinTrainingWeights = await (_database.select(
+      _database.builtinTrainingWeights,
+    )..where((w) => w.dirty.equals(true))).get();
     if (builtinTrainingWeights.isNotEmpty) {
-      collections['builtin_training_weights'] =
-          builtinTrainingWeights
-              .map(
-                (w) => {
-                  'id': w.id,
-                  'builtin_training_id': w.builtinTrainingId,
-                  'custom_weight_right': w.customWeightRight,
-                  'custom_weight_left': w.customWeightLeft,
-                  'updated_at': w.updatedAt.toIso8601String(),
-                  'deleted_at': w.deletedAt?.toIso8601String(),
-                  'created_at': w.createdAt.toIso8601String(),
-                },
-              )
-              .toList();
+      collections['builtin_training_weights'] = builtinTrainingWeights
+          .map(
+            (w) => {
+              'id': w.id,
+              'builtin_training_id': w.builtinTrainingId,
+              'custom_weight_right': w.customWeightRight,
+              'custom_weight_left': w.customWeightLeft,
+              'updated_at': w.updatedAt.toIso8601String(),
+              'deleted_at': w.deletedAt?.toIso8601String(),
+              'created_at': w.createdAt.toIso8601String(),
+            },
+          )
+          .toList();
     }
 
-    final pinnedBuiltinTrainings =
-        await (_database.select(_database.pinnedBuiltinTrainings)
-          ..where((p) => p.dirty.equals(true))).get();
+    final pinnedBuiltinTrainings = await (_database.select(
+      _database.pinnedBuiltinTrainings,
+    )..where((p) => p.dirty.equals(true))).get();
     if (pinnedBuiltinTrainings.isNotEmpty) {
-      collections['pinned_builtin_trainings'] =
-          pinnedBuiltinTrainings
-              .map(
-                (p) => {
-                  'builtin_training_id': p.builtinTrainingId,
-                  'updated_at': p.updatedAt.toIso8601String(),
-                  'deleted_at': p.deletedAt?.toIso8601String(),
-                  'created_at': p.createdAt?.toIso8601String(),
-                },
-              )
-              .toList();
+      collections['pinned_builtin_trainings'] = pinnedBuiltinTrainings
+          .map((p) => {'builtin_training_id': p.builtinTrainingId})
+          .toList();
     }
 
     return collections;
@@ -641,14 +618,13 @@ class SyncRepository {
   Future<void> _applyRepeaters(List<dynamic> repeaters) async {
     for (final record in repeaters) {
       final id = record['id'] as String;
-      final deletedAt =
-          record['deleted_at'] != null
-              ? DateTime.parse(record['deleted_at'] as String)
-              : null;
+      final deletedAt = record['deleted_at'] != null
+          ? DateTime.parse(record['deleted_at'] as String)
+          : null;
 
-      final existing =
-          await (_database.select(_database.repeaters)
-            ..where((r) => r.id.equals(id))).getSingleOrNull();
+      final existing = await (_database.select(
+        _database.repeaters,
+      )..where((r) => r.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -678,8 +654,9 @@ class SyncRepository {
       );
 
       if (existing != null) {
-        await (_database.update(_database.repeaters)
-          ..where((r) => r.id.equals(existing.id))).write(companion);
+        await (_database.update(
+          _database.repeaters,
+        )..where((r) => r.id.equals(existing.id))).write(companion);
       } else {
         await _database.into(_database.repeaters).insert(companion);
       }
@@ -690,14 +667,13 @@ class SyncRepository {
   Future<void> _applyTrainings(List<dynamic> trainings) async {
     for (final record in trainings) {
       final id = record['id'] as String;
-      final deletedAt =
-          record['deleted_at'] != null
-              ? DateTime.parse(record['deleted_at'] as String)
-              : null;
+      final deletedAt = record['deleted_at'] != null
+          ? DateTime.parse(record['deleted_at'] as String)
+          : null;
 
-      final existing =
-          await (_database.select(_database.trainings)
-            ..where((t) => t.id.equals(id))).getSingleOrNull();
+      final existing = await (_database.select(
+        _database.trainings,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -726,8 +702,9 @@ class SyncRepository {
       );
 
       if (existing != null) {
-        await (_database.update(_database.trainings)
-          ..where((t) => t.id.equals(existing.id))).write(companion);
+        await (_database.update(
+          _database.trainings,
+        )..where((t) => t.id.equals(existing.id))).write(companion);
       } else {
         await _database.into(_database.trainings).insert(companion);
       }
@@ -738,14 +715,13 @@ class SyncRepository {
   Future<void> _applySessions(List<dynamic> sessions) async {
     for (final record in sessions) {
       final id = record['id'] as String;
-      final deletedAt =
-          record['deleted_at'] != null
-              ? DateTime.parse(record['deleted_at'] as String)
-              : null;
+      final deletedAt = record['deleted_at'] != null
+          ? DateTime.parse(record['deleted_at'] as String)
+          : null;
 
-      final existing =
-          await (_database.select(_database.sessions)
-            ..where((s) => s.id.equals(id))).getSingleOrNull();
+      final existing = await (_database.select(
+        _database.sessions,
+      )..where((s) => s.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -780,8 +756,9 @@ class SyncRepository {
       );
 
       if (existing != null) {
-        await (_database.update(_database.sessions)
-          ..where((s) => s.id.equals(existing.id))).write(companion);
+        await (_database.update(
+          _database.sessions,
+        )..where((s) => s.id.equals(existing.id))).write(companion);
       } else {
         await _database.into(_database.sessions).insert(companion);
       }
@@ -792,14 +769,13 @@ class SyncRepository {
   Future<void> _applyRepTemplates(List<dynamic> repTemplates) async {
     for (final record in repTemplates) {
       final id = record['id'] as String;
-      final deletedAt =
-          record['deleted_at'] != null
-              ? DateTime.parse(record['deleted_at'] as String)
-              : null;
+      final deletedAt = record['deleted_at'] != null
+          ? DateTime.parse(record['deleted_at'] as String)
+          : null;
 
-      final existing =
-          await (_database.select(_database.repTemplates)
-            ..where((r) => r.id.equals(id))).getSingleOrNull();
+      final existing = await (_database.select(
+        _database.repTemplates,
+      )..where((r) => r.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -809,9 +785,9 @@ class SyncRepository {
       }
 
       final trainingId = record['training_id'] as String;
-      final training =
-          await (_database.select(_database.trainings)
-            ..where((t) => t.id.equals(trainingId))).getSingleOrNull();
+      final training = await (_database.select(
+        _database.trainings,
+      )..where((t) => t.id.equals(trainingId))).getSingleOrNull();
 
       if (training == null) {
         AppLoggerHelper.warning(
@@ -840,8 +816,9 @@ class SyncRepository {
       );
 
       if (existing != null) {
-        await (_database.update(_database.repTemplates)
-          ..where((r) => r.id.equals(existing.id))).write(companion);
+        await (_database.update(
+          _database.repTemplates,
+        )..where((r) => r.id.equals(existing.id))).write(companion);
       } else {
         await _database.into(_database.repTemplates).insert(companion);
       }
@@ -852,14 +829,13 @@ class SyncRepository {
   Future<void> _applyRepDatas(List<dynamic> repDatas) async {
     for (final record in repDatas) {
       final id = record['id'] as String;
-      final deletedAt =
-          record['deleted_at'] != null
-              ? DateTime.parse(record['deleted_at'] as String)
-              : null;
+      final deletedAt = record['deleted_at'] != null
+          ? DateTime.parse(record['deleted_at'] as String)
+          : null;
 
-      final existing =
-          await (_database.select(_database.repDatas)
-            ..where((r) => r.id.equals(id))).getSingleOrNull();
+      final existing = await (_database.select(
+        _database.repDatas,
+      )..where((r) => r.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -869,9 +845,9 @@ class SyncRepository {
       }
 
       final sessionId = record['session_id'] as String;
-      final session =
-          await (_database.select(_database.sessions)
-            ..where((s) => s.id.equals(sessionId))).getSingleOrNull();
+      final session = await (_database.select(
+        _database.sessions,
+      )..where((s) => s.id.equals(sessionId))).getSingleOrNull();
 
       if (session == null) {
         AppLoggerHelper.warning('Session not found for rep_data $id, skipping');
@@ -899,8 +875,9 @@ class SyncRepository {
       );
 
       if (existing != null) {
-        await (_database.update(_database.repDatas)
-          ..where((r) => r.id.equals(existing.id))).write(companion);
+        await (_database.update(
+          _database.repDatas,
+        )..where((r) => r.id.equals(existing.id))).write(companion);
       } else {
         await _database.into(_database.repDatas).insert(companion);
       }
@@ -911,14 +888,13 @@ class SyncRepository {
   Future<void> _applyAssessments(List<dynamic> assessments) async {
     for (final record in assessments) {
       final id = record['id'] as String;
-      final deletedAt =
-          record['deleted_at'] != null
-              ? DateTime.parse(record['deleted_at'] as String)
-              : null;
+      final deletedAt = record['deleted_at'] != null
+          ? DateTime.parse(record['deleted_at'] as String)
+          : null;
 
-      final existing =
-          await (_database.select(_database.assessments)
-            ..where((a) => a.id.equals(id))).getSingleOrNull();
+      final existing = await (_database.select(
+        _database.assessments,
+      )..where((a) => a.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -928,9 +904,9 @@ class SyncRepository {
       }
 
       final sessionId = record['session_id'] as String;
-      final session =
-          await (_database.select(_database.sessions)
-            ..where((s) => s.id.equals(sessionId))).getSingleOrNull();
+      final session = await (_database.select(
+        _database.sessions,
+      )..where((s) => s.id.equals(sessionId))).getSingleOrNull();
 
       if (session == null) {
         AppLoggerHelper.warning(
@@ -957,8 +933,9 @@ class SyncRepository {
       );
 
       if (existing != null) {
-        await (_database.update(_database.assessments)
-          ..where((a) => a.id.equals(existing.id))).write(companion);
+        await (_database.update(
+          _database.assessments,
+        )..where((a) => a.id.equals(existing.id))).write(companion);
       } else {
         await _database.into(_database.assessments).insert(companion);
       }
@@ -969,14 +946,13 @@ class SyncRepository {
   Future<void> _applySensorConfigs(List<dynamic> sensorConfigs) async {
     for (final record in sensorConfigs) {
       final id = record['id'] as String;
-      final deletedAt =
-          record['deleted_at'] != null
-              ? DateTime.parse(record['deleted_at'] as String)
-              : null;
+      final deletedAt = record['deleted_at'] != null
+          ? DateTime.parse(record['deleted_at'] as String)
+          : null;
 
-      final existing =
-          await (_database.select(_database.sensorConfigs)
-            ..where((s) => s.id.equals(id))).getSingleOrNull();
+      final existing = await (_database.select(
+        _database.sensorConfigs,
+      )..where((s) => s.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -1002,8 +978,9 @@ class SyncRepository {
       );
 
       if (existing != null) {
-        await (_database.update(_database.sensorConfigs)
-          ..where((s) => s.id.equals(existing.id))).write(companion);
+        await (_database.update(
+          _database.sensorConfigs,
+        )..where((s) => s.id.equals(existing.id))).write(companion);
       } else {
         await _database.into(_database.sensorConfigs).insert(companion);
       }
@@ -1018,14 +995,13 @@ class SyncRepository {
   ) async {
     for (final record in builtinTrainingWeights) {
       final id = record['id'] as String;
-      final deletedAt =
-          record['deleted_at'] != null
-              ? DateTime.parse(record['deleted_at'] as String)
-              : null;
+      final deletedAt = record['deleted_at'] != null
+          ? DateTime.parse(record['deleted_at'] as String)
+          : null;
 
-      final existing =
-          await (_database.select(_database.builtinTrainingWeights)
-            ..where((w) => w.id.equals(id))).getSingleOrNull();
+      final existing = await (_database.select(
+        _database.builtinTrainingWeights,
+      )..where((w) => w.id.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -1050,8 +1026,9 @@ class SyncRepository {
       );
 
       if (existing != null) {
-        await (_database.update(_database.builtinTrainingWeights)
-          ..where((w) => w.id.equals(existing.id))).write(companion);
+        await (_database.update(
+          _database.builtinTrainingWeights,
+        )..where((w) => w.id.equals(existing.id))).write(companion);
       } else {
         await _database
             .into(_database.builtinTrainingWeights)
@@ -1068,14 +1045,13 @@ class SyncRepository {
   ) async {
     for (final record in pinnedBuiltinTrainings) {
       final id = record['id'] as String;
-      final deletedAt =
-          record['deleted_at'] != null
-              ? DateTime.parse(record['deleted_at'] as String)
-              : null;
+      final deletedAt = record['deleted_at'] != null
+          ? DateTime.parse(record['deleted_at'] as String)
+          : null;
 
-      final existing =
-          await (_database.select(_database.pinnedBuiltinTrainings)
-            ..where((p) => p.builtinTrainingId.equals(id))).getSingleOrNull();
+      final existing = await (_database.select(
+        _database.pinnedBuiltinTrainings,
+      )..where((p) => p.builtinTrainingId.equals(id))).getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -1090,20 +1066,14 @@ class SyncRepository {
 
       final companion = PinnedBuiltinTrainingsCompanion(
         builtinTrainingId: Value(builtinTrainingId),
-        updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
-        createdAt: Value(
-          record['created_at'] != null
-              ? DateTime.parse(record['created_at'] as String)
-              : null,
-        ),
-        deletedAt: Value(deletedAt),
         dirty: const Value(false),
       );
 
       if (existing != null) {
         await (_database.update(_database.pinnedBuiltinTrainings)..where(
-          (p) => p.builtinTrainingId.equals(existing.builtinTrainingId),
-        )).write(companion);
+              (p) => p.builtinTrainingId.equals(existing.builtinTrainingId),
+            ))
+            .write(companion);
       } else {
         await _database
             .into(_database.pinnedBuiltinTrainings)
@@ -1116,41 +1086,42 @@ class SyncRepository {
   }
 
   Future<void> _clearDirtyFlags(List<String> rejected) async {
-    await (_database.update(_database.sessions)..where(
-      (s) => s.dirty.equals(true) & s.id.isNotIn(rejected),
-    )).write(SessionsCompanion(dirty: const Value(false)));
+    await (_database.update(_database.sessions)
+          ..where((s) => s.dirty.equals(true) & s.id.isNotIn(rejected)))
+        .write(SessionsCompanion(dirty: const Value(false)));
 
-    await (_database.update(_database.trainings)..where(
-      (t) => t.dirty.equals(true) & t.id.isNotIn(rejected),
-    )).write(TrainingsCompanion(dirty: const Value(false)));
+    await (_database.update(_database.trainings)
+          ..where((t) => t.dirty.equals(true) & t.id.isNotIn(rejected)))
+        .write(TrainingsCompanion(dirty: const Value(false)));
 
-    await (_database.update(_database.assessments)..where(
-      (a) => a.dirty.equals(true) & a.id.isNotIn(rejected),
-    )).write(AssessmentsCompanion(dirty: const Value(false)));
+    await (_database.update(_database.assessments)
+          ..where((a) => a.dirty.equals(true) & a.id.isNotIn(rejected)))
+        .write(AssessmentsCompanion(dirty: const Value(false)));
 
-    await (_database.update(_database.repeaters)..where(
-      (r) => r.dirty.equals(true) & r.id.isNotIn(rejected),
-    )).write(RepeatersCompanion(dirty: const Value(false)));
+    await (_database.update(_database.repeaters)
+          ..where((r) => r.dirty.equals(true) & r.id.isNotIn(rejected)))
+        .write(RepeatersCompanion(dirty: const Value(false)));
 
-    await (_database.update(_database.repTemplates)..where(
-      (r) => r.dirty.equals(true) & r.id.isNotIn(rejected),
-    )).write(RepTemplatesCompanion(dirty: const Value(false)));
+    await (_database.update(_database.repTemplates)
+          ..where((r) => r.dirty.equals(true) & r.id.isNotIn(rejected)))
+        .write(RepTemplatesCompanion(dirty: const Value(false)));
 
-    await (_database.update(_database.repDatas)..where(
-      (r) => r.dirty.equals(true) & r.id.isNotIn(rejected),
-    )).write(RepDatasCompanion(dirty: const Value(false)));
+    await (_database.update(_database.repDatas)
+          ..where((r) => r.dirty.equals(true) & r.id.isNotIn(rejected)))
+        .write(RepDatasCompanion(dirty: const Value(false)));
 
-    await (_database.update(_database.sensorConfigs)..where(
-      (s) => s.dirty.equals(true) & s.id.isNotIn(rejected),
-    )).write(SensorConfigsCompanion(dirty: const Value(false)));
+    await (_database.update(_database.sensorConfigs)
+          ..where((s) => s.dirty.equals(true) & s.id.isNotIn(rejected)))
+        .write(SensorConfigsCompanion(dirty: const Value(false)));
 
-    await (_database.update(_database.builtinTrainingWeights)..where(
-      (w) => w.dirty.equals(true) & w.id.isNotIn(rejected),
-    )).write(BuiltinTrainingWeightsCompanion(dirty: const Value(false)));
+    await (_database.update(_database.builtinTrainingWeights)
+          ..where((w) => w.dirty.equals(true) & w.id.isNotIn(rejected)))
+        .write(BuiltinTrainingWeightsCompanion(dirty: const Value(false)));
 
     await (_database.update(_database.pinnedBuiltinTrainings)..where(
-      (p) => p.dirty.equals(true) & p.builtinTrainingId.isNotIn(rejected),
-    )).write(PinnedBuiltinTrainingsCompanion(dirty: const Value(false)));
+          (p) => p.dirty.equals(true) & p.builtinTrainingId.isNotIn(rejected),
+        ))
+        .write(PinnedBuiltinTrainingsCompanion(dirty: const Value(false)));
   }
 
   Future<void> _wipeLocalDatabase() async {
@@ -1161,8 +1132,9 @@ class SyncRepository {
     await _database.delete(_database.sessions).go();
 
     await _database.delete(_database.repTemplates).go();
-    await (_database.delete(_database.trainings)
-      ..where((t) => t.isBuiltin.equals(false))).go();
+    await (_database.delete(
+      _database.trainings,
+    )..where((t) => t.isBuiltin.equals(false))).go();
     await _database.delete(_database.repeaters).go();
     await _database.delete(_database.sensorConfigs).go();
     await _database.delete(_database.builtinTrainingWeights).go();

@@ -72,8 +72,9 @@ class DummyDataGenerator {
       await gDatabase.delete(gDatabase.sessions).go();
 
       // Delete all custom trainings (builtins are kept)
-      await (gDatabase.delete(gDatabase.trainings)
-        ..where((t) => t.isBuiltin.equals(false))).go();
+      await (gDatabase.delete(
+        gDatabase.trainings,
+      )..where((t) => t.isBuiltin.equals(false))).go();
 
       AppLoggerHelper.info('Successfully cleared all data');
     } catch (e) {
@@ -99,10 +100,9 @@ class DummyDataGenerator {
       ),
     );
     // Mark as favorite (will get the training ID from the trainings table)
-    final beginnerTraining =
-        await (gDatabase.select(
-          gDatabase.trainings,
-        )..where((t) => t.name.equals('Beginner Repeaters'))).getSingleOrNull();
+    final beginnerTraining = await (gDatabase.select(
+      gDatabase.trainings,
+    )..where((t) => t.name.equals('Beginner Repeaters'))).getSingleOrNull();
     if (beginnerTraining != null) {
       await gDatabase.toggleFav(beginnerTraining.id);
     }
@@ -122,9 +122,9 @@ class DummyDataGenerator {
       ),
     );
     // Mark as favorite
-    final advancedTraining =
-        await (gDatabase.select(gDatabase.trainings)
-          ..where((t) => t.name.equals('Advanced Hangs'))).getSingleOrNull();
+    final advancedTraining = await (gDatabase.select(
+      gDatabase.trainings,
+    )..where((t) => t.name.equals('Advanced Hangs'))).getSingleOrNull();
     if (advancedTraining != null) {
       await gDatabase.toggleFav(advancedTraining.id);
     }

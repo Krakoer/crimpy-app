@@ -28,10 +28,9 @@ class _NavDestination extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        isSelected
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
+    final color = isSelected
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
 
     return NavigationDestination(
       icon: Column(
@@ -43,10 +42,9 @@ class _NavDestination extends StatelessWidget {
             width: 4,
             height: 4,
             decoration: BoxDecoration(
-              color:
-                  isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.transparent,
+              color: isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.transparent,
               shape: BoxShape.circle,
             ),
           ),
@@ -162,11 +160,11 @@ class _MainPageState extends ConsumerState<MainPage> {
           IconButton(
             onPressed:
                 ref.watch(connectionStateProvider) !=
-                        BleConnectionState.connected
-                    ? null
-                    : () => Navigator.of(
-                      context,
-                    ).push(MaterialPageRoute(builder: (ctx) => ChartScreen())),
+                    BleConnectionState.connected
+                ? null
+                : () => Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (ctx) => ChartScreen())),
             icon: Icon(FontAwesomeIcons.chartLine),
           ),
           // Connection status icon in app bar

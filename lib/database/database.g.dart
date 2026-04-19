@@ -390,46 +390,38 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
   Session map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Session(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      name:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}name'],
-          )!,
-      notes:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}notes'],
-          )!,
-      date:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}date'],
-          )!,
-      dataPath:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}data_path'],
-          )!,
-      isAssessment:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_assessment'],
-          )!,
-      sessionType:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}session_type'],
-          )!,
-      duration:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}duration'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}date'],
+      )!,
+      dataPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}data_path'],
+      )!,
+      isAssessment: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_assessment'],
+      )!,
+      sessionType: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}session_type'],
+      )!,
+      duration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration'],
+      )!,
       repeaterSets: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}repeater_sets'],
@@ -458,20 +450,18 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -570,39 +560,31 @@ class Session extends DataClass implements Insertable<Session> {
       isAssessment: Value(isAssessment),
       sessionType: Value(sessionType),
       duration: Value(duration),
-      repeaterSets:
-          repeaterSets == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterSets),
-      repeaterReps:
-          repeaterReps == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterReps),
-      repeaterWorkTime:
-          repeaterWorkTime == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterWorkTime),
-      repeaterRestTime:
-          repeaterRestTime == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterRestTime),
-      repeaterSetRest:
-          repeaterSetRest == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterSetRest),
-      repeaterSplitHand:
-          repeaterSplitHand == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterSplitHand),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      repeaterSets: repeaterSets == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterSets),
+      repeaterReps: repeaterReps == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterReps),
+      repeaterWorkTime: repeaterWorkTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterWorkTime),
+      repeaterRestTime: repeaterRestTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterRestTime),
+      repeaterSetRest: repeaterSetRest == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterSetRest),
+      repeaterSplitHand: repeaterSplitHand == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterSplitHand),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -688,20 +670,18 @@ class Session extends DataClass implements Insertable<Session> {
     duration: duration ?? this.duration,
     repeaterSets: repeaterSets.present ? repeaterSets.value : this.repeaterSets,
     repeaterReps: repeaterReps.present ? repeaterReps.value : this.repeaterReps,
-    repeaterWorkTime:
-        repeaterWorkTime.present
-            ? repeaterWorkTime.value
-            : this.repeaterWorkTime,
-    repeaterRestTime:
-        repeaterRestTime.present
-            ? repeaterRestTime.value
-            : this.repeaterRestTime,
-    repeaterSetRest:
-        repeaterSetRest.present ? repeaterSetRest.value : this.repeaterSetRest,
-    repeaterSplitHand:
-        repeaterSplitHand.present
-            ? repeaterSplitHand.value
-            : this.repeaterSplitHand,
+    repeaterWorkTime: repeaterWorkTime.present
+        ? repeaterWorkTime.value
+        : this.repeaterWorkTime,
+    repeaterRestTime: repeaterRestTime.present
+        ? repeaterRestTime.value
+        : this.repeaterRestTime,
+    repeaterSetRest: repeaterSetRest.present
+        ? repeaterSetRest.value
+        : this.repeaterSetRest,
+    repeaterSplitHand: repeaterSplitHand.present
+        ? repeaterSplitHand.value
+        : this.repeaterSplitHand,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -714,37 +694,31 @@ class Session extends DataClass implements Insertable<Session> {
       notes: data.notes.present ? data.notes.value : this.notes,
       date: data.date.present ? data.date.value : this.date,
       dataPath: data.dataPath.present ? data.dataPath.value : this.dataPath,
-      isAssessment:
-          data.isAssessment.present
-              ? data.isAssessment.value
-              : this.isAssessment,
-      sessionType:
-          data.sessionType.present ? data.sessionType.value : this.sessionType,
+      isAssessment: data.isAssessment.present
+          ? data.isAssessment.value
+          : this.isAssessment,
+      sessionType: data.sessionType.present
+          ? data.sessionType.value
+          : this.sessionType,
       duration: data.duration.present ? data.duration.value : this.duration,
-      repeaterSets:
-          data.repeaterSets.present
-              ? data.repeaterSets.value
-              : this.repeaterSets,
-      repeaterReps:
-          data.repeaterReps.present
-              ? data.repeaterReps.value
-              : this.repeaterReps,
-      repeaterWorkTime:
-          data.repeaterWorkTime.present
-              ? data.repeaterWorkTime.value
-              : this.repeaterWorkTime,
-      repeaterRestTime:
-          data.repeaterRestTime.present
-              ? data.repeaterRestTime.value
-              : this.repeaterRestTime,
-      repeaterSetRest:
-          data.repeaterSetRest.present
-              ? data.repeaterSetRest.value
-              : this.repeaterSetRest,
-      repeaterSplitHand:
-          data.repeaterSplitHand.present
-              ? data.repeaterSplitHand.value
-              : this.repeaterSplitHand,
+      repeaterSets: data.repeaterSets.present
+          ? data.repeaterSets.value
+          : this.repeaterSets,
+      repeaterReps: data.repeaterReps.present
+          ? data.repeaterReps.value
+          : this.repeaterReps,
+      repeaterWorkTime: data.repeaterWorkTime.present
+          ? data.repeaterWorkTime.value
+          : this.repeaterWorkTime,
+      repeaterRestTime: data.repeaterRestTime.present
+          ? data.repeaterRestTime.value
+          : this.repeaterRestTime,
+      repeaterSetRest: data.repeaterSetRest.present
+          ? data.repeaterSetRest.value
+          : this.repeaterSetRest,
+      repeaterSplitHand: data.repeaterSplitHand.present
+          ? data.repeaterSplitHand.value
+          : this.repeaterSplitHand,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -1280,16 +1254,14 @@ class $AssessmentsTable extends Assessments
   Assessment map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Assessment(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      type:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}type'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}type'],
+      )!,
       rightValue: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}right_value'],
@@ -1298,11 +1270,10 @@ class $AssessmentsTable extends Assessments
         DriftSqlType.double,
         data['${effectivePrefix}left_value'],
       ),
-      sessionId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}session_id'],
-          )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
       gripPosition: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}grip_position'],
@@ -1311,20 +1282,18 @@ class $AssessmentsTable extends Assessments
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -1387,28 +1356,23 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     return AssessmentsCompanion(
       id: Value(id),
       type: Value(type),
-      rightValue:
-          rightValue == null && nullToAbsent
-              ? const Value.absent()
-              : Value(rightValue),
-      leftValue:
-          leftValue == null && nullToAbsent
-              ? const Value.absent()
-              : Value(leftValue),
+      rightValue: rightValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rightValue),
+      leftValue: leftValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(leftValue),
       sessionId: Value(sessionId),
-      gripPosition:
-          gripPosition == null && nullToAbsent
-              ? const Value.absent()
-              : Value(gripPosition),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      gripPosition: gripPosition == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gripPosition),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -1475,14 +1439,14 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     return Assessment(
       id: data.id.present ? data.id.value : this.id,
       type: data.type.present ? data.type.value : this.type,
-      rightValue:
-          data.rightValue.present ? data.rightValue.value : this.rightValue,
+      rightValue: data.rightValue.present
+          ? data.rightValue.value
+          : this.rightValue,
       leftValue: data.leftValue.present ? data.leftValue.value : this.leftValue,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
-      gripPosition:
-          data.gripPosition.present
-              ? data.gripPosition.value
-              : this.gripPosition,
+      gripPosition: data.gripPosition.present
+          ? data.gripPosition.value
+          : this.gripPosition,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -1993,36 +1957,30 @@ class $RepeatersTable extends Repeaters
   Repeater map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Repeater(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      sets:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}sets'],
-          )!,
-      reps:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}reps'],
-          )!,
-      worktime:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}worktime'],
-          )!,
-      resttime:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}resttime'],
-          )!,
-      setRest:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}set_rest'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      sets: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sets'],
+      )!,
+      reps: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reps'],
+      )!,
+      worktime: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}worktime'],
+      )!,
+      resttime: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}resttime'],
+      )!,
+      setRest: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}set_rest'],
+      )!,
       targetWeigthRight: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}target_weigth_right'],
@@ -2031,34 +1989,30 @@ class $RepeatersTable extends Repeaters
         DriftSqlType.double,
         data['${effectivePrefix}target_weigth_left'],
       ),
-      splitHand:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}split_hand'],
-          )!,
-      gripPosition:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}grip_position'],
-          )!,
+      splitHand: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}split_hand'],
+      )!,
+      gripPosition: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}grip_position'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -2135,25 +2089,21 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       worktime: Value(worktime),
       resttime: Value(resttime),
       setRest: Value(setRest),
-      targetWeigthRight:
-          targetWeigthRight == null && nullToAbsent
-              ? const Value.absent()
-              : Value(targetWeigthRight),
-      targetWeigthLeft:
-          targetWeigthLeft == null && nullToAbsent
-              ? const Value.absent()
-              : Value(targetWeigthLeft),
+      targetWeigthRight: targetWeigthRight == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetWeigthRight),
+      targetWeigthLeft: targetWeigthLeft == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetWeigthLeft),
       splitHand: Value(splitHand),
       gripPosition: Value(gripPosition),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -2225,14 +2175,12 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     worktime: worktime ?? this.worktime,
     resttime: resttime ?? this.resttime,
     setRest: setRest ?? this.setRest,
-    targetWeigthRight:
-        targetWeigthRight.present
-            ? targetWeigthRight.value
-            : this.targetWeigthRight,
-    targetWeigthLeft:
-        targetWeigthLeft.present
-            ? targetWeigthLeft.value
-            : this.targetWeigthLeft,
+    targetWeigthRight: targetWeigthRight.present
+        ? targetWeigthRight.value
+        : this.targetWeigthRight,
+    targetWeigthLeft: targetWeigthLeft.present
+        ? targetWeigthLeft.value
+        : this.targetWeigthLeft,
     splitHand: splitHand ?? this.splitHand,
     gripPosition: gripPosition ?? this.gripPosition,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
@@ -2248,19 +2196,16 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       worktime: data.worktime.present ? data.worktime.value : this.worktime,
       resttime: data.resttime.present ? data.resttime.value : this.resttime,
       setRest: data.setRest.present ? data.setRest.value : this.setRest,
-      targetWeigthRight:
-          data.targetWeigthRight.present
-              ? data.targetWeigthRight.value
-              : this.targetWeigthRight,
-      targetWeigthLeft:
-          data.targetWeigthLeft.present
-              ? data.targetWeigthLeft.value
-              : this.targetWeigthLeft,
+      targetWeigthRight: data.targetWeigthRight.present
+          ? data.targetWeigthRight.value
+          : this.targetWeigthRight,
+      targetWeigthLeft: data.targetWeigthLeft.present
+          ? data.targetWeigthLeft.value
+          : this.targetWeigthLeft,
       splitHand: data.splitHand.present ? data.splitHand.value : this.splitHand,
-      gripPosition:
-          data.gripPosition.present
-              ? data.gripPosition.value
-              : this.gripPosition,
+      gripPosition: data.gripPosition.present
+          ? data.gripPosition.value
+          : this.gripPosition,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -2752,53 +2697,46 @@ class $TrainingsTable extends Trainings
   Training map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Training(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      name:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}name'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
       repeaterId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}repeater_id'],
       ),
-      isBuiltin:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_builtin'],
-          )!,
-      isFavorite:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_favorite'],
-          )!,
-      isAssessment:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_assessment'],
-          )!,
+      isBuiltin: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_builtin'],
+      )!,
+      isFavorite: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_favorite'],
+      )!,
+      isAssessment: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_assessment'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -2857,22 +2795,19 @@ class Training extends DataClass implements Insertable<Training> {
     return TrainingsCompanion(
       id: Value(id),
       name: Value(name),
-      repeaterId:
-          repeaterId == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterId),
+      repeaterId: repeaterId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterId),
       isBuiltin: Value(isBuiltin),
       isFavorite: Value(isFavorite),
       isAssessment: Value(isAssessment),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -2939,15 +2874,16 @@ class Training extends DataClass implements Insertable<Training> {
     return Training(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
-      repeaterId:
-          data.repeaterId.present ? data.repeaterId.value : this.repeaterId,
+      repeaterId: data.repeaterId.present
+          ? data.repeaterId.value
+          : this.repeaterId,
       isBuiltin: data.isBuiltin.present ? data.isBuiltin.value : this.isBuiltin,
-      isFavorite:
-          data.isFavorite.present ? data.isFavorite.value : this.isFavorite,
-      isAssessment:
-          data.isAssessment.present
-              ? data.isAssessment.value
-              : this.isAssessment,
+      isFavorite: data.isFavorite.present
+          ? data.isFavorite.value
+          : this.isFavorite,
+      isAssessment: data.isAssessment.present
+          ? data.isAssessment.value
+          : this.isAssessment,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -3420,64 +3356,54 @@ class $RepTemplatesTable extends RepTemplates
   RepTemplate map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return RepTemplate(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      isRest:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_rest'],
-          )!,
-      rightHand:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}right_hand'],
-          )!,
-      duration:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}duration'],
-          )!,
-      trainingId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}training_id'],
-          )!,
-      targetWeight:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}target_weight'],
-          )!,
-      index:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}index'],
-          )!,
-      gripPosition:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}grip_position'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      isRest: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_rest'],
+      )!,
+      rightHand: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}right_hand'],
+      )!,
+      duration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration'],
+      )!,
+      trainingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}training_id'],
+      )!,
+      targetWeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}target_weight'],
+      )!,
+      index: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}index'],
+      )!,
+      gripPosition: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}grip_position'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -3546,15 +3472,13 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       targetWeight: Value(targetWeight),
       index: Value(index),
       gripPosition: Value(gripPosition),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -3631,17 +3555,16 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       isRest: data.isRest.present ? data.isRest.value : this.isRest,
       rightHand: data.rightHand.present ? data.rightHand.value : this.rightHand,
       duration: data.duration.present ? data.duration.value : this.duration,
-      trainingId:
-          data.trainingId.present ? data.trainingId.value : this.trainingId,
-      targetWeight:
-          data.targetWeight.present
-              ? data.targetWeight.value
-              : this.targetWeight,
+      trainingId: data.trainingId.present
+          ? data.trainingId.value
+          : this.trainingId,
+      targetWeight: data.targetWeight.present
+          ? data.targetWeight.value
+          : this.targetWeight,
       index: data.index.present ? data.index.value : this.index,
-      gripPosition:
-          data.gripPosition.present
-              ? data.gripPosition.value
-              : this.gripPosition,
+      gripPosition: data.gripPosition.present
+          ? data.gripPosition.value
+          : this.gripPosition,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -4169,69 +4092,58 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
   RepData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return RepData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      averageWeight:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}average_weight'],
-          )!,
-      sessionId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}session_id'],
-          )!,
-      isRest:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_rest'],
-          )!,
-      rightHand:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}right_hand'],
-          )!,
-      duration:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}duration'],
-          )!,
-      targetWeight:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}target_weight'],
-          )!,
-      index:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}index'],
-          )!,
-      gripPosition:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}grip_position'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      averageWeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}average_weight'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      isRest: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_rest'],
+      )!,
+      rightHand: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}right_hand'],
+      )!,
+      duration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration'],
+      )!,
+      targetWeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}target_weight'],
+      )!,
+      index: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}index'],
+      )!,
+      gripPosition: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}grip_position'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -4304,15 +4216,13 @@ class RepData extends DataClass implements Insertable<RepData> {
       targetWeight: Value(targetWeight),
       index: Value(index),
       gripPosition: Value(gripPosition),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -4390,23 +4300,20 @@ class RepData extends DataClass implements Insertable<RepData> {
   RepData copyWithCompanion(RepDatasCompanion data) {
     return RepData(
       id: data.id.present ? data.id.value : this.id,
-      averageWeight:
-          data.averageWeight.present
-              ? data.averageWeight.value
-              : this.averageWeight,
+      averageWeight: data.averageWeight.present
+          ? data.averageWeight.value
+          : this.averageWeight,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
       isRest: data.isRest.present ? data.isRest.value : this.isRest,
       rightHand: data.rightHand.present ? data.rightHand.value : this.rightHand,
       duration: data.duration.present ? data.duration.value : this.duration,
-      targetWeight:
-          data.targetWeight.present
-              ? data.targetWeight.value
-              : this.targetWeight,
+      targetWeight: data.targetWeight.present
+          ? data.targetWeight.value
+          : this.targetWeight,
       index: data.index.present ? data.index.value : this.index,
-      gripPosition:
-          data.gripPosition.present
-              ? data.gripPosition.value
-              : this.gripPosition,
+      gripPosition: data.gripPosition.present
+          ? data.gripPosition.value
+          : this.gripPosition,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -4852,49 +4759,42 @@ class $SensorConfigsTable extends SensorConfigs
   SensorConfig map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SensorConfig(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      name:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}name'],
-          )!,
-      index:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}index'],
-          )!,
-      tare:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}tare'],
-          )!,
-      coef:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}coef'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      index: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}index'],
+      )!,
+      tare: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}tare'],
+      )!,
+      coef: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}coef'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -4951,15 +4851,13 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       index: Value(index),
       tare: Value(tare),
       coef: Value(coef),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -5406,16 +5304,14 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
   BuiltinTrainingWeight map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return BuiltinTrainingWeight(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      builtinTrainingId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}builtin_training_id'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      builtinTrainingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}builtin_training_id'],
+      )!,
       customWeightRight: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}custom_weight_right'],
@@ -5424,25 +5320,22 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
         DriftSqlType.double,
         data['${effectivePrefix}custom_weight_left'],
       ),
-      createdAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}created_at'],
-          )!,
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -5496,20 +5389,17 @@ class BuiltinTrainingWeight extends DataClass
     return BuiltinTrainingWeightsCompanion(
       id: Value(id),
       builtinTrainingId: Value(builtinTrainingId),
-      customWeightRight:
-          customWeightRight == null && nullToAbsent
-              ? const Value.absent()
-              : Value(customWeightRight),
-      customWeightLeft:
-          customWeightLeft == null && nullToAbsent
-              ? const Value.absent()
-              : Value(customWeightLeft),
+      customWeightRight: customWeightRight == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customWeightRight),
+      customWeightLeft: customWeightLeft == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customWeightLeft),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -5559,14 +5449,12 @@ class BuiltinTrainingWeight extends DataClass
   }) => BuiltinTrainingWeight(
     id: id ?? this.id,
     builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
-    customWeightRight:
-        customWeightRight.present
-            ? customWeightRight.value
-            : this.customWeightRight,
-    customWeightLeft:
-        customWeightLeft.present
-            ? customWeightLeft.value
-            : this.customWeightLeft,
+    customWeightRight: customWeightRight.present
+        ? customWeightRight.value
+        : this.customWeightRight,
+    customWeightLeft: customWeightLeft.present
+        ? customWeightLeft.value
+        : this.customWeightLeft,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -5577,18 +5465,15 @@ class BuiltinTrainingWeight extends DataClass
   ) {
     return BuiltinTrainingWeight(
       id: data.id.present ? data.id.value : this.id,
-      builtinTrainingId:
-          data.builtinTrainingId.present
-              ? data.builtinTrainingId.value
-              : this.builtinTrainingId,
-      customWeightRight:
-          data.customWeightRight.present
-              ? data.customWeightRight.value
-              : this.customWeightRight,
-      customWeightLeft:
-          data.customWeightLeft.present
-              ? data.customWeightLeft.value
-              : this.customWeightLeft,
+      builtinTrainingId: data.builtinTrainingId.present
+          ? data.builtinTrainingId.value
+          : this.builtinTrainingId,
+      customWeightRight: data.customWeightRight.present
+          ? data.customWeightRight.value
+          : this.customWeightRight,
+      customWeightLeft: data.customWeightLeft.present
+          ? data.customWeightLeft.value
+          : this.customWeightLeft,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -5785,41 +5670,6 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
         type: DriftSqlType.string,
         requiredDuringInsert: true,
       );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    clientDefault: () => DateTime.now(),
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
-    'deleted_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
   static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
   @override
   late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
@@ -5834,13 +5684,7 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
     defaultValue: const Constant(false),
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    builtinTrainingId,
-    createdAt,
-    updatedAt,
-    deletedAt,
-    dirty,
-  ];
+  List<GeneratedColumn> get $columns => [builtinTrainingId, dirty];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -5864,24 +5708,6 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
     } else if (isInserting) {
       context.missing(_builtinTrainingIdMeta);
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
-    if (data.containsKey('deleted_at')) {
-      context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
-      );
-    }
     if (data.containsKey('dirty')) {
       context.handle(
         _dirtyMeta,
@@ -5897,29 +5723,14 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
   PinnedBuiltinTraining map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return PinnedBuiltinTraining(
-      builtinTrainingId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}builtin_training_id'],
-          )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}updated_at'],
-          )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}dirty'],
-          )!,
+      builtinTrainingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}builtin_training_id'],
+      )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -5932,28 +5743,15 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
 class PinnedBuiltinTraining extends DataClass
     implements Insertable<PinnedBuiltinTraining> {
   final String builtinTrainingId;
-  final DateTime? createdAt;
-  final DateTime updatedAt;
-  final DateTime? deletedAt;
   final bool dirty;
   const PinnedBuiltinTraining({
     required this.builtinTrainingId,
-    this.createdAt,
-    required this.updatedAt,
-    this.deletedAt,
     required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['builtin_training_id'] = Variable<String>(builtinTrainingId);
-    if (!nullToAbsent || createdAt != null) {
-      map['created_at'] = Variable<DateTime>(createdAt);
-    }
-    map['updated_at'] = Variable<DateTime>(updatedAt);
-    if (!nullToAbsent || deletedAt != null) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt);
-    }
     map['dirty'] = Variable<bool>(dirty);
     return map;
   }
@@ -5961,15 +5759,6 @@ class PinnedBuiltinTraining extends DataClass
   PinnedBuiltinTrainingsCompanion toCompanion(bool nullToAbsent) {
     return PinnedBuiltinTrainingsCompanion(
       builtinTrainingId: Value(builtinTrainingId),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
-      updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -5981,9 +5770,6 @@ class PinnedBuiltinTraining extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PinnedBuiltinTraining(
       builtinTrainingId: serializer.fromJson<String>(json['builtinTrainingId']),
-      createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
@@ -5992,37 +5778,22 @@ class PinnedBuiltinTraining extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'builtinTrainingId': serializer.toJson<String>(builtinTrainingId),
-      'createdAt': serializer.toJson<DateTime?>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
-  PinnedBuiltinTraining copyWith({
-    String? builtinTrainingId,
-    Value<DateTime?> createdAt = const Value.absent(),
-    DateTime? updatedAt,
-    Value<DateTime?> deletedAt = const Value.absent(),
-    bool? dirty,
-  }) => PinnedBuiltinTraining(
-    builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
-    createdAt: createdAt.present ? createdAt.value : this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
-    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
-    dirty: dirty ?? this.dirty,
-  );
+  PinnedBuiltinTraining copyWith({String? builtinTrainingId, bool? dirty}) =>
+      PinnedBuiltinTraining(
+        builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
+        dirty: dirty ?? this.dirty,
+      );
   PinnedBuiltinTraining copyWithCompanion(
     PinnedBuiltinTrainingsCompanion data,
   ) {
     return PinnedBuiltinTraining(
-      builtinTrainingId:
-          data.builtinTrainingId.present
-              ? data.builtinTrainingId.value
-              : this.builtinTrainingId,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      builtinTrainingId: data.builtinTrainingId.present
+          ? data.builtinTrainingId.value
+          : this.builtinTrainingId,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
@@ -6031,65 +5802,43 @@ class PinnedBuiltinTraining extends DataClass
   String toString() {
     return (StringBuffer('PinnedBuiltinTraining(')
           ..write('builtinTrainingId: $builtinTrainingId, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(builtinTrainingId, createdAt, updatedAt, deletedAt, dirty);
+  int get hashCode => Object.hash(builtinTrainingId, dirty);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is PinnedBuiltinTraining &&
           other.builtinTrainingId == this.builtinTrainingId &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt &&
           other.dirty == this.dirty);
 }
 
 class PinnedBuiltinTrainingsCompanion
     extends UpdateCompanion<PinnedBuiltinTraining> {
   final Value<String> builtinTrainingId;
-  final Value<DateTime?> createdAt;
-  final Value<DateTime> updatedAt;
-  final Value<DateTime?> deletedAt;
   final Value<bool> dirty;
   final Value<int> rowid;
   const PinnedBuiltinTrainingsCompanion({
     this.builtinTrainingId = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PinnedBuiltinTrainingsCompanion.insert({
     required String builtinTrainingId,
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : builtinTrainingId = Value(builtinTrainingId);
   static Insertable<PinnedBuiltinTraining> custom({
     Expression<String>? builtinTrainingId,
-    Expression<DateTime>? createdAt,
-    Expression<DateTime>? updatedAt,
-    Expression<DateTime>? deletedAt,
     Expression<bool>? dirty,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (builtinTrainingId != null) 'builtin_training_id': builtinTrainingId,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
       if (rowid != null) 'rowid': rowid,
     });
@@ -6097,17 +5846,11 @@ class PinnedBuiltinTrainingsCompanion
 
   PinnedBuiltinTrainingsCompanion copyWith({
     Value<String>? builtinTrainingId,
-    Value<DateTime?>? createdAt,
-    Value<DateTime>? updatedAt,
-    Value<DateTime?>? deletedAt,
     Value<bool>? dirty,
     Value<int>? rowid,
   }) {
     return PinnedBuiltinTrainingsCompanion(
       builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
       rowid: rowid ?? this.rowid,
     );
@@ -6118,15 +5861,6 @@ class PinnedBuiltinTrainingsCompanion
     final map = <String, Expression>{};
     if (builtinTrainingId.present) {
       map['builtin_training_id'] = Variable<String>(builtinTrainingId.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    if (deletedAt.present) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
     }
     if (dirty.present) {
       map['dirty'] = Variable<bool>(dirty.value);
@@ -6141,9 +5875,6 @@ class PinnedBuiltinTrainingsCompanion
   String toString() {
     return (StringBuffer('PinnedBuiltinTrainingsCompanion(')
           ..write('builtinTrainingId: $builtinTrainingId, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -6366,51 +6097,42 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
   User map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return User(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      email:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}email'],
-          )!,
-      firstname:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}firstname'],
-          )!,
-      lastname:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}lastname'],
-          )!,
-      emailVerified:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}email_verified'],
-          )!,
-      isAdmin:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_admin'],
-          )!,
-      isCoach:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_coach'],
-          )!,
-      coachValidated:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}coach_validated'],
-          )!,
-      createdAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}created_at'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      email: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}email'],
+      )!,
+      firstname: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}firstname'],
+      )!,
+      lastname: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lastname'],
+      )!,
+      emailVerified: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}email_verified'],
+      )!,
+      isAdmin: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_admin'],
+      )!,
+      isCoach: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_coach'],
+      )!,
+      coachValidated: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}coach_validated'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -6530,16 +6252,14 @@ class User extends DataClass implements Insertable<User> {
       email: data.email.present ? data.email.value : this.email,
       firstname: data.firstname.present ? data.firstname.value : this.firstname,
       lastname: data.lastname.present ? data.lastname.value : this.lastname,
-      emailVerified:
-          data.emailVerified.present
-              ? data.emailVerified.value
-              : this.emailVerified,
+      emailVerified: data.emailVerified.present
+          ? data.emailVerified.value
+          : this.emailVerified,
       isAdmin: data.isAdmin.present ? data.isAdmin.value : this.isAdmin,
       isCoach: data.isCoach.present ? data.isCoach.value : this.isCoach,
-      coachValidated:
-          data.coachValidated.present
-              ? data.coachValidated.value
-              : this.coachValidated,
+      coachValidated: data.coachValidated.present
+          ? data.coachValidated.value
+          : this.coachValidated,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -6843,25 +6563,22 @@ class $SyncMetadataTable extends SyncMetadata
   SyncMetadataData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SyncMetadataData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      lastSyncVersion:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}last_sync_version'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      lastSyncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_sync_version'],
+      )!,
       lastSyncTime: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}last_sync_time'],
       ),
-      pendingChanges:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}pending_changes'],
-          )!,
+      pendingChanges: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pending_changes'],
+      )!,
     );
   }
 
@@ -6899,10 +6616,9 @@ class SyncMetadataData extends DataClass
     return SyncMetadataCompanion(
       id: Value(id),
       lastSyncVersion: Value(lastSyncVersion),
-      lastSyncTime:
-          lastSyncTime == null && nullToAbsent
-              ? const Value.absent()
-              : Value(lastSyncTime),
+      lastSyncTime: lastSyncTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncTime),
       pendingChanges: Value(pendingChanges),
     );
   }
@@ -6944,18 +6660,15 @@ class SyncMetadataData extends DataClass
   SyncMetadataData copyWithCompanion(SyncMetadataCompanion data) {
     return SyncMetadataData(
       id: data.id.present ? data.id.value : this.id,
-      lastSyncVersion:
-          data.lastSyncVersion.present
-              ? data.lastSyncVersion.value
-              : this.lastSyncVersion,
-      lastSyncTime:
-          data.lastSyncTime.present
-              ? data.lastSyncTime.value
-              : this.lastSyncTime,
-      pendingChanges:
-          data.pendingChanges.present
-              ? data.pendingChanges.value
-              : this.pendingChanges,
+      lastSyncVersion: data.lastSyncVersion.present
+          ? data.lastSyncVersion.value
+          : this.lastSyncVersion,
+      lastSyncTime: data.lastSyncTime.present
+          ? data.lastSyncTime.value
+          : this.lastSyncTime,
+      pendingChanges: data.pendingChanges.present
+          ? data.pendingChanges.value
+          : this.pendingChanges,
     );
   }
 
@@ -7438,12 +7151,12 @@ class $$SessionsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$SessionsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$SessionsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$SessionsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$SessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SessionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SessionsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -7528,16 +7241,9 @@ class $$SessionsTableTableManager
                 dirty: dirty,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -7773,13 +7479,12 @@ class $$AssessmentsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$AssessmentsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$AssessmentsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () =>
-                  $$AssessmentsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$AssessmentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AssessmentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AssessmentsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -7832,16 +7537,9 @@ class $$AssessmentsTableTableManager
                 dirty: dirty,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -8139,12 +7837,12 @@ class $$RepeatersTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$RepeatersTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$RepeatersTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$RepeatersTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$RepeatersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RepeatersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RepeatersTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -8213,16 +7911,9 @@ class $$RepeatersTableTableManager
                 dirty: dirty,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -8457,12 +8148,12 @@ class $$TrainingsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$TrainingsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$TrainingsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$TrainingsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$TrainingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TrainingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TrainingsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -8515,16 +8206,9 @@ class $$TrainingsTableTableManager
                 dirty: dirty,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -8792,13 +8476,12 @@ class $$RepTemplatesTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$RepTemplatesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$RepTemplatesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () =>
-                  $$RepTemplatesTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$RepTemplatesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RepTemplatesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RepTemplatesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -8859,16 +8542,9 @@ class $$RepTemplatesTableTableManager
                 dirty: dirty,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -9151,12 +8827,12 @@ class $$RepDatasTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$RepDatasTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$RepDatasTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$RepDatasTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$RepDatasTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RepDatasTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RepDatasTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -9221,16 +8897,9 @@ class $$RepDatasTableTableManager
                 dirty: dirty,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -9447,16 +9116,12 @@ class $$SensorConfigsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$SensorConfigsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () =>
-                  $$SensorConfigsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$SensorConfigsTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () =>
+              $$SensorConfigsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SensorConfigsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SensorConfigsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -9505,16 +9170,9 @@ class $$SensorConfigsTableTableManager
                 dirty: dirty,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -9731,18 +9389,18 @@ class $$BuiltinTrainingWeightsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$BuiltinTrainingWeightsTableFilterComposer(
+          createFilteringComposer: () =>
+              $$BuiltinTrainingWeightsTableFilterComposer(
                 $db: db,
                 $table: table,
               ),
-          createOrderingComposer:
-              () => $$BuiltinTrainingWeightsTableOrderingComposer(
+          createOrderingComposer: () =>
+              $$BuiltinTrainingWeightsTableOrderingComposer(
                 $db: db,
                 $table: table,
               ),
-          createComputedFieldComposer:
-              () => $$BuiltinTrainingWeightsTableAnnotationComposer(
+          createComputedFieldComposer: () =>
+              $$BuiltinTrainingWeightsTableAnnotationComposer(
                 $db: db,
                 $table: table,
               ),
@@ -9790,16 +9448,9 @@ class $$BuiltinTrainingWeightsTableTableManager
                 dirty: dirty,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -9829,18 +9480,12 @@ typedef $$BuiltinTrainingWeightsTableProcessedTableManager =
 typedef $$PinnedBuiltinTrainingsTableCreateCompanionBuilder =
     PinnedBuiltinTrainingsCompanion Function({
       required String builtinTrainingId,
-      Value<DateTime?> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
       Value<bool> dirty,
       Value<int> rowid,
     });
 typedef $$PinnedBuiltinTrainingsTableUpdateCompanionBuilder =
     PinnedBuiltinTrainingsCompanion Function({
       Value<String> builtinTrainingId,
-      Value<DateTime?> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
       Value<bool> dirty,
       Value<int> rowid,
     });
@@ -9856,21 +9501,6 @@ class $$PinnedBuiltinTrainingsTableFilterComposer
   });
   ColumnFilters<String> get builtinTrainingId => $composableBuilder(
     column: $table.builtinTrainingId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9894,21 +9524,6 @@ class $$PinnedBuiltinTrainingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<bool> get dirty => $composableBuilder(
     column: $table.dirty,
     builder: (column) => ColumnOrderings(column),
@@ -9928,15 +9543,6 @@ class $$PinnedBuiltinTrainingsTableAnnotationComposer
     column: $table.builtinTrainingId,
     builder: (column) => column,
   );
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 
   GeneratedColumn<bool> get dirty =>
       $composableBuilder(column: $table.dirty, builder: (column) => column);
@@ -9971,63 +9577,44 @@ class $$PinnedBuiltinTrainingsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$PinnedBuiltinTrainingsTableFilterComposer(
+          createFilteringComposer: () =>
+              $$PinnedBuiltinTrainingsTableFilterComposer(
                 $db: db,
                 $table: table,
               ),
-          createOrderingComposer:
-              () => $$PinnedBuiltinTrainingsTableOrderingComposer(
+          createOrderingComposer: () =>
+              $$PinnedBuiltinTrainingsTableOrderingComposer(
                 $db: db,
                 $table: table,
               ),
-          createComputedFieldComposer:
-              () => $$PinnedBuiltinTrainingsTableAnnotationComposer(
+          createComputedFieldComposer: () =>
+              $$PinnedBuiltinTrainingsTableAnnotationComposer(
                 $db: db,
                 $table: table,
               ),
           updateCompanionCallback:
               ({
                 Value<String> builtinTrainingId = const Value.absent(),
-                Value<DateTime?> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PinnedBuiltinTrainingsCompanion(
                 builtinTrainingId: builtinTrainingId,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-                deletedAt: deletedAt,
                 dirty: dirty,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String builtinTrainingId,
-                Value<DateTime?> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PinnedBuiltinTrainingsCompanion.insert(
                 builtinTrainingId: builtinTrainingId,
-                createdAt: createdAt,
-                updatedAt: updatedAt,
-                deletedAt: deletedAt,
                 dirty: dirty,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -10251,12 +9838,12 @@ class $$UsersTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$UsersTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$UsersTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$UsersTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$UsersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UsersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UsersTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -10305,16 +9892,9 @@ class $$UsersTableTableManager
                 createdAt: createdAt,
                 rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -10460,13 +10040,12 @@ class $$SyncMetadataTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$SyncMetadataTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$SyncMetadataTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () =>
-                  $$SyncMetadataTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$SyncMetadataTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncMetadataTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncMetadataTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -10491,16 +10070,9 @@ class $$SyncMetadataTableTableManager
                 lastSyncTime: lastSyncTime,
                 pendingChanges: pendingChanges,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );

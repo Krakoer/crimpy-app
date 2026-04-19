@@ -45,14 +45,12 @@ class _ForceChartState extends State<ForceChart> {
     final allData = [...widget.leftData, ...widget.rightData].toList();
 
     // Round dates to day
-    List<(DateTime, double)> leftData =
-        widget.leftData
-            .map((d) => (d.$1.copyWith(hour: 0, minute: 0, second: 0), d.$2))
-            .toList();
-    List<(DateTime, double)> rightData =
-        widget.rightData
-            .map((d) => (d.$1.copyWith(hour: 0, minute: 0, second: 0), d.$2))
-            .toList();
+    List<(DateTime, double)> leftData = widget.leftData
+        .map((d) => (d.$1.copyWith(hour: 0, minute: 0, second: 0), d.$2))
+        .toList();
+    List<(DateTime, double)> rightData = widget.rightData
+        .map((d) => (d.$1.copyWith(hour: 0, minute: 0, second: 0), d.$2))
+        .toList();
 
     return CrimpyCards.assessment(
       child: Stack(

@@ -290,12 +290,13 @@ class PinnedTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
     final favoriteTrainings = await _trainingRepository.getAllTrainings(
       onlyFavs: true,
     );
-    final favoriteItems =
-        favoriteTrainings.map(TrainingListItem.regular).toList();
+    final favoriteItems = favoriteTrainings
+        .map(TrainingListItem.regular)
+        .toList();
 
     // Get pinned builtin training IDs
-    final pinnedIds =
-        await _builtinTrainingRepository.getPinnedBuiltinTrainingIds();
+    final pinnedIds = await _builtinTrainingRepository
+        .getPinnedBuiltinTrainingIds();
 
     // Get all builtin trainings
     final allBuiltins = await _builtinTrainingRepository.getBuiltinTrainings();
@@ -308,10 +309,9 @@ class PinnedTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
             .isTrainingAvailable(builtin);
         final missingAssessments = await _builtinTrainingRepository
             .getMissingAssessments(builtin);
-        final generatedTraining =
-            isAvailable
-                ? await _builtinTrainingRepository.generateTraining(builtin)
-                : null;
+        final generatedTraining = isAvailable
+            ? await _builtinTrainingRepository.generateTraining(builtin)
+            : null;
 
         pinnedBuiltinItems.add(
           TrainingListItem.builtin(
@@ -362,12 +362,13 @@ class AllTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
 
     // Get regular trainings
     final regularTrainings = await _trainingRepository.getAllTrainings();
-    final regularItems =
-        regularTrainings.map(TrainingListItem.regular).toList();
+    final regularItems = regularTrainings
+        .map(TrainingListItem.regular)
+        .toList();
 
     // Get builtin trainings
-    final builtinTrainings =
-        await _builtinTrainingRepository.getBuiltinTrainings();
+    final builtinTrainings = await _builtinTrainingRepository
+        .getBuiltinTrainings();
     final builtinItems = <TrainingListItem>[];
 
     for (final builtin in builtinTrainings) {
@@ -376,10 +377,9 @@ class AllTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
       );
       final missingAssessments = await _builtinTrainingRepository
           .getMissingAssessments(builtin);
-      final generatedTraining =
-          isAvailable
-              ? await _builtinTrainingRepository.generateTraining(builtin)
-              : null;
+      final generatedTraining = isAvailable
+          ? await _builtinTrainingRepository.generateTraining(builtin)
+          : null;
       final isPinned = await _builtinTrainingRepository.isBuiltinTrainingPinned(
         builtin.id,
       );

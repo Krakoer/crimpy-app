@@ -29,10 +29,12 @@ Map<String, dynamic> _$PushRequestToJson(_PushRequest instance) =>
 
 _PushResponse _$PushResponseFromJson(Map<String, dynamic> json) =>
     _PushResponse(
-      accepted:
-          (json['accepted'] as List<dynamic>).map((e) => e as String).toList(),
-      rejected:
-          (json['rejected'] as List<dynamic>).map((e) => e as String).toList(),
+      accepted: (json['accepted'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
+      rejected: (json['rejected'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
       serverVersion: (json['server_version'] as num).toInt(),
     );
 
@@ -60,10 +62,9 @@ _SyncState _$SyncStateFromJson(Map<String, dynamic> json) => _SyncState(
       $enumDecodeNullable(_$SyncStatusEnumMap, json['status']) ??
       SyncStatus.idle,
   lastSyncVersion: (json['lastSyncVersion'] as num?)?.toInt() ?? 0,
-  lastSyncTime:
-      json['lastSyncTime'] == null
-          ? null
-          : DateTime.parse(json['lastSyncTime'] as String),
+  lastSyncTime: json['lastSyncTime'] == null
+      ? null
+      : DateTime.parse(json['lastSyncTime'] as String),
   errorMessage: json['errorMessage'] as String?,
   pendingChanges: (json['pendingChanges'] as num?)?.toInt() ?? 0,
 );

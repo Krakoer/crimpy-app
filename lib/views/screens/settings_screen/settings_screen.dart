@@ -84,11 +84,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         ElevatedButton(
                           onPressed:
                               ref.watch(connectionStateProvider) ==
-                                      BleConnectionState.connected
-                                  ? () {
-                                    ref.read(bleConfigProvider.notifier).tare();
-                                  }
-                                  : null,
+                                  BleConnectionState.connected
+                              ? () {
+                                  ref.read(bleConfigProvider.notifier).tare();
+                                }
+                              : null,
                           child: Text("Tare"),
                         ),
                       ],
@@ -118,15 +118,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         ElevatedButton(
                           onPressed:
                               ref.watch(connectionStateProvider) ==
-                                      BleConnectionState.connected
-                                  ? () {
-                                    showDialog(
-                                      context: context,
-                                      builder:
-                                          (ctx) => StartCalibrationDialog(),
-                                    );
-                                  }
-                                  : null,
+                                  BleConnectionState.connected
+                              ? () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (ctx) => StartCalibrationDialog(),
+                                  );
+                                }
+                              : null,
                           child: Text("Calibrate"),
                         ),
                       ],
@@ -180,32 +179,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   ref
                       .watch(appInfoProvider)
                       .when(
-                        data:
-                            (appInfo) => Column(
-                              children: [
-                                Text(
-                                  'Crimpy',
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Version ${appInfo.version} (Build ${appInfo.buildNumber})',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.bodyMedium?.copyWith(
+                        data: (appInfo) => Column(
+                          children: [
+                            Text(
+                              'Crimpy',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Version ${appInfo.version} (Build ${appInfo.buildNumber})',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurface
                                         .withValues(alpha: 0.6),
                                   ),
-                                ),
-                              ],
                             ),
+                          ],
+                        ),
                         loading: () => const CircularProgressIndicator(),
-                        error:
-                            (_, __) =>
-                                const Text('Unable to load version info'),
+                        error: (_, __) =>
+                            const Text('Unable to load version info'),
                       ),
                   const SizedBox(height: 16),
                 ],
@@ -285,22 +281,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     if (_formKey.currentState!.validate()) {
       showDialog(
         context: context,
-        builder:
-            (ctx) => CreatePresetDialog(
-              onSave: (String presetName) {
-                ref
-                    .read(sensorConfigsProvider.notifier)
-                    .addSensorConfig(
-                      SensorConfigsCompanion(
-                        coef: dr.Value(
-                          double.parse(_calibrationController.text),
-                        ),
-                        tare: dr.Value(double.parse(_tareController.text)),
-                        name: dr.Value(presetName),
-                      ),
-                    );
-              },
-            ),
+        builder: (ctx) => CreatePresetDialog(
+          onSave: (String presetName) {
+            ref
+                .read(sensorConfigsProvider.notifier)
+                .addSensorConfig(
+                  SensorConfigsCompanion(
+                    coef: dr.Value(double.parse(_calibrationController.text)),
+                    tare: dr.Value(double.parse(_tareController.text)),
+                    name: dr.Value(presetName),
+                  ),
+                );
+          },
+        ),
       );
     }
   }
@@ -310,25 +303,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Generate Dummy Data'),
-            content: const Text(
-              'This will populate your database with sample sessions, trainings, and assessments. '
-              'This is useful for testing and taking screenshots.\n\n'
-              'Continue?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text('Generate'),
-              ),
-            ],
+      builder: (ctx) => AlertDialog(
+        title: const Text('Generate Dummy Data'),
+        content: const Text(
+          'This will populate your database with sample sessions, trainings, and assessments. '
+          'This is useful for testing and taking screenshots.\n\n'
+          'Continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
           ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Generate'),
+          ),
+        ],
+      ),
     );
 
     if (confirmed != true) return;
@@ -375,29 +367,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
       context: context,
-      builder:
-          (ctx) => AlertDialog(
-            title: const Text('Clear All Data'),
-            content: const Text(
-              'This will DELETE all sessions and custom trainings from your database. '
-              'This action cannot be undone!\n\n'
-              'Are you sure you want to continue?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Clear All'),
-              ),
-            ],
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear All Data'),
+        content: const Text(
+          'This will DELETE all sessions and custom trainings from your database. '
+          'This action cannot be undone!\n\n'
+          'Are you sure you want to continue?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
           ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Clear All'),
+          ),
+        ],
+      ),
     );
 
     if (confirmed != true) return;

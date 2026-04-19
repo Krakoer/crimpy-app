@@ -94,12 +94,11 @@ class SyncStatusWidget extends ConsumerWidget {
             ],
             const SizedBox(height: 12),
             ElevatedButton.icon(
-              onPressed:
-                  isSyncing
-                      ? null
-                      : () {
-                        ref.read(syncViewModelProvider.notifier).performSync();
-                      },
+              onPressed: isSyncing
+                  ? null
+                  : () {
+                      ref.read(syncViewModelProvider.notifier).performSync();
+                    },
               icon: const Icon(FontAwesomeIcons.arrowsRotate, size: 16),
               label: Text(isSyncing ? 'Syncing...' : 'Sync Now'),
               style: ElevatedButton.styleFrom(

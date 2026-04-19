@@ -63,14 +63,12 @@ class _TrainingFeedbackScreenState
     // Check if training concerns only one hand or both
     final handSide =
         widget.results.firstWhereOrNull((r) => r.handSide == HandSide.right) ==
-                null
-            ? HandSide.left
-            : widget.results.firstWhereOrNull(
-                  (r) => r.handSide == HandSide.left,
-                ) ==
-                null
-            ? HandSide.right
-            : HandSide.both;
+            null
+        ? HandSide.left
+        : widget.results.firstWhereOrNull((r) => r.handSide == HandSide.left) ==
+              null
+        ? HandSide.right
+        : HandSide.both;
 
     // Calculate overall success percentage
     final workingReps = widget.results.where((r) => !r.isRest).toList();
@@ -138,19 +136,17 @@ class _TrainingFeedbackScreenState
                         vertical: 16,
                       ),
                       decoration: BoxDecoration(
-                        color:
-                            percentageSuccess >= 80
-                                ? CrimpyTheme.bgSuccess
-                                : percentageSuccess >= 50
-                                ? CrimpyTheme.bgWarning
-                                : CrimpyTheme.bgError,
+                        color: percentageSuccess >= 80
+                            ? CrimpyTheme.bgSuccess
+                            : percentageSuccess >= 50
+                            ? CrimpyTheme.bgWarning
+                            : CrimpyTheme.bgError,
                         border: Border.all(
-                          color:
-                              percentageSuccess >= 80
-                                  ? CrimpyTheme.statusSuccess
-                                  : percentageSuccess >= 50
-                                  ? CrimpyTheme.statusWarning
-                                  : CrimpyTheme.statusError,
+                          color: percentageSuccess >= 80
+                              ? CrimpyTheme.statusSuccess
+                              : percentageSuccess >= 50
+                              ? CrimpyTheme.statusWarning
+                              : CrimpyTheme.statusError,
                           width: 1,
                         ),
                       ),
@@ -159,17 +155,15 @@ class _TrainingFeedbackScreenState
                         children: [
                           Text(
                             '$percentageSuccess%',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.displayLarge?.copyWith(
-                              color:
-                                  percentageSuccess >= 80
+                            style: Theme.of(context).textTheme.displayLarge
+                                ?.copyWith(
+                                  color: percentageSuccess >= 80
                                       ? CrimpyTheme.statusSuccess
                                       : percentageSuccess >= 50
                                       ? CrimpyTheme.statusWarning
                                       : CrimpyTheme.statusError,
-                              fontWeight: FontWeight.w900,
-                            ),
+                                  fontWeight: FontWeight.w900,
+                                ),
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -186,12 +180,9 @@ class _TrainingFeedbackScreenState
               // Hand-specific feedback cards
               if (handSide == HandSide.both) ...[
                 TrainingResultCard(
-                  reps:
-                      widget.results
-                          .where(
-                            (r) => !r.isRest && r.handSide == HandSide.right,
-                          )
-                          .toList(),
+                  reps: widget.results
+                      .where((r) => !r.isRest && r.handSide == HandSide.right)
+                      .toList(),
                   handSide: HandSide.right,
                   loadAdjustmentFunction: widget.template.computeNewWeights!,
                   onNewWeightChange: (double newWeight) {
@@ -201,12 +192,9 @@ class _TrainingFeedbackScreenState
                   },
                 ),
                 TrainingResultCard(
-                  reps:
-                      widget.results
-                          .where(
-                            (r) => !r.isRest && r.handSide == HandSide.left,
-                          )
-                          .toList(),
+                  reps: widget.results
+                      .where((r) => !r.isRest && r.handSide == HandSide.left)
+                      .toList(),
                   handSide: HandSide.left,
                   loadAdjustmentFunction: widget.template.computeNewWeights!,
                   onNewWeightChange: (double newWeight) {
@@ -343,12 +331,12 @@ class _TrainingFeedbackScreenState
 
                   // Only update weights if they were actually changed (feedback was given)
                   if (_newWeightRight > 0 || _newWeightLeft > 0) {
-                    final newWeightRight =
-                        _newWeightRight > 0
-                            ? _newWeightRight
-                            : currentWeightRight;
-                    final newWeightLeft =
-                        _newWeightLeft > 0 ? _newWeightLeft : currentWeightLeft;
+                    final newWeightRight = _newWeightRight > 0
+                        ? _newWeightRight
+                        : currentWeightRight;
+                    final newWeightLeft = _newWeightLeft > 0
+                        ? _newWeightLeft
+                        : currentWeightLeft;
 
                     await ref
                         .read(builtinTrainingRepositoryProvider)

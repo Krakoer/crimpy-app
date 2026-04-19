@@ -36,10 +36,10 @@ class _FailureFeedbackFormState extends State<FailureFeedbackForm> {
         final workingReps = widget.reps.where((r) => !r.isRest).toList();
         final percentageSuccess =
             (workingReps
-                    .where((r) => r.averageWeight >= r.targetWeight)
-                    .length /
-                workingReps.length *
-                100);
+                .where((r) => r.averageWeight >= r.targetWeight)
+                .length /
+            workingReps.length *
+            100);
         final failureRate = 100 - percentageSuccess;
 
         final multiplier = widget.loadAdjustmentFunction!(
@@ -150,12 +150,11 @@ class _FailureFeedbackFormState extends State<FailureFeedbackForm> {
                       ),
                       Text(
                         '${newWeight.toStringAsFixed(1)}kg',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.headlineMedium?.copyWith(
-                          color: CrimpyTheme.primaryOrange,
-                          fontWeight: FontWeight.w900,
-                        ),
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
+                              color: CrimpyTheme.primaryOrange,
+                              fontWeight: FontWeight.w900,
+                            ),
                       ),
                     ],
                   ),
@@ -172,10 +171,9 @@ class _FailureFeedbackFormState extends State<FailureFeedbackForm> {
                       Text(
                         '${variation >= 0 ? '+' : ''}$variation%',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color:
-                              variation >= 0
-                                  ? CrimpyTheme.statusSuccess
-                                  : CrimpyTheme.statusError,
+                          color: variation >= 0
+                              ? CrimpyTheme.statusSuccess
+                              : CrimpyTheme.statusError,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -269,14 +267,15 @@ class _FailureFeedbackFormState extends State<FailureFeedbackForm> {
                   _useCustomWeight = false;
                   // Recalculate recommended weight
                   if (widget.loadAdjustmentFunction != null) {
-                    final workingReps =
-                        widget.reps.where((r) => !r.isRest).toList();
+                    final workingReps = widget.reps
+                        .where((r) => !r.isRest)
+                        .toList();
                     final percentageSuccess =
                         (workingReps
-                                .where((r) => r.averageWeight >= r.targetWeight)
-                                .length /
-                            workingReps.length *
-                            100);
+                            .where((r) => r.averageWeight >= r.targetWeight)
+                            .length /
+                        workingReps.length *
+                        100);
                     final failureRate = 100 - percentageSuccess;
                     final multiplier = widget.loadAdjustmentFunction!(
                       failureRate: failureRate,

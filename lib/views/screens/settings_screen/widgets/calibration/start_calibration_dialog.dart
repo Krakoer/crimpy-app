@@ -31,8 +31,8 @@ class _CalibrationDialogState extends ConsumerState<StartCalibrationDialog> {
                 context: context,
                 // Prevent the run dialog to be dismissed.
                 barrierDismissible: false,
-                builder:
-                    (ctx) => RunCalibrationDialog(targetWeight: targetWeight),
+                builder: (ctx) =>
+                    RunCalibrationDialog(targetWeight: targetWeight),
               );
             }
           },

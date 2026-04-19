@@ -8,14 +8,13 @@ class Sessions extends Table with TableInfo<Sessions, SessionsData> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   Sessions(this.attachedDatabase, [this._alias]);
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
     'name',
@@ -128,6 +127,14 @@ class Sessions extends Table with TableInfo<Sessions, SessionsData> {
     requiredDuringInsert: false,
     $customConstraints: 'NULL CHECK (repeater_split_hand IN (0, 1))',
   );
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
     'updated_at',
     aliasedName,
@@ -157,14 +164,6 @@ class Sessions extends Table with TableInfo<Sessions, SessionsData> {
     $customConstraints: 'NOT NULL DEFAULT 0 CHECK (dirty IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -181,10 +180,10 @@ class Sessions extends Table with TableInfo<Sessions, SessionsData> {
     repeaterRestTime,
     repeaterSetRest,
     repeaterSplitHand,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -198,7 +197,7 @@ class Sessions extends Table with TableInfo<Sessions, SessionsData> {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SessionsData(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
       name: attachedDatabase.typeMapping.read(
@@ -253,6 +252,10 @@ class Sessions extends Table with TableInfo<Sessions, SessionsData> {
         DriftSqlType.int,
         data['${effectivePrefix}repeater_split_hand'],
       ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
@@ -265,10 +268,6 @@ class Sessions extends Table with TableInfo<Sessions, SessionsData> {
         DriftSqlType.int,
         data['${effectivePrefix}dirty'],
       )!,
-      remoteId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}remote_id'],
-      )!,
     );
   }
 
@@ -278,11 +277,13 @@ class Sessions extends Table with TableInfo<Sessions, SessionsData> {
   }
 
   @override
+  List<String> get customConstraints => const ['PRIMARY KEY(id)'];
+  @override
   bool get dontWriteConstraints => true;
 }
 
 class SessionsData extends DataClass implements Insertable<SessionsData> {
-  final int id;
+  final String id;
   final String name;
   final String notes;
   final int date;
@@ -296,10 +297,10 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
   final int? repeaterRestTime;
   final int? repeaterSetRest;
   final int? repeaterSplitHand;
+  final int? createdAt;
   final int updatedAt;
   final int? deletedAt;
   final int dirty;
-  final String remoteId;
   const SessionsData({
     required this.id,
     required this.name,
@@ -315,15 +316,15 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
     this.repeaterRestTime,
     this.repeaterSetRest,
     this.repeaterSplitHand,
+    this.createdAt,
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['notes'] = Variable<String>(notes);
     map['date'] = Variable<int>(date);
@@ -349,12 +350,14 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
     if (!nullToAbsent || repeaterSplitHand != null) {
       map['repeater_split_hand'] = Variable<int>(repeaterSplitHand);
     }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<int>(createdAt);
+    }
     map['updated_at'] = Variable<int>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
     }
     map['dirty'] = Variable<int>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -386,12 +389,14 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
       repeaterSplitHand: repeaterSplitHand == null && nullToAbsent
           ? const Value.absent()
           : Value(repeaterSplitHand),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -401,7 +406,7 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SessionsData(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       notes: serializer.fromJson<String>(json['notes']),
       date: serializer.fromJson<int>(json['date']),
@@ -415,17 +420,17 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
       repeaterRestTime: serializer.fromJson<int?>(json['repeaterRestTime']),
       repeaterSetRest: serializer.fromJson<int?>(json['repeaterSetRest']),
       repeaterSplitHand: serializer.fromJson<int?>(json['repeaterSplitHand']),
+      createdAt: serializer.fromJson<int?>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
       dirty: serializer.fromJson<int>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'notes': serializer.toJson<String>(notes),
       'date': serializer.toJson<int>(date),
@@ -439,15 +444,15 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
       'repeaterRestTime': serializer.toJson<int?>(repeaterRestTime),
       'repeaterSetRest': serializer.toJson<int?>(repeaterSetRest),
       'repeaterSplitHand': serializer.toJson<int?>(repeaterSplitHand),
+      'createdAt': serializer.toJson<int?>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
       'dirty': serializer.toJson<int>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   SessionsData copyWith({
-    int? id,
+    String? id,
     String? name,
     String? notes,
     int? date,
@@ -461,10 +466,10 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
     Value<int?> repeaterRestTime = const Value.absent(),
     Value<int?> repeaterSetRest = const Value.absent(),
     Value<int?> repeaterSplitHand = const Value.absent(),
+    Value<int?> createdAt = const Value.absent(),
     int? updatedAt,
     Value<int?> deletedAt = const Value.absent(),
     int? dirty,
-    String? remoteId,
   }) => SessionsData(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -488,10 +493,10 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
     repeaterSplitHand: repeaterSplitHand.present
         ? repeaterSplitHand.value
         : this.repeaterSplitHand,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   SessionsData copyWithCompanion(SessionsCompanion data) {
     return SessionsData(
@@ -525,10 +530,10 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
       repeaterSplitHand: data.repeaterSplitHand.present
           ? data.repeaterSplitHand.value
           : this.repeaterSplitHand,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -549,10 +554,10 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
           ..write('repeaterRestTime: $repeaterRestTime, ')
           ..write('repeaterSetRest: $repeaterSetRest, ')
           ..write('repeaterSplitHand: $repeaterSplitHand, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -573,10 +578,10 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
     repeaterRestTime,
     repeaterSetRest,
     repeaterSplitHand,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -596,14 +601,14 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
           other.repeaterRestTime == this.repeaterRestTime &&
           other.repeaterSetRest == this.repeaterSetRest &&
           other.repeaterSplitHand == this.repeaterSplitHand &&
+          other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class SessionsCompanion extends UpdateCompanion<SessionsData> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> name;
   final Value<String> notes;
   final Value<int> date;
@@ -617,10 +622,11 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
   final Value<int?> repeaterRestTime;
   final Value<int?> repeaterSetRest;
   final Value<int?> repeaterSplitHand;
+  final Value<int?> createdAt;
   final Value<int> updatedAt;
   final Value<int?> deletedAt;
   final Value<int> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const SessionsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -636,13 +642,14 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
     this.repeaterRestTime = const Value.absent(),
     this.repeaterSetRest = const Value.absent(),
     this.repeaterSplitHand = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   SessionsCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required String name,
     required String notes,
     this.date = const Value.absent(),
@@ -656,16 +663,17 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
     this.repeaterRestTime = const Value.absent(),
     this.repeaterSetRest = const Value.absent(),
     this.repeaterSplitHand = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    required String remoteId,
-  }) : name = Value(name),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
        notes = Value(notes),
-       dataPath = Value(dataPath),
-       remoteId = Value(remoteId);
+       dataPath = Value(dataPath);
   static Insertable<SessionsData> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? name,
     Expression<String>? notes,
     Expression<int>? date,
@@ -679,10 +687,11 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
     Expression<int>? repeaterRestTime,
     Expression<int>? repeaterSetRest,
     Expression<int>? repeaterSplitHand,
+    Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<int>? deletedAt,
     Expression<int>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -699,15 +708,16 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
       if (repeaterRestTime != null) 'repeater_rest_time': repeaterRestTime,
       if (repeaterSetRest != null) 'repeater_set_rest': repeaterSetRest,
       if (repeaterSplitHand != null) 'repeater_split_hand': repeaterSplitHand,
+      if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   SessionsCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<String>? name,
     Value<String>? notes,
     Value<int>? date,
@@ -721,10 +731,11 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
     Value<int?>? repeaterRestTime,
     Value<int?>? repeaterSetRest,
     Value<int?>? repeaterSplitHand,
+    Value<int?>? createdAt,
     Value<int>? updatedAt,
     Value<int?>? deletedAt,
     Value<int>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return SessionsCompanion(
       id: id ?? this.id,
@@ -741,10 +752,11 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
       repeaterRestTime: repeaterRestTime ?? this.repeaterRestTime,
       repeaterSetRest: repeaterSetRest ?? this.repeaterSetRest,
       repeaterSplitHand: repeaterSplitHand ?? this.repeaterSplitHand,
+      createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -752,7 +764,7 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -793,6 +805,9 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
     if (repeaterSplitHand.present) {
       map['repeater_split_hand'] = Variable<int>(repeaterSplitHand.value);
     }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
@@ -802,8 +817,8 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
     if (dirty.present) {
       map['dirty'] = Variable<int>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -825,10 +840,11 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
           ..write('repeaterRestTime: $repeaterRestTime, ')
           ..write('repeaterSetRest: $repeaterSetRest, ')
           ..write('repeaterSplitHand: $repeaterSplitHand, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -839,14 +855,13 @@ class Assessments extends Table with TableInfo<Assessments, AssessmentsData> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   Assessments(this.attachedDatabase, [this._alias]);
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<int> type = GeneratedColumn<int>(
     'type',
@@ -872,13 +887,13 @@ class Assessments extends Table with TableInfo<Assessments, AssessmentsData> {
     requiredDuringInsert: false,
     $customConstraints: 'NULL',
   );
-  late final GeneratedColumn<int> sessionId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
     'session_id',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL REFERENCES sessions(id)',
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<int> gripPosition = GeneratedColumn<int>(
     'grip_position',
@@ -888,6 +903,14 @@ class Assessments extends Table with TableInfo<Assessments, AssessmentsData> {
     requiredDuringInsert: false,
     $customConstraints: 'NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
+  );
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
   );
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
     'updated_at',
@@ -918,14 +941,6 @@ class Assessments extends Table with TableInfo<Assessments, AssessmentsData> {
     $customConstraints: 'NOT NULL DEFAULT 0 CHECK (dirty IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -934,10 +949,10 @@ class Assessments extends Table with TableInfo<Assessments, AssessmentsData> {
     leftValue,
     sessionId,
     gripPosition,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -951,7 +966,7 @@ class Assessments extends Table with TableInfo<Assessments, AssessmentsData> {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AssessmentsData(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
       type: attachedDatabase.typeMapping.read(
@@ -967,12 +982,16 @@ class Assessments extends Table with TableInfo<Assessments, AssessmentsData> {
         data['${effectivePrefix}left_value'],
       ),
       sessionId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}session_id'],
       )!,
       gripPosition: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}grip_position'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
       ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -986,10 +1005,6 @@ class Assessments extends Table with TableInfo<Assessments, AssessmentsData> {
         DriftSqlType.int,
         data['${effectivePrefix}dirty'],
       )!,
-      remoteId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}remote_id'],
-      )!,
     );
   }
 
@@ -999,20 +1014,25 @@ class Assessments extends Table with TableInfo<Assessments, AssessmentsData> {
   }
 
   @override
+  List<String> get customConstraints => const [
+    'PRIMARY KEY(id)',
+    'FOREIGN KEY(session_id)REFERENCES sessions(id)ON DELETE CASCADE',
+  ];
+  @override
   bool get dontWriteConstraints => true;
 }
 
 class AssessmentsData extends DataClass implements Insertable<AssessmentsData> {
-  final int id;
+  final String id;
   final int type;
   final double? rightValue;
   final double? leftValue;
-  final int sessionId;
+  final String sessionId;
   final int? gripPosition;
+  final int? createdAt;
   final int updatedAt;
   final int? deletedAt;
   final int dirty;
-  final String remoteId;
   const AssessmentsData({
     required this.id,
     required this.type,
@@ -1020,15 +1040,15 @@ class AssessmentsData extends DataClass implements Insertable<AssessmentsData> {
     this.leftValue,
     required this.sessionId,
     this.gripPosition,
+    this.createdAt,
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['type'] = Variable<int>(type);
     if (!nullToAbsent || rightValue != null) {
       map['right_value'] = Variable<double>(rightValue);
@@ -1036,16 +1056,18 @@ class AssessmentsData extends DataClass implements Insertable<AssessmentsData> {
     if (!nullToAbsent || leftValue != null) {
       map['left_value'] = Variable<double>(leftValue);
     }
-    map['session_id'] = Variable<int>(sessionId);
+    map['session_id'] = Variable<String>(sessionId);
     if (!nullToAbsent || gripPosition != null) {
       map['grip_position'] = Variable<int>(gripPosition);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<int>(createdAt);
     }
     map['updated_at'] = Variable<int>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
     }
     map['dirty'] = Variable<int>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -1063,12 +1085,14 @@ class AssessmentsData extends DataClass implements Insertable<AssessmentsData> {
       gripPosition: gripPosition == null && nullToAbsent
           ? const Value.absent()
           : Value(gripPosition),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -1078,46 +1102,46 @@ class AssessmentsData extends DataClass implements Insertable<AssessmentsData> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AssessmentsData(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       type: serializer.fromJson<int>(json['type']),
       rightValue: serializer.fromJson<double?>(json['rightValue']),
       leftValue: serializer.fromJson<double?>(json['leftValue']),
-      sessionId: serializer.fromJson<int>(json['sessionId']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
       gripPosition: serializer.fromJson<int?>(json['gripPosition']),
+      createdAt: serializer.fromJson<int?>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
       dirty: serializer.fromJson<int>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'type': serializer.toJson<int>(type),
       'rightValue': serializer.toJson<double?>(rightValue),
       'leftValue': serializer.toJson<double?>(leftValue),
-      'sessionId': serializer.toJson<int>(sessionId),
+      'sessionId': serializer.toJson<String>(sessionId),
       'gripPosition': serializer.toJson<int?>(gripPosition),
+      'createdAt': serializer.toJson<int?>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
       'dirty': serializer.toJson<int>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   AssessmentsData copyWith({
-    int? id,
+    String? id,
     int? type,
     Value<double?> rightValue = const Value.absent(),
     Value<double?> leftValue = const Value.absent(),
-    int? sessionId,
+    String? sessionId,
     Value<int?> gripPosition = const Value.absent(),
+    Value<int?> createdAt = const Value.absent(),
     int? updatedAt,
     Value<int?> deletedAt = const Value.absent(),
     int? dirty,
-    String? remoteId,
   }) => AssessmentsData(
     id: id ?? this.id,
     type: type ?? this.type,
@@ -1125,10 +1149,10 @@ class AssessmentsData extends DataClass implements Insertable<AssessmentsData> {
     leftValue: leftValue.present ? leftValue.value : this.leftValue,
     sessionId: sessionId ?? this.sessionId,
     gripPosition: gripPosition.present ? gripPosition.value : this.gripPosition,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   AssessmentsData copyWithCompanion(AssessmentsCompanion data) {
     return AssessmentsData(
@@ -1142,10 +1166,10 @@ class AssessmentsData extends DataClass implements Insertable<AssessmentsData> {
       gripPosition: data.gripPosition.present
           ? data.gripPosition.value
           : this.gripPosition,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -1158,10 +1182,10 @@ class AssessmentsData extends DataClass implements Insertable<AssessmentsData> {
           ..write('leftValue: $leftValue, ')
           ..write('sessionId: $sessionId, ')
           ..write('gripPosition: $gripPosition, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -1174,10 +1198,10 @@ class AssessmentsData extends DataClass implements Insertable<AssessmentsData> {
     leftValue,
     sessionId,
     gripPosition,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -1189,23 +1213,24 @@ class AssessmentsData extends DataClass implements Insertable<AssessmentsData> {
           other.leftValue == this.leftValue &&
           other.sessionId == this.sessionId &&
           other.gripPosition == this.gripPosition &&
+          other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class AssessmentsCompanion extends UpdateCompanion<AssessmentsData> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<int> type;
   final Value<double?> rightValue;
   final Value<double?> leftValue;
-  final Value<int> sessionId;
+  final Value<String> sessionId;
   final Value<int?> gripPosition;
+  final Value<int?> createdAt;
   final Value<int> updatedAt;
   final Value<int?> deletedAt;
   final Value<int> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const AssessmentsCompanion({
     this.id = const Value.absent(),
     this.type = const Value.absent(),
@@ -1213,36 +1238,39 @@ class AssessmentsCompanion extends UpdateCompanion<AssessmentsData> {
     this.leftValue = const Value.absent(),
     this.sessionId = const Value.absent(),
     this.gripPosition = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   AssessmentsCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required int type,
     this.rightValue = const Value.absent(),
     this.leftValue = const Value.absent(),
-    required int sessionId,
+    required String sessionId,
     this.gripPosition = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    required String remoteId,
-  }) : type = Value(type),
-       sessionId = Value(sessionId),
-       remoteId = Value(remoteId);
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       type = Value(type),
+       sessionId = Value(sessionId);
   static Insertable<AssessmentsData> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<int>? type,
     Expression<double>? rightValue,
     Expression<double>? leftValue,
-    Expression<int>? sessionId,
+    Expression<String>? sessionId,
     Expression<int>? gripPosition,
+    Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<int>? deletedAt,
     Expression<int>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1251,24 +1279,26 @@ class AssessmentsCompanion extends UpdateCompanion<AssessmentsData> {
       if (leftValue != null) 'left_value': leftValue,
       if (sessionId != null) 'session_id': sessionId,
       if (gripPosition != null) 'grip_position': gripPosition,
+      if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   AssessmentsCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<int>? type,
     Value<double?>? rightValue,
     Value<double?>? leftValue,
-    Value<int>? sessionId,
+    Value<String>? sessionId,
     Value<int?>? gripPosition,
+    Value<int?>? createdAt,
     Value<int>? updatedAt,
     Value<int?>? deletedAt,
     Value<int>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return AssessmentsCompanion(
       id: id ?? this.id,
@@ -1277,10 +1307,11 @@ class AssessmentsCompanion extends UpdateCompanion<AssessmentsData> {
       leftValue: leftValue ?? this.leftValue,
       sessionId: sessionId ?? this.sessionId,
       gripPosition: gripPosition ?? this.gripPosition,
+      createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1288,7 +1319,7 @@ class AssessmentsCompanion extends UpdateCompanion<AssessmentsData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (type.present) {
       map['type'] = Variable<int>(type.value);
@@ -1300,10 +1331,13 @@ class AssessmentsCompanion extends UpdateCompanion<AssessmentsData> {
       map['left_value'] = Variable<double>(leftValue.value);
     }
     if (sessionId.present) {
-      map['session_id'] = Variable<int>(sessionId.value);
+      map['session_id'] = Variable<String>(sessionId.value);
     }
     if (gripPosition.present) {
       map['grip_position'] = Variable<int>(gripPosition.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
@@ -1314,8 +1348,8 @@ class AssessmentsCompanion extends UpdateCompanion<AssessmentsData> {
     if (dirty.present) {
       map['dirty'] = Variable<int>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -1329,10 +1363,11 @@ class AssessmentsCompanion extends UpdateCompanion<AssessmentsData> {
           ..write('leftValue: $leftValue, ')
           ..write('sessionId: $sessionId, ')
           ..write('gripPosition: $gripPosition, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1343,14 +1378,13 @@ class Repeaters extends Table with TableInfo<Repeaters, RepeatersData> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   Repeaters(this.attachedDatabase, [this._alias]);
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<int> sets = GeneratedColumn<int>(
     'sets',
@@ -1426,6 +1460,14 @@ class Repeaters extends Table with TableInfo<Repeaters, RepeatersData> {
     $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
   );
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
     'updated_at',
     aliasedName,
@@ -1455,14 +1497,6 @@ class Repeaters extends Table with TableInfo<Repeaters, RepeatersData> {
     $customConstraints: 'NOT NULL DEFAULT 0 CHECK (dirty IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1475,10 +1509,10 @@ class Repeaters extends Table with TableInfo<Repeaters, RepeatersData> {
     targetWeigthLeft,
     splitHand,
     gripPosition,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1492,7 +1526,7 @@ class Repeaters extends Table with TableInfo<Repeaters, RepeatersData> {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return RepeatersData(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
       sets: attachedDatabase.typeMapping.read(
@@ -1531,6 +1565,10 @@ class Repeaters extends Table with TableInfo<Repeaters, RepeatersData> {
         DriftSqlType.int,
         data['${effectivePrefix}grip_position'],
       )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
@@ -1543,10 +1581,6 @@ class Repeaters extends Table with TableInfo<Repeaters, RepeatersData> {
         DriftSqlType.int,
         data['${effectivePrefix}dirty'],
       )!,
-      remoteId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}remote_id'],
-      )!,
     );
   }
 
@@ -1556,11 +1590,13 @@ class Repeaters extends Table with TableInfo<Repeaters, RepeatersData> {
   }
 
   @override
+  List<String> get customConstraints => const ['PRIMARY KEY(id)'];
+  @override
   bool get dontWriteConstraints => true;
 }
 
 class RepeatersData extends DataClass implements Insertable<RepeatersData> {
-  final int id;
+  final String id;
   final int sets;
   final int reps;
   final int worktime;
@@ -1570,10 +1606,10 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
   final double? targetWeigthLeft;
   final int splitHand;
   final int gripPosition;
+  final int? createdAt;
   final int updatedAt;
   final int? deletedAt;
   final int dirty;
-  final String remoteId;
   const RepeatersData({
     required this.id,
     required this.sets,
@@ -1585,15 +1621,15 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
     this.targetWeigthLeft,
     required this.splitHand,
     required this.gripPosition,
+    this.createdAt,
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['sets'] = Variable<int>(sets);
     map['reps'] = Variable<int>(reps);
     map['worktime'] = Variable<int>(worktime);
@@ -1607,12 +1643,14 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
     }
     map['split_hand'] = Variable<int>(splitHand);
     map['grip_position'] = Variable<int>(gripPosition);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<int>(createdAt);
+    }
     map['updated_at'] = Variable<int>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
     }
     map['dirty'] = Variable<int>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -1632,12 +1670,14 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
           : Value(targetWeigthLeft),
       splitHand: Value(splitHand),
       gripPosition: Value(gripPosition),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -1647,7 +1687,7 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RepeatersData(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       sets: serializer.fromJson<int>(json['sets']),
       reps: serializer.fromJson<int>(json['reps']),
       worktime: serializer.fromJson<int>(json['worktime']),
@@ -1659,17 +1699,17 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
       targetWeigthLeft: serializer.fromJson<double?>(json['targetWeigthLeft']),
       splitHand: serializer.fromJson<int>(json['splitHand']),
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
+      createdAt: serializer.fromJson<int?>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
       dirty: serializer.fromJson<int>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'sets': serializer.toJson<int>(sets),
       'reps': serializer.toJson<int>(reps),
       'worktime': serializer.toJson<int>(worktime),
@@ -1679,15 +1719,15 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
       'targetWeigthLeft': serializer.toJson<double?>(targetWeigthLeft),
       'splitHand': serializer.toJson<int>(splitHand),
       'gripPosition': serializer.toJson<int>(gripPosition),
+      'createdAt': serializer.toJson<int?>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
       'dirty': serializer.toJson<int>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   RepeatersData copyWith({
-    int? id,
+    String? id,
     int? sets,
     int? reps,
     int? worktime,
@@ -1697,10 +1737,10 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
     Value<double?> targetWeigthLeft = const Value.absent(),
     int? splitHand,
     int? gripPosition,
+    Value<int?> createdAt = const Value.absent(),
     int? updatedAt,
     Value<int?> deletedAt = const Value.absent(),
     int? dirty,
-    String? remoteId,
   }) => RepeatersData(
     id: id ?? this.id,
     sets: sets ?? this.sets,
@@ -1716,10 +1756,10 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
         : this.targetWeigthLeft,
     splitHand: splitHand ?? this.splitHand,
     gripPosition: gripPosition ?? this.gripPosition,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   RepeatersData copyWithCompanion(RepeatersCompanion data) {
     return RepeatersData(
@@ -1739,10 +1779,10 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
       gripPosition: data.gripPosition.present
           ? data.gripPosition.value
           : this.gripPosition,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -1759,10 +1799,10 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
           ..write('targetWeigthLeft: $targetWeigthLeft, ')
           ..write('splitHand: $splitHand, ')
           ..write('gripPosition: $gripPosition, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -1779,10 +1819,10 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
     targetWeigthLeft,
     splitHand,
     gripPosition,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -1798,14 +1838,14 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
           other.targetWeigthLeft == this.targetWeigthLeft &&
           other.splitHand == this.splitHand &&
           other.gripPosition == this.gripPosition &&
+          other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class RepeatersCompanion extends UpdateCompanion<RepeatersData> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<int> sets;
   final Value<int> reps;
   final Value<int> worktime;
@@ -1815,10 +1855,11 @@ class RepeatersCompanion extends UpdateCompanion<RepeatersData> {
   final Value<double?> targetWeigthLeft;
   final Value<int> splitHand;
   final Value<int> gripPosition;
+  final Value<int?> createdAt;
   final Value<int> updatedAt;
   final Value<int?> deletedAt;
   final Value<int> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const RepeatersCompanion({
     this.id = const Value.absent(),
     this.sets = const Value.absent(),
@@ -1830,13 +1871,14 @@ class RepeatersCompanion extends UpdateCompanion<RepeatersData> {
     this.targetWeigthLeft = const Value.absent(),
     this.splitHand = const Value.absent(),
     this.gripPosition = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   RepeatersCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required int sets,
     required int reps,
     required int worktime,
@@ -1846,19 +1888,20 @@ class RepeatersCompanion extends UpdateCompanion<RepeatersData> {
     this.targetWeigthLeft = const Value.absent(),
     required int splitHand,
     this.gripPosition = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    required String remoteId,
-  }) : sets = Value(sets),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       sets = Value(sets),
        reps = Value(reps),
        worktime = Value(worktime),
        resttime = Value(resttime),
        setRest = Value(setRest),
-       splitHand = Value(splitHand),
-       remoteId = Value(remoteId);
+       splitHand = Value(splitHand);
   static Insertable<RepeatersData> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<int>? sets,
     Expression<int>? reps,
     Expression<int>? worktime,
@@ -1868,10 +1911,11 @@ class RepeatersCompanion extends UpdateCompanion<RepeatersData> {
     Expression<double>? targetWeigthLeft,
     Expression<int>? splitHand,
     Expression<int>? gripPosition,
+    Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<int>? deletedAt,
     Expression<int>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1884,15 +1928,16 @@ class RepeatersCompanion extends UpdateCompanion<RepeatersData> {
       if (targetWeigthLeft != null) 'target_weigth_left': targetWeigthLeft,
       if (splitHand != null) 'split_hand': splitHand,
       if (gripPosition != null) 'grip_position': gripPosition,
+      if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   RepeatersCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<int>? sets,
     Value<int>? reps,
     Value<int>? worktime,
@@ -1902,10 +1947,11 @@ class RepeatersCompanion extends UpdateCompanion<RepeatersData> {
     Value<double?>? targetWeigthLeft,
     Value<int>? splitHand,
     Value<int>? gripPosition,
+    Value<int?>? createdAt,
     Value<int>? updatedAt,
     Value<int?>? deletedAt,
     Value<int>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return RepeatersCompanion(
       id: id ?? this.id,
@@ -1918,10 +1964,11 @@ class RepeatersCompanion extends UpdateCompanion<RepeatersData> {
       targetWeigthLeft: targetWeigthLeft ?? this.targetWeigthLeft,
       splitHand: splitHand ?? this.splitHand,
       gripPosition: gripPosition ?? this.gripPosition,
+      createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1929,7 +1976,7 @@ class RepeatersCompanion extends UpdateCompanion<RepeatersData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (sets.present) {
       map['sets'] = Variable<int>(sets.value);
@@ -1958,6 +2005,9 @@ class RepeatersCompanion extends UpdateCompanion<RepeatersData> {
     if (gripPosition.present) {
       map['grip_position'] = Variable<int>(gripPosition.value);
     }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
@@ -1967,8 +2017,8 @@ class RepeatersCompanion extends UpdateCompanion<RepeatersData> {
     if (dirty.present) {
       map['dirty'] = Variable<int>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -1986,10 +2036,11 @@ class RepeatersCompanion extends UpdateCompanion<RepeatersData> {
           ..write('targetWeigthLeft: $targetWeigthLeft, ')
           ..write('splitHand: $splitHand, ')
           ..write('gripPosition: $gripPosition, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -2000,14 +2051,13 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   Trainings(this.attachedDatabase, [this._alias]);
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
     'name',
@@ -2017,13 +2067,13 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  late final GeneratedColumn<int> repeaterId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> repeaterId = GeneratedColumn<String>(
     'repeater_id',
     aliasedName,
     true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    $customConstraints: 'NULL REFERENCES repeaters(id)ON DELETE CASCADE',
+    $customConstraints: 'NULL',
   );
   late final GeneratedColumn<int> isBuiltin = GeneratedColumn<int>(
     'is_builtin',
@@ -2052,6 +2102,14 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
     $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_assessment IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
     'updated_at',
     aliasedName,
@@ -2081,14 +2139,6 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
     $customConstraints: 'NOT NULL DEFAULT 0 CHECK (dirty IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2097,10 +2147,10 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
     isBuiltin,
     isFavorite,
     isAssessment,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2114,7 +2164,7 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return TrainingsData(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
       name: attachedDatabase.typeMapping.read(
@@ -2122,7 +2172,7 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
         data['${effectivePrefix}name'],
       )!,
       repeaterId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}repeater_id'],
       ),
       isBuiltin: attachedDatabase.typeMapping.read(
@@ -2137,6 +2187,10 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
         DriftSqlType.int,
         data['${effectivePrefix}is_assessment'],
       )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
@@ -2149,10 +2203,6 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
         DriftSqlType.int,
         data['${effectivePrefix}dirty'],
       )!,
-      remoteId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}remote_id'],
-      )!,
     );
   }
 
@@ -2162,20 +2212,25 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
   }
 
   @override
+  List<String> get customConstraints => const [
+    'PRIMARY KEY(id)',
+    'FOREIGN KEY(repeater_id)REFERENCES repeaters(id)ON DELETE CASCADE',
+  ];
+  @override
   bool get dontWriteConstraints => true;
 }
 
 class TrainingsData extends DataClass implements Insertable<TrainingsData> {
-  final int id;
+  final String id;
   final String name;
-  final int? repeaterId;
+  final String? repeaterId;
   final int isBuiltin;
   final int isFavorite;
   final int isAssessment;
+  final int? createdAt;
   final int updatedAt;
   final int? deletedAt;
   final int dirty;
-  final String remoteId;
   const TrainingsData({
     required this.id,
     required this.name,
@@ -2183,28 +2238,30 @@ class TrainingsData extends DataClass implements Insertable<TrainingsData> {
     required this.isBuiltin,
     required this.isFavorite,
     required this.isAssessment,
+    this.createdAt,
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || repeaterId != null) {
-      map['repeater_id'] = Variable<int>(repeaterId);
+      map['repeater_id'] = Variable<String>(repeaterId);
     }
     map['is_builtin'] = Variable<int>(isBuiltin);
     map['is_favorite'] = Variable<int>(isFavorite);
     map['is_assessment'] = Variable<int>(isAssessment);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<int>(createdAt);
+    }
     map['updated_at'] = Variable<int>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
     }
     map['dirty'] = Variable<int>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -2218,12 +2275,14 @@ class TrainingsData extends DataClass implements Insertable<TrainingsData> {
       isBuiltin: Value(isBuiltin),
       isFavorite: Value(isFavorite),
       isAssessment: Value(isAssessment),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -2233,46 +2292,46 @@ class TrainingsData extends DataClass implements Insertable<TrainingsData> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return TrainingsData(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
-      repeaterId: serializer.fromJson<int?>(json['repeaterId']),
+      repeaterId: serializer.fromJson<String?>(json['repeaterId']),
       isBuiltin: serializer.fromJson<int>(json['isBuiltin']),
       isFavorite: serializer.fromJson<int>(json['isFavorite']),
       isAssessment: serializer.fromJson<int>(json['isAssessment']),
+      createdAt: serializer.fromJson<int?>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
       dirty: serializer.fromJson<int>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
-      'repeaterId': serializer.toJson<int?>(repeaterId),
+      'repeaterId': serializer.toJson<String?>(repeaterId),
       'isBuiltin': serializer.toJson<int>(isBuiltin),
       'isFavorite': serializer.toJson<int>(isFavorite),
       'isAssessment': serializer.toJson<int>(isAssessment),
+      'createdAt': serializer.toJson<int?>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
       'dirty': serializer.toJson<int>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   TrainingsData copyWith({
-    int? id,
+    String? id,
     String? name,
-    Value<int?> repeaterId = const Value.absent(),
+    Value<String?> repeaterId = const Value.absent(),
     int? isBuiltin,
     int? isFavorite,
     int? isAssessment,
+    Value<int?> createdAt = const Value.absent(),
     int? updatedAt,
     Value<int?> deletedAt = const Value.absent(),
     int? dirty,
-    String? remoteId,
   }) => TrainingsData(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -2280,10 +2339,10 @@ class TrainingsData extends DataClass implements Insertable<TrainingsData> {
     isBuiltin: isBuiltin ?? this.isBuiltin,
     isFavorite: isFavorite ?? this.isFavorite,
     isAssessment: isAssessment ?? this.isAssessment,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   TrainingsData copyWithCompanion(TrainingsCompanion data) {
     return TrainingsData(
@@ -2299,10 +2358,10 @@ class TrainingsData extends DataClass implements Insertable<TrainingsData> {
       isAssessment: data.isAssessment.present
           ? data.isAssessment.value
           : this.isAssessment,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -2315,10 +2374,10 @@ class TrainingsData extends DataClass implements Insertable<TrainingsData> {
           ..write('isBuiltin: $isBuiltin, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('isAssessment: $isAssessment, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -2331,10 +2390,10 @@ class TrainingsData extends DataClass implements Insertable<TrainingsData> {
     isBuiltin,
     isFavorite,
     isAssessment,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -2346,23 +2405,24 @@ class TrainingsData extends DataClass implements Insertable<TrainingsData> {
           other.isBuiltin == this.isBuiltin &&
           other.isFavorite == this.isFavorite &&
           other.isAssessment == this.isAssessment &&
+          other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class TrainingsCompanion extends UpdateCompanion<TrainingsData> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> name;
-  final Value<int?> repeaterId;
+  final Value<String?> repeaterId;
   final Value<int> isBuiltin;
   final Value<int> isFavorite;
   final Value<int> isAssessment;
+  final Value<int?> createdAt;
   final Value<int> updatedAt;
   final Value<int?> deletedAt;
   final Value<int> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const TrainingsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -2370,35 +2430,38 @@ class TrainingsCompanion extends UpdateCompanion<TrainingsData> {
     this.isBuiltin = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.isAssessment = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   TrainingsCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required String name,
     this.repeaterId = const Value.absent(),
     this.isBuiltin = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.isAssessment = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    required String remoteId,
-  }) : name = Value(name),
-       remoteId = Value(remoteId);
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name);
   static Insertable<TrainingsData> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? name,
-    Expression<int>? repeaterId,
+    Expression<String>? repeaterId,
     Expression<int>? isBuiltin,
     Expression<int>? isFavorite,
     Expression<int>? isAssessment,
+    Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<int>? deletedAt,
     Expression<int>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2407,24 +2470,26 @@ class TrainingsCompanion extends UpdateCompanion<TrainingsData> {
       if (isBuiltin != null) 'is_builtin': isBuiltin,
       if (isFavorite != null) 'is_favorite': isFavorite,
       if (isAssessment != null) 'is_assessment': isAssessment,
+      if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   TrainingsCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<String>? name,
-    Value<int?>? repeaterId,
+    Value<String?>? repeaterId,
     Value<int>? isBuiltin,
     Value<int>? isFavorite,
     Value<int>? isAssessment,
+    Value<int?>? createdAt,
     Value<int>? updatedAt,
     Value<int?>? deletedAt,
     Value<int>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return TrainingsCompanion(
       id: id ?? this.id,
@@ -2433,10 +2498,11 @@ class TrainingsCompanion extends UpdateCompanion<TrainingsData> {
       isBuiltin: isBuiltin ?? this.isBuiltin,
       isFavorite: isFavorite ?? this.isFavorite,
       isAssessment: isAssessment ?? this.isAssessment,
+      createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -2444,13 +2510,13 @@ class TrainingsCompanion extends UpdateCompanion<TrainingsData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
     if (repeaterId.present) {
-      map['repeater_id'] = Variable<int>(repeaterId.value);
+      map['repeater_id'] = Variable<String>(repeaterId.value);
     }
     if (isBuiltin.present) {
       map['is_builtin'] = Variable<int>(isBuiltin.value);
@@ -2461,6 +2527,9 @@ class TrainingsCompanion extends UpdateCompanion<TrainingsData> {
     if (isAssessment.present) {
       map['is_assessment'] = Variable<int>(isAssessment.value);
     }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
@@ -2470,8 +2539,8 @@ class TrainingsCompanion extends UpdateCompanion<TrainingsData> {
     if (dirty.present) {
       map['dirty'] = Variable<int>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -2485,10 +2554,11 @@ class TrainingsCompanion extends UpdateCompanion<TrainingsData> {
           ..write('isBuiltin: $isBuiltin, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('isAssessment: $isAssessment, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -2500,14 +2570,13 @@ class RepTemplates extends Table
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   RepTemplates(this.attachedDatabase, [this._alias]);
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<int> isRest = GeneratedColumn<int>(
     'is_rest',
@@ -2533,13 +2602,13 @@ class RepTemplates extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  late final GeneratedColumn<int> trainingId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> trainingId = GeneratedColumn<String>(
     'training_id',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL REFERENCES trainings(id)ON DELETE CASCADE',
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<double> targetWeight = GeneratedColumn<double>(
     'target_weight',
@@ -2566,6 +2635,14 @@ class RepTemplates extends Table
     $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
   );
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
     'updated_at',
     aliasedName,
@@ -2595,14 +2672,6 @@ class RepTemplates extends Table
     $customConstraints: 'NOT NULL DEFAULT 0 CHECK (dirty IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2613,10 +2682,10 @@ class RepTemplates extends Table
     targetWeight,
     index,
     gripPosition,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2630,7 +2699,7 @@ class RepTemplates extends Table
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return RepTemplatesData(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
       isRest: attachedDatabase.typeMapping.read(
@@ -2646,7 +2715,7 @@ class RepTemplates extends Table
         data['${effectivePrefix}duration'],
       )!,
       trainingId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}training_id'],
       )!,
       targetWeight: attachedDatabase.typeMapping.read(
@@ -2661,6 +2730,10 @@ class RepTemplates extends Table
         DriftSqlType.int,
         data['${effectivePrefix}grip_position'],
       )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
@@ -2673,10 +2746,6 @@ class RepTemplates extends Table
         DriftSqlType.int,
         data['${effectivePrefix}dirty'],
       )!,
-      remoteId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}remote_id'],
-      )!,
     );
   }
 
@@ -2686,23 +2755,28 @@ class RepTemplates extends Table
   }
 
   @override
+  List<String> get customConstraints => const [
+    'PRIMARY KEY(id)',
+    'FOREIGN KEY(training_id)REFERENCES trainings(id)ON DELETE CASCADE',
+  ];
+  @override
   bool get dontWriteConstraints => true;
 }
 
 class RepTemplatesData extends DataClass
     implements Insertable<RepTemplatesData> {
-  final int id;
+  final String id;
   final int isRest;
   final int rightHand;
   final int duration;
-  final int trainingId;
+  final String trainingId;
   final double targetWeight;
   final int index;
   final int gripPosition;
+  final int? createdAt;
   final int updatedAt;
   final int? deletedAt;
   final int dirty;
-  final String remoteId;
   const RepTemplatesData({
     required this.id,
     required this.isRest,
@@ -2712,28 +2786,30 @@ class RepTemplatesData extends DataClass
     required this.targetWeight,
     required this.index,
     required this.gripPosition,
+    this.createdAt,
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['is_rest'] = Variable<int>(isRest);
     map['right_hand'] = Variable<int>(rightHand);
     map['duration'] = Variable<int>(duration);
-    map['training_id'] = Variable<int>(trainingId);
+    map['training_id'] = Variable<String>(trainingId);
     map['target_weight'] = Variable<double>(targetWeight);
     map['index'] = Variable<int>(index);
     map['grip_position'] = Variable<int>(gripPosition);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<int>(createdAt);
+    }
     map['updated_at'] = Variable<int>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
     }
     map['dirty'] = Variable<int>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -2747,12 +2823,14 @@ class RepTemplatesData extends DataClass
       targetWeight: Value(targetWeight),
       index: Value(index),
       gripPosition: Value(gripPosition),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -2762,52 +2840,52 @@ class RepTemplatesData extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RepTemplatesData(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       isRest: serializer.fromJson<int>(json['isRest']),
       rightHand: serializer.fromJson<int>(json['rightHand']),
       duration: serializer.fromJson<int>(json['duration']),
-      trainingId: serializer.fromJson<int>(json['trainingId']),
+      trainingId: serializer.fromJson<String>(json['trainingId']),
       targetWeight: serializer.fromJson<double>(json['targetWeight']),
       index: serializer.fromJson<int>(json['index']),
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
+      createdAt: serializer.fromJson<int?>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
       dirty: serializer.fromJson<int>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'isRest': serializer.toJson<int>(isRest),
       'rightHand': serializer.toJson<int>(rightHand),
       'duration': serializer.toJson<int>(duration),
-      'trainingId': serializer.toJson<int>(trainingId),
+      'trainingId': serializer.toJson<String>(trainingId),
       'targetWeight': serializer.toJson<double>(targetWeight),
       'index': serializer.toJson<int>(index),
       'gripPosition': serializer.toJson<int>(gripPosition),
+      'createdAt': serializer.toJson<int?>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
       'dirty': serializer.toJson<int>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   RepTemplatesData copyWith({
-    int? id,
+    String? id,
     int? isRest,
     int? rightHand,
     int? duration,
-    int? trainingId,
+    String? trainingId,
     double? targetWeight,
     int? index,
     int? gripPosition,
+    Value<int?> createdAt = const Value.absent(),
     int? updatedAt,
     Value<int?> deletedAt = const Value.absent(),
     int? dirty,
-    String? remoteId,
   }) => RepTemplatesData(
     id: id ?? this.id,
     isRest: isRest ?? this.isRest,
@@ -2817,10 +2895,10 @@ class RepTemplatesData extends DataClass
     targetWeight: targetWeight ?? this.targetWeight,
     index: index ?? this.index,
     gripPosition: gripPosition ?? this.gripPosition,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   RepTemplatesData copyWithCompanion(RepTemplatesCompanion data) {
     return RepTemplatesData(
@@ -2838,10 +2916,10 @@ class RepTemplatesData extends DataClass
       gripPosition: data.gripPosition.present
           ? data.gripPosition.value
           : this.gripPosition,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -2856,10 +2934,10 @@ class RepTemplatesData extends DataClass
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
           ..write('gripPosition: $gripPosition, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -2874,10 +2952,10 @@ class RepTemplatesData extends DataClass
     targetWeight,
     index,
     gripPosition,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -2891,25 +2969,26 @@ class RepTemplatesData extends DataClass
           other.targetWeight == this.targetWeight &&
           other.index == this.index &&
           other.gripPosition == this.gripPosition &&
+          other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class RepTemplatesCompanion extends UpdateCompanion<RepTemplatesData> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<int> isRest;
   final Value<int> rightHand;
   final Value<int> duration;
-  final Value<int> trainingId;
+  final Value<String> trainingId;
   final Value<double> targetWeight;
   final Value<int> index;
   final Value<int> gripPosition;
+  final Value<int?> createdAt;
   final Value<int> updatedAt;
   final Value<int?> deletedAt;
   final Value<int> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const RepTemplatesCompanion({
     this.id = const Value.absent(),
     this.isRest = const Value.absent(),
@@ -2919,44 +2998,47 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplatesData> {
     this.targetWeight = const Value.absent(),
     this.index = const Value.absent(),
     this.gripPosition = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   RepTemplatesCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required int isRest,
     required int rightHand,
     required int duration,
-    required int trainingId,
+    required String trainingId,
     required double targetWeight,
     required int index,
     this.gripPosition = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    required String remoteId,
-  }) : isRest = Value(isRest),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       isRest = Value(isRest),
        rightHand = Value(rightHand),
        duration = Value(duration),
        trainingId = Value(trainingId),
        targetWeight = Value(targetWeight),
-       index = Value(index),
-       remoteId = Value(remoteId);
+       index = Value(index);
   static Insertable<RepTemplatesData> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<int>? isRest,
     Expression<int>? rightHand,
     Expression<int>? duration,
-    Expression<int>? trainingId,
+    Expression<String>? trainingId,
     Expression<double>? targetWeight,
     Expression<int>? index,
     Expression<int>? gripPosition,
+    Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<int>? deletedAt,
     Expression<int>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2967,26 +3049,28 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplatesData> {
       if (targetWeight != null) 'target_weight': targetWeight,
       if (index != null) 'index': index,
       if (gripPosition != null) 'grip_position': gripPosition,
+      if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   RepTemplatesCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<int>? isRest,
     Value<int>? rightHand,
     Value<int>? duration,
-    Value<int>? trainingId,
+    Value<String>? trainingId,
     Value<double>? targetWeight,
     Value<int>? index,
     Value<int>? gripPosition,
+    Value<int?>? createdAt,
     Value<int>? updatedAt,
     Value<int?>? deletedAt,
     Value<int>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return RepTemplatesCompanion(
       id: id ?? this.id,
@@ -2997,10 +3081,11 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplatesData> {
       targetWeight: targetWeight ?? this.targetWeight,
       index: index ?? this.index,
       gripPosition: gripPosition ?? this.gripPosition,
+      createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -3008,7 +3093,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplatesData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (isRest.present) {
       map['is_rest'] = Variable<int>(isRest.value);
@@ -3020,7 +3105,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplatesData> {
       map['duration'] = Variable<int>(duration.value);
     }
     if (trainingId.present) {
-      map['training_id'] = Variable<int>(trainingId.value);
+      map['training_id'] = Variable<String>(trainingId.value);
     }
     if (targetWeight.present) {
       map['target_weight'] = Variable<double>(targetWeight.value);
@@ -3031,6 +3116,9 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplatesData> {
     if (gripPosition.present) {
       map['grip_position'] = Variable<int>(gripPosition.value);
     }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
@@ -3040,8 +3128,8 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplatesData> {
     if (dirty.present) {
       map['dirty'] = Variable<int>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -3057,10 +3145,11 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplatesData> {
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
           ..write('gripPosition: $gripPosition, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -3071,14 +3160,13 @@ class RepDatas extends Table with TableInfo<RepDatas, RepDatasData> {
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   RepDatas(this.attachedDatabase, [this._alias]);
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<double> averageWeight = GeneratedColumn<double>(
     'average_weight',
@@ -3088,13 +3176,13 @@ class RepDatas extends Table with TableInfo<RepDatas, RepDatasData> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  late final GeneratedColumn<int> sessionId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
     'session_id',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL REFERENCES sessions(id)',
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<int> isRest = GeneratedColumn<int>(
     'is_rest',
@@ -3145,6 +3233,14 @@ class RepDatas extends Table with TableInfo<RepDatas, RepDatasData> {
     $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
   );
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
     'updated_at',
     aliasedName,
@@ -3174,14 +3270,6 @@ class RepDatas extends Table with TableInfo<RepDatas, RepDatasData> {
     $customConstraints: 'NOT NULL DEFAULT 0 CHECK (dirty IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3193,10 +3281,10 @@ class RepDatas extends Table with TableInfo<RepDatas, RepDatasData> {
     targetWeight,
     index,
     gripPosition,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3210,7 +3298,7 @@ class RepDatas extends Table with TableInfo<RepDatas, RepDatasData> {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return RepDatasData(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
       averageWeight: attachedDatabase.typeMapping.read(
@@ -3218,7 +3306,7 @@ class RepDatas extends Table with TableInfo<RepDatas, RepDatasData> {
         data['${effectivePrefix}average_weight'],
       )!,
       sessionId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}session_id'],
       )!,
       isRest: attachedDatabase.typeMapping.read(
@@ -3245,6 +3333,10 @@ class RepDatas extends Table with TableInfo<RepDatas, RepDatasData> {
         DriftSqlType.int,
         data['${effectivePrefix}grip_position'],
       )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
@@ -3257,10 +3349,6 @@ class RepDatas extends Table with TableInfo<RepDatas, RepDatasData> {
         DriftSqlType.int,
         data['${effectivePrefix}dirty'],
       )!,
-      remoteId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}remote_id'],
-      )!,
     );
   }
 
@@ -3270,23 +3358,28 @@ class RepDatas extends Table with TableInfo<RepDatas, RepDatasData> {
   }
 
   @override
+  List<String> get customConstraints => const [
+    'PRIMARY KEY(id)',
+    'FOREIGN KEY(session_id)REFERENCES sessions(id)ON DELETE CASCADE',
+  ];
+  @override
   bool get dontWriteConstraints => true;
 }
 
 class RepDatasData extends DataClass implements Insertable<RepDatasData> {
-  final int id;
+  final String id;
   final double averageWeight;
-  final int sessionId;
+  final String sessionId;
   final int isRest;
   final int rightHand;
   final int duration;
   final double targetWeight;
   final int index;
   final int gripPosition;
+  final int? createdAt;
   final int updatedAt;
   final int? deletedAt;
   final int dirty;
-  final String remoteId;
   const RepDatasData({
     required this.id,
     required this.averageWeight,
@@ -3297,29 +3390,31 @@ class RepDatasData extends DataClass implements Insertable<RepDatasData> {
     required this.targetWeight,
     required this.index,
     required this.gripPosition,
+    this.createdAt,
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['average_weight'] = Variable<double>(averageWeight);
-    map['session_id'] = Variable<int>(sessionId);
+    map['session_id'] = Variable<String>(sessionId);
     map['is_rest'] = Variable<int>(isRest);
     map['right_hand'] = Variable<int>(rightHand);
     map['duration'] = Variable<int>(duration);
     map['target_weight'] = Variable<double>(targetWeight);
     map['index'] = Variable<int>(index);
     map['grip_position'] = Variable<int>(gripPosition);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<int>(createdAt);
+    }
     map['updated_at'] = Variable<int>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
     }
     map['dirty'] = Variable<int>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -3334,12 +3429,14 @@ class RepDatasData extends DataClass implements Insertable<RepDatasData> {
       targetWeight: Value(targetWeight),
       index: Value(index),
       gripPosition: Value(gripPosition),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -3349,55 +3446,55 @@ class RepDatasData extends DataClass implements Insertable<RepDatasData> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RepDatasData(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       averageWeight: serializer.fromJson<double>(json['averageWeight']),
-      sessionId: serializer.fromJson<int>(json['sessionId']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
       isRest: serializer.fromJson<int>(json['isRest']),
       rightHand: serializer.fromJson<int>(json['rightHand']),
       duration: serializer.fromJson<int>(json['duration']),
       targetWeight: serializer.fromJson<double>(json['targetWeight']),
       index: serializer.fromJson<int>(json['index']),
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
+      createdAt: serializer.fromJson<int?>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
       dirty: serializer.fromJson<int>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'averageWeight': serializer.toJson<double>(averageWeight),
-      'sessionId': serializer.toJson<int>(sessionId),
+      'sessionId': serializer.toJson<String>(sessionId),
       'isRest': serializer.toJson<int>(isRest),
       'rightHand': serializer.toJson<int>(rightHand),
       'duration': serializer.toJson<int>(duration),
       'targetWeight': serializer.toJson<double>(targetWeight),
       'index': serializer.toJson<int>(index),
       'gripPosition': serializer.toJson<int>(gripPosition),
+      'createdAt': serializer.toJson<int?>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
       'dirty': serializer.toJson<int>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   RepDatasData copyWith({
-    int? id,
+    String? id,
     double? averageWeight,
-    int? sessionId,
+    String? sessionId,
     int? isRest,
     int? rightHand,
     int? duration,
     double? targetWeight,
     int? index,
     int? gripPosition,
+    Value<int?> createdAt = const Value.absent(),
     int? updatedAt,
     Value<int?> deletedAt = const Value.absent(),
     int? dirty,
-    String? remoteId,
   }) => RepDatasData(
     id: id ?? this.id,
     averageWeight: averageWeight ?? this.averageWeight,
@@ -3408,10 +3505,10 @@ class RepDatasData extends DataClass implements Insertable<RepDatasData> {
     targetWeight: targetWeight ?? this.targetWeight,
     index: index ?? this.index,
     gripPosition: gripPosition ?? this.gripPosition,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   RepDatasData copyWithCompanion(RepDatasCompanion data) {
     return RepDatasData(
@@ -3430,10 +3527,10 @@ class RepDatasData extends DataClass implements Insertable<RepDatasData> {
       gripPosition: data.gripPosition.present
           ? data.gripPosition.value
           : this.gripPosition,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -3449,10 +3546,10 @@ class RepDatasData extends DataClass implements Insertable<RepDatasData> {
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
           ..write('gripPosition: $gripPosition, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -3468,10 +3565,10 @@ class RepDatasData extends DataClass implements Insertable<RepDatasData> {
     targetWeight,
     index,
     gripPosition,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -3486,26 +3583,27 @@ class RepDatasData extends DataClass implements Insertable<RepDatasData> {
           other.targetWeight == this.targetWeight &&
           other.index == this.index &&
           other.gripPosition == this.gripPosition &&
+          other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class RepDatasCompanion extends UpdateCompanion<RepDatasData> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<double> averageWeight;
-  final Value<int> sessionId;
+  final Value<String> sessionId;
   final Value<int> isRest;
   final Value<int> rightHand;
   final Value<int> duration;
   final Value<double> targetWeight;
   final Value<int> index;
   final Value<int> gripPosition;
+  final Value<int?> createdAt;
   final Value<int> updatedAt;
   final Value<int?> deletedAt;
   final Value<int> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const RepDatasCompanion({
     this.id = const Value.absent(),
     this.averageWeight = const Value.absent(),
@@ -3516,47 +3614,50 @@ class RepDatasCompanion extends UpdateCompanion<RepDatasData> {
     this.targetWeight = const Value.absent(),
     this.index = const Value.absent(),
     this.gripPosition = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   RepDatasCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required double averageWeight,
-    required int sessionId,
+    required String sessionId,
     required int isRest,
     required int rightHand,
     required int duration,
     required double targetWeight,
     required int index,
     this.gripPosition = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    required String remoteId,
-  }) : averageWeight = Value(averageWeight),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       averageWeight = Value(averageWeight),
        sessionId = Value(sessionId),
        isRest = Value(isRest),
        rightHand = Value(rightHand),
        duration = Value(duration),
        targetWeight = Value(targetWeight),
-       index = Value(index),
-       remoteId = Value(remoteId);
+       index = Value(index);
   static Insertable<RepDatasData> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<double>? averageWeight,
-    Expression<int>? sessionId,
+    Expression<String>? sessionId,
     Expression<int>? isRest,
     Expression<int>? rightHand,
     Expression<int>? duration,
     Expression<double>? targetWeight,
     Expression<int>? index,
     Expression<int>? gripPosition,
+    Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<int>? deletedAt,
     Expression<int>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3568,27 +3669,29 @@ class RepDatasCompanion extends UpdateCompanion<RepDatasData> {
       if (targetWeight != null) 'target_weight': targetWeight,
       if (index != null) 'index': index,
       if (gripPosition != null) 'grip_position': gripPosition,
+      if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   RepDatasCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<double>? averageWeight,
-    Value<int>? sessionId,
+    Value<String>? sessionId,
     Value<int>? isRest,
     Value<int>? rightHand,
     Value<int>? duration,
     Value<double>? targetWeight,
     Value<int>? index,
     Value<int>? gripPosition,
+    Value<int?>? createdAt,
     Value<int>? updatedAt,
     Value<int?>? deletedAt,
     Value<int>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return RepDatasCompanion(
       id: id ?? this.id,
@@ -3600,10 +3703,11 @@ class RepDatasCompanion extends UpdateCompanion<RepDatasData> {
       targetWeight: targetWeight ?? this.targetWeight,
       index: index ?? this.index,
       gripPosition: gripPosition ?? this.gripPosition,
+      createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -3611,13 +3715,13 @@ class RepDatasCompanion extends UpdateCompanion<RepDatasData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (averageWeight.present) {
       map['average_weight'] = Variable<double>(averageWeight.value);
     }
     if (sessionId.present) {
-      map['session_id'] = Variable<int>(sessionId.value);
+      map['session_id'] = Variable<String>(sessionId.value);
     }
     if (isRest.present) {
       map['is_rest'] = Variable<int>(isRest.value);
@@ -3637,6 +3741,9 @@ class RepDatasCompanion extends UpdateCompanion<RepDatasData> {
     if (gripPosition.present) {
       map['grip_position'] = Variable<int>(gripPosition.value);
     }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
@@ -3646,8 +3753,8 @@ class RepDatasCompanion extends UpdateCompanion<RepDatasData> {
     if (dirty.present) {
       map['dirty'] = Variable<int>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -3664,10 +3771,11 @@ class RepDatasCompanion extends UpdateCompanion<RepDatasData> {
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
           ..write('gripPosition: $gripPosition, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -3679,14 +3787,13 @@ class SensorConfigs extends Table
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   SensorConfigs(this.attachedDatabase, [this._alias]);
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
   );
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
     'name',
@@ -3720,6 +3827,14 @@ class SensorConfigs extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
     'updated_at',
     aliasedName,
@@ -3749,14 +3864,6 @@ class SensorConfigs extends Table
     $customConstraints: 'NOT NULL DEFAULT 0 CHECK (dirty IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3764,10 +3871,10 @@ class SensorConfigs extends Table
     index,
     tare,
     coef,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3781,7 +3888,7 @@ class SensorConfigs extends Table
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SensorConfigsData(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
       name: attachedDatabase.typeMapping.read(
@@ -3800,6 +3907,10 @@ class SensorConfigs extends Table
         DriftSqlType.double,
         data['${effectivePrefix}coef'],
       )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
@@ -3812,10 +3923,6 @@ class SensorConfigs extends Table
         DriftSqlType.int,
         data['${effectivePrefix}dirty'],
       )!,
-      remoteId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}remote_id'],
-      )!,
     );
   }
 
@@ -3825,45 +3932,49 @@ class SensorConfigs extends Table
   }
 
   @override
+  List<String> get customConstraints => const ['PRIMARY KEY(id)'];
+  @override
   bool get dontWriteConstraints => true;
 }
 
 class SensorConfigsData extends DataClass
     implements Insertable<SensorConfigsData> {
-  final int id;
+  final String id;
   final String name;
   final int index;
   final double tare;
   final double coef;
+  final int? createdAt;
   final int updatedAt;
   final int? deletedAt;
   final int dirty;
-  final String remoteId;
   const SensorConfigsData({
     required this.id,
     required this.name,
     required this.index,
     required this.tare,
     required this.coef,
+    this.createdAt,
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['index'] = Variable<int>(index);
     map['tare'] = Variable<double>(tare);
     map['coef'] = Variable<double>(coef);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<int>(createdAt);
+    }
     map['updated_at'] = Variable<int>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
     }
     map['dirty'] = Variable<int>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -3874,12 +3985,14 @@ class SensorConfigsData extends DataClass
       index: Value(index),
       tare: Value(tare),
       coef: Value(coef),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -3889,53 +4002,53 @@ class SensorConfigsData extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SensorConfigsData(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       index: serializer.fromJson<int>(json['index']),
       tare: serializer.fromJson<double>(json['tare']),
       coef: serializer.fromJson<double>(json['coef']),
+      createdAt: serializer.fromJson<int?>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
       dirty: serializer.fromJson<int>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'index': serializer.toJson<int>(index),
       'tare': serializer.toJson<double>(tare),
       'coef': serializer.toJson<double>(coef),
+      'createdAt': serializer.toJson<int?>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
       'dirty': serializer.toJson<int>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   SensorConfigsData copyWith({
-    int? id,
+    String? id,
     String? name,
     int? index,
     double? tare,
     double? coef,
+    Value<int?> createdAt = const Value.absent(),
     int? updatedAt,
     Value<int?> deletedAt = const Value.absent(),
     int? dirty,
-    String? remoteId,
   }) => SensorConfigsData(
     id: id ?? this.id,
     name: name ?? this.name,
     index: index ?? this.index,
     tare: tare ?? this.tare,
     coef: coef ?? this.coef,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   SensorConfigsData copyWithCompanion(SensorConfigsCompanion data) {
     return SensorConfigsData(
@@ -3944,10 +4057,10 @@ class SensorConfigsData extends DataClass
       index: data.index.present ? data.index.value : this.index,
       tare: data.tare.present ? data.tare.value : this.tare,
       coef: data.coef.present ? data.coef.value : this.coef,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -3959,10 +4072,10 @@ class SensorConfigsData extends DataClass
           ..write('index: $index, ')
           ..write('tare: $tare, ')
           ..write('coef: $coef, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -3974,10 +4087,10 @@ class SensorConfigsData extends DataClass
     index,
     tare,
     coef,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -3988,58 +4101,62 @@ class SensorConfigsData extends DataClass
           other.index == this.index &&
           other.tare == this.tare &&
           other.coef == this.coef &&
+          other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class SensorConfigsCompanion extends UpdateCompanion<SensorConfigsData> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> name;
   final Value<int> index;
   final Value<double> tare;
   final Value<double> coef;
+  final Value<int?> createdAt;
   final Value<int> updatedAt;
   final Value<int?> deletedAt;
   final Value<int> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const SensorConfigsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.index = const Value.absent(),
     this.tare = const Value.absent(),
     this.coef = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   SensorConfigsCompanion.insert({
-    this.id = const Value.absent(),
+    required String id,
     required String name,
     required int index,
     required double tare,
     required double coef,
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    required String remoteId,
-  }) : name = Value(name),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
        index = Value(index),
        tare = Value(tare),
-       coef = Value(coef),
-       remoteId = Value(remoteId);
+       coef = Value(coef);
   static Insertable<SensorConfigsData> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? name,
     Expression<int>? index,
     Expression<double>? tare,
     Expression<double>? coef,
+    Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<int>? deletedAt,
     Expression<int>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -4047,23 +4164,25 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfigsData> {
       if (index != null) 'index': index,
       if (tare != null) 'tare': tare,
       if (coef != null) 'coef': coef,
+      if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   SensorConfigsCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<String>? name,
     Value<int>? index,
     Value<double>? tare,
     Value<double>? coef,
+    Value<int?>? createdAt,
     Value<int>? updatedAt,
     Value<int?>? deletedAt,
     Value<int>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return SensorConfigsCompanion(
       id: id ?? this.id,
@@ -4071,10 +4190,11 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfigsData> {
       index: index ?? this.index,
       tare: tare ?? this.tare,
       coef: coef ?? this.coef,
+      createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -4082,7 +4202,7 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfigsData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -4096,6 +4216,9 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfigsData> {
     if (coef.present) {
       map['coef'] = Variable<double>(coef.value);
     }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
@@ -4105,8 +4228,8 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfigsData> {
     if (dirty.present) {
       map['dirty'] = Variable<int>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -4119,10 +4242,11 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfigsData> {
           ..write('index: $index, ')
           ..write('tare: $tare, ')
           ..write('coef: $coef, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -4134,23 +4258,23 @@ class BuiltinTrainingWeights extends Table
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   BuiltinTrainingWeights(this.attachedDatabase, [this._alias]);
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
-  );
-  late final GeneratedColumn<int> builtinTrainingId = GeneratedColumn<int>(
-    'builtin_training_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL REFERENCES trainings(id)ON DELETE CASCADE',
+    $customConstraints: 'NOT NULL',
   );
+  late final GeneratedColumn<String> builtinTrainingId =
+      GeneratedColumn<String>(
+        'builtin_training_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+        $customConstraints: 'NOT NULL',
+      );
   late final GeneratedColumn<double> customWeightRight =
       GeneratedColumn<double>(
         'custom_weight_right',
@@ -4168,6 +4292,18 @@ class BuiltinTrainingWeights extends Table
     requiredDuringInsert: false,
     $customConstraints: 'NULL',
   );
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints:
+        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+    defaultValue: const CustomExpression(
+      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+    ),
+  );
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
     'updated_at',
     aliasedName,
@@ -4197,24 +4333,16 @@ class BuiltinTrainingWeights extends Table
     $customConstraints: 'NOT NULL DEFAULT 0 CHECK (dirty IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
     builtinTrainingId,
     customWeightRight,
     customWeightLeft,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4231,11 +4359,11 @@ class BuiltinTrainingWeights extends Table
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return BuiltinTrainingWeightsData(
       id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
       builtinTrainingId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}builtin_training_id'],
       )!,
       customWeightRight: attachedDatabase.typeMapping.read(
@@ -4246,6 +4374,10 @@ class BuiltinTrainingWeights extends Table
         DriftSqlType.double,
         data['${effectivePrefix}custom_weight_left'],
       ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
@@ -4258,10 +4390,6 @@ class BuiltinTrainingWeights extends Table
         DriftSqlType.int,
         data['${effectivePrefix}dirty'],
       )!,
-      remoteId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}remote_id'],
-      )!,
     );
   }
 
@@ -4271,46 +4399,51 @@ class BuiltinTrainingWeights extends Table
   }
 
   @override
+  List<String> get customConstraints => const [
+    'PRIMARY KEY(id)',
+    'FOREIGN KEY(builtin_training_id)REFERENCES trainings(id)ON DELETE CASCADE',
+  ];
+  @override
   bool get dontWriteConstraints => true;
 }
 
 class BuiltinTrainingWeightsData extends DataClass
     implements Insertable<BuiltinTrainingWeightsData> {
-  final int id;
-  final int builtinTrainingId;
+  final String id;
+  final String builtinTrainingId;
   final double? customWeightRight;
   final double? customWeightLeft;
+  final int createdAt;
   final int updatedAt;
   final int? deletedAt;
   final int dirty;
-  final String remoteId;
   const BuiltinTrainingWeightsData({
     required this.id,
     required this.builtinTrainingId,
     this.customWeightRight,
     this.customWeightLeft,
+    required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['builtin_training_id'] = Variable<int>(builtinTrainingId);
+    map['id'] = Variable<String>(id);
+    map['builtin_training_id'] = Variable<String>(builtinTrainingId);
     if (!nullToAbsent || customWeightRight != null) {
       map['custom_weight_right'] = Variable<double>(customWeightRight);
     }
     if (!nullToAbsent || customWeightLeft != null) {
       map['custom_weight_left'] = Variable<double>(customWeightLeft);
     }
+    map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<int>(deletedAt);
     }
     map['dirty'] = Variable<int>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
@@ -4324,12 +4457,12 @@ class BuiltinTrainingWeightsData extends DataClass
       customWeightLeft: customWeightLeft == null && nullToAbsent
           ? const Value.absent()
           : Value(customWeightLeft),
+      createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -4339,42 +4472,42 @@ class BuiltinTrainingWeightsData extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return BuiltinTrainingWeightsData(
-      id: serializer.fromJson<int>(json['id']),
-      builtinTrainingId: serializer.fromJson<int>(json['builtinTrainingId']),
+      id: serializer.fromJson<String>(json['id']),
+      builtinTrainingId: serializer.fromJson<String>(json['builtinTrainingId']),
       customWeightRight: serializer.fromJson<double?>(
         json['customWeightRight'],
       ),
       customWeightLeft: serializer.fromJson<double?>(json['customWeightLeft']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
       deletedAt: serializer.fromJson<int?>(json['deletedAt']),
       dirty: serializer.fromJson<int>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'builtinTrainingId': serializer.toJson<int>(builtinTrainingId),
+      'id': serializer.toJson<String>(id),
+      'builtinTrainingId': serializer.toJson<String>(builtinTrainingId),
       'customWeightRight': serializer.toJson<double?>(customWeightRight),
       'customWeightLeft': serializer.toJson<double?>(customWeightLeft),
+      'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
       'deletedAt': serializer.toJson<int?>(deletedAt),
       'dirty': serializer.toJson<int>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   BuiltinTrainingWeightsData copyWith({
-    int? id,
-    int? builtinTrainingId,
+    String? id,
+    String? builtinTrainingId,
     Value<double?> customWeightRight = const Value.absent(),
     Value<double?> customWeightLeft = const Value.absent(),
+    int? createdAt,
     int? updatedAt,
     Value<int?> deletedAt = const Value.absent(),
     int? dirty,
-    String? remoteId,
   }) => BuiltinTrainingWeightsData(
     id: id ?? this.id,
     builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
@@ -4384,10 +4517,10 @@ class BuiltinTrainingWeightsData extends DataClass
     customWeightLeft: customWeightLeft.present
         ? customWeightLeft.value
         : this.customWeightLeft,
+    createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   BuiltinTrainingWeightsData copyWithCompanion(
     BuiltinTrainingWeightsCompanion data,
@@ -4403,10 +4536,10 @@ class BuiltinTrainingWeightsData extends DataClass
       customWeightLeft: data.customWeightLeft.present
           ? data.customWeightLeft.value
           : this.customWeightLeft,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -4417,10 +4550,10 @@ class BuiltinTrainingWeightsData extends DataClass
           ..write('builtinTrainingId: $builtinTrainingId, ')
           ..write('customWeightRight: $customWeightRight, ')
           ..write('customWeightLeft: $customWeightLeft, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -4431,10 +4564,10 @@ class BuiltinTrainingWeightsData extends DataClass
     builtinTrainingId,
     customWeightRight,
     customWeightLeft,
+    createdAt,
     updatedAt,
     deletedAt,
     dirty,
-    remoteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -4444,84 +4577,91 @@ class BuiltinTrainingWeightsData extends DataClass
           other.builtinTrainingId == this.builtinTrainingId &&
           other.customWeightRight == this.customWeightRight &&
           other.customWeightLeft == this.customWeightLeft &&
+          other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class BuiltinTrainingWeightsCompanion
     extends UpdateCompanion<BuiltinTrainingWeightsData> {
-  final Value<int> id;
-  final Value<int> builtinTrainingId;
+  final Value<String> id;
+  final Value<String> builtinTrainingId;
   final Value<double?> customWeightRight;
   final Value<double?> customWeightLeft;
+  final Value<int> createdAt;
   final Value<int> updatedAt;
   final Value<int?> deletedAt;
   final Value<int> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const BuiltinTrainingWeightsCompanion({
     this.id = const Value.absent(),
     this.builtinTrainingId = const Value.absent(),
     this.customWeightRight = const Value.absent(),
     this.customWeightLeft = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   BuiltinTrainingWeightsCompanion.insert({
-    this.id = const Value.absent(),
-    required int builtinTrainingId,
+    required String id,
+    required String builtinTrainingId,
     this.customWeightRight = const Value.absent(),
     this.customWeightLeft = const Value.absent(),
+    this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    required String remoteId,
-  }) : builtinTrainingId = Value(builtinTrainingId),
-       remoteId = Value(remoteId);
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       builtinTrainingId = Value(builtinTrainingId);
   static Insertable<BuiltinTrainingWeightsData> custom({
-    Expression<int>? id,
-    Expression<int>? builtinTrainingId,
+    Expression<String>? id,
+    Expression<String>? builtinTrainingId,
     Expression<double>? customWeightRight,
     Expression<double>? customWeightLeft,
+    Expression<int>? createdAt,
     Expression<int>? updatedAt,
     Expression<int>? deletedAt,
     Expression<int>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (builtinTrainingId != null) 'builtin_training_id': builtinTrainingId,
       if (customWeightRight != null) 'custom_weight_right': customWeightRight,
       if (customWeightLeft != null) 'custom_weight_left': customWeightLeft,
+      if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   BuiltinTrainingWeightsCompanion copyWith({
-    Value<int>? id,
-    Value<int>? builtinTrainingId,
+    Value<String>? id,
+    Value<String>? builtinTrainingId,
     Value<double?>? customWeightRight,
     Value<double?>? customWeightLeft,
+    Value<int>? createdAt,
     Value<int>? updatedAt,
     Value<int?>? deletedAt,
     Value<int>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return BuiltinTrainingWeightsCompanion(
       id: id ?? this.id,
       builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
       customWeightRight: customWeightRight ?? this.customWeightRight,
       customWeightLeft: customWeightLeft ?? this.customWeightLeft,
+      createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -4529,16 +4669,19 @@ class BuiltinTrainingWeightsCompanion
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (builtinTrainingId.present) {
-      map['builtin_training_id'] = Variable<int>(builtinTrainingId.value);
+      map['builtin_training_id'] = Variable<String>(builtinTrainingId.value);
     }
     if (customWeightRight.present) {
       map['custom_weight_right'] = Variable<double>(customWeightRight.value);
     }
     if (customWeightLeft.present) {
       map['custom_weight_left'] = Variable<double>(customWeightLeft.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
@@ -4549,8 +4692,8 @@ class BuiltinTrainingWeightsCompanion
     if (dirty.present) {
       map['dirty'] = Variable<int>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -4562,10 +4705,11 @@ class BuiltinTrainingWeightsCompanion
           ..write('builtinTrainingId: $builtinTrainingId, ')
           ..write('customWeightRight: $customWeightRight, ')
           ..write('customWeightLeft: $customWeightLeft, ')
+          ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -4577,34 +4721,15 @@ class PinnedBuiltinTrainings extends Table
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   PinnedBuiltinTrainings(this.attachedDatabase, [this._alias]);
-  late final GeneratedColumn<int> builtinTrainingId = GeneratedColumn<int>(
-    'builtin_training_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL',
-  );
-  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints:
-        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-    defaultValue: const CustomExpression(
-      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
-    ),
-  );
-  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
-    'deleted_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NULL',
-  );
+  late final GeneratedColumn<String> builtinTrainingId =
+      GeneratedColumn<String>(
+        'builtin_training_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+        $customConstraints: 'NOT NULL',
+      );
   late final GeneratedColumn<int> dirty = GeneratedColumn<int>(
     'dirty',
     aliasedName,
@@ -4614,22 +4739,8 @@ class PinnedBuiltinTrainings extends Table
     $customConstraints: 'NOT NULL DEFAULT 0 CHECK (dirty IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
-  late final GeneratedColumn<String> remoteId = GeneratedColumn<String>(
-    'remote_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
   @override
-  List<GeneratedColumn> get $columns => [
-    builtinTrainingId,
-    updatedAt,
-    deletedAt,
-    dirty,
-    remoteId,
-  ];
+  List<GeneratedColumn> get $columns => [builtinTrainingId, dirty];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4645,24 +4756,12 @@ class PinnedBuiltinTrainings extends Table
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return PinnedBuiltinTrainingsData(
       builtinTrainingId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}builtin_training_id'],
       )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}updated_at'],
-      )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}deleted_at'],
-      ),
       dirty: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}dirty'],
-      )!,
-      remoteId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}remote_id'],
       )!,
     );
   }
@@ -4682,40 +4781,24 @@ class PinnedBuiltinTrainings extends Table
 
 class PinnedBuiltinTrainingsData extends DataClass
     implements Insertable<PinnedBuiltinTrainingsData> {
-  final int builtinTrainingId;
-  final int updatedAt;
-  final int? deletedAt;
+  final String builtinTrainingId;
   final int dirty;
-  final String remoteId;
   const PinnedBuiltinTrainingsData({
     required this.builtinTrainingId,
-    required this.updatedAt,
-    this.deletedAt,
     required this.dirty,
-    required this.remoteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['builtin_training_id'] = Variable<int>(builtinTrainingId);
-    map['updated_at'] = Variable<int>(updatedAt);
-    if (!nullToAbsent || deletedAt != null) {
-      map['deleted_at'] = Variable<int>(deletedAt);
-    }
+    map['builtin_training_id'] = Variable<String>(builtinTrainingId);
     map['dirty'] = Variable<int>(dirty);
-    map['remote_id'] = Variable<String>(remoteId);
     return map;
   }
 
   PinnedBuiltinTrainingsCompanion toCompanion(bool nullToAbsent) {
     return PinnedBuiltinTrainingsCompanion(
       builtinTrainingId: Value(builtinTrainingId),
-      updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
       dirty: Value(dirty),
-      remoteId: Value(remoteId),
     );
   }
 
@@ -4725,37 +4808,25 @@ class PinnedBuiltinTrainingsData extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PinnedBuiltinTrainingsData(
-      builtinTrainingId: serializer.fromJson<int>(json['builtinTrainingId']),
-      updatedAt: serializer.fromJson<int>(json['updatedAt']),
-      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+      builtinTrainingId: serializer.fromJson<String>(json['builtinTrainingId']),
       dirty: serializer.fromJson<int>(json['dirty']),
-      remoteId: serializer.fromJson<String>(json['remoteId']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'builtinTrainingId': serializer.toJson<int>(builtinTrainingId),
-      'updatedAt': serializer.toJson<int>(updatedAt),
-      'deletedAt': serializer.toJson<int?>(deletedAt),
+      'builtinTrainingId': serializer.toJson<String>(builtinTrainingId),
       'dirty': serializer.toJson<int>(dirty),
-      'remoteId': serializer.toJson<String>(remoteId),
     };
   }
 
   PinnedBuiltinTrainingsData copyWith({
-    int? builtinTrainingId,
-    int? updatedAt,
-    Value<int?> deletedAt = const Value.absent(),
+    String? builtinTrainingId,
     int? dirty,
-    String? remoteId,
   }) => PinnedBuiltinTrainingsData(
     builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
-    updatedAt: updatedAt ?? this.updatedAt,
-    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     dirty: dirty ?? this.dirty,
-    remoteId: remoteId ?? this.remoteId,
   );
   PinnedBuiltinTrainingsData copyWithCompanion(
     PinnedBuiltinTrainingsCompanion data,
@@ -4764,10 +4835,7 @@ class PinnedBuiltinTrainingsData extends DataClass
       builtinTrainingId: data.builtinTrainingId.present
           ? data.builtinTrainingId.value
           : this.builtinTrainingId,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       dirty: data.dirty.present ? data.dirty.value : this.dirty,
-      remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
     );
   }
 
@@ -4775,78 +4843,57 @@ class PinnedBuiltinTrainingsData extends DataClass
   String toString() {
     return (StringBuffer('PinnedBuiltinTrainingsData(')
           ..write('builtinTrainingId: $builtinTrainingId, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(builtinTrainingId, updatedAt, deletedAt, dirty, remoteId);
+  int get hashCode => Object.hash(builtinTrainingId, dirty);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is PinnedBuiltinTrainingsData &&
           other.builtinTrainingId == this.builtinTrainingId &&
-          other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty &&
-          other.remoteId == this.remoteId);
+          other.dirty == this.dirty);
 }
 
 class PinnedBuiltinTrainingsCompanion
     extends UpdateCompanion<PinnedBuiltinTrainingsData> {
-  final Value<int> builtinTrainingId;
-  final Value<int> updatedAt;
-  final Value<int?> deletedAt;
+  final Value<String> builtinTrainingId;
   final Value<int> dirty;
-  final Value<String> remoteId;
+  final Value<int> rowid;
   const PinnedBuiltinTrainingsCompanion({
     this.builtinTrainingId = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
     this.dirty = const Value.absent(),
-    this.remoteId = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   PinnedBuiltinTrainingsCompanion.insert({
-    this.builtinTrainingId = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
+    required String builtinTrainingId,
     this.dirty = const Value.absent(),
-    required String remoteId,
-  }) : remoteId = Value(remoteId);
+    this.rowid = const Value.absent(),
+  }) : builtinTrainingId = Value(builtinTrainingId);
   static Insertable<PinnedBuiltinTrainingsData> custom({
-    Expression<int>? builtinTrainingId,
-    Expression<int>? updatedAt,
-    Expression<int>? deletedAt,
+    Expression<String>? builtinTrainingId,
     Expression<int>? dirty,
-    Expression<String>? remoteId,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (builtinTrainingId != null) 'builtin_training_id': builtinTrainingId,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (deletedAt != null) 'deleted_at': deletedAt,
       if (dirty != null) 'dirty': dirty,
-      if (remoteId != null) 'remote_id': remoteId,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   PinnedBuiltinTrainingsCompanion copyWith({
-    Value<int>? builtinTrainingId,
-    Value<int>? updatedAt,
-    Value<int?>? deletedAt,
+    Value<String>? builtinTrainingId,
     Value<int>? dirty,
-    Value<String>? remoteId,
+    Value<int>? rowid,
   }) {
     return PinnedBuiltinTrainingsCompanion(
       builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
-      updatedAt: updatedAt ?? this.updatedAt,
-      deletedAt: deletedAt ?? this.deletedAt,
       dirty: dirty ?? this.dirty,
-      remoteId: remoteId ?? this.remoteId,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -4854,19 +4901,13 @@ class PinnedBuiltinTrainingsCompanion
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (builtinTrainingId.present) {
-      map['builtin_training_id'] = Variable<int>(builtinTrainingId.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<int>(updatedAt.value);
-    }
-    if (deletedAt.present) {
-      map['deleted_at'] = Variable<int>(deletedAt.value);
+      map['builtin_training_id'] = Variable<String>(builtinTrainingId.value);
     }
     if (dirty.present) {
       map['dirty'] = Variable<int>(dirty.value);
     }
-    if (remoteId.present) {
-      map['remote_id'] = Variable<String>(remoteId.value);
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -4875,10 +4916,8 @@ class PinnedBuiltinTrainingsCompanion
   String toString() {
     return (StringBuffer('PinnedBuiltinTrainingsCompanion(')
           ..write('builtinTrainingId: $builtinTrainingId, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
           ..write('dirty: $dirty, ')
-          ..write('remoteId: $remoteId')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -5351,8 +5390,278 @@ class UsersCompanion extends UpdateCompanion<UsersData> {
   }
 }
 
-class DatabaseAtV1 extends GeneratedDatabase {
-  DatabaseAtV1(QueryExecutor e) : super(e);
+class SyncMetadata extends Table
+    with TableInfo<SyncMetadata, SyncMetadataData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  SyncMetadata(this.attachedDatabase, [this._alias]);
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
+  );
+  late final GeneratedColumn<int> lastSyncVersion = GeneratedColumn<int>(
+    'last_sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  late final GeneratedColumn<int> lastSyncTime = GeneratedColumn<int>(
+    'last_sync_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<int> pendingChanges = GeneratedColumn<int>(
+    'pending_changes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    lastSyncVersion,
+    lastSyncTime,
+    pendingChanges,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_metadata';
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SyncMetadataData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncMetadataData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      lastSyncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_sync_version'],
+      )!,
+      lastSyncTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_sync_time'],
+      ),
+      pendingChanges: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pending_changes'],
+      )!,
+    );
+  }
+
+  @override
+  SyncMetadata createAlias(String alias) {
+    return SyncMetadata(attachedDatabase, alias);
+  }
+
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class SyncMetadataData extends DataClass
+    implements Insertable<SyncMetadataData> {
+  final int id;
+  final int lastSyncVersion;
+  final int? lastSyncTime;
+  final int pendingChanges;
+  const SyncMetadataData({
+    required this.id,
+    required this.lastSyncVersion,
+    this.lastSyncTime,
+    required this.pendingChanges,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['last_sync_version'] = Variable<int>(lastSyncVersion);
+    if (!nullToAbsent || lastSyncTime != null) {
+      map['last_sync_time'] = Variable<int>(lastSyncTime);
+    }
+    map['pending_changes'] = Variable<int>(pendingChanges);
+    return map;
+  }
+
+  SyncMetadataCompanion toCompanion(bool nullToAbsent) {
+    return SyncMetadataCompanion(
+      id: Value(id),
+      lastSyncVersion: Value(lastSyncVersion),
+      lastSyncTime: lastSyncTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncTime),
+      pendingChanges: Value(pendingChanges),
+    );
+  }
+
+  factory SyncMetadataData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncMetadataData(
+      id: serializer.fromJson<int>(json['id']),
+      lastSyncVersion: serializer.fromJson<int>(json['lastSyncVersion']),
+      lastSyncTime: serializer.fromJson<int?>(json['lastSyncTime']),
+      pendingChanges: serializer.fromJson<int>(json['pendingChanges']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'lastSyncVersion': serializer.toJson<int>(lastSyncVersion),
+      'lastSyncTime': serializer.toJson<int?>(lastSyncTime),
+      'pendingChanges': serializer.toJson<int>(pendingChanges),
+    };
+  }
+
+  SyncMetadataData copyWith({
+    int? id,
+    int? lastSyncVersion,
+    Value<int?> lastSyncTime = const Value.absent(),
+    int? pendingChanges,
+  }) => SyncMetadataData(
+    id: id ?? this.id,
+    lastSyncVersion: lastSyncVersion ?? this.lastSyncVersion,
+    lastSyncTime: lastSyncTime.present ? lastSyncTime.value : this.lastSyncTime,
+    pendingChanges: pendingChanges ?? this.pendingChanges,
+  );
+  SyncMetadataData copyWithCompanion(SyncMetadataCompanion data) {
+    return SyncMetadataData(
+      id: data.id.present ? data.id.value : this.id,
+      lastSyncVersion: data.lastSyncVersion.present
+          ? data.lastSyncVersion.value
+          : this.lastSyncVersion,
+      lastSyncTime: data.lastSyncTime.present
+          ? data.lastSyncTime.value
+          : this.lastSyncTime,
+      pendingChanges: data.pendingChanges.present
+          ? data.pendingChanges.value
+          : this.pendingChanges,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncMetadataData(')
+          ..write('id: $id, ')
+          ..write('lastSyncVersion: $lastSyncVersion, ')
+          ..write('lastSyncTime: $lastSyncTime, ')
+          ..write('pendingChanges: $pendingChanges')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, lastSyncVersion, lastSyncTime, pendingChanges);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncMetadataData &&
+          other.id == this.id &&
+          other.lastSyncVersion == this.lastSyncVersion &&
+          other.lastSyncTime == this.lastSyncTime &&
+          other.pendingChanges == this.pendingChanges);
+}
+
+class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
+  final Value<int> id;
+  final Value<int> lastSyncVersion;
+  final Value<int?> lastSyncTime;
+  final Value<int> pendingChanges;
+  const SyncMetadataCompanion({
+    this.id = const Value.absent(),
+    this.lastSyncVersion = const Value.absent(),
+    this.lastSyncTime = const Value.absent(),
+    this.pendingChanges = const Value.absent(),
+  });
+  SyncMetadataCompanion.insert({
+    this.id = const Value.absent(),
+    this.lastSyncVersion = const Value.absent(),
+    this.lastSyncTime = const Value.absent(),
+    this.pendingChanges = const Value.absent(),
+  });
+  static Insertable<SyncMetadataData> custom({
+    Expression<int>? id,
+    Expression<int>? lastSyncVersion,
+    Expression<int>? lastSyncTime,
+    Expression<int>? pendingChanges,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (lastSyncVersion != null) 'last_sync_version': lastSyncVersion,
+      if (lastSyncTime != null) 'last_sync_time': lastSyncTime,
+      if (pendingChanges != null) 'pending_changes': pendingChanges,
+    });
+  }
+
+  SyncMetadataCompanion copyWith({
+    Value<int>? id,
+    Value<int>? lastSyncVersion,
+    Value<int?>? lastSyncTime,
+    Value<int>? pendingChanges,
+  }) {
+    return SyncMetadataCompanion(
+      id: id ?? this.id,
+      lastSyncVersion: lastSyncVersion ?? this.lastSyncVersion,
+      lastSyncTime: lastSyncTime ?? this.lastSyncTime,
+      pendingChanges: pendingChanges ?? this.pendingChanges,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (lastSyncVersion.present) {
+      map['last_sync_version'] = Variable<int>(lastSyncVersion.value);
+    }
+    if (lastSyncTime.present) {
+      map['last_sync_time'] = Variable<int>(lastSyncTime.value);
+    }
+    if (pendingChanges.present) {
+      map['pending_changes'] = Variable<int>(pendingChanges.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncMetadataCompanion(')
+          ..write('id: $id, ')
+          ..write('lastSyncVersion: $lastSyncVersion, ')
+          ..write('lastSyncTime: $lastSyncTime, ')
+          ..write('pendingChanges: $pendingChanges')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class DatabaseAtV5 extends GeneratedDatabase {
+  DatabaseAtV5(QueryExecutor e) : super(e);
   late final Sessions sessions = Sessions(this);
   late final Assessments assessments = Assessments(this);
   late final Repeaters repeaters = Repeaters(this);
@@ -5365,6 +5674,7 @@ class DatabaseAtV1 extends GeneratedDatabase {
   late final PinnedBuiltinTrainings pinnedBuiltinTrainings =
       PinnedBuiltinTrainings(this);
   late final Users users = Users(this);
+  late final SyncMetadata syncMetadata = SyncMetadata(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5380,9 +5690,17 @@ class DatabaseAtV1 extends GeneratedDatabase {
     builtinTrainingWeights,
     pinnedBuiltinTrainings,
     users,
+    syncMetadata,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'sessions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('assessments', kind: UpdateKind.delete)],
+    ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
         'repeaters',
@@ -5399,6 +5717,13 @@ class DatabaseAtV1 extends GeneratedDatabase {
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
+        'sessions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('rep_datas', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
         'trainings',
         limitUpdateKind: UpdateKind.delete,
       ),
@@ -5408,5 +5733,5 @@ class DatabaseAtV1 extends GeneratedDatabase {
     ),
   ]);
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 5;
 }

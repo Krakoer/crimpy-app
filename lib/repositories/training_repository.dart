@@ -9,67 +9,64 @@ class TrainingRepository {
   Future<List<TrainingWithReps>> getAllTrainings({
     bool onlyFavs = false,
   }) async {
-    final trainings =
-        onlyFavs
-            ? await gDatabase.getFavTrainings()
-            : await gDatabase.getAllTrainingsWithoutAssessments();
+    final trainings = onlyFavs
+        ? await gDatabase.getFavTrainings()
+        : await gDatabase.getAllTrainingsWithoutAssessments();
 
     List<TrainingWithReps> resp = [];
 
     for (final t in trainings) {
       bool isRepeater = t.repeaterId != null;
       // Get repeater model if available
-      Repeater? repeaterData =
-          !isRepeater ? null : await gDatabase.getRepeater(t.repeaterId!);
+      Repeater? repeaterData = !isRepeater
+          ? null
+          : await gDatabase.getRepeater(t.repeaterId!);
 
-      RepeaterModel? model =
-          !isRepeater
-              ? null
-              : RepeaterModel(
-                sets: repeaterData!.sets,
-                restBteweenSets: repeaterData.setRest,
-                repsBySet: repeaterData.reps,
-                workTime: repeaterData.worktime,
-                restTime: repeaterData.resttime,
-                splitHand: repeaterData.splitHand,
-                weightRight: repeaterData.targetWeigthRight,
-                weightLeft: repeaterData.targetWeigthLeft,
-                gripPosition: GripPosition.values[repeaterData.gripPosition],
-              );
+      RepeaterModel? model = !isRepeater
+          ? null
+          : RepeaterModel(
+              sets: repeaterData!.sets,
+              restBteweenSets: repeaterData.setRest,
+              repsBySet: repeaterData.reps,
+              workTime: repeaterData.worktime,
+              restTime: repeaterData.resttime,
+              splitHand: repeaterData.splitHand,
+              weightRight: repeaterData.targetWeigthRight,
+              weightLeft: repeaterData.targetWeigthLeft,
+              gripPosition: GripPosition.values[repeaterData.gripPosition],
+            );
       // If the training is a repeater, generate the reps instead of getting them from DB.
       final List<RepModel> repModels;
       if (isRepeater) {
         final repTemplates = model!.generateReps();
-        repModels =
-            repTemplates
-                .map(
-                  (r) => RepModel(
-                    durationInSeconds: r.duration,
-                    isRest: r.isRest,
-                    handSide: r.handSide,
-                    targetWeight: r.targetWeight,
-                    id: r.id,
-                    index: r.index,
-                    gripPosition: r.gripPosition,
-                  ),
-                )
-                .toList();
+        repModels = repTemplates
+            .map(
+              (r) => RepModel(
+                durationInSeconds: r.duration,
+                isRest: r.isRest,
+                handSide: r.handSide,
+                targetWeight: r.targetWeight,
+                id: r.id,
+                index: r.index,
+                gripPosition: r.gripPosition,
+              ),
+            )
+            .toList();
       } else {
         final dbReps = await gDatabase.getRepsForTraining(t.id);
-        repModels =
-            dbReps
-                .map(
-                  (r) => RepModel(
-                    durationInSeconds: r.duration,
-                    isRest: r.isRest,
-                    handSide: r.rightHand ? HandSide.right : HandSide.left,
-                    targetWeight: r.targetWeight,
-                    id: r.id,
-                    index: r.index,
-                    gripPosition: GripPosition.values[r.gripPosition],
-                  ),
-                )
-                .toList();
+        repModels = dbReps
+            .map(
+              (r) => RepModel(
+                durationInSeconds: r.duration,
+                isRest: r.isRest,
+                handSide: r.rightHand ? HandSide.right : HandSide.left,
+                targetWeight: r.targetWeight,
+                id: r.id,
+                index: r.index,
+                gripPosition: GripPosition.values[r.gripPosition],
+              ),
+            )
+            .toList();
       }
 
       resp.add(

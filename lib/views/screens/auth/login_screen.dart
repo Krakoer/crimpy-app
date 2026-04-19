@@ -139,14 +139,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  child:
-                      _isLoading
-                          ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                          : const Text('Login'),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Login'),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -154,17 +153,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     const Text("Don't have an account? "),
                     TextButton(
-                      onPressed:
-                          _isLoading
-                              ? null
-                              : () {
-                                Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => const RegistrationScreen(),
-                                  ),
-                                );
-                              },
+                      onPressed: _isLoading
+                          ? null
+                          : () {
+                              Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const RegistrationScreen(),
+                                ),
+                              );
+                            },
                       child: const Text('Register'),
                     ),
                   ],

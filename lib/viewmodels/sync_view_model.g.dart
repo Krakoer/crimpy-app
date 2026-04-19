@@ -115,7 +115,7 @@ final class SyncViewModelProvider
   SyncViewModel create() => SyncViewModel();
 }
 
-String _$syncViewModelHash() => r'98729933ed6fee3e7e6de07a3856eec9f536d858';
+String _$syncViewModelHash() => r'ebff01e2f511d6edace7355781be4479191897dc';
 
 abstract class _$SyncViewModel extends $AsyncNotifier<SyncState> {
   FutureOr<SyncState> build();

@@ -196,46 +196,38 @@ class Sessions extends Table with TableInfo<Sessions, SessionsData> {
   SessionsData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SessionsData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      name:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}name'],
-          )!,
-      notes:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}notes'],
-          )!,
-      date:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}date'],
-          )!,
-      dataPath:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}data_path'],
-          )!,
-      isAssessment:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}is_assessment'],
-          )!,
-      sessionType:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}session_type'],
-          )!,
-      duration:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}duration'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}date'],
+      )!,
+      dataPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}data_path'],
+      )!,
+      isAssessment: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_assessment'],
+      )!,
+      sessionType: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}session_type'],
+      )!,
+      duration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration'],
+      )!,
       repeaterSets: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}repeater_sets'],
@@ -264,20 +256,18 @@ class Sessions extends Table with TableInfo<Sessions, SessionsData> {
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -381,39 +371,31 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
       isAssessment: Value(isAssessment),
       sessionType: Value(sessionType),
       duration: Value(duration),
-      repeaterSets:
-          repeaterSets == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterSets),
-      repeaterReps:
-          repeaterReps == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterReps),
-      repeaterWorkTime:
-          repeaterWorkTime == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterWorkTime),
-      repeaterRestTime:
-          repeaterRestTime == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterRestTime),
-      repeaterSetRest:
-          repeaterSetRest == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterSetRest),
-      repeaterSplitHand:
-          repeaterSplitHand == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterSplitHand),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      repeaterSets: repeaterSets == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterSets),
+      repeaterReps: repeaterReps == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterReps),
+      repeaterWorkTime: repeaterWorkTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterWorkTime),
+      repeaterRestTime: repeaterRestTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterRestTime),
+      repeaterSetRest: repeaterSetRest == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterSetRest),
+      repeaterSplitHand: repeaterSplitHand == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterSplitHand),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -499,20 +481,18 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
     duration: duration ?? this.duration,
     repeaterSets: repeaterSets.present ? repeaterSets.value : this.repeaterSets,
     repeaterReps: repeaterReps.present ? repeaterReps.value : this.repeaterReps,
-    repeaterWorkTime:
-        repeaterWorkTime.present
-            ? repeaterWorkTime.value
-            : this.repeaterWorkTime,
-    repeaterRestTime:
-        repeaterRestTime.present
-            ? repeaterRestTime.value
-            : this.repeaterRestTime,
-    repeaterSetRest:
-        repeaterSetRest.present ? repeaterSetRest.value : this.repeaterSetRest,
-    repeaterSplitHand:
-        repeaterSplitHand.present
-            ? repeaterSplitHand.value
-            : this.repeaterSplitHand,
+    repeaterWorkTime: repeaterWorkTime.present
+        ? repeaterWorkTime.value
+        : this.repeaterWorkTime,
+    repeaterRestTime: repeaterRestTime.present
+        ? repeaterRestTime.value
+        : this.repeaterRestTime,
+    repeaterSetRest: repeaterSetRest.present
+        ? repeaterSetRest.value
+        : this.repeaterSetRest,
+    repeaterSplitHand: repeaterSplitHand.present
+        ? repeaterSplitHand.value
+        : this.repeaterSplitHand,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -525,37 +505,31 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
       notes: data.notes.present ? data.notes.value : this.notes,
       date: data.date.present ? data.date.value : this.date,
       dataPath: data.dataPath.present ? data.dataPath.value : this.dataPath,
-      isAssessment:
-          data.isAssessment.present
-              ? data.isAssessment.value
-              : this.isAssessment,
-      sessionType:
-          data.sessionType.present ? data.sessionType.value : this.sessionType,
+      isAssessment: data.isAssessment.present
+          ? data.isAssessment.value
+          : this.isAssessment,
+      sessionType: data.sessionType.present
+          ? data.sessionType.value
+          : this.sessionType,
       duration: data.duration.present ? data.duration.value : this.duration,
-      repeaterSets:
-          data.repeaterSets.present
-              ? data.repeaterSets.value
-              : this.repeaterSets,
-      repeaterReps:
-          data.repeaterReps.present
-              ? data.repeaterReps.value
-              : this.repeaterReps,
-      repeaterWorkTime:
-          data.repeaterWorkTime.present
-              ? data.repeaterWorkTime.value
-              : this.repeaterWorkTime,
-      repeaterRestTime:
-          data.repeaterRestTime.present
-              ? data.repeaterRestTime.value
-              : this.repeaterRestTime,
-      repeaterSetRest:
-          data.repeaterSetRest.present
-              ? data.repeaterSetRest.value
-              : this.repeaterSetRest,
-      repeaterSplitHand:
-          data.repeaterSplitHand.present
-              ? data.repeaterSplitHand.value
-              : this.repeaterSplitHand,
+      repeaterSets: data.repeaterSets.present
+          ? data.repeaterSets.value
+          : this.repeaterSets,
+      repeaterReps: data.repeaterReps.present
+          ? data.repeaterReps.value
+          : this.repeaterReps,
+      repeaterWorkTime: data.repeaterWorkTime.present
+          ? data.repeaterWorkTime.value
+          : this.repeaterWorkTime,
+      repeaterRestTime: data.repeaterRestTime.present
+          ? data.repeaterRestTime.value
+          : this.repeaterRestTime,
+      repeaterSetRest: data.repeaterSetRest.present
+          ? data.repeaterSetRest.value
+          : this.repeaterSetRest,
+      repeaterSplitHand: data.repeaterSplitHand.present
+          ? data.repeaterSplitHand.value
+          : this.repeaterSplitHand,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -991,16 +965,14 @@ class Assessments extends Table with TableInfo<Assessments, AssessmentsData> {
   AssessmentsData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AssessmentsData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      type:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}type'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}type'],
+      )!,
       rightValue: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}right_value'],
@@ -1009,11 +981,10 @@ class Assessments extends Table with TableInfo<Assessments, AssessmentsData> {
         DriftSqlType.double,
         data['${effectivePrefix}left_value'],
       ),
-      sessionId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}session_id'],
-          )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
       gripPosition: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}grip_position'],
@@ -1022,20 +993,18 @@ class Assessments extends Table with TableInfo<Assessments, AssessmentsData> {
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -1106,28 +1075,23 @@ class AssessmentsData extends DataClass implements Insertable<AssessmentsData> {
     return AssessmentsCompanion(
       id: Value(id),
       type: Value(type),
-      rightValue:
-          rightValue == null && nullToAbsent
-              ? const Value.absent()
-              : Value(rightValue),
-      leftValue:
-          leftValue == null && nullToAbsent
-              ? const Value.absent()
-              : Value(leftValue),
+      rightValue: rightValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rightValue),
+      leftValue: leftValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(leftValue),
       sessionId: Value(sessionId),
-      gripPosition:
-          gripPosition == null && nullToAbsent
-              ? const Value.absent()
-              : Value(gripPosition),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      gripPosition: gripPosition == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gripPosition),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -1194,14 +1158,14 @@ class AssessmentsData extends DataClass implements Insertable<AssessmentsData> {
     return AssessmentsData(
       id: data.id.present ? data.id.value : this.id,
       type: data.type.present ? data.type.value : this.type,
-      rightValue:
-          data.rightValue.present ? data.rightValue.value : this.rightValue,
+      rightValue: data.rightValue.present
+          ? data.rightValue.value
+          : this.rightValue,
       leftValue: data.leftValue.present ? data.leftValue.value : this.leftValue,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
-      gripPosition:
-          data.gripPosition.present
-              ? data.gripPosition.value
-              : this.gripPosition,
+      gripPosition: data.gripPosition.present
+          ? data.gripPosition.value
+          : this.gripPosition,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -1561,36 +1525,30 @@ class Repeaters extends Table with TableInfo<Repeaters, RepeatersData> {
   RepeatersData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return RepeatersData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      sets:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}sets'],
-          )!,
-      reps:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}reps'],
-          )!,
-      worktime:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}worktime'],
-          )!,
-      resttime:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}resttime'],
-          )!,
-      setRest:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}set_rest'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      sets: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sets'],
+      )!,
+      reps: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reps'],
+      )!,
+      worktime: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}worktime'],
+      )!,
+      resttime: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}resttime'],
+      )!,
+      setRest: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}set_rest'],
+      )!,
       targetWeigthRight: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}target_weigth_right'],
@@ -1599,34 +1557,30 @@ class Repeaters extends Table with TableInfo<Repeaters, RepeatersData> {
         DriftSqlType.double,
         data['${effectivePrefix}target_weigth_left'],
       ),
-      splitHand:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}split_hand'],
-          )!,
-      gripPosition:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}grip_position'],
-          )!,
+      splitHand: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}split_hand'],
+      )!,
+      gripPosition: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}grip_position'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -1708,25 +1662,21 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
       worktime: Value(worktime),
       resttime: Value(resttime),
       setRest: Value(setRest),
-      targetWeigthRight:
-          targetWeigthRight == null && nullToAbsent
-              ? const Value.absent()
-              : Value(targetWeigthRight),
-      targetWeigthLeft:
-          targetWeigthLeft == null && nullToAbsent
-              ? const Value.absent()
-              : Value(targetWeigthLeft),
+      targetWeigthRight: targetWeigthRight == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetWeigthRight),
+      targetWeigthLeft: targetWeigthLeft == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetWeigthLeft),
       splitHand: Value(splitHand),
       gripPosition: Value(gripPosition),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -1798,14 +1748,12 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
     worktime: worktime ?? this.worktime,
     resttime: resttime ?? this.resttime,
     setRest: setRest ?? this.setRest,
-    targetWeigthRight:
-        targetWeigthRight.present
-            ? targetWeigthRight.value
-            : this.targetWeigthRight,
-    targetWeigthLeft:
-        targetWeigthLeft.present
-            ? targetWeigthLeft.value
-            : this.targetWeigthLeft,
+    targetWeigthRight: targetWeigthRight.present
+        ? targetWeigthRight.value
+        : this.targetWeigthRight,
+    targetWeigthLeft: targetWeigthLeft.present
+        ? targetWeigthLeft.value
+        : this.targetWeigthLeft,
     splitHand: splitHand ?? this.splitHand,
     gripPosition: gripPosition ?? this.gripPosition,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
@@ -1821,19 +1769,16 @@ class RepeatersData extends DataClass implements Insertable<RepeatersData> {
       worktime: data.worktime.present ? data.worktime.value : this.worktime,
       resttime: data.resttime.present ? data.resttime.value : this.resttime,
       setRest: data.setRest.present ? data.setRest.value : this.setRest,
-      targetWeigthRight:
-          data.targetWeigthRight.present
-              ? data.targetWeigthRight.value
-              : this.targetWeigthRight,
-      targetWeigthLeft:
-          data.targetWeigthLeft.present
-              ? data.targetWeigthLeft.value
-              : this.targetWeigthLeft,
+      targetWeigthRight: data.targetWeigthRight.present
+          ? data.targetWeigthRight.value
+          : this.targetWeigthRight,
+      targetWeigthLeft: data.targetWeigthLeft.present
+          ? data.targetWeigthLeft.value
+          : this.targetWeigthLeft,
       splitHand: data.splitHand.present ? data.splitHand.value : this.splitHand,
-      gripPosition:
-          data.gripPosition.present
-              ? data.gripPosition.value
-              : this.gripPosition,
+      gripPosition: data.gripPosition.present
+          ? data.gripPosition.value
+          : this.gripPosition,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -2218,53 +2163,46 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
   TrainingsData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return TrainingsData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      name:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}name'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
       repeaterId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}repeater_id'],
       ),
-      isBuiltin:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}is_builtin'],
-          )!,
-      isFavorite:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}is_favorite'],
-          )!,
-      isAssessment:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}is_assessment'],
-          )!,
+      isBuiltin: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_builtin'],
+      )!,
+      isFavorite: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_favorite'],
+      )!,
+      isAssessment: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_assessment'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -2331,22 +2269,19 @@ class TrainingsData extends DataClass implements Insertable<TrainingsData> {
     return TrainingsCompanion(
       id: Value(id),
       name: Value(name),
-      repeaterId:
-          repeaterId == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterId),
+      repeaterId: repeaterId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterId),
       isBuiltin: Value(isBuiltin),
       isFavorite: Value(isFavorite),
       isAssessment: Value(isAssessment),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -2413,15 +2348,16 @@ class TrainingsData extends DataClass implements Insertable<TrainingsData> {
     return TrainingsData(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
-      repeaterId:
-          data.repeaterId.present ? data.repeaterId.value : this.repeaterId,
+      repeaterId: data.repeaterId.present
+          ? data.repeaterId.value
+          : this.repeaterId,
       isBuiltin: data.isBuiltin.present ? data.isBuiltin.value : this.isBuiltin,
-      isFavorite:
-          data.isFavorite.present ? data.isFavorite.value : this.isFavorite,
-      isAssessment:
-          data.isAssessment.present
-              ? data.isAssessment.value
-              : this.isAssessment,
+      isFavorite: data.isFavorite.present
+          ? data.isFavorite.value
+          : this.isFavorite,
+      isAssessment: data.isAssessment.present
+          ? data.isAssessment.value
+          : this.isAssessment,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -2762,64 +2698,54 @@ class RepTemplates extends Table
   RepTemplatesData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return RepTemplatesData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      isRest:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}is_rest'],
-          )!,
-      rightHand:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}right_hand'],
-          )!,
-      duration:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}duration'],
-          )!,
-      trainingId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}training_id'],
-          )!,
-      targetWeight:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}target_weight'],
-          )!,
-      index:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}index'],
-          )!,
-      gripPosition:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}grip_position'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      isRest: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_rest'],
+      )!,
+      rightHand: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}right_hand'],
+      )!,
+      duration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration'],
+      )!,
+      trainingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}training_id'],
+      )!,
+      targetWeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}target_weight'],
+      )!,
+      index: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}index'],
+      )!,
+      gripPosition: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}grip_position'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -2897,15 +2823,13 @@ class RepTemplatesData extends DataClass
       targetWeight: Value(targetWeight),
       index: Value(index),
       gripPosition: Value(gripPosition),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -2982,17 +2906,16 @@ class RepTemplatesData extends DataClass
       isRest: data.isRest.present ? data.isRest.value : this.isRest,
       rightHand: data.rightHand.present ? data.rightHand.value : this.rightHand,
       duration: data.duration.present ? data.duration.value : this.duration,
-      trainingId:
-          data.trainingId.present ? data.trainingId.value : this.trainingId,
-      targetWeight:
-          data.targetWeight.present
-              ? data.targetWeight.value
-              : this.targetWeight,
+      trainingId: data.trainingId.present
+          ? data.trainingId.value
+          : this.trainingId,
+      targetWeight: data.targetWeight.present
+          ? data.targetWeight.value
+          : this.targetWeight,
       index: data.index.present ? data.index.value : this.index,
-      gripPosition:
-          data.gripPosition.present
-              ? data.gripPosition.value
-              : this.gripPosition,
+      gripPosition: data.gripPosition.present
+          ? data.gripPosition.value
+          : this.gripPosition,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -3374,69 +3297,58 @@ class RepDatas extends Table with TableInfo<RepDatas, RepDatasData> {
   RepDatasData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return RepDatasData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      averageWeight:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}average_weight'],
-          )!,
-      sessionId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}session_id'],
-          )!,
-      isRest:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}is_rest'],
-          )!,
-      rightHand:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}right_hand'],
-          )!,
-      duration:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}duration'],
-          )!,
-      targetWeight:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}target_weight'],
-          )!,
-      index:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}index'],
-          )!,
-      gripPosition:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}grip_position'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      averageWeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}average_weight'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      isRest: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_rest'],
+      )!,
+      rightHand: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}right_hand'],
+      )!,
+      duration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration'],
+      )!,
+      targetWeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}target_weight'],
+      )!,
+      index: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}index'],
+      )!,
+      gripPosition: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}grip_position'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -3517,15 +3429,13 @@ class RepDatasData extends DataClass implements Insertable<RepDatasData> {
       targetWeight: Value(targetWeight),
       index: Value(index),
       gripPosition: Value(gripPosition),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -3603,23 +3513,20 @@ class RepDatasData extends DataClass implements Insertable<RepDatasData> {
   RepDatasData copyWithCompanion(RepDatasCompanion data) {
     return RepDatasData(
       id: data.id.present ? data.id.value : this.id,
-      averageWeight:
-          data.averageWeight.present
-              ? data.averageWeight.value
-              : this.averageWeight,
+      averageWeight: data.averageWeight.present
+          ? data.averageWeight.value
+          : this.averageWeight,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
       isRest: data.isRest.present ? data.isRest.value : this.isRest,
       rightHand: data.rightHand.present ? data.rightHand.value : this.rightHand,
       duration: data.duration.present ? data.duration.value : this.duration,
-      targetWeight:
-          data.targetWeight.present
-              ? data.targetWeight.value
-              : this.targetWeight,
+      targetWeight: data.targetWeight.present
+          ? data.targetWeight.value
+          : this.targetWeight,
       index: data.index.present ? data.index.value : this.index,
-      gripPosition:
-          data.gripPosition.present
-              ? data.gripPosition.value
-              : this.gripPosition,
+      gripPosition: data.gripPosition.present
+          ? data.gripPosition.value
+          : this.gripPosition,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -3980,49 +3887,42 @@ class SensorConfigs extends Table
   SensorConfigsData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SensorConfigsData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      name:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}name'],
-          )!,
-      index:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}index'],
-          )!,
-      tare:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}tare'],
-          )!,
-      coef:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}coef'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      index: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}index'],
+      )!,
+      tare: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}tare'],
+      )!,
+      coef: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}coef'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -4085,15 +3985,13 @@ class SensorConfigsData extends DataClass
       index: Value(index),
       tare: Value(tare),
       coef: Value(coef),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -4460,16 +4358,14 @@ class BuiltinTrainingWeights extends Table
   }) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return BuiltinTrainingWeightsData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      builtinTrainingId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}builtin_training_id'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      builtinTrainingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}builtin_training_id'],
+      )!,
       customWeightRight: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}custom_weight_right'],
@@ -4478,25 +4374,22 @@ class BuiltinTrainingWeights extends Table
         DriftSqlType.double,
         data['${effectivePrefix}custom_weight_left'],
       ),
-      createdAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}created_at'],
-          )!,
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -4558,20 +4451,17 @@ class BuiltinTrainingWeightsData extends DataClass
     return BuiltinTrainingWeightsCompanion(
       id: Value(id),
       builtinTrainingId: Value(builtinTrainingId),
-      customWeightRight:
-          customWeightRight == null && nullToAbsent
-              ? const Value.absent()
-              : Value(customWeightRight),
-      customWeightLeft:
-          customWeightLeft == null && nullToAbsent
-              ? const Value.absent()
-              : Value(customWeightLeft),
+      customWeightRight: customWeightRight == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customWeightRight),
+      customWeightLeft: customWeightLeft == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customWeightLeft),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -4621,14 +4511,12 @@ class BuiltinTrainingWeightsData extends DataClass
   }) => BuiltinTrainingWeightsData(
     id: id ?? this.id,
     builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
-    customWeightRight:
-        customWeightRight.present
-            ? customWeightRight.value
-            : this.customWeightRight,
-    customWeightLeft:
-        customWeightLeft.present
-            ? customWeightLeft.value
-            : this.customWeightLeft,
+    customWeightRight: customWeightRight.present
+        ? customWeightRight.value
+        : this.customWeightRight,
+    customWeightLeft: customWeightLeft.present
+        ? customWeightLeft.value
+        : this.customWeightLeft,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -4639,18 +4527,15 @@ class BuiltinTrainingWeightsData extends DataClass
   ) {
     return BuiltinTrainingWeightsData(
       id: data.id.present ? data.id.value : this.id,
-      builtinTrainingId:
-          data.builtinTrainingId.present
-              ? data.builtinTrainingId.value
-              : this.builtinTrainingId,
-      customWeightRight:
-          data.customWeightRight.present
-              ? data.customWeightRight.value
-              : this.customWeightRight,
-      customWeightLeft:
-          data.customWeightLeft.present
-              ? data.customWeightLeft.value
-              : this.customWeightLeft,
+      builtinTrainingId: data.builtinTrainingId.present
+          ? data.builtinTrainingId.value
+          : this.builtinTrainingId,
+      customWeightRight: data.customWeightRight.present
+          ? data.customWeightRight.value
+          : this.customWeightRight,
+      customWeightLeft: data.customWeightLeft.present
+          ? data.customWeightLeft.value
+          : this.customWeightLeft,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -4904,29 +4789,26 @@ class PinnedBuiltinTrainings extends Table
   }) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return PinnedBuiltinTrainingsData(
-      builtinTrainingId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}builtin_training_id'],
-          )!,
+      builtinTrainingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}builtin_training_id'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}created_at'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
       deletedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}deleted_at'],
       ),
-      dirty:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}dirty'],
-          )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -4975,15 +4857,13 @@ class PinnedBuiltinTrainingsData extends DataClass
   PinnedBuiltinTrainingsCompanion toCompanion(bool nullToAbsent) {
     return PinnedBuiltinTrainingsCompanion(
       builtinTrainingId: Value(builtinTrainingId),
-      createdAt:
-          createdAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(createdAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
       updatedAt: Value(updatedAt),
-      deletedAt:
-          deletedAt == null && nullToAbsent
-              ? const Value.absent()
-              : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
       dirty: Value(dirty),
     );
   }
@@ -5030,10 +4910,9 @@ class PinnedBuiltinTrainingsData extends DataClass
     PinnedBuiltinTrainingsCompanion data,
   ) {
     return PinnedBuiltinTrainingsData(
-      builtinTrainingId:
-          data.builtinTrainingId.present
-              ? data.builtinTrainingId.value
-              : this.builtinTrainingId,
+      builtinTrainingId: data.builtinTrainingId.present
+          ? data.builtinTrainingId.value
+          : this.builtinTrainingId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -5273,51 +5152,42 @@ class Users extends Table with TableInfo<Users, UsersData> {
   UsersData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return UsersData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}id'],
-          )!,
-      email:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}email'],
-          )!,
-      firstname:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}firstname'],
-          )!,
-      lastname:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}lastname'],
-          )!,
-      emailVerified:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}email_verified'],
-          )!,
-      isAdmin:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}is_admin'],
-          )!,
-      isCoach:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}is_coach'],
-          )!,
-      coachValidated:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}coach_validated'],
-          )!,
-      createdAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}created_at'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      email: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}email'],
+      )!,
+      firstname: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}firstname'],
+      )!,
+      lastname: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lastname'],
+      )!,
+      emailVerified: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}email_verified'],
+      )!,
+      isAdmin: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_admin'],
+      )!,
+      isCoach: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}is_coach'],
+      )!,
+      coachValidated: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}coach_validated'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -5442,16 +5312,14 @@ class UsersData extends DataClass implements Insertable<UsersData> {
       email: data.email.present ? data.email.value : this.email,
       firstname: data.firstname.present ? data.firstname.value : this.firstname,
       lastname: data.lastname.present ? data.lastname.value : this.lastname,
-      emailVerified:
-          data.emailVerified.present
-              ? data.emailVerified.value
-              : this.emailVerified,
+      emailVerified: data.emailVerified.present
+          ? data.emailVerified.value
+          : this.emailVerified,
       isAdmin: data.isAdmin.present ? data.isAdmin.value : this.isAdmin,
       isCoach: data.isCoach.present ? data.isCoach.value : this.isCoach,
-      coachValidated:
-          data.coachValidated.present
-              ? data.coachValidated.value
-              : this.coachValidated,
+      coachValidated: data.coachValidated.present
+          ? data.coachValidated.value
+          : this.coachValidated,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -5702,25 +5570,22 @@ class SyncMetadata extends Table
   SyncMetadataData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SyncMetadataData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      lastSyncVersion:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}last_sync_version'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      lastSyncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_sync_version'],
+      )!,
       lastSyncTime: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}last_sync_time'],
       ),
-      pendingChanges:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}pending_changes'],
-          )!,
+      pendingChanges: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pending_changes'],
+      )!,
     );
   }
 
@@ -5761,10 +5626,9 @@ class SyncMetadataData extends DataClass
     return SyncMetadataCompanion(
       id: Value(id),
       lastSyncVersion: Value(lastSyncVersion),
-      lastSyncTime:
-          lastSyncTime == null && nullToAbsent
-              ? const Value.absent()
-              : Value(lastSyncTime),
+      lastSyncTime: lastSyncTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncTime),
       pendingChanges: Value(pendingChanges),
     );
   }
@@ -5806,18 +5670,15 @@ class SyncMetadataData extends DataClass
   SyncMetadataData copyWithCompanion(SyncMetadataCompanion data) {
     return SyncMetadataData(
       id: data.id.present ? data.id.value : this.id,
-      lastSyncVersion:
-          data.lastSyncVersion.present
-              ? data.lastSyncVersion.value
-              : this.lastSyncVersion,
-      lastSyncTime:
-          data.lastSyncTime.present
-              ? data.lastSyncTime.value
-              : this.lastSyncTime,
-      pendingChanges:
-          data.pendingChanges.present
-              ? data.pendingChanges.value
-              : this.pendingChanges,
+      lastSyncVersion: data.lastSyncVersion.present
+          ? data.lastSyncVersion.value
+          : this.lastSyncVersion,
+      lastSyncTime: data.lastSyncTime.present
+          ? data.lastSyncTime.value
+          : this.lastSyncTime,
+      pendingChanges: data.pendingChanges.present
+          ? data.pendingChanges.value
+          : this.pendingChanges,
     );
   }
 
