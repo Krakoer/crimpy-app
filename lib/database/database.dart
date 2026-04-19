@@ -353,7 +353,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// Get all saved sessions, with optional filters.
   Future<List<Session>> getAllSessions({SessionFilter? filters}) async {
-    var query = select(sessions);
+    var query = select(sessions)..where((s) => s.deletedAt.isNull());
     // Handle date filters
     if (filters != null) {
       if (filters.startDate != null) {
@@ -736,16 +736,20 @@ class AppDatabase extends _$AppDatabase {
 
   /// Get all the trainings without the assessments.
   Future<List<Training>> getAllTrainingsWithoutAssessments() =>
-      (select(trainings)
-        ..where((training) => training.isAssessment.not())).get();
+      (select(trainings)..where(
+        (training) => training.isAssessment.not() & training.deletedAt.isNull(),
+      )).get();
 
   /// Get all the assessment trainings.
   Future<List<Training>> getAllAssessmentTrainings() =>
-      (select(trainings)..where((training) => training.isAssessment)).get();
+      (select(trainings)..where(
+        (training) => training.isAssessment & training.deletedAt.isNull(),
+      )).get();
 
   /// Get all favorite trainings.
   Future<List<Training>> getFavTrainings() =>
-      (select(trainings)..where((t) => t.isFavorite)).get();
+      (select(trainings)
+        ..where((t) => t.isFavorite & t.deletedAt.isNull())).get();
 
   /// Get the rep templates associated with a training.
   Future<List<RepTemplate>> getRepsForTraining(String trainingId) =>
@@ -814,7 +818,7 @@ class AppDatabase extends _$AppDatabase {
     HandSide? handSide,
     GripPosition? gripPosition,
   }) async {
-    var query = select(assessments);
+    var query = select(assessments)..where((a) => a.deletedAt.isNull());
 
     if (type != null) {
       query = query..where((r) => r.type.equals(type.index));
@@ -840,7 +844,11 @@ class AppDatabase extends _$AppDatabase {
     // Join on sessions to get the date of the assessment.
     final res =
         await query.join([
-          innerJoin(sessions, sessions.id.equalsExp(assessments.sessionId)),
+          innerJoin(
+            sessions,
+            sessions.id.equalsExp(assessments.sessionId) &
+                sessions.deletedAt.isNull(),
+          ),
         ]).get();
 
     return res.map((row) {
