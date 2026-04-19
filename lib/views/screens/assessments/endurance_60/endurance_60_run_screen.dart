@@ -145,14 +145,6 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen> {
       isAssessment: true,
     );
 
-    // Save the assessment immediately (no result screen needed for time-based assessments)
-    // Get all data points for storage
-    final data = ref.read(bleDataStreamProvider.notifier).getData();
-
-    await ref
-        .read(assessmentsProvider(AssessmentType.endurance60).notifier)
-        .saveAssessment(saveAssessment, saveSession, [], data: data);
-
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
