@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/sync_models.dart';
@@ -25,8 +27,23 @@ SyncRepository syncRepository(Ref ref) {
 
 @riverpod
 class SyncViewModel extends _$SyncViewModel {
+  Timer? _debounceTimer;
+
   @override
   Future<SyncState> build() async {
+    ref.onDispose(() => _debounceTimer?.cancel());
+
+    final subscription = gDatabase.dataChanged.listen((_) async {
+      final metadata = await gDatabase.getSyncMetadata();
+      if (ref.mounted && state.hasValue) {
+        state = AsyncData(
+          state.value!.copyWith(pendingChanges: metadata?.pendingChanges ?? 0),
+        );
+      }
+      _scheduleAutoSync();
+    });
+    ref.onDispose(subscription.cancel);
+
     final metadata = await gDatabase.getSyncMetadata();
     return SyncState(
       lastSyncVersion: metadata?.lastSyncVersion ?? 0,
@@ -73,6 +90,15 @@ class SyncViewModel extends _$SyncViewModel {
     }
   }
 
+  Future<void> performSyncSilently() async {
+    if (state.value?.status == SyncStatus.syncing) return;
+    try {
+      await performSync();
+    } catch (e) {
+      AppLoggerHelper.info('Background sync failed silently: $e');
+    }
+  }
+
   Future<void> handleFirstLogin() async {
     await future;
 
@@ -109,12 +135,13 @@ class SyncViewModel extends _$SyncViewModel {
     }
   }
 
-  Future<void> incrementPendingChanges() async {
-    await gDatabase.incrementPendingChanges();
-    final metadata = await gDatabase.getSyncMetadata();
-    state = AsyncData(
-      state.value!.copyWith(pendingChanges: metadata?.pendingChanges ?? 0),
-    );
+  void _scheduleAutoSync() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(seconds: 5), () {
+      final user = ref.read(authStateProvider).asData?.value;
+      if (user == null) return;
+      performSyncSilently();
+    });
   }
 
   void _invalidateDataProviders() {

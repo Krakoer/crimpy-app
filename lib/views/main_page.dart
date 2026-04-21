@@ -1,4 +1,6 @@
 import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/viewmodels/auth_view_model.dart';
+import 'package:crimpy/viewmodels/sync_view_model.dart';
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/assessments_list_screen.dart';
 import 'package:crimpy/views/screens/profile_screen/profile_screen.dart';
 import 'package:crimpy/views/widgets/ble/tare_dialog.dart';
@@ -62,14 +64,15 @@ class MainPage extends ConsumerStatefulWidget {
   ConsumerState<MainPage> createState() => _MainPageState();
 }
 
-class _MainPageState extends ConsumerState<MainPage> {
+class _MainPageState extends ConsumerState<MainPage>
+    with WidgetsBindingObserver {
   int currentPageIndex = 0;
   final _pageViewController = PageController();
 
   @override
   void initState() {
     super.initState();
-    // Check if we should show the "What's New" dialog after the first frame
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkForUpdates();
     });
@@ -77,8 +80,19 @@ class _MainPageState extends ConsumerState<MainPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pageViewController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final user = ref.read(authStateProvider).asData?.value;
+      if (user != null) {
+        ref.read(syncViewModelProvider.notifier).performSyncSilently();
+      }
+    }
   }
 
   /// Check if the app has been updated and show the "What's New" dialog

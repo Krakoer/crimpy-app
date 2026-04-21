@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:crimpy/database/database.steps.dart';
@@ -308,6 +309,9 @@ class SyncMetadata extends Table {
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
+
+  final _dataChangedController = StreamController<void>.broadcast();
+  Stream<void> get dataChanged => _dataChangedController.stream;
 
   // ------------------------------------- SESSIONS -------------------------------------
   /// Get a session with its data points.
@@ -1075,6 +1079,7 @@ class AppDatabase extends _$AppDatabase {
       lastSyncTime: existing?.lastSyncTime,
       pendingChanges: currentCount + 1,
     );
+    _dataChangedController.add(null);
   }
 
   /// Reset pending changes count.
