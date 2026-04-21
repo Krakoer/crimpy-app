@@ -156,7 +156,6 @@ class SyncRepository {
               'grip_position': r.gripPosition,
               'updated_at': r.updatedAt.toUtc().toIso8601String(),
               'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
-              'created_at': r.createdAt?.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -182,7 +181,6 @@ class SyncRepository {
           'is_assessment': t.isAssessment,
           'updated_at': t.updatedAt.toUtc().toIso8601String(),
           'deleted_at': t.deletedAt?.toUtc().toIso8601String(),
-          'created_at': t.createdAt?.toUtc().toIso8601String(),
         });
       }
       collections['trainings'] = trainingMaps;
@@ -209,7 +207,6 @@ class SyncRepository {
               'repeater_split_hand': s.repeaterSplitHand,
               'updated_at': s.updatedAt.toUtc().toIso8601String(),
               'deleted_at': s.deletedAt?.toUtc().toIso8601String(),
-              'created_at': s.createdAt?.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -234,7 +231,6 @@ class SyncRepository {
             'grip_position': r.gripPosition,
             'updated_at': r.updatedAt.toUtc().toIso8601String(),
             'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
-            'created_at': r.createdAt?.toUtc().toIso8601String(),
           });
         }
       }
@@ -263,7 +259,6 @@ class SyncRepository {
             'grip_position': r.gripPosition,
             'updated_at': r.updatedAt.toUtc().toIso8601String(),
             'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
-            'created_at': r.createdAt?.toUtc().toIso8601String(),
           });
         }
       }
@@ -289,7 +284,6 @@ class SyncRepository {
             'grip_position': a.gripPosition,
             'updated_at': a.updatedAt.toUtc().toIso8601String(),
             'deleted_at': a.deletedAt?.toUtc().toIso8601String(),
-            'created_at': a.createdAt?.toUtc().toIso8601String(),
           });
         }
       }
@@ -310,7 +304,6 @@ class SyncRepository {
               'coef': s.coef,
               'updated_at': s.updatedAt.toUtc().toIso8601String(),
               'deleted_at': s.deletedAt?.toUtc().toIso8601String(),
-              'created_at': s.createdAt?.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -329,7 +322,6 @@ class SyncRepository {
               'custom_weight_left': w.customWeightLeft,
               'updated_at': w.updatedAt.toUtc().toIso8601String(),
               'deleted_at': w.deletedAt?.toUtc().toIso8601String(),
-              'created_at': w.createdAt.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -369,7 +361,6 @@ class SyncRepository {
               'grip_position': r.gripPosition,
               'updated_at': r.updatedAt.toUtc().toIso8601String(),
               'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
-              'created_at': r.createdAt?.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -396,7 +387,6 @@ class SyncRepository {
           'is_assessment': t.isAssessment,
           'updated_at': t.updatedAt.toUtc().toIso8601String(),
           'deleted_at': t.deletedAt?.toUtc().toIso8601String(),
-          'created_at': t.createdAt?.toUtc().toIso8601String(),
         });
       }
       collections['trainings'] = trainingMaps;
@@ -425,7 +415,6 @@ class SyncRepository {
               'repeater_split_hand': s.repeaterSplitHand,
               'updated_at': s.updatedAt.toUtc().toIso8601String(),
               'deleted_at': s.deletedAt?.toUtc().toIso8601String(),
-              'created_at': s.createdAt?.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -452,7 +441,6 @@ class SyncRepository {
             'grip_position': r.gripPosition,
             'updated_at': r.updatedAt.toUtc().toIso8601String(),
             'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
-            'created_at': r.createdAt?.toUtc().toIso8601String(),
           });
         }
       }
@@ -483,7 +471,6 @@ class SyncRepository {
             'grip_position': r.gripPosition,
             'updated_at': r.updatedAt.toUtc().toIso8601String(),
             'deleted_at': r.deletedAt?.toUtc().toIso8601String(),
-            'created_at': r.createdAt?.toUtc().toIso8601String(),
           });
         }
       }
@@ -511,7 +498,6 @@ class SyncRepository {
             'grip_position': a.gripPosition,
             'updated_at': a.updatedAt.toUtc().toIso8601String(),
             'deleted_at': a.deletedAt?.toUtc().toIso8601String(),
-            'created_at': a.createdAt?.toUtc().toIso8601String(),
           });
         }
       }
@@ -534,7 +520,6 @@ class SyncRepository {
               'coef': s.coef,
               'updated_at': s.updatedAt.toUtc().toIso8601String(),
               'deleted_at': s.deletedAt?.toUtc().toIso8601String(),
-              'created_at': s.createdAt?.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -553,7 +538,6 @@ class SyncRepository {
               'custom_weight_left': w.customWeightLeft,
               'updated_at': w.updatedAt.toUtc().toIso8601String(),
               'deleted_at': w.deletedAt?.toUtc().toIso8601String(),
-              'created_at': w.createdAt.toUtc().toIso8601String(),
             },
           )
           .toList();
@@ -645,11 +629,6 @@ class SyncRepository {
         gripPosition: Value(record['grip_position'] as int),
         id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
-        createdAt: Value(
-          record['created_at'] != null
-              ? DateTime.parse(record['created_at'] as String)
-              : null,
-        ),
         dirty: const Value(false),
       );
 
@@ -692,11 +671,6 @@ class SyncRepository {
         isBuiltin: const Value(false),
         id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
-        createdAt: Value(
-          record['created_at'] != null
-              ? DateTime.parse(record['created_at'] as String)
-              : null,
-        ),
         deletedAt: Value(deletedAt),
         dirty: const Value(false),
       );
@@ -746,11 +720,6 @@ class SyncRepository {
         repeaterSplitHand: Value(record['repeater_split_hand'] as bool?),
         id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
-        createdAt: Value(
-          record['created_at'] != null
-              ? DateTime.parse(record['created_at'] as String)
-              : null,
-        ),
         deletedAt: Value(deletedAt),
         dirty: const Value(false),
       );
@@ -806,11 +775,6 @@ class SyncRepository {
         gripPosition: Value(record['grip_position'] as int),
         id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
-        createdAt: Value(
-          record['created_at'] != null
-              ? DateTime.parse(record['created_at'] as String)
-              : null,
-        ),
         deletedAt: Value(deletedAt),
         dirty: const Value(false),
       );
@@ -865,11 +829,6 @@ class SyncRepository {
         gripPosition: Value(record['grip_position'] as int),
         id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
-        createdAt: Value(
-          record['created_at'] != null
-              ? DateTime.parse(record['created_at'] as String)
-              : null,
-        ),
         deletedAt: Value(deletedAt),
         dirty: const Value(false),
       );
@@ -923,11 +882,6 @@ class SyncRepository {
         gripPosition: Value(record['grip_position'] as int?),
         id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
-        createdAt: Value(
-          record['created_at'] != null
-              ? DateTime.parse(record['created_at'] as String)
-              : null,
-        ),
         deletedAt: Value(deletedAt),
         dirty: const Value(false),
       );
@@ -968,11 +922,6 @@ class SyncRepository {
         coef: Value(_toDouble(record['coef'])!),
         id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
-        createdAt: Value(
-          record['created_at'] != null
-              ? DateTime.parse(record['created_at'] as String)
-              : null,
-        ),
         deletedAt: Value(deletedAt),
         dirty: const Value(false),
       );
@@ -1020,7 +969,6 @@ class SyncRepository {
         customWeightLeft: Value(_toDouble(record['custom_weight_left'])),
         id: Value(id),
         updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
-        createdAt: Value(DateTime.parse(record['created_at'] as String)),
         deletedAt: Value(deletedAt),
         dirty: const Value(false),
       );

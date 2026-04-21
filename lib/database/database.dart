@@ -41,9 +41,6 @@ class Sessions extends Table {
   late final BoolColumn repeaterSplitHand = boolean().nullable()();
 
   // Sync columns
-  late final DateTimeColumn createdAt = dateTime().nullable().clientDefault(
-    () => DateTime.now(),
-  )();
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
@@ -67,9 +64,6 @@ class Assessments extends Table {
   )(); // 0 = halfCrimp (default)
 
   // Sync columns
-  late final DateTimeColumn createdAt = dateTime().nullable().clientDefault(
-    () => DateTime.now(),
-  )();
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
@@ -102,9 +96,6 @@ class Trainings extends Table {
   )();
 
   // Sync columns
-  late final DateTimeColumn createdAt = dateTime().nullable().clientDefault(
-    () => DateTime.now(),
-  )();
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
@@ -137,9 +128,6 @@ class Repeaters extends Table {
   )(); // 0 = halfCrimp (default)
 
   // Sync columns
-  late final DateTimeColumn createdAt = dateTime().nullable().clientDefault(
-    () => DateTime.now(),
-  )();
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
@@ -165,9 +153,6 @@ class RepTemplates extends Table {
   )(); // 0 = halfCrimp (default)
 
   // Sync columns
-  late final DateTimeColumn createdAt = dateTime().nullable().clientDefault(
-    () => DateTime.now(),
-  )();
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
@@ -199,9 +184,6 @@ class RepDatas extends Table {
   )(); // 0 = halfCrimp (default)
 
   // Sync columns
-  late final DateTimeColumn createdAt = dateTime().nullable().clientDefault(
-    () => DateTime.now(),
-  )();
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
@@ -226,6 +208,10 @@ class PinnedBuiltinTrainings extends Table {
 
   // Sync columns
   late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
+  late final DateTimeColumn updatedAt = dateTime().withDefault(
+    currentDateAndTime,
+  )();
+  late final DateTimeColumn deletedAt = dateTime().nullable()();
 }
 
 // Stores the saved sensor configs.
@@ -238,9 +224,6 @@ class SensorConfigs extends Table {
   late final RealColumn coef = real()();
 
   // Sync columns
-  late final DateTimeColumn createdAt = dateTime().nullable().clientDefault(
-    () => DateTime.now(),
-  )();
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
@@ -260,9 +243,6 @@ class BuiltinTrainingWeights extends Table {
   late final RealColumn customWeightLeft = real().nullable()();
 
   // Sync columns
-  late final DateTimeColumn createdAt = dateTime().withDefault(
-    currentDateAndTime,
-  )();
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
@@ -271,11 +251,6 @@ class BuiltinTrainingWeights extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
-
-  @override
-  List<String> get customConstraints => [
-    'FOREIGN KEY (builtin_training_id) REFERENCES trainings(id) ON DELETE CASCADE',
-  ];
 }
 
 // Stores the currently authenticated user information.
@@ -1071,7 +1046,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1183,8 +1158,25 @@ class AppDatabase extends _$AppDatabase {
         );
       },
       from4To5: (m, schema) async {
-        // Drop useless sync columns
         await m.alterTable(TableMigration(schema.pinnedBuiltinTrainings));
+      },
+      from5To6: (m, schema) async {
+        await m.alterTable(TableMigration(schema.sessions));
+        await m.alterTable(TableMigration(schema.assessments));
+        await m.alterTable(TableMigration(schema.repeaters));
+        await m.alterTable(TableMigration(schema.trainings));
+        await m.alterTable(TableMigration(schema.repTemplates));
+        await m.alterTable(TableMigration(schema.repDatas));
+        await m.alterTable(TableMigration(schema.sensorConfigs));
+        await m.alterTable(TableMigration(schema.builtinTrainingWeights));
+        await m.addColumn(
+          schema.pinnedBuiltinTrainings,
+          schema.pinnedBuiltinTrainings.updatedAt,
+        );
+        await m.addColumn(
+          schema.pinnedBuiltinTrainings,
+          schema.pinnedBuiltinTrainings.deletedAt,
+        );
       },
     ),
   );
