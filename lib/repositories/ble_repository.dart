@@ -256,7 +256,7 @@ class BleRepository {
   }
 
   /// Update a list of sesnor calibration configs.
-  Future<void> updateSensorConfigs(List<SensorConfigs> configs) async {
+  Future<void> updateSensorConfigs(List<SensorConfig> configs) async {
     await gDatabase.updateSensorConfigs(configs);
   }
 

@@ -3,6 +3,7 @@ import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/auth_models.dart' as auth_models;
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/auth_service.dart';
+import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/sync_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
@@ -59,6 +60,7 @@ class AuthState extends _$AuthState {
       ref.invalidate(allTrainingsProvider);
       ref.invalidate(pinnedTrainingsProvider);
       ref.invalidate(assessmentsProvider);
+      ref.invalidate(sensorConfigsProvider);
 
       AppLoggerHelper.info('Login successful, data providers invalidated');
     } catch (e, s) {
@@ -158,6 +160,7 @@ class AuthState extends _$AuthState {
       ref.invalidate(allTrainingsProvider);
       ref.invalidate(pinnedTrainingsProvider);
       ref.invalidate(assessmentsProvider);
+      ref.invalidate(sensorConfigsProvider);
       ref.invalidateSelf();
 
       AppLoggerHelper.info('Logout successful, data providers invalidated');

@@ -443,6 +443,8 @@ class AppDatabase extends _$AppDatabase {
             targetWeight: Value(index.$2.targetWeight),
             averageWeight: Value(index.$2.averageWeight),
             gripPosition: Value(index.$2.gripPosition.index),
+            dirty: Value(true),
+            updatedAt: Value(DateTime.now()),
           ),
         )
         .toList();
@@ -867,9 +869,11 @@ class AppDatabase extends _$AppDatabase {
 
   // ------------------------------------- SENSOR CONFIGS -------------------------------------
   /// Get the saved sensor configs.
-  Future<List<SensorConfig>> getSensorConfigs() async => (select(
-    sensorConfigs,
-  )..orderBy([(r) => OrderingTerm.desc(r.index)])).get();
+  Future<List<SensorConfig>> getSensorConfigs() async =>
+      (select(sensorConfigs)
+            ..orderBy([(r) => OrderingTerm.desc(r.index)])
+            ..where((conf) => conf.deletedAt.isNull()))
+          .get();
 
   /// Save a new sensor config.
   Future<int> addSensorConfig(SensorConfigsCompanion config) async {
@@ -882,20 +886,43 @@ class AppDatabase extends _$AppDatabase {
       tare: config.tare,
       index: Value(newIndex),
       name: config.name,
+      dirty: const Value(true),
+      updatedAt: Value(DateTime.now()),
     );
-    return await into(sensorConfigs).insert(newConf);
+    final rowId = await into(sensorConfigs).insert(newConf);
+    await incrementPendingChanges();
+    return rowId;
   }
 
   /// Update a list of sensor configs.
-  Future<void> updateSensorConfigs(List<SensorConfigs> configs) async {
+  Future<void> updateSensorConfigs(List<SensorConfig> configs) async {
+    final now = DateTime.now();
     for (final entry in configs) {
-      await update(sensorConfigs).replace(entry as Insertable<SensorConfig>);
+      await (update(sensorConfigs)..where((s) => s.id.equals(entry.id))).write(
+        SensorConfigsCompanion(
+          name: Value(entry.name),
+          index: Value(entry.index),
+          tare: Value(entry.tare),
+          coef: Value(entry.coef),
+          dirty: const Value(true),
+          updatedAt: Value(now),
+        ),
+      );
     }
+    await incrementPendingChanges();
   }
 
-  /// Delete a new sensor config.
-  Future<void> deleteSensorConfig(String id) async =>
-      (delete(sensorConfigs)..where((t) => t.id.equals(id))).go();
+  /// Delete a sensor config.
+  Future<void> deleteSensorConfig(String id) async {
+    await (update(sensorConfigs)..where((t) => t.id.equals(id))).write(
+      SensorConfigsCompanion(
+        dirty: const Value(true),
+        updatedAt: Value(DateTime.now()),
+        deletedAt: Value(DateTime.now()),
+      ),
+    );
+    await incrementPendingChanges();
+  }
 
   // ------------------------------------- BUILTIN TRAINING WEIGHTS -------------------------------------
   /// Get custom weights for a builtin training.
@@ -917,7 +944,6 @@ class AppDatabase extends _$AppDatabase {
     final existing = await getBuiltinTrainingWeights(builtinTrainingId);
 
     if (existing != null) {
-      // Update existing weights
       await (update(
         builtinTrainingWeights,
       )..where((w) => w.id.equals(existing.id))).write(
@@ -925,26 +951,31 @@ class AppDatabase extends _$AppDatabase {
           customWeightRight: Value(customWeightRight),
           customWeightLeft: Value(customWeightLeft),
           updatedAt: Value(DateTime.now()),
+          dirty: const Value(true),
         ),
       );
     } else {
-      // Insert new weights
       await into(builtinTrainingWeights).insert(
         BuiltinTrainingWeightsCompanion.insert(
           builtinTrainingId: builtinTrainingId,
           customWeightRight: Value(customWeightRight),
           customWeightLeft: Value(customWeightLeft),
+          dirty: const Value(true),
+          updatedAt: Value(DateTime.now()),
         ),
       );
     }
+    await incrementPendingChanges();
   }
 
   // ------------------------------------- PINNED BUILTIN TRAININGS -------------------------------------
   /// Get all pinned builtin training IDs.
   Future<List<String>> getPinnedBuiltinTrainingIds() async {
-    return (await select(
-      pinnedBuiltinTrainings,
-    ).get()).map((row) => row.builtinTrainingId).toList();
+    return (await (select(
+          pinnedBuiltinTrainings,
+        )..where((p) => p.deletedAt.isNull())).get())
+        .map((row) => row.builtinTrainingId)
+        .toList();
   }
 
   /// Pin a builtin training to the home screen.
@@ -952,22 +983,35 @@ class AppDatabase extends _$AppDatabase {
     await into(pinnedBuiltinTrainings).insert(
       PinnedBuiltinTrainingsCompanion(
         builtinTrainingId: Value(builtinTrainingId),
+        dirty: const Value(true),
+        updatedAt: Value(DateTime.now()),
       ),
     );
+    await incrementPendingChanges();
   }
 
   /// Unpin a builtin training from the home screen.
   Future<void> unpinBuiltinTraining(String builtinTrainingId) async {
-    await (delete(
+    await (update(
       pinnedBuiltinTrainings,
-    )..where((t) => t.builtinTrainingId.equals(builtinTrainingId))).go();
+    )..where((t) => t.builtinTrainingId.equals(builtinTrainingId))).write(
+      PinnedBuiltinTrainingsCompanion(
+        dirty: const Value(true),
+        updatedAt: Value(DateTime.now()),
+        deletedAt: Value(DateTime.now()),
+      ),
+    );
+    await incrementPendingChanges();
   }
 
   /// Check if a builtin training is pinned.
   Future<bool> isBuiltinTrainingPinned(String builtinTrainingId) async {
     final result =
-        await (select(pinnedBuiltinTrainings)
-              ..where((t) => t.builtinTrainingId.equals(builtinTrainingId)))
+        await (select(pinnedBuiltinTrainings)..where(
+              (t) =>
+                  t.builtinTrainingId.equals(builtinTrainingId) &
+                  t.deletedAt.isNull(),
+            ))
             .getSingleOrNull();
     return result != null;
   }

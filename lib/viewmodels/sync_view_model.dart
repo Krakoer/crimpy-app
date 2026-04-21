@@ -4,6 +4,7 @@ import 'package:crimpy/models/sync_models.dart';
 import 'package:crimpy/repositories/sync_repository.dart';
 import 'package:crimpy/services/sync_service.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
+import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -123,6 +124,7 @@ class SyncViewModel extends _$SyncViewModel {
     ref.invalidate(allTrainingsProvider);
     ref.invalidate(pinnedTrainingsProvider);
     ref.invalidate(assessmentsProvider);
+    ref.invalidate(sensorConfigsProvider);
     AppLoggerHelper.info('Data providers invalidated after sync');
   }
 }

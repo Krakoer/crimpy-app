@@ -332,7 +332,13 @@ class SyncRepository {
         .get();
     if (pinnedBuiltinTrainings.isNotEmpty) {
       collections['pinned_builtin_trainings'] = pinnedBuiltinTrainings
-          .map((p) => {'builtin_training_id': p.builtinTrainingId})
+          .map(
+            (p) => {
+              'builtin_training_id': p.builtinTrainingId,
+              'updated_at': p.updatedAt.toUtc().toIso8601String(),
+              'deleted_at': p.deletedAt?.toUtc().toIso8601String(),
+            },
+          )
           .toList();
     }
 
@@ -548,7 +554,13 @@ class SyncRepository {
     )..where((p) => p.dirty.equals(true))).get();
     if (pinnedBuiltinTrainings.isNotEmpty) {
       collections['pinned_builtin_trainings'] = pinnedBuiltinTrainings
-          .map((p) => {'builtin_training_id': p.builtinTrainingId})
+          .map(
+            (p) => {
+              'builtin_training_id': p.builtinTrainingId,
+              'updated_at': p.updatedAt.toUtc().toIso8601String(),
+              'deleted_at': p.deletedAt?.toUtc().toIso8601String(),
+            },
+          )
           .toList();
     }
 
@@ -992,14 +1004,15 @@ class SyncRepository {
     List<dynamic> pinnedBuiltinTrainings,
   ) async {
     for (final record in pinnedBuiltinTrainings) {
-      final id = record['id'] as String;
+      final builtinTrainingId = record['builtin_training_id'] as String;
       final deletedAt = record['deleted_at'] != null
           ? DateTime.parse(record['deleted_at'] as String)
           : null;
 
-      final existing = await (_database.select(
-        _database.pinnedBuiltinTrainings,
-      )..where((p) => p.builtinTrainingId.equals(id))).getSingleOrNull();
+      final existing =
+          await (_database.select(_database.pinnedBuiltinTrainings)
+                ..where((p) => p.builtinTrainingId.equals(builtinTrainingId)))
+              .getSingleOrNull();
 
       if (deletedAt != null) {
         if (existing != null) {
@@ -1010,17 +1023,16 @@ class SyncRepository {
         continue;
       }
 
-      final builtinTrainingId = record['builtin_training_id'] as String;
-
       final companion = PinnedBuiltinTrainingsCompanion(
         builtinTrainingId: Value(builtinTrainingId),
+        updatedAt: Value(DateTime.parse(record['updated_at'] as String)),
+        deletedAt: Value(deletedAt),
         dirty: const Value(false),
       );
 
       if (existing != null) {
-        await (_database.update(_database.pinnedBuiltinTrainings)..where(
-              (p) => p.builtinTrainingId.equals(existing.builtinTrainingId),
-            ))
+        await (_database.update(_database.pinnedBuiltinTrainings)
+              ..where((p) => p.builtinTrainingId.equals(builtinTrainingId)))
             .write(companion);
       } else {
         await _database
