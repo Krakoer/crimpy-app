@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -105,11 +104,8 @@ class _ForceChartState extends State<ForceChart> {
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                  child: Container(
-                    color: CrimpyTheme.primaryWhite.withValues(alpha: 0.4),
-                  ),
+                child: Container(
+                  color: CrimpyTheme.primaryWhite.withValues(alpha: 0.7),
                 ),
               ),
             ),

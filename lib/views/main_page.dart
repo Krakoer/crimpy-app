@@ -214,7 +214,9 @@ class _MainPageState extends ConsumerState<MainPage>
             goToAssessments: () => _pageViewController.jumpToPage(2),
           ),
           AssessmentsScreen(),
-          ClimbingProfileScreen(),
+          ClimbingProfileScreen(
+            goToAssessments: () => _pageViewController.jumpToPage(2),
+          ),
           SettingsScreen(),
         ],
       ),

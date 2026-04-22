@@ -1,9 +1,6 @@
 import 'package:crimpy/models/assessment_model.dart';
-import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
-import 'package:crimpy/viewmodels/ble_view_model.dart';
-import 'package:crimpy/views/screens/assessments/pre_run_screen.dart';
 import 'package:crimpy/views/screens/auth/login_screen.dart';
 import 'package:crimpy/views/screens/auth/registration_screen.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/stat_content.dart';
@@ -15,12 +12,14 @@ class ProfileContent extends ConsumerWidget {
   final List<AssessmentModel> assessments;
   final Color accentLeft;
   final Color accentRight;
+  final VoidCallback goToAssessments;
 
   const ProfileContent({
     super.key,
     required this.assessments,
     required this.accentLeft,
     required this.accentRight,
+    required this.goToAssessments,
   });
 
   @override
@@ -176,26 +175,7 @@ class ProfileContent extends ConsumerWidget {
             mvcByGripPosition: mvcByGripPosition,
             accentLeft: accentLeft,
             accentRight: accentRight,
-            onStartAssessment:
-                ref.watch(connectionStateProvider) ==
-                    BleConnectionState.connected
-                ? () async {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (ctx) =>
-                            PreRunScreen(type: AssessmentType.mvc),
-                      ),
-                    );
-                  }
-                : () => showDialog(
-                    builder: (context) => AlertDialog(
-                      title: Text("No BLE device connected"),
-                      content: Text(
-                        "You must connect to a BLE device to run an assessment",
-                      ),
-                    ),
-                    context: context,
-                  ),
+            onStartAssessment: goToAssessments,
           ),
 
           const SizedBox(height: 32),
@@ -219,26 +199,7 @@ class ProfileContent extends ConsumerWidget {
                 .where((a) => a.rightValue != null)
                 .map((a) => (a.date, a.rightValue!))
                 .toList(),
-            onStartAssessment: () =>
-                ref.watch(connectionStateProvider) ==
-                    BleConnectionState.connected
-                ? () async {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (ctx) =>
-                            PreRunScreen(type: AssessmentType.criticalForce),
-                      ),
-                    );
-                  }
-                : () => showDialog(
-                    builder: (context) => AlertDialog(
-                      title: Text("No BLE device connected"),
-                      content: Text(
-                        "You must connect to a BLE device to run an assessment",
-                      ),
-                    ),
-                    context: context,
-                  ),
+            onStartAssessment: goToAssessments,
           ),
 
           SizedBox(height: 32),
@@ -263,26 +224,7 @@ class ProfileContent extends ConsumerWidget {
                 .map((a) => (a.date, a.rightValue!))
                 .toList(),
             unit: AssessmentUnit.seconds,
-            onStartAssessment: () =>
-                ref.watch(connectionStateProvider) ==
-                    BleConnectionState.connected
-                ? () async {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (ctx) =>
-                            PreRunScreen(type: AssessmentType.endurance60),
-                      ),
-                    );
-                  }
-                : () => showDialog(
-                    builder: (context) => AlertDialog(
-                      title: Text("No BLE device connected"),
-                      content: Text(
-                        "You must connect to a BLE device to run an assessment",
-                      ),
-                    ),
-                    context: context,
-                  ),
+            onStartAssessment: goToAssessments,
           ),
         ],
       ),
