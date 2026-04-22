@@ -16,43 +16,53 @@ import '../viewmodels/app_info_view_model.dart';
 import 'widgets/ble/connection_dialog.dart';
 import 'widgets/whats_new_dialog.dart';
 
-// Custom navigation destination widget to reduce rebuilds
-class _NavDestination extends StatelessWidget {
+class _NavItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool isSelected;
+  final VoidCallback onTap;
 
-  const _NavDestination({
+  const _NavItem({
     required this.icon,
     required this.label,
     required this.isSelected,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     final color = isSelected
-        ? Theme.of(context).colorScheme.primary
-        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
+        ? primary
+        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35);
 
-    return NavigationDestination(
-      icon: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FaIcon(icon, size: 20, color: color),
-          const SizedBox(height: 4),
-          Container(
-            width: 4,
-            height: 4,
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.transparent,
-              shape: BoxShape.circle,
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: 2,
+              color: isSelected ? primary : Colors.transparent,
             ),
-          ),
-        ],
+            const SizedBox(height: 10),
+            FaIcon(icon, size: 18, color: color),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'JetBrainsMono',
+                fontSize: 9,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: color,
+                letterSpacing: 0.3,
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
       ),
-      label: label,
     );
   }
 }
@@ -123,56 +133,43 @@ class _MainPageState extends ConsumerState<MainPage>
     final connectionState = ref.watch(connectionStateProvider);
 
     return Scaffold(
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
+      bottomNavigationBar: SafeArea(
+        child: Container(
           color: Theme.of(context).colorScheme.surface,
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).colorScheme.outline,
-              width: 2,
-            ),
+          child: Row(
+            children: [
+              _NavItem(
+                icon: FontAwesomeIcons.house,
+                label: 'Home',
+                isSelected: currentPageIndex == 0,
+                onTap: () => _pageViewController.jumpToPage(0),
+              ),
+              _NavItem(
+                icon: FontAwesomeIcons.fire,
+                label: 'Trainings',
+                isSelected: currentPageIndex == 1,
+                onTap: () => _pageViewController.jumpToPage(1),
+              ),
+              _NavItem(
+                icon: FontAwesomeIcons.chartSimple,
+                label: 'Assess.',
+                isSelected: currentPageIndex == 2,
+                onTap: () => _pageViewController.jumpToPage(2),
+              ),
+              _NavItem(
+                icon: FontAwesomeIcons.user,
+                label: 'Profile',
+                isSelected: currentPageIndex == 3,
+                onTap: () => _pageViewController.jumpToPage(3),
+              ),
+              _NavItem(
+                icon: FontAwesomeIcons.gear,
+                label: 'Settings',
+                isSelected: currentPageIndex == 4,
+                onTap: () => _pageViewController.jumpToPage(4),
+              ),
+            ],
           ),
-        ),
-        child: NavigationBar(
-          height: 60,
-          onDestinationSelected: (int index) {
-            _pageViewController.jumpToPage(index);
-          },
-          selectedIndex: currentPageIndex,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          indicatorColor: Colors.transparent,
-          indicatorShape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.zero,
-          ),
-          destinations: <Widget>[
-            _NavDestination(
-              icon: FontAwesomeIcons.house,
-              label: 'Home',
-              isSelected: currentPageIndex == 0,
-            ),
-            _NavDestination(
-              icon: FontAwesomeIcons.fire,
-              label: 'Trainings',
-              isSelected: currentPageIndex == 1,
-            ),
-            _NavDestination(
-              icon: FontAwesomeIcons.chartSimple,
-              label: 'Assessments',
-              isSelected: currentPageIndex == 2,
-            ),
-            _NavDestination(
-              icon: FontAwesomeIcons.user,
-              label: 'Profile',
-              isSelected: currentPageIndex == 3,
-            ),
-            _NavDestination(
-              icon: FontAwesomeIcons.gear,
-              label: 'Settings',
-              isSelected: currentPageIndex == 4,
-            ),
-          ],
         ),
       ),
       appBar: AppBar(
