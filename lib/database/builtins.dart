@@ -50,7 +50,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
     name: "Max Force",
     description: "Measure your Maximum Voluntary Contraction (MVC)",
     type: AssessmentType.mvc,
-    icon: FontAwesomeIcons.boltLightning,
+    icon: FontAwesomeIcons.handFist,
     trainingGenerator: ({GripPosition? gripPosition}) {
       final grip = gripPosition ?? GripPosition.halfCrimp;
       return TrainingWithReps(
@@ -104,7 +104,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
     description:
         "Measure your Critical Force, the force you can exerce for an extended time period.",
     type: AssessmentType.criticalForce,
-    icon: FontAwesomeIcons.clock,
+    icon: FontAwesomeIcons.heartPulse,
     trainingGenerator: ({GripPosition? gripPosition}) => TrainingWithReps(
       id: "55970ac0-4544-4945-80cd-4841f7c58fe5",
       name: "Critical Force",
@@ -143,7 +143,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
     name: "60% Endurance",
     description: "Measure how long you can maintain 60% of your MVC.",
     type: AssessmentType.endurance60,
-    icon: FontAwesomeIcons.hourglass,
+    icon: FontAwesomeIcons.stopwatch,
     trainingGenerator: ({GripPosition? gripPosition}) => TrainingWithReps(
       id: "493acbdd-6fe7-4f25-987c-575ccf433293",
       name: "60% Endurance",
