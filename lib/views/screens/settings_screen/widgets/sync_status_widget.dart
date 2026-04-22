@@ -26,7 +26,6 @@ class SyncStatusWidget extends ConsumerWidget {
   ) {
     final theme = Theme.of(context);
     final isSyncing = syncState.status == SyncStatus.syncing;
-    final hasError = syncState.status == SyncStatus.error;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -84,28 +83,28 @@ class SyncStatusWidget extends ConsumerWidget {
                 ),
               ),
             ],
-            if (hasError) ...[
-              if (syncState.errorMessage != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  'Error: ${syncState.errorMessage}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.error,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () {
-                  ref.read(syncViewModelProvider.notifier).performSync();
-                },
-                icon: const Icon(FontAwesomeIcons.arrowsRotate, size: 16),
-                label: const Text('Retry'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(36),
+            if (syncState.errorMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Error: ${syncState.errorMessage}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
                 ),
               ),
             ],
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: isSyncing
+                  ? null
+                  : () {
+                      ref.read(syncViewModelProvider.notifier).performSync();
+                    },
+              icon: const Icon(FontAwesomeIcons.arrowsRotate, size: 16),
+              label: Text(isSyncing ? 'Syncing...' : 'Sync Now'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size.fromHeight(40),
+              ),
+            ),
           ],
         ),
       ),
