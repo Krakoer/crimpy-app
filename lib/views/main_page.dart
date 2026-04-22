@@ -75,6 +75,7 @@ class _MainPageState extends ConsumerState<MainPage>
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkForUpdates();
+      _syncOnStartup();
     });
   }
 
@@ -92,6 +93,13 @@ class _MainPageState extends ConsumerState<MainPage>
       if (user != null) {
         ref.read(syncViewModelProvider.notifier).performSyncSilently();
       }
+    }
+  }
+
+  void _syncOnStartup() {
+    final user = ref.read(authStateProvider).asData?.value;
+    if (user != null) {
+      ref.read(syncViewModelProvider.notifier).performSyncSilently();
     }
   }
 
