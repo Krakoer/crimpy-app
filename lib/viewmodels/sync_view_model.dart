@@ -137,7 +137,7 @@ class SyncViewModel extends _$SyncViewModel {
 
   void _scheduleAutoSync() {
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(seconds: 5), () {
+    _debounceTimer = Timer(const Duration(seconds: 1), () {
       final user = ref.read(authStateProvider).asData?.value;
       if (user == null) return;
       performSyncSilently();
