@@ -176,7 +176,15 @@ class _MainPageState extends ConsumerState<MainPage>
         ),
       ),
       appBar: AppBar(
-        title: Text("Crimpy"),
+        title: Text(
+          const [
+            'Crimpy',
+            'Trainings',
+            'Assessments',
+            'Profile',
+            'Settings',
+          ][currentPageIndex],
+        ),
         actions: [
           // Live data button when connected
           IconButton(
