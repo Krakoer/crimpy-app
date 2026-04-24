@@ -34,10 +34,9 @@ class BleRepository {
   Stream<BleConnectionState> get connectionStateStream =>
       _connectionStateController.stream;
 
-  BleConnectionState get currentConnectionState =>
-      _device == null
-          ? BleConnectionState.disconnected
-          : BleConnectionState.connected;
+  BleConnectionState get currentConnectionState => _device == null
+      ? BleConnectionState.disconnected
+      : BleConnectionState.connected;
 
   /// Stores the connected device.
   BluetoothDevice? _device;
@@ -257,12 +256,12 @@ class BleRepository {
   }
 
   /// Update a list of sesnor calibration configs.
-  Future<void> updateSensorConfigs(List<SensorConfigs> configs) async {
+  Future<void> updateSensorConfigs(List<SensorConfig> configs) async {
     await gDatabase.updateSensorConfigs(configs);
   }
 
   /// Delete a sensor config by its ID.
-  Future<void> deleteSensorConfig(int id) async {
+  Future<void> deleteSensorConfig(String id) async {
     await gDatabase.deleteSensorConfig(id);
   }
 

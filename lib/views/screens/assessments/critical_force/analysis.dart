@@ -46,13 +46,12 @@ List<double> _sigmaClippedStats(List<double> data) {
 
   List<bool> mask = List.filled(data.length, true);
   for (int i = 0; i < 5; i++) {
-    List<double> maskedData =
-        data
-            .asMap()
-            .entries
-            .where((entry) => mask[entry.key])
-            .map((entry) => entry.value)
-            .toList();
+    List<double> maskedData = data
+        .asMap()
+        .entries
+        .where((entry) => mask[entry.key])
+        .map((entry) => entry.value)
+        .toList();
 
     if (maskedData.isEmpty) {
       return [0.0, 0.0, 0.0];
@@ -81,13 +80,12 @@ List<double> _sigmaClippedStats(List<double> data) {
     }
   }
 
-  List<double> maskedData =
-      data
-          .asMap()
-          .entries
-          .where((entry) => mask[entry.key])
-          .map((entry) => entry.value)
-          .toList();
+  List<double> maskedData = data
+      .asMap()
+      .entries
+      .where((entry) => mask[entry.key])
+      .map((entry) => entry.value)
+      .toList();
 
   if (maskedData.isEmpty) {
     return [0.0, 0.0, 0.0];
@@ -235,8 +233,9 @@ CriticalForceResults analyseData(
   double factor = loadTime / (loadTime + restTime);
   // Use last 4 intervals for load asymptote, or all intervals if fewer than 5
   final asymptoteStartIndex = fmeans.length >= 5 ? fmeans.length - 5 : 0;
-  final asymptoteEndIndex =
-      fmeans.length >= 5 ? fmeans.length - 1 : fmeans.length;
+  final asymptoteEndIndex = fmeans.length >= 5
+      ? fmeans.length - 1
+      : fmeans.length;
   final asymptoteSublist = fmeans.sublist(
     asymptoteStartIndex,
     asymptoteEndIndex,
@@ -244,10 +243,9 @@ CriticalForceResults analyseData(
 
   double loadAsymptote =
       asymptoteSublist.reduce((a, b) => a + b) / asymptoteSublist.length;
-  double eLoadAsymptote =
-      asymptoteSublist.length > 1
-          ? _standardDeviation(asymptoteSublist) / asymptoteSublist.length
-          : 0.0;
+  double eLoadAsymptote = asymptoteSublist.length > 1
+      ? _standardDeviation(asymptoteSublist) / asymptoteSublist.length
+      : 0.0;
   double criticalLoad = loadAsymptote * factor;
   // ignore: unused_local_variable
   double eCriticalLoad = criticalLoad * (eLoadAsymptote / loadAsymptote);

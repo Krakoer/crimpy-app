@@ -26,7 +26,7 @@ class _HistoryScreenState extends ConsumerState<WeekHistogramCard> {
     ).add(Duration(days: 7 * _weekOffset));
     // Get the sessions of the week
     final asyncSessions = ref.watch(
-      sessionsProvider(
+      filteredSessionsProvider(
         SessionFilter(
           startDate: startOfTheWeek,
           endDate: startOfTheWeek.add(Duration(days: 7)),
@@ -35,10 +35,9 @@ class _HistoryScreenState extends ConsumerState<WeekHistogramCard> {
     );
 
     final endOfWeek = startOfTheWeek.add(Duration(days: 6));
-    final String weekTitle =
-        _weekOffset == 0
-            ? "This Week"
-            : "${startOfTheWeek.day}/${startOfTheWeek.month} - ${endOfWeek.day}/${endOfWeek.month}";
+    final String weekTitle = _weekOffset == 0
+        ? "This Week"
+        : "${startOfTheWeek.day}/${startOfTheWeek.month} - ${endOfWeek.day}/${endOfWeek.month}";
 
     return HomeCard(
       title: weekTitle,
@@ -60,14 +59,13 @@ class _HistoryScreenState extends ConsumerState<WeekHistogramCard> {
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.chevron_right, size: 20),
-            onPressed:
-                _weekOffset < 0
-                    ? () {
-                      setState(() {
-                        _weekOffset++;
-                      });
-                    }
-                    : null, // Disable if we're at current week or future
+            onPressed: _weekOffset < 0
+                ? () {
+                    setState(() {
+                      _weekOffset++;
+                    });
+                  }
+                : null, // Disable if we're at current week or future
             tooltip: 'Next week',
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),

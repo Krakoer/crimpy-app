@@ -127,6 +127,14 @@ dart run build_runner build
 dart run build_runner build --delete-conflicting-outputs
 ```
 
+### Migrations
+
+When updating the database, after generating code with build_runner, you should:
+1. Bump the database version in `database.dart`
+2. Generate migration & tests with `dart run drift_dev make-migrations`
+3. Write `MigrationStrategy` in `database.dart`
+4. Optional: edit generated tests if necessary (type or constraints change typically)
+
 ### Static Analysis
 ```bash
 flutter analyze

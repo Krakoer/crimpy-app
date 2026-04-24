@@ -23,19 +23,17 @@ class TrainingListItemWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     Widget cardContent = CrimpyCards.training(
-      onTap:
-          item.isAvailable
-              ? () {
-                if (item.training != null) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder:
-                          (context) => TrainingDetailScreen(item.training!),
-                    ),
-                  );
-                }
+      onTap: item.isAvailable
+          ? () {
+              if (item.training != null) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => TrainingDetailScreen(item.training!),
+                  ),
+                );
               }
-              : onMissingAssessments,
+            }
+          : onMissingAssessments,
       child: Row(
         children: [
           // Icon
@@ -83,10 +81,9 @@ class TrainingListItemWidget extends ConsumerWidget {
                           ? formatDurationMinSec(item.totalDuration)
                           : 'Assessment required',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color:
-                            item.isAvailable
-                                ? CrimpyTheme.textSecondary
-                                : CrimpyTheme.textMuted,
+                        color: item.isAvailable
+                            ? CrimpyTheme.textSecondary
+                            : CrimpyTheme.textMuted,
                       ),
                     ),
                   ],
@@ -106,20 +103,17 @@ class TrainingListItemWidget extends ConsumerWidget {
                     color: CrimpyTheme.textSecondary,
                     size: 20,
                   ),
-                  onPressed:
-                      () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder:
-                              (_) =>
-                                  item.training!.repeater == null
-                                      ? TrainingCreationScreen(
-                                        originalTraining: item.training!,
-                                      )
-                                      : RepeaterCreationScreen(
-                                        originalTemplate: item.training!,
-                                      ),
-                        ),
-                      ),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => item.training!.repeater == null
+                          ? TrainingCreationScreen(
+                              originalTraining: item.training!,
+                            )
+                          : RepeaterCreationScreen(
+                              originalTemplate: item.training!,
+                            ),
+                    ),
+                  ),
                   tooltip: 'Edit Training',
                 ),
                 IconButton(
@@ -131,9 +125,8 @@ class TrainingListItemWidget extends ConsumerWidget {
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder:
-                          (context) =>
-                              DeleteTrainingDialog(trainingId: item.id),
+                      builder: (context) =>
+                          DeleteTrainingDialog(trainingId: item.id),
                     );
                   },
                   tooltip: 'Delete Training',

@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 /// Builtin Assessment Model - similar to BuiltinTrainingModel
 /// Dynamically generates assessment trainings at runtime without DB storage
 class BuiltinAssessmentModel {
-  final int id;
+  final String id;
   final String name;
   final String description;
   final AssessmentType type;
@@ -46,20 +46,20 @@ class BuiltinAssessmentModel {
 // Stores the built-ins assessment definitions (dynamically generated, not stored in DB)
 final List<BuiltinAssessmentModel> builtinAssessments = [
   BuiltinAssessmentModel(
-    id: 1 << 32,
+    id: "f7954158-63ba-4f0b-a125-6ef195fa6442",
     name: "Max Force",
     description: "Measure your Maximum Voluntary Contraction (MVC)",
     type: AssessmentType.mvc,
-    icon: FontAwesomeIcons.boltLightning,
+    icon: FontAwesomeIcons.handFist,
     trainingGenerator: ({GripPosition? gripPosition}) {
       final grip = gripPosition ?? GripPosition.halfCrimp;
       return TrainingWithReps(
-        id: 1 << 32,
+        id: "248a87c4-039e-464a-a351-b883ff68c147",
         name: "Max Force",
         isFav: false,
         reps: [
           RepModel(
-            id: 1 << 32,
+            id: "",
             durationInSeconds: 10,
             isRest: true,
             handSide: HandSide.left,
@@ -68,7 +68,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
             gripPosition: grip,
           ),
           RepModel(
-            id: 2 << 32,
+            id: "",
             durationInSeconds: 5,
             isRest: false,
             handSide: HandSide.right,
@@ -77,7 +77,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
             gripPosition: grip,
           ),
           RepModel(
-            id: 3 << 32,
+            id: "",
             durationInSeconds: 10,
             isRest: true,
             handSide: HandSide.left,
@@ -86,7 +86,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
             gripPosition: grip,
           ),
           RepModel(
-            id: 4 << 32,
+            id: "",
             durationInSeconds: 5,
             isRest: false,
             handSide: HandSide.left,
@@ -99,66 +99,64 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
     },
   ),
   BuiltinAssessmentModel(
-    id: 3 << 32,
+    id: "55970ac0-4544-4945-80cd-4841f7c58fe5",
     name: "Critical Force",
     description:
         "Measure your Critical Force, the force you can exerce for an extended time period.",
     type: AssessmentType.criticalForce,
-    icon: FontAwesomeIcons.clock,
-    trainingGenerator:
-        ({GripPosition? gripPosition}) => TrainingWithReps(
-          id: 3 << 32,
-          name: "Critical Force",
-          isFav: false,
-          reps: [
-            RepModel(
-              durationInSeconds: 10,
-              isRest: true,
-              handSide: HandSide.right,
-              targetWeight: 0,
-              index: 0,
-              id: 9 << 32,
-            ),
-            ...RepeaterModel(
-              repsBySet: 24,
-              restBteweenSets: 0,
-              sets: 1,
-              restTime: 3,
-              splitHand: false,
-              workTime: 7,
-            ).generateReps().mapIndexed(
-              (index, rep) => RepModel(
-                durationInSeconds: rep.duration,
-                isRest: rep.isRest,
-                handSide: rep.handSide,
-                targetWeight: rep.targetWeight,
-                index: index + 1,
-                id: (index + 10) << 32,
-              ),
-            ),
-          ],
+    icon: FontAwesomeIcons.heartPulse,
+    trainingGenerator: ({GripPosition? gripPosition}) => TrainingWithReps(
+      id: "55970ac0-4544-4945-80cd-4841f7c58fe5",
+      name: "Critical Force",
+      isFav: false,
+      reps: [
+        RepModel(
+          durationInSeconds: 10,
+          isRest: true,
+          handSide: HandSide.right,
+          targetWeight: 0,
+          index: 0,
+          id: "",
         ),
+        ...RepeaterModel(
+          repsBySet: 24,
+          restBteweenSets: 0,
+          sets: 1,
+          restTime: 3,
+          splitHand: false,
+          workTime: 7,
+        ).generateReps().mapIndexed(
+          (index, rep) => RepModel(
+            durationInSeconds: rep.duration,
+            isRest: rep.isRest,
+            handSide: rep.handSide,
+            targetWeight: rep.targetWeight,
+            index: index + 1,
+            id: "",
+          ),
+        ),
+      ],
+    ),
   ),
   BuiltinAssessmentModel(
-    id: 4 << 32,
+    id: "493acbdd-6fe7-4f25-987c-575ccf433293",
     name: "60% Endurance",
     description: "Measure how long you can maintain 60% of your MVC.",
     type: AssessmentType.endurance60,
-    icon: FontAwesomeIcons.hourglass,
-    trainingGenerator:
-        ({GripPosition? gripPosition}) => TrainingWithReps(
-          id: 4 << 32,
-          name: "60% Endurance",
-          isFav: false,
-          reps: [],
-        ),
+    icon: FontAwesomeIcons.stopwatch,
+    trainingGenerator: ({GripPosition? gripPosition}) => TrainingWithReps(
+      id: "493acbdd-6fe7-4f25-987c-575ccf433293",
+      name: "60% Endurance",
+      isFav: false,
+      reps: [],
+    ),
   ),
 ];
 
 /// Built-in trainings that require assessment values to be available.
 final List<BuiltinTrainingModel> builtinTrainings = [
   BuiltinTrainingModel(
-    id: 1000,
+    id: "311cf821-156d-4d2f-a196-ee9a04d1634f",
     name: "Power Endurance",
     description: "3 sets of 10 7/3 repeaters at 65% of max force.",
     requiredAssessments: [
@@ -186,52 +184,49 @@ final List<BuiltinTrainingModel> builtinTrainings = [
           mvcLeft.leftValue! > 0 &&
           mvcRight.rightValue! > 0;
     },
-    trainingGenerator: (
-      assessmentValues, {
-      double? customLoadRight,
-      double? customLoadLeft,
-    }) {
-      final maxForceRight =
-          assessmentValues
-              .lastWhereOrNull(
-                (assessment) =>
-                    assessment.type == AssessmentType.mvc &&
-                    assessment.gripPosition == GripPosition.halfCrimp &&
-                    assessment.rightValue != null,
-              )
-              ?.rightValue ??
-          0.0;
-      final maxForceLeft =
-          assessmentValues
-              .lastWhereOrNull(
-                (assessment) =>
-                    assessment.type == AssessmentType.mvc &&
-                    assessment.gripPosition == GripPosition.halfCrimp &&
-                    assessment.leftValue != null,
-              )
-              ?.leftValue ??
-          0.0;
-      final targetWeightRight =
-          customLoadRight ??
-          (maxForceRight * 0.65); // Use custom load or 65% of max force
-      final targetWeightLeft =
-          customLoadLeft ??
-          (maxForceLeft * 0.65); // Use custom load or 65% of max force
+    trainingGenerator:
+        (assessmentValues, {double? customLoadRight, double? customLoadLeft}) {
+          final maxForceRight =
+              assessmentValues
+                  .lastWhereOrNull(
+                    (assessment) =>
+                        assessment.type == AssessmentType.mvc &&
+                        assessment.gripPosition == GripPosition.halfCrimp &&
+                        assessment.rightValue != null,
+                  )
+                  ?.rightValue ??
+              0.0;
+          final maxForceLeft =
+              assessmentValues
+                  .lastWhereOrNull(
+                    (assessment) =>
+                        assessment.type == AssessmentType.mvc &&
+                        assessment.gripPosition == GripPosition.halfCrimp &&
+                        assessment.leftValue != null,
+                  )
+                  ?.leftValue ??
+              0.0;
+          final targetWeightRight =
+              customLoadRight ??
+              (maxForceRight * 0.65); // Use custom load or 65% of max force
+          final targetWeightLeft =
+              customLoadLeft ??
+              (maxForceLeft * 0.65); // Use custom load or 65% of max force
 
-      return [
-        RepeaterModel(
-          sets: 3,
-          restBteweenSets: 8 * 60, // 8 minutes in seconds
-          repsBySet: 10,
-          workTime: 7,
-          restTime: 3,
-          splitHand: true,
-          weightRight: targetWeightRight,
-          weightLeft: targetWeightLeft,
-          gripPosition: GripPosition.halfCrimp,
-        ),
-      ];
-    },
+          return [
+            RepeaterModel(
+              sets: 3,
+              restBteweenSets: 8 * 60, // 8 minutes in seconds
+              repsBySet: 10,
+              workTime: 7,
+              restTime: 3,
+              splitHand: true,
+              weightRight: targetWeightRight,
+              weightLeft: targetWeightLeft,
+              gripPosition: GripPosition.halfCrimp,
+            ),
+          ];
+        },
     computeNewWeights: ({difficulty, failureRate}) {
       if (difficulty != null) {
         switch (difficulty) {
@@ -261,7 +256,7 @@ final List<BuiltinTrainingModel> builtinTrainings = [
     },
   ),
   BuiltinTrainingModel(
-    id: 1001,
+    id: "c14dc18b-5575-46e4-8758-158a08d32d9e",
     name: "Max Force",
     description: "Max force training at 85% of max force.",
     requiredAssessments: [
@@ -289,52 +284,49 @@ final List<BuiltinTrainingModel> builtinTrainings = [
           mvcLeft.leftValue! > 0 &&
           mvcRight.rightValue! > 0;
     },
-    trainingGenerator: (
-      assessmentValues, {
-      double? customLoadRight,
-      double? customLoadLeft,
-    }) {
-      final maxForceRight =
-          assessmentValues
-              .lastWhereOrNull(
-                (assessment) =>
-                    assessment.type == AssessmentType.mvc &&
-                    assessment.gripPosition == GripPosition.halfCrimp &&
-                    assessment.rightValue != null,
-              )
-              ?.rightValue ??
-          0.0;
-      final maxForceLeft =
-          assessmentValues
-              .lastWhereOrNull(
-                (assessment) =>
-                    assessment.type == AssessmentType.mvc &&
-                    assessment.gripPosition == GripPosition.halfCrimp &&
-                    assessment.leftValue != null,
-              )
-              ?.leftValue ??
-          0.0;
-      final targetWeightRight =
-          customLoadRight ??
-          (maxForceRight * 0.85); // Use custom load or 85% of max force
-      final targetWeightLeft =
-          customLoadLeft ??
-          (maxForceLeft * 0.85); // Use custom load or 85% of max force
+    trainingGenerator:
+        (assessmentValues, {double? customLoadRight, double? customLoadLeft}) {
+          final maxForceRight =
+              assessmentValues
+                  .lastWhereOrNull(
+                    (assessment) =>
+                        assessment.type == AssessmentType.mvc &&
+                        assessment.gripPosition == GripPosition.halfCrimp &&
+                        assessment.rightValue != null,
+                  )
+                  ?.rightValue ??
+              0.0;
+          final maxForceLeft =
+              assessmentValues
+                  .lastWhereOrNull(
+                    (assessment) =>
+                        assessment.type == AssessmentType.mvc &&
+                        assessment.gripPosition == GripPosition.halfCrimp &&
+                        assessment.leftValue != null,
+                  )
+                  ?.leftValue ??
+              0.0;
+          final targetWeightRight =
+              customLoadRight ??
+              (maxForceRight * 0.85); // Use custom load or 85% of max force
+          final targetWeightLeft =
+              customLoadLeft ??
+              (maxForceLeft * 0.85); // Use custom load or 85% of max force
 
-      return [
-        RepeaterModel(
-          sets: 3,
-          restBteweenSets: 4 * 60, // 8 minutes in seconds
-          repsBySet: 3,
-          workTime: 7,
-          restTime: 15,
-          splitHand: true,
-          weightRight: targetWeightRight,
-          weightLeft: targetWeightLeft,
-          gripPosition: GripPosition.halfCrimp,
-        ),
-      ];
-    },
+          return [
+            RepeaterModel(
+              sets: 3,
+              restBteweenSets: 4 * 60, // 8 minutes in seconds
+              repsBySet: 3,
+              workTime: 7,
+              restTime: 15,
+              splitHand: true,
+              weightRight: targetWeightRight,
+              weightLeft: targetWeightLeft,
+              gripPosition: GripPosition.halfCrimp,
+            ),
+          ];
+        },
     computeNewWeights: ({difficulty, failureRate}) {
       if (difficulty != null) {
         switch (difficulty) {
@@ -364,7 +356,7 @@ final List<BuiltinTrainingModel> builtinTrainings = [
     },
   ),
   BuiltinTrainingModel(
-    id: 1003,
+    id: "877b39e6-9718-4388-9d27-ed9d70704828",
     name: "Warmup",
     description:
         "Progressive warmup through all grip positions at 20%, 35%, 50%, 60%, 75%, and 95% of MVC.",
@@ -409,114 +401,111 @@ final List<BuiltinTrainingModel> builtinTrainings = [
       }
       return true;
     },
-    trainingGenerator: (
-      assessmentValues, {
-      double? customLoadRight,
-      double? customLoadLeft,
-    }) {
-      // Helper function to get MVC for a grip position
-      double getMvc(GripPosition grip, bool isRight) {
-        return assessmentValues
-                .lastWhereOrNull(
-                  (assessment) =>
-                      assessment.type == AssessmentType.mvc &&
-                      assessment.gripPosition == grip &&
-                      (isRight
-                          ? assessment.rightValue != null
-                          : assessment.leftValue != null),
-                )
-                ?.getValue(isRight) ??
-            0.0;
-      }
+    trainingGenerator:
+        (assessmentValues, {double? customLoadRight, double? customLoadLeft}) {
+          // Helper function to get MVC for a grip position
+          double getMvc(GripPosition grip, bool isRight) {
+            return assessmentValues
+                    .lastWhereOrNull(
+                      (assessment) =>
+                          assessment.type == AssessmentType.mvc &&
+                          assessment.gripPosition == grip &&
+                          (isRight
+                              ? assessment.rightValue != null
+                              : assessment.leftValue != null),
+                    )
+                    ?.getValue(isRight) ??
+                0.0;
+          }
 
-      // Define the warmup structure: intensity percentages and grip positions
-      final warmupBlocks = [
-        // 20% intensity
-        (
-          0.20,
-          [
-            GripPosition.threeFinger,
-            GripPosition.openHand,
-            GripPosition.halfCrimp,
-          ],
-        ),
-        // 35% intensity
-        (
-          0.35,
-          [
-            GripPosition.threeFinger,
-            GripPosition.openHand,
-            GripPosition.halfCrimp,
-          ],
-        ),
-        // 50% intensity
-        (
-          0.50,
-          [
-            GripPosition.threeFinger,
-            GripPosition.openHand,
-            GripPosition.halfCrimp,
-          ],
-        ),
-        // 60% intensity
-        (
-          0.60,
-          [
-            GripPosition.threeFinger,
-            GripPosition.openHand,
-            GripPosition.halfCrimp,
-          ],
-        ),
-        // 75% intensity
-        (
-          0.75,
-          [
-            GripPosition.threeFinger,
-            GripPosition.openHand,
-            GripPosition.halfCrimp,
-          ],
-        ),
-        // 95% intensity
-        (
-          0.95,
-          [
-            GripPosition.threeFinger,
-            GripPosition.openHand,
-            GripPosition.halfCrimp,
-          ],
-        ),
-      ];
-
-      List<RepeaterModel> repeaters = [];
-
-      for (final (intensity, grips) in warmupBlocks) {
-        for (final grip in grips) {
-          final mvcRight = getMvc(grip, true);
-          final mvcLeft = getMvc(grip, false);
-
-          // Calculate set duration: repsBySet * workTime + (repsBySet - 1) * restTime
-          final restTime = intensity >= 0.95 ? 10 : 5;
-          final setDuration = 4 * 5 + 3 * restTime; // 35s or 50s
-
-          repeaters.add(
-            RepeaterModel(
-              sets: 1,
-              restBteweenSets:
-                  setDuration, // Minimal rest - just time for other hand
-              repsBySet: 4,
-              workTime: 5,
-              restTime: restTime, // 10s rest for 95%, 5s otherwise
-              splitHand: true,
-              weightRight: mvcRight * intensity,
-              weightLeft: mvcLeft * intensity,
-              gripPosition: grip,
+          // Define the warmup structure: intensity percentages and grip positions
+          final warmupBlocks = [
+            // 20% intensity
+            (
+              0.20,
+              [
+                GripPosition.threeFinger,
+                GripPosition.openHand,
+                GripPosition.halfCrimp,
+              ],
             ),
-          );
-        }
-      }
+            // 35% intensity
+            (
+              0.35,
+              [
+                GripPosition.threeFinger,
+                GripPosition.openHand,
+                GripPosition.halfCrimp,
+              ],
+            ),
+            // 50% intensity
+            (
+              0.50,
+              [
+                GripPosition.threeFinger,
+                GripPosition.openHand,
+                GripPosition.halfCrimp,
+              ],
+            ),
+            // 60% intensity
+            (
+              0.60,
+              [
+                GripPosition.threeFinger,
+                GripPosition.openHand,
+                GripPosition.halfCrimp,
+              ],
+            ),
+            // 75% intensity
+            (
+              0.75,
+              [
+                GripPosition.threeFinger,
+                GripPosition.openHand,
+                GripPosition.halfCrimp,
+              ],
+            ),
+            // 95% intensity
+            (
+              0.95,
+              [
+                GripPosition.threeFinger,
+                GripPosition.openHand,
+                GripPosition.halfCrimp,
+              ],
+            ),
+          ];
 
-      return repeaters;
-    },
+          List<RepeaterModel> repeaters = [];
+
+          for (final (intensity, grips) in warmupBlocks) {
+            for (final grip in grips) {
+              final mvcRight = getMvc(grip, true);
+              final mvcLeft = getMvc(grip, false);
+
+              // Calculate set duration: repsBySet * workTime + (repsBySet - 1) * restTime
+              final restTime = intensity >= 0.95 ? 10 : 5;
+              final setDuration = 4 * 5 + 3 * restTime; // 35s or 50s
+
+              repeaters.add(
+                RepeaterModel(
+                  sets: 1,
+                  restBteweenSets:
+                      setDuration, // Minimal rest - just time for other hand
+                  repsBySet: 4,
+                  workTime: 5,
+                  restTime: restTime, // 10s rest for 95%, 5s otherwise
+                  splitHand: true,
+                  weightRight: mvcRight * intensity,
+                  weightLeft: mvcLeft * intensity,
+                  gripPosition: grip,
+                ),
+              );
+            }
+          }
+
+          return repeaters;
+        },
   ),
   // For debug purposes
   // BuiltinTrainingModel(

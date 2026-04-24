@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -45,14 +44,12 @@ class _ForceChartState extends State<ForceChart> {
     final allData = [...widget.leftData, ...widget.rightData].toList();
 
     // Round dates to day
-    List<(DateTime, double)> leftData =
-        widget.leftData
-            .map((d) => (d.$1.copyWith(hour: 0, minute: 0, second: 0), d.$2))
-            .toList();
-    List<(DateTime, double)> rightData =
-        widget.rightData
-            .map((d) => (d.$1.copyWith(hour: 0, minute: 0, second: 0), d.$2))
-            .toList();
+    List<(DateTime, double)> leftData = widget.leftData
+        .map((d) => (d.$1.copyWith(hour: 0, minute: 0, second: 0), d.$2))
+        .toList();
+    List<(DateTime, double)> rightData = widget.rightData
+        .map((d) => (d.$1.copyWith(hour: 0, minute: 0, second: 0), d.$2))
+        .toList();
 
     return CrimpyCards.assessment(
       child: Stack(
@@ -107,11 +104,8 @@ class _ForceChartState extends State<ForceChart> {
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-                  child: Container(
-                    color: CrimpyTheme.primaryWhite.withValues(alpha: 0.4),
-                  ),
+                child: Container(
+                  color: CrimpyTheme.primaryWhite.withValues(alpha: 0.7),
                 ),
               ),
             ),

@@ -63,12 +63,11 @@ abstract class WaveformPainterBase {
     double height,
     Paint paint,
   ) {
-    final workPath =
-        Path()
-          ..moveTo(startX, top + height)
-          ..lineTo(startX, top)
-          ..lineTo(startX + width, top)
-          ..lineTo(startX + width, top + height);
+    final workPath = Path()
+      ..moveTo(startX, top + height)
+      ..lineTo(startX, top)
+      ..lineTo(startX + width, top)
+      ..lineTo(startX + width, top + height);
     canvas.drawPath(workPath, paint);
   }
 
@@ -81,10 +80,9 @@ abstract class WaveformPainterBase {
     double height,
     Paint paint,
   ) {
-    final restPath =
-        Path()
-          ..moveTo(startX, top + height)
-          ..lineTo(startX + width, top + height);
+    final restPath = Path()
+      ..moveTo(startX, top + height)
+      ..lineTo(startX + width, top + height);
     canvas.drawPath(restPath, paint);
   }
 }

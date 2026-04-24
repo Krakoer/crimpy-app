@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../theme/crimpy_theme.dart';
 
 class ClimbingProfileScreen extends ConsumerStatefulWidget {
-  const ClimbingProfileScreen({super.key});
+  final VoidCallback goToAssessments;
+
+  const ClimbingProfileScreen({required this.goToAssessments, super.key});
 
   @override
   ConsumerState<ClimbingProfileScreen> createState() =>
@@ -30,6 +32,7 @@ class _ClimbingProfileScreenState extends ConsumerState<ClimbingProfileScreen>
         assessments: value,
         accentLeft: accentLeft,
         accentRight: accentRight,
+        goToAssessments: widget.goToAssessments,
       ),
       AsyncError(:final error) => Center(child: Text("Error: $error")),
       AsyncLoading() => const Center(child: CircularProgressIndicator()),

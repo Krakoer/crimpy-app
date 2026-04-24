@@ -16,18 +16,16 @@ class CreateTrainingFab extends StatelessWidget {
         SpeedDialChild(
           child: Icon(FontAwesomeIcons.ruler),
           label: "Custom training",
-          onTap:
-              () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => TrainingCreationScreen()),
-              ),
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => TrainingCreationScreen())),
         ),
         SpeedDialChild(
           child: Icon(FontAwesomeIcons.repeat),
           label: "Repeater training",
-          onTap:
-              () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => RepeaterCreationScreen()),
-              ),
+          onTap: () => Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => RepeaterCreationScreen())),
         ),
       ],
       child: Icon(Icons.add),

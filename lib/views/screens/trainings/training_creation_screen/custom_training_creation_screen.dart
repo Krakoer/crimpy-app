@@ -46,19 +46,18 @@ class _TrainingCreationScreenState
   void _addOrEditRep({int? index}) {
     showDialog(
       context: context,
-      builder:
-          (context) => RepFormDialog(
-            initialRep: index == null ? null : _reps[index],
-            onAddRep: (rep) {
-              setState(() {
-                if (index == null) {
-                  _reps.add(rep);
-                } else {
-                  _reps[index] = rep;
-                }
-              });
-            },
-          ),
+      builder: (context) => RepFormDialog(
+        initialRep: index == null ? null : _reps[index],
+        onAddRep: (rep) {
+          setState(() {
+            if (index == null) {
+              _reps.add(rep);
+            } else {
+              _reps[index] = rep;
+            }
+          });
+        },
+      ),
     );
   }
 
@@ -172,27 +171,26 @@ class _TrainingCreationScreenState
 
                 // Reps list
                 Expanded(
-                  child:
-                      _reps.isEmpty
-                          ? const Center(
-                            child: Text(
-                              'No reps added yet. Tap "Add Rep" to create one.',
-                            ),
-                          )
-                          : ReorderableListView.builder(
-                            itemCount: _reps.length,
-                            onReorder: _reorderRep,
-                            itemBuilder: (context, index) {
-                              final rep = _reps[index];
-                              return RepListItem(
-                                key: ValueKey(index),
-                                rep: rep,
-                                index: index,
-                                onEdit: () => _addOrEditRep(index: index),
-                                onDelete: () => _deleteRep(index),
-                              );
-                            },
+                  child: _reps.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No reps added yet. Tap "Add Rep" to create one.',
                           ),
+                        )
+                      : ReorderableListView.builder(
+                          itemCount: _reps.length,
+                          onReorder: _reorderRep,
+                          itemBuilder: (context, index) {
+                            final rep = _reps[index];
+                            return RepListItem(
+                              key: ValueKey(index),
+                              rep: rep,
+                              index: index,
+                              onEdit: () => _addOrEditRep(index: index),
+                              onDelete: () => _deleteRep(index),
+                            );
+                          },
+                        ),
                 ),
               ],
             ),

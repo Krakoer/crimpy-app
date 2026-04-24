@@ -15,10 +15,9 @@ class RepeaterWaveformVisualization extends StatelessWidget {
     return SizedBox(
       height: 180,
       child: CustomPaint(
-        painter:
-            repeater.splitHand
-                ? SplitHandRepeaterWaveformPainter(repeater: repeater)
-                : MixedHandRepeaterWaveformPainter(repeater: repeater),
+        painter: repeater.splitHand
+            ? SplitHandRepeaterWaveformPainter(repeater: repeater)
+            : MixedHandRepeaterWaveformPainter(repeater: repeater),
         size: const Size(double.infinity, 180),
       ),
     );

@@ -13,21 +13,18 @@ class Gauge extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final forceState = ref.watch(bleDataStreamProvider);
-    final double fillPercentage =
-        targetWeight == 0
-            ? 0
-            : min(
-              100,
-              (forceState.value!.last.value / targetWeight) * 100 * 0.67,
-            );
+    final double fillPercentage = targetWeight == 0
+        ? 0
+        : min(100, (forceState.value!.last.value / targetWeight) * 100 * 0.67);
     return SizedBox(
       width: 300,
       height: 300,
       child: CustomPaint(
         painter: WeightGaugePainter(
           fillPercentage: fillPercentage,
-          currentWeight:
-              forceState.value != null ? forceState.value!.last.value : 0,
+          currentWeight: forceState.value != null
+              ? forceState.value!.last.value
+              : 0,
           targetWeight: targetWeight,
         ),
       ),
@@ -56,24 +53,20 @@ class WeightGaugePainter extends CustomPainter {
     final bool targetMatched = targetWeight <= currentWeight;
 
     // Paint for circle outline
-    final outlinePaint =
-        Paint()
-          ..color = CrimpyTheme.gray300
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth;
+    final outlinePaint = Paint()
+      ..color = CrimpyTheme.gray300
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
 
     // Paint for light gray background
-    final lightGrayPaint =
-        Paint()
-          ..color = CrimpyTheme.gray100
-          ..style = PaintingStyle.fill;
+    final lightGrayPaint = Paint()
+      ..color = CrimpyTheme.gray100
+      ..style = PaintingStyle.fill;
 
     // Paint for dark gray fill
-    final darkGrayPaint =
-        Paint()
-          ..color =
-              targetMatched ? CrimpyTheme.primaryBlack : CrimpyTheme.gray600
-          ..style = PaintingStyle.fill;
+    final darkGrayPaint = Paint()
+      ..color = targetMatched ? CrimpyTheme.primaryBlack : CrimpyTheme.gray600
+      ..style = PaintingStyle.fill;
 
     // Draw light gray background circle
     canvas.drawCircle(center, innerRadius, lightGrayPaint);

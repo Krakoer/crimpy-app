@@ -64,23 +64,22 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
         final NavigatorState navigator = Navigator.of(context);
         final shouldPop = await showDialog<bool>(
           context: context,
-          builder:
-              (context) => AlertDialog(
-                title: Text('Leave without saving training?'),
-                content: Text(
-                  'Are you sure you want to quit without saving this training to your history?',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: Text('No'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: Text('Yes'),
-                  ),
-                ],
+          builder: (context) => AlertDialog(
+            title: Text('Leave without saving training?'),
+            content: Text(
+              'Are you sure you want to quit without saving this training to your history?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('No'),
               ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text('Yes'),
+              ),
+            ],
+          ),
         );
 
         if (shouldPop ?? false) {
@@ -180,7 +179,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
               }
 
               ref
-                  .read(sessionsProvider(null).notifier)
+                  .read(sessionsProvider.notifier)
                   .saveSession(
                     SessionModel(
                       name: _trainingNameController.text,
@@ -270,10 +269,10 @@ class WeightComparisonGraph extends StatelessWidget {
               '${data[index].repIndex}',
               data[index].isBelowTarget
                   ? TextStyle(
-                    color: Theme.of(context).colorScheme.error,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  )
+                      color: Theme.of(context).colorScheme.error,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    )
                   : TextStyle(color: CrimpyTheme.primaryBlack, fontSize: 20),
             );
           }

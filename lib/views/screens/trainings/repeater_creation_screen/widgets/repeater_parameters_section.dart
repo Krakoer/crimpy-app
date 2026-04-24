@@ -61,8 +61,8 @@ class RepeaterParametersSection extends StatelessWidget {
           _DurationRow(
             label: 'Work time',
             duration: worktime,
-            onTap:
-                () => showDurationPicker(context, onWorktimeChanged, worktime),
+            onTap: () =>
+                showDurationPicker(context, onWorktimeChanged, worktime),
           ),
           const SizedBox(height: 12),
           _DurationRow(

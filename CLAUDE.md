@@ -6,6 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Crimpy is a Flutter mobile application for climbing training and assessment using Bluetooth-connected force sensors. It tracks climbing performance through customizable workouts and standardized assessments like MVC and critical force.
 
+## Shell Usage
+
+Always source `~/.zshrc` before running commands.
+
+## Code Style and Documentation
+
+We value code that explains itself through clear class, method, and variable names. Comments may be used when necessary to explain tricky logic, but should otherwise be avoided. Write self-documenting code with descriptive names rather than relying on comments.
+
+**Use small unitary commits with concise and comprehensive commit messages to make the review easier.**
+
+Never use unicode characters such as long dashes, triple dots, arrows or emojis, in the code or in the doc.
+
 ## Commands
 
 ### Development & Building

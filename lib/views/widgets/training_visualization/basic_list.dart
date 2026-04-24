@@ -31,8 +31,9 @@ class BasicRepList extends StatelessWidget {
       padding: const EdgeInsets.all(0),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor:
-              rep.isRest ? CrimpyTheme.successColor : CrimpyTheme.errorColor,
+          backgroundColor: rep.isRest
+              ? CrimpyTheme.successColor
+              : CrimpyTheme.errorColor,
           child: Text('${index + 1}'),
         ),
         title: Text(rep.isRest ? "Rest" : "Pull"),

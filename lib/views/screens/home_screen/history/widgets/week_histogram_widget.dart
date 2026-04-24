@@ -89,10 +89,9 @@ class WeekHistogramWidget extends StatelessWidget {
     for (final entry in dayDurations.entries) {
       final sessionType = entry.key;
       final duration = entry.value;
-      final segmentHeightPercentage =
-          maxDuration.inSeconds > 0
-              ? duration.inSeconds / maxDuration.inSeconds
-              : 0.0;
+      final segmentHeightPercentage = maxDuration.inSeconds > 0
+          ? duration.inSeconds / maxDuration.inSeconds
+          : 0.0;
 
       barSegments.add(
         Container(
@@ -127,16 +126,15 @@ class WeekHistogramWidget extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(4),
               // Draw a slight shadow for current day
-              boxShadow:
-                  isToday
-                      ? [
-                        const BoxShadow(
-                          color: Color(0x4D000000),
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ]
-                      : null,
+              boxShadow: isToday
+                  ? [
+                      const BoxShadow(
+                        color: Color(0x4D000000),
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ]
+                  : null,
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(4),
@@ -161,13 +159,12 @@ class WeekHistogramWidget extends StatelessWidget {
             width: 6,
             height: 6,
             margin: const EdgeInsets.only(top: 4),
-            decoration:
-                isToday
-                    ? const BoxDecoration(
-                      color: CrimpyTheme.primaryOrange,
-                      shape: BoxShape.circle,
-                    )
-                    : null,
+            decoration: isToday
+                ? const BoxDecoration(
+                    color: CrimpyTheme.primaryOrange,
+                    shape: BoxShape.circle,
+                  )
+                : null,
           ),
         ],
       ),

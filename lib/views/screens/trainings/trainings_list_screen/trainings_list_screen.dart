@@ -29,11 +29,10 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen>
     ) {
       showDialog(
         context: context,
-        builder:
-            (context) => MissingAssessmentsDialog(
-              missingAssessments: missingAssessments,
-              onGoToAssessments: widget.goToAssessments,
-            ),
+        builder: (context) => MissingAssessmentsDialog(
+          missingAssessments: missingAssessments,
+          onGoToAssessments: widget.goToAssessments,
+        ),
       );
     }
 
@@ -47,18 +46,15 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen>
               top: 16.0,
               bottom: 80.0, // Extra padding for FAB
             ),
-            children:
-                value
-                    .map(
-                      (item) => TrainingListItemWidget(
-                        item: item,
-                        onMissingAssessments:
-                            () => showMissingAssessmentsDialog(
-                              item.missingAssessments,
-                            ),
-                      ),
-                    )
-                    .toList(),
+            children: value
+                .map(
+                  (item) => TrainingListItemWidget(
+                    item: item,
+                    onMissingAssessments: () =>
+                        showMissingAssessmentsDialog(item.missingAssessments),
+                  ),
+                )
+                .toList(),
           ),
           AsyncError(:final error) => Text('Oops $error'),
           _ => const Center(child: CircularProgressIndicator()),

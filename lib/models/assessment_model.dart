@@ -40,7 +40,7 @@ class AssessmentTrainingModel {
   final AssessmentType type;
   final IconData icon;
   final String description;
-  final int trainingId;
+  final String trainingId;
   final GripPosition? gripPosition;
 
   AssessmentTrainingModel({
@@ -99,7 +99,7 @@ class AssessmentResultModel {
 
 class AssessmentModel {
   final AssessmentType type;
-  final int id;
+  final String id;
   final DateTime date;
   final double? rightValue;
   final double? leftValue;
