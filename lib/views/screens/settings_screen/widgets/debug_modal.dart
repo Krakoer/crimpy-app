@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:crimpy/logger.dart';
 import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/utils/dummy_data_generator.dart';
 import 'package:crimpy/viewmodels/app_info_view_model.dart';
@@ -5,8 +8,10 @@ import 'package:crimpy/views/screens/settings_screen/widgets/sync_status_widget.
 import 'package:crimpy/views/widgets/whats_new_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mailer/flutter_mailer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 void showDebugModal(BuildContext context) {
@@ -67,6 +72,8 @@ class _DebugModalContent extends ConsumerWidget {
               _AppVersionSection(),
               const Divider(height: 24),
               _ReportBugButton(),
+              const SizedBox(height: 8),
+              _SendLogsButton(),
               if (kDebugMode) ...[
                 const Divider(height: 24),
                 _DebugToolsSection(),
@@ -91,6 +98,48 @@ class _ReportBugButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(44)),
       ),
     );
+  }
+}
+
+class _SendLogsButton extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appInfo = ref.watch(appInfoProvider);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: OutlinedButton.icon(
+        onPressed: () => _sendLogs(context, appInfo.asData?.value),
+        icon: const Icon(FontAwesomeIcons.envelope, size: 14),
+        label: const Text('Send debug logs'),
+        style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(44)),
+      ),
+    );
+  }
+
+  Future<void> _sendLogs(BuildContext context, AppInfo? appInfo) async {
+    try {
+      final logContent = AppLoggerHelper.getLogsAsText();
+      final tempDir = await getTemporaryDirectory();
+      final logFile = File('${tempDir.path}/crimpy_debug_logs.txt');
+      await logFile.writeAsString(logContent);
+
+      final version = appInfo?.fullVersion ?? 'unknown';
+      final mailOptions = MailOptions(
+        subject: 'Crimpy debug logs - $version',
+        body: 'Debug logs from Crimpy $version attached.',
+        recipients: ['contact@crimpy.app'],
+        attachments: [logFile.path],
+        isHTML: false,
+      );
+
+      await FlutterMailer.send(mailOptions);
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not open email app: $e')));
+    }
   }
 }
 
