@@ -40,6 +40,7 @@ class ApiClient {
             AppLoggerHelper.info('Token expired, clearing stored token');
             await clearToken();
           }
+          _logDeniedRequest(error);
           return handler.next(error);
         },
       ),
@@ -80,6 +81,34 @@ class ApiClient {
   }
 
   Dio get dio => _dio;
+
+  void _logDeniedRequest(DioException e) {
+    final statusCode = e.response?.statusCode;
+    if (statusCode == null) return;
+
+    final timestamp = DateTime.now().toIso8601String();
+    final request = e.requestOptions;
+
+    final headers = Map<String, dynamic>.from(request.headers);
+    if (headers.containsKey('Authorization')) {
+      headers['Authorization'] = '[REDACTED]';
+    }
+
+    final parts = <String>[
+      '[$timestamp] Request denied',
+      '  ${request.method} ${request.uri}',
+      '  Status: $statusCode',
+      '  Headers: $headers',
+    ];
+    if (request.data != null) {
+      parts.add('  Request body: ${request.data}');
+    }
+    if (e.response?.data != null) {
+      parts.add('  Response body: ${e.response!.data}');
+    }
+
+    AppLoggerHelper.error(parts.join('\n'));
+  }
 
   String _extractErrorMessage(DioException e) {
     if (e.response?.data != null) {
@@ -130,9 +159,10 @@ class ApiClient {
         options: options,
       );
     } on DioException catch (e) {
-      final message = _extractErrorMessage(e);
-      AppLoggerHelper.error('GET $path failed: $message');
-      throw ApiException(message, statusCode: e.response?.statusCode);
+      throw ApiException(
+        _extractErrorMessage(e),
+        statusCode: e.response?.statusCode,
+      );
     }
   }
 
@@ -150,9 +180,10 @@ class ApiClient {
         options: options,
       );
     } on DioException catch (e) {
-      final message = _extractErrorMessage(e);
-      AppLoggerHelper.error('POST $path failed: $message');
-      throw ApiException(message, statusCode: e.response?.statusCode);
+      throw ApiException(
+        _extractErrorMessage(e),
+        statusCode: e.response?.statusCode,
+      );
     }
   }
 
@@ -170,9 +201,10 @@ class ApiClient {
         options: options,
       );
     } on DioException catch (e) {
-      final message = _extractErrorMessage(e);
-      AppLoggerHelper.error('PUT $path failed: $message');
-      throw ApiException(message, statusCode: e.response?.statusCode);
+      throw ApiException(
+        _extractErrorMessage(e),
+        statusCode: e.response?.statusCode,
+      );
     }
   }
 
@@ -190,9 +222,10 @@ class ApiClient {
         options: options,
       );
     } on DioException catch (e) {
-      final message = _extractErrorMessage(e);
-      AppLoggerHelper.error('DELETE $path failed: $message');
-      throw ApiException(message, statusCode: e.response?.statusCode);
+      throw ApiException(
+        _extractErrorMessage(e),
+        statusCode: e.response?.statusCode,
+      );
     }
   }
 }
