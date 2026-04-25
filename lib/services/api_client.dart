@@ -1,10 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/services/api_exception.dart';
 
 class ApiClient {
-  static const String baseUrl = 'https://devapi.crimpy.app';
+  static const String baseUrl = kDebugMode
+      ? 'https://devapi.crimpy.app'
+      : 'https://api.crimpy.app';
   static const String tokenKey = 'auth_token';
 
   final Dio _dio;
