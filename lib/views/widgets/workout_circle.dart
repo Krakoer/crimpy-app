@@ -20,8 +20,9 @@ class _WorkoutCircleState extends State<WorkoutCircle> {
       height: 297,
       child: CircularProgressIndicator(
         value: widget.value,
-        color:
-            widget.rest ? greenColor : const Color.fromARGB(255, 149, 21, 12),
+        color: widget.rest
+            ? greenColor
+            : const Color.fromARGB(255, 149, 21, 12),
         strokeWidth: 8,
         strokeCap: StrokeCap.round,
       ),

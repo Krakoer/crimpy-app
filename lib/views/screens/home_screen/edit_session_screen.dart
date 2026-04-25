@@ -92,8 +92,9 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   subtitle: Text(
                     DateFormat('EEEE, MMMM d, y').format(_selectedDate),
                   ),
-                  trailing:
-                      isCrimpySession ? null : const Icon(Icons.chevron_right),
+                  trailing: isCrimpySession
+                      ? null
+                      : const Icon(Icons.chevron_right),
                   onTap: isCrimpySession ? null : _selectDate,
                 ),
               ),
@@ -109,8 +110,9 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   ),
                   title: const Text('Time'),
                   subtitle: Text(_selectedTime.format(context)),
-                  trailing:
-                      isCrimpySession ? null : const Icon(Icons.chevron_right),
+                  trailing: isCrimpySession
+                      ? null
+                      : const Icon(Icons.chevron_right),
                   onTap: isCrimpySession ? null : _selectTime,
                 ),
               ),
@@ -151,19 +153,18 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                         ],
-                        validator:
-                            isCrimpySession
-                                ? null
-                                : (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter a duration';
-                                  }
-                                  final minutes = int.tryParse(value);
-                                  if (minutes == null || minutes <= 0) {
-                                    return 'Please enter a valid duration';
-                                  }
-                                  return null;
-                                },
+                        validator: isCrimpySession
+                            ? null
+                            : (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter a duration';
+                                }
+                                final minutes = int.tryParse(value);
+                                if (minutes == null || minutes <= 0) {
+                                  return 'Please enter a valid duration';
+                                }
+                                return null;
+                              },
                         onSaved: (value) {
                           if (!isCrimpySession) {
                             _durationMinutes = int.parse(value!);
@@ -292,9 +293,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
 
     try {
       // Update session in database
-      await ref
-          .read(sessionsProvider(null).notifier)
-          .updateSession(updatedSession);
+      await ref.read(sessionsProvider.notifier).updateSession(updatedSession);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

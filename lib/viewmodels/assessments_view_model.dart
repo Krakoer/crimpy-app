@@ -68,9 +68,9 @@ class AssessmentNotifier extends AsyncNotifier<List<AssessmentModel>> {
 
     // Save the session
     final sessionId = await ref
-        .read(sessionsProvider(null).notifier)
+        .read(sessionsProvider.notifier)
         .saveSession(session, reps, data: data);
-    if (sessionId != -1) {
+    if (sessionId != "") {
       // Save the assessment
       await _assessmentRepository.saveAssessment(assessmentModel, sessionId);
     }
@@ -107,20 +107,19 @@ class AssessmentNotifier extends AsyncNotifier<List<AssessmentModel>> {
 
   /// Retuns the id of the assessment that has been done the same day with the same hand and grip position, if any.
   /// Only call this method with a non null type family.
-  Future<int?> getSameDayAssessment({
+  Future<String?> getSameDayAssessment({
     HandSide? handSide,
     GripPosition? gripPosition,
   }) async {
     if (type == null) {
       AppLoggerHelper.warning("Called getSameDayAssessment with a type null.");
-      return 0;
+      return "";
     }
-    final prevAssessment =
-        (await _assessmentRepository.getAssessments(
-          type: type,
-          handSide: handSide,
-          gripPosition: gripPosition,
-        )).lastOrNull;
+    final prevAssessment = (await _assessmentRepository.getAssessments(
+      type: type,
+      handSide: handSide,
+      gripPosition: gripPosition,
+    )).lastOrNull;
     if (prevAssessment == null) {
       return null;
     }

@@ -24,14 +24,13 @@ class WhatsNewDialog extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             appInfoAsync.when(
-              data:
-                  (appInfo) => Text(
-                    'Version ${appInfo.version}',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
-                  ),
+              data: (appInfo) => Text(
+                'Version ${appInfo.version}',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                ),
+              ),
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),
             ),

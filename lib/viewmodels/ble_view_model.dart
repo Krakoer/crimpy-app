@@ -275,13 +275,13 @@ class SensorConfigsNotifier extends AsyncNotifier<List<SensorConfig>> {
     return _bleRepository.getSensorConfigs();
   }
 
-  Future<void> updateSensorConfigs(List<SensorConfigs> configs) async {
+  Future<void> updateSensorConfigs(List<SensorConfig> configs) async {
     await _bleRepository.updateSensorConfigs(configs);
     ref.invalidateSelf();
     await future;
   }
 
-  Future<void> deleteSensorConfig(int id) async {
+  Future<void> deleteSensorConfig(String id) async {
     await _bleRepository.deleteSensorConfig(id);
     ref.invalidateSelf();
     await future;

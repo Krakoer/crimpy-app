@@ -46,10 +46,9 @@ class _MvcWeightInputFieldState extends ConsumerState<MvcWeightInputField> {
         double? mvcValue;
         if (assessments.isNotEmpty) {
           final lastAssessment = assessments.last;
-          mvcValue =
-              widget.handSide.isRightHand
-                  ? lastAssessment.rightValue
-                  : lastAssessment.leftValue;
+          mvcValue = widget.handSide.isRightHand
+              ? lastAssessment.rightValue
+              : lastAssessment.leftValue;
         }
 
         return Column(
@@ -198,31 +197,30 @@ class _MvcWeightInputFieldState extends ConsumerState<MvcWeightInputField> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children:
-                      [50, 60, 70, 80, 90].map((percentage) {
-                        final calculatedWeight = (mvcValue! * percentage / 100);
-                        return OutlinedButton(
-                          onPressed: () {
-                            widget.controller.text = calculatedWeight
-                                .toStringAsFixed(1);
-                          },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            side: BorderSide(
-                              color: CrimpyTheme.primaryOrange,
-                              width: 1.5,
-                            ),
-                            foregroundColor: CrimpyTheme.primaryOrange,
-                          ),
-                          child: Text(
-                            '$percentage% (${calculatedWeight.toStringAsFixed(1)} kg)',
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        );
-                      }).toList(),
+                  children: [50, 60, 70, 80, 90].map((percentage) {
+                    final calculatedWeight = (mvcValue! * percentage / 100);
+                    return OutlinedButton(
+                      onPressed: () {
+                        widget.controller.text = calculatedWeight
+                            .toStringAsFixed(1);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        side: BorderSide(
+                          color: CrimpyTheme.primaryOrange,
+                          width: 1.5,
+                        ),
+                        foregroundColor: CrimpyTheme.primaryOrange,
+                      ),
+                      child: Text(
+                        '$percentage% (${calculatedWeight.toStringAsFixed(1)} kg)',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ],
             ],

@@ -163,10 +163,9 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                     height: 8,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color:
-                          index == _currentSectionIndex
-                              ? CrimpyTheme.assessmentColor
-                              : CrimpyTheme.textMuted.withValues(alpha: 0.3),
+                      color: index == _currentSectionIndex
+                          ? CrimpyTheme.assessmentColor
+                          : CrimpyTheme.textMuted.withValues(alpha: 0.3),
                     ),
                   ),
                 ),
@@ -234,19 +233,18 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                       Expanded(
                         flex: _isFirstSection ? 1 : 2,
                         child: ElevatedButton.icon(
-                          onPressed:
-                              _isLastSection
-                                  ? () async {
-                                    if (_dontShowAgain) {
-                                      await _tutorialService.markTutorialAsSeen(
-                                        widget.tutorialId,
-                                      );
-                                    }
-                                    if (context.mounted) {
-                                      Navigator.of(context).pop(true);
-                                    }
+                          onPressed: _isLastSection
+                              ? () async {
+                                  if (_dontShowAgain) {
+                                    await _tutorialService.markTutorialAsSeen(
+                                      widget.tutorialId,
+                                    );
                                   }
-                                  : _nextSection,
+                                  if (context.mounted) {
+                                    Navigator.of(context).pop(true);
+                                  }
+                                }
+                              : _nextSection,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: CrimpyTheme.assessmentColor,
                             foregroundColor: Colors.white,
@@ -346,12 +344,11 @@ Future<bool> showTutorialIfNeeded({
       final result = await showDialog<bool>(
         context: context,
         barrierDismissible: true,
-        builder:
-            (context) => AssessmentTutorialDialog(
-              content: content,
-              tutorialId: tutorialId,
-              showDontShowAgain: !forceShow,
-            ),
+        builder: (context) => AssessmentTutorialDialog(
+          content: content,
+          tutorialId: tutorialId,
+          showDontShowAgain: !forceShow,
+        ),
       );
       // Return true only if user explicitly clicked "Got it!", false otherwise
       return result == true;

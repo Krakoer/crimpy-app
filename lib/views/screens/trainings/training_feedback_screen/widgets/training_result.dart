@@ -42,12 +42,11 @@ class TrainingResultCard extends StatelessWidget {
             .round();
 
     // Get hand color
-    final handColor =
-        handSide == HandSide.right
-            ? CrimpyTheme.accentOrange
-            : handSide == HandSide.left
-            ? CrimpyTheme.accentTeal
-            : CrimpyTheme.accentYellow;
+    final handColor = handSide == HandSide.right
+        ? CrimpyTheme.accentOrange
+        : handSide == HandSide.left
+        ? CrimpyTheme.accentTeal
+        : CrimpyTheme.accentYellow;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -94,23 +93,22 @@ class TrainingResultCard extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color:
-                        success ? CrimpyTheme.bgSuccess : CrimpyTheme.bgWarning,
+                    color: success
+                        ? CrimpyTheme.bgSuccess
+                        : CrimpyTheme.bgWarning,
                     border: Border.all(
-                      color:
-                          success
-                              ? CrimpyTheme.statusSuccess
-                              : CrimpyTheme.statusWarning,
+                      color: success
+                          ? CrimpyTheme.statusSuccess
+                          : CrimpyTheme.statusWarning,
                       width: 1,
                     ),
                   ),
                   child: Text(
                     '$percentageSuccess%',
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color:
-                          success
-                              ? CrimpyTheme.statusSuccess
-                              : CrimpyTheme.statusWarning,
+                      color: success
+                          ? CrimpyTheme.statusSuccess
+                          : CrimpyTheme.statusWarning,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -148,16 +146,16 @@ class TrainingResultCard extends StatelessWidget {
             // Feedback form
             success
                 ? SuccessFeedbackForm(
-                  loadAdjustmentFunction: loadAdjustmentFunction,
-                  currentWeight: currentWeight,
-                  onNewWeightChange: onNewWeightChange,
-                )
+                    loadAdjustmentFunction: loadAdjustmentFunction,
+                    currentWeight: currentWeight,
+                    onNewWeightChange: onNewWeightChange,
+                  )
                 : FailureFeedbackForm(
-                  reps: reps,
-                  loadAdjustmentFunction: loadAdjustmentFunction,
-                  currentWeight: currentWeight,
-                  onNewWeightChange: onNewWeightChange,
-                ),
+                    reps: reps,
+                    loadAdjustmentFunction: loadAdjustmentFunction,
+                    currentWeight: currentWeight,
+                    onNewWeightChange: onNewWeightChange,
+                  ),
           ],
         ),
       ),

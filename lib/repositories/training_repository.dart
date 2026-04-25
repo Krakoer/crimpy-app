@@ -9,67 +9,64 @@ class TrainingRepository {
   Future<List<TrainingWithReps>> getAllTrainings({
     bool onlyFavs = false,
   }) async {
-    final trainings =
-        onlyFavs
-            ? await gDatabase.getFavTrainings()
-            : await gDatabase.getAllTrainingsWithoutAssessments();
+    final trainings = onlyFavs
+        ? await gDatabase.getFavTrainings()
+        : await gDatabase.getAllTrainingsWithoutAssessments();
 
     List<TrainingWithReps> resp = [];
 
     for (final t in trainings) {
       bool isRepeater = t.repeaterId != null;
       // Get repeater model if available
-      Repeater? repeaterData =
-          !isRepeater ? null : await gDatabase.getRepeater(t.repeaterId!);
+      Repeater? repeaterData = !isRepeater
+          ? null
+          : await gDatabase.getRepeater(t.repeaterId!);
 
-      RepeaterModel? model =
-          !isRepeater
-              ? null
-              : RepeaterModel(
-                sets: repeaterData!.sets,
-                restBteweenSets: repeaterData.setRest,
-                repsBySet: repeaterData.reps,
-                workTime: repeaterData.worktime,
-                restTime: repeaterData.resttime,
-                splitHand: repeaterData.splitHand,
-                weightRight: repeaterData.targetWeigthRight,
-                weightLeft: repeaterData.targetWeigthLeft,
-                gripPosition: GripPosition.values[repeaterData.gripPosition],
-              );
+      RepeaterModel? model = !isRepeater
+          ? null
+          : RepeaterModel(
+              sets: repeaterData!.sets,
+              restBteweenSets: repeaterData.setRest,
+              repsBySet: repeaterData.reps,
+              workTime: repeaterData.worktime,
+              restTime: repeaterData.resttime,
+              splitHand: repeaterData.splitHand,
+              weightRight: repeaterData.targetWeigthRight,
+              weightLeft: repeaterData.targetWeigthLeft,
+              gripPosition: GripPosition.values[repeaterData.gripPosition],
+            );
       // If the training is a repeater, generate the reps instead of getting them from DB.
       final List<RepModel> repModels;
       if (isRepeater) {
         final repTemplates = model!.generateReps();
-        repModels =
-            repTemplates
-                .map(
-                  (r) => RepModel(
-                    durationInSeconds: r.duration,
-                    isRest: r.isRest,
-                    handSide: r.handSide,
-                    targetWeight: r.targetWeight,
-                    id: r.id,
-                    index: r.index,
-                    gripPosition: r.gripPosition,
-                  ),
-                )
-                .toList();
+        repModels = repTemplates
+            .map(
+              (r) => RepModel(
+                durationInSeconds: r.duration,
+                isRest: r.isRest,
+                handSide: r.handSide,
+                targetWeight: r.targetWeight,
+                id: r.id,
+                index: r.index,
+                gripPosition: r.gripPosition,
+              ),
+            )
+            .toList();
       } else {
         final dbReps = await gDatabase.getRepsForTraining(t.id);
-        repModels =
-            dbReps
-                .map(
-                  (r) => RepModel(
-                    durationInSeconds: r.duration,
-                    isRest: r.isRest,
-                    handSide: r.rightHand ? HandSide.right : HandSide.left,
-                    targetWeight: r.targetWeight,
-                    id: r.id,
-                    index: r.index,
-                    gripPosition: GripPosition.values[r.gripPosition],
-                  ),
-                )
-                .toList();
+        repModels = dbReps
+            .map(
+              (r) => RepModel(
+                durationInSeconds: r.duration,
+                isRest: r.isRest,
+                handSide: r.rightHand ? HandSide.right : HandSide.left,
+                targetWeight: r.targetWeight,
+                id: r.id,
+                index: r.index,
+                gripPosition: GripPosition.values[r.gripPosition],
+              ),
+            )
+            .toList();
       }
 
       resp.add(
@@ -98,7 +95,7 @@ class TrainingRepository {
 
   /// Edit a training name and/or reps.
   Future<void> editTraining(
-    int trainingId, {
+    String trainingId, {
     String? name,
     List<RepModel>? reps,
   }) async {
@@ -106,13 +103,13 @@ class TrainingRepository {
   }
 
   /// Toggle the favorite bool for a given training.
-  Future<void> toggleFav(int trainingId) async {
+  Future<void> toggleFav(String trainingId) async {
     return gDatabase.toggleFav(trainingId);
   }
 
   /// Edit a repeater training name and/or model.
   Future<void> editRepeaterTraining(
-    int trainingId, {
+    String trainingId, {
     String? name,
     RepeaterModel? model,
   }) async {
@@ -120,7 +117,7 @@ class TrainingRepository {
   }
 
   /// Delete a training by its ID.
-  Future<void> deleteTraining(int trainingId) async {
+  Future<void> deleteTraining(String trainingId) async {
     gDatabase.deleteTraining(trainingId);
   }
 
@@ -172,12 +169,12 @@ class TrainingRepository {
   }
 
   /// Get a session with its reps data given an ID.
-  Future<SessionModel?> getSessionWithData(int sessionId) async {
+  Future<SessionModel?> getSessionWithData(String sessionId) async {
     return await gDatabase.getSessionWithData(sessionId);
   }
 
   /// Save a session into the DB.
-  Future<int> saveSession(
+  Future<String> saveSession(
     SessionModel session,
     List<RepDataModel> reps, {
     List<BleDataPoint>? data,
@@ -191,7 +188,7 @@ class TrainingRepository {
   }
 
   /// Delete a session by its ID.
-  Future<void> deleteSession(int sessionId) async {
+  Future<void> deleteSession(String sessionId) async {
     gDatabase.deleteSession(sessionId);
   }
 }

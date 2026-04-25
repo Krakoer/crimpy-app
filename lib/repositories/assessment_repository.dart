@@ -13,13 +13,13 @@ class AssessmentRepository {
   /// Save an assessment given its model and a session ID.
   Future<void> saveAssessment(
     AssessmentResultModel assessment,
-    int sessionId,
+    String sessionId,
   ) async {
     await gDatabase.saveAssessment(assessment, sessionId);
   }
 
   /// Delete an assessment.
-  Future<void> deleteAssessment(int id) async {
+  Future<void> deleteAssessment(String id) async {
     await gDatabase.deleteAssessment(id);
   }
 
@@ -46,12 +46,11 @@ class AssessmentRepository {
     HandSide handSide, {
     GripPosition? gripPosition,
   }) async {
-    final assessment =
-        (await gDatabase.getAssessments(
-          type: type,
-          handSide: handSide,
-          gripPosition: gripPosition,
-        )).lastOrNull;
+    final assessment = (await gDatabase.getAssessments(
+      type: type,
+      handSide: handSide,
+      gripPosition: gripPosition,
+    )).lastOrNull;
     return handSide.isRightHand
         ? assessment?.rightValue
         : assessment?.leftValue;

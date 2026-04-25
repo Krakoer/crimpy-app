@@ -61,16 +61,14 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color:
-                        successCount == workReps.length
-                            ? Colors.green.withValues(alpha: 0.15)
-                            : Colors.orange.withValues(alpha: 0.15),
+                    color: successCount == workReps.length
+                        ? Colors.green.withValues(alpha: 0.15)
+                        : Colors.orange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color:
-                          successCount == workReps.length
-                              ? Colors.green.shade700
-                              : Colors.orange.shade700,
+                      color: successCount == workReps.length
+                          ? Colors.green.shade700
+                          : Colors.orange.shade700,
                       width: 1,
                     ),
                   ),
@@ -79,10 +77,9 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color:
-                          successCount == workReps.length
-                              ? Colors.green.shade700
-                              : Colors.orange.shade700,
+                      color: successCount == workReps.length
+                          ? Colors.green.shade700
+                          : Colors.orange.shade700,
                     ),
                   ),
                 ),

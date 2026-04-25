@@ -105,85 +105,77 @@ class _SuccessFeedbackFormState extends State<SuccessFeedbackForm> {
               widget.onNewWeightChange(newWeight);
             },
             child: Column(
-              children:
-                  TrainingDifficulty.values.map((difficulty) {
-                    final multiplier = widget.loadAdjustmentFunction(
-                      difficulty: difficulty,
-                    );
-                    final int variation = (multiplier * 100).round();
-                    final newWeight = widget.currentWeight * (1 + multiplier);
-                    final isSelected = _difficulty == difficulty;
+              children: TrainingDifficulty.values.map((difficulty) {
+                final multiplier = widget.loadAdjustmentFunction(
+                  difficulty: difficulty,
+                );
+                final int variation = (multiplier * 100).round();
+                final newWeight = widget.currentWeight * (1 + multiplier);
+                final isSelected = _difficulty == difficulty;
 
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8.0),
-                      decoration: BoxDecoration(
-                        color:
-                            isSelected
-                                ? CrimpyTheme.bgInfo
-                                : CrimpyTheme.bgSecondary,
-                        border: Border.all(
-                          color:
-                              isSelected
-                                  ? CrimpyTheme.primaryOrange
-                                  : CrimpyTheme.borderDefault,
-                          width: isSelected ? 2 : 1,
-                        ),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8.0),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? CrimpyTheme.bgInfo
+                        : CrimpyTheme.bgSecondary,
+                    border: Border.all(
+                      color: isSelected
+                          ? CrimpyTheme.primaryOrange
+                          : CrimpyTheme.borderDefault,
+                      width: isSelected ? 2 : 1,
+                    ),
+                  ),
+                  child: InkWell(
+                    onTap: () {
+                      setState(() => _difficulty = difficulty);
+                      final multiplier = widget.loadAdjustmentFunction(
+                        difficulty: difficulty,
+                      );
+                      final newWeight = widget.currentWeight * (1 + multiplier);
+                      widget.onNewWeightChange(newWeight);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12.0,
+                        vertical: 8.0,
                       ),
-                      child: InkWell(
-                        onTap: () {
-                          setState(() => _difficulty = difficulty);
-                          final multiplier = widget.loadAdjustmentFunction(
-                            difficulty: difficulty,
-                          );
-                          final newWeight =
-                              widget.currentWeight * (1 + multiplier);
-                          widget.onNewWeightChange(newWeight);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12.0,
-                            vertical: 8.0,
-                          ),
-                          child: Row(
-                            children: [
-                              Radio<TrainingDifficulty>(value: difficulty),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      difficulty.description,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium?.copyWith(
-                                        fontWeight:
-                                            isSelected
-                                                ? FontWeight.w700
-                                                : FontWeight.w500,
+                      child: Row(
+                        children: [
+                          Radio<TrainingDifficulty>(value: difficulty),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  difficulty.description,
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: isSelected
+                                            ? FontWeight.w700
+                                            : FontWeight.w500,
                                       ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      "${newWeight.toStringAsFixed(1)}kg (${variation >= 0 ? '+' : ''}$variation%)",
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall?.copyWith(
-                                        color:
-                                            isSelected
-                                                ? CrimpyTheme.primaryOrange
-                                                : CrimpyTheme.textSecondary,
-                                      ),
-                                    ),
-                                  ],
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 2),
+                                Text(
+                                  "${newWeight.toStringAsFixed(1)}kg (${variation >= 0 ? '+' : ''}$variation%)",
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: isSelected
+                                            ? CrimpyTheme.primaryOrange
+                                            : CrimpyTheme.textSecondary,
+                                      ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           ),
           const SizedBox(height: 16),

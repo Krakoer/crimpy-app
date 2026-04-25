@@ -31,12 +31,11 @@ class ChartScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         mini: true,
         // Only allow reset when connected
-        onPressed:
-            connectionState == BleConnectionState.connected
-                ? () {
-                  ref.read(bleSessionProvider.notifier).reset();
-                }
-                : null,
+        onPressed: connectionState == BleConnectionState.connected
+            ? () {
+                ref.read(bleSessionProvider.notifier).reset();
+              }
+            : null,
         tooltip: 'Reset Session',
         child: const Icon(Icons.restart_alt),
       ),
@@ -60,10 +59,9 @@ class ChartScreen extends ConsumerWidget {
             Icon(
               _getConnectionIcon(connectionState),
               size: 60,
-              color:
-                  connectionState == BleConnectionState.connecting
-                      ? CrimpyTheme.accentOrange
-                      : CrimpyTheme.gray400,
+              color: connectionState == BleConnectionState.connecting
+                  ? CrimpyTheme.accentOrange
+                  : CrimpyTheme.gray400,
             ),
             const SizedBox(height: 16),
             Text(

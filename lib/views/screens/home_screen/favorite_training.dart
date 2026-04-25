@@ -44,9 +44,8 @@ class FavoriteTrainingList extends ConsumerWidget {
                           if (item.training != null) {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder:
-                                    (ctx) =>
-                                        TrainingDetailScreen(item.training!),
+                                builder: (ctx) =>
+                                    TrainingDetailScreen(item.training!),
                               ),
                             );
                           }
@@ -83,11 +82,10 @@ class FavoriteTrainingList extends ConsumerWidget {
                     color: CrimpyTheme.primaryBlack.withValues(alpha: 0.5),
                   ),
                   child: InkWell(
-                    onTap:
-                        () => showDialog(
-                          context: context,
-                          builder: (ctx) => PinTrainingDialog(),
-                        ),
+                    onTap: () => showDialog(
+                      context: context,
+                      builder: (ctx) => PinTrainingDialog(),
+                    ),
                     child: Container(
                       padding: EdgeInsets.all(16),
                       child: Row(
@@ -148,62 +146,64 @@ class PinTrainingDialog extends ConsumerWidget {
           child: SizedBox(
             width: 300,
             height: 300,
-            child:
-                value.isEmpty
-                    ? Center(
-                      child: Text(
-                        "You don't have any training available yet.\n\nDo an assessment to unlock personalised trainings, or create your own trainings in the trainings page!",
-                        textAlign: TextAlign.center,
-                      ),
-                    )
-                    : ListView.builder(
-                      itemCount: value.length,
-                      itemBuilder: (contex, index) {
-                        final item = value[index];
-
-                        return ListTile(
-                          // Heart icon to represent the favorite status.
-                          trailing: Icon(
-                            item.isPinned
-                                ? FontAwesomeIcons.solidHeart
-                                : FontAwesomeIcons.heart,
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                          // On tap, toggle the status.
-                          onTap: () async {
-                            if (item.isBuiltin) {
-                              await ref
-                                  .read(pinnedTrainingsProvider.notifier)
-                                  .togglePin(item.id);
-                            } else {
-                              await ref
-                                  .read(favTrainingsProvider.notifier)
-                                  .toggleFav(item.id);
-                            }
-                            // Invalidate both providers to refresh the dialog and home screen
-                            ref.invalidate(allTrainingsProvider);
-                            ref.invalidate(pinnedTrainingsProvider);
-                          },
-                          title: Text(
-                            item.name,
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Icon(
-                                FontAwesomeIcons.stopwatch,
-                                color: CrimpyTheme.gray400,
-                                size: 17,
-                              ),
-                              SizedBox(width: 6),
-                              Text(formatDurationMinSec(item.totalDuration)),
-                            ],
-                          ),
-                        );
-                      },
+            child: value.isEmpty
+                ? Center(
+                    child: Text(
+                      "You don't have any training available yet.\n\nDo an assessment to unlock personalised trainings, or create your own trainings in the trainings page!",
+                      textAlign: TextAlign.center,
                     ),
+                  )
+                : ListView.builder(
+                    itemCount: value.length,
+                    itemBuilder: (contex, index) {
+                      final item = value[index];
+
+                      // Skip unavailable builtin trainings in pin dialog
+                      if (!item.isAvailable) return SizedBox.shrink();
+
+                      return ListTile(
+                        // Heart icon to represent the favorite status.
+                        trailing: Icon(
+                          item.isPinned
+                              ? FontAwesomeIcons.solidHeart
+                              : FontAwesomeIcons.heart,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        // On tap, toggle the status.
+                        onTap: () async {
+                          if (item.isBuiltin) {
+                            await ref
+                                .read(pinnedTrainingsProvider.notifier)
+                                .togglePin(item.id);
+                          } else {
+                            await ref
+                                .read(favTrainingsProvider.notifier)
+                                .toggleFav(item.id);
+                          }
+                          // Invalidate both providers to refresh the dialog and home screen
+                          ref.invalidate(allTrainingsProvider);
+                          ref.invalidate(pinnedTrainingsProvider);
+                        },
+                        title: Text(
+                          item.name,
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Icon(
+                              FontAwesomeIcons.stopwatch,
+                              color: CrimpyTheme.gray400,
+                              size: 17,
+                            ),
+                            SizedBox(width: 6),
+                            Text(formatDurationMinSec(item.totalDuration)),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ),
         ),
         AsyncError(:final error) => Center(

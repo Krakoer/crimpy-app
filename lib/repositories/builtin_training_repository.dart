@@ -122,7 +122,7 @@ class BuiltinTrainingRepository {
 
   /// Get the current custom weights for a builtin training.
   Future<({double? weightRight, double? weightLeft})> getCustomWeights(
-    int builtinTrainingId,
+    String builtinTrainingId,
   ) async {
     final weights = await _database.getBuiltinTrainingWeights(
       builtinTrainingId,
@@ -134,22 +134,22 @@ class BuiltinTrainingRepository {
   }
 
   /// Get all pinned builtin training IDs.
-  Future<List<int>> getPinnedBuiltinTrainingIds() async {
+  Future<List<String>> getPinnedBuiltinTrainingIds() async {
     return await _database.getPinnedBuiltinTrainingIds();
   }
 
   /// Pin a builtin training to the home screen.
-  Future<void> pinBuiltinTraining(int builtinTrainingId) async {
+  Future<void> pinBuiltinTraining(String builtinTrainingId) async {
     await _database.pinBuiltinTraining(builtinTrainingId);
   }
 
   /// Unpin a builtin training from the home screen.
-  Future<void> unpinBuiltinTraining(int builtinTrainingId) async {
+  Future<void> unpinBuiltinTraining(String builtinTrainingId) async {
     await _database.unpinBuiltinTraining(builtinTrainingId);
   }
 
   /// Check if a builtin training is pinned.
-  Future<bool> isBuiltinTrainingPinned(int builtinTrainingId) async {
+  Future<bool> isBuiltinTrainingPinned(String builtinTrainingId) async {
     return await _database.isBuiltinTrainingPinned(builtinTrainingId);
   }
 }

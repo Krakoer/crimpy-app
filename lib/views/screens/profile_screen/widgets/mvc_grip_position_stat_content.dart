@@ -90,10 +90,9 @@ class _MvcGripPositionStatContentState
       );
     }
 
-    final selectedAssessments =
-        _selectedGripPosition != null
-            ? widget.mvcByGripPosition[_selectedGripPosition]!
-            : [];
+    final selectedAssessments = _selectedGripPosition != null
+        ? widget.mvcByGripPosition[_selectedGripPosition]!
+        : [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,12 +173,12 @@ class _MvcGripPositionStatContentState
                             0
                     ? "--"
                     : formatAssessmentValue(
-                      selectedAssessments
-                              .map((a) => a.leftValue ?? 0)
-                              .lastOrNull ??
-                          0,
-                      AssessmentUnit.kilograms,
-                    ),
+                        selectedAssessments
+                                .map((a) => a.leftValue ?? 0)
+                                .lastOrNull ??
+                            0,
+                        AssessmentUnit.kilograms,
+                      ),
                 widget.accentLeft,
               ),
             ),
@@ -195,12 +194,12 @@ class _MvcGripPositionStatContentState
                             0
                     ? "--"
                     : formatAssessmentValue(
-                      selectedAssessments
-                              .map((a) => a.rightValue ?? 0)
-                              .lastOrNull ??
-                          0,
-                      AssessmentUnit.kilograms,
-                    ),
+                        selectedAssessments
+                                .map((a) => a.rightValue ?? 0)
+                                .lastOrNull ??
+                            0,
+                        AssessmentUnit.kilograms,
+                      ),
                 widget.accentRight,
               ),
             ),
@@ -208,16 +207,14 @@ class _MvcGripPositionStatContentState
         ),
         const SizedBox(height: 16),
         ForceChart(
-          leftData:
-              selectedAssessments
-                  .where((a) => a.leftValue != null)
-                  .map<(DateTime, double)>((a) => (a.date, a.leftValue!))
-                  .toList(),
-          rightData:
-              selectedAssessments
-                  .where((a) => a.rightValue != null)
-                  .map<(DateTime, double)>((a) => (a.date, a.rightValue!))
-                  .toList(),
+          leftData: selectedAssessments
+              .where((a) => a.leftValue != null)
+              .map<(DateTime, double)>((a) => (a.date, a.leftValue!))
+              .toList(),
+          rightData: selectedAssessments
+              .where((a) => a.rightValue != null)
+              .map<(DateTime, double)>((a) => (a.date, a.rightValue!))
+              .toList(),
           accentLeft: widget.accentLeft,
           accentRight: widget.accentRight,
           onStartAssessment: widget.onStartAssessment,
@@ -233,19 +230,18 @@ class _MvcGripPositionStatContentState
         return SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children:
-                widget.mvcByGripPosition.keys.map((position) {
-                  return ListTile(
-                    title: Text(position.displayName),
-                    selected: position == _selectedGripPosition,
-                    onTap: () {
-                      setState(() {
-                        _selectedGripPosition = position;
-                      });
-                      Navigator.pop(context);
-                    },
-                  );
-                }).toList(),
+            children: widget.mvcByGripPosition.keys.map((position) {
+              return ListTile(
+                title: Text(position.displayName),
+                selected: position == _selectedGripPosition,
+                onTap: () {
+                  setState(() {
+                    _selectedGripPosition = position;
+                  });
+                  Navigator.pop(context);
+                },
+              );
+            }).toList(),
           ),
         );
       },

@@ -67,8 +67,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             handSide: timer.currentRep.handSide,
             targetWeight: timer.currentRep.targetWeight,
             // Add avg if it was not a rest
-            averageWeight:
-                timer.currentRep.isRest ? 0 : ref.read(bleSessionProvider).avg,
+            averageWeight: timer.currentRep.isRest
+                ? 0
+                : ref.read(bleSessionProvider).avg,
             duration: timer.currentRep.durationInSeconds,
             index: timer.currentRep.index,
             isRest: timer.currentRep.isRest,
@@ -95,8 +96,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             handSide: timer.currentRep.handSide,
             targetWeight: timer.currentRep.targetWeight,
             // Add avg if it was not a rest
-            averageWeight:
-                timer.currentRep.isRest ? 0 : ref.read(bleSessionProvider).avg,
+            averageWeight: timer.currentRep.isRest
+                ? 0
+                : ref.read(bleSessionProvider).avg,
             duration: timer.currentRep.durationInSeconds,
             index: timer.currentRep.index,
             isRest: timer.currentRep.isRest,
@@ -110,16 +112,15 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
           builder:
               // If the training can compute new weights, show feedback screen.
               // Otherwise show regular post-training screen.
-              (context) =>
-                  widget.training.computeNewWeights == null
-                      ? PostWorkoutScreen(
-                        template: widget.training,
-                        results: repResults,
-                      )
-                      : TrainingFeedbackScreen(
-                        template: widget.training,
-                        results: repResults,
-                      ),
+              (context) => widget.training.computeNewWeights == null
+              ? PostWorkoutScreen(
+                  template: widget.training,
+                  results: repResults,
+                )
+              : TrainingFeedbackScreen(
+                  template: widget.training,
+                  results: repResults,
+                ),
         ),
       );
     },
@@ -168,23 +169,22 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         final NavigatorState navigator = Navigator.of(context);
         final shouldPop = await showDialog<bool>(
           context: context,
-          builder:
-              (context) => AlertDialog(
-                title: const Text('Leave the workout?'),
-                content: const Text(
-                  'If you leave this workout, you will lose your progress.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('No'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('Yes'),
-                  ),
-                ],
+          builder: (context) => AlertDialog(
+            title: const Text('Leave the workout?'),
+            content: const Text(
+              'If you leave this workout, you will lose your progress.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('No'),
               ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Yes'),
+              ),
+            ],
+          ),
         );
 
         if (shouldPop ?? false) {
@@ -245,11 +245,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                                 Gauge(timer.currentRep.targetWeight),
                                 AnimatedBuilder(
                                   animation: _serieController,
-                                  builder:
-                                      (ctx, child) => WorkoutCircle(
-                                        value: _serieController.value,
-                                        rest: timer.currentRep.isRest,
-                                      ),
+                                  builder: (ctx, child) => WorkoutCircle(
+                                    value: _serieController.value,
+                                    rest: timer.currentRep.isRest,
+                                  ),
                                 ),
                               ],
                             ),
@@ -278,10 +277,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                   // Adjust indices: preparation rep is at index 0, actual training starts at index 1
                   // So we subtract 1 to show the correct rep number relative to the actual training
                   TrainingProgressInfo(
-                    currentRepIndex:
-                        timer.currentRepIndex > 0
-                            ? timer.currentRepIndex - 1
-                            : 0,
+                    currentRepIndex: timer.currentRepIndex > 0
+                        ? timer.currentRepIndex - 1
+                        : 0,
                     totalReps: widget.training.reps.length,
                     repeater: widget.training.repeater,
                   ),

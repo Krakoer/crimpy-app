@@ -47,23 +47,22 @@ class PostAssessmentScreen extends ConsumerWidget {
         // Ask user if they want to discard results
         final shouldPop = await showDialog<bool>(
           context: context,
-          builder:
-              (context) => AlertDialog(
-                title: Text('Discard assessment results?'),
-                content: Text(
-                  'If you leave without saving, your assessment results will be lost.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: Text('Discard'),
-                  ),
-                ],
+          builder: (context) => AlertDialog(
+            title: Text('Discard assessment results?'),
+            content: Text(
+              'If you leave without saving, your assessment results will be lost.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text('Cancel'),
               ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text('Discard'),
+              ),
+            ],
+          ),
         );
 
         if (shouldPop ?? false) {
@@ -156,15 +155,13 @@ class ResultCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final displayUnit = unit ?? AssessmentUnit.kilograms;
     // Compute relative percentage between the previous and the new results.
-    final percentage =
-        prevValue == null
-            ? double.infinity
-            : ((newValue - prevValue!) / prevValue! * 100).round();
+    final percentage = prevValue == null
+        ? double.infinity
+        : ((newValue - prevValue!) / prevValue! * 100).round();
     final isPositive = prevValue == null ? true : newValue >= prevValue!;
-    final percentageColor =
-        isPositive
-            ? CrimpyTheme.accentYellow
-            : Theme.of(context).colorScheme.error;
+    final percentageColor = isPositive
+        ? CrimpyTheme.accentYellow
+        : Theme.of(context).colorScheme.error;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

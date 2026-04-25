@@ -1,6 +1,7 @@
 import 'package:crimpy/logger.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'views/main_page.dart';
@@ -11,6 +12,7 @@ Future<void> main() async {
   SentryWidgetsFlutterBinding.ensureInitialized();
   FlutterBluePlus.setLogLevel(LogLevel.warning, color: true);
   AppLoggerHelper.initialize();
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   // Only initialize Sentry in release mode
   if (kDebugMode) {
@@ -28,11 +30,10 @@ Future<void> main() async {
         options.tracesSampleRate = 1.0;
         // The sampling rate for profiling is relative to tracesSampleRate
         // Setting to 1.0 will profile 100% of sampled transactions:
-        options.profilesSampleRate = 1.0;
+        // options.profilesSampleRate = 1.0;
       },
-      appRunner:
-          () =>
-              runApp(SentryWidget(child: const ProviderScope(child: MyApp()))),
+      appRunner: () =>
+          runApp(SentryWidget(child: const ProviderScope(child: MyApp()))),
     );
   }
 }

@@ -69,24 +69,23 @@ class CrimpyCard extends StatelessWidget {
       padding: effectivePadding,
       decoration: BoxDecoration(
         color: effectiveBackgroundColor,
-        border:
-            showAccentBorder && accentColor != null
-                ? Border(
-                  left: BorderSide(color: accentColor!, width: 4),
-                  top: BorderSide(
-                    color: effectiveBorderColor,
-                    width: borderWidth,
-                  ),
-                  right: BorderSide(
-                    color: effectiveBorderColor,
-                    width: borderWidth,
-                  ),
-                  bottom: BorderSide(
-                    color: effectiveBorderColor,
-                    width: borderWidth,
-                  ),
-                )
-                : Border.all(color: effectiveBorderColor, width: borderWidth),
+        border: showAccentBorder && accentColor != null
+            ? Border(
+                left: BorderSide(color: accentColor!, width: 4),
+                top: BorderSide(
+                  color: effectiveBorderColor,
+                  width: borderWidth,
+                ),
+                right: BorderSide(
+                  color: effectiveBorderColor,
+                  width: borderWidth,
+                ),
+                bottom: BorderSide(
+                  color: effectiveBorderColor,
+                  width: borderWidth,
+                ),
+              )
+            : Border.all(color: effectiveBorderColor, width: borderWidth),
         borderRadius: BorderRadius.zero, // Sharp corners for Radicle aesthetic
       ),
       child: child,

@@ -35,7 +35,7 @@ class FavTrainingsNotifier extends AsyncNotifier<List<TrainingWithReps>> {
   }
 
   /// Toggle the favorite status for a given training.
-  Future<void> toggleFav(int trainingId) async {
+  Future<void> toggleFav(String trainingId) async {
     await _trainingRepository.toggleFav(trainingId);
     ref.invalidate(trainingsProvider);
     ref.invalidateSelf();
@@ -59,7 +59,7 @@ class TrainingsNotifier extends AsyncNotifier<List<TrainingWithReps>> {
 
   /// Edit a training's name and/or reps.
   Future<void> editTraining(
-    int trainingId, {
+    String trainingId, {
     String? newName,
     List<RepModel>? newReps,
   }) async {
@@ -81,7 +81,7 @@ class TrainingsNotifier extends AsyncNotifier<List<TrainingWithReps>> {
 
   /// Edit a repeater training's name and/or model.
   Future<void> editRepeaterTraining(
-    int trainingId, {
+    String trainingId, {
     String? newName,
     RepeaterModel? model,
   }) async {
@@ -128,7 +128,7 @@ class TrainingsNotifier extends AsyncNotifier<List<TrainingWithReps>> {
   }
 
   /// Delete a training.
-  Future<void> deleteTraining(int trainingId) async {
+  Future<void> deleteTraining(String trainingId) async {
     state = const AsyncValue.loading();
     try {
       await _trainingRepository.deleteTraining(trainingId);
@@ -141,7 +141,7 @@ class TrainingsNotifier extends AsyncNotifier<List<TrainingWithReps>> {
   }
 }
 
-/// Represents the filters available for the `sessionsProvider` family.
+/// Represents the filters available for filtering sessions.
 class SessionFilter {
   final DateTime? startDate;
   final DateTime? endDate;
@@ -159,27 +159,38 @@ class SessionFilter {
 
   @override
   int get hashCode => Object.hash(startDate, endDate, isAssessment);
+
+  bool matchesSession(SessionModel session) {
+    if (isAssessment != null && session.isAssessment != isAssessment) {
+      return false;
+    }
+    if (startDate != null && session.date.isBefore(startDate!)) {
+      return false;
+    }
+    if (endDate != null && session.date.isAfter(endDate!)) {
+      return false;
+    }
+    return true;
+  }
 }
 
-/// Returns the list of sessions, and allows the creation of new sessions.
-final sessionsProvider = AsyncNotifierProvider.autoDispose
-    .family<SessionsNotifier, List<SessionModel>, SessionFilter?>(
+/// Returns the list of all sessions, and allows the creation of new sessions.
+final sessionsProvider =
+    AsyncNotifierProvider<SessionsNotifier, List<SessionModel>>(
       SessionsNotifier.new,
     );
 
 class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
-  SessionsNotifier(this.filters);
-  final SessionFilter? filters;
   late TrainingRepository _trainingRepository;
 
   @override
   Future<List<SessionModel>> build() {
     _trainingRepository = ref.watch(trainingRepositoryProvider);
-    return _trainingRepository.getAllSessionsWithReps(filters: filters);
+    return _trainingRepository.getAllSessionsWithReps(filters: null);
   }
 
   /// Save a session and its repetitions data.
-  Future<int> saveSession(
+  Future<String> saveSession(
     SessionModel session,
     List<RepDataModel> reps, {
     List<BleDataPoint>? data,
@@ -191,19 +202,19 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
         reps,
         data: data,
       );
-      ref.invalidate(sessionsProvider);
+      ref.invalidateSelf();
       if (ref.mounted) await future;
       return id;
     } catch (e, stackTrace) {
       if (ref.mounted) {
         state = AsyncValue.error(e, stackTrace);
       }
-      return -1;
+      return "";
     }
   }
 
   /// Get a session by its ID.
-  Future<SessionModel?> getSession(int id) async {
+  Future<SessionModel?> getSession(String id) async {
     return _trainingRepository.getSessionWithData(id);
   }
 
@@ -212,7 +223,7 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
     state = const AsyncValue.loading();
     try {
       await _trainingRepository.updateSession(session);
-      ref.invalidate(sessionsProvider);
+      ref.invalidateSelf();
       if (ref.mounted) await future;
     } catch (e, stackTrace) {
       if (ref.mounted) {
@@ -222,11 +233,11 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
     }
   }
 
-  Future<void> deleteSession(int sessionId) async {
+  Future<void> deleteSession(String sessionId) async {
     state = const AsyncValue.loading();
     try {
       await _trainingRepository.deleteSession(sessionId);
-      ref.invalidate(sessionsProvider);
+      ref.invalidateSelf();
       await future;
     } catch (e, stackTrace) {
       state = AsyncValue.error(e, stackTrace);
@@ -236,13 +247,29 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
 }
 
 /// Provider for getting a single session with full data by ID.
-final sessionWithDataProvider = FutureProvider.family<SessionModel?, int>((
+final sessionWithDataProvider = FutureProvider.family<SessionModel?, String>((
   ref,
   sessionId,
 ) {
   final trainingRepository = ref.watch(trainingRepositoryProvider);
   return trainingRepository.getSessionWithData(sessionId);
 });
+
+/// Provider that returns filtered sessions based on a given filter.
+/// This provider watches the base sessions provider and applies client-side filtering.
+final filteredSessionsProvider =
+    FutureProvider.family<List<SessionModel>, SessionFilter?>((
+      ref,
+      filter,
+    ) async {
+      final allSessions = await ref.watch(sessionsProvider.future);
+      if (filter == null) {
+        return allSessions;
+      }
+      return allSessions
+          .where((session) => filter.matchesSession(session))
+          .toList();
+    });
 
 /// Provider for pinned builtin trainings (with favorites).
 final pinnedTrainingsProvider =
@@ -263,12 +290,13 @@ class PinnedTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
     final favoriteTrainings = await _trainingRepository.getAllTrainings(
       onlyFavs: true,
     );
-    final favoriteItems =
-        favoriteTrainings.map(TrainingListItem.regular).toList();
+    final favoriteItems = favoriteTrainings
+        .map(TrainingListItem.regular)
+        .toList();
 
     // Get pinned builtin training IDs
-    final pinnedIds =
-        await _builtinTrainingRepository.getPinnedBuiltinTrainingIds();
+    final pinnedIds = await _builtinTrainingRepository
+        .getPinnedBuiltinTrainingIds();
 
     // Get all builtin trainings
     final allBuiltins = await _builtinTrainingRepository.getBuiltinTrainings();
@@ -281,10 +309,9 @@ class PinnedTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
             .isTrainingAvailable(builtin);
         final missingAssessments = await _builtinTrainingRepository
             .getMissingAssessments(builtin);
-        final generatedTraining =
-            isAvailable
-                ? await _builtinTrainingRepository.generateTraining(builtin)
-                : null;
+        final generatedTraining = isAvailable
+            ? await _builtinTrainingRepository.generateTraining(builtin)
+            : null;
 
         pinnedBuiltinItems.add(
           TrainingListItem.builtin(
@@ -303,7 +330,7 @@ class PinnedTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
   }
 
   /// Toggle pin status for a builtin training.
-  Future<void> togglePin(int builtinTrainingId) async {
+  Future<void> togglePin(String builtinTrainingId) async {
     final isPinned = await _builtinTrainingRepository.isBuiltinTrainingPinned(
       builtinTrainingId,
     );
@@ -335,12 +362,13 @@ class AllTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
 
     // Get regular trainings
     final regularTrainings = await _trainingRepository.getAllTrainings();
-    final regularItems =
-        regularTrainings.map(TrainingListItem.regular).toList();
+    final regularItems = regularTrainings
+        .map(TrainingListItem.regular)
+        .toList();
 
     // Get builtin trainings
-    final builtinTrainings =
-        await _builtinTrainingRepository.getBuiltinTrainings();
+    final builtinTrainings = await _builtinTrainingRepository
+        .getBuiltinTrainings();
     final builtinItems = <TrainingListItem>[];
 
     for (final builtin in builtinTrainings) {
@@ -349,10 +377,9 @@ class AllTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
       );
       final missingAssessments = await _builtinTrainingRepository
           .getMissingAssessments(builtin);
-      final generatedTraining =
-          isAvailable
-              ? await _builtinTrainingRepository.generateTraining(builtin)
-              : null;
+      final generatedTraining = isAvailable
+          ? await _builtinTrainingRepository.generateTraining(builtin)
+          : null;
       final isPinned = await _builtinTrainingRepository.isBuiltinTrainingPinned(
         builtin.id,
       );

@@ -61,23 +61,20 @@ class TrainingProgressInfo extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.symmetric(vertical: 16),
-      child:
-          repeaterProgress != null
-              ? Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _ProgressText(
-                    'Set ${repeaterProgress.currentSet}/${repeaterProgress.totalSets}',
-                  ),
-                  _ProgressText(
-                    'Rep ${repeaterProgress.currentRep}/${repeaterProgress.totalRepsPerSet}',
-                  ),
-                  _ProgressText('${currentRepIndex + 1}/$totalReps'),
-                ],
-              )
-              : Center(
-                child: _ProgressText('${currentRepIndex + 1}/$totalReps'),
-              ),
+      child: repeaterProgress != null
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _ProgressText(
+                  'Set ${repeaterProgress.currentSet}/${repeaterProgress.totalSets}',
+                ),
+                _ProgressText(
+                  'Rep ${repeaterProgress.currentRep}/${repeaterProgress.totalRepsPerSet}',
+                ),
+                _ProgressText('${currentRepIndex + 1}/$totalReps'),
+              ],
+            )
+          : Center(child: _ProgressText('${currentRepIndex + 1}/$totalReps')),
     );
   }
 }

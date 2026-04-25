@@ -66,11 +66,13 @@ class RepItemWidget extends StatelessWidget {
   Widget _buildWorkItem() {
     // Calculate success/failure
     final bool hasTarget = rep.targetWeight > 0;
-    final double successRate =
-        hasTarget ? rep.averageWeight / rep.targetWeight : 0;
+    final double successRate = hasTarget
+        ? rep.averageWeight / rep.targetWeight
+        : 0;
     final bool isSuccess = successRate >= 0.9;
-    final Color statusColor =
-        isSuccess ? Colors.green.shade600 : Colors.orange.shade600;
+    final Color statusColor = isSuccess
+        ? Colors.green.shade600
+        : Colors.orange.shade600;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -78,10 +80,9 @@ class RepItemWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: sessionColor.withValues(alpha: 0.05),
         border: Border.all(
-          color:
-              hasTarget
-                  ? statusColor.withValues(alpha: 0.3)
-                  : sessionColor.withValues(alpha: 0.2),
+          color: hasTarget
+              ? statusColor.withValues(alpha: 0.3)
+              : sessionColor.withValues(alpha: 0.2),
           width: 1.5,
         ),
         borderRadius: BorderRadius.circular(8),

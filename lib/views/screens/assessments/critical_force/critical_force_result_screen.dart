@@ -29,10 +29,9 @@ class CriticalForceResultScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final startTime = data[0].timestamp.millisecondsSinceEpoch;
-    final timestamps =
-        data
-            .map((e) => (e.timestamp.millisecondsSinceEpoch - startTime) / 1000)
-            .toList();
+    final timestamps = data
+        .map((e) => (e.timestamp.millisecondsSinceEpoch - startTime) / 1000)
+        .toList();
     final forces = data.map((e) => e.value).toList();
     return Scaffold(
       appBar: AppBar(title: Text("Critical Force assessment results")),

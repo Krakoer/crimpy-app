@@ -10,16 +10,13 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
   $SessionsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -168,6 +165,42 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
       'CHECK ("repeater_split_hand" IN (0, 1))',
     ),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -184,6 +217,9 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     repeaterRestTime,
     repeaterSetRest,
     repeaterSplitHand,
+    updatedAt,
+    deletedAt,
+    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -308,6 +344,24 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
     return context;
   }
 
@@ -317,46 +371,38 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
   Session map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Session(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      name:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}name'],
-          )!,
-      notes:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}notes'],
-          )!,
-      date:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}date'],
-          )!,
-      dataPath:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}data_path'],
-          )!,
-      isAssessment:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_assessment'],
-          )!,
-      sessionType:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}session_type'],
-          )!,
-      duration:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}duration'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      )!,
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}date'],
+      )!,
+      dataPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}data_path'],
+      )!,
+      isAssessment: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_assessment'],
+      )!,
+      sessionType: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}session_type'],
+      )!,
+      duration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration'],
+      )!,
       repeaterSets: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}repeater_sets'],
@@ -381,6 +427,18 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.bool,
         data['${effectivePrefix}repeater_split_hand'],
       ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -391,7 +449,7 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
 }
 
 class Session extends DataClass implements Insertable<Session> {
-  final int id;
+  final String id;
   final String name;
   final String notes;
   final DateTime date;
@@ -405,6 +463,9 @@ class Session extends DataClass implements Insertable<Session> {
   final int? repeaterRestTime;
   final int? repeaterSetRest;
   final bool? repeaterSplitHand;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
   const Session({
     required this.id,
     required this.name,
@@ -420,11 +481,14 @@ class Session extends DataClass implements Insertable<Session> {
     this.repeaterRestTime,
     this.repeaterSetRest,
     this.repeaterSplitHand,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['notes'] = Variable<String>(notes);
     map['date'] = Variable<DateTime>(date);
@@ -450,6 +514,11 @@ class Session extends DataClass implements Insertable<Session> {
     if (!nullToAbsent || repeaterSplitHand != null) {
       map['repeater_split_hand'] = Variable<bool>(repeaterSplitHand);
     }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -463,30 +532,29 @@ class Session extends DataClass implements Insertable<Session> {
       isAssessment: Value(isAssessment),
       sessionType: Value(sessionType),
       duration: Value(duration),
-      repeaterSets:
-          repeaterSets == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterSets),
-      repeaterReps:
-          repeaterReps == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterReps),
-      repeaterWorkTime:
-          repeaterWorkTime == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterWorkTime),
-      repeaterRestTime:
-          repeaterRestTime == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterRestTime),
-      repeaterSetRest:
-          repeaterSetRest == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterSetRest),
-      repeaterSplitHand:
-          repeaterSplitHand == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterSplitHand),
+      repeaterSets: repeaterSets == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterSets),
+      repeaterReps: repeaterReps == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterReps),
+      repeaterWorkTime: repeaterWorkTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterWorkTime),
+      repeaterRestTime: repeaterRestTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterRestTime),
+      repeaterSetRest: repeaterSetRest == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterSetRest),
+      repeaterSplitHand: repeaterSplitHand == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterSplitHand),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      dirty: Value(dirty),
     );
   }
 
@@ -496,7 +564,7 @@ class Session extends DataClass implements Insertable<Session> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Session(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       notes: serializer.fromJson<String>(json['notes']),
       date: serializer.fromJson<DateTime>(json['date']),
@@ -510,13 +578,16 @@ class Session extends DataClass implements Insertable<Session> {
       repeaterRestTime: serializer.fromJson<int?>(json['repeaterRestTime']),
       repeaterSetRest: serializer.fromJson<int?>(json['repeaterSetRest']),
       repeaterSplitHand: serializer.fromJson<bool?>(json['repeaterSplitHand']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'notes': serializer.toJson<String>(notes),
       'date': serializer.toJson<DateTime>(date),
@@ -530,11 +601,14 @@ class Session extends DataClass implements Insertable<Session> {
       'repeaterRestTime': serializer.toJson<int?>(repeaterRestTime),
       'repeaterSetRest': serializer.toJson<int?>(repeaterSetRest),
       'repeaterSplitHand': serializer.toJson<bool?>(repeaterSplitHand),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
   Session copyWith({
-    int? id,
+    String? id,
     String? name,
     String? notes,
     DateTime? date,
@@ -548,6 +622,9 @@ class Session extends DataClass implements Insertable<Session> {
     Value<int?> repeaterRestTime = const Value.absent(),
     Value<int?> repeaterSetRest = const Value.absent(),
     Value<bool?> repeaterSplitHand = const Value.absent(),
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
   }) => Session(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -559,20 +636,21 @@ class Session extends DataClass implements Insertable<Session> {
     duration: duration ?? this.duration,
     repeaterSets: repeaterSets.present ? repeaterSets.value : this.repeaterSets,
     repeaterReps: repeaterReps.present ? repeaterReps.value : this.repeaterReps,
-    repeaterWorkTime:
-        repeaterWorkTime.present
-            ? repeaterWorkTime.value
-            : this.repeaterWorkTime,
-    repeaterRestTime:
-        repeaterRestTime.present
-            ? repeaterRestTime.value
-            : this.repeaterRestTime,
-    repeaterSetRest:
-        repeaterSetRest.present ? repeaterSetRest.value : this.repeaterSetRest,
-    repeaterSplitHand:
-        repeaterSplitHand.present
-            ? repeaterSplitHand.value
-            : this.repeaterSplitHand,
+    repeaterWorkTime: repeaterWorkTime.present
+        ? repeaterWorkTime.value
+        : this.repeaterWorkTime,
+    repeaterRestTime: repeaterRestTime.present
+        ? repeaterRestTime.value
+        : this.repeaterRestTime,
+    repeaterSetRest: repeaterSetRest.present
+        ? repeaterSetRest.value
+        : this.repeaterSetRest,
+    repeaterSplitHand: repeaterSplitHand.present
+        ? repeaterSplitHand.value
+        : this.repeaterSplitHand,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
   );
   Session copyWithCompanion(SessionsCompanion data) {
     return Session(
@@ -581,37 +659,34 @@ class Session extends DataClass implements Insertable<Session> {
       notes: data.notes.present ? data.notes.value : this.notes,
       date: data.date.present ? data.date.value : this.date,
       dataPath: data.dataPath.present ? data.dataPath.value : this.dataPath,
-      isAssessment:
-          data.isAssessment.present
-              ? data.isAssessment.value
-              : this.isAssessment,
-      sessionType:
-          data.sessionType.present ? data.sessionType.value : this.sessionType,
+      isAssessment: data.isAssessment.present
+          ? data.isAssessment.value
+          : this.isAssessment,
+      sessionType: data.sessionType.present
+          ? data.sessionType.value
+          : this.sessionType,
       duration: data.duration.present ? data.duration.value : this.duration,
-      repeaterSets:
-          data.repeaterSets.present
-              ? data.repeaterSets.value
-              : this.repeaterSets,
-      repeaterReps:
-          data.repeaterReps.present
-              ? data.repeaterReps.value
-              : this.repeaterReps,
-      repeaterWorkTime:
-          data.repeaterWorkTime.present
-              ? data.repeaterWorkTime.value
-              : this.repeaterWorkTime,
-      repeaterRestTime:
-          data.repeaterRestTime.present
-              ? data.repeaterRestTime.value
-              : this.repeaterRestTime,
-      repeaterSetRest:
-          data.repeaterSetRest.present
-              ? data.repeaterSetRest.value
-              : this.repeaterSetRest,
-      repeaterSplitHand:
-          data.repeaterSplitHand.present
-              ? data.repeaterSplitHand.value
-              : this.repeaterSplitHand,
+      repeaterSets: data.repeaterSets.present
+          ? data.repeaterSets.value
+          : this.repeaterSets,
+      repeaterReps: data.repeaterReps.present
+          ? data.repeaterReps.value
+          : this.repeaterReps,
+      repeaterWorkTime: data.repeaterWorkTime.present
+          ? data.repeaterWorkTime.value
+          : this.repeaterWorkTime,
+      repeaterRestTime: data.repeaterRestTime.present
+          ? data.repeaterRestTime.value
+          : this.repeaterRestTime,
+      repeaterSetRest: data.repeaterSetRest.present
+          ? data.repeaterSetRest.value
+          : this.repeaterSetRest,
+      repeaterSplitHand: data.repeaterSplitHand.present
+          ? data.repeaterSplitHand.value
+          : this.repeaterSplitHand,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -631,7 +706,10 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('repeaterWorkTime: $repeaterWorkTime, ')
           ..write('repeaterRestTime: $repeaterRestTime, ')
           ..write('repeaterSetRest: $repeaterSetRest, ')
-          ..write('repeaterSplitHand: $repeaterSplitHand')
+          ..write('repeaterSplitHand: $repeaterSplitHand, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -652,6 +730,9 @@ class Session extends DataClass implements Insertable<Session> {
     repeaterRestTime,
     repeaterSetRest,
     repeaterSplitHand,
+    updatedAt,
+    deletedAt,
+    dirty,
   );
   @override
   bool operator ==(Object other) =>
@@ -670,11 +751,14 @@ class Session extends DataClass implements Insertable<Session> {
           other.repeaterWorkTime == this.repeaterWorkTime &&
           other.repeaterRestTime == this.repeaterRestTime &&
           other.repeaterSetRest == this.repeaterSetRest &&
-          other.repeaterSplitHand == this.repeaterSplitHand);
+          other.repeaterSplitHand == this.repeaterSplitHand &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty);
 }
 
 class SessionsCompanion extends UpdateCompanion<Session> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> name;
   final Value<String> notes;
   final Value<DateTime> date;
@@ -688,6 +772,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<int?> repeaterRestTime;
   final Value<int?> repeaterSetRest;
   final Value<bool?> repeaterSplitHand;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<int> rowid;
   const SessionsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -703,6 +791,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.repeaterRestTime = const Value.absent(),
     this.repeaterSetRest = const Value.absent(),
     this.repeaterSplitHand = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   SessionsCompanion.insert({
     this.id = const Value.absent(),
@@ -719,11 +811,15 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.repeaterRestTime = const Value.absent(),
     this.repeaterSetRest = const Value.absent(),
     this.repeaterSplitHand = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : name = Value(name),
        notes = Value(notes),
        dataPath = Value(dataPath);
   static Insertable<Session> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? name,
     Expression<String>? notes,
     Expression<DateTime>? date,
@@ -737,6 +833,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<int>? repeaterRestTime,
     Expression<int>? repeaterSetRest,
     Expression<bool>? repeaterSplitHand,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -753,11 +853,15 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (repeaterRestTime != null) 'repeater_rest_time': repeaterRestTime,
       if (repeaterSetRest != null) 'repeater_set_rest': repeaterSetRest,
       if (repeaterSplitHand != null) 'repeater_split_hand': repeaterSplitHand,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   SessionsCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<String>? name,
     Value<String>? notes,
     Value<DateTime>? date,
@@ -771,6 +875,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<int?>? repeaterRestTime,
     Value<int?>? repeaterSetRest,
     Value<bool?>? repeaterSplitHand,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<int>? rowid,
   }) {
     return SessionsCompanion(
       id: id ?? this.id,
@@ -787,6 +895,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       repeaterRestTime: repeaterRestTime ?? this.repeaterRestTime,
       repeaterSetRest: repeaterSetRest ?? this.repeaterSetRest,
       repeaterSplitHand: repeaterSplitHand ?? this.repeaterSplitHand,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -794,7 +906,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -835,6 +947,18 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (repeaterSplitHand.present) {
       map['repeater_split_hand'] = Variable<bool>(repeaterSplitHand.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -854,7 +978,11 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('repeaterWorkTime: $repeaterWorkTime, ')
           ..write('repeaterRestTime: $repeaterRestTime, ')
           ..write('repeaterSetRest: $repeaterSetRest, ')
-          ..write('repeaterSplitHand: $repeaterSplitHand')
+          ..write('repeaterSplitHand: $repeaterSplitHand, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -868,16 +996,13 @@ class $AssessmentsTable extends Assessments
   $AssessmentsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
@@ -914,15 +1039,12 @@ class $AssessmentsTable extends Assessments
     'sessionId',
   );
   @override
-  late final GeneratedColumn<int> sessionId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
     'session_id',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES sessions (id)',
-    ),
   );
   static const VerificationMeta _gripPositionMeta = const VerificationMeta(
     'gripPosition',
@@ -936,6 +1058,42 @@ class $AssessmentsTable extends Assessments
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -944,6 +1102,9 @@ class $AssessmentsTable extends Assessments
     leftValue,
     sessionId,
     gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -997,6 +1158,24 @@ class $AssessmentsTable extends Assessments
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
     return context;
   }
 
@@ -1006,16 +1185,14 @@ class $AssessmentsTable extends Assessments
   Assessment map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Assessment(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      type:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}type'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}type'],
+      )!,
       rightValue: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}right_value'],
@@ -1024,15 +1201,26 @@ class $AssessmentsTable extends Assessments
         DriftSqlType.double,
         data['${effectivePrefix}left_value'],
       ),
-      sessionId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}session_id'],
-          )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
       gripPosition: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}grip_position'],
       ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -1043,12 +1231,15 @@ class $AssessmentsTable extends Assessments
 }
 
 class Assessment extends DataClass implements Insertable<Assessment> {
-  final int id;
+  final String id;
   final int type;
   final double? rightValue;
   final double? leftValue;
-  final int sessionId;
+  final String sessionId;
   final int? gripPosition;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
   const Assessment({
     required this.id,
     required this.type,
@@ -1056,11 +1247,14 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     this.leftValue,
     required this.sessionId,
     this.gripPosition,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['type'] = Variable<int>(type);
     if (!nullToAbsent || rightValue != null) {
       map['right_value'] = Variable<double>(rightValue);
@@ -1068,10 +1262,15 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     if (!nullToAbsent || leftValue != null) {
       map['left_value'] = Variable<double>(leftValue);
     }
-    map['session_id'] = Variable<int>(sessionId);
+    map['session_id'] = Variable<String>(sessionId);
     if (!nullToAbsent || gripPosition != null) {
       map['grip_position'] = Variable<int>(gripPosition);
     }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -1079,19 +1278,21 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     return AssessmentsCompanion(
       id: Value(id),
       type: Value(type),
-      rightValue:
-          rightValue == null && nullToAbsent
-              ? const Value.absent()
-              : Value(rightValue),
-      leftValue:
-          leftValue == null && nullToAbsent
-              ? const Value.absent()
-              : Value(leftValue),
+      rightValue: rightValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rightValue),
+      leftValue: leftValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(leftValue),
       sessionId: Value(sessionId),
-      gripPosition:
-          gripPosition == null && nullToAbsent
-              ? const Value.absent()
-              : Value(gripPosition),
+      gripPosition: gripPosition == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gripPosition),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      dirty: Value(dirty),
     );
   }
 
@@ -1101,34 +1302,43 @@ class Assessment extends DataClass implements Insertable<Assessment> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Assessment(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       type: serializer.fromJson<int>(json['type']),
       rightValue: serializer.fromJson<double?>(json['rightValue']),
       leftValue: serializer.fromJson<double?>(json['leftValue']),
-      sessionId: serializer.fromJson<int>(json['sessionId']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
       gripPosition: serializer.fromJson<int?>(json['gripPosition']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'type': serializer.toJson<int>(type),
       'rightValue': serializer.toJson<double?>(rightValue),
       'leftValue': serializer.toJson<double?>(leftValue),
-      'sessionId': serializer.toJson<int>(sessionId),
+      'sessionId': serializer.toJson<String>(sessionId),
       'gripPosition': serializer.toJson<int?>(gripPosition),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
   Assessment copyWith({
-    int? id,
+    String? id,
     int? type,
     Value<double?> rightValue = const Value.absent(),
     Value<double?> leftValue = const Value.absent(),
-    int? sessionId,
+    String? sessionId,
     Value<int?> gripPosition = const Value.absent(),
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
   }) => Assessment(
     id: id ?? this.id,
     type: type ?? this.type,
@@ -1136,19 +1346,25 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     leftValue: leftValue.present ? leftValue.value : this.leftValue,
     sessionId: sessionId ?? this.sessionId,
     gripPosition: gripPosition.present ? gripPosition.value : this.gripPosition,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
   );
   Assessment copyWithCompanion(AssessmentsCompanion data) {
     return Assessment(
       id: data.id.present ? data.id.value : this.id,
       type: data.type.present ? data.type.value : this.type,
-      rightValue:
-          data.rightValue.present ? data.rightValue.value : this.rightValue,
+      rightValue: data.rightValue.present
+          ? data.rightValue.value
+          : this.rightValue,
       leftValue: data.leftValue.present ? data.leftValue.value : this.leftValue,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
-      gripPosition:
-          data.gripPosition.present
-              ? data.gripPosition.value
-              : this.gripPosition,
+      gripPosition: data.gripPosition.present
+          ? data.gripPosition.value
+          : this.gripPosition,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -1160,14 +1376,26 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           ..write('rightValue: $rightValue, ')
           ..write('leftValue: $leftValue, ')
           ..write('sessionId: $sessionId, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, type, rightValue, leftValue, sessionId, gripPosition);
+  int get hashCode => Object.hash(
+    id,
+    type,
+    rightValue,
+    leftValue,
+    sessionId,
+    gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1177,16 +1405,23 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           other.rightValue == this.rightValue &&
           other.leftValue == this.leftValue &&
           other.sessionId == this.sessionId &&
-          other.gripPosition == this.gripPosition);
+          other.gripPosition == this.gripPosition &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty);
 }
 
 class AssessmentsCompanion extends UpdateCompanion<Assessment> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<int> type;
   final Value<double?> rightValue;
   final Value<double?> leftValue;
-  final Value<int> sessionId;
+  final Value<String> sessionId;
   final Value<int?> gripPosition;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<int> rowid;
   const AssessmentsCompanion({
     this.id = const Value.absent(),
     this.type = const Value.absent(),
@@ -1194,23 +1429,35 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     this.leftValue = const Value.absent(),
     this.sessionId = const Value.absent(),
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   AssessmentsCompanion.insert({
     this.id = const Value.absent(),
     required int type,
     this.rightValue = const Value.absent(),
     this.leftValue = const Value.absent(),
-    required int sessionId,
+    required String sessionId,
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : type = Value(type),
        sessionId = Value(sessionId);
   static Insertable<Assessment> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<int>? type,
     Expression<double>? rightValue,
     Expression<double>? leftValue,
-    Expression<int>? sessionId,
+    Expression<String>? sessionId,
     Expression<int>? gripPosition,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1219,16 +1466,24 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
       if (leftValue != null) 'left_value': leftValue,
       if (sessionId != null) 'session_id': sessionId,
       if (gripPosition != null) 'grip_position': gripPosition,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   AssessmentsCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<int>? type,
     Value<double?>? rightValue,
     Value<double?>? leftValue,
-    Value<int>? sessionId,
+    Value<String>? sessionId,
     Value<int?>? gripPosition,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<int>? rowid,
   }) {
     return AssessmentsCompanion(
       id: id ?? this.id,
@@ -1237,6 +1492,10 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
       leftValue: leftValue ?? this.leftValue,
       sessionId: sessionId ?? this.sessionId,
       gripPosition: gripPosition ?? this.gripPosition,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1244,7 +1503,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (type.present) {
       map['type'] = Variable<int>(type.value);
@@ -1256,10 +1515,22 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
       map['left_value'] = Variable<double>(leftValue.value);
     }
     if (sessionId.present) {
-      map['session_id'] = Variable<int>(sessionId.value);
+      map['session_id'] = Variable<String>(sessionId.value);
     }
     if (gripPosition.present) {
       map['grip_position'] = Variable<int>(gripPosition.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -1272,7 +1543,11 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
           ..write('rightValue: $rightValue, ')
           ..write('leftValue: $leftValue, ')
           ..write('sessionId: $sessionId, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1286,16 +1561,13 @@ class $RepeatersTable extends Repeaters
   $RepeatersTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _setsMeta = const VerificationMeta('sets');
   @override
@@ -1397,6 +1669,42 @@ class $RepeatersTable extends Repeaters
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1409,6 +1717,9 @@ class $RepeatersTable extends Repeaters
     targetWeigthLeft,
     splitHand,
     gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1500,6 +1811,24 @@ class $RepeatersTable extends Repeaters
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
     return context;
   }
 
@@ -1509,36 +1838,30 @@ class $RepeatersTable extends Repeaters
   Repeater map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Repeater(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      sets:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}sets'],
-          )!,
-      reps:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}reps'],
-          )!,
-      worktime:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}worktime'],
-          )!,
-      resttime:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}resttime'],
-          )!,
-      setRest:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}set_rest'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      sets: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sets'],
+      )!,
+      reps: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reps'],
+      )!,
+      worktime: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}worktime'],
+      )!,
+      resttime: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}resttime'],
+      )!,
+      setRest: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}set_rest'],
+      )!,
       targetWeigthRight: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}target_weigth_right'],
@@ -1547,16 +1870,26 @@ class $RepeatersTable extends Repeaters
         DriftSqlType.double,
         data['${effectivePrefix}target_weigth_left'],
       ),
-      splitHand:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}split_hand'],
-          )!,
-      gripPosition:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}grip_position'],
-          )!,
+      splitHand: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}split_hand'],
+      )!,
+      gripPosition: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}grip_position'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -1567,7 +1900,7 @@ class $RepeatersTable extends Repeaters
 }
 
 class Repeater extends DataClass implements Insertable<Repeater> {
-  final int id;
+  final String id;
   final int sets;
   final int reps;
   final int worktime;
@@ -1577,6 +1910,9 @@ class Repeater extends DataClass implements Insertable<Repeater> {
   final double? targetWeigthLeft;
   final bool splitHand;
   final int gripPosition;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
   const Repeater({
     required this.id,
     required this.sets,
@@ -1588,11 +1924,14 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     this.targetWeigthLeft,
     required this.splitHand,
     required this.gripPosition,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['sets'] = Variable<int>(sets);
     map['reps'] = Variable<int>(reps);
     map['worktime'] = Variable<int>(worktime);
@@ -1606,6 +1945,11 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     }
     map['split_hand'] = Variable<bool>(splitHand);
     map['grip_position'] = Variable<int>(gripPosition);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -1617,16 +1961,19 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       worktime: Value(worktime),
       resttime: Value(resttime),
       setRest: Value(setRest),
-      targetWeigthRight:
-          targetWeigthRight == null && nullToAbsent
-              ? const Value.absent()
-              : Value(targetWeigthRight),
-      targetWeigthLeft:
-          targetWeigthLeft == null && nullToAbsent
-              ? const Value.absent()
-              : Value(targetWeigthLeft),
+      targetWeigthRight: targetWeigthRight == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetWeigthRight),
+      targetWeigthLeft: targetWeigthLeft == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetWeigthLeft),
       splitHand: Value(splitHand),
       gripPosition: Value(gripPosition),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      dirty: Value(dirty),
     );
   }
 
@@ -1636,7 +1983,7 @@ class Repeater extends DataClass implements Insertable<Repeater> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Repeater(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       sets: serializer.fromJson<int>(json['sets']),
       reps: serializer.fromJson<int>(json['reps']),
       worktime: serializer.fromJson<int>(json['worktime']),
@@ -1648,13 +1995,16 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       targetWeigthLeft: serializer.fromJson<double?>(json['targetWeigthLeft']),
       splitHand: serializer.fromJson<bool>(json['splitHand']),
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'sets': serializer.toJson<int>(sets),
       'reps': serializer.toJson<int>(reps),
       'worktime': serializer.toJson<int>(worktime),
@@ -1664,11 +2014,14 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       'targetWeigthLeft': serializer.toJson<double?>(targetWeigthLeft),
       'splitHand': serializer.toJson<bool>(splitHand),
       'gripPosition': serializer.toJson<int>(gripPosition),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
   Repeater copyWith({
-    int? id,
+    String? id,
     int? sets,
     int? reps,
     int? worktime,
@@ -1678,6 +2031,9 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     Value<double?> targetWeigthLeft = const Value.absent(),
     bool? splitHand,
     int? gripPosition,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
   }) => Repeater(
     id: id ?? this.id,
     sets: sets ?? this.sets,
@@ -1685,16 +2041,17 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     worktime: worktime ?? this.worktime,
     resttime: resttime ?? this.resttime,
     setRest: setRest ?? this.setRest,
-    targetWeigthRight:
-        targetWeigthRight.present
-            ? targetWeigthRight.value
-            : this.targetWeigthRight,
-    targetWeigthLeft:
-        targetWeigthLeft.present
-            ? targetWeigthLeft.value
-            : this.targetWeigthLeft,
+    targetWeigthRight: targetWeigthRight.present
+        ? targetWeigthRight.value
+        : this.targetWeigthRight,
+    targetWeigthLeft: targetWeigthLeft.present
+        ? targetWeigthLeft.value
+        : this.targetWeigthLeft,
     splitHand: splitHand ?? this.splitHand,
     gripPosition: gripPosition ?? this.gripPosition,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
   );
   Repeater copyWithCompanion(RepeatersCompanion data) {
     return Repeater(
@@ -1704,19 +2061,19 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       worktime: data.worktime.present ? data.worktime.value : this.worktime,
       resttime: data.resttime.present ? data.resttime.value : this.resttime,
       setRest: data.setRest.present ? data.setRest.value : this.setRest,
-      targetWeigthRight:
-          data.targetWeigthRight.present
-              ? data.targetWeigthRight.value
-              : this.targetWeigthRight,
-      targetWeigthLeft:
-          data.targetWeigthLeft.present
-              ? data.targetWeigthLeft.value
-              : this.targetWeigthLeft,
+      targetWeigthRight: data.targetWeigthRight.present
+          ? data.targetWeigthRight.value
+          : this.targetWeigthRight,
+      targetWeigthLeft: data.targetWeigthLeft.present
+          ? data.targetWeigthLeft.value
+          : this.targetWeigthLeft,
       splitHand: data.splitHand.present ? data.splitHand.value : this.splitHand,
-      gripPosition:
-          data.gripPosition.present
-              ? data.gripPosition.value
-              : this.gripPosition,
+      gripPosition: data.gripPosition.present
+          ? data.gripPosition.value
+          : this.gripPosition,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -1732,7 +2089,10 @@ class Repeater extends DataClass implements Insertable<Repeater> {
           ..write('targetWeigthRight: $targetWeigthRight, ')
           ..write('targetWeigthLeft: $targetWeigthLeft, ')
           ..write('splitHand: $splitHand, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -1749,6 +2109,9 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     targetWeigthLeft,
     splitHand,
     gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
   );
   @override
   bool operator ==(Object other) =>
@@ -1763,11 +2126,14 @@ class Repeater extends DataClass implements Insertable<Repeater> {
           other.targetWeigthRight == this.targetWeigthRight &&
           other.targetWeigthLeft == this.targetWeigthLeft &&
           other.splitHand == this.splitHand &&
-          other.gripPosition == this.gripPosition);
+          other.gripPosition == this.gripPosition &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty);
 }
 
 class RepeatersCompanion extends UpdateCompanion<Repeater> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<int> sets;
   final Value<int> reps;
   final Value<int> worktime;
@@ -1777,6 +2143,10 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
   final Value<double?> targetWeigthLeft;
   final Value<bool> splitHand;
   final Value<int> gripPosition;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<int> rowid;
   const RepeatersCompanion({
     this.id = const Value.absent(),
     this.sets = const Value.absent(),
@@ -1788,6 +2158,10 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     this.targetWeigthLeft = const Value.absent(),
     this.splitHand = const Value.absent(),
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   RepeatersCompanion.insert({
     this.id = const Value.absent(),
@@ -1800,6 +2174,10 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     this.targetWeigthLeft = const Value.absent(),
     required bool splitHand,
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : sets = Value(sets),
        reps = Value(reps),
        worktime = Value(worktime),
@@ -1807,7 +2185,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
        setRest = Value(setRest),
        splitHand = Value(splitHand);
   static Insertable<Repeater> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<int>? sets,
     Expression<int>? reps,
     Expression<int>? worktime,
@@ -1817,6 +2195,10 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     Expression<double>? targetWeigthLeft,
     Expression<bool>? splitHand,
     Expression<int>? gripPosition,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1829,11 +2211,15 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
       if (targetWeigthLeft != null) 'target_weigth_left': targetWeigthLeft,
       if (splitHand != null) 'split_hand': splitHand,
       if (gripPosition != null) 'grip_position': gripPosition,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   RepeatersCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<int>? sets,
     Value<int>? reps,
     Value<int>? worktime,
@@ -1843,6 +2229,10 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     Value<double?>? targetWeigthLeft,
     Value<bool>? splitHand,
     Value<int>? gripPosition,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<int>? rowid,
   }) {
     return RepeatersCompanion(
       id: id ?? this.id,
@@ -1855,6 +2245,10 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
       targetWeigthLeft: targetWeigthLeft ?? this.targetWeigthLeft,
       splitHand: splitHand ?? this.splitHand,
       gripPosition: gripPosition ?? this.gripPosition,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -1862,7 +2256,7 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (sets.present) {
       map['sets'] = Variable<int>(sets.value);
@@ -1891,6 +2285,18 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     if (gripPosition.present) {
       map['grip_position'] = Variable<int>(gripPosition.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -1906,7 +2312,11 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
           ..write('targetWeigthRight: $targetWeigthRight, ')
           ..write('targetWeigthLeft: $targetWeigthLeft, ')
           ..write('splitHand: $splitHand, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -1920,16 +2330,13 @@ class $TrainingsTable extends Trainings
   $TrainingsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -1944,15 +2351,12 @@ class $TrainingsTable extends Trainings
     'repeaterId',
   );
   @override
-  late final GeneratedColumn<int> repeaterId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> repeaterId = GeneratedColumn<String>(
     'repeater_id',
     aliasedName,
     true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES repeaters (id) ON DELETE CASCADE',
-    ),
   );
   static const VerificationMeta _isBuiltinMeta = const VerificationMeta(
     'isBuiltin',
@@ -1999,6 +2403,42 @@ class $TrainingsTable extends Trainings
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2007,6 +2447,9 @@ class $TrainingsTable extends Trainings
     isBuiltin,
     isFavorite,
     isAssessment,
+    updatedAt,
+    deletedAt,
+    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2058,6 +2501,24 @@ class $TrainingsTable extends Trainings
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
     return context;
   }
 
@@ -2067,35 +2528,42 @@ class $TrainingsTable extends Trainings
   Training map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Training(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      name:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}name'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
       repeaterId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
+        DriftSqlType.string,
         data['${effectivePrefix}repeater_id'],
       ),
-      isBuiltin:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_builtin'],
-          )!,
-      isFavorite:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_favorite'],
-          )!,
-      isAssessment:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_assessment'],
-          )!,
+      isBuiltin: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_builtin'],
+      )!,
+      isFavorite: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_favorite'],
+      )!,
+      isAssessment: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_assessment'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -2106,12 +2574,15 @@ class $TrainingsTable extends Trainings
 }
 
 class Training extends DataClass implements Insertable<Training> {
-  final int id;
+  final String id;
   final String name;
-  final int? repeaterId;
+  final String? repeaterId;
   final bool isBuiltin;
   final bool isFavorite;
   final bool isAssessment;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
   const Training({
     required this.id,
     required this.name,
@@ -2119,18 +2590,26 @@ class Training extends DataClass implements Insertable<Training> {
     required this.isBuiltin,
     required this.isFavorite,
     required this.isAssessment,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || repeaterId != null) {
-      map['repeater_id'] = Variable<int>(repeaterId);
+      map['repeater_id'] = Variable<String>(repeaterId);
     }
     map['is_builtin'] = Variable<bool>(isBuiltin);
     map['is_favorite'] = Variable<bool>(isFavorite);
     map['is_assessment'] = Variable<bool>(isAssessment);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -2138,13 +2617,17 @@ class Training extends DataClass implements Insertable<Training> {
     return TrainingsCompanion(
       id: Value(id),
       name: Value(name),
-      repeaterId:
-          repeaterId == null && nullToAbsent
-              ? const Value.absent()
-              : Value(repeaterId),
+      repeaterId: repeaterId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(repeaterId),
       isBuiltin: Value(isBuiltin),
       isFavorite: Value(isFavorite),
       isAssessment: Value(isAssessment),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      dirty: Value(dirty),
     );
   }
 
@@ -2154,34 +2637,43 @@ class Training extends DataClass implements Insertable<Training> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Training(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
-      repeaterId: serializer.fromJson<int?>(json['repeaterId']),
+      repeaterId: serializer.fromJson<String?>(json['repeaterId']),
       isBuiltin: serializer.fromJson<bool>(json['isBuiltin']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       isAssessment: serializer.fromJson<bool>(json['isAssessment']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
-      'repeaterId': serializer.toJson<int?>(repeaterId),
+      'repeaterId': serializer.toJson<String?>(repeaterId),
       'isBuiltin': serializer.toJson<bool>(isBuiltin),
       'isFavorite': serializer.toJson<bool>(isFavorite),
       'isAssessment': serializer.toJson<bool>(isAssessment),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
   Training copyWith({
-    int? id,
+    String? id,
     String? name,
-    Value<int?> repeaterId = const Value.absent(),
+    Value<String?> repeaterId = const Value.absent(),
     bool? isBuiltin,
     bool? isFavorite,
     bool? isAssessment,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
   }) => Training(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -2189,20 +2681,27 @@ class Training extends DataClass implements Insertable<Training> {
     isBuiltin: isBuiltin ?? this.isBuiltin,
     isFavorite: isFavorite ?? this.isFavorite,
     isAssessment: isAssessment ?? this.isAssessment,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
   );
   Training copyWithCompanion(TrainingsCompanion data) {
     return Training(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
-      repeaterId:
-          data.repeaterId.present ? data.repeaterId.value : this.repeaterId,
+      repeaterId: data.repeaterId.present
+          ? data.repeaterId.value
+          : this.repeaterId,
       isBuiltin: data.isBuiltin.present ? data.isBuiltin.value : this.isBuiltin,
-      isFavorite:
-          data.isFavorite.present ? data.isFavorite.value : this.isFavorite,
-      isAssessment:
-          data.isAssessment.present
-              ? data.isAssessment.value
-              : this.isAssessment,
+      isFavorite: data.isFavorite.present
+          ? data.isFavorite.value
+          : this.isFavorite,
+      isAssessment: data.isAssessment.present
+          ? data.isAssessment.value
+          : this.isAssessment,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -2214,14 +2713,26 @@ class Training extends DataClass implements Insertable<Training> {
           ..write('repeaterId: $repeaterId, ')
           ..write('isBuiltin: $isBuiltin, ')
           ..write('isFavorite: $isFavorite, ')
-          ..write('isAssessment: $isAssessment')
+          ..write('isAssessment: $isAssessment, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, repeaterId, isBuiltin, isFavorite, isAssessment);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    repeaterId,
+    isBuiltin,
+    isFavorite,
+    isAssessment,
+    updatedAt,
+    deletedAt,
+    dirty,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2231,16 +2742,23 @@ class Training extends DataClass implements Insertable<Training> {
           other.repeaterId == this.repeaterId &&
           other.isBuiltin == this.isBuiltin &&
           other.isFavorite == this.isFavorite &&
-          other.isAssessment == this.isAssessment);
+          other.isAssessment == this.isAssessment &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty);
 }
 
 class TrainingsCompanion extends UpdateCompanion<Training> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> name;
-  final Value<int?> repeaterId;
+  final Value<String?> repeaterId;
   final Value<bool> isBuiltin;
   final Value<bool> isFavorite;
   final Value<bool> isAssessment;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<int> rowid;
   const TrainingsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -2248,6 +2766,10 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     this.isBuiltin = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.isAssessment = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   TrainingsCompanion.insert({
     this.id = const Value.absent(),
@@ -2256,14 +2778,22 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     this.isBuiltin = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.isAssessment = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Training> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? name,
-    Expression<int>? repeaterId,
+    Expression<String>? repeaterId,
     Expression<bool>? isBuiltin,
     Expression<bool>? isFavorite,
     Expression<bool>? isAssessment,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2272,16 +2802,24 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
       if (isBuiltin != null) 'is_builtin': isBuiltin,
       if (isFavorite != null) 'is_favorite': isFavorite,
       if (isAssessment != null) 'is_assessment': isAssessment,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   TrainingsCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<String>? name,
-    Value<int?>? repeaterId,
+    Value<String?>? repeaterId,
     Value<bool>? isBuiltin,
     Value<bool>? isFavorite,
     Value<bool>? isAssessment,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<int>? rowid,
   }) {
     return TrainingsCompanion(
       id: id ?? this.id,
@@ -2290,6 +2828,10 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
       isBuiltin: isBuiltin ?? this.isBuiltin,
       isFavorite: isFavorite ?? this.isFavorite,
       isAssessment: isAssessment ?? this.isAssessment,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -2297,13 +2839,13 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
     if (repeaterId.present) {
-      map['repeater_id'] = Variable<int>(repeaterId.value);
+      map['repeater_id'] = Variable<String>(repeaterId.value);
     }
     if (isBuiltin.present) {
       map['is_builtin'] = Variable<bool>(isBuiltin.value);
@@ -2313,6 +2855,18 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     }
     if (isAssessment.present) {
       map['is_assessment'] = Variable<bool>(isAssessment.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -2325,7 +2879,11 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
           ..write('repeaterId: $repeaterId, ')
           ..write('isBuiltin: $isBuiltin, ')
           ..write('isFavorite: $isFavorite, ')
-          ..write('isAssessment: $isAssessment')
+          ..write('isAssessment: $isAssessment, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -2339,16 +2897,13 @@ class $RepTemplatesTable extends RepTemplates
   $RepTemplatesTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _isRestMeta = const VerificationMeta('isRest');
   @override
@@ -2391,15 +2946,12 @@ class $RepTemplatesTable extends RepTemplates
     'trainingId',
   );
   @override
-  late final GeneratedColumn<int> trainingId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> trainingId = GeneratedColumn<String>(
     'training_id',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES trainings (id) ON DELETE CASCADE',
-    ),
   );
   static const VerificationMeta _targetWeightMeta = const VerificationMeta(
     'targetWeight',
@@ -2433,6 +2985,42 @@ class $RepTemplatesTable extends RepTemplates
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2443,6 +3031,9 @@ class $RepTemplatesTable extends RepTemplates
     targetWeight,
     index,
     gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2519,6 +3110,24 @@ class $RepTemplatesTable extends RepTemplates
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
     return context;
   }
 
@@ -2528,46 +3137,50 @@ class $RepTemplatesTable extends RepTemplates
   RepTemplate map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return RepTemplate(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      isRest:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_rest'],
-          )!,
-      rightHand:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}right_hand'],
-          )!,
-      duration:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}duration'],
-          )!,
-      trainingId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}training_id'],
-          )!,
-      targetWeight:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}target_weight'],
-          )!,
-      index:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}index'],
-          )!,
-      gripPosition:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}grip_position'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      isRest: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_rest'],
+      )!,
+      rightHand: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}right_hand'],
+      )!,
+      duration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration'],
+      )!,
+      trainingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}training_id'],
+      )!,
+      targetWeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}target_weight'],
+      )!,
+      index: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}index'],
+      )!,
+      gripPosition: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}grip_position'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -2578,14 +3191,17 @@ class $RepTemplatesTable extends RepTemplates
 }
 
 class RepTemplate extends DataClass implements Insertable<RepTemplate> {
-  final int id;
+  final String id;
   final bool isRest;
   final bool rightHand;
   final int duration;
-  final int trainingId;
+  final String trainingId;
   final double targetWeight;
   final int index;
   final int gripPosition;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
   const RepTemplate({
     required this.id,
     required this.isRest,
@@ -2595,18 +3211,26 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     required this.targetWeight,
     required this.index,
     required this.gripPosition,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['is_rest'] = Variable<bool>(isRest);
     map['right_hand'] = Variable<bool>(rightHand);
     map['duration'] = Variable<int>(duration);
-    map['training_id'] = Variable<int>(trainingId);
+    map['training_id'] = Variable<String>(trainingId);
     map['target_weight'] = Variable<double>(targetWeight);
     map['index'] = Variable<int>(index);
     map['grip_position'] = Variable<int>(gripPosition);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -2620,6 +3244,11 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       targetWeight: Value(targetWeight),
       index: Value(index),
       gripPosition: Value(gripPosition),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      dirty: Value(dirty),
     );
   }
 
@@ -2629,40 +3258,49 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RepTemplate(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       isRest: serializer.fromJson<bool>(json['isRest']),
       rightHand: serializer.fromJson<bool>(json['rightHand']),
       duration: serializer.fromJson<int>(json['duration']),
-      trainingId: serializer.fromJson<int>(json['trainingId']),
+      trainingId: serializer.fromJson<String>(json['trainingId']),
       targetWeight: serializer.fromJson<double>(json['targetWeight']),
       index: serializer.fromJson<int>(json['index']),
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'isRest': serializer.toJson<bool>(isRest),
       'rightHand': serializer.toJson<bool>(rightHand),
       'duration': serializer.toJson<int>(duration),
-      'trainingId': serializer.toJson<int>(trainingId),
+      'trainingId': serializer.toJson<String>(trainingId),
       'targetWeight': serializer.toJson<double>(targetWeight),
       'index': serializer.toJson<int>(index),
       'gripPosition': serializer.toJson<int>(gripPosition),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
   RepTemplate copyWith({
-    int? id,
+    String? id,
     bool? isRest,
     bool? rightHand,
     int? duration,
-    int? trainingId,
+    String? trainingId,
     double? targetWeight,
     int? index,
     int? gripPosition,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
   }) => RepTemplate(
     id: id ?? this.id,
     isRest: isRest ?? this.isRest,
@@ -2672,6 +3310,9 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     targetWeight: targetWeight ?? this.targetWeight,
     index: index ?? this.index,
     gripPosition: gripPosition ?? this.gripPosition,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
   );
   RepTemplate copyWithCompanion(RepTemplatesCompanion data) {
     return RepTemplate(
@@ -2679,17 +3320,19 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       isRest: data.isRest.present ? data.isRest.value : this.isRest,
       rightHand: data.rightHand.present ? data.rightHand.value : this.rightHand,
       duration: data.duration.present ? data.duration.value : this.duration,
-      trainingId:
-          data.trainingId.present ? data.trainingId.value : this.trainingId,
-      targetWeight:
-          data.targetWeight.present
-              ? data.targetWeight.value
-              : this.targetWeight,
+      trainingId: data.trainingId.present
+          ? data.trainingId.value
+          : this.trainingId,
+      targetWeight: data.targetWeight.present
+          ? data.targetWeight.value
+          : this.targetWeight,
       index: data.index.present ? data.index.value : this.index,
-      gripPosition:
-          data.gripPosition.present
-              ? data.gripPosition.value
-              : this.gripPosition,
+      gripPosition: data.gripPosition.present
+          ? data.gripPosition.value
+          : this.gripPosition,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -2703,7 +3346,10 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
           ..write('trainingId: $trainingId, ')
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -2718,6 +3364,9 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     targetWeight,
     index,
     gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
   );
   @override
   bool operator ==(Object other) =>
@@ -2730,18 +3379,25 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
           other.trainingId == this.trainingId &&
           other.targetWeight == this.targetWeight &&
           other.index == this.index &&
-          other.gripPosition == this.gripPosition);
+          other.gripPosition == this.gripPosition &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty);
 }
 
 class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<bool> isRest;
   final Value<bool> rightHand;
   final Value<int> duration;
-  final Value<int> trainingId;
+  final Value<String> trainingId;
   final Value<double> targetWeight;
   final Value<int> index;
   final Value<int> gripPosition;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<int> rowid;
   const RepTemplatesCompanion({
     this.id = const Value.absent(),
     this.isRest = const Value.absent(),
@@ -2751,16 +3407,24 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     this.targetWeight = const Value.absent(),
     this.index = const Value.absent(),
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   RepTemplatesCompanion.insert({
     this.id = const Value.absent(),
     required bool isRest,
     required bool rightHand,
     required int duration,
-    required int trainingId,
+    required String trainingId,
     required double targetWeight,
     required int index,
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : isRest = Value(isRest),
        rightHand = Value(rightHand),
        duration = Value(duration),
@@ -2768,14 +3432,18 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
        targetWeight = Value(targetWeight),
        index = Value(index);
   static Insertable<RepTemplate> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<bool>? isRest,
     Expression<bool>? rightHand,
     Expression<int>? duration,
-    Expression<int>? trainingId,
+    Expression<String>? trainingId,
     Expression<double>? targetWeight,
     Expression<int>? index,
     Expression<int>? gripPosition,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2786,18 +3454,26 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
       if (targetWeight != null) 'target_weight': targetWeight,
       if (index != null) 'index': index,
       if (gripPosition != null) 'grip_position': gripPosition,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   RepTemplatesCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<bool>? isRest,
     Value<bool>? rightHand,
     Value<int>? duration,
-    Value<int>? trainingId,
+    Value<String>? trainingId,
     Value<double>? targetWeight,
     Value<int>? index,
     Value<int>? gripPosition,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<int>? rowid,
   }) {
     return RepTemplatesCompanion(
       id: id ?? this.id,
@@ -2808,6 +3484,10 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
       targetWeight: targetWeight ?? this.targetWeight,
       index: index ?? this.index,
       gripPosition: gripPosition ?? this.gripPosition,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -2815,7 +3495,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (isRest.present) {
       map['is_rest'] = Variable<bool>(isRest.value);
@@ -2827,7 +3507,7 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
       map['duration'] = Variable<int>(duration.value);
     }
     if (trainingId.present) {
-      map['training_id'] = Variable<int>(trainingId.value);
+      map['training_id'] = Variable<String>(trainingId.value);
     }
     if (targetWeight.present) {
       map['target_weight'] = Variable<double>(targetWeight.value);
@@ -2837,6 +3517,18 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     }
     if (gripPosition.present) {
       map['grip_position'] = Variable<int>(gripPosition.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -2851,7 +3543,11 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
           ..write('trainingId: $trainingId, ')
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -2864,16 +3560,13 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
   $RepDatasTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _averageWeightMeta = const VerificationMeta(
     'averageWeight',
@@ -2890,15 +3583,12 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     'sessionId',
   );
   @override
-  late final GeneratedColumn<int> sessionId = GeneratedColumn<int>(
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
     'session_id',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES sessions (id)',
-    ),
   );
   static const VerificationMeta _isRestMeta = const VerificationMeta('isRest');
   @override
@@ -2969,6 +3659,42 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2980,6 +3706,9 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     targetWeight,
     index,
     gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3067,6 +3796,24 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
     return context;
   }
 
@@ -3076,51 +3823,54 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
   RepData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return RepData(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      averageWeight:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}average_weight'],
-          )!,
-      sessionId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}session_id'],
-          )!,
-      isRest:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}is_rest'],
-          )!,
-      rightHand:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.bool,
-            data['${effectivePrefix}right_hand'],
-          )!,
-      duration:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}duration'],
-          )!,
-      targetWeight:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}target_weight'],
-          )!,
-      index:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}index'],
-          )!,
-      gripPosition:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}grip_position'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      averageWeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}average_weight'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      isRest: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_rest'],
+      )!,
+      rightHand: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}right_hand'],
+      )!,
+      duration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration'],
+      )!,
+      targetWeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}target_weight'],
+      )!,
+      index: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}index'],
+      )!,
+      gripPosition: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}grip_position'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -3131,15 +3881,18 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
 }
 
 class RepData extends DataClass implements Insertable<RepData> {
-  final int id;
+  final String id;
   final double averageWeight;
-  final int sessionId;
+  final String sessionId;
   final bool isRest;
   final bool rightHand;
   final int duration;
   final double targetWeight;
   final int index;
   final int gripPosition;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
   const RepData({
     required this.id,
     required this.averageWeight,
@@ -3150,19 +3903,27 @@ class RepData extends DataClass implements Insertable<RepData> {
     required this.targetWeight,
     required this.index,
     required this.gripPosition,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['average_weight'] = Variable<double>(averageWeight);
-    map['session_id'] = Variable<int>(sessionId);
+    map['session_id'] = Variable<String>(sessionId);
     map['is_rest'] = Variable<bool>(isRest);
     map['right_hand'] = Variable<bool>(rightHand);
     map['duration'] = Variable<int>(duration);
     map['target_weight'] = Variable<double>(targetWeight);
     map['index'] = Variable<int>(index);
     map['grip_position'] = Variable<int>(gripPosition);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -3177,6 +3938,11 @@ class RepData extends DataClass implements Insertable<RepData> {
       targetWeight: Value(targetWeight),
       index: Value(index),
       gripPosition: Value(gripPosition),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      dirty: Value(dirty),
     );
   }
 
@@ -3186,43 +3952,52 @@ class RepData extends DataClass implements Insertable<RepData> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RepData(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       averageWeight: serializer.fromJson<double>(json['averageWeight']),
-      sessionId: serializer.fromJson<int>(json['sessionId']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
       isRest: serializer.fromJson<bool>(json['isRest']),
       rightHand: serializer.fromJson<bool>(json['rightHand']),
       duration: serializer.fromJson<int>(json['duration']),
       targetWeight: serializer.fromJson<double>(json['targetWeight']),
       index: serializer.fromJson<int>(json['index']),
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'averageWeight': serializer.toJson<double>(averageWeight),
-      'sessionId': serializer.toJson<int>(sessionId),
+      'sessionId': serializer.toJson<String>(sessionId),
       'isRest': serializer.toJson<bool>(isRest),
       'rightHand': serializer.toJson<bool>(rightHand),
       'duration': serializer.toJson<int>(duration),
       'targetWeight': serializer.toJson<double>(targetWeight),
       'index': serializer.toJson<int>(index),
       'gripPosition': serializer.toJson<int>(gripPosition),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
   RepData copyWith({
-    int? id,
+    String? id,
     double? averageWeight,
-    int? sessionId,
+    String? sessionId,
     bool? isRest,
     bool? rightHand,
     int? duration,
     double? targetWeight,
     int? index,
     int? gripPosition,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
   }) => RepData(
     id: id ?? this.id,
     averageWeight: averageWeight ?? this.averageWeight,
@@ -3233,27 +4008,30 @@ class RepData extends DataClass implements Insertable<RepData> {
     targetWeight: targetWeight ?? this.targetWeight,
     index: index ?? this.index,
     gripPosition: gripPosition ?? this.gripPosition,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
   );
   RepData copyWithCompanion(RepDatasCompanion data) {
     return RepData(
       id: data.id.present ? data.id.value : this.id,
-      averageWeight:
-          data.averageWeight.present
-              ? data.averageWeight.value
-              : this.averageWeight,
+      averageWeight: data.averageWeight.present
+          ? data.averageWeight.value
+          : this.averageWeight,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
       isRest: data.isRest.present ? data.isRest.value : this.isRest,
       rightHand: data.rightHand.present ? data.rightHand.value : this.rightHand,
       duration: data.duration.present ? data.duration.value : this.duration,
-      targetWeight:
-          data.targetWeight.present
-              ? data.targetWeight.value
-              : this.targetWeight,
+      targetWeight: data.targetWeight.present
+          ? data.targetWeight.value
+          : this.targetWeight,
       index: data.index.present ? data.index.value : this.index,
-      gripPosition:
-          data.gripPosition.present
-              ? data.gripPosition.value
-              : this.gripPosition,
+      gripPosition: data.gripPosition.present
+          ? data.gripPosition.value
+          : this.gripPosition,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -3268,7 +4046,10 @@ class RepData extends DataClass implements Insertable<RepData> {
           ..write('duration: $duration, ')
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -3284,6 +4065,9 @@ class RepData extends DataClass implements Insertable<RepData> {
     targetWeight,
     index,
     gripPosition,
+    updatedAt,
+    deletedAt,
+    dirty,
   );
   @override
   bool operator ==(Object other) =>
@@ -3297,19 +4081,26 @@ class RepData extends DataClass implements Insertable<RepData> {
           other.duration == this.duration &&
           other.targetWeight == this.targetWeight &&
           other.index == this.index &&
-          other.gripPosition == this.gripPosition);
+          other.gripPosition == this.gripPosition &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty);
 }
 
 class RepDatasCompanion extends UpdateCompanion<RepData> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<double> averageWeight;
-  final Value<int> sessionId;
+  final Value<String> sessionId;
   final Value<bool> isRest;
   final Value<bool> rightHand;
   final Value<int> duration;
   final Value<double> targetWeight;
   final Value<int> index;
   final Value<int> gripPosition;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<int> rowid;
   const RepDatasCompanion({
     this.id = const Value.absent(),
     this.averageWeight = const Value.absent(),
@@ -3320,17 +4111,25 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     this.targetWeight = const Value.absent(),
     this.index = const Value.absent(),
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   RepDatasCompanion.insert({
     this.id = const Value.absent(),
     required double averageWeight,
-    required int sessionId,
+    required String sessionId,
     required bool isRest,
     required bool rightHand,
     required int duration,
     required double targetWeight,
     required int index,
     this.gripPosition = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : averageWeight = Value(averageWeight),
        sessionId = Value(sessionId),
        isRest = Value(isRest),
@@ -3339,15 +4138,19 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
        targetWeight = Value(targetWeight),
        index = Value(index);
   static Insertable<RepData> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<double>? averageWeight,
-    Expression<int>? sessionId,
+    Expression<String>? sessionId,
     Expression<bool>? isRest,
     Expression<bool>? rightHand,
     Expression<int>? duration,
     Expression<double>? targetWeight,
     Expression<int>? index,
     Expression<int>? gripPosition,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3359,19 +4162,27 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       if (targetWeight != null) 'target_weight': targetWeight,
       if (index != null) 'index': index,
       if (gripPosition != null) 'grip_position': gripPosition,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   RepDatasCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<double>? averageWeight,
-    Value<int>? sessionId,
+    Value<String>? sessionId,
     Value<bool>? isRest,
     Value<bool>? rightHand,
     Value<int>? duration,
     Value<double>? targetWeight,
     Value<int>? index,
     Value<int>? gripPosition,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<int>? rowid,
   }) {
     return RepDatasCompanion(
       id: id ?? this.id,
@@ -3383,6 +4194,10 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       targetWeight: targetWeight ?? this.targetWeight,
       index: index ?? this.index,
       gripPosition: gripPosition ?? this.gripPosition,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -3390,13 +4205,13 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (averageWeight.present) {
       map['average_weight'] = Variable<double>(averageWeight.value);
     }
     if (sessionId.present) {
-      map['session_id'] = Variable<int>(sessionId.value);
+      map['session_id'] = Variable<String>(sessionId.value);
     }
     if (isRest.present) {
       map['is_rest'] = Variable<bool>(isRest.value);
@@ -3416,6 +4231,18 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     if (gripPosition.present) {
       map['grip_position'] = Variable<int>(gripPosition.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -3430,7 +4257,11 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
           ..write('duration: $duration, ')
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
-          ..write('gripPosition: $gripPosition')
+          ..write('gripPosition: $gripPosition, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -3444,16 +4275,13 @@ class $SensorConfigsTable extends SensorConfigs
   $SensorConfigsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -3491,8 +4319,53 @@ class $SensorConfigsTable extends SensorConfigs
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, name, index, tare, coef];
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    index,
+    tare,
+    coef,
+    updatedAt,
+    deletedAt,
+    dirty,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3540,6 +4413,24 @@ class $SensorConfigsTable extends SensorConfigs
     } else if (isInserting) {
       context.missing(_coefMeta);
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
     return context;
   }
 
@@ -3549,31 +4440,38 @@ class $SensorConfigsTable extends SensorConfigs
   SensorConfig map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SensorConfig(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      name:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}name'],
-          )!,
-      index:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}index'],
-          )!,
-      tare:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}tare'],
-          )!,
-      coef:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.double,
-            data['${effectivePrefix}coef'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      index: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}index'],
+      )!,
+      tare: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}tare'],
+      )!,
+      coef: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}coef'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -3584,26 +4482,37 @@ class $SensorConfigsTable extends SensorConfigs
 }
 
 class SensorConfig extends DataClass implements Insertable<SensorConfig> {
-  final int id;
+  final String id;
   final String name;
   final int index;
   final double tare;
   final double coef;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
   const SensorConfig({
     required this.id,
     required this.name,
     required this.index,
     required this.tare,
     required this.coef,
+    required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
+    map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['index'] = Variable<int>(index);
     map['tare'] = Variable<double>(tare);
     map['coef'] = Variable<double>(coef);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -3614,6 +4523,11 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       index: Value(index),
       tare: Value(tare),
       coef: Value(coef),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      dirty: Value(dirty),
     );
   }
 
@@ -3623,37 +4537,49 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SensorConfig(
-      id: serializer.fromJson<int>(json['id']),
+      id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       index: serializer.fromJson<int>(json['index']),
       tare: serializer.fromJson<double>(json['tare']),
       coef: serializer.fromJson<double>(json['coef']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
+      'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'index': serializer.toJson<int>(index),
       'tare': serializer.toJson<double>(tare),
       'coef': serializer.toJson<double>(coef),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
   SensorConfig copyWith({
-    int? id,
+    String? id,
     String? name,
     int? index,
     double? tare,
     double? coef,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
   }) => SensorConfig(
     id: id ?? this.id,
     name: name ?? this.name,
     index: index ?? this.index,
     tare: tare ?? this.tare,
     coef: coef ?? this.coef,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
   );
   SensorConfig copyWithCompanion(SensorConfigsCompanion data) {
     return SensorConfig(
@@ -3662,6 +4588,9 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       index: data.index.present ? data.index.value : this.index,
       tare: data.tare.present ? data.tare.value : this.tare,
       coef: data.coef.present ? data.coef.value : this.coef,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -3672,13 +4601,17 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
           ..write('name: $name, ')
           ..write('index: $index, ')
           ..write('tare: $tare, ')
-          ..write('coef: $coef')
+          ..write('coef: $coef, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, index, tare, coef);
+  int get hashCode =>
+      Object.hash(id, name, index, tare, coef, updatedAt, deletedAt, dirty);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3687,21 +4620,32 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
           other.name == this.name &&
           other.index == this.index &&
           other.tare == this.tare &&
-          other.coef == this.coef);
+          other.coef == this.coef &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty);
 }
 
 class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
-  final Value<int> id;
+  final Value<String> id;
   final Value<String> name;
   final Value<int> index;
   final Value<double> tare;
   final Value<double> coef;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<int> rowid;
   const SensorConfigsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.index = const Value.absent(),
     this.tare = const Value.absent(),
     this.coef = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   SensorConfigsCompanion.insert({
     this.id = const Value.absent(),
@@ -3709,16 +4653,24 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     required int index,
     required double tare,
     required double coef,
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : name = Value(name),
        index = Value(index),
        tare = Value(tare),
        coef = Value(coef);
   static Insertable<SensorConfig> custom({
-    Expression<int>? id,
+    Expression<String>? id,
     Expression<String>? name,
     Expression<int>? index,
     Expression<double>? tare,
     Expression<double>? coef,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3726,15 +4678,23 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
       if (index != null) 'index': index,
       if (tare != null) 'tare': tare,
       if (coef != null) 'coef': coef,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   SensorConfigsCompanion copyWith({
-    Value<int>? id,
+    Value<String>? id,
     Value<String>? name,
     Value<int>? index,
     Value<double>? tare,
     Value<double>? coef,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<int>? rowid,
   }) {
     return SensorConfigsCompanion(
       id: id ?? this.id,
@@ -3742,6 +4702,10 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
       index: index ?? this.index,
       tare: tare ?? this.tare,
       coef: coef ?? this.coef,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -3749,7 +4713,7 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (name.present) {
       map['name'] = Variable<String>(name.value);
@@ -3763,6 +4727,18 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     if (coef.present) {
       map['coef'] = Variable<double>(coef.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
@@ -3773,7 +4749,11 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
           ..write('name: $name, ')
           ..write('index: $index, ')
           ..write('tare: $tare, ')
-          ..write('coef: $coef')
+          ..write('coef: $coef, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -3787,31 +4767,26 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
   $BuiltinTrainingWeightsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    clientDefault: () => Uuid().v4(),
   );
   static const VerificationMeta _builtinTrainingIdMeta = const VerificationMeta(
     'builtinTrainingId',
   );
   @override
-  late final GeneratedColumn<int> builtinTrainingId = GeneratedColumn<int>(
-    'builtin_training_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES trainings (id) ON DELETE CASCADE',
-    ),
-  );
+  late final GeneratedColumn<String> builtinTrainingId =
+      GeneratedColumn<String>(
+        'builtin_training_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
   static const VerificationMeta _customWeightRightMeta = const VerificationMeta(
     'customWeightRight',
   );
@@ -3847,6 +4822,30 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3854,6 +4853,8 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
     customWeightRight,
     customWeightLeft,
     updatedAt,
+    deletedAt,
+    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3905,6 +4906,18 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
     return context;
   }
 
@@ -3914,16 +4927,14 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
   BuiltinTrainingWeight map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return BuiltinTrainingWeight(
-      id:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}id'],
-          )!,
-      builtinTrainingId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}builtin_training_id'],
-          )!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      builtinTrainingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}builtin_training_id'],
+      )!,
       customWeightRight: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}custom_weight_right'],
@@ -3932,11 +4943,18 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
         DriftSqlType.double,
         data['${effectivePrefix}custom_weight_left'],
       ),
-      updatedAt:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.dateTime,
-            data['${effectivePrefix}updated_at'],
-          )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
     );
   }
 
@@ -3948,23 +4966,27 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
 
 class BuiltinTrainingWeight extends DataClass
     implements Insertable<BuiltinTrainingWeight> {
-  final int id;
-  final int builtinTrainingId;
+  final String id;
+  final String builtinTrainingId;
   final double? customWeightRight;
   final double? customWeightLeft;
   final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final bool dirty;
   const BuiltinTrainingWeight({
     required this.id,
     required this.builtinTrainingId,
     this.customWeightRight,
     this.customWeightLeft,
     required this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['builtin_training_id'] = Variable<int>(builtinTrainingId);
+    map['id'] = Variable<String>(id);
+    map['builtin_training_id'] = Variable<String>(builtinTrainingId);
     if (!nullToAbsent || customWeightRight != null) {
       map['custom_weight_right'] = Variable<double>(customWeightRight);
     }
@@ -3972,6 +4994,10 @@ class BuiltinTrainingWeight extends DataClass
       map['custom_weight_left'] = Variable<double>(customWeightLeft);
     }
     map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -3979,15 +5005,17 @@ class BuiltinTrainingWeight extends DataClass
     return BuiltinTrainingWeightsCompanion(
       id: Value(id),
       builtinTrainingId: Value(builtinTrainingId),
-      customWeightRight:
-          customWeightRight == null && nullToAbsent
-              ? const Value.absent()
-              : Value(customWeightRight),
-      customWeightLeft:
-          customWeightLeft == null && nullToAbsent
-              ? const Value.absent()
-              : Value(customWeightLeft),
+      customWeightRight: customWeightRight == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customWeightRight),
+      customWeightLeft: customWeightLeft == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customWeightLeft),
       updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      dirty: Value(dirty),
     );
   }
 
@@ -3997,64 +5025,69 @@ class BuiltinTrainingWeight extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return BuiltinTrainingWeight(
-      id: serializer.fromJson<int>(json['id']),
-      builtinTrainingId: serializer.fromJson<int>(json['builtinTrainingId']),
+      id: serializer.fromJson<String>(json['id']),
+      builtinTrainingId: serializer.fromJson<String>(json['builtinTrainingId']),
       customWeightRight: serializer.fromJson<double?>(
         json['customWeightRight'],
       ),
       customWeightLeft: serializer.fromJson<double?>(json['customWeightLeft']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'builtinTrainingId': serializer.toJson<int>(builtinTrainingId),
+      'id': serializer.toJson<String>(id),
+      'builtinTrainingId': serializer.toJson<String>(builtinTrainingId),
       'customWeightRight': serializer.toJson<double?>(customWeightRight),
       'customWeightLeft': serializer.toJson<double?>(customWeightLeft),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
   BuiltinTrainingWeight copyWith({
-    int? id,
-    int? builtinTrainingId,
+    String? id,
+    String? builtinTrainingId,
     Value<double?> customWeightRight = const Value.absent(),
     Value<double?> customWeightLeft = const Value.absent(),
     DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+    bool? dirty,
   }) => BuiltinTrainingWeight(
     id: id ?? this.id,
     builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
-    customWeightRight:
-        customWeightRight.present
-            ? customWeightRight.value
-            : this.customWeightRight,
-    customWeightLeft:
-        customWeightLeft.present
-            ? customWeightLeft.value
-            : this.customWeightLeft,
+    customWeightRight: customWeightRight.present
+        ? customWeightRight.value
+        : this.customWeightRight,
+    customWeightLeft: customWeightLeft.present
+        ? customWeightLeft.value
+        : this.customWeightLeft,
     updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
   );
   BuiltinTrainingWeight copyWithCompanion(
     BuiltinTrainingWeightsCompanion data,
   ) {
     return BuiltinTrainingWeight(
       id: data.id.present ? data.id.value : this.id,
-      builtinTrainingId:
-          data.builtinTrainingId.present
-              ? data.builtinTrainingId.value
-              : this.builtinTrainingId,
-      customWeightRight:
-          data.customWeightRight.present
-              ? data.customWeightRight.value
-              : this.customWeightRight,
-      customWeightLeft:
-          data.customWeightLeft.present
-              ? data.customWeightLeft.value
-              : this.customWeightLeft,
+      builtinTrainingId: data.builtinTrainingId.present
+          ? data.builtinTrainingId.value
+          : this.builtinTrainingId,
+      customWeightRight: data.customWeightRight.present
+          ? data.customWeightRight.value
+          : this.customWeightRight,
+      customWeightLeft: data.customWeightLeft.present
+          ? data.customWeightLeft.value
+          : this.customWeightLeft,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -4065,7 +5098,9 @@ class BuiltinTrainingWeight extends DataClass
           ..write('builtinTrainingId: $builtinTrainingId, ')
           ..write('customWeightRight: $customWeightRight, ')
           ..write('customWeightLeft: $customWeightLeft, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty')
           ..write(')'))
         .toString();
   }
@@ -4077,6 +5112,8 @@ class BuiltinTrainingWeight extends DataClass
     customWeightRight,
     customWeightLeft,
     updatedAt,
+    deletedAt,
+    dirty,
   );
   @override
   bool operator ==(Object other) =>
@@ -4086,36 +5123,50 @@ class BuiltinTrainingWeight extends DataClass
           other.builtinTrainingId == this.builtinTrainingId &&
           other.customWeightRight == this.customWeightRight &&
           other.customWeightLeft == this.customWeightLeft &&
-          other.updatedAt == this.updatedAt);
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty);
 }
 
 class BuiltinTrainingWeightsCompanion
     extends UpdateCompanion<BuiltinTrainingWeight> {
-  final Value<int> id;
-  final Value<int> builtinTrainingId;
+  final Value<String> id;
+  final Value<String> builtinTrainingId;
   final Value<double?> customWeightRight;
   final Value<double?> customWeightLeft;
   final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<bool> dirty;
+  final Value<int> rowid;
   const BuiltinTrainingWeightsCompanion({
     this.id = const Value.absent(),
     this.builtinTrainingId = const Value.absent(),
     this.customWeightRight = const Value.absent(),
     this.customWeightLeft = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   BuiltinTrainingWeightsCompanion.insert({
     this.id = const Value.absent(),
-    required int builtinTrainingId,
+    required String builtinTrainingId,
     this.customWeightRight = const Value.absent(),
     this.customWeightLeft = const Value.absent(),
     this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : builtinTrainingId = Value(builtinTrainingId);
   static Insertable<BuiltinTrainingWeight> custom({
-    Expression<int>? id,
-    Expression<int>? builtinTrainingId,
+    Expression<String>? id,
+    Expression<String>? builtinTrainingId,
     Expression<double>? customWeightRight,
     Expression<double>? customWeightLeft,
     Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -4123,15 +5174,21 @@ class BuiltinTrainingWeightsCompanion
       if (customWeightRight != null) 'custom_weight_right': customWeightRight,
       if (customWeightLeft != null) 'custom_weight_left': customWeightLeft,
       if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   BuiltinTrainingWeightsCompanion copyWith({
-    Value<int>? id,
-    Value<int>? builtinTrainingId,
+    Value<String>? id,
+    Value<String>? builtinTrainingId,
     Value<double?>? customWeightRight,
     Value<double?>? customWeightLeft,
     Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<bool>? dirty,
+    Value<int>? rowid,
   }) {
     return BuiltinTrainingWeightsCompanion(
       id: id ?? this.id,
@@ -4139,6 +5196,9 @@ class BuiltinTrainingWeightsCompanion
       customWeightRight: customWeightRight ?? this.customWeightRight,
       customWeightLeft: customWeightLeft ?? this.customWeightLeft,
       updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -4146,10 +5206,10 @@ class BuiltinTrainingWeightsCompanion
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (id.present) {
-      map['id'] = Variable<int>(id.value);
+      map['id'] = Variable<String>(id.value);
     }
     if (builtinTrainingId.present) {
-      map['builtin_training_id'] = Variable<int>(builtinTrainingId.value);
+      map['builtin_training_id'] = Variable<String>(builtinTrainingId.value);
     }
     if (customWeightRight.present) {
       map['custom_weight_right'] = Variable<double>(customWeightRight.value);
@@ -4159,6 +5219,15 @@ class BuiltinTrainingWeightsCompanion
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -4170,7 +5239,10 @@ class BuiltinTrainingWeightsCompanion
           ..write('builtinTrainingId: $builtinTrainingId, ')
           ..write('customWeightRight: $customWeightRight, ')
           ..write('customWeightLeft: $customWeightLeft, ')
-          ..write('updatedAt: $updatedAt')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -4186,15 +5258,57 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
     'builtinTrainingId',
   );
   @override
-  late final GeneratedColumn<int> builtinTrainingId = GeneratedColumn<int>(
-    'builtin_training_id',
+  late final GeneratedColumn<String> builtinTrainingId =
+      GeneratedColumn<String>(
+        'builtin_training_id',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
   @override
-  List<GeneratedColumn> get $columns => [builtinTrainingId];
+  List<GeneratedColumn> get $columns => [
+    builtinTrainingId,
+    dirty,
+    updatedAt,
+    deletedAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4215,6 +5329,26 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
           _builtinTrainingIdMeta,
         ),
       );
+    } else if (isInserting) {
+      context.missing(_builtinTrainingIdMeta);
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
     }
     return context;
   }
@@ -4225,11 +5359,22 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
   PinnedBuiltinTraining map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return PinnedBuiltinTraining(
-      builtinTrainingId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.int,
-            data['${effectivePrefix}builtin_training_id'],
-          )!,
+      builtinTrainingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}builtin_training_id'],
+      )!,
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
     );
   }
 
@@ -4241,18 +5386,36 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
 
 class PinnedBuiltinTraining extends DataClass
     implements Insertable<PinnedBuiltinTraining> {
-  final int builtinTrainingId;
-  const PinnedBuiltinTraining({required this.builtinTrainingId});
+  final String builtinTrainingId;
+  final bool dirty;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const PinnedBuiltinTraining({
+    required this.builtinTrainingId,
+    required this.dirty,
+    required this.updatedAt,
+    this.deletedAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['builtin_training_id'] = Variable<int>(builtinTrainingId);
+    map['builtin_training_id'] = Variable<String>(builtinTrainingId);
+    map['dirty'] = Variable<bool>(dirty);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
     return map;
   }
 
   PinnedBuiltinTrainingsCompanion toCompanion(bool nullToAbsent) {
     return PinnedBuiltinTrainingsCompanion(
       builtinTrainingId: Value(builtinTrainingId),
+      dirty: Value(dirty),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
     );
   }
 
@@ -4262,69 +5425,121 @@ class PinnedBuiltinTraining extends DataClass
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PinnedBuiltinTraining(
-      builtinTrainingId: serializer.fromJson<int>(json['builtinTrainingId']),
+      builtinTrainingId: serializer.fromJson<String>(json['builtinTrainingId']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'builtinTrainingId': serializer.toJson<int>(builtinTrainingId),
+      'builtinTrainingId': serializer.toJson<String>(builtinTrainingId),
+      'dirty': serializer.toJson<bool>(dirty),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
-  PinnedBuiltinTraining copyWith({int? builtinTrainingId}) =>
-      PinnedBuiltinTraining(
-        builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
-      );
+  PinnedBuiltinTraining copyWith({
+    String? builtinTrainingId,
+    bool? dirty,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => PinnedBuiltinTraining(
+    builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
+    dirty: dirty ?? this.dirty,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
   PinnedBuiltinTraining copyWithCompanion(
     PinnedBuiltinTrainingsCompanion data,
   ) {
     return PinnedBuiltinTraining(
-      builtinTrainingId:
-          data.builtinTrainingId.present
-              ? data.builtinTrainingId.value
-              : this.builtinTrainingId,
+      builtinTrainingId: data.builtinTrainingId.present
+          ? data.builtinTrainingId.value
+          : this.builtinTrainingId,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
   @override
   String toString() {
     return (StringBuffer('PinnedBuiltinTraining(')
-          ..write('builtinTrainingId: $builtinTrainingId')
+          ..write('builtinTrainingId: $builtinTrainingId, ')
+          ..write('dirty: $dirty, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => builtinTrainingId.hashCode;
+  int get hashCode =>
+      Object.hash(builtinTrainingId, dirty, updatedAt, deletedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is PinnedBuiltinTraining &&
-          other.builtinTrainingId == this.builtinTrainingId);
+          other.builtinTrainingId == this.builtinTrainingId &&
+          other.dirty == this.dirty &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
 }
 
 class PinnedBuiltinTrainingsCompanion
     extends UpdateCompanion<PinnedBuiltinTraining> {
-  final Value<int> builtinTrainingId;
+  final Value<String> builtinTrainingId;
+  final Value<bool> dirty;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
   const PinnedBuiltinTrainingsCompanion({
     this.builtinTrainingId = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   PinnedBuiltinTrainingsCompanion.insert({
-    this.builtinTrainingId = const Value.absent(),
-  });
+    required String builtinTrainingId,
+    this.dirty = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : builtinTrainingId = Value(builtinTrainingId);
   static Insertable<PinnedBuiltinTraining> custom({
-    Expression<int>? builtinTrainingId,
+    Expression<String>? builtinTrainingId,
+    Expression<bool>? dirty,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (builtinTrainingId != null) 'builtin_training_id': builtinTrainingId,
+      if (dirty != null) 'dirty': dirty,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
-  PinnedBuiltinTrainingsCompanion copyWith({Value<int>? builtinTrainingId}) {
+  PinnedBuiltinTrainingsCompanion copyWith({
+    Value<String>? builtinTrainingId,
+    Value<bool>? dirty,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
     return PinnedBuiltinTrainingsCompanion(
       builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
+      dirty: dirty ?? this.dirty,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
     );
   }
 
@@ -4332,7 +5547,19 @@ class PinnedBuiltinTrainingsCompanion
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     if (builtinTrainingId.present) {
-      map['builtin_training_id'] = Variable<int>(builtinTrainingId.value);
+      map['builtin_training_id'] = Variable<String>(builtinTrainingId.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
     }
     return map;
   }
@@ -4340,7 +5567,900 @@ class PinnedBuiltinTrainingsCompanion
   @override
   String toString() {
     return (StringBuffer('PinnedBuiltinTrainingsCompanion(')
-          ..write('builtinTrainingId: $builtinTrainingId')
+          ..write('builtinTrainingId: $builtinTrainingId, ')
+          ..write('dirty: $dirty, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $UsersTable extends Users with TableInfo<$UsersTable, User> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UsersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+    'email',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _firstnameMeta = const VerificationMeta(
+    'firstname',
+  );
+  @override
+  late final GeneratedColumn<String> firstname = GeneratedColumn<String>(
+    'firstname',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastnameMeta = const VerificationMeta(
+    'lastname',
+  );
+  @override
+  late final GeneratedColumn<String> lastname = GeneratedColumn<String>(
+    'lastname',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _emailVerifiedMeta = const VerificationMeta(
+    'emailVerified',
+  );
+  @override
+  late final GeneratedColumn<bool> emailVerified = GeneratedColumn<bool>(
+    'email_verified',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("email_verified" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isAdminMeta = const VerificationMeta(
+    'isAdmin',
+  );
+  @override
+  late final GeneratedColumn<bool> isAdmin = GeneratedColumn<bool>(
+    'is_admin',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_admin" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isCoachMeta = const VerificationMeta(
+    'isCoach',
+  );
+  @override
+  late final GeneratedColumn<bool> isCoach = GeneratedColumn<bool>(
+    'is_coach',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_coach" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _coachValidatedMeta = const VerificationMeta(
+    'coachValidated',
+  );
+  @override
+  late final GeneratedColumn<bool> coachValidated = GeneratedColumn<bool>(
+    'coach_validated',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("coach_validated" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    email,
+    firstname,
+    lastname,
+    emailVerified,
+    isAdmin,
+    isCoach,
+    coachValidated,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'users';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<User> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+        _emailMeta,
+        email.isAcceptableOrUnknown(data['email']!, _emailMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_emailMeta);
+    }
+    if (data.containsKey('firstname')) {
+      context.handle(
+        _firstnameMeta,
+        firstname.isAcceptableOrUnknown(data['firstname']!, _firstnameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_firstnameMeta);
+    }
+    if (data.containsKey('lastname')) {
+      context.handle(
+        _lastnameMeta,
+        lastname.isAcceptableOrUnknown(data['lastname']!, _lastnameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lastnameMeta);
+    }
+    if (data.containsKey('email_verified')) {
+      context.handle(
+        _emailVerifiedMeta,
+        emailVerified.isAcceptableOrUnknown(
+          data['email_verified']!,
+          _emailVerifiedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('is_admin')) {
+      context.handle(
+        _isAdminMeta,
+        isAdmin.isAcceptableOrUnknown(data['is_admin']!, _isAdminMeta),
+      );
+    }
+    if (data.containsKey('is_coach')) {
+      context.handle(
+        _isCoachMeta,
+        isCoach.isAcceptableOrUnknown(data['is_coach']!, _isCoachMeta),
+      );
+    }
+    if (data.containsKey('coach_validated')) {
+      context.handle(
+        _coachValidatedMeta,
+        coachValidated.isAcceptableOrUnknown(
+          data['coach_validated']!,
+          _coachValidatedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  User map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return User(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      email: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}email'],
+      )!,
+      firstname: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}firstname'],
+      )!,
+      lastname: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lastname'],
+      )!,
+      emailVerified: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}email_verified'],
+      )!,
+      isAdmin: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_admin'],
+      )!,
+      isCoach: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_coach'],
+      )!,
+      coachValidated: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}coach_validated'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $UsersTable createAlias(String alias) {
+    return $UsersTable(attachedDatabase, alias);
+  }
+}
+
+class User extends DataClass implements Insertable<User> {
+  final String id;
+  final String email;
+  final String firstname;
+  final String lastname;
+  final bool emailVerified;
+  final bool isAdmin;
+  final bool isCoach;
+  final bool coachValidated;
+  final DateTime createdAt;
+  const User({
+    required this.id,
+    required this.email,
+    required this.firstname,
+    required this.lastname,
+    required this.emailVerified,
+    required this.isAdmin,
+    required this.isCoach,
+    required this.coachValidated,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['email'] = Variable<String>(email);
+    map['firstname'] = Variable<String>(firstname);
+    map['lastname'] = Variable<String>(lastname);
+    map['email_verified'] = Variable<bool>(emailVerified);
+    map['is_admin'] = Variable<bool>(isAdmin);
+    map['is_coach'] = Variable<bool>(isCoach);
+    map['coach_validated'] = Variable<bool>(coachValidated);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  UsersCompanion toCompanion(bool nullToAbsent) {
+    return UsersCompanion(
+      id: Value(id),
+      email: Value(email),
+      firstname: Value(firstname),
+      lastname: Value(lastname),
+      emailVerified: Value(emailVerified),
+      isAdmin: Value(isAdmin),
+      isCoach: Value(isCoach),
+      coachValidated: Value(coachValidated),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory User.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return User(
+      id: serializer.fromJson<String>(json['id']),
+      email: serializer.fromJson<String>(json['email']),
+      firstname: serializer.fromJson<String>(json['firstname']),
+      lastname: serializer.fromJson<String>(json['lastname']),
+      emailVerified: serializer.fromJson<bool>(json['emailVerified']),
+      isAdmin: serializer.fromJson<bool>(json['isAdmin']),
+      isCoach: serializer.fromJson<bool>(json['isCoach']),
+      coachValidated: serializer.fromJson<bool>(json['coachValidated']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'email': serializer.toJson<String>(email),
+      'firstname': serializer.toJson<String>(firstname),
+      'lastname': serializer.toJson<String>(lastname),
+      'emailVerified': serializer.toJson<bool>(emailVerified),
+      'isAdmin': serializer.toJson<bool>(isAdmin),
+      'isCoach': serializer.toJson<bool>(isCoach),
+      'coachValidated': serializer.toJson<bool>(coachValidated),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  User copyWith({
+    String? id,
+    String? email,
+    String? firstname,
+    String? lastname,
+    bool? emailVerified,
+    bool? isAdmin,
+    bool? isCoach,
+    bool? coachValidated,
+    DateTime? createdAt,
+  }) => User(
+    id: id ?? this.id,
+    email: email ?? this.email,
+    firstname: firstname ?? this.firstname,
+    lastname: lastname ?? this.lastname,
+    emailVerified: emailVerified ?? this.emailVerified,
+    isAdmin: isAdmin ?? this.isAdmin,
+    isCoach: isCoach ?? this.isCoach,
+    coachValidated: coachValidated ?? this.coachValidated,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  User copyWithCompanion(UsersCompanion data) {
+    return User(
+      id: data.id.present ? data.id.value : this.id,
+      email: data.email.present ? data.email.value : this.email,
+      firstname: data.firstname.present ? data.firstname.value : this.firstname,
+      lastname: data.lastname.present ? data.lastname.value : this.lastname,
+      emailVerified: data.emailVerified.present
+          ? data.emailVerified.value
+          : this.emailVerified,
+      isAdmin: data.isAdmin.present ? data.isAdmin.value : this.isAdmin,
+      isCoach: data.isCoach.present ? data.isCoach.value : this.isCoach,
+      coachValidated: data.coachValidated.present
+          ? data.coachValidated.value
+          : this.coachValidated,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('User(')
+          ..write('id: $id, ')
+          ..write('email: $email, ')
+          ..write('firstname: $firstname, ')
+          ..write('lastname: $lastname, ')
+          ..write('emailVerified: $emailVerified, ')
+          ..write('isAdmin: $isAdmin, ')
+          ..write('isCoach: $isCoach, ')
+          ..write('coachValidated: $coachValidated, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    email,
+    firstname,
+    lastname,
+    emailVerified,
+    isAdmin,
+    isCoach,
+    coachValidated,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is User &&
+          other.id == this.id &&
+          other.email == this.email &&
+          other.firstname == this.firstname &&
+          other.lastname == this.lastname &&
+          other.emailVerified == this.emailVerified &&
+          other.isAdmin == this.isAdmin &&
+          other.isCoach == this.isCoach &&
+          other.coachValidated == this.coachValidated &&
+          other.createdAt == this.createdAt);
+}
+
+class UsersCompanion extends UpdateCompanion<User> {
+  final Value<String> id;
+  final Value<String> email;
+  final Value<String> firstname;
+  final Value<String> lastname;
+  final Value<bool> emailVerified;
+  final Value<bool> isAdmin;
+  final Value<bool> isCoach;
+  final Value<bool> coachValidated;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const UsersCompanion({
+    this.id = const Value.absent(),
+    this.email = const Value.absent(),
+    this.firstname = const Value.absent(),
+    this.lastname = const Value.absent(),
+    this.emailVerified = const Value.absent(),
+    this.isAdmin = const Value.absent(),
+    this.isCoach = const Value.absent(),
+    this.coachValidated = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UsersCompanion.insert({
+    required String id,
+    required String email,
+    required String firstname,
+    required String lastname,
+    this.emailVerified = const Value.absent(),
+    this.isAdmin = const Value.absent(),
+    this.isCoach = const Value.absent(),
+    this.coachValidated = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       email = Value(email),
+       firstname = Value(firstname),
+       lastname = Value(lastname);
+  static Insertable<User> custom({
+    Expression<String>? id,
+    Expression<String>? email,
+    Expression<String>? firstname,
+    Expression<String>? lastname,
+    Expression<bool>? emailVerified,
+    Expression<bool>? isAdmin,
+    Expression<bool>? isCoach,
+    Expression<bool>? coachValidated,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (email != null) 'email': email,
+      if (firstname != null) 'firstname': firstname,
+      if (lastname != null) 'lastname': lastname,
+      if (emailVerified != null) 'email_verified': emailVerified,
+      if (isAdmin != null) 'is_admin': isAdmin,
+      if (isCoach != null) 'is_coach': isCoach,
+      if (coachValidated != null) 'coach_validated': coachValidated,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UsersCompanion copyWith({
+    Value<String>? id,
+    Value<String>? email,
+    Value<String>? firstname,
+    Value<String>? lastname,
+    Value<bool>? emailVerified,
+    Value<bool>? isAdmin,
+    Value<bool>? isCoach,
+    Value<bool>? coachValidated,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return UsersCompanion(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      firstname: firstname ?? this.firstname,
+      lastname: lastname ?? this.lastname,
+      emailVerified: emailVerified ?? this.emailVerified,
+      isAdmin: isAdmin ?? this.isAdmin,
+      isCoach: isCoach ?? this.isCoach,
+      coachValidated: coachValidated ?? this.coachValidated,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
+    if (firstname.present) {
+      map['firstname'] = Variable<String>(firstname.value);
+    }
+    if (lastname.present) {
+      map['lastname'] = Variable<String>(lastname.value);
+    }
+    if (emailVerified.present) {
+      map['email_verified'] = Variable<bool>(emailVerified.value);
+    }
+    if (isAdmin.present) {
+      map['is_admin'] = Variable<bool>(isAdmin.value);
+    }
+    if (isCoach.present) {
+      map['is_coach'] = Variable<bool>(isCoach.value);
+    }
+    if (coachValidated.present) {
+      map['coach_validated'] = Variable<bool>(coachValidated.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UsersCompanion(')
+          ..write('id: $id, ')
+          ..write('email: $email, ')
+          ..write('firstname: $firstname, ')
+          ..write('lastname: $lastname, ')
+          ..write('emailVerified: $emailVerified, ')
+          ..write('isAdmin: $isAdmin, ')
+          ..write('isCoach: $isCoach, ')
+          ..write('coachValidated: $coachValidated, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SyncMetadataTable extends SyncMetadata
+    with TableInfo<$SyncMetadataTable, SyncMetadataData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncMetadataTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _lastSyncVersionMeta = const VerificationMeta(
+    'lastSyncVersion',
+  );
+  @override
+  late final GeneratedColumn<int> lastSyncVersion = GeneratedColumn<int>(
+    'last_sync_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastSyncTimeMeta = const VerificationMeta(
+    'lastSyncTime',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastSyncTime = GeneratedColumn<DateTime>(
+    'last_sync_time',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _pendingChangesMeta = const VerificationMeta(
+    'pendingChanges',
+  );
+  @override
+  late final GeneratedColumn<int> pendingChanges = GeneratedColumn<int>(
+    'pending_changes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    lastSyncVersion,
+    lastSyncTime,
+    pendingChanges,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_metadata';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncMetadataData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('last_sync_version')) {
+      context.handle(
+        _lastSyncVersionMeta,
+        lastSyncVersion.isAcceptableOrUnknown(
+          data['last_sync_version']!,
+          _lastSyncVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_sync_time')) {
+      context.handle(
+        _lastSyncTimeMeta,
+        lastSyncTime.isAcceptableOrUnknown(
+          data['last_sync_time']!,
+          _lastSyncTimeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('pending_changes')) {
+      context.handle(
+        _pendingChangesMeta,
+        pendingChanges.isAcceptableOrUnknown(
+          data['pending_changes']!,
+          _pendingChangesMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SyncMetadataData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncMetadataData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      lastSyncVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}last_sync_version'],
+      )!,
+      lastSyncTime: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_sync_time'],
+      ),
+      pendingChanges: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pending_changes'],
+      )!,
+    );
+  }
+
+  @override
+  $SyncMetadataTable createAlias(String alias) {
+    return $SyncMetadataTable(attachedDatabase, alias);
+  }
+}
+
+class SyncMetadataData extends DataClass
+    implements Insertable<SyncMetadataData> {
+  final int id;
+  final int lastSyncVersion;
+  final DateTime? lastSyncTime;
+  final int pendingChanges;
+  const SyncMetadataData({
+    required this.id,
+    required this.lastSyncVersion,
+    this.lastSyncTime,
+    required this.pendingChanges,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['last_sync_version'] = Variable<int>(lastSyncVersion);
+    if (!nullToAbsent || lastSyncTime != null) {
+      map['last_sync_time'] = Variable<DateTime>(lastSyncTime);
+    }
+    map['pending_changes'] = Variable<int>(pendingChanges);
+    return map;
+  }
+
+  SyncMetadataCompanion toCompanion(bool nullToAbsent) {
+    return SyncMetadataCompanion(
+      id: Value(id),
+      lastSyncVersion: Value(lastSyncVersion),
+      lastSyncTime: lastSyncTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncTime),
+      pendingChanges: Value(pendingChanges),
+    );
+  }
+
+  factory SyncMetadataData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncMetadataData(
+      id: serializer.fromJson<int>(json['id']),
+      lastSyncVersion: serializer.fromJson<int>(json['lastSyncVersion']),
+      lastSyncTime: serializer.fromJson<DateTime?>(json['lastSyncTime']),
+      pendingChanges: serializer.fromJson<int>(json['pendingChanges']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'lastSyncVersion': serializer.toJson<int>(lastSyncVersion),
+      'lastSyncTime': serializer.toJson<DateTime?>(lastSyncTime),
+      'pendingChanges': serializer.toJson<int>(pendingChanges),
+    };
+  }
+
+  SyncMetadataData copyWith({
+    int? id,
+    int? lastSyncVersion,
+    Value<DateTime?> lastSyncTime = const Value.absent(),
+    int? pendingChanges,
+  }) => SyncMetadataData(
+    id: id ?? this.id,
+    lastSyncVersion: lastSyncVersion ?? this.lastSyncVersion,
+    lastSyncTime: lastSyncTime.present ? lastSyncTime.value : this.lastSyncTime,
+    pendingChanges: pendingChanges ?? this.pendingChanges,
+  );
+  SyncMetadataData copyWithCompanion(SyncMetadataCompanion data) {
+    return SyncMetadataData(
+      id: data.id.present ? data.id.value : this.id,
+      lastSyncVersion: data.lastSyncVersion.present
+          ? data.lastSyncVersion.value
+          : this.lastSyncVersion,
+      lastSyncTime: data.lastSyncTime.present
+          ? data.lastSyncTime.value
+          : this.lastSyncTime,
+      pendingChanges: data.pendingChanges.present
+          ? data.pendingChanges.value
+          : this.pendingChanges,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncMetadataData(')
+          ..write('id: $id, ')
+          ..write('lastSyncVersion: $lastSyncVersion, ')
+          ..write('lastSyncTime: $lastSyncTime, ')
+          ..write('pendingChanges: $pendingChanges')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, lastSyncVersion, lastSyncTime, pendingChanges);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncMetadataData &&
+          other.id == this.id &&
+          other.lastSyncVersion == this.lastSyncVersion &&
+          other.lastSyncTime == this.lastSyncTime &&
+          other.pendingChanges == this.pendingChanges);
+}
+
+class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
+  final Value<int> id;
+  final Value<int> lastSyncVersion;
+  final Value<DateTime?> lastSyncTime;
+  final Value<int> pendingChanges;
+  const SyncMetadataCompanion({
+    this.id = const Value.absent(),
+    this.lastSyncVersion = const Value.absent(),
+    this.lastSyncTime = const Value.absent(),
+    this.pendingChanges = const Value.absent(),
+  });
+  SyncMetadataCompanion.insert({
+    this.id = const Value.absent(),
+    this.lastSyncVersion = const Value.absent(),
+    this.lastSyncTime = const Value.absent(),
+    this.pendingChanges = const Value.absent(),
+  });
+  static Insertable<SyncMetadataData> custom({
+    Expression<int>? id,
+    Expression<int>? lastSyncVersion,
+    Expression<DateTime>? lastSyncTime,
+    Expression<int>? pendingChanges,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (lastSyncVersion != null) 'last_sync_version': lastSyncVersion,
+      if (lastSyncTime != null) 'last_sync_time': lastSyncTime,
+      if (pendingChanges != null) 'pending_changes': pendingChanges,
+    });
+  }
+
+  SyncMetadataCompanion copyWith({
+    Value<int>? id,
+    Value<int>? lastSyncVersion,
+    Value<DateTime?>? lastSyncTime,
+    Value<int>? pendingChanges,
+  }) {
+    return SyncMetadataCompanion(
+      id: id ?? this.id,
+      lastSyncVersion: lastSyncVersion ?? this.lastSyncVersion,
+      lastSyncTime: lastSyncTime ?? this.lastSyncTime,
+      pendingChanges: pendingChanges ?? this.pendingChanges,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (lastSyncVersion.present) {
+      map['last_sync_version'] = Variable<int>(lastSyncVersion.value);
+    }
+    if (lastSyncTime.present) {
+      map['last_sync_time'] = Variable<DateTime>(lastSyncTime.value);
+    }
+    if (pendingChanges.present) {
+      map['pending_changes'] = Variable<int>(pendingChanges.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncMetadataCompanion(')
+          ..write('id: $id, ')
+          ..write('lastSyncVersion: $lastSyncVersion, ')
+          ..write('lastSyncTime: $lastSyncTime, ')
+          ..write('pendingChanges: $pendingChanges')
           ..write(')'))
         .toString();
   }
@@ -4360,6 +6480,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $BuiltinTrainingWeightsTable(this);
   late final $PinnedBuiltinTrainingsTable pinnedBuiltinTrainings =
       $PinnedBuiltinTrainingsTable(this);
+  late final $UsersTable users = $UsersTable(this);
+  late final $SyncMetadataTable syncMetadata = $SyncMetadataTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4374,38 +6496,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sensorConfigs,
     builtinTrainingWeights,
     pinnedBuiltinTrainings,
+    users,
+    syncMetadata,
   ];
-  @override
-  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'repeaters',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('trainings', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'trainings',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('rep_templates', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'trainings',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [
-        TableUpdate('builtin_training_weights', kind: UpdateKind.delete),
-      ],
-    ),
-  ]);
 }
 
 typedef $$SessionsTableCreateCompanionBuilder =
     SessionsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required String name,
       required String notes,
       Value<DateTime> date,
@@ -4419,10 +6517,14 @@ typedef $$SessionsTableCreateCompanionBuilder =
       Value<int?> repeaterRestTime,
       Value<int?> repeaterSetRest,
       Value<bool?> repeaterSplitHand,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
 typedef $$SessionsTableUpdateCompanionBuilder =
     SessionsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<String> name,
       Value<String> notes,
       Value<DateTime> date,
@@ -4436,49 +6538,11 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<int?> repeaterRestTime,
       Value<int?> repeaterSetRest,
       Value<bool?> repeaterSplitHand,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
-
-final class $$SessionsTableReferences
-    extends BaseReferences<_$AppDatabase, $SessionsTable, Session> {
-  $$SessionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$AssessmentsTable, List<Assessment>>
-  _assessmentsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.assessments,
-    aliasName: $_aliasNameGenerator(db.sessions.id, db.assessments.sessionId),
-  );
-
-  $$AssessmentsTableProcessedTableManager get assessmentsRefs {
-    final manager = $$AssessmentsTableTableManager(
-      $_db,
-      $_db.assessments,
-    ).filter((f) => f.sessionId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_assessmentsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
-  static MultiTypedResultKey<$RepDatasTable, List<RepData>> _repDatasRefsTable(
-    _$AppDatabase db,
-  ) => MultiTypedResultKey.fromTable(
-    db.repDatas,
-    aliasName: $_aliasNameGenerator(db.sessions.id, db.repDatas.sessionId),
-  );
-
-  $$RepDatasTableProcessedTableManager get repDatasRefs {
-    final manager = $$RepDatasTableTableManager(
-      $_db,
-      $_db.repDatas,
-    ).filter((f) => f.sessionId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_repDatasRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
 
 class $$SessionsTableFilterComposer
     extends Composer<_$AppDatabase, $SessionsTable> {
@@ -4489,7 +6553,7 @@ class $$SessionsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -4559,55 +6623,20 @@ class $$SessionsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  Expression<bool> assessmentsRefs(
-    Expression<bool> Function($$AssessmentsTableFilterComposer f) f,
-  ) {
-    final $$AssessmentsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.assessments,
-      getReferencedColumn: (t) => t.sessionId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AssessmentsTableFilterComposer(
-            $db: $db,
-            $table: $db.assessments,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  Expression<bool> repDatasRefs(
-    Expression<bool> Function($$RepDatasTableFilterComposer f) f,
-  ) {
-    final $$RepDatasTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.repDatas,
-      getReferencedColumn: (t) => t.sessionId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$RepDatasTableFilterComposer(
-            $db: $db,
-            $table: $db.repDatas,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SessionsTableOrderingComposer
@@ -4619,7 +6648,7 @@ class $$SessionsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -4688,6 +6717,21 @@ class $$SessionsTableOrderingComposer
     column: $table.repeaterSplitHand,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SessionsTableAnnotationComposer
@@ -4699,7 +6743,7 @@ class $$SessionsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
@@ -4757,55 +6801,14 @@ class $$SessionsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  Expression<T> assessmentsRefs<T extends Object>(
-    Expression<T> Function($$AssessmentsTableAnnotationComposer a) f,
-  ) {
-    final $$AssessmentsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.assessments,
-      getReferencedColumn: (t) => t.sessionId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AssessmentsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.assessments,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  Expression<T> repDatasRefs<T extends Object>(
-    Expression<T> Function($$RepDatasTableAnnotationComposer a) f,
-  ) {
-    final $$RepDatasTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.repDatas,
-      getReferencedColumn: (t) => t.sessionId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$RepDatasTableAnnotationComposer(
-            $db: $db,
-            $table: $db.repDatas,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$SessionsTableTableManager
@@ -4819,24 +6822,24 @@ class $$SessionsTableTableManager
           $$SessionsTableAnnotationComposer,
           $$SessionsTableCreateCompanionBuilder,
           $$SessionsTableUpdateCompanionBuilder,
-          (Session, $$SessionsTableReferences),
+          (Session, BaseReferences<_$AppDatabase, $SessionsTable, Session>),
           Session,
-          PrefetchHooks Function({bool assessmentsRefs, bool repDatasRefs})
+          PrefetchHooks Function()
         > {
   $$SessionsTableTableManager(_$AppDatabase db, $SessionsTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$SessionsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$SessionsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$SessionsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$SessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SessionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SessionsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> notes = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
@@ -4850,6 +6853,10 @@ class $$SessionsTableTableManager
                 Value<int?> repeaterRestTime = const Value.absent(),
                 Value<int?> repeaterSetRest = const Value.absent(),
                 Value<bool?> repeaterSplitHand = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion(
                 id: id,
                 name: name,
@@ -4865,10 +6872,14 @@ class $$SessionsTableTableManager
                 repeaterRestTime: repeaterRestTime,
                 repeaterSetRest: repeaterSetRest,
                 repeaterSplitHand: repeaterSplitHand,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required String name,
                 required String notes,
                 Value<DateTime> date = const Value.absent(),
@@ -4882,6 +6893,10 @@ class $$SessionsTableTableManager
                 Value<int?> repeaterRestTime = const Value.absent(),
                 Value<int?> repeaterSetRest = const Value.absent(),
                 Value<bool?> repeaterSplitHand = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion.insert(
                 id: id,
                 name: name,
@@ -4897,74 +6912,15 @@ class $$SessionsTableTableManager
                 repeaterRestTime: repeaterRestTime,
                 repeaterSetRest: repeaterSetRest,
                 repeaterSplitHand: repeaterSplitHand,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          $$SessionsTableReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
-          prefetchHooksCallback: ({
-            assessmentsRefs = false,
-            repDatasRefs = false,
-          }) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (assessmentsRefs) db.assessments,
-                if (repDatasRefs) db.repDatas,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (assessmentsRefs)
-                    await $_getPrefetchedData<
-                      Session,
-                      $SessionsTable,
-                      Assessment
-                    >(
-                      currentTable: table,
-                      referencedTable: $$SessionsTableReferences
-                          ._assessmentsRefsTable(db),
-                      managerFromTypedResult:
-                          (p0) =>
-                              $$SessionsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).assessmentsRefs,
-                      referencedItemsForCurrentItem:
-                          (item, referencedItems) => referencedItems.where(
-                            (e) => e.sessionId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                  if (repDatasRefs)
-                    await $_getPrefetchedData<Session, $SessionsTable, RepData>(
-                      currentTable: table,
-                      referencedTable: $$SessionsTableReferences
-                          ._repDatasRefsTable(db),
-                      managerFromTypedResult:
-                          (p0) =>
-                              $$SessionsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).repDatasRefs,
-                      referencedItemsForCurrentItem:
-                          (item, referencedItems) => referencedItems.where(
-                            (e) => e.sessionId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
-              },
-            );
-          },
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -4979,52 +6935,36 @@ typedef $$SessionsTableProcessedTableManager =
       $$SessionsTableAnnotationComposer,
       $$SessionsTableCreateCompanionBuilder,
       $$SessionsTableUpdateCompanionBuilder,
-      (Session, $$SessionsTableReferences),
+      (Session, BaseReferences<_$AppDatabase, $SessionsTable, Session>),
       Session,
-      PrefetchHooks Function({bool assessmentsRefs, bool repDatasRefs})
+      PrefetchHooks Function()
     >;
 typedef $$AssessmentsTableCreateCompanionBuilder =
     AssessmentsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required int type,
       Value<double?> rightValue,
       Value<double?> leftValue,
-      required int sessionId,
+      required String sessionId,
       Value<int?> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
 typedef $$AssessmentsTableUpdateCompanionBuilder =
     AssessmentsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<int> type,
       Value<double?> rightValue,
       Value<double?> leftValue,
-      Value<int> sessionId,
+      Value<String> sessionId,
       Value<int?> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
-
-final class $$AssessmentsTableReferences
-    extends BaseReferences<_$AppDatabase, $AssessmentsTable, Assessment> {
-  $$AssessmentsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $SessionsTable _sessionIdTable(_$AppDatabase db) =>
-      db.sessions.createAlias(
-        $_aliasNameGenerator(db.assessments.sessionId, db.sessions.id),
-      );
-
-  $$SessionsTableProcessedTableManager get sessionId {
-    final $_column = $_itemColumn<int>('session_id')!;
-
-    final manager = $$SessionsTableTableManager(
-      $_db,
-      $_db.sessions,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
 
 class $$AssessmentsTableFilterComposer
     extends Composer<_$AppDatabase, $AssessmentsTable> {
@@ -5035,7 +6975,7 @@ class $$AssessmentsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -5055,33 +6995,30 @@ class $$AssessmentsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<int> get gripPosition => $composableBuilder(
     column: $table.gripPosition,
     builder: (column) => ColumnFilters(column),
   );
 
-  $$SessionsTableFilterComposer get sessionId {
-    final $$SessionsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.sessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SessionsTableFilterComposer(
-            $db: $db,
-            $table: $db.sessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$AssessmentsTableOrderingComposer
@@ -5093,7 +7030,7 @@ class $$AssessmentsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -5113,33 +7050,30 @@ class $$AssessmentsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get gripPosition => $composableBuilder(
     column: $table.gripPosition,
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$SessionsTableOrderingComposer get sessionId {
-    final $$SessionsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.sessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SessionsTableOrderingComposer(
-            $db: $db,
-            $table: $db.sessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AssessmentsTableAnnotationComposer
@@ -5151,7 +7085,7 @@ class $$AssessmentsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<int> get type =>
@@ -5165,33 +7099,22 @@ class $$AssessmentsTableAnnotationComposer
   GeneratedColumn<double> get leftValue =>
       $composableBuilder(column: $table.leftValue, builder: (column) => column);
 
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
+
   GeneratedColumn<int> get gripPosition => $composableBuilder(
     column: $table.gripPosition,
     builder: (column) => column,
   );
 
-  $$SessionsTableAnnotationComposer get sessionId {
-    final $$SessionsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.sessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SessionsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.sessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$AssessmentsTableTableManager
@@ -5205,30 +7128,36 @@ class $$AssessmentsTableTableManager
           $$AssessmentsTableAnnotationComposer,
           $$AssessmentsTableCreateCompanionBuilder,
           $$AssessmentsTableUpdateCompanionBuilder,
-          (Assessment, $$AssessmentsTableReferences),
+          (
+            Assessment,
+            BaseReferences<_$AppDatabase, $AssessmentsTable, Assessment>,
+          ),
           Assessment,
-          PrefetchHooks Function({bool sessionId})
+          PrefetchHooks Function()
         > {
   $$AssessmentsTableTableManager(_$AppDatabase db, $AssessmentsTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$AssessmentsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$AssessmentsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () =>
-                  $$AssessmentsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$AssessmentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AssessmentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AssessmentsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<int> type = const Value.absent(),
                 Value<double?> rightValue = const Value.absent(),
                 Value<double?> leftValue = const Value.absent(),
-                Value<int> sessionId = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
                 Value<int?> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => AssessmentsCompanion(
                 id: id,
                 type: type,
@@ -5236,15 +7165,23 @@ class $$AssessmentsTableTableManager
                 leftValue: leftValue,
                 sessionId: sessionId,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required int type,
                 Value<double?> rightValue = const Value.absent(),
                 Value<double?> leftValue = const Value.absent(),
-                required int sessionId,
+                required String sessionId,
                 Value<int?> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => AssessmentsCompanion.insert(
                 id: id,
                 type: type,
@@ -5252,58 +7189,15 @@ class $$AssessmentsTableTableManager
                 leftValue: leftValue,
                 sessionId: sessionId,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          $$AssessmentsTableReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
-          prefetchHooksCallback: ({sessionId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                T extends TableManagerState<
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic
-                >
-              >(state) {
-                if (sessionId) {
-                  state =
-                      state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.sessionId,
-                            referencedTable: $$AssessmentsTableReferences
-                                ._sessionIdTable(db),
-                            referencedColumn:
-                                $$AssessmentsTableReferences
-                                    ._sessionIdTable(db)
-                                    .id,
-                          )
-                          as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -5318,13 +7212,16 @@ typedef $$AssessmentsTableProcessedTableManager =
       $$AssessmentsTableAnnotationComposer,
       $$AssessmentsTableCreateCompanionBuilder,
       $$AssessmentsTableUpdateCompanionBuilder,
-      (Assessment, $$AssessmentsTableReferences),
+      (
+        Assessment,
+        BaseReferences<_$AppDatabase, $AssessmentsTable, Assessment>,
+      ),
       Assessment,
-      PrefetchHooks Function({bool sessionId})
+      PrefetchHooks Function()
     >;
 typedef $$RepeatersTableCreateCompanionBuilder =
     RepeatersCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required int sets,
       required int reps,
       required int worktime,
@@ -5334,10 +7231,14 @@ typedef $$RepeatersTableCreateCompanionBuilder =
       Value<double?> targetWeigthLeft,
       required bool splitHand,
       Value<int> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
 typedef $$RepeatersTableUpdateCompanionBuilder =
     RepeatersCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<int> sets,
       Value<int> reps,
       Value<int> worktime,
@@ -5347,30 +7248,11 @@ typedef $$RepeatersTableUpdateCompanionBuilder =
       Value<double?> targetWeigthLeft,
       Value<bool> splitHand,
       Value<int> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
-
-final class $$RepeatersTableReferences
-    extends BaseReferences<_$AppDatabase, $RepeatersTable, Repeater> {
-  $$RepeatersTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$TrainingsTable, List<Training>>
-  _trainingsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.trainings,
-    aliasName: $_aliasNameGenerator(db.repeaters.id, db.trainings.repeaterId),
-  );
-
-  $$TrainingsTableProcessedTableManager get trainingsRefs {
-    final manager = $$TrainingsTableTableManager(
-      $_db,
-      $_db.trainings,
-    ).filter((f) => f.repeaterId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_trainingsRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
 
 class $$RepeatersTableFilterComposer
     extends Composer<_$AppDatabase, $RepeatersTable> {
@@ -5381,7 +7263,7 @@ class $$RepeatersTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -5431,30 +7313,20 @@ class $$RepeatersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  Expression<bool> trainingsRefs(
-    Expression<bool> Function($$TrainingsTableFilterComposer f) f,
-  ) {
-    final $$TrainingsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.repeaterId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableFilterComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$RepeatersTableOrderingComposer
@@ -5466,7 +7338,7 @@ class $$RepeatersTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -5515,6 +7387,21 @@ class $$RepeatersTableOrderingComposer
     column: $table.gripPosition,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RepeatersTableAnnotationComposer
@@ -5526,7 +7413,7 @@ class $$RepeatersTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<int> get sets =>
@@ -5562,30 +7449,14 @@ class $$RepeatersTableAnnotationComposer
     builder: (column) => column,
   );
 
-  Expression<T> trainingsRefs<T extends Object>(
-    Expression<T> Function($$TrainingsTableAnnotationComposer a) f,
-  ) {
-    final $$TrainingsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.repeaterId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$RepeatersTableTableManager
@@ -5599,24 +7470,24 @@ class $$RepeatersTableTableManager
           $$RepeatersTableAnnotationComposer,
           $$RepeatersTableCreateCompanionBuilder,
           $$RepeatersTableUpdateCompanionBuilder,
-          (Repeater, $$RepeatersTableReferences),
+          (Repeater, BaseReferences<_$AppDatabase, $RepeatersTable, Repeater>),
           Repeater,
-          PrefetchHooks Function({bool trainingsRefs})
+          PrefetchHooks Function()
         > {
   $$RepeatersTableTableManager(_$AppDatabase db, $RepeatersTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$RepeatersTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$RepeatersTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$RepeatersTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$RepeatersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RepeatersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RepeatersTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<int> sets = const Value.absent(),
                 Value<int> reps = const Value.absent(),
                 Value<int> worktime = const Value.absent(),
@@ -5626,6 +7497,10 @@ class $$RepeatersTableTableManager
                 Value<double?> targetWeigthLeft = const Value.absent(),
                 Value<bool> splitHand = const Value.absent(),
                 Value<int> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => RepeatersCompanion(
                 id: id,
                 sets: sets,
@@ -5637,10 +7512,14 @@ class $$RepeatersTableTableManager
                 targetWeigthLeft: targetWeigthLeft,
                 splitHand: splitHand,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required int sets,
                 required int reps,
                 required int worktime,
@@ -5650,6 +7529,10 @@ class $$RepeatersTableTableManager
                 Value<double?> targetWeigthLeft = const Value.absent(),
                 required bool splitHand,
                 Value<int> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => RepeatersCompanion.insert(
                 id: id,
                 sets: sets,
@@ -5661,50 +7544,15 @@ class $$RepeatersTableTableManager
                 targetWeigthLeft: targetWeigthLeft,
                 splitHand: splitHand,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          $$RepeatersTableReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
-          prefetchHooksCallback: ({trainingsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [if (trainingsRefs) db.trainings],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (trainingsRefs)
-                    await $_getPrefetchedData<
-                      Repeater,
-                      $RepeatersTable,
-                      Training
-                    >(
-                      currentTable: table,
-                      referencedTable: $$RepeatersTableReferences
-                          ._trainingsRefsTable(db),
-                      managerFromTypedResult:
-                          (p0) =>
-                              $$RepeatersTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).trainingsRefs,
-                      referencedItemsForCurrentItem:
-                          (item, referencedItems) => referencedItems.where(
-                            (e) => e.repeaterId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
-              },
-            );
-          },
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -5719,101 +7567,36 @@ typedef $$RepeatersTableProcessedTableManager =
       $$RepeatersTableAnnotationComposer,
       $$RepeatersTableCreateCompanionBuilder,
       $$RepeatersTableUpdateCompanionBuilder,
-      (Repeater, $$RepeatersTableReferences),
+      (Repeater, BaseReferences<_$AppDatabase, $RepeatersTable, Repeater>),
       Repeater,
-      PrefetchHooks Function({bool trainingsRefs})
+      PrefetchHooks Function()
     >;
 typedef $$TrainingsTableCreateCompanionBuilder =
     TrainingsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required String name,
-      Value<int?> repeaterId,
+      Value<String?> repeaterId,
       Value<bool> isBuiltin,
       Value<bool> isFavorite,
       Value<bool> isAssessment,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
 typedef $$TrainingsTableUpdateCompanionBuilder =
     TrainingsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<String> name,
-      Value<int?> repeaterId,
+      Value<String?> repeaterId,
       Value<bool> isBuiltin,
       Value<bool> isFavorite,
       Value<bool> isAssessment,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
-
-final class $$TrainingsTableReferences
-    extends BaseReferences<_$AppDatabase, $TrainingsTable, Training> {
-  $$TrainingsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $RepeatersTable _repeaterIdTable(_$AppDatabase db) =>
-      db.repeaters.createAlias(
-        $_aliasNameGenerator(db.trainings.repeaterId, db.repeaters.id),
-      );
-
-  $$RepeatersTableProcessedTableManager? get repeaterId {
-    final $_column = $_itemColumn<int>('repeater_id');
-    if ($_column == null) return null;
-    final manager = $$RepeatersTableTableManager(
-      $_db,
-      $_db.repeaters,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_repeaterIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static MultiTypedResultKey<$RepTemplatesTable, List<RepTemplate>>
-  _repTemplatesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.repTemplates,
-    aliasName: $_aliasNameGenerator(
-      db.trainings.id,
-      db.repTemplates.trainingId,
-    ),
-  );
-
-  $$RepTemplatesTableProcessedTableManager get repTemplatesRefs {
-    final manager = $$RepTemplatesTableTableManager(
-      $_db,
-      $_db.repTemplates,
-    ).filter((f) => f.trainingId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_repTemplatesRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
-  static MultiTypedResultKey<
-    $BuiltinTrainingWeightsTable,
-    List<BuiltinTrainingWeight>
-  >
-  _builtinTrainingWeightsRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.builtinTrainingWeights,
-        aliasName: $_aliasNameGenerator(
-          db.trainings.id,
-          db.builtinTrainingWeights.builtinTrainingId,
-        ),
-      );
-
-  $$BuiltinTrainingWeightsTableProcessedTableManager
-  get builtinTrainingWeightsRefs {
-    final manager = $$BuiltinTrainingWeightsTableTableManager(
-      $_db,
-      $_db.builtinTrainingWeights,
-    ).filter((f) => f.builtinTrainingId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(
-      _builtinTrainingWeightsRefsTable($_db),
-    );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-}
 
 class $$TrainingsTableFilterComposer
     extends Composer<_$AppDatabase, $TrainingsTable> {
@@ -5824,13 +7607,18 @@ class $$TrainingsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get repeaterId => $composableBuilder(
+    column: $table.repeaterId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5849,79 +7637,20 @@ class $$TrainingsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  $$RepeatersTableFilterComposer get repeaterId {
-    final $$RepeatersTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.repeaterId,
-      referencedTable: $db.repeaters,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$RepeatersTableFilterComposer(
-            $db: $db,
-            $table: $db.repeaters,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  Expression<bool> repTemplatesRefs(
-    Expression<bool> Function($$RepTemplatesTableFilterComposer f) f,
-  ) {
-    final $$RepTemplatesTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.repTemplates,
-      getReferencedColumn: (t) => t.trainingId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$RepTemplatesTableFilterComposer(
-            $db: $db,
-            $table: $db.repTemplates,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
-  Expression<bool> builtinTrainingWeightsRefs(
-    Expression<bool> Function($$BuiltinTrainingWeightsTableFilterComposer f) f,
-  ) {
-    final $$BuiltinTrainingWeightsTableFilterComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.builtinTrainingWeights,
-          getReferencedColumn: (t) => t.builtinTrainingId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$BuiltinTrainingWeightsTableFilterComposer(
-                $db: $db,
-                $table: $db.builtinTrainingWeights,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
-    return f(composer);
-  }
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$TrainingsTableOrderingComposer
@@ -5933,13 +7662,18 @@ class $$TrainingsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
 
   ColumnOrderings<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get repeaterId => $composableBuilder(
+    column: $table.repeaterId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -5958,28 +7692,20 @@ class $$TrainingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$RepeatersTableOrderingComposer get repeaterId {
-    final $$RepeatersTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.repeaterId,
-      referencedTable: $db.repeaters,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$RepeatersTableOrderingComposer(
-            $db: $db,
-            $table: $db.repeaters,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TrainingsTableAnnotationComposer
@@ -5991,11 +7717,16 @@ class $$TrainingsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get repeaterId => $composableBuilder(
+    column: $table.repeaterId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isBuiltin =>
       $composableBuilder(column: $table.isBuiltin, builder: (column) => column);
@@ -6010,79 +7741,14 @@ class $$TrainingsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  $$RepeatersTableAnnotationComposer get repeaterId {
-    final $$RepeatersTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.repeaterId,
-      referencedTable: $db.repeaters,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$RepeatersTableAnnotationComposer(
-            $db: $db,
-            $table: $db.repeaters,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  Expression<T> repTemplatesRefs<T extends Object>(
-    Expression<T> Function($$RepTemplatesTableAnnotationComposer a) f,
-  ) {
-    final $$RepTemplatesTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.repTemplates,
-      getReferencedColumn: (t) => t.trainingId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$RepTemplatesTableAnnotationComposer(
-            $db: $db,
-            $table: $db.repTemplates,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 
-  Expression<T> builtinTrainingWeightsRefs<T extends Object>(
-    Expression<T> Function($$BuiltinTrainingWeightsTableAnnotationComposer a) f,
-  ) {
-    final $$BuiltinTrainingWeightsTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.builtinTrainingWeights,
-          getReferencedColumn: (t) => t.builtinTrainingId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$BuiltinTrainingWeightsTableAnnotationComposer(
-                $db: $db,
-                $table: $db.builtinTrainingWeights,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
-    return f(composer);
-  }
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$TrainingsTableTableManager
@@ -6096,33 +7762,33 @@ class $$TrainingsTableTableManager
           $$TrainingsTableAnnotationComposer,
           $$TrainingsTableCreateCompanionBuilder,
           $$TrainingsTableUpdateCompanionBuilder,
-          (Training, $$TrainingsTableReferences),
+          (Training, BaseReferences<_$AppDatabase, $TrainingsTable, Training>),
           Training,
-          PrefetchHooks Function({
-            bool repeaterId,
-            bool repTemplatesRefs,
-            bool builtinTrainingWeightsRefs,
-          })
+          PrefetchHooks Function()
         > {
   $$TrainingsTableTableManager(_$AppDatabase db, $TrainingsTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$TrainingsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$TrainingsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$TrainingsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$TrainingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TrainingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TrainingsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
-                Value<int?> repeaterId = const Value.absent(),
+                Value<String?> repeaterId = const Value.absent(),
                 Value<bool> isBuiltin = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<bool> isAssessment = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => TrainingsCompanion(
                 id: id,
                 name: name,
@@ -6130,15 +7796,23 @@ class $$TrainingsTableTableManager
                 isBuiltin: isBuiltin,
                 isFavorite: isFavorite,
                 isAssessment: isAssessment,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required String name,
-                Value<int?> repeaterId = const Value.absent(),
+                Value<String?> repeaterId = const Value.absent(),
                 Value<bool> isBuiltin = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<bool> isAssessment = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => TrainingsCompanion.insert(
                 id: id,
                 name: name,
@@ -6146,110 +7820,15 @@ class $$TrainingsTableTableManager
                 isBuiltin: isBuiltin,
                 isFavorite: isFavorite,
                 isAssessment: isAssessment,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          $$TrainingsTableReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
-          prefetchHooksCallback: ({
-            repeaterId = false,
-            repTemplatesRefs = false,
-            builtinTrainingWeightsRefs = false,
-          }) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (repTemplatesRefs) db.repTemplates,
-                if (builtinTrainingWeightsRefs) db.builtinTrainingWeights,
-              ],
-              addJoins: <
-                T extends TableManagerState<
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic
-                >
-              >(state) {
-                if (repeaterId) {
-                  state =
-                      state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.repeaterId,
-                            referencedTable: $$TrainingsTableReferences
-                                ._repeaterIdTable(db),
-                            referencedColumn:
-                                $$TrainingsTableReferences
-                                    ._repeaterIdTable(db)
-                                    .id,
-                          )
-                          as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (repTemplatesRefs)
-                    await $_getPrefetchedData<
-                      Training,
-                      $TrainingsTable,
-                      RepTemplate
-                    >(
-                      currentTable: table,
-                      referencedTable: $$TrainingsTableReferences
-                          ._repTemplatesRefsTable(db),
-                      managerFromTypedResult:
-                          (p0) =>
-                              $$TrainingsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).repTemplatesRefs,
-                      referencedItemsForCurrentItem:
-                          (item, referencedItems) => referencedItems.where(
-                            (e) => e.trainingId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                  if (builtinTrainingWeightsRefs)
-                    await $_getPrefetchedData<
-                      Training,
-                      $TrainingsTable,
-                      BuiltinTrainingWeight
-                    >(
-                      currentTable: table,
-                      referencedTable: $$TrainingsTableReferences
-                          ._builtinTrainingWeightsRefsTable(db),
-                      managerFromTypedResult:
-                          (p0) =>
-                              $$TrainingsTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).builtinTrainingWeightsRefs,
-                      referencedItemsForCurrentItem:
-                          (item, referencedItems) => referencedItems.where(
-                            (e) => e.builtinTrainingId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
-                ];
-              },
-            );
-          },
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -6264,60 +7843,40 @@ typedef $$TrainingsTableProcessedTableManager =
       $$TrainingsTableAnnotationComposer,
       $$TrainingsTableCreateCompanionBuilder,
       $$TrainingsTableUpdateCompanionBuilder,
-      (Training, $$TrainingsTableReferences),
+      (Training, BaseReferences<_$AppDatabase, $TrainingsTable, Training>),
       Training,
-      PrefetchHooks Function({
-        bool repeaterId,
-        bool repTemplatesRefs,
-        bool builtinTrainingWeightsRefs,
-      })
+      PrefetchHooks Function()
     >;
 typedef $$RepTemplatesTableCreateCompanionBuilder =
     RepTemplatesCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required bool isRest,
       required bool rightHand,
       required int duration,
-      required int trainingId,
+      required String trainingId,
       required double targetWeight,
       required int index,
       Value<int> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
 typedef $$RepTemplatesTableUpdateCompanionBuilder =
     RepTemplatesCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<bool> isRest,
       Value<bool> rightHand,
       Value<int> duration,
-      Value<int> trainingId,
+      Value<String> trainingId,
       Value<double> targetWeight,
       Value<int> index,
       Value<int> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
-
-final class $$RepTemplatesTableReferences
-    extends BaseReferences<_$AppDatabase, $RepTemplatesTable, RepTemplate> {
-  $$RepTemplatesTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $TrainingsTable _trainingIdTable(_$AppDatabase db) =>
-      db.trainings.createAlias(
-        $_aliasNameGenerator(db.repTemplates.trainingId, db.trainings.id),
-      );
-
-  $$TrainingsTableProcessedTableManager get trainingId {
-    final $_column = $_itemColumn<int>('training_id')!;
-
-    final manager = $$TrainingsTableTableManager(
-      $_db,
-      $_db.trainings,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_trainingIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
 
 class $$RepTemplatesTableFilterComposer
     extends Composer<_$AppDatabase, $RepTemplatesTable> {
@@ -6328,7 +7887,7 @@ class $$RepTemplatesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -6348,6 +7907,11 @@ class $$RepTemplatesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get trainingId => $composableBuilder(
+    column: $table.trainingId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<double> get targetWeight => $composableBuilder(
     column: $table.targetWeight,
     builder: (column) => ColumnFilters(column),
@@ -6363,28 +7927,20 @@ class $$RepTemplatesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  $$TrainingsTableFilterComposer get trainingId {
-    final $$TrainingsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.trainingId,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableFilterComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$RepTemplatesTableOrderingComposer
@@ -6396,7 +7952,7 @@ class $$RepTemplatesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -6416,6 +7972,11 @@ class $$RepTemplatesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get trainingId => $composableBuilder(
+    column: $table.trainingId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get targetWeight => $composableBuilder(
     column: $table.targetWeight,
     builder: (column) => ColumnOrderings(column),
@@ -6431,28 +7992,20 @@ class $$RepTemplatesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$TrainingsTableOrderingComposer get trainingId {
-    final $$TrainingsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.trainingId,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableOrderingComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RepTemplatesTableAnnotationComposer
@@ -6464,7 +8017,7 @@ class $$RepTemplatesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<bool> get isRest =>
@@ -6475,6 +8028,11 @@ class $$RepTemplatesTableAnnotationComposer
 
   GeneratedColumn<int> get duration =>
       $composableBuilder(column: $table.duration, builder: (column) => column);
+
+  GeneratedColumn<String> get trainingId => $composableBuilder(
+    column: $table.trainingId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<double> get targetWeight => $composableBuilder(
     column: $table.targetWeight,
@@ -6489,28 +8047,14 @@ class $$RepTemplatesTableAnnotationComposer
     builder: (column) => column,
   );
 
-  $$TrainingsTableAnnotationComposer get trainingId {
-    final $$TrainingsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.trainingId,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$RepTemplatesTableTableManager
@@ -6524,32 +8068,38 @@ class $$RepTemplatesTableTableManager
           $$RepTemplatesTableAnnotationComposer,
           $$RepTemplatesTableCreateCompanionBuilder,
           $$RepTemplatesTableUpdateCompanionBuilder,
-          (RepTemplate, $$RepTemplatesTableReferences),
+          (
+            RepTemplate,
+            BaseReferences<_$AppDatabase, $RepTemplatesTable, RepTemplate>,
+          ),
           RepTemplate,
-          PrefetchHooks Function({bool trainingId})
+          PrefetchHooks Function()
         > {
   $$RepTemplatesTableTableManager(_$AppDatabase db, $RepTemplatesTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$RepTemplatesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$RepTemplatesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () =>
-                  $$RepTemplatesTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$RepTemplatesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RepTemplatesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RepTemplatesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<bool> isRest = const Value.absent(),
                 Value<bool> rightHand = const Value.absent(),
                 Value<int> duration = const Value.absent(),
-                Value<int> trainingId = const Value.absent(),
+                Value<String> trainingId = const Value.absent(),
                 Value<double> targetWeight = const Value.absent(),
                 Value<int> index = const Value.absent(),
                 Value<int> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => RepTemplatesCompanion(
                 id: id,
                 isRest: isRest,
@@ -6559,17 +8109,25 @@ class $$RepTemplatesTableTableManager
                 targetWeight: targetWeight,
                 index: index,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required bool isRest,
                 required bool rightHand,
                 required int duration,
-                required int trainingId,
+                required String trainingId,
                 required double targetWeight,
                 required int index,
                 Value<int> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => RepTemplatesCompanion.insert(
                 id: id,
                 isRest: isRest,
@@ -6579,58 +8137,15 @@ class $$RepTemplatesTableTableManager
                 targetWeight: targetWeight,
                 index: index,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          $$RepTemplatesTableReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
-          prefetchHooksCallback: ({trainingId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                T extends TableManagerState<
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic
-                >
-              >(state) {
-                if (trainingId) {
-                  state =
-                      state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.trainingId,
-                            referencedTable: $$RepTemplatesTableReferences
-                                ._trainingIdTable(db),
-                            referencedColumn:
-                                $$RepTemplatesTableReferences
-                                    ._trainingIdTable(db)
-                                    .id,
-                          )
-                          as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -6645,56 +8160,45 @@ typedef $$RepTemplatesTableProcessedTableManager =
       $$RepTemplatesTableAnnotationComposer,
       $$RepTemplatesTableCreateCompanionBuilder,
       $$RepTemplatesTableUpdateCompanionBuilder,
-      (RepTemplate, $$RepTemplatesTableReferences),
+      (
+        RepTemplate,
+        BaseReferences<_$AppDatabase, $RepTemplatesTable, RepTemplate>,
+      ),
       RepTemplate,
-      PrefetchHooks Function({bool trainingId})
+      PrefetchHooks Function()
     >;
 typedef $$RepDatasTableCreateCompanionBuilder =
     RepDatasCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required double averageWeight,
-      required int sessionId,
+      required String sessionId,
       required bool isRest,
       required bool rightHand,
       required int duration,
       required double targetWeight,
       required int index,
       Value<int> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
 typedef $$RepDatasTableUpdateCompanionBuilder =
     RepDatasCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<double> averageWeight,
-      Value<int> sessionId,
+      Value<String> sessionId,
       Value<bool> isRest,
       Value<bool> rightHand,
       Value<int> duration,
       Value<double> targetWeight,
       Value<int> index,
       Value<int> gripPosition,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
-
-final class $$RepDatasTableReferences
-    extends BaseReferences<_$AppDatabase, $RepDatasTable, RepData> {
-  $$RepDatasTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $SessionsTable _sessionIdTable(_$AppDatabase db) => db.sessions
-      .createAlias($_aliasNameGenerator(db.repDatas.sessionId, db.sessions.id));
-
-  $$SessionsTableProcessedTableManager get sessionId {
-    final $_column = $_itemColumn<int>('session_id')!;
-
-    final manager = $$SessionsTableTableManager(
-      $_db,
-      $_db.sessions,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_sessionIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
 
 class $$RepDatasTableFilterComposer
     extends Composer<_$AppDatabase, $RepDatasTable> {
@@ -6705,13 +8209,18 @@ class $$RepDatasTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
 
   ColumnFilters<double> get averageWeight => $composableBuilder(
     column: $table.averageWeight,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6745,28 +8254,20 @@ class $$RepDatasTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  $$SessionsTableFilterComposer get sessionId {
-    final $$SessionsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.sessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SessionsTableFilterComposer(
-            $db: $db,
-            $table: $db.sessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$RepDatasTableOrderingComposer
@@ -6778,13 +8279,18 @@ class $$RepDatasTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
 
   ColumnOrderings<double> get averageWeight => $composableBuilder(
     column: $table.averageWeight,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -6818,28 +8324,20 @@ class $$RepDatasTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$SessionsTableOrderingComposer get sessionId {
-    final $$SessionsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.sessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SessionsTableOrderingComposer(
-            $db: $db,
-            $table: $db.sessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RepDatasTableAnnotationComposer
@@ -6851,13 +8349,16 @@ class $$RepDatasTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<double> get averageWeight => $composableBuilder(
     column: $table.averageWeight,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
 
   GeneratedColumn<bool> get isRest =>
       $composableBuilder(column: $table.isRest, builder: (column) => column);
@@ -6881,28 +8382,14 @@ class $$RepDatasTableAnnotationComposer
     builder: (column) => column,
   );
 
-  $$SessionsTableAnnotationComposer get sessionId {
-    final $$SessionsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.sessionId,
-      referencedTable: $db.sessions,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$SessionsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.sessions,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$RepDatasTableTableManager
@@ -6916,32 +8403,36 @@ class $$RepDatasTableTableManager
           $$RepDatasTableAnnotationComposer,
           $$RepDatasTableCreateCompanionBuilder,
           $$RepDatasTableUpdateCompanionBuilder,
-          (RepData, $$RepDatasTableReferences),
+          (RepData, BaseReferences<_$AppDatabase, $RepDatasTable, RepData>),
           RepData,
-          PrefetchHooks Function({bool sessionId})
+          PrefetchHooks Function()
         > {
   $$RepDatasTableTableManager(_$AppDatabase db, $RepDatasTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$RepDatasTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () => $$RepDatasTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$RepDatasTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () =>
+              $$RepDatasTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RepDatasTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RepDatasTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<double> averageWeight = const Value.absent(),
-                Value<int> sessionId = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
                 Value<bool> isRest = const Value.absent(),
                 Value<bool> rightHand = const Value.absent(),
                 Value<int> duration = const Value.absent(),
                 Value<double> targetWeight = const Value.absent(),
                 Value<int> index = const Value.absent(),
                 Value<int> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => RepDatasCompanion(
                 id: id,
                 averageWeight: averageWeight,
@@ -6952,18 +8443,26 @@ class $$RepDatasTableTableManager
                 targetWeight: targetWeight,
                 index: index,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required double averageWeight,
-                required int sessionId,
+                required String sessionId,
                 required bool isRest,
                 required bool rightHand,
                 required int duration,
                 required double targetWeight,
                 required int index,
                 Value<int> gripPosition = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => RepDatasCompanion.insert(
                 id: id,
                 averageWeight: averageWeight,
@@ -6974,58 +8473,15 @@ class $$RepDatasTableTableManager
                 targetWeight: targetWeight,
                 index: index,
                 gripPosition: gripPosition,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          $$RepDatasTableReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
-          prefetchHooksCallback: ({sessionId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                T extends TableManagerState<
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic
-                >
-              >(state) {
-                if (sessionId) {
-                  state =
-                      state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.sessionId,
-                            referencedTable: $$RepDatasTableReferences
-                                ._sessionIdTable(db),
-                            referencedColumn:
-                                $$RepDatasTableReferences
-                                    ._sessionIdTable(db)
-                                    .id,
-                          )
-                          as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -7040,25 +8496,33 @@ typedef $$RepDatasTableProcessedTableManager =
       $$RepDatasTableAnnotationComposer,
       $$RepDatasTableCreateCompanionBuilder,
       $$RepDatasTableUpdateCompanionBuilder,
-      (RepData, $$RepDatasTableReferences),
+      (RepData, BaseReferences<_$AppDatabase, $RepDatasTable, RepData>),
       RepData,
-      PrefetchHooks Function({bool sessionId})
+      PrefetchHooks Function()
     >;
 typedef $$SensorConfigsTableCreateCompanionBuilder =
     SensorConfigsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       required String name,
       required int index,
       required double tare,
       required double coef,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
 typedef $$SensorConfigsTableUpdateCompanionBuilder =
     SensorConfigsCompanion Function({
-      Value<int> id,
+      Value<String> id,
       Value<String> name,
       Value<int> index,
       Value<double> tare,
       Value<double> coef,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
 
 class $$SensorConfigsTableFilterComposer
@@ -7070,7 +8534,7 @@ class $$SensorConfigsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnFilters(column),
   );
@@ -7094,6 +8558,21 @@ class $$SensorConfigsTableFilterComposer
     column: $table.coef,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SensorConfigsTableOrderingComposer
@@ -7105,7 +8584,7 @@ class $$SensorConfigsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
     builder: (column) => ColumnOrderings(column),
   );
@@ -7129,6 +8608,21 @@ class $$SensorConfigsTableOrderingComposer
     column: $table.coef,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SensorConfigsTableAnnotationComposer
@@ -7140,7 +8634,7 @@ class $$SensorConfigsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get name =>
@@ -7154,6 +8648,15 @@ class $$SensorConfigsTableAnnotationComposer
 
   GeneratedColumn<double> get coef =>
       $composableBuilder(column: $table.coef, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$SensorConfigsTableTableManager
@@ -7179,54 +8682,59 @@ class $$SensorConfigsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$SensorConfigsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer:
-              () =>
-                  $$SensorConfigsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer:
-              () => $$SensorConfigsTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+          createFilteringComposer: () =>
+              $$SensorConfigsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SensorConfigsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SensorConfigsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<int> index = const Value.absent(),
                 Value<double> tare = const Value.absent(),
                 Value<double> coef = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => SensorConfigsCompanion(
                 id: id,
                 name: name,
                 index: index,
                 tare: tare,
                 coef: coef,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
+                Value<String> id = const Value.absent(),
                 required String name,
                 required int index,
                 required double tare,
                 required double coef,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => SensorConfigsCompanion.insert(
                 id: id,
                 name: name,
                 index: index,
                 tare: tare,
                 coef: coef,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -7251,56 +8759,26 @@ typedef $$SensorConfigsTableProcessedTableManager =
     >;
 typedef $$BuiltinTrainingWeightsTableCreateCompanionBuilder =
     BuiltinTrainingWeightsCompanion Function({
-      Value<int> id,
-      required int builtinTrainingId,
+      Value<String> id,
+      required String builtinTrainingId,
       Value<double?> customWeightRight,
       Value<double?> customWeightLeft,
       Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
 typedef $$BuiltinTrainingWeightsTableUpdateCompanionBuilder =
     BuiltinTrainingWeightsCompanion Function({
-      Value<int> id,
-      Value<int> builtinTrainingId,
+      Value<String> id,
+      Value<String> builtinTrainingId,
       Value<double?> customWeightRight,
       Value<double?> customWeightLeft,
       Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
     });
-
-final class $$BuiltinTrainingWeightsTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $BuiltinTrainingWeightsTable,
-          BuiltinTrainingWeight
-        > {
-  $$BuiltinTrainingWeightsTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
-
-  static $TrainingsTable _builtinTrainingIdTable(_$AppDatabase db) =>
-      db.trainings.createAlias(
-        $_aliasNameGenerator(
-          db.builtinTrainingWeights.builtinTrainingId,
-          db.trainings.id,
-        ),
-      );
-
-  $$TrainingsTableProcessedTableManager get builtinTrainingId {
-    final $_column = $_itemColumn<int>('builtin_training_id')!;
-
-    final manager = $$TrainingsTableTableManager(
-      $_db,
-      $_db.trainings,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_builtinTrainingIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
 
 class $$BuiltinTrainingWeightsTableFilterComposer
     extends Composer<_$AppDatabase, $BuiltinTrainingWeightsTable> {
@@ -7311,8 +8789,13 @@ class $$BuiltinTrainingWeightsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
+  ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get builtinTrainingId => $composableBuilder(
+    column: $table.builtinTrainingId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7331,28 +8814,15 @@ class $$BuiltinTrainingWeightsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  $$TrainingsTableFilterComposer get builtinTrainingId {
-    final $$TrainingsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.builtinTrainingId,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableFilterComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$BuiltinTrainingWeightsTableOrderingComposer
@@ -7364,8 +8834,13 @@ class $$BuiltinTrainingWeightsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
+  ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get builtinTrainingId => $composableBuilder(
+    column: $table.builtinTrainingId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -7384,28 +8859,15 @@ class $$BuiltinTrainingWeightsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  $$TrainingsTableOrderingComposer get builtinTrainingId {
-    final $$TrainingsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.builtinTrainingId,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableOrderingComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$BuiltinTrainingWeightsTableAnnotationComposer
@@ -7417,8 +8879,13 @@ class $$BuiltinTrainingWeightsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
+  GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get builtinTrainingId => $composableBuilder(
+    column: $table.builtinTrainingId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<double> get customWeightRight => $composableBuilder(
     column: $table.customWeightRight,
@@ -7433,28 +8900,11 @@ class $$BuiltinTrainingWeightsTableAnnotationComposer
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  $$TrainingsTableAnnotationComposer get builtinTrainingId {
-    final $$TrainingsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.builtinTrainingId,
-      referencedTable: $db.trainings,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$TrainingsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.trainings,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$BuiltinTrainingWeightsTableTableManager
@@ -7468,9 +8918,16 @@ class $$BuiltinTrainingWeightsTableTableManager
           $$BuiltinTrainingWeightsTableAnnotationComposer,
           $$BuiltinTrainingWeightsTableCreateCompanionBuilder,
           $$BuiltinTrainingWeightsTableUpdateCompanionBuilder,
-          (BuiltinTrainingWeight, $$BuiltinTrainingWeightsTableReferences),
+          (
+            BuiltinTrainingWeight,
+            BaseReferences<
+              _$AppDatabase,
+              $BuiltinTrainingWeightsTable,
+              BuiltinTrainingWeight
+            >,
+          ),
           BuiltinTrainingWeight,
-          PrefetchHooks Function({bool builtinTrainingId})
+          PrefetchHooks Function()
         > {
   $$BuiltinTrainingWeightsTableTableManager(
     _$AppDatabase db,
@@ -7479,101 +8936,65 @@ class $$BuiltinTrainingWeightsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$BuiltinTrainingWeightsTableFilterComposer(
+          createFilteringComposer: () =>
+              $$BuiltinTrainingWeightsTableFilterComposer(
                 $db: db,
                 $table: table,
               ),
-          createOrderingComposer:
-              () => $$BuiltinTrainingWeightsTableOrderingComposer(
+          createOrderingComposer: () =>
+              $$BuiltinTrainingWeightsTableOrderingComposer(
                 $db: db,
                 $table: table,
               ),
-          createComputedFieldComposer:
-              () => $$BuiltinTrainingWeightsTableAnnotationComposer(
+          createComputedFieldComposer: () =>
+              $$BuiltinTrainingWeightsTableAnnotationComposer(
                 $db: db,
                 $table: table,
               ),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
-                Value<int> builtinTrainingId = const Value.absent(),
+                Value<String> id = const Value.absent(),
+                Value<String> builtinTrainingId = const Value.absent(),
                 Value<double?> customWeightRight = const Value.absent(),
                 Value<double?> customWeightLeft = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => BuiltinTrainingWeightsCompanion(
                 id: id,
                 builtinTrainingId: builtinTrainingId,
                 customWeightRight: customWeightRight,
                 customWeightLeft: customWeightLeft,
                 updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
-                required int builtinTrainingId,
+                Value<String> id = const Value.absent(),
+                required String builtinTrainingId,
                 Value<double?> customWeightRight = const Value.absent(),
                 Value<double?> customWeightLeft = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => BuiltinTrainingWeightsCompanion.insert(
                 id: id,
                 builtinTrainingId: builtinTrainingId,
                 customWeightRight: customWeightRight,
                 customWeightLeft: customWeightLeft,
                 updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
               ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          $$BuiltinTrainingWeightsTableReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
-          prefetchHooksCallback: ({builtinTrainingId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                T extends TableManagerState<
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic
-                >
-              >(state) {
-                if (builtinTrainingId) {
-                  state =
-                      state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.builtinTrainingId,
-                            referencedTable:
-                                $$BuiltinTrainingWeightsTableReferences
-                                    ._builtinTrainingIdTable(db),
-                            referencedColumn:
-                                $$BuiltinTrainingWeightsTableReferences
-                                    ._builtinTrainingIdTable(db)
-                                    .id,
-                          )
-                          as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -7588,14 +9009,33 @@ typedef $$BuiltinTrainingWeightsTableProcessedTableManager =
       $$BuiltinTrainingWeightsTableAnnotationComposer,
       $$BuiltinTrainingWeightsTableCreateCompanionBuilder,
       $$BuiltinTrainingWeightsTableUpdateCompanionBuilder,
-      (BuiltinTrainingWeight, $$BuiltinTrainingWeightsTableReferences),
+      (
+        BuiltinTrainingWeight,
+        BaseReferences<
+          _$AppDatabase,
+          $BuiltinTrainingWeightsTable,
+          BuiltinTrainingWeight
+        >,
+      ),
       BuiltinTrainingWeight,
-      PrefetchHooks Function({bool builtinTrainingId})
+      PrefetchHooks Function()
     >;
 typedef $$PinnedBuiltinTrainingsTableCreateCompanionBuilder =
-    PinnedBuiltinTrainingsCompanion Function({Value<int> builtinTrainingId});
+    PinnedBuiltinTrainingsCompanion Function({
+      required String builtinTrainingId,
+      Value<bool> dirty,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
 typedef $$PinnedBuiltinTrainingsTableUpdateCompanionBuilder =
-    PinnedBuiltinTrainingsCompanion Function({Value<int> builtinTrainingId});
+    PinnedBuiltinTrainingsCompanion Function({
+      Value<String> builtinTrainingId,
+      Value<bool> dirty,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
 
 class $$PinnedBuiltinTrainingsTableFilterComposer
     extends Composer<_$AppDatabase, $PinnedBuiltinTrainingsTable> {
@@ -7606,8 +9046,23 @@ class $$PinnedBuiltinTrainingsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get builtinTrainingId => $composableBuilder(
+  ColumnFilters<String> get builtinTrainingId => $composableBuilder(
     column: $table.builtinTrainingId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7621,8 +9076,23 @@ class $$PinnedBuiltinTrainingsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get builtinTrainingId => $composableBuilder(
+  ColumnOrderings<String> get builtinTrainingId => $composableBuilder(
     column: $table.builtinTrainingId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -7636,10 +9106,19 @@ class $$PinnedBuiltinTrainingsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get builtinTrainingId => $composableBuilder(
+  GeneratedColumn<String> get builtinTrainingId => $composableBuilder(
     column: $table.builtinTrainingId,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$PinnedBuiltinTrainingsTableTableManager
@@ -7671,41 +9150,52 @@ class $$PinnedBuiltinTrainingsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer:
-              () => $$PinnedBuiltinTrainingsTableFilterComposer(
+          createFilteringComposer: () =>
+              $$PinnedBuiltinTrainingsTableFilterComposer(
                 $db: db,
                 $table: table,
               ),
-          createOrderingComposer:
-              () => $$PinnedBuiltinTrainingsTableOrderingComposer(
+          createOrderingComposer: () =>
+              $$PinnedBuiltinTrainingsTableOrderingComposer(
                 $db: db,
                 $table: table,
               ),
-          createComputedFieldComposer:
-              () => $$PinnedBuiltinTrainingsTableAnnotationComposer(
+          createComputedFieldComposer: () =>
+              $$PinnedBuiltinTrainingsTableAnnotationComposer(
                 $db: db,
                 $table: table,
               ),
           updateCompanionCallback:
-              ({Value<int> builtinTrainingId = const Value.absent()}) =>
-                  PinnedBuiltinTrainingsCompanion(
-                    builtinTrainingId: builtinTrainingId,
-                  ),
+              ({
+                Value<String> builtinTrainingId = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PinnedBuiltinTrainingsCompanion(
+                builtinTrainingId: builtinTrainingId,
+                dirty: dirty,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
           createCompanionCallback:
-              ({Value<int> builtinTrainingId = const Value.absent()}) =>
-                  PinnedBuiltinTrainingsCompanion.insert(
-                    builtinTrainingId: builtinTrainingId,
-                  ),
-          withReferenceMapper:
-              (p0) =>
-                  p0
-                      .map(
-                        (e) => (
-                          e.readTable(table),
-                          BaseReferences(db, table, e),
-                        ),
-                      )
-                      .toList(),
+              ({
+                required String builtinTrainingId,
+                Value<bool> dirty = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PinnedBuiltinTrainingsCompanion.insert(
+                builtinTrainingId: builtinTrainingId,
+                dirty: dirty,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
           prefetchHooksCallback: null,
         ),
       );
@@ -7730,6 +9220,460 @@ typedef $$PinnedBuiltinTrainingsTableProcessedTableManager =
         >,
       ),
       PinnedBuiltinTraining,
+      PrefetchHooks Function()
+    >;
+typedef $$UsersTableCreateCompanionBuilder =
+    UsersCompanion Function({
+      required String id,
+      required String email,
+      required String firstname,
+      required String lastname,
+      Value<bool> emailVerified,
+      Value<bool> isAdmin,
+      Value<bool> isCoach,
+      Value<bool> coachValidated,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$UsersTableUpdateCompanionBuilder =
+    UsersCompanion Function({
+      Value<String> id,
+      Value<String> email,
+      Value<String> firstname,
+      Value<String> lastname,
+      Value<bool> emailVerified,
+      Value<bool> isAdmin,
+      Value<bool> isCoach,
+      Value<bool> coachValidated,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
+  $$UsersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get firstname => $composableBuilder(
+    column: $table.firstname,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastname => $composableBuilder(
+    column: $table.lastname,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get emailVerified => $composableBuilder(
+    column: $table.emailVerified,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isAdmin => $composableBuilder(
+    column: $table.isAdmin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCoach => $composableBuilder(
+    column: $table.isCoach,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get coachValidated => $composableBuilder(
+    column: $table.coachValidated,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$UsersTableOrderingComposer
+    extends Composer<_$AppDatabase, $UsersTable> {
+  $$UsersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get email => $composableBuilder(
+    column: $table.email,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get firstname => $composableBuilder(
+    column: $table.firstname,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastname => $composableBuilder(
+    column: $table.lastname,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get emailVerified => $composableBuilder(
+    column: $table.emailVerified,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isAdmin => $composableBuilder(
+    column: $table.isAdmin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCoach => $composableBuilder(
+    column: $table.isCoach,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get coachValidated => $composableBuilder(
+    column: $table.coachValidated,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$UsersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UsersTable> {
+  $$UsersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get firstname =>
+      $composableBuilder(column: $table.firstname, builder: (column) => column);
+
+  GeneratedColumn<String> get lastname =>
+      $composableBuilder(column: $table.lastname, builder: (column) => column);
+
+  GeneratedColumn<bool> get emailVerified => $composableBuilder(
+    column: $table.emailVerified,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isAdmin =>
+      $composableBuilder(column: $table.isAdmin, builder: (column) => column);
+
+  GeneratedColumn<bool> get isCoach =>
+      $composableBuilder(column: $table.isCoach, builder: (column) => column);
+
+  GeneratedColumn<bool> get coachValidated => $composableBuilder(
+    column: $table.coachValidated,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$UsersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UsersTable,
+          User,
+          $$UsersTableFilterComposer,
+          $$UsersTableOrderingComposer,
+          $$UsersTableAnnotationComposer,
+          $$UsersTableCreateCompanionBuilder,
+          $$UsersTableUpdateCompanionBuilder,
+          (User, BaseReferences<_$AppDatabase, $UsersTable, User>),
+          User,
+          PrefetchHooks Function()
+        > {
+  $$UsersTableTableManager(_$AppDatabase db, $UsersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UsersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UsersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UsersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> email = const Value.absent(),
+                Value<String> firstname = const Value.absent(),
+                Value<String> lastname = const Value.absent(),
+                Value<bool> emailVerified = const Value.absent(),
+                Value<bool> isAdmin = const Value.absent(),
+                Value<bool> isCoach = const Value.absent(),
+                Value<bool> coachValidated = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UsersCompanion(
+                id: id,
+                email: email,
+                firstname: firstname,
+                lastname: lastname,
+                emailVerified: emailVerified,
+                isAdmin: isAdmin,
+                isCoach: isCoach,
+                coachValidated: coachValidated,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String email,
+                required String firstname,
+                required String lastname,
+                Value<bool> emailVerified = const Value.absent(),
+                Value<bool> isAdmin = const Value.absent(),
+                Value<bool> isCoach = const Value.absent(),
+                Value<bool> coachValidated = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UsersCompanion.insert(
+                id: id,
+                email: email,
+                firstname: firstname,
+                lastname: lastname,
+                emailVerified: emailVerified,
+                isAdmin: isAdmin,
+                isCoach: isCoach,
+                coachValidated: coachValidated,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$UsersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UsersTable,
+      User,
+      $$UsersTableFilterComposer,
+      $$UsersTableOrderingComposer,
+      $$UsersTableAnnotationComposer,
+      $$UsersTableCreateCompanionBuilder,
+      $$UsersTableUpdateCompanionBuilder,
+      (User, BaseReferences<_$AppDatabase, $UsersTable, User>),
+      User,
+      PrefetchHooks Function()
+    >;
+typedef $$SyncMetadataTableCreateCompanionBuilder =
+    SyncMetadataCompanion Function({
+      Value<int> id,
+      Value<int> lastSyncVersion,
+      Value<DateTime?> lastSyncTime,
+      Value<int> pendingChanges,
+    });
+typedef $$SyncMetadataTableUpdateCompanionBuilder =
+    SyncMetadataCompanion Function({
+      Value<int> id,
+      Value<int> lastSyncVersion,
+      Value<DateTime?> lastSyncTime,
+      Value<int> pendingChanges,
+    });
+
+class $$SyncMetadataTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lastSyncVersion => $composableBuilder(
+    column: $table.lastSyncVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSyncTime => $composableBuilder(
+    column: $table.lastSyncTime,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pendingChanges => $composableBuilder(
+    column: $table.pendingChanges,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SyncMetadataTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get lastSyncVersion => $composableBuilder(
+    column: $table.lastSyncVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSyncTime => $composableBuilder(
+    column: $table.lastSyncTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pendingChanges => $composableBuilder(
+    column: $table.pendingChanges,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SyncMetadataTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncMetadataTable> {
+  $$SyncMetadataTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get lastSyncVersion => $composableBuilder(
+    column: $table.lastSyncVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastSyncTime => $composableBuilder(
+    column: $table.lastSyncTime,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get pendingChanges => $composableBuilder(
+    column: $table.pendingChanges,
+    builder: (column) => column,
+  );
+}
+
+class $$SyncMetadataTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SyncMetadataTable,
+          SyncMetadataData,
+          $$SyncMetadataTableFilterComposer,
+          $$SyncMetadataTableOrderingComposer,
+          $$SyncMetadataTableAnnotationComposer,
+          $$SyncMetadataTableCreateCompanionBuilder,
+          $$SyncMetadataTableUpdateCompanionBuilder,
+          (
+            SyncMetadataData,
+            BaseReferences<_$AppDatabase, $SyncMetadataTable, SyncMetadataData>,
+          ),
+          SyncMetadataData,
+          PrefetchHooks Function()
+        > {
+  $$SyncMetadataTableTableManager(_$AppDatabase db, $SyncMetadataTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncMetadataTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncMetadataTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncMetadataTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> lastSyncVersion = const Value.absent(),
+                Value<DateTime?> lastSyncTime = const Value.absent(),
+                Value<int> pendingChanges = const Value.absent(),
+              }) => SyncMetadataCompanion(
+                id: id,
+                lastSyncVersion: lastSyncVersion,
+                lastSyncTime: lastSyncTime,
+                pendingChanges: pendingChanges,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> lastSyncVersion = const Value.absent(),
+                Value<DateTime?> lastSyncTime = const Value.absent(),
+                Value<int> pendingChanges = const Value.absent(),
+              }) => SyncMetadataCompanion.insert(
+                id: id,
+                lastSyncVersion: lastSyncVersion,
+                lastSyncTime: lastSyncTime,
+                pendingChanges: pendingChanges,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SyncMetadataTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SyncMetadataTable,
+      SyncMetadataData,
+      $$SyncMetadataTableFilterComposer,
+      $$SyncMetadataTableOrderingComposer,
+      $$SyncMetadataTableAnnotationComposer,
+      $$SyncMetadataTableCreateCompanionBuilder,
+      $$SyncMetadataTableUpdateCompanionBuilder,
+      (
+        SyncMetadataData,
+        BaseReferences<_$AppDatabase, $SyncMetadataTable, SyncMetadataData>,
+      ),
+      SyncMetadataData,
       PrefetchHooks Function()
     >;
 
@@ -7760,4 +9704,8 @@ class $AppDatabaseManager {
         _db,
         _db.pinnedBuiltinTrainings,
       );
+  $$UsersTableTableManager get users =>
+      $$UsersTableTableManager(_db, _db.users);
+  $$SyncMetadataTableTableManager get syncMetadata =>
+      $$SyncMetadataTableTableManager(_db, _db.syncMetadata);
 }

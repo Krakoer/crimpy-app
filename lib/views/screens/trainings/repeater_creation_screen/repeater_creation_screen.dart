@@ -42,10 +42,10 @@ class _RepeaterCreationScreenState
     if (widget.originalTemplate != null) {
       _isEdit = true;
       _trainingNameController.text = widget.originalTemplate!.name;
-      _setNumberController.text =
-          widget.originalTemplate!.repeater!.sets.toString();
-      _repsNumberController.text =
-          widget.originalTemplate!.repeater!.repsBySet.toString();
+      _setNumberController.text = widget.originalTemplate!.repeater!.sets
+          .toString();
+      _repsNumberController.text = widget.originalTemplate!.repeater!.repsBySet
+          .toString();
       _trainingNameController.text = widget.originalTemplate!.name;
       rest = Duration(seconds: widget.originalTemplate!.repeater!.restTime);
       worktime = Duration(seconds: widget.originalTemplate!.repeater!.workTime);
@@ -125,23 +125,22 @@ class _RepeaterCreationScreenState
   ) {
     showCupertinoModalPopup<void>(
       context: context,
-      builder:
-          (BuildContext context) => Container(
-            height: 216,
-            padding: const EdgeInsets.only(top: 6.0),
-            margin: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-            ),
-            color: CupertinoColors.systemBackground.resolveFrom(context),
-            child: SafeArea(
-              top: false,
-              child: CupertinoTimerPicker(
-                onTimerDurationChanged: onChange,
-                mode: CupertinoTimerPickerMode.ms,
-                initialTimerDuration: initDur,
-              ),
-            ),
+      builder: (BuildContext context) => Container(
+        height: 216,
+        padding: const EdgeInsets.only(top: 6.0),
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        child: SafeArea(
+          top: false,
+          child: CupertinoTimerPicker(
+            onTimerDurationChanged: onChange,
+            mode: CupertinoTimerPickerMode.ms,
+            initialTimerDuration: initDur,
           ),
+        ),
+      ),
     );
   }
 
@@ -356,18 +355,15 @@ class _RepeaterCreationScreenState
                   worktime: worktime,
                   rest: rest,
                   setRest: setRest,
-                  onWorktimeChanged:
-                      (newDur) => setState(() {
-                        worktime = newDur;
-                      }),
-                  onRestChanged:
-                      (newDur) => setState(() {
-                        rest = newDur;
-                      }),
-                  onSetRestChanged:
-                      (newDur) => setState(() {
-                        setRest = newDur;
-                      }),
+                  onWorktimeChanged: (newDur) => setState(() {
+                    worktime = newDur;
+                  }),
+                  onRestChanged: (newDur) => setState(() {
+                    rest = newDur;
+                  }),
+                  onSetRestChanged: (newDur) => setState(() {
+                    setRest = newDur;
+                  }),
                   showDurationPicker: _showDurationPicker,
                 ),
                 const SizedBox(height: 20),
@@ -384,10 +380,9 @@ class _RepeaterCreationScreenState
                     Expanded(
                       child: SplitHandToggle(
                         value: _splitHand,
-                        onChanged:
-                            (newVal) => setState(() {
-                              _splitHand = newVal;
-                            }),
+                        onChanged: (newVal) => setState(() {
+                          _splitHand = newVal;
+                        }),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -426,13 +421,12 @@ class _RepeaterCreationScreenState
                             vertical: 8,
                           ),
                         ),
-                        items:
-                            GripPosition.values.map((position) {
-                              return DropdownMenuItem(
-                                value: position,
-                                child: Text(position.displayName),
-                              );
-                            }).toList(),
+                        items: GripPosition.values.map((position) {
+                          return DropdownMenuItem(
+                            value: position,
+                            child: Text(position.displayName),
+                          );
+                        }).toList(),
                         onChanged: (newValue) {
                           if (newValue != null) {
                             setState(() {
