@@ -40,36 +40,6 @@ class WhatsNewDialog extends ConsumerWidget {
               '📅 Calendar View',
               'Navigate your training sessions with the new calendar view and prev/next week buttons',
             ),
-            _buildFeatureItem(
-              context,
-              '📊 Waveform Visualization',
-              'See waveform visualization for repeater trainings to better understand your performance',
-            ),
-            _buildFeatureItem(
-              context,
-              '⚡ Preparation Reps',
-              'Trainings now include preparation reps at the start with clear PREPARATION text',
-            ),
-            _buildFeatureItem(
-              context,
-              '📱 Enhanced Navigation',
-              'Smoother navigation with swipe support and removed animation lag',
-            ),
-            _buildFeatureItem(
-              context,
-              '🐛 Bug Reporter',
-              'Easily report bugs and send feedback directly from the settings screen',
-            ),
-            _buildFeatureItem(
-              context,
-              '✏️ Edit Session Times',
-              'Set custom times when logging sessions and edit them later',
-            ),
-            _buildFeatureItem(
-              context,
-              '🗑️ Delete Sessions',
-              'Added ability to delete sessions you no longer need',
-            ),
             const SizedBox(height: 8),
             Text(
               'Thank you for using Crimpy!',
