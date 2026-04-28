@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:crimpy/database/database.steps.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
@@ -9,6 +8,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
@@ -1095,139 +1095,22 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+    beforeOpen: (openingDetails) async {
+      if (kDebugMode) {
+        final m = createMigrator();
+        for (final table in allTables) {
+          await m.deleteTable(table.actualTableName);
+          await m.createTable(table);
+        }
+      }
+    },
     onCreate: (Migrator m) async {
       await m.createAll();
     },
-    onUpgrade: stepByStep(
-      from1To2: (m, schema) async {
-        await m.createTable(schema.users);
-        await m.createTable(schema.syncMetadata);
-      },
-      from2To3: (m, schema) async {
-        await m.addColumn(schema.sessions, schema.sessions.createdAt);
-        await m.addColumn(schema.assessments, schema.assessments.createdAt);
-        await m.addColumn(schema.repDatas, schema.repDatas.createdAt);
-        await m.addColumn(
-          schema.builtinTrainingWeights,
-          schema.builtinTrainingWeights.createdAt,
-        );
-        await m.addColumn(schema.sensorConfigs, schema.sensorConfigs.createdAt);
-        await m.addColumn(schema.repTemplates, schema.repTemplates.createdAt);
-        await m.addColumn(schema.trainings, schema.trainings.createdAt);
-        await m.addColumn(schema.repeaters, schema.repeaters.createdAt);
-        await m.addColumn(
-          schema.pinnedBuiltinTrainings,
-          schema.pinnedBuiltinTrainings.createdAt,
-        );
-      },
-      from3To4: (m, schema) async {
-        await m.alterTable(
-          TableMigration(
-            schema.sessions,
-            columnTransformer: {
-              sessions.id: Schema3(database: m.database).sessions.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.assessments,
-            columnTransformer: {
-              sessions.id: Schema3(database: m.database).sessions.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.trainings,
-            columnTransformer: {
-              trainings.id: Schema3(database: m.database).trainings.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.repDatas,
-            columnTransformer: {
-              repDatas.id: Schema3(database: m.database).repDatas.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.repeaters,
-            columnTransformer: {
-              repeaters.id: Schema3(database: m.database).repeaters.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.sensorConfigs,
-            columnTransformer: {
-              sensorConfigs.id: Schema3(
-                database: m.database,
-              ).sensorConfigs.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.repTemplates,
-            columnTransformer: {
-              repTemplates.id: Schema3(
-                database: m.database,
-              ).repTemplates.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.builtinTrainingWeights,
-            columnTransformer: {
-              builtinTrainingWeights.id: Schema3(
-                database: m.database,
-              ).builtinTrainingWeights.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.pinnedBuiltinTrainings,
-            columnTransformer: {
-              pinnedBuiltinTrainings.builtinTrainingId: Schema3(
-                database: m.database,
-              ).pinnedBuiltinTrainings.remoteId,
-            },
-          ),
-        );
-      },
-      from4To5: (m, schema) async {
-        await m.alterTable(TableMigration(schema.pinnedBuiltinTrainings));
-      },
-      from5To6: (m, schema) async {
-        await m.alterTable(TableMigration(schema.sessions));
-        await m.alterTable(TableMigration(schema.assessments));
-        await m.alterTable(TableMigration(schema.repeaters));
-        await m.alterTable(TableMigration(schema.trainings));
-        await m.alterTable(TableMigration(schema.repTemplates));
-        await m.alterTable(TableMigration(schema.repDatas));
-        await m.alterTable(TableMigration(schema.sensorConfigs));
-        await m.alterTable(TableMigration(schema.builtinTrainingWeights));
-        await m.addColumn(
-          schema.pinnedBuiltinTrainings,
-          schema.pinnedBuiltinTrainings.updatedAt,
-        );
-        await m.addColumn(
-          schema.pinnedBuiltinTrainings,
-          schema.pinnedBuiltinTrainings.deletedAt,
-        );
-      },
-    ),
   );
 }
 
