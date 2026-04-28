@@ -12,9 +12,9 @@ import 'package:crimpy/views/screens/home_screen/home_screen.dart';
 import 'package:crimpy/views/screens/settings_screen/settings_screen.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../viewmodels/ble_view_model.dart';
-// import '../viewmodels/app_info_view_model.dart';
+import '../viewmodels/app_info_view_model.dart';
 import 'widgets/ble/connection_dialog.dart';
-// import 'widgets/whats_new_dialog.dart';
+import 'widgets/whats_new_dialog.dart';
 
 class _NavItem extends StatelessWidget {
   final IconData icon;
@@ -84,7 +84,7 @@ class _MainPageState extends ConsumerState<MainPage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // _checkForUpdates();
+      _checkForUpdates();
       _syncOnStartup();
     });
   }
@@ -114,19 +114,19 @@ class _MainPageState extends ConsumerState<MainPage>
   }
 
   /// Check if the app has been updated and show the "What's New" dialog
-  // Future<void> _checkForUpdates() async {
-  //   final whatsNewManager = ref.read(whatsNewProvider);
-  //   final shouldShow = await whatsNewManager.shouldShowWhatsNew();
+  Future<void> _checkForUpdates() async {
+    final whatsNewManager = ref.read(whatsNewProvider);
+    final shouldShow = await whatsNewManager.shouldShowWhatsNew();
 
-  //   if (shouldShow && mounted) {
-  //     await showDialog(
-  //       context: context,
-  //       builder: (context) => const WhatsNewDialog(),
-  //     );
-  //     // Mark this version as seen
-  //     await whatsNewManager.markVersionSeen();
-  //   }
-  // }
+    if (shouldShow && mounted) {
+      await showDialog(
+        context: context,
+        builder: (context) => const WhatsNewDialog(),
+      );
+      // Mark this version as seen
+      await whatsNewManager.markVersionSeen();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

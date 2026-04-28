@@ -37,8 +37,13 @@ class WhatsNewDialog extends ConsumerWidget {
             const SizedBox(height: 16),
             _buildFeatureItem(
               context,
-              '📅 Calendar View',
-              'Navigate your training sessions with the new calendar view and prev/next week buttons',
+              'Backend sync',
+              'You can now create an account in the profile page and save your data on the cloud.',
+            ),
+            _buildFeatureItem(
+              context,
+              'Bug fixes',
+              'Many small UI bugs has been fixed.',
             ),
             const SizedBox(height: 8),
             Text(
