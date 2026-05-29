@@ -1,6 +1,4 @@
 import 'package:crimpy/models/ble_data_model.dart';
-import 'package:crimpy/viewmodels/auth_view_model.dart';
-import 'package:crimpy/viewmodels/sync_view_model.dart';
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/assessments_list_screen.dart';
 import 'package:crimpy/views/screens/profile_screen/profile_screen.dart';
 import 'package:crimpy/views/widgets/ble/tare_dialog.dart';
@@ -85,7 +83,6 @@ class _MainPageState extends ConsumerState<MainPage>
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkForUpdates();
-      _syncOnStartup();
     });
   }
 
@@ -94,23 +91,6 @@ class _MainPageState extends ConsumerState<MainPage>
     WidgetsBinding.instance.removeObserver(this);
     _pageViewController.dispose();
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      final user = ref.read(authStateProvider).asData?.value;
-      if (user != null) {
-        ref.read(syncViewModelProvider.notifier).performSyncSilently();
-      }
-    }
-  }
-
-  void _syncOnStartup() {
-    final user = ref.read(authStateProvider).asData?.value;
-    if (user != null) {
-      ref.read(syncViewModelProvider.notifier).performSyncSilently();
-    }
   }
 
   /// Check if the app has been updated and show the "What's New" dialog

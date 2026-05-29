@@ -4,7 +4,6 @@ import 'package:crimpy/logger.dart';
 import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/utils/dummy_data_generator.dart';
 import 'package:crimpy/viewmodels/app_info_view_model.dart';
-import 'package:crimpy/views/screens/settings_screen/widgets/sync_status_widget.dart';
 import 'package:crimpy/views/widgets/whats_new_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -67,7 +66,6 @@ class _DebugModalContent extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SyncStatusWidget(),
               const Divider(height: 24),
               _AppVersionSection(),
               const Divider(height: 24),

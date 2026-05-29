@@ -4,7 +4,6 @@ import 'package:crimpy/models/auth_models.dart' as auth_models;
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/auth_service.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
-import 'package:crimpy/viewmodels/sync_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -50,9 +49,6 @@ class AuthState extends _$AuthState {
 
       await _saveUserToDb(authResponse.user);
       ref.invalidateSelf();
-
-      final syncViewModel = ref.read(syncViewModelProvider.notifier);
-      await syncViewModel.handleFirstLogin();
 
       ref.invalidate(sessionsProvider);
       ref.invalidate(trainingsProvider);
@@ -149,9 +145,7 @@ class AuthState extends _$AuthState {
       final authService = ref.read(authServiceProvider);
       await authService.logout();
 
-      final syncRepository = ref.read(syncRepositoryProvider);
-      await syncRepository.wipeLocalDatabase();
-
+      await gDatabase.wipeLocalData();
       await gDatabase.deleteCurrentUser();
 
       ref.invalidate(sessionsProvider);

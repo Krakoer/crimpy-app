@@ -177,30 +177,6 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
-    'deleted_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
-  @override
-  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
-    'dirty',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("dirty" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -218,8 +194,6 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     repeaterSetRest,
     repeaterSplitHand,
     updatedAt,
-    deletedAt,
-    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -350,18 +324,6 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
-    if (data.containsKey('deleted_at')) {
-      context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
-      );
-    }
-    if (data.containsKey('dirty')) {
-      context.handle(
-        _dirtyMeta,
-        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
-      );
-    }
     return context;
   }
 
@@ -431,14 +393,6 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
-      dirty: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}dirty'],
-      )!,
     );
   }
 
@@ -464,8 +418,6 @@ class Session extends DataClass implements Insertable<Session> {
   final int? repeaterSetRest;
   final bool? repeaterSplitHand;
   final DateTime updatedAt;
-  final DateTime? deletedAt;
-  final bool dirty;
   const Session({
     required this.id,
     required this.name,
@@ -482,8 +434,6 @@ class Session extends DataClass implements Insertable<Session> {
     this.repeaterSetRest,
     this.repeaterSplitHand,
     required this.updatedAt,
-    this.deletedAt,
-    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -515,10 +465,6 @@ class Session extends DataClass implements Insertable<Session> {
       map['repeater_split_hand'] = Variable<bool>(repeaterSplitHand);
     }
     map['updated_at'] = Variable<DateTime>(updatedAt);
-    if (!nullToAbsent || deletedAt != null) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt);
-    }
-    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -551,10 +497,6 @@ class Session extends DataClass implements Insertable<Session> {
           ? const Value.absent()
           : Value(repeaterSplitHand),
       updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
-      dirty: Value(dirty),
     );
   }
 
@@ -579,8 +521,6 @@ class Session extends DataClass implements Insertable<Session> {
       repeaterSetRest: serializer.fromJson<int?>(json['repeaterSetRest']),
       repeaterSplitHand: serializer.fromJson<bool?>(json['repeaterSplitHand']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
-      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
@@ -602,8 +542,6 @@ class Session extends DataClass implements Insertable<Session> {
       'repeaterSetRest': serializer.toJson<int?>(repeaterSetRest),
       'repeaterSplitHand': serializer.toJson<bool?>(repeaterSplitHand),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
-      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
@@ -623,8 +561,6 @@ class Session extends DataClass implements Insertable<Session> {
     Value<int?> repeaterSetRest = const Value.absent(),
     Value<bool?> repeaterSplitHand = const Value.absent(),
     DateTime? updatedAt,
-    Value<DateTime?> deletedAt = const Value.absent(),
-    bool? dirty,
   }) => Session(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -649,8 +585,6 @@ class Session extends DataClass implements Insertable<Session> {
         ? repeaterSplitHand.value
         : this.repeaterSplitHand,
     updatedAt: updatedAt ?? this.updatedAt,
-    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
-    dirty: dirty ?? this.dirty,
   );
   Session copyWithCompanion(SessionsCompanion data) {
     return Session(
@@ -685,8 +619,6 @@ class Session extends DataClass implements Insertable<Session> {
           ? data.repeaterSplitHand.value
           : this.repeaterSplitHand,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
-      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -707,9 +639,7 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('repeaterRestTime: $repeaterRestTime, ')
           ..write('repeaterSetRest: $repeaterSetRest, ')
           ..write('repeaterSplitHand: $repeaterSplitHand, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -731,8 +661,6 @@ class Session extends DataClass implements Insertable<Session> {
     repeaterSetRest,
     repeaterSplitHand,
     updatedAt,
-    deletedAt,
-    dirty,
   );
   @override
   bool operator ==(Object other) =>
@@ -752,9 +680,7 @@ class Session extends DataClass implements Insertable<Session> {
           other.repeaterRestTime == this.repeaterRestTime &&
           other.repeaterSetRest == this.repeaterSetRest &&
           other.repeaterSplitHand == this.repeaterSplitHand &&
-          other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty);
+          other.updatedAt == this.updatedAt);
 }
 
 class SessionsCompanion extends UpdateCompanion<Session> {
@@ -773,8 +699,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<int?> repeaterSetRest;
   final Value<bool?> repeaterSplitHand;
   final Value<DateTime> updatedAt;
-  final Value<DateTime?> deletedAt;
-  final Value<bool> dirty;
   final Value<int> rowid;
   const SessionsCompanion({
     this.id = const Value.absent(),
@@ -792,8 +716,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.repeaterSetRest = const Value.absent(),
     this.repeaterSplitHand = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SessionsCompanion.insert({
@@ -812,8 +734,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.repeaterSetRest = const Value.absent(),
     this.repeaterSplitHand = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : name = Value(name),
        notes = Value(notes),
@@ -834,8 +754,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<int>? repeaterSetRest,
     Expression<bool>? repeaterSplitHand,
     Expression<DateTime>? updatedAt,
-    Expression<DateTime>? deletedAt,
-    Expression<bool>? dirty,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -854,8 +772,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (repeaterSetRest != null) 'repeater_set_rest': repeaterSetRest,
       if (repeaterSplitHand != null) 'repeater_split_hand': repeaterSplitHand,
       if (updatedAt != null) 'updated_at': updatedAt,
-      if (deletedAt != null) 'deleted_at': deletedAt,
-      if (dirty != null) 'dirty': dirty,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -876,8 +792,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<int?>? repeaterSetRest,
     Value<bool?>? repeaterSplitHand,
     Value<DateTime>? updatedAt,
-    Value<DateTime?>? deletedAt,
-    Value<bool>? dirty,
     Value<int>? rowid,
   }) {
     return SessionsCompanion(
@@ -896,8 +810,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       repeaterSetRest: repeaterSetRest ?? this.repeaterSetRest,
       repeaterSplitHand: repeaterSplitHand ?? this.repeaterSplitHand,
       updatedAt: updatedAt ?? this.updatedAt,
-      deletedAt: deletedAt ?? this.deletedAt,
-      dirty: dirty ?? this.dirty,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -950,12 +862,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
-    if (deletedAt.present) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
-    }
-    if (dirty.present) {
-      map['dirty'] = Variable<bool>(dirty.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -980,8 +886,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('repeaterSetRest: $repeaterSetRest, ')
           ..write('repeaterSplitHand: $repeaterSplitHand, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1070,30 +974,6 @@ class $AssessmentsTable extends Assessments
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
-    'deleted_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
-  @override
-  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
-    'dirty',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("dirty" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1103,8 +983,6 @@ class $AssessmentsTable extends Assessments
     sessionId,
     gripPosition,
     updatedAt,
-    deletedAt,
-    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1164,18 +1042,6 @@ class $AssessmentsTable extends Assessments
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
-    if (data.containsKey('deleted_at')) {
-      context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
-      );
-    }
-    if (data.containsKey('dirty')) {
-      context.handle(
-        _dirtyMeta,
-        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
-      );
-    }
     return context;
   }
 
@@ -1213,14 +1079,6 @@ class $AssessmentsTable extends Assessments
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
-      dirty: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}dirty'],
-      )!,
     );
   }
 
@@ -1238,8 +1096,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
   final String sessionId;
   final int? gripPosition;
   final DateTime updatedAt;
-  final DateTime? deletedAt;
-  final bool dirty;
   const Assessment({
     required this.id,
     required this.type,
@@ -1248,8 +1104,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     required this.sessionId,
     this.gripPosition,
     required this.updatedAt,
-    this.deletedAt,
-    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1267,10 +1121,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       map['grip_position'] = Variable<int>(gripPosition);
     }
     map['updated_at'] = Variable<DateTime>(updatedAt);
-    if (!nullToAbsent || deletedAt != null) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt);
-    }
-    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -1289,10 +1139,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           ? const Value.absent()
           : Value(gripPosition),
       updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
-      dirty: Value(dirty),
     );
   }
 
@@ -1309,8 +1155,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       sessionId: serializer.fromJson<String>(json['sessionId']),
       gripPosition: serializer.fromJson<int?>(json['gripPosition']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
-      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
@@ -1324,8 +1168,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       'sessionId': serializer.toJson<String>(sessionId),
       'gripPosition': serializer.toJson<int?>(gripPosition),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
-      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
@@ -1337,8 +1179,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     String? sessionId,
     Value<int?> gripPosition = const Value.absent(),
     DateTime? updatedAt,
-    Value<DateTime?> deletedAt = const Value.absent(),
-    bool? dirty,
   }) => Assessment(
     id: id ?? this.id,
     type: type ?? this.type,
@@ -1347,8 +1187,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     sessionId: sessionId ?? this.sessionId,
     gripPosition: gripPosition.present ? gripPosition.value : this.gripPosition,
     updatedAt: updatedAt ?? this.updatedAt,
-    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
-    dirty: dirty ?? this.dirty,
   );
   Assessment copyWithCompanion(AssessmentsCompanion data) {
     return Assessment(
@@ -1363,8 +1201,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           ? data.gripPosition.value
           : this.gripPosition,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
-      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -1377,9 +1213,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           ..write('leftValue: $leftValue, ')
           ..write('sessionId: $sessionId, ')
           ..write('gripPosition: $gripPosition, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -1393,8 +1227,6 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     sessionId,
     gripPosition,
     updatedAt,
-    deletedAt,
-    dirty,
   );
   @override
   bool operator ==(Object other) =>
@@ -1406,9 +1238,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           other.leftValue == this.leftValue &&
           other.sessionId == this.sessionId &&
           other.gripPosition == this.gripPosition &&
-          other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty);
+          other.updatedAt == this.updatedAt);
 }
 
 class AssessmentsCompanion extends UpdateCompanion<Assessment> {
@@ -1419,8 +1249,6 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
   final Value<String> sessionId;
   final Value<int?> gripPosition;
   final Value<DateTime> updatedAt;
-  final Value<DateTime?> deletedAt;
-  final Value<bool> dirty;
   final Value<int> rowid;
   const AssessmentsCompanion({
     this.id = const Value.absent(),
@@ -1430,8 +1258,6 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     this.sessionId = const Value.absent(),
     this.gripPosition = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AssessmentsCompanion.insert({
@@ -1442,8 +1268,6 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     required String sessionId,
     this.gripPosition = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : type = Value(type),
        sessionId = Value(sessionId);
@@ -1455,8 +1279,6 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     Expression<String>? sessionId,
     Expression<int>? gripPosition,
     Expression<DateTime>? updatedAt,
-    Expression<DateTime>? deletedAt,
-    Expression<bool>? dirty,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1467,8 +1289,6 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
       if (sessionId != null) 'session_id': sessionId,
       if (gripPosition != null) 'grip_position': gripPosition,
       if (updatedAt != null) 'updated_at': updatedAt,
-      if (deletedAt != null) 'deleted_at': deletedAt,
-      if (dirty != null) 'dirty': dirty,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1481,8 +1301,6 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     Value<String>? sessionId,
     Value<int?>? gripPosition,
     Value<DateTime>? updatedAt,
-    Value<DateTime?>? deletedAt,
-    Value<bool>? dirty,
     Value<int>? rowid,
   }) {
     return AssessmentsCompanion(
@@ -1493,8 +1311,6 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
       sessionId: sessionId ?? this.sessionId,
       gripPosition: gripPosition ?? this.gripPosition,
       updatedAt: updatedAt ?? this.updatedAt,
-      deletedAt: deletedAt ?? this.deletedAt,
-      dirty: dirty ?? this.dirty,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1523,12 +1339,6 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
-    if (deletedAt.present) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
-    }
-    if (dirty.present) {
-      map['dirty'] = Variable<bool>(dirty.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1545,8 +1355,6 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
           ..write('sessionId: $sessionId, ')
           ..write('gripPosition: $gripPosition, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1681,30 +1489,6 @@ class $RepeatersTable extends Repeaters
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
-    'deleted_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
-  @override
-  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
-    'dirty',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("dirty" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1718,8 +1502,6 @@ class $RepeatersTable extends Repeaters
     splitHand,
     gripPosition,
     updatedAt,
-    deletedAt,
-    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1817,18 +1599,6 @@ class $RepeatersTable extends Repeaters
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
-    if (data.containsKey('deleted_at')) {
-      context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
-      );
-    }
-    if (data.containsKey('dirty')) {
-      context.handle(
-        _dirtyMeta,
-        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
-      );
-    }
     return context;
   }
 
@@ -1882,14 +1652,6 @@ class $RepeatersTable extends Repeaters
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
-      dirty: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}dirty'],
-      )!,
     );
   }
 
@@ -1911,8 +1673,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
   final bool splitHand;
   final int gripPosition;
   final DateTime updatedAt;
-  final DateTime? deletedAt;
-  final bool dirty;
   const Repeater({
     required this.id,
     required this.sets,
@@ -1925,8 +1685,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     required this.splitHand,
     required this.gripPosition,
     required this.updatedAt,
-    this.deletedAt,
-    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1946,10 +1704,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     map['split_hand'] = Variable<bool>(splitHand);
     map['grip_position'] = Variable<int>(gripPosition);
     map['updated_at'] = Variable<DateTime>(updatedAt);
-    if (!nullToAbsent || deletedAt != null) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt);
-    }
-    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -1970,10 +1724,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       splitHand: Value(splitHand),
       gripPosition: Value(gripPosition),
       updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
-      dirty: Value(dirty),
     );
   }
 
@@ -1996,8 +1746,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       splitHand: serializer.fromJson<bool>(json['splitHand']),
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
-      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
@@ -2015,8 +1763,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
       'splitHand': serializer.toJson<bool>(splitHand),
       'gripPosition': serializer.toJson<int>(gripPosition),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
-      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
@@ -2032,8 +1778,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     bool? splitHand,
     int? gripPosition,
     DateTime? updatedAt,
-    Value<DateTime?> deletedAt = const Value.absent(),
-    bool? dirty,
   }) => Repeater(
     id: id ?? this.id,
     sets: sets ?? this.sets,
@@ -2050,8 +1794,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     splitHand: splitHand ?? this.splitHand,
     gripPosition: gripPosition ?? this.gripPosition,
     updatedAt: updatedAt ?? this.updatedAt,
-    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
-    dirty: dirty ?? this.dirty,
   );
   Repeater copyWithCompanion(RepeatersCompanion data) {
     return Repeater(
@@ -2072,8 +1814,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
           ? data.gripPosition.value
           : this.gripPosition,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
-      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -2090,9 +1830,7 @@ class Repeater extends DataClass implements Insertable<Repeater> {
           ..write('targetWeigthLeft: $targetWeigthLeft, ')
           ..write('splitHand: $splitHand, ')
           ..write('gripPosition: $gripPosition, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -2110,8 +1848,6 @@ class Repeater extends DataClass implements Insertable<Repeater> {
     splitHand,
     gripPosition,
     updatedAt,
-    deletedAt,
-    dirty,
   );
   @override
   bool operator ==(Object other) =>
@@ -2127,9 +1863,7 @@ class Repeater extends DataClass implements Insertable<Repeater> {
           other.targetWeigthLeft == this.targetWeigthLeft &&
           other.splitHand == this.splitHand &&
           other.gripPosition == this.gripPosition &&
-          other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty);
+          other.updatedAt == this.updatedAt);
 }
 
 class RepeatersCompanion extends UpdateCompanion<Repeater> {
@@ -2144,8 +1878,6 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
   final Value<bool> splitHand;
   final Value<int> gripPosition;
   final Value<DateTime> updatedAt;
-  final Value<DateTime?> deletedAt;
-  final Value<bool> dirty;
   final Value<int> rowid;
   const RepeatersCompanion({
     this.id = const Value.absent(),
@@ -2159,8 +1891,6 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     this.splitHand = const Value.absent(),
     this.gripPosition = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RepeatersCompanion.insert({
@@ -2175,8 +1905,6 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     required bool splitHand,
     this.gripPosition = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : sets = Value(sets),
        reps = Value(reps),
@@ -2196,8 +1924,6 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     Expression<bool>? splitHand,
     Expression<int>? gripPosition,
     Expression<DateTime>? updatedAt,
-    Expression<DateTime>? deletedAt,
-    Expression<bool>? dirty,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2212,8 +1938,6 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
       if (splitHand != null) 'split_hand': splitHand,
       if (gripPosition != null) 'grip_position': gripPosition,
       if (updatedAt != null) 'updated_at': updatedAt,
-      if (deletedAt != null) 'deleted_at': deletedAt,
-      if (dirty != null) 'dirty': dirty,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2230,8 +1954,6 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     Value<bool>? splitHand,
     Value<int>? gripPosition,
     Value<DateTime>? updatedAt,
-    Value<DateTime?>? deletedAt,
-    Value<bool>? dirty,
     Value<int>? rowid,
   }) {
     return RepeatersCompanion(
@@ -2246,8 +1968,6 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
       splitHand: splitHand ?? this.splitHand,
       gripPosition: gripPosition ?? this.gripPosition,
       updatedAt: updatedAt ?? this.updatedAt,
-      deletedAt: deletedAt ?? this.deletedAt,
-      dirty: dirty ?? this.dirty,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2288,12 +2008,6 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
-    if (deletedAt.present) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
-    }
-    if (dirty.present) {
-      map['dirty'] = Variable<bool>(dirty.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2314,8 +2028,6 @@ class RepeatersCompanion extends UpdateCompanion<Repeater> {
           ..write('splitHand: $splitHand, ')
           ..write('gripPosition: $gripPosition, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2415,30 +2127,6 @@ class $TrainingsTable extends Trainings
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
-    'deleted_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
-  @override
-  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
-    'dirty',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("dirty" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2448,8 +2136,6 @@ class $TrainingsTable extends Trainings
     isFavorite,
     isAssessment,
     updatedAt,
-    deletedAt,
-    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2507,18 +2193,6 @@ class $TrainingsTable extends Trainings
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
-    if (data.containsKey('deleted_at')) {
-      context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
-      );
-    }
-    if (data.containsKey('dirty')) {
-      context.handle(
-        _dirtyMeta,
-        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
-      );
-    }
     return context;
   }
 
@@ -2556,14 +2230,6 @@ class $TrainingsTable extends Trainings
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
-      dirty: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}dirty'],
-      )!,
     );
   }
 
@@ -2581,8 +2247,6 @@ class Training extends DataClass implements Insertable<Training> {
   final bool isFavorite;
   final bool isAssessment;
   final DateTime updatedAt;
-  final DateTime? deletedAt;
-  final bool dirty;
   const Training({
     required this.id,
     required this.name,
@@ -2591,8 +2255,6 @@ class Training extends DataClass implements Insertable<Training> {
     required this.isFavorite,
     required this.isAssessment,
     required this.updatedAt,
-    this.deletedAt,
-    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2606,10 +2268,6 @@ class Training extends DataClass implements Insertable<Training> {
     map['is_favorite'] = Variable<bool>(isFavorite);
     map['is_assessment'] = Variable<bool>(isAssessment);
     map['updated_at'] = Variable<DateTime>(updatedAt);
-    if (!nullToAbsent || deletedAt != null) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt);
-    }
-    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -2624,10 +2282,6 @@ class Training extends DataClass implements Insertable<Training> {
       isFavorite: Value(isFavorite),
       isAssessment: Value(isAssessment),
       updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
-      dirty: Value(dirty),
     );
   }
 
@@ -2644,8 +2298,6 @@ class Training extends DataClass implements Insertable<Training> {
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       isAssessment: serializer.fromJson<bool>(json['isAssessment']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
-      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
@@ -2659,8 +2311,6 @@ class Training extends DataClass implements Insertable<Training> {
       'isFavorite': serializer.toJson<bool>(isFavorite),
       'isAssessment': serializer.toJson<bool>(isAssessment),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
-      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
@@ -2672,8 +2322,6 @@ class Training extends DataClass implements Insertable<Training> {
     bool? isFavorite,
     bool? isAssessment,
     DateTime? updatedAt,
-    Value<DateTime?> deletedAt = const Value.absent(),
-    bool? dirty,
   }) => Training(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -2682,8 +2330,6 @@ class Training extends DataClass implements Insertable<Training> {
     isFavorite: isFavorite ?? this.isFavorite,
     isAssessment: isAssessment ?? this.isAssessment,
     updatedAt: updatedAt ?? this.updatedAt,
-    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
-    dirty: dirty ?? this.dirty,
   );
   Training copyWithCompanion(TrainingsCompanion data) {
     return Training(
@@ -2700,8 +2346,6 @@ class Training extends DataClass implements Insertable<Training> {
           ? data.isAssessment.value
           : this.isAssessment,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
-      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -2714,9 +2358,7 @@ class Training extends DataClass implements Insertable<Training> {
           ..write('isBuiltin: $isBuiltin, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('isAssessment: $isAssessment, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -2730,8 +2372,6 @@ class Training extends DataClass implements Insertable<Training> {
     isFavorite,
     isAssessment,
     updatedAt,
-    deletedAt,
-    dirty,
   );
   @override
   bool operator ==(Object other) =>
@@ -2743,9 +2383,7 @@ class Training extends DataClass implements Insertable<Training> {
           other.isBuiltin == this.isBuiltin &&
           other.isFavorite == this.isFavorite &&
           other.isAssessment == this.isAssessment &&
-          other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty);
+          other.updatedAt == this.updatedAt);
 }
 
 class TrainingsCompanion extends UpdateCompanion<Training> {
@@ -2756,8 +2394,6 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
   final Value<bool> isFavorite;
   final Value<bool> isAssessment;
   final Value<DateTime> updatedAt;
-  final Value<DateTime?> deletedAt;
-  final Value<bool> dirty;
   final Value<int> rowid;
   const TrainingsCompanion({
     this.id = const Value.absent(),
@@ -2767,8 +2403,6 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     this.isFavorite = const Value.absent(),
     this.isAssessment = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TrainingsCompanion.insert({
@@ -2779,8 +2413,6 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     this.isFavorite = const Value.absent(),
     this.isAssessment = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Training> custom({
@@ -2791,8 +2423,6 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     Expression<bool>? isFavorite,
     Expression<bool>? isAssessment,
     Expression<DateTime>? updatedAt,
-    Expression<DateTime>? deletedAt,
-    Expression<bool>? dirty,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2803,8 +2433,6 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
       if (isFavorite != null) 'is_favorite': isFavorite,
       if (isAssessment != null) 'is_assessment': isAssessment,
       if (updatedAt != null) 'updated_at': updatedAt,
-      if (deletedAt != null) 'deleted_at': deletedAt,
-      if (dirty != null) 'dirty': dirty,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2817,8 +2445,6 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     Value<bool>? isFavorite,
     Value<bool>? isAssessment,
     Value<DateTime>? updatedAt,
-    Value<DateTime?>? deletedAt,
-    Value<bool>? dirty,
     Value<int>? rowid,
   }) {
     return TrainingsCompanion(
@@ -2829,8 +2455,6 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
       isFavorite: isFavorite ?? this.isFavorite,
       isAssessment: isAssessment ?? this.isAssessment,
       updatedAt: updatedAt ?? this.updatedAt,
-      deletedAt: deletedAt ?? this.deletedAt,
-      dirty: dirty ?? this.dirty,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2859,12 +2483,6 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
-    if (deletedAt.present) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
-    }
-    if (dirty.present) {
-      map['dirty'] = Variable<bool>(dirty.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2881,8 +2499,6 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
           ..write('isFavorite: $isFavorite, ')
           ..write('isAssessment: $isAssessment, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2997,30 +2613,6 @@ class $RepTemplatesTable extends RepTemplates
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
-    'deleted_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
-  @override
-  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
-    'dirty',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("dirty" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3032,8 +2624,6 @@ class $RepTemplatesTable extends RepTemplates
     index,
     gripPosition,
     updatedAt,
-    deletedAt,
-    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3116,18 +2706,6 @@ class $RepTemplatesTable extends RepTemplates
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
-    if (data.containsKey('deleted_at')) {
-      context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
-      );
-    }
-    if (data.containsKey('dirty')) {
-      context.handle(
-        _dirtyMeta,
-        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
-      );
-    }
     return context;
   }
 
@@ -3173,14 +2751,6 @@ class $RepTemplatesTable extends RepTemplates
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
-      dirty: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}dirty'],
-      )!,
     );
   }
 
@@ -3200,8 +2770,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
   final int index;
   final int gripPosition;
   final DateTime updatedAt;
-  final DateTime? deletedAt;
-  final bool dirty;
   const RepTemplate({
     required this.id,
     required this.isRest,
@@ -3212,8 +2780,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     required this.index,
     required this.gripPosition,
     required this.updatedAt,
-    this.deletedAt,
-    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3227,10 +2793,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     map['index'] = Variable<int>(index);
     map['grip_position'] = Variable<int>(gripPosition);
     map['updated_at'] = Variable<DateTime>(updatedAt);
-    if (!nullToAbsent || deletedAt != null) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt);
-    }
-    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -3245,10 +2807,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       index: Value(index),
       gripPosition: Value(gripPosition),
       updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
-      dirty: Value(dirty),
     );
   }
 
@@ -3267,8 +2825,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       index: serializer.fromJson<int>(json['index']),
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
-      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
@@ -3284,8 +2840,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
       'index': serializer.toJson<int>(index),
       'gripPosition': serializer.toJson<int>(gripPosition),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
-      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
@@ -3299,8 +2853,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     int? index,
     int? gripPosition,
     DateTime? updatedAt,
-    Value<DateTime?> deletedAt = const Value.absent(),
-    bool? dirty,
   }) => RepTemplate(
     id: id ?? this.id,
     isRest: isRest ?? this.isRest,
@@ -3311,8 +2863,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     index: index ?? this.index,
     gripPosition: gripPosition ?? this.gripPosition,
     updatedAt: updatedAt ?? this.updatedAt,
-    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
-    dirty: dirty ?? this.dirty,
   );
   RepTemplate copyWithCompanion(RepTemplatesCompanion data) {
     return RepTemplate(
@@ -3331,8 +2881,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
           ? data.gripPosition.value
           : this.gripPosition,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
-      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -3347,9 +2895,7 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
           ..write('gripPosition: $gripPosition, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -3365,8 +2911,6 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     index,
     gripPosition,
     updatedAt,
-    deletedAt,
-    dirty,
   );
   @override
   bool operator ==(Object other) =>
@@ -3380,9 +2924,7 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
           other.targetWeight == this.targetWeight &&
           other.index == this.index &&
           other.gripPosition == this.gripPosition &&
-          other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty);
+          other.updatedAt == this.updatedAt);
 }
 
 class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
@@ -3395,8 +2937,6 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
   final Value<int> index;
   final Value<int> gripPosition;
   final Value<DateTime> updatedAt;
-  final Value<DateTime?> deletedAt;
-  final Value<bool> dirty;
   final Value<int> rowid;
   const RepTemplatesCompanion({
     this.id = const Value.absent(),
@@ -3408,8 +2948,6 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     this.index = const Value.absent(),
     this.gripPosition = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RepTemplatesCompanion.insert({
@@ -3422,8 +2960,6 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     required int index,
     this.gripPosition = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : isRest = Value(isRest),
        rightHand = Value(rightHand),
@@ -3441,8 +2977,6 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     Expression<int>? index,
     Expression<int>? gripPosition,
     Expression<DateTime>? updatedAt,
-    Expression<DateTime>? deletedAt,
-    Expression<bool>? dirty,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3455,8 +2989,6 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
       if (index != null) 'index': index,
       if (gripPosition != null) 'grip_position': gripPosition,
       if (updatedAt != null) 'updated_at': updatedAt,
-      if (deletedAt != null) 'deleted_at': deletedAt,
-      if (dirty != null) 'dirty': dirty,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3471,8 +3003,6 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     Value<int>? index,
     Value<int>? gripPosition,
     Value<DateTime>? updatedAt,
-    Value<DateTime?>? deletedAt,
-    Value<bool>? dirty,
     Value<int>? rowid,
   }) {
     return RepTemplatesCompanion(
@@ -3485,8 +3015,6 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
       index: index ?? this.index,
       gripPosition: gripPosition ?? this.gripPosition,
       updatedAt: updatedAt ?? this.updatedAt,
-      deletedAt: deletedAt ?? this.deletedAt,
-      dirty: dirty ?? this.dirty,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3521,12 +3049,6 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
-    if (deletedAt.present) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
-    }
-    if (dirty.present) {
-      map['dirty'] = Variable<bool>(dirty.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3545,8 +3067,6 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
           ..write('index: $index, ')
           ..write('gripPosition: $gripPosition, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3671,30 +3191,6 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
-    'deleted_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
-  @override
-  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
-    'dirty',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("dirty" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3707,8 +3203,6 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     index,
     gripPosition,
     updatedAt,
-    deletedAt,
-    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3802,18 +3296,6 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
-    if (data.containsKey('deleted_at')) {
-      context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
-      );
-    }
-    if (data.containsKey('dirty')) {
-      context.handle(
-        _dirtyMeta,
-        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
-      );
-    }
     return context;
   }
 
@@ -3863,14 +3345,6 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
-      dirty: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}dirty'],
-      )!,
     );
   }
 
@@ -3891,8 +3365,6 @@ class RepData extends DataClass implements Insertable<RepData> {
   final int index;
   final int gripPosition;
   final DateTime updatedAt;
-  final DateTime? deletedAt;
-  final bool dirty;
   const RepData({
     required this.id,
     required this.averageWeight,
@@ -3904,8 +3376,6 @@ class RepData extends DataClass implements Insertable<RepData> {
     required this.index,
     required this.gripPosition,
     required this.updatedAt,
-    this.deletedAt,
-    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3920,10 +3390,6 @@ class RepData extends DataClass implements Insertable<RepData> {
     map['index'] = Variable<int>(index);
     map['grip_position'] = Variable<int>(gripPosition);
     map['updated_at'] = Variable<DateTime>(updatedAt);
-    if (!nullToAbsent || deletedAt != null) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt);
-    }
-    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -3939,10 +3405,6 @@ class RepData extends DataClass implements Insertable<RepData> {
       index: Value(index),
       gripPosition: Value(gripPosition),
       updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
-      dirty: Value(dirty),
     );
   }
 
@@ -3962,8 +3424,6 @@ class RepData extends DataClass implements Insertable<RepData> {
       index: serializer.fromJson<int>(json['index']),
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
-      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
@@ -3980,8 +3440,6 @@ class RepData extends DataClass implements Insertable<RepData> {
       'index': serializer.toJson<int>(index),
       'gripPosition': serializer.toJson<int>(gripPosition),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
-      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
@@ -3996,8 +3454,6 @@ class RepData extends DataClass implements Insertable<RepData> {
     int? index,
     int? gripPosition,
     DateTime? updatedAt,
-    Value<DateTime?> deletedAt = const Value.absent(),
-    bool? dirty,
   }) => RepData(
     id: id ?? this.id,
     averageWeight: averageWeight ?? this.averageWeight,
@@ -4009,8 +3465,6 @@ class RepData extends DataClass implements Insertable<RepData> {
     index: index ?? this.index,
     gripPosition: gripPosition ?? this.gripPosition,
     updatedAt: updatedAt ?? this.updatedAt,
-    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
-    dirty: dirty ?? this.dirty,
   );
   RepData copyWithCompanion(RepDatasCompanion data) {
     return RepData(
@@ -4030,8 +3484,6 @@ class RepData extends DataClass implements Insertable<RepData> {
           ? data.gripPosition.value
           : this.gripPosition,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
-      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -4047,9 +3499,7 @@ class RepData extends DataClass implements Insertable<RepData> {
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
           ..write('gripPosition: $gripPosition, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -4066,8 +3516,6 @@ class RepData extends DataClass implements Insertable<RepData> {
     index,
     gripPosition,
     updatedAt,
-    deletedAt,
-    dirty,
   );
   @override
   bool operator ==(Object other) =>
@@ -4082,9 +3530,7 @@ class RepData extends DataClass implements Insertable<RepData> {
           other.targetWeight == this.targetWeight &&
           other.index == this.index &&
           other.gripPosition == this.gripPosition &&
-          other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty);
+          other.updatedAt == this.updatedAt);
 }
 
 class RepDatasCompanion extends UpdateCompanion<RepData> {
@@ -4098,8 +3544,6 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
   final Value<int> index;
   final Value<int> gripPosition;
   final Value<DateTime> updatedAt;
-  final Value<DateTime?> deletedAt;
-  final Value<bool> dirty;
   final Value<int> rowid;
   const RepDatasCompanion({
     this.id = const Value.absent(),
@@ -4112,8 +3556,6 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     this.index = const Value.absent(),
     this.gripPosition = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RepDatasCompanion.insert({
@@ -4127,8 +3569,6 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     required int index,
     this.gripPosition = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : averageWeight = Value(averageWeight),
        sessionId = Value(sessionId),
@@ -4148,8 +3588,6 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     Expression<int>? index,
     Expression<int>? gripPosition,
     Expression<DateTime>? updatedAt,
-    Expression<DateTime>? deletedAt,
-    Expression<bool>? dirty,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4163,8 +3601,6 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       if (index != null) 'index': index,
       if (gripPosition != null) 'grip_position': gripPosition,
       if (updatedAt != null) 'updated_at': updatedAt,
-      if (deletedAt != null) 'deleted_at': deletedAt,
-      if (dirty != null) 'dirty': dirty,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4180,8 +3616,6 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     Value<int>? index,
     Value<int>? gripPosition,
     Value<DateTime>? updatedAt,
-    Value<DateTime?>? deletedAt,
-    Value<bool>? dirty,
     Value<int>? rowid,
   }) {
     return RepDatasCompanion(
@@ -4195,8 +3629,6 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       index: index ?? this.index,
       gripPosition: gripPosition ?? this.gripPosition,
       updatedAt: updatedAt ?? this.updatedAt,
-      deletedAt: deletedAt ?? this.deletedAt,
-      dirty: dirty ?? this.dirty,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4234,12 +3666,6 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
-    if (deletedAt.present) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
-    }
-    if (dirty.present) {
-      map['dirty'] = Variable<bool>(dirty.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4259,8 +3685,6 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
           ..write('index: $index, ')
           ..write('gripPosition: $gripPosition, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4331,30 +3755,6 @@ class $SensorConfigsTable extends SensorConfigs
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
-    'deleted_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
-  @override
-  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
-    'dirty',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("dirty" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4363,8 +3763,6 @@ class $SensorConfigsTable extends SensorConfigs
     tare,
     coef,
     updatedAt,
-    deletedAt,
-    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4419,18 +3817,6 @@ class $SensorConfigsTable extends SensorConfigs
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
-    if (data.containsKey('deleted_at')) {
-      context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
-      );
-    }
-    if (data.containsKey('dirty')) {
-      context.handle(
-        _dirtyMeta,
-        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
-      );
-    }
     return context;
   }
 
@@ -4464,14 +3850,6 @@ class $SensorConfigsTable extends SensorConfigs
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
-      dirty: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}dirty'],
-      )!,
     );
   }
 
@@ -4488,8 +3866,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
   final double tare;
   final double coef;
   final DateTime updatedAt;
-  final DateTime? deletedAt;
-  final bool dirty;
   const SensorConfig({
     required this.id,
     required this.name,
@@ -4497,8 +3873,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
     required this.tare,
     required this.coef,
     required this.updatedAt,
-    this.deletedAt,
-    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4509,10 +3883,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
     map['tare'] = Variable<double>(tare);
     map['coef'] = Variable<double>(coef);
     map['updated_at'] = Variable<DateTime>(updatedAt);
-    if (!nullToAbsent || deletedAt != null) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt);
-    }
-    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -4524,10 +3894,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       tare: Value(tare),
       coef: Value(coef),
       updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
-      dirty: Value(dirty),
     );
   }
 
@@ -4543,8 +3909,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       tare: serializer.fromJson<double>(json['tare']),
       coef: serializer.fromJson<double>(json['coef']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
-      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
@@ -4557,8 +3921,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       'tare': serializer.toJson<double>(tare),
       'coef': serializer.toJson<double>(coef),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
-      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
@@ -4569,8 +3931,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
     double? tare,
     double? coef,
     DateTime? updatedAt,
-    Value<DateTime?> deletedAt = const Value.absent(),
-    bool? dirty,
   }) => SensorConfig(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -4578,8 +3938,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
     tare: tare ?? this.tare,
     coef: coef ?? this.coef,
     updatedAt: updatedAt ?? this.updatedAt,
-    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
-    dirty: dirty ?? this.dirty,
   );
   SensorConfig copyWithCompanion(SensorConfigsCompanion data) {
     return SensorConfig(
@@ -4589,8 +3947,6 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
       tare: data.tare.present ? data.tare.value : this.tare,
       coef: data.coef.present ? data.coef.value : this.coef,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
-      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -4602,16 +3958,13 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
           ..write('index: $index, ')
           ..write('tare: $tare, ')
           ..write('coef: $coef, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, index, tare, coef, updatedAt, deletedAt, dirty);
+  int get hashCode => Object.hash(id, name, index, tare, coef, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4621,9 +3974,7 @@ class SensorConfig extends DataClass implements Insertable<SensorConfig> {
           other.index == this.index &&
           other.tare == this.tare &&
           other.coef == this.coef &&
-          other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty);
+          other.updatedAt == this.updatedAt);
 }
 
 class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
@@ -4633,8 +3984,6 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
   final Value<double> tare;
   final Value<double> coef;
   final Value<DateTime> updatedAt;
-  final Value<DateTime?> deletedAt;
-  final Value<bool> dirty;
   final Value<int> rowid;
   const SensorConfigsCompanion({
     this.id = const Value.absent(),
@@ -4643,8 +3992,6 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     this.tare = const Value.absent(),
     this.coef = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SensorConfigsCompanion.insert({
@@ -4654,8 +4001,6 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     required double tare,
     required double coef,
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : name = Value(name),
        index = Value(index),
@@ -4668,8 +4013,6 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     Expression<double>? tare,
     Expression<double>? coef,
     Expression<DateTime>? updatedAt,
-    Expression<DateTime>? deletedAt,
-    Expression<bool>? dirty,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4679,8 +4022,6 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
       if (tare != null) 'tare': tare,
       if (coef != null) 'coef': coef,
       if (updatedAt != null) 'updated_at': updatedAt,
-      if (deletedAt != null) 'deleted_at': deletedAt,
-      if (dirty != null) 'dirty': dirty,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4692,8 +4033,6 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     Value<double>? tare,
     Value<double>? coef,
     Value<DateTime>? updatedAt,
-    Value<DateTime?>? deletedAt,
-    Value<bool>? dirty,
     Value<int>? rowid,
   }) {
     return SensorConfigsCompanion(
@@ -4703,8 +4042,6 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
       tare: tare ?? this.tare,
       coef: coef ?? this.coef,
       updatedAt: updatedAt ?? this.updatedAt,
-      deletedAt: deletedAt ?? this.deletedAt,
-      dirty: dirty ?? this.dirty,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4730,12 +4067,6 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
-    if (deletedAt.present) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
-    }
-    if (dirty.present) {
-      map['dirty'] = Variable<bool>(dirty.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4751,8 +4082,6 @@ class SensorConfigsCompanion extends UpdateCompanion<SensorConfig> {
           ..write('tare: $tare, ')
           ..write('coef: $coef, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4822,30 +4151,6 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
-    'deleted_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
-  @override
-  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
-    'dirty',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("dirty" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4853,8 +4158,6 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
     customWeightRight,
     customWeightLeft,
     updatedAt,
-    deletedAt,
-    dirty,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4906,18 +4209,6 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
-    if (data.containsKey('deleted_at')) {
-      context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
-      );
-    }
-    if (data.containsKey('dirty')) {
-      context.handle(
-        _dirtyMeta,
-        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
-      );
-    }
     return context;
   }
 
@@ -4947,14 +4238,6 @@ class $BuiltinTrainingWeightsTable extends BuiltinTrainingWeights
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
-      dirty: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}dirty'],
-      )!,
     );
   }
 
@@ -4971,16 +4254,12 @@ class BuiltinTrainingWeight extends DataClass
   final double? customWeightRight;
   final double? customWeightLeft;
   final DateTime updatedAt;
-  final DateTime? deletedAt;
-  final bool dirty;
   const BuiltinTrainingWeight({
     required this.id,
     required this.builtinTrainingId,
     this.customWeightRight,
     this.customWeightLeft,
     required this.updatedAt,
-    this.deletedAt,
-    required this.dirty,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4994,10 +4273,6 @@ class BuiltinTrainingWeight extends DataClass
       map['custom_weight_left'] = Variable<double>(customWeightLeft);
     }
     map['updated_at'] = Variable<DateTime>(updatedAt);
-    if (!nullToAbsent || deletedAt != null) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt);
-    }
-    map['dirty'] = Variable<bool>(dirty);
     return map;
   }
 
@@ -5012,10 +4287,6 @@ class BuiltinTrainingWeight extends DataClass
           ? const Value.absent()
           : Value(customWeightLeft),
       updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
-      dirty: Value(dirty),
     );
   }
 
@@ -5032,8 +4303,6 @@ class BuiltinTrainingWeight extends DataClass
       ),
       customWeightLeft: serializer.fromJson<double?>(json['customWeightLeft']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
-      dirty: serializer.fromJson<bool>(json['dirty']),
     );
   }
   @override
@@ -5045,8 +4314,6 @@ class BuiltinTrainingWeight extends DataClass
       'customWeightRight': serializer.toJson<double?>(customWeightRight),
       'customWeightLeft': serializer.toJson<double?>(customWeightLeft),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
-      'dirty': serializer.toJson<bool>(dirty),
     };
   }
 
@@ -5056,8 +4323,6 @@ class BuiltinTrainingWeight extends DataClass
     Value<double?> customWeightRight = const Value.absent(),
     Value<double?> customWeightLeft = const Value.absent(),
     DateTime? updatedAt,
-    Value<DateTime?> deletedAt = const Value.absent(),
-    bool? dirty,
   }) => BuiltinTrainingWeight(
     id: id ?? this.id,
     builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
@@ -5068,8 +4333,6 @@ class BuiltinTrainingWeight extends DataClass
         ? customWeightLeft.value
         : this.customWeightLeft,
     updatedAt: updatedAt ?? this.updatedAt,
-    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
-    dirty: dirty ?? this.dirty,
   );
   BuiltinTrainingWeight copyWithCompanion(
     BuiltinTrainingWeightsCompanion data,
@@ -5086,8 +4349,6 @@ class BuiltinTrainingWeight extends DataClass
           ? data.customWeightLeft.value
           : this.customWeightLeft,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
-      dirty: data.dirty.present ? data.dirty.value : this.dirty,
     );
   }
 
@@ -5098,9 +4359,7 @@ class BuiltinTrainingWeight extends DataClass
           ..write('builtinTrainingId: $builtinTrainingId, ')
           ..write('customWeightRight: $customWeightRight, ')
           ..write('customWeightLeft: $customWeightLeft, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -5112,8 +4371,6 @@ class BuiltinTrainingWeight extends DataClass
     customWeightRight,
     customWeightLeft,
     updatedAt,
-    deletedAt,
-    dirty,
   );
   @override
   bool operator ==(Object other) =>
@@ -5123,9 +4380,7 @@ class BuiltinTrainingWeight extends DataClass
           other.builtinTrainingId == this.builtinTrainingId &&
           other.customWeightRight == this.customWeightRight &&
           other.customWeightLeft == this.customWeightLeft &&
-          other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt &&
-          other.dirty == this.dirty);
+          other.updatedAt == this.updatedAt);
 }
 
 class BuiltinTrainingWeightsCompanion
@@ -5135,8 +4390,6 @@ class BuiltinTrainingWeightsCompanion
   final Value<double?> customWeightRight;
   final Value<double?> customWeightLeft;
   final Value<DateTime> updatedAt;
-  final Value<DateTime?> deletedAt;
-  final Value<bool> dirty;
   final Value<int> rowid;
   const BuiltinTrainingWeightsCompanion({
     this.id = const Value.absent(),
@@ -5144,8 +4397,6 @@ class BuiltinTrainingWeightsCompanion
     this.customWeightRight = const Value.absent(),
     this.customWeightLeft = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   BuiltinTrainingWeightsCompanion.insert({
@@ -5154,8 +4405,6 @@ class BuiltinTrainingWeightsCompanion
     this.customWeightRight = const Value.absent(),
     this.customWeightLeft = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : builtinTrainingId = Value(builtinTrainingId);
   static Insertable<BuiltinTrainingWeight> custom({
@@ -5164,8 +4413,6 @@ class BuiltinTrainingWeightsCompanion
     Expression<double>? customWeightRight,
     Expression<double>? customWeightLeft,
     Expression<DateTime>? updatedAt,
-    Expression<DateTime>? deletedAt,
-    Expression<bool>? dirty,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5174,8 +4421,6 @@ class BuiltinTrainingWeightsCompanion
       if (customWeightRight != null) 'custom_weight_right': customWeightRight,
       if (customWeightLeft != null) 'custom_weight_left': customWeightLeft,
       if (updatedAt != null) 'updated_at': updatedAt,
-      if (deletedAt != null) 'deleted_at': deletedAt,
-      if (dirty != null) 'dirty': dirty,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5186,8 +4431,6 @@ class BuiltinTrainingWeightsCompanion
     Value<double?>? customWeightRight,
     Value<double?>? customWeightLeft,
     Value<DateTime>? updatedAt,
-    Value<DateTime?>? deletedAt,
-    Value<bool>? dirty,
     Value<int>? rowid,
   }) {
     return BuiltinTrainingWeightsCompanion(
@@ -5196,8 +4439,6 @@ class BuiltinTrainingWeightsCompanion
       customWeightRight: customWeightRight ?? this.customWeightRight,
       customWeightLeft: customWeightLeft ?? this.customWeightLeft,
       updatedAt: updatedAt ?? this.updatedAt,
-      deletedAt: deletedAt ?? this.deletedAt,
-      dirty: dirty ?? this.dirty,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5220,12 +4461,6 @@ class BuiltinTrainingWeightsCompanion
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
-    if (deletedAt.present) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
-    }
-    if (dirty.present) {
-      map['dirty'] = Variable<bool>(dirty.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5240,8 +4475,6 @@ class BuiltinTrainingWeightsCompanion
           ..write('customWeightRight: $customWeightRight, ')
           ..write('customWeightLeft: $customWeightLeft, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
-          ..write('dirty: $dirty, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5266,19 +4499,6 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
         type: DriftSqlType.string,
         requiredDuringInsert: true,
       );
-  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
-  @override
-  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
-    'dirty',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("dirty" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -5291,24 +4511,8 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
-    'deleted_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    builtinTrainingId,
-    dirty,
-    updatedAt,
-    deletedAt,
-  ];
+  List<GeneratedColumn> get $columns => [builtinTrainingId, updatedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -5332,22 +4536,10 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
     } else if (isInserting) {
       context.missing(_builtinTrainingIdMeta);
     }
-    if (data.containsKey('dirty')) {
-      context.handle(
-        _dirtyMeta,
-        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
-      );
-    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
         updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
-    if (data.containsKey('deleted_at')) {
-      context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
       );
     }
     return context;
@@ -5363,18 +4555,10 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
         DriftSqlType.string,
         data['${effectivePrefix}builtin_training_id'],
       )!,
-      dirty: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}dirty'],
-      )!,
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
       )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
     );
   }
 
@@ -5387,35 +4571,23 @@ class $PinnedBuiltinTrainingsTable extends PinnedBuiltinTrainings
 class PinnedBuiltinTraining extends DataClass
     implements Insertable<PinnedBuiltinTraining> {
   final String builtinTrainingId;
-  final bool dirty;
   final DateTime updatedAt;
-  final DateTime? deletedAt;
   const PinnedBuiltinTraining({
     required this.builtinTrainingId,
-    required this.dirty,
     required this.updatedAt,
-    this.deletedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['builtin_training_id'] = Variable<String>(builtinTrainingId);
-    map['dirty'] = Variable<bool>(dirty);
     map['updated_at'] = Variable<DateTime>(updatedAt);
-    if (!nullToAbsent || deletedAt != null) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt);
-    }
     return map;
   }
 
   PinnedBuiltinTrainingsCompanion toCompanion(bool nullToAbsent) {
     return PinnedBuiltinTrainingsCompanion(
       builtinTrainingId: Value(builtinTrainingId),
-      dirty: Value(dirty),
       updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
     );
   }
 
@@ -5426,9 +4598,7 @@ class PinnedBuiltinTraining extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PinnedBuiltinTraining(
       builtinTrainingId: serializer.fromJson<String>(json['builtinTrainingId']),
-      dirty: serializer.fromJson<bool>(json['dirty']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
     );
   }
   @override
@@ -5436,22 +4606,16 @@ class PinnedBuiltinTraining extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'builtinTrainingId': serializer.toJson<String>(builtinTrainingId),
-      'dirty': serializer.toJson<bool>(dirty),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
     };
   }
 
   PinnedBuiltinTraining copyWith({
     String? builtinTrainingId,
-    bool? dirty,
     DateTime? updatedAt,
-    Value<DateTime?> deletedAt = const Value.absent(),
   }) => PinnedBuiltinTraining(
     builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
-    dirty: dirty ?? this.dirty,
     updatedAt: updatedAt ?? this.updatedAt,
-    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
   );
   PinnedBuiltinTraining copyWithCompanion(
     PinnedBuiltinTrainingsCompanion data,
@@ -5460,9 +4624,7 @@ class PinnedBuiltinTraining extends DataClass
       builtinTrainingId: data.builtinTrainingId.present
           ? data.builtinTrainingId.value
           : this.builtinTrainingId,
-      dirty: data.dirty.present ? data.dirty.value : this.dirty,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
     );
   }
 
@@ -5470,75 +4632,56 @@ class PinnedBuiltinTraining extends DataClass
   String toString() {
     return (StringBuffer('PinnedBuiltinTraining(')
           ..write('builtinTrainingId: $builtinTrainingId, ')
-          ..write('dirty: $dirty, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(builtinTrainingId, dirty, updatedAt, deletedAt);
+  int get hashCode => Object.hash(builtinTrainingId, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is PinnedBuiltinTraining &&
           other.builtinTrainingId == this.builtinTrainingId &&
-          other.dirty == this.dirty &&
-          other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt);
+          other.updatedAt == this.updatedAt);
 }
 
 class PinnedBuiltinTrainingsCompanion
     extends UpdateCompanion<PinnedBuiltinTraining> {
   final Value<String> builtinTrainingId;
-  final Value<bool> dirty;
   final Value<DateTime> updatedAt;
-  final Value<DateTime?> deletedAt;
   final Value<int> rowid;
   const PinnedBuiltinTrainingsCompanion({
     this.builtinTrainingId = const Value.absent(),
-    this.dirty = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PinnedBuiltinTrainingsCompanion.insert({
     required String builtinTrainingId,
-    this.dirty = const Value.absent(),
     this.updatedAt = const Value.absent(),
-    this.deletedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : builtinTrainingId = Value(builtinTrainingId);
   static Insertable<PinnedBuiltinTraining> custom({
     Expression<String>? builtinTrainingId,
-    Expression<bool>? dirty,
     Expression<DateTime>? updatedAt,
-    Expression<DateTime>? deletedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (builtinTrainingId != null) 'builtin_training_id': builtinTrainingId,
-      if (dirty != null) 'dirty': dirty,
       if (updatedAt != null) 'updated_at': updatedAt,
-      if (deletedAt != null) 'deleted_at': deletedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   PinnedBuiltinTrainingsCompanion copyWith({
     Value<String>? builtinTrainingId,
-    Value<bool>? dirty,
     Value<DateTime>? updatedAt,
-    Value<DateTime?>? deletedAt,
     Value<int>? rowid,
   }) {
     return PinnedBuiltinTrainingsCompanion(
       builtinTrainingId: builtinTrainingId ?? this.builtinTrainingId,
-      dirty: dirty ?? this.dirty,
       updatedAt: updatedAt ?? this.updatedAt,
-      deletedAt: deletedAt ?? this.deletedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5549,14 +4692,8 @@ class PinnedBuiltinTrainingsCompanion
     if (builtinTrainingId.present) {
       map['builtin_training_id'] = Variable<String>(builtinTrainingId.value);
     }
-    if (dirty.present) {
-      map['dirty'] = Variable<bool>(dirty.value);
-    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    if (deletedAt.present) {
-      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -5568,9 +4705,7 @@ class PinnedBuiltinTrainingsCompanion
   String toString() {
     return (StringBuffer('PinnedBuiltinTrainingsCompanion(')
           ..write('builtinTrainingId: $builtinTrainingId, ')
-          ..write('dirty: $dirty, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6146,326 +5281,6 @@ class UsersCompanion extends UpdateCompanion<User> {
   }
 }
 
-class $SyncMetadataTable extends SyncMetadata
-    with TableInfo<$SyncMetadataTable, SyncMetadataData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $SyncMetadataTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
-  static const VerificationMeta _lastSyncVersionMeta = const VerificationMeta(
-    'lastSyncVersion',
-  );
-  @override
-  late final GeneratedColumn<int> lastSyncVersion = GeneratedColumn<int>(
-    'last_sync_version',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
-  static const VerificationMeta _lastSyncTimeMeta = const VerificationMeta(
-    'lastSyncTime',
-  );
-  @override
-  late final GeneratedColumn<DateTime> lastSyncTime = GeneratedColumn<DateTime>(
-    'last_sync_time',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _pendingChangesMeta = const VerificationMeta(
-    'pendingChanges',
-  );
-  @override
-  late final GeneratedColumn<int> pendingChanges = GeneratedColumn<int>(
-    'pending_changes',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    lastSyncVersion,
-    lastSyncTime,
-    pendingChanges,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'sync_metadata';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<SyncMetadataData> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('last_sync_version')) {
-      context.handle(
-        _lastSyncVersionMeta,
-        lastSyncVersion.isAcceptableOrUnknown(
-          data['last_sync_version']!,
-          _lastSyncVersionMeta,
-        ),
-      );
-    }
-    if (data.containsKey('last_sync_time')) {
-      context.handle(
-        _lastSyncTimeMeta,
-        lastSyncTime.isAcceptableOrUnknown(
-          data['last_sync_time']!,
-          _lastSyncTimeMeta,
-        ),
-      );
-    }
-    if (data.containsKey('pending_changes')) {
-      context.handle(
-        _pendingChangesMeta,
-        pendingChanges.isAcceptableOrUnknown(
-          data['pending_changes']!,
-          _pendingChangesMeta,
-        ),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  SyncMetadataData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SyncMetadataData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      lastSyncVersion: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}last_sync_version'],
-      )!,
-      lastSyncTime: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}last_sync_time'],
-      ),
-      pendingChanges: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}pending_changes'],
-      )!,
-    );
-  }
-
-  @override
-  $SyncMetadataTable createAlias(String alias) {
-    return $SyncMetadataTable(attachedDatabase, alias);
-  }
-}
-
-class SyncMetadataData extends DataClass
-    implements Insertable<SyncMetadataData> {
-  final int id;
-  final int lastSyncVersion;
-  final DateTime? lastSyncTime;
-  final int pendingChanges;
-  const SyncMetadataData({
-    required this.id,
-    required this.lastSyncVersion,
-    this.lastSyncTime,
-    required this.pendingChanges,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['last_sync_version'] = Variable<int>(lastSyncVersion);
-    if (!nullToAbsent || lastSyncTime != null) {
-      map['last_sync_time'] = Variable<DateTime>(lastSyncTime);
-    }
-    map['pending_changes'] = Variable<int>(pendingChanges);
-    return map;
-  }
-
-  SyncMetadataCompanion toCompanion(bool nullToAbsent) {
-    return SyncMetadataCompanion(
-      id: Value(id),
-      lastSyncVersion: Value(lastSyncVersion),
-      lastSyncTime: lastSyncTime == null && nullToAbsent
-          ? const Value.absent()
-          : Value(lastSyncTime),
-      pendingChanges: Value(pendingChanges),
-    );
-  }
-
-  factory SyncMetadataData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SyncMetadataData(
-      id: serializer.fromJson<int>(json['id']),
-      lastSyncVersion: serializer.fromJson<int>(json['lastSyncVersion']),
-      lastSyncTime: serializer.fromJson<DateTime?>(json['lastSyncTime']),
-      pendingChanges: serializer.fromJson<int>(json['pendingChanges']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'lastSyncVersion': serializer.toJson<int>(lastSyncVersion),
-      'lastSyncTime': serializer.toJson<DateTime?>(lastSyncTime),
-      'pendingChanges': serializer.toJson<int>(pendingChanges),
-    };
-  }
-
-  SyncMetadataData copyWith({
-    int? id,
-    int? lastSyncVersion,
-    Value<DateTime?> lastSyncTime = const Value.absent(),
-    int? pendingChanges,
-  }) => SyncMetadataData(
-    id: id ?? this.id,
-    lastSyncVersion: lastSyncVersion ?? this.lastSyncVersion,
-    lastSyncTime: lastSyncTime.present ? lastSyncTime.value : this.lastSyncTime,
-    pendingChanges: pendingChanges ?? this.pendingChanges,
-  );
-  SyncMetadataData copyWithCompanion(SyncMetadataCompanion data) {
-    return SyncMetadataData(
-      id: data.id.present ? data.id.value : this.id,
-      lastSyncVersion: data.lastSyncVersion.present
-          ? data.lastSyncVersion.value
-          : this.lastSyncVersion,
-      lastSyncTime: data.lastSyncTime.present
-          ? data.lastSyncTime.value
-          : this.lastSyncTime,
-      pendingChanges: data.pendingChanges.present
-          ? data.pendingChanges.value
-          : this.pendingChanges,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SyncMetadataData(')
-          ..write('id: $id, ')
-          ..write('lastSyncVersion: $lastSyncVersion, ')
-          ..write('lastSyncTime: $lastSyncTime, ')
-          ..write('pendingChanges: $pendingChanges')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode =>
-      Object.hash(id, lastSyncVersion, lastSyncTime, pendingChanges);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is SyncMetadataData &&
-          other.id == this.id &&
-          other.lastSyncVersion == this.lastSyncVersion &&
-          other.lastSyncTime == this.lastSyncTime &&
-          other.pendingChanges == this.pendingChanges);
-}
-
-class SyncMetadataCompanion extends UpdateCompanion<SyncMetadataData> {
-  final Value<int> id;
-  final Value<int> lastSyncVersion;
-  final Value<DateTime?> lastSyncTime;
-  final Value<int> pendingChanges;
-  const SyncMetadataCompanion({
-    this.id = const Value.absent(),
-    this.lastSyncVersion = const Value.absent(),
-    this.lastSyncTime = const Value.absent(),
-    this.pendingChanges = const Value.absent(),
-  });
-  SyncMetadataCompanion.insert({
-    this.id = const Value.absent(),
-    this.lastSyncVersion = const Value.absent(),
-    this.lastSyncTime = const Value.absent(),
-    this.pendingChanges = const Value.absent(),
-  });
-  static Insertable<SyncMetadataData> custom({
-    Expression<int>? id,
-    Expression<int>? lastSyncVersion,
-    Expression<DateTime>? lastSyncTime,
-    Expression<int>? pendingChanges,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (lastSyncVersion != null) 'last_sync_version': lastSyncVersion,
-      if (lastSyncTime != null) 'last_sync_time': lastSyncTime,
-      if (pendingChanges != null) 'pending_changes': pendingChanges,
-    });
-  }
-
-  SyncMetadataCompanion copyWith({
-    Value<int>? id,
-    Value<int>? lastSyncVersion,
-    Value<DateTime?>? lastSyncTime,
-    Value<int>? pendingChanges,
-  }) {
-    return SyncMetadataCompanion(
-      id: id ?? this.id,
-      lastSyncVersion: lastSyncVersion ?? this.lastSyncVersion,
-      lastSyncTime: lastSyncTime ?? this.lastSyncTime,
-      pendingChanges: pendingChanges ?? this.pendingChanges,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (lastSyncVersion.present) {
-      map['last_sync_version'] = Variable<int>(lastSyncVersion.value);
-    }
-    if (lastSyncTime.present) {
-      map['last_sync_time'] = Variable<DateTime>(lastSyncTime.value);
-    }
-    if (pendingChanges.present) {
-      map['pending_changes'] = Variable<int>(pendingChanges.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SyncMetadataCompanion(')
-          ..write('id: $id, ')
-          ..write('lastSyncVersion: $lastSyncVersion, ')
-          ..write('lastSyncTime: $lastSyncTime, ')
-          ..write('pendingChanges: $pendingChanges')
-          ..write(')'))
-        .toString();
-  }
-}
-
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -6481,7 +5296,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $PinnedBuiltinTrainingsTable pinnedBuiltinTrainings =
       $PinnedBuiltinTrainingsTable(this);
   late final $UsersTable users = $UsersTable(this);
-  late final $SyncMetadataTable syncMetadata = $SyncMetadataTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6497,7 +5311,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     builtinTrainingWeights,
     pinnedBuiltinTrainings,
     users,
-    syncMetadata,
   ];
 }
 
@@ -6518,8 +5331,6 @@ typedef $$SessionsTableCreateCompanionBuilder =
       Value<int?> repeaterSetRest,
       Value<bool?> repeaterSplitHand,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 typedef $$SessionsTableUpdateCompanionBuilder =
@@ -6539,8 +5350,6 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<int?> repeaterSetRest,
       Value<bool?> repeaterSplitHand,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 
@@ -6625,16 +5434,6 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6722,16 +5521,6 @@ class $$SessionsTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$SessionsTableAnnotationComposer
@@ -6803,12 +5592,6 @@ class $$SessionsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get dirty =>
-      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$SessionsTableTableManager
@@ -6854,8 +5637,6 @@ class $$SessionsTableTableManager
                 Value<int?> repeaterSetRest = const Value.absent(),
                 Value<bool?> repeaterSplitHand = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion(
                 id: id,
@@ -6873,8 +5654,6 @@ class $$SessionsTableTableManager
                 repeaterSetRest: repeaterSetRest,
                 repeaterSplitHand: repeaterSplitHand,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -6894,8 +5673,6 @@ class $$SessionsTableTableManager
                 Value<int?> repeaterSetRest = const Value.absent(),
                 Value<bool?> repeaterSplitHand = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion.insert(
                 id: id,
@@ -6913,8 +5690,6 @@ class $$SessionsTableTableManager
                 repeaterSetRest: repeaterSetRest,
                 repeaterSplitHand: repeaterSplitHand,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -6948,8 +5723,6 @@ typedef $$AssessmentsTableCreateCompanionBuilder =
       required String sessionId,
       Value<int?> gripPosition,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 typedef $$AssessmentsTableUpdateCompanionBuilder =
@@ -6961,8 +5734,6 @@ typedef $$AssessmentsTableUpdateCompanionBuilder =
       Value<String> sessionId,
       Value<int?> gripPosition,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 
@@ -7007,16 +5778,6 @@ class $$AssessmentsTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7064,16 +5825,6 @@ class $$AssessmentsTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$AssessmentsTableAnnotationComposer
@@ -7109,12 +5860,6 @@ class $$AssessmentsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get dirty =>
-      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$AssessmentsTableTableManager
@@ -7155,8 +5900,6 @@ class $$AssessmentsTableTableManager
                 Value<String> sessionId = const Value.absent(),
                 Value<int?> gripPosition = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AssessmentsCompanion(
                 id: id,
@@ -7166,8 +5909,6 @@ class $$AssessmentsTableTableManager
                 sessionId: sessionId,
                 gripPosition: gripPosition,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7179,8 +5920,6 @@ class $$AssessmentsTableTableManager
                 required String sessionId,
                 Value<int?> gripPosition = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AssessmentsCompanion.insert(
                 id: id,
@@ -7190,8 +5929,6 @@ class $$AssessmentsTableTableManager
                 sessionId: sessionId,
                 gripPosition: gripPosition,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -7232,8 +5969,6 @@ typedef $$RepeatersTableCreateCompanionBuilder =
       required bool splitHand,
       Value<int> gripPosition,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 typedef $$RepeatersTableUpdateCompanionBuilder =
@@ -7249,8 +5984,6 @@ typedef $$RepeatersTableUpdateCompanionBuilder =
       Value<bool> splitHand,
       Value<int> gripPosition,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 
@@ -7315,16 +6048,6 @@ class $$RepeatersTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7392,16 +6115,6 @@ class $$RepeatersTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$RepeatersTableAnnotationComposer
@@ -7451,12 +6164,6 @@ class $$RepeatersTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get dirty =>
-      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$RepeatersTableTableManager
@@ -7498,8 +6205,6 @@ class $$RepeatersTableTableManager
                 Value<bool> splitHand = const Value.absent(),
                 Value<int> gripPosition = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RepeatersCompanion(
                 id: id,
@@ -7513,8 +6218,6 @@ class $$RepeatersTableTableManager
                 splitHand: splitHand,
                 gripPosition: gripPosition,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7530,8 +6233,6 @@ class $$RepeatersTableTableManager
                 required bool splitHand,
                 Value<int> gripPosition = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RepeatersCompanion.insert(
                 id: id,
@@ -7545,8 +6246,6 @@ class $$RepeatersTableTableManager
                 splitHand: splitHand,
                 gripPosition: gripPosition,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -7580,8 +6279,6 @@ typedef $$TrainingsTableCreateCompanionBuilder =
       Value<bool> isFavorite,
       Value<bool> isAssessment,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 typedef $$TrainingsTableUpdateCompanionBuilder =
@@ -7593,8 +6290,6 @@ typedef $$TrainingsTableUpdateCompanionBuilder =
       Value<bool> isFavorite,
       Value<bool> isAssessment,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 
@@ -7639,16 +6334,6 @@ class $$TrainingsTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7696,16 +6381,6 @@ class $$TrainingsTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$TrainingsTableAnnotationComposer
@@ -7743,12 +6418,6 @@ class $$TrainingsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get dirty =>
-      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$TrainingsTableTableManager
@@ -7786,8 +6455,6 @@ class $$TrainingsTableTableManager
                 Value<bool> isFavorite = const Value.absent(),
                 Value<bool> isAssessment = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TrainingsCompanion(
                 id: id,
@@ -7797,8 +6464,6 @@ class $$TrainingsTableTableManager
                 isFavorite: isFavorite,
                 isAssessment: isAssessment,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7810,8 +6475,6 @@ class $$TrainingsTableTableManager
                 Value<bool> isFavorite = const Value.absent(),
                 Value<bool> isAssessment = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TrainingsCompanion.insert(
                 id: id,
@@ -7821,8 +6484,6 @@ class $$TrainingsTableTableManager
                 isFavorite: isFavorite,
                 isAssessment: isAssessment,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -7858,8 +6519,6 @@ typedef $$RepTemplatesTableCreateCompanionBuilder =
       required int index,
       Value<int> gripPosition,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 typedef $$RepTemplatesTableUpdateCompanionBuilder =
@@ -7873,8 +6532,6 @@ typedef $$RepTemplatesTableUpdateCompanionBuilder =
       Value<int> index,
       Value<int> gripPosition,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 
@@ -7929,16 +6586,6 @@ class $$RepTemplatesTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7996,16 +6643,6 @@ class $$RepTemplatesTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$RepTemplatesTableAnnotationComposer
@@ -8049,12 +6686,6 @@ class $$RepTemplatesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get dirty =>
-      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$RepTemplatesTableTableManager
@@ -8097,8 +6728,6 @@ class $$RepTemplatesTableTableManager
                 Value<int> index = const Value.absent(),
                 Value<int> gripPosition = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RepTemplatesCompanion(
                 id: id,
@@ -8110,8 +6739,6 @@ class $$RepTemplatesTableTableManager
                 index: index,
                 gripPosition: gripPosition,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -8125,8 +6752,6 @@ class $$RepTemplatesTableTableManager
                 required int index,
                 Value<int> gripPosition = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RepTemplatesCompanion.insert(
                 id: id,
@@ -8138,8 +6763,6 @@ class $$RepTemplatesTableTableManager
                 index: index,
                 gripPosition: gripPosition,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -8179,8 +6802,6 @@ typedef $$RepDatasTableCreateCompanionBuilder =
       required int index,
       Value<int> gripPosition,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 typedef $$RepDatasTableUpdateCompanionBuilder =
@@ -8195,8 +6816,6 @@ typedef $$RepDatasTableUpdateCompanionBuilder =
       Value<int> index,
       Value<int> gripPosition,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 
@@ -8256,16 +6875,6 @@ class $$RepDatasTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -8328,16 +6937,6 @@ class $$RepDatasTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$RepDatasTableAnnotationComposer
@@ -8384,12 +6983,6 @@ class $$RepDatasTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get dirty =>
-      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$RepDatasTableTableManager
@@ -8430,8 +7023,6 @@ class $$RepDatasTableTableManager
                 Value<int> index = const Value.absent(),
                 Value<int> gripPosition = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RepDatasCompanion(
                 id: id,
@@ -8444,8 +7035,6 @@ class $$RepDatasTableTableManager
                 index: index,
                 gripPosition: gripPosition,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -8460,8 +7049,6 @@ class $$RepDatasTableTableManager
                 required int index,
                 Value<int> gripPosition = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RepDatasCompanion.insert(
                 id: id,
@@ -8474,8 +7061,6 @@ class $$RepDatasTableTableManager
                 index: index,
                 gripPosition: gripPosition,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -8508,8 +7093,6 @@ typedef $$SensorConfigsTableCreateCompanionBuilder =
       required double tare,
       required double coef,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 typedef $$SensorConfigsTableUpdateCompanionBuilder =
@@ -8520,8 +7103,6 @@ typedef $$SensorConfigsTableUpdateCompanionBuilder =
       Value<double> tare,
       Value<double> coef,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 
@@ -8561,16 +7142,6 @@ class $$SensorConfigsTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -8613,16 +7184,6 @@ class $$SensorConfigsTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$SensorConfigsTableAnnotationComposer
@@ -8651,12 +7212,6 @@ class $$SensorConfigsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get dirty =>
-      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$SensorConfigsTableTableManager
@@ -8696,8 +7251,6 @@ class $$SensorConfigsTableTableManager
                 Value<double> tare = const Value.absent(),
                 Value<double> coef = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SensorConfigsCompanion(
                 id: id,
@@ -8706,8 +7259,6 @@ class $$SensorConfigsTableTableManager
                 tare: tare,
                 coef: coef,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -8718,8 +7269,6 @@ class $$SensorConfigsTableTableManager
                 required double tare,
                 required double coef,
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SensorConfigsCompanion.insert(
                 id: id,
@@ -8728,8 +7277,6 @@ class $$SensorConfigsTableTableManager
                 tare: tare,
                 coef: coef,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -8764,8 +7311,6 @@ typedef $$BuiltinTrainingWeightsTableCreateCompanionBuilder =
       Value<double?> customWeightRight,
       Value<double?> customWeightLeft,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 typedef $$BuiltinTrainingWeightsTableUpdateCompanionBuilder =
@@ -8775,8 +7320,6 @@ typedef $$BuiltinTrainingWeightsTableUpdateCompanionBuilder =
       Value<double?> customWeightRight,
       Value<double?> customWeightLeft,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<bool> dirty,
       Value<int> rowid,
     });
 
@@ -8811,16 +7354,6 @@ class $$BuiltinTrainingWeightsTableFilterComposer
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -8858,16 +7391,6 @@ class $$BuiltinTrainingWeightsTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$BuiltinTrainingWeightsTableAnnotationComposer
@@ -8899,12 +7422,6 @@ class $$BuiltinTrainingWeightsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get dirty =>
-      $composableBuilder(column: $table.dirty, builder: (column) => column);
 }
 
 class $$BuiltinTrainingWeightsTableTableManager
@@ -8958,8 +7475,6 @@ class $$BuiltinTrainingWeightsTableTableManager
                 Value<double?> customWeightRight = const Value.absent(),
                 Value<double?> customWeightLeft = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => BuiltinTrainingWeightsCompanion(
                 id: id,
@@ -8967,8 +7482,6 @@ class $$BuiltinTrainingWeightsTableTableManager
                 customWeightRight: customWeightRight,
                 customWeightLeft: customWeightLeft,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -8978,8 +7491,6 @@ class $$BuiltinTrainingWeightsTableTableManager
                 Value<double?> customWeightRight = const Value.absent(),
                 Value<double?> customWeightLeft = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => BuiltinTrainingWeightsCompanion.insert(
                 id: id,
@@ -8987,8 +7498,6 @@ class $$BuiltinTrainingWeightsTableTableManager
                 customWeightRight: customWeightRight,
                 customWeightLeft: customWeightLeft,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
-                dirty: dirty,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -9023,17 +7532,13 @@ typedef $$BuiltinTrainingWeightsTableProcessedTableManager =
 typedef $$PinnedBuiltinTrainingsTableCreateCompanionBuilder =
     PinnedBuiltinTrainingsCompanion Function({
       required String builtinTrainingId,
-      Value<bool> dirty,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 typedef $$PinnedBuiltinTrainingsTableUpdateCompanionBuilder =
     PinnedBuiltinTrainingsCompanion Function({
       Value<String> builtinTrainingId,
-      Value<bool> dirty,
       Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
       Value<int> rowid,
     });
 
@@ -9051,18 +7556,8 @@ class $$PinnedBuiltinTrainingsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
-    builder: (column) => ColumnFilters(column),
-  );
-
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -9081,18 +7576,8 @@ class $$PinnedBuiltinTrainingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get dirty => $composableBuilder(
-    column: $table.dirty,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -9111,14 +7596,8 @@ class $$PinnedBuiltinTrainingsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<bool> get dirty =>
-      $composableBuilder(column: $table.dirty, builder: (column) => column);
-
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$PinnedBuiltinTrainingsTableTableManager
@@ -9168,29 +7647,21 @@ class $$PinnedBuiltinTrainingsTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> builtinTrainingId = const Value.absent(),
-                Value<bool> dirty = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PinnedBuiltinTrainingsCompanion(
                 builtinTrainingId: builtinTrainingId,
-                dirty: dirty,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String builtinTrainingId,
-                Value<bool> dirty = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
-                Value<DateTime?> deletedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PinnedBuiltinTrainingsCompanion.insert(
                 builtinTrainingId: builtinTrainingId,
-                dirty: dirty,
                 updatedAt: updatedAt,
-                deletedAt: deletedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -9495,187 +7966,6 @@ typedef $$UsersTableProcessedTableManager =
       User,
       PrefetchHooks Function()
     >;
-typedef $$SyncMetadataTableCreateCompanionBuilder =
-    SyncMetadataCompanion Function({
-      Value<int> id,
-      Value<int> lastSyncVersion,
-      Value<DateTime?> lastSyncTime,
-      Value<int> pendingChanges,
-    });
-typedef $$SyncMetadataTableUpdateCompanionBuilder =
-    SyncMetadataCompanion Function({
-      Value<int> id,
-      Value<int> lastSyncVersion,
-      Value<DateTime?> lastSyncTime,
-      Value<int> pendingChanges,
-    });
-
-class $$SyncMetadataTableFilterComposer
-    extends Composer<_$AppDatabase, $SyncMetadataTable> {
-  $$SyncMetadataTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get lastSyncVersion => $composableBuilder(
-    column: $table.lastSyncVersion,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get lastSyncTime => $composableBuilder(
-    column: $table.lastSyncTime,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get pendingChanges => $composableBuilder(
-    column: $table.pendingChanges,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$SyncMetadataTableOrderingComposer
-    extends Composer<_$AppDatabase, $SyncMetadataTable> {
-  $$SyncMetadataTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get lastSyncVersion => $composableBuilder(
-    column: $table.lastSyncVersion,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get lastSyncTime => $composableBuilder(
-    column: $table.lastSyncTime,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get pendingChanges => $composableBuilder(
-    column: $table.pendingChanges,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$SyncMetadataTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SyncMetadataTable> {
-  $$SyncMetadataTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<int> get lastSyncVersion => $composableBuilder(
-    column: $table.lastSyncVersion,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<DateTime> get lastSyncTime => $composableBuilder(
-    column: $table.lastSyncTime,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get pendingChanges => $composableBuilder(
-    column: $table.pendingChanges,
-    builder: (column) => column,
-  );
-}
-
-class $$SyncMetadataTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $SyncMetadataTable,
-          SyncMetadataData,
-          $$SyncMetadataTableFilterComposer,
-          $$SyncMetadataTableOrderingComposer,
-          $$SyncMetadataTableAnnotationComposer,
-          $$SyncMetadataTableCreateCompanionBuilder,
-          $$SyncMetadataTableUpdateCompanionBuilder,
-          (
-            SyncMetadataData,
-            BaseReferences<_$AppDatabase, $SyncMetadataTable, SyncMetadataData>,
-          ),
-          SyncMetadataData,
-          PrefetchHooks Function()
-        > {
-  $$SyncMetadataTableTableManager(_$AppDatabase db, $SyncMetadataTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$SyncMetadataTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SyncMetadataTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$SyncMetadataTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<int> lastSyncVersion = const Value.absent(),
-                Value<DateTime?> lastSyncTime = const Value.absent(),
-                Value<int> pendingChanges = const Value.absent(),
-              }) => SyncMetadataCompanion(
-                id: id,
-                lastSyncVersion: lastSyncVersion,
-                lastSyncTime: lastSyncTime,
-                pendingChanges: pendingChanges,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<int> lastSyncVersion = const Value.absent(),
-                Value<DateTime?> lastSyncTime = const Value.absent(),
-                Value<int> pendingChanges = const Value.absent(),
-              }) => SyncMetadataCompanion.insert(
-                id: id,
-                lastSyncVersion: lastSyncVersion,
-                lastSyncTime: lastSyncTime,
-                pendingChanges: pendingChanges,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$SyncMetadataTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $SyncMetadataTable,
-      SyncMetadataData,
-      $$SyncMetadataTableFilterComposer,
-      $$SyncMetadataTableOrderingComposer,
-      $$SyncMetadataTableAnnotationComposer,
-      $$SyncMetadataTableCreateCompanionBuilder,
-      $$SyncMetadataTableUpdateCompanionBuilder,
-      (
-        SyncMetadataData,
-        BaseReferences<_$AppDatabase, $SyncMetadataTable, SyncMetadataData>,
-      ),
-      SyncMetadataData,
-      PrefetchHooks Function()
-    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9706,6 +7996,4 @@ class $AppDatabaseManager {
       );
   $$UsersTableTableManager get users =>
       $$UsersTableTableManager(_db, _db.users);
-  $$SyncMetadataTableTableManager get syncMetadata =>
-      $$SyncMetadataTableTableManager(_db, _db.syncMetadata);
 }

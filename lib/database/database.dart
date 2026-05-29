@@ -41,12 +41,9 @@ class Sessions extends Table {
   late final IntColumn repeaterSetRest = integer().nullable()();
   late final BoolColumn repeaterSplitHand = boolean().nullable()();
 
-  // Sync columns
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
-  late final DateTimeColumn deletedAt = dateTime().nullable()();
-  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -64,12 +61,9 @@ class Assessments extends Table {
     const Constant(0),
   )(); // 0 = halfCrimp (default)
 
-  // Sync columns
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
-  late final DateTimeColumn deletedAt = dateTime().nullable()();
-  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -96,12 +90,9 @@ class Trainings extends Table {
     const Constant(false),
   )();
 
-  // Sync columns
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
-  late final DateTimeColumn deletedAt = dateTime().nullable()();
-  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -128,12 +119,9 @@ class Repeaters extends Table {
     const Constant(0),
   )(); // 0 = halfCrimp (default)
 
-  // Sync columns
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
-  late final DateTimeColumn deletedAt = dateTime().nullable()();
-  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -153,12 +141,9 @@ class RepTemplates extends Table {
     const Constant(0),
   )(); // 0 = halfCrimp (default)
 
-  // Sync columns
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
-  late final DateTimeColumn deletedAt = dateTime().nullable()();
-  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -184,12 +169,9 @@ class RepDatas extends Table {
     const Constant(0),
   )(); // 0 = halfCrimp (default)
 
-  // Sync columns
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
-  late final DateTimeColumn deletedAt = dateTime().nullable()();
-  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -207,12 +189,9 @@ class PinnedBuiltinTrainings extends Table {
   @override
   Set<Column> get primaryKey => {builtinTrainingId};
 
-  // Sync columns
-  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
-  late final DateTimeColumn deletedAt = dateTime().nullable()();
 }
 
 // Stores the saved sensor configs.
@@ -224,12 +203,9 @@ class SensorConfigs extends Table {
   late final RealColumn tare = real()();
   late final RealColumn coef = real()();
 
-  // Sync columns
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
-  late final DateTimeColumn deletedAt = dateTime().nullable()();
-  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -243,12 +219,9 @@ class BuiltinTrainingWeights extends Table {
   late final RealColumn customWeightRight = real().nullable()();
   late final RealColumn customWeightLeft = real().nullable()();
 
-  // Sync columns
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
-  late final DateTimeColumn deletedAt = dateTime().nullable()();
-  late final BoolColumn dirty = boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -280,18 +253,6 @@ class Users extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// Stores sync metadata for tracking sync state.
-class SyncMetadata extends Table {
-  late final IntColumn id = integer().autoIncrement()();
-  late final IntColumn lastSyncVersion = integer().withDefault(
-    const Constant(0),
-  )();
-  late final DateTimeColumn lastSyncTime = dateTime().nullable()();
-  late final IntColumn pendingChanges = integer().withDefault(
-    const Constant(0),
-  )();
-}
-
 @DriftDatabase(
   tables: [
     Sessions,
@@ -304,14 +265,10 @@ class SyncMetadata extends Table {
     BuiltinTrainingWeights,
     PinnedBuiltinTrainings,
     Users,
-    SyncMetadata,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
-
-  final _dataChangedController = StreamController<void>.broadcast();
-  Stream<void> get dataChanged => _dataChangedController.stream;
 
   // ------------------------------------- SESSIONS -------------------------------------
   /// Get a session with its data points.
@@ -358,8 +315,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// Get all saved sessions, with optional filters.
   Future<List<Session>> getAllSessions({SessionFilter? filters}) async {
-    var query = select(sessions)..where((s) => s.deletedAt.isNull());
-    // Handle date filters
+    var query = select(sessions);
     if (filters != null) {
       if (filters.startDate != null) {
         query = query
@@ -427,7 +383,6 @@ class AppDatabase extends _$AppDatabase {
         repeaterRestTime: Value(session.repeaterConfig?.restTime),
         repeaterSetRest: Value(session.repeaterConfig?.setRest),
         repeaterSplitHand: Value(session.repeaterConfig?.splitHand),
-        dirty: const Value(true),
         updatedAt: Value(DateTime.now()),
       ),
     );
@@ -435,7 +390,6 @@ class AppDatabase extends _$AppDatabase {
       sessions,
     )..where((s) => s.rowId.equals(sessionRowId))).getSingle()).id;
 
-    await incrementPendingChanges();
     final companions = reps.indexed
         .map(
           (index) => RepDatasCompanion(
@@ -447,7 +401,6 @@ class AppDatabase extends _$AppDatabase {
             targetWeight: Value(index.$2.targetWeight),
             averageWeight: Value(index.$2.averageWeight),
             gripPosition: Value(index.$2.gripPosition.index),
-            dirty: Value(true),
             updatedAt: Value(DateTime.now()),
           ),
         )
@@ -481,39 +434,25 @@ class AppDatabase extends _$AppDatabase {
         name: Value(session.name),
         sessionType: Value(session.sessionType.index),
         duration: Value(sessionDuration),
-        dirty: const Value(true),
         updatedAt: Value(DateTime.now()),
       ),
     );
-    await incrementPendingChanges();
   }
 
   /// Delete a session.
   Future<void> deleteSession(String sessionId) async {
-    await (update(sessions)..where((s) => s.id.equals(sessionId))).write(
-      SessionsCompanion(
-        dirty: const Value(true),
-        updatedAt: Value(DateTime.now()),
-        deletedAt: Value(DateTime.now()),
-      ),
-    );
-    await incrementPendingChanges();
+    await (delete(sessions)..where((s) => s.id.equals(sessionId))).go();
   }
 
   // ------------------------------------- TRAININGS -------------------------------------
   /// Save a training with its repetitions.
   Future<String> saveTrainingWithReps(String name, List<RepModel> reps) async {
     final trainingRowId = await into(trainings).insert(
-      TrainingsCompanion(
-        name: Value(name),
-        dirty: const Value(true),
-        updatedAt: Value(DateTime.now()),
-      ),
+      TrainingsCompanion(name: Value(name), updatedAt: Value(DateTime.now())),
     );
     final trainingId = (await (select(
       trainings,
     )..where((t) => t.rowId.equals(trainingRowId))).getSingle()).id;
-    await incrementPendingChanges();
 
     final companions = reps
         .asMap()
@@ -528,7 +467,6 @@ class AppDatabase extends _$AppDatabase {
               trainingId: Value(trainingId),
               targetWeight: Value(rep.targetWeight),
               gripPosition: Value(rep.gripPosition.index),
-              dirty: const Value(true),
               updatedAt: Value(DateTime.now()),
             ),
           ),
@@ -539,7 +477,6 @@ class AppDatabase extends _$AppDatabase {
     batch((batch) {
       batch.insertAll(repTemplates, companions);
     });
-    await incrementPendingChanges();
 
     return trainingId;
   }
@@ -552,11 +489,9 @@ class AppDatabase extends _$AppDatabase {
     await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
       TrainingsCompanion(
         isFavorite: Value(!oldFav),
-        dirty: const Value(true),
         updatedAt: Value(DateTime.now()),
       ),
     );
-    await incrementPendingChanges();
   }
 
   /// Edit a repetitions along with its reps.
@@ -567,16 +502,10 @@ class AppDatabase extends _$AppDatabase {
     String? name,
     List<RepModel>? reps,
   }) async {
-    // First update the name if given.
     if (name != null) {
       await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
-        TrainingsCompanion(
-          name: Value(name),
-          dirty: const Value(true),
-          updatedAt: Value(DateTime.now()),
-        ),
+        TrainingsCompanion(name: Value(name), updatedAt: Value(DateTime.now())),
       );
-      await incrementPendingChanges();
     }
 
     if (reps != null) {
@@ -588,7 +517,6 @@ class AppDatabase extends _$AppDatabase {
 
       final now = DateTime.now();
 
-      // Update existing reps or insert new ones, preserving IDs where possible
       for (var i = 0; i < reps.length; i++) {
         final rep = reps[i];
         final companion = RepTemplatesCompanion(
@@ -599,7 +527,6 @@ class AppDatabase extends _$AppDatabase {
           trainingId: Value(trainingId),
           targetWeight: Value(rep.targetWeight),
           gripPosition: Value(rep.gripPosition.index),
-          dirty: const Value(true),
           updatedAt: Value(now),
         );
 
@@ -612,26 +539,17 @@ class AppDatabase extends _$AppDatabase {
         }
       }
 
-      // Soft delete any excess reps that were removed
+      // Delete any excess reps that were removed
       for (var i = reps.length; i < existingReps.length; i++) {
-        await (update(
+        await (delete(
           repTemplates,
-        )..where((r) => r.id.equals(existingReps[i].id))).write(
-          RepTemplatesCompanion(
-            dirty: const Value(true),
-            updatedAt: Value(now),
-            deletedAt: Value(now),
-          ),
-        );
+        )..where((r) => r.id.equals(existingReps[i].id))).go();
       }
-
-      await incrementPendingChanges();
 
       if (name == null) {
         await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
-          TrainingsCompanion(dirty: const Value(true), updatedAt: Value(now)),
+          TrainingsCompanion(updatedAt: Value(now)),
         );
-        await incrementPendingChanges();
       }
     }
   }
@@ -642,31 +560,22 @@ class AppDatabase extends _$AppDatabase {
     String? name,
     RepeaterModel? model,
   }) async {
-    // First update the name if any.
     if (name != null) {
       await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
-        TrainingsCompanion(
-          name: Value(name),
-          dirty: const Value(true),
-          updatedAt: Value(DateTime.now()),
-        ),
+        TrainingsCompanion(name: Value(name), updatedAt: Value(DateTime.now())),
       );
-      await incrementPendingChanges();
     }
 
     if (model != null) {
-      // Get repeater ID
       var r = await (select(
         trainings,
       )..where((t) => t.id.equals(trainingId))).getSingle();
 
-      // Make sure the template has a repeater Id
       if (r.repeaterId == null) {
         AppLoggerHelper.error("Template missing repeater ID while updating");
         return;
       }
 
-      // Then update the repeater template
       await (update(
         repeaters,
       )..where((tbl) => tbl.id.equals(r.repeaterId!))).write(
@@ -680,19 +589,14 @@ class AppDatabase extends _$AppDatabase {
           targetWeigthRight: Value(model.weightRight),
           worktime: Value(model.workTime),
           gripPosition: Value(model.gripPosition.index),
-          dirty: const Value(true),
           updatedAt: Value(DateTime.now()),
         ),
       );
 
       if (name == null) {
         await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
-          TrainingsCompanion(
-            dirty: const Value(true),
-            updatedAt: Value(DateTime.now()),
-          ),
+          TrainingsCompanion(updatedAt: Value(DateTime.now())),
         );
-        await incrementPendingChanges();
       }
     }
   }
@@ -710,7 +614,6 @@ class AppDatabase extends _$AppDatabase {
         targetWeigthRight: Value(model.weightRight),
         worktime: Value(model.workTime),
         gripPosition: Value(model.gripPosition.index),
-        dirty: const Value(true),
         updatedAt: Value(DateTime.now()),
       ),
     );
@@ -722,14 +625,12 @@ class AppDatabase extends _$AppDatabase {
       TrainingsCompanion(
         name: Value(name),
         repeaterId: Value(repeaterId),
-        dirty: const Value(true),
         updatedAt: Value(DateTime.now()),
       ),
     );
     final trainingId = (await (select(
       trainings,
     )..where((t) => t.rowId.equals(trainingRowId))).getSingle()).id;
-    await incrementPendingChanges();
     return trainingId;
   }
 
@@ -738,44 +639,28 @@ class AppDatabase extends _$AppDatabase {
       (select(repeaters)..where((s) => s.id.equals(rId))).getSingleOrNull();
 
   /// Get all the trainings without the assessments.
-  Future<List<Training>> getAllTrainingsWithoutAssessments() =>
-      (select(trainings)..where(
-            (training) =>
-                training.isAssessment.not() & training.deletedAt.isNull(),
-          ))
-          .get();
+  Future<List<Training>> getAllTrainingsWithoutAssessments() => (select(
+    trainings,
+  )..where((training) => training.isAssessment.not())).get();
 
   /// Get all the assessment trainings.
   Future<List<Training>> getAllAssessmentTrainings() =>
-      (select(trainings)..where(
-            (training) => training.isAssessment & training.deletedAt.isNull(),
-          ))
-          .get();
+      (select(trainings)..where((training) => training.isAssessment)).get();
 
   /// Get all favorite trainings.
-  Future<List<Training>> getFavTrainings() => (select(
-    trainings,
-  )..where((t) => t.isFavorite & t.deletedAt.isNull())).get();
+  Future<List<Training>> getFavTrainings() =>
+      (select(trainings)..where((t) => t.isFavorite)).get();
 
   /// Get the rep templates associated with a training.
   Future<List<RepTemplate>> getRepsForTraining(String trainingId) =>
       (select(repTemplates)
-            ..where(
-              (r) => r.trainingId.equals(trainingId) & r.deletedAt.isNull(),
-            )
+            ..where((r) => r.trainingId.equals(trainingId))
             ..orderBy([(r) => OrderingTerm(expression: r.index)]))
           .get();
 
   /// Delete a training.
   Future<void> deleteTraining(String trainingId) async {
-    await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
-      TrainingsCompanion(
-        dirty: const Value(true),
-        updatedAt: Value(DateTime.now()),
-        deletedAt: Value(DateTime.now()),
-      ),
-    );
-    await incrementPendingChanges();
+    await (delete(trainings)..where((t) => t.id.equals(trainingId))).go();
   }
 
   // ------------------------------------- ASSESSMENTS -------------------------------------
@@ -790,7 +675,6 @@ class AppDatabase extends _$AppDatabase {
       type: Value(assessment.type.index),
       sessionId: Value(sessionId),
       gripPosition: Value(assessment.gripPosition?.index),
-      dirty: const Value(true),
       updatedAt: Value(DateTime.now()),
     );
 
@@ -798,20 +682,12 @@ class AppDatabase extends _$AppDatabase {
     final assessmentId = (await (select(
       assessments,
     )..where((a) => a.rowId.equals(assessmentRowId))).getSingle()).id;
-    await incrementPendingChanges();
     return assessmentId;
   }
 
   /// Delete an assessment.
   Future<void> deleteAssessment(String id) async {
-    await (update(assessments)..where((a) => a.id.equals(id))).write(
-      AssessmentsCompanion(
-        dirty: const Value(true),
-        updatedAt: Value(DateTime.now()),
-        deletedAt: Value(DateTime.now()),
-      ),
-    );
-    await incrementPendingChanges();
+    await (delete(assessments)..where((a) => a.id.equals(id))).go();
   }
 
   /// Get the assessments done.
@@ -823,12 +699,11 @@ class AppDatabase extends _$AppDatabase {
     HandSide? handSide,
     GripPosition? gripPosition,
   }) async {
-    var query = select(assessments)..where((a) => a.deletedAt.isNull());
+    var query = select(assessments);
 
     if (type != null) {
       query = query..where((r) => r.type.equals(type.index));
     }
-    // Add filter if hand was provided.
     if (handSide != null) {
       query = query
         ..where(
@@ -837,7 +712,6 @@ class AppDatabase extends _$AppDatabase {
               : assessment.leftValue.isNotNull(),
         );
     }
-    // Add filter if grip position was provided.
     if (gripPosition != null) {
       query = query
         ..where(
@@ -845,13 +719,8 @@ class AppDatabase extends _$AppDatabase {
         );
     }
 
-    // Join on sessions to get the date of the assessment.
     final res = await query.join([
-      innerJoin(
-        sessions,
-        sessions.id.equalsExp(assessments.sessionId) &
-            sessions.deletedAt.isNull(),
-      ),
+      innerJoin(sessions, sessions.id.equalsExp(assessments.sessionId)),
     ]).get();
 
     return res.map((row) {
@@ -873,11 +742,9 @@ class AppDatabase extends _$AppDatabase {
 
   // ------------------------------------- SENSOR CONFIGS -------------------------------------
   /// Get the saved sensor configs.
-  Future<List<SensorConfig>> getSensorConfigs() async =>
-      (select(sensorConfigs)
-            ..orderBy([(r) => OrderingTerm.desc(r.index)])
-            ..where((conf) => conf.deletedAt.isNull()))
-          .get();
+  Future<List<SensorConfig>> getSensorConfigs() async => (select(
+    sensorConfigs,
+  )..orderBy([(r) => OrderingTerm.desc(r.index)])).get();
 
   /// Save a new sensor config.
   Future<int> addSensorConfig(SensorConfigsCompanion config) async {
@@ -890,11 +757,9 @@ class AppDatabase extends _$AppDatabase {
       tare: config.tare,
       index: Value(newIndex),
       name: config.name,
-      dirty: const Value(true),
       updatedAt: Value(DateTime.now()),
     );
     final rowId = await into(sensorConfigs).insert(newConf);
-    await incrementPendingChanges();
     return rowId;
   }
 
@@ -908,24 +773,15 @@ class AppDatabase extends _$AppDatabase {
           index: Value(entry.index),
           tare: Value(entry.tare),
           coef: Value(entry.coef),
-          dirty: const Value(true),
           updatedAt: Value(now),
         ),
       );
     }
-    await incrementPendingChanges();
   }
 
   /// Delete a sensor config.
   Future<void> deleteSensorConfig(String id) async {
-    await (update(sensorConfigs)..where((t) => t.id.equals(id))).write(
-      SensorConfigsCompanion(
-        dirty: const Value(true),
-        updatedAt: Value(DateTime.now()),
-        deletedAt: Value(DateTime.now()),
-      ),
-    );
-    await incrementPendingChanges();
+    await (delete(sensorConfigs)..where((s) => s.id.equals(id))).go();
   }
 
   // ------------------------------------- BUILTIN TRAINING WEIGHTS -------------------------------------
@@ -944,7 +800,6 @@ class AppDatabase extends _$AppDatabase {
     double? customWeightRight,
     double? customWeightLeft,
   }) async {
-    // Check if weights already exist
     final existing = await getBuiltinTrainingWeights(builtinTrainingId);
 
     if (existing != null) {
@@ -955,7 +810,6 @@ class AppDatabase extends _$AppDatabase {
           customWeightRight: Value(customWeightRight),
           customWeightLeft: Value(customWeightLeft),
           updatedAt: Value(DateTime.now()),
-          dirty: const Value(true),
         ),
       );
     } else {
@@ -964,58 +818,42 @@ class AppDatabase extends _$AppDatabase {
           builtinTrainingId: builtinTrainingId,
           customWeightRight: Value(customWeightRight),
           customWeightLeft: Value(customWeightLeft),
-          dirty: const Value(true),
           updatedAt: Value(DateTime.now()),
         ),
       );
     }
-    await incrementPendingChanges();
   }
 
   // ------------------------------------- PINNED BUILTIN TRAININGS -------------------------------------
   /// Get all pinned builtin training IDs.
   Future<List<String>> getPinnedBuiltinTrainingIds() async {
-    return (await (select(
-          pinnedBuiltinTrainings,
-        )..where((p) => p.deletedAt.isNull())).get())
-        .map((row) => row.builtinTrainingId)
-        .toList();
+    return (await select(
+      pinnedBuiltinTrainings,
+    ).get()).map((row) => row.builtinTrainingId).toList();
   }
 
   /// Pin a builtin training to the home screen.
   Future<void> pinBuiltinTraining(String builtinTrainingId) async {
-    await into(pinnedBuiltinTrainings).insert(
+    await into(pinnedBuiltinTrainings).insertOnConflictUpdate(
       PinnedBuiltinTrainingsCompanion(
         builtinTrainingId: Value(builtinTrainingId),
-        dirty: const Value(true),
         updatedAt: Value(DateTime.now()),
       ),
     );
-    await incrementPendingChanges();
   }
 
   /// Unpin a builtin training from the home screen.
   Future<void> unpinBuiltinTraining(String builtinTrainingId) async {
-    await (update(
+    await (delete(
       pinnedBuiltinTrainings,
-    )..where((t) => t.builtinTrainingId.equals(builtinTrainingId))).write(
-      PinnedBuiltinTrainingsCompanion(
-        dirty: const Value(true),
-        updatedAt: Value(DateTime.now()),
-        deletedAt: Value(DateTime.now()),
-      ),
-    );
-    await incrementPendingChanges();
+    )..where((t) => t.builtinTrainingId.equals(builtinTrainingId))).go();
   }
 
   /// Check if a builtin training is pinned.
   Future<bool> isBuiltinTrainingPinned(String builtinTrainingId) async {
     final result =
-        await (select(pinnedBuiltinTrainings)..where(
-              (t) =>
-                  t.builtinTrainingId.equals(builtinTrainingId) &
-                  t.deletedAt.isNull(),
-            ))
+        await (select(pinnedBuiltinTrainings)
+              ..where((t) => t.builtinTrainingId.equals(builtinTrainingId)))
             .getSingleOrNull();
     return result != null;
   }
@@ -1036,66 +874,22 @@ class AppDatabase extends _$AppDatabase {
     await delete(users).go();
   }
 
-  // ------------------------------------- SYNC METADATA -------------------------------------
-  /// Get the sync metadata.
-  Future<SyncMetadataData?> getSyncMetadata() async {
-    return await (select(syncMetadata)).getSingleOrNull();
-  }
-
-  /// Save or update sync metadata.
-  Future<void> saveSyncMetadata({
-    required int lastSyncVersion,
-    DateTime? lastSyncTime,
-    int? pendingChanges,
-  }) async {
-    final existing = await getSyncMetadata();
-    if (existing != null) {
-      await (update(
-        syncMetadata,
-      )..where((s) => s.id.equals(existing.id))).write(
-        SyncMetadataCompanion(
-          lastSyncVersion: Value(lastSyncVersion),
-          lastSyncTime: Value(lastSyncTime),
-          pendingChanges: Value(pendingChanges ?? existing.pendingChanges),
-        ),
-      );
-    } else {
-      await into(syncMetadata).insert(
-        SyncMetadataCompanion.insert(
-          lastSyncVersion: Value(lastSyncVersion),
-          lastSyncTime: Value(lastSyncTime),
-          pendingChanges: Value(pendingChanges ?? 0),
-        ),
-      );
-    }
-  }
-
-  /// Increment pending changes count.
-  Future<void> incrementPendingChanges() async {
-    final existing = await getSyncMetadata();
-    final currentCount = existing?.pendingChanges ?? 0;
-    await saveSyncMetadata(
-      lastSyncVersion: existing?.lastSyncVersion ?? 0,
-      lastSyncTime: existing?.lastSyncTime,
-      pendingChanges: currentCount + 1,
-    );
-    _dataChangedController.add(null);
-  }
-
-  /// Reset pending changes count.
-  Future<void> resetPendingChanges() async {
-    final existing = await getSyncMetadata();
-    if (existing != null) {
-      await saveSyncMetadata(
-        lastSyncVersion: existing.lastSyncVersion,
-        lastSyncTime: existing.lastSyncTime,
-        pendingChanges: 0,
-      );
-    }
+  /// Clear all user-generated local data (called on logout).
+  /// Builtin trainings are preserved.
+  Future<void> wipeLocalData() async {
+    await delete(assessments).go();
+    await delete(repDatas).go();
+    await delete(sessions).go();
+    await delete(repTemplates).go();
+    await (delete(trainings)..where((t) => t.isBuiltin.equals(false))).go();
+    await delete(repeaters).go();
+    await delete(sensorConfigs).go();
+    await delete(builtinTrainingWeights).go();
+    await delete(pinnedBuiltinTrainings).go();
   }
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1105,7 +899,6 @@ class AppDatabase extends _$AppDatabase {
     onUpgrade: stepByStep(
       from1To2: (m, schema) async {
         await m.createTable(schema.users);
-        await m.createTable(schema.syncMetadata);
       },
       from2To3: (m, schema) async {
         await m.addColumn(schema.sessions, schema.sessions.createdAt);
@@ -1226,6 +1019,20 @@ class AppDatabase extends _$AppDatabase {
           schema.pinnedBuiltinTrainings,
           schema.pinnedBuiltinTrainings.deletedAt,
         );
+      },
+      from6To7: (m, schema) async {
+        // Drop dirty and deleted_at columns from all synced tables
+        await m.alterTable(TableMigration(schema.sessions));
+        await m.alterTable(TableMigration(schema.assessments));
+        await m.alterTable(TableMigration(schema.repeaters));
+        await m.alterTable(TableMigration(schema.trainings));
+        await m.alterTable(TableMigration(schema.repTemplates));
+        await m.alterTable(TableMigration(schema.repDatas));
+        await m.alterTable(TableMigration(schema.sensorConfigs));
+        await m.alterTable(TableMigration(schema.builtinTrainingWeights));
+        await m.alterTable(TableMigration(schema.pinnedBuiltinTrainings));
+        // Drop SyncMetadata table
+        await m.database.customStatement('DROP TABLE IF EXISTS sync_metadata');
       },
     ),
   );
