@@ -1,6 +1,9 @@
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/auth_models.dart' as auth_models;
+import 'package:crimpy/models/common.dart';
+import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/repositories/remote_training_repository.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/auth_service.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
@@ -10,6 +13,18 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:drift/drift.dart' as drift;
 
 part 'auth_view_model.g.dart';
+
+class LocalImportStatus {
+  final int sessionCount;
+  final int trainingCount;
+
+  const LocalImportStatus({
+    required this.sessionCount,
+    required this.trainingCount,
+  });
+
+  bool get hasData => sessionCount > 0 || trainingCount > 0;
+}
 
 @riverpod
 ApiClient apiClient(Ref ref) {
@@ -50,15 +65,7 @@ class AuthState extends _$AuthState {
       await _saveUserToDb(authResponse.user);
       ref.invalidateSelf();
 
-      ref.invalidate(sessionsProvider);
-      ref.invalidate(trainingsProvider);
-      ref.invalidate(favTrainingsProvider);
-      ref.invalidate(allTrainingsProvider);
-      ref.invalidate(pinnedTrainingsProvider);
-      ref.invalidate(assessmentsProvider);
-      ref.invalidate(sensorConfigsProvider);
-
-      AppLoggerHelper.info('Login successful, data providers invalidated');
+      AppLoggerHelper.info('Login successful');
     } catch (e, s) {
       AppLoggerHelper.error('Login error: $e (stacktrace: $s)');
       rethrow;
@@ -162,6 +169,128 @@ class AuthState extends _$AuthState {
       AppLoggerHelper.error('Logout error: $e');
       rethrow;
     }
+  }
+
+  Future<LocalImportStatus> checkLocalDataBeforeLogin() async {
+    final sessions = await gDatabase.getAllSessions();
+    final trainings = await gDatabase.getAllTrainingsWithoutAssessments();
+    return LocalImportStatus(
+      sessionCount: sessions.length,
+      trainingCount: trainings.length,
+    );
+  }
+
+  Future<void> importLocalDataToApi() async {
+    final apiClient = ref.read(apiClientProvider);
+    final remoteRepo = RemoteTrainingRepository(apiClient);
+
+    // Import sessions with their rep_datas
+    final sessions = await gDatabase.getAllSessions();
+    for (final s in sessions) {
+      try {
+        final dbReps = await gDatabase.getRepsForSession(s.id);
+        RepeaterConfig? repeaterConfig;
+        if (s.repeaterSets != null &&
+            s.repeaterReps != null &&
+            s.repeaterWorkTime != null &&
+            s.repeaterRestTime != null &&
+            s.repeaterSetRest != null &&
+            s.repeaterSplitHand != null) {
+          repeaterConfig = RepeaterConfig(
+            sets: s.repeaterSets!,
+            repsPerSet: s.repeaterReps!,
+            workTime: s.repeaterWorkTime!,
+            restTime: s.repeaterRestTime!,
+            setRest: s.repeaterSetRest!,
+            splitHand: s.repeaterSplitHand!,
+          );
+        }
+        final session = SessionModel(
+          id: s.id,
+          name: s.name,
+          notes: s.notes,
+          date: s.date,
+          isAssessment: s.isAssessment,
+          sessionType: SessionType.values[s.sessionType],
+          durationInSeconds: s.duration,
+          repeaterConfig: repeaterConfig,
+        );
+        final reps = dbReps
+            .map(
+              (r) => RepDataModel(
+                index: r.index,
+                duration: r.duration,
+                isRest: r.isRest,
+                handSide: r.rightHand ? HandSide.right : HandSide.left,
+                targetWeight: r.targetWeight,
+                averageWeight: r.averageWeight,
+                gripPosition: GripPosition.values[r.gripPosition],
+              ),
+            )
+            .toList();
+        await remoteRepo.saveSession(session, reps);
+      } catch (e) {
+        AppLoggerHelper.error('Failed to import session ${s.id}: $e');
+      }
+    }
+
+    // Import trainings with their rep_templates
+    final trainings = await gDatabase.getAllTrainingsWithoutAssessments();
+    for (final t in trainings) {
+      if (t.isBuiltin) continue;
+      try {
+        if (t.repeaterId != null) {
+          final repeater = await gDatabase.getRepeater(t.repeaterId!);
+          if (repeater != null) {
+            await remoteRepo.saveRepeaterTraining(
+              t.name,
+              RepeaterModel(
+                sets: repeater.sets,
+                repsBySet: repeater.reps,
+                workTime: repeater.worktime,
+                restTime: repeater.resttime,
+                restBteweenSets: repeater.setRest,
+                splitHand: repeater.splitHand,
+                weightRight: repeater.targetWeigthRight,
+                weightLeft: repeater.targetWeigthLeft,
+                gripPosition: GripPosition.values[repeater.gripPosition],
+              ),
+            );
+          }
+        } else {
+          final dbReps = await gDatabase.getRepsForTraining(t.id);
+          final reps = dbReps
+              .map(
+                (r) => RepModel(
+                  id: r.id,
+                  durationInSeconds: r.duration,
+                  isRest: r.isRest,
+                  handSide: r.rightHand ? HandSide.right : HandSide.left,
+                  targetWeight: r.targetWeight,
+                  index: r.index,
+                  gripPosition: GripPosition.values[r.gripPosition],
+                ),
+              )
+              .toList();
+          await remoteRepo.saveTraining(t.name, reps);
+        }
+      } catch (e) {
+        AppLoggerHelper.error('Failed to import training ${t.id}: $e');
+      }
+    }
+
+    AppLoggerHelper.info('Local data import complete');
+  }
+
+  Future<void> clearLocalDataAfterLogin() async {
+    await gDatabase.wipeLocalData();
+    ref.invalidate(sessionsProvider);
+    ref.invalidate(trainingsProvider);
+    ref.invalidate(favTrainingsProvider);
+    ref.invalidate(allTrainingsProvider);
+    ref.invalidate(pinnedTrainingsProvider);
+    ref.invalidate(assessmentsProvider);
+    ref.invalidate(sensorConfigsProvider);
   }
 
   Future<void> _saveUserToDb(auth_models.User user) async {

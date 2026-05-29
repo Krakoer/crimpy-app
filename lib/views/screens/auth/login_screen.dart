@@ -35,9 +35,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      await ref
-          .read(authStateProvider.notifier)
-          .login(_emailController.text.trim(), _passwordController.text);
+      final authNotifier = ref.read(authStateProvider.notifier);
+
+      // Check for local data before login so we can offer import
+      final localStatus = await authNotifier.checkLocalDataBeforeLogin();
+
+      await authNotifier.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      if (!mounted) return;
+
+      if (localStatus.hasData) {
+        final shouldImport = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Import local data?'),
+            content: Text(
+              'You have ${localStatus.sessionCount} session(s) and '
+              '${localStatus.trainingCount} training(s) stored locally. '
+              'Import them to your account?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Skip'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Import'),
+              ),
+            ],
+          ),
+        );
+
+        if (!mounted) return;
+
+        if (shouldImport == true) {
+          setState(() => _isLoading = true);
+          await authNotifier.importLocalDataToApi();
+        }
+      }
+
+      await authNotifier.clearLocalDataAfterLogin();
 
       if (mounted) {
         Navigator.of(context).pop();
