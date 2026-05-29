@@ -4,8 +4,35 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 
-class TrainingRepository {
-  /// Get all the available trainings along with their reps, except for the assessment ones.
+abstract class TrainingRepository {
+  Future<List<TrainingWithReps>> getAllTrainings({bool onlyFavs = false});
+  Future<void> saveTraining(String name, List<RepModel> reps);
+  Future<void> saveRepeaterTraining(String name, RepeaterModel model);
+  Future<void> editTraining(
+    String trainingId, {
+    String? name,
+    List<RepModel>? reps,
+  });
+  Future<void> editRepeaterTraining(
+    String trainingId, {
+    String? name,
+    RepeaterModel? model,
+  });
+  Future<void> toggleFav(String trainingId);
+  Future<void> deleteTraining(String trainingId);
+  Future<List<SessionModel>> getAllSessionsWithReps({SessionFilter? filters});
+  Future<SessionModel?> getSessionWithData(String sessionId);
+  Future<String> saveSession(
+    SessionModel session,
+    List<RepDataModel> reps, {
+    List<BleDataPoint>? data,
+  });
+  Future<void> updateSession(SessionModel session);
+  Future<void> deleteSession(String sessionId);
+}
+
+class LocalTrainingRepository implements TrainingRepository {
+  @override
   Future<List<TrainingWithReps>> getAllTrainings({
     bool onlyFavs = false,
   }) async {
@@ -17,7 +44,6 @@ class TrainingRepository {
 
     for (final t in trainings) {
       bool isRepeater = t.repeaterId != null;
-      // Get repeater model if available
       Repeater? repeaterData = !isRepeater
           ? null
           : await gDatabase.getRepeater(t.repeaterId!);
@@ -35,7 +61,7 @@ class TrainingRepository {
               weightLeft: repeaterData.targetWeigthLeft,
               gripPosition: GripPosition.values[repeaterData.gripPosition],
             );
-      // If the training is a repeater, generate the reps instead of getting them from DB.
+
       final List<RepModel> repModels;
       if (isRepeater) {
         final repTemplates = model!.generateReps();
@@ -83,17 +109,17 @@ class TrainingRepository {
     return resp;
   }
 
-  /// Save a training into a DB given a name and a list of rep models.
+  @override
   Future<void> saveTraining(String name, List<RepModel> reps) async {
     await gDatabase.saveTrainingWithReps(name, reps);
   }
 
-  /// Save a repeater training given a name and a repeater model.
+  @override
   Future<void> saveRepeaterTraining(String name, RepeaterModel model) async {
     await gDatabase.saveRepeaterTraining(name, model);
   }
 
-  /// Edit a training name and/or reps.
+  @override
   Future<void> editTraining(
     String trainingId, {
     String? name,
@@ -102,12 +128,12 @@ class TrainingRepository {
     await gDatabase.editTrainingWithReps(trainingId, name: name, reps: reps);
   }
 
-  /// Toggle the favorite bool for a given training.
+  @override
   Future<void> toggleFav(String trainingId) async {
     return gDatabase.toggleFav(trainingId);
   }
 
-  /// Edit a repeater training name and/or model.
+  @override
   Future<void> editRepeaterTraining(
     String trainingId, {
     String? name,
@@ -116,12 +142,12 @@ class TrainingRepository {
     await gDatabase.editRepeaterTraining(trainingId, name: name, model: model);
   }
 
-  /// Delete a training by its ID.
+  @override
   Future<void> deleteTraining(String trainingId) async {
     gDatabase.deleteTraining(trainingId);
   }
 
-  /// Get sessions with the reps data, with optional filters (see `SessionFilter` doc).
+  @override
   Future<List<SessionModel>> getAllSessionsWithReps({
     SessionFilter? filters,
   }) async {
@@ -132,7 +158,6 @@ class TrainingRepository {
     for (final t in trainings) {
       final reps = await gDatabase.getRepsForSession(t.id);
 
-      // Build repeater config if available
       RepeaterConfig? repeaterConfig;
       if (t.repeaterSets != null &&
           t.repeaterReps != null &&
@@ -168,12 +193,12 @@ class TrainingRepository {
     return res;
   }
 
-  /// Get a session with its reps data given an ID.
+  @override
   Future<SessionModel?> getSessionWithData(String sessionId) async {
     return await gDatabase.getSessionWithData(sessionId);
   }
 
-  /// Save a session into the DB.
+  @override
   Future<String> saveSession(
     SessionModel session,
     List<RepDataModel> reps, {
@@ -182,12 +207,12 @@ class TrainingRepository {
     return await gDatabase.saveSession(session, reps, points: data);
   }
 
-  /// Update an existing session in the DB.
+  @override
   Future<void> updateSession(SessionModel session) async {
     return await gDatabase.updateSession(session);
   }
 
-  /// Delete a session by its ID.
+  @override
   Future<void> deleteSession(String sessionId) async {
     gDatabase.deleteSession(sessionId);
   }

@@ -7,8 +7,15 @@ import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
 
 class BuiltinTrainingRepository {
-  final AssessmentRepository _assessmentRepository = AssessmentRepository();
-  final AppDatabase _database = gDatabase;
+  final AssessmentRepository _assessmentRepository;
+  final AppDatabase _database;
+
+  BuiltinTrainingRepository({
+    AssessmentRepository? assessmentRepository,
+    AppDatabase? database,
+  }) : _assessmentRepository =
+           assessmentRepository ?? LocalAssessmentRepository(),
+       _database = database ?? gDatabase;
 
   /// Get all built-in trainings with their availability status.
   Future<List<BuiltinTrainingModel>> getBuiltinTrainings() async {

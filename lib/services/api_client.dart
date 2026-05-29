@@ -228,4 +228,156 @@ class ApiClient {
       );
     }
   }
+
+  // ----- Sessions -----
+  Future<List<Map<String, dynamic>>> getSessions() async {
+    final res = await get('/api/sessions');
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> getSession(String id) async {
+    final res = await get('/api/sessions/$id');
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> createSession(Map<String, dynamic> body) async {
+    final res = await post('/api/sessions', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<void> updateSessionApi(String id, Map<String, dynamic> body) async {
+    await put('/api/sessions/$id', data: body);
+  }
+
+  Future<void> deleteSessionApi(String id) async {
+    await delete('/api/sessions/$id');
+  }
+
+  // ----- Trainings -----
+  Future<List<Map<String, dynamic>>> getTrainings() async {
+    final res = await get('/api/trainings');
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> getTraining(String id) async {
+    final res = await get('/api/trainings/$id');
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> createTraining(Map<String, dynamic> body) async {
+    final res = await post('/api/trainings', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> updateTrainingApi(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await put('/api/trainings/$id', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<void> deleteTrainingApi(String id) async {
+    await delete('/api/trainings/$id');
+  }
+
+  // ----- Repeaters -----
+  Future<List<Map<String, dynamic>>> getRepeaters() async {
+    final res = await get('/api/repeaters');
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> createRepeater(Map<String, dynamic> body) async {
+    final res = await post('/api/repeaters', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> updateRepeaterApi(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await put('/api/repeaters/$id', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<void> deleteRepeaterApi(String id) async {
+    await delete('/api/repeaters/$id');
+  }
+
+  // ----- Sensor Configs -----
+  Future<List<Map<String, dynamic>>> getSensorConfigs() async {
+    final res = await get('/api/sensor-configs');
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> createSensorConfig(
+    Map<String, dynamic> body,
+  ) async {
+    final res = await post('/api/sensor-configs', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> updateSensorConfigApi(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await put('/api/sensor-configs/$id', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<void> deleteSensorConfigApi(String id) async {
+    await delete('/api/sensor-configs/$id');
+  }
+
+  // ----- Pinned Builtin Trainings -----
+  Future<List<Map<String, dynamic>>> getPinnedBuiltinTrainings() async {
+    final res = await get('/api/pinned-builtin-trainings');
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<void> pinBuiltinTrainingApi(String builtinTrainingId) async {
+    await post(
+      '/api/pinned-builtin-trainings',
+      data: {'builtin_training_id': builtinTrainingId},
+    );
+  }
+
+  Future<void> unpinBuiltinTrainingApi(String builtinTrainingId) async {
+    await delete('/api/pinned-builtin-trainings/$builtinTrainingId');
+  }
+
+  // ----- Builtin Training Weights -----
+  Future<List<Map<String, dynamic>>> getBuiltinTrainingWeights() async {
+    final res = await get('/api/builtin-training-weights');
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> createBuiltinTrainingWeight(
+    Map<String, dynamic> body,
+  ) async {
+    final res = await post('/api/builtin-training-weights', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> updateBuiltinTrainingWeightApi(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await put('/api/builtin-training-weights/$id', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<void> deleteBuiltinTrainingWeightApi(String id) async {
+    await delete('/api/builtin-training-weights/$id');
+  }
+
+  // ----- Assessments -----
+  Future<List<Map<String, dynamic>>> getAssessmentsApi() async {
+    final res = await get('/api/assessments');
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<void> deleteAssessmentApi(String id) async {
+    await delete('/api/assessments/$id');
+  }
 }

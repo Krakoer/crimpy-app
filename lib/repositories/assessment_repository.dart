@@ -3,14 +3,32 @@ import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 
-class AssessmentRepository {
-  /// Get all assessments trainings.
-  /// Dynamically generates assessment trainings from builtins (no DB storage).
+abstract class AssessmentRepository {
+  Future<List<AssessmentTrainingModel>> getAssessmentTrainings();
+  Future<void> saveAssessment(
+    AssessmentResultModel assessment,
+    String sessionId,
+  );
+  Future<void> deleteAssessment(String id);
+  Future<List<AssessmentModel>> getAssessments({
+    AssessmentType? type,
+    HandSide? handSide,
+    GripPosition? gripPosition,
+  });
+  Future<double?> getLastValueForHand(
+    AssessmentType type,
+    HandSide handSide, {
+    GripPosition? gripPosition,
+  });
+}
+
+class LocalAssessmentRepository implements AssessmentRepository {
+  @override
   Future<List<AssessmentTrainingModel>> getAssessmentTrainings() async {
     return builtinAssessments.map((a) => a.generateAssessment()).toList();
   }
 
-  /// Save an assessment given its model and a session ID.
+  @override
   Future<void> saveAssessment(
     AssessmentResultModel assessment,
     String sessionId,
@@ -18,15 +36,12 @@ class AssessmentRepository {
     await gDatabase.saveAssessment(assessment, sessionId);
   }
 
-  /// Delete an assessment.
+  @override
   Future<void> deleteAssessment(String id) async {
     await gDatabase.deleteAssessment(id);
   }
 
-  /// Get all the assessments.
-  /// Allow to filter on `type`.
-  /// If the `handSide` parameter is set, only corresponding assessment will be retrieved.
-  /// If the `gripPosition` parameter is set, only assessments with that grip position will be retrieved.
+  @override
   Future<List<AssessmentModel>> getAssessments({
     AssessmentType? type,
     HandSide? handSide,
@@ -39,8 +54,7 @@ class AssessmentRepository {
     );
   }
 
-  /// Get the last value of an assessment given its type for a given hand.
-  /// If `gripPosition` is provided, only assessments with that grip position will be considered.
+  @override
   Future<double?> getLastValueForHand(
     AssessmentType type,
     HandSide handSide, {

@@ -1,22 +1,39 @@
 import 'dart:async';
 
 import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/repositories/remote_training_repository.dart';
+import 'package:crimpy/repositories/remote_assessment_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/repositories/builtin_training_repository.dart';
+import 'package:crimpy/viewmodels/auth_view_model.dart';
 
-/// Returns the trainings repository.
+/// Returns the trainings repository (local Drift in guest mode, remote API when authenticated).
 final trainingRepositoryProvider = Provider<TrainingRepository>((ref) {
-  final repository = TrainingRepository();
-  return repository;
+  final user = ref.watch(authStateProvider).asData?.value;
+  if (user != null) {
+    return RemoteTrainingRepository(ref.read(apiClientProvider));
+  }
+  return LocalTrainingRepository();
 });
 
-/// Returns the builtin trainings repository.
+/// Returns the assessment repository (local Drift in guest mode, remote API when authenticated).
+final assessmentRepositoryProvider = Provider<AssessmentRepository>((ref) {
+  final user = ref.watch(authStateProvider).asData?.value;
+  if (user != null) {
+    return RemoteAssessmentRepository(ref.read(apiClientProvider));
+  }
+  return LocalAssessmentRepository();
+});
+
+/// Returns the builtin trainings repository, injecting the appropriate AssessmentRepository.
 final builtinTrainingRepositoryProvider = Provider<BuiltinTrainingRepository>((
   ref,
 ) {
-  return BuiltinTrainingRepository();
+  final assessmentRepo = ref.watch(assessmentRepositoryProvider);
+  return BuiltinTrainingRepository(assessmentRepository: assessmentRepo);
 });
 
 /// Returns favorite trainings.

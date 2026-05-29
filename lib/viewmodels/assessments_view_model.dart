@@ -8,11 +8,6 @@ import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 
-final assessmentRepositoryProvider = Provider<AssessmentRepository>((ref) {
-  final repository = AssessmentRepository();
-  return repository;
-});
-
 /// Returns the list of available assessment trainings.
 final assessmentTrainingsProvider =
     FutureProvider<List<AssessmentTrainingModel>>((ref) {

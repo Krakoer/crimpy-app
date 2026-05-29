@@ -265,7 +265,7 @@ class _DebugToolsSectionState extends ConsumerState<_DebugToolsSection> {
     );
 
     try {
-      final trainingRepository = TrainingRepository();
+      final trainingRepository = LocalTrainingRepository();
       final generator = DummyDataGenerator(trainingRepository);
       await generator.generateAllDummyData();
 
@@ -324,7 +324,7 @@ class _DebugToolsSectionState extends ConsumerState<_DebugToolsSection> {
     );
 
     try {
-      final trainingRepository = TrainingRepository();
+      final trainingRepository = LocalTrainingRepository();
       final generator = DummyDataGenerator(trainingRepository);
       await generator.clearAllData();
 
