@@ -20,10 +20,14 @@ class RemoteAssessmentRepository implements AssessmentRepository {
     AssessmentResultModel assessment,
     String sessionId,
   ) async {
-    // Assessments are created as part of POST /api/sessions (nested)
-    // This method is only called when saving to the already-running session context.
-    // The session handler creates assessments in the same transaction.
-    // This is a no-op for the remote case since saveSession handles it.
+    await _apiClient.createAssessmentApi({
+      'session_id': sessionId,
+      'type': assessment.type.index,
+      if (assessment.rightValue != null) 'right_value': assessment.rightValue,
+      if (assessment.leftValue != null) 'left_value': assessment.leftValue,
+      if (assessment.gripPosition != null)
+        'grip_position': assessment.gripPosition!.index,
+    });
   }
 
   @override

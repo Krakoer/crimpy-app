@@ -6,7 +6,8 @@ import 'package:crimpy/services/api_exception.dart';
 
 class ApiClient {
   static const String baseUrl = kDebugMode
-      ? 'https://devapi.crimpy.app'
+      // ? 'https://devapi.crimpy.app'
+      ? 'http://192.168.1.15:3000'
       : 'https://api.crimpy.app';
   static const String tokenKey = 'auth_token';
 
@@ -287,6 +288,11 @@ class ApiClient {
     return (res.data as List).cast<Map<String, dynamic>>();
   }
 
+  Future<Map<String, dynamic>> getRepeater(String id) async {
+    final res = await get('/api/repeaters/$id');
+    return res.data as Map<String, dynamic>;
+  }
+
   Future<Map<String, dynamic>> createRepeater(Map<String, dynamic> body) async {
     final res = await post('/api/repeaters', data: body);
     return res.data as Map<String, dynamic>;
@@ -372,9 +378,19 @@ class ApiClient {
   }
 
   // ----- Assessments -----
+  Future<Map<String, dynamic>> createAssessmentApi(
+    Map<String, dynamic> body,
+  ) async {
+    final res = await post('/api/assessments', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
   Future<List<Map<String, dynamic>>> getAssessmentsApi() async {
     final res = await get('/api/assessments');
-    return (res.data as List).cast<Map<String, dynamic>>();
+    if (res.data != null) {
+      return (res.data as List).cast<Map<String, dynamic>>();
+    }
+    return [];
   }
 
   Future<void> deleteAssessmentApi(String id) async {

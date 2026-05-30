@@ -35,7 +35,41 @@ class RemoteTrainingRepository implements TrainingRepository {
 
   Future<TrainingWithReps?> _fetchTrainingWithReps(String id) async {
     final data = await _apiClient.getTraining(id);
+    final training = data['training'] as Map<String, dynamic>?;
+    if (training == null) return null;
+
+    final repeaterIdStr = training['RepeaterID'] as String?;
+    if (repeaterIdStr != null) {
+      final repeaterData = await _apiClient.getRepeater(repeaterIdStr);
+      return _parseTrainingWithRepeater(training, repeaterData);
+    }
+
     return _parseTrainingWithReps(data);
+  }
+
+  TrainingWithReps _parseTrainingWithRepeater(
+    Map<String, dynamic> training,
+    Map<String, dynamic> repeaterData,
+  ) {
+    final repeater = RepeaterModel(
+      sets: (repeaterData['Sets'] as num).toInt(),
+      repsBySet: (repeaterData['Reps'] as num).toInt(),
+      workTime: (repeaterData['Worktime'] as num).toInt(),
+      restTime: (repeaterData['Resttime'] as num).toInt(),
+      restBteweenSets: (repeaterData['SetRest'] as num).toInt(),
+      splitHand: repeaterData['SplitHand'] as bool,
+      weightRight: (repeaterData['TargetWeightRight'] as num?)?.toDouble(),
+      weightLeft: (repeaterData['TargetWeightLeft'] as num?)?.toDouble(),
+      gripPosition: GripPosition
+          .values[(repeaterData['GripPosition'] as num? ?? 0).toInt()],
+    );
+    return TrainingWithReps(
+      id: training['ID'] as String,
+      name: training['Name'] as String,
+      isFav: training['IsFavorite'] as bool,
+      reps: const [],
+      repeater: repeater,
+    );
   }
 
   TrainingWithReps? _parseTrainingWithReps(Map<String, dynamic> data) {
@@ -45,10 +79,7 @@ class RemoteTrainingRepository implements TrainingRepository {
     final repTemplates = (data['rep_templates'] as List? ?? [])
         .cast<Map<String, dynamic>>();
 
-    RepeaterModel? repeater;
-    final List<RepModel> reps;
-
-    reps = repTemplates.map((r) {
+    final reps = repTemplates.map((r) {
       return RepModel(
         id: r['ID'] as String?,
         durationInSeconds: (r['Duration'] as num).toInt(),
@@ -66,7 +97,7 @@ class RemoteTrainingRepository implements TrainingRepository {
       name: training['Name'] as String,
       isFav: training['IsFavorite'] as bool,
       reps: reps,
-      repeater: repeater,
+      repeater: null,
     );
   }
 
@@ -295,6 +326,7 @@ class RemoteTrainingRepository implements TrainingRepository {
       'id': id,
       'name': session.name,
       'notes': session.notes ?? '',
+      'date': session.date.toUtc().toIso8601String(),
       'is_assessment': session.isAssessment,
       'session_type': session.sessionType.index,
       'duration': duration,

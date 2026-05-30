@@ -3,12 +3,12 @@ import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/auth_models.dart' as auth_models;
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/repositories/remote_assessment_repository.dart';
 import 'package:crimpy/repositories/remote_training_repository.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/auth_service.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
-import 'package:crimpy/viewmodels/training_view_model.dart';
-import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -155,12 +155,6 @@ class AuthState extends _$AuthState {
       await gDatabase.wipeLocalData();
       await gDatabase.deleteCurrentUser();
 
-      ref.invalidate(sessionsProvider);
-      ref.invalidate(trainingsProvider);
-      ref.invalidate(favTrainingsProvider);
-      ref.invalidate(allTrainingsProvider);
-      ref.invalidate(pinnedTrainingsProvider);
-      ref.invalidate(assessmentsProvider);
       ref.invalidate(sensorConfigsProvider);
       ref.invalidateSelf();
 
@@ -183,8 +177,9 @@ class AuthState extends _$AuthState {
   Future<void> importLocalDataToApi() async {
     final apiClient = ref.read(apiClientProvider);
     final remoteRepo = RemoteTrainingRepository(apiClient);
+    final remoteAssessmentRepo = RemoteAssessmentRepository(apiClient);
 
-    // Import sessions with their rep_datas
+    // Import sessions with their rep_datas and assessments
     final sessions = await gDatabase.getAllSessions();
     for (final s in sessions) {
       try {
@@ -228,7 +223,30 @@ class AuthState extends _$AuthState {
               ),
             )
             .toList();
-        await remoteRepo.saveSession(session, reps);
+        final serverSessionId = await remoteRepo.saveSession(session, reps);
+
+        if (s.isAssessment) {
+          final dbAssessments = await gDatabase.getAssessmentsForSession(s.id);
+          for (final a in dbAssessments) {
+            try {
+              await remoteAssessmentRepo.saveAssessment(
+                AssessmentResultModel(
+                  type: AssessmentType.values[a.type],
+                  rightValue: a.rightValue,
+                  leftValue: a.leftValue,
+                  gripPosition: a.gripPosition != null
+                      ? GripPosition.values[a.gripPosition!]
+                      : null,
+                ),
+                serverSessionId,
+              );
+            } catch (e) {
+              AppLoggerHelper.error(
+                'Failed to import assessment for session ${s.id}: $e',
+              );
+            }
+          }
+        }
       } catch (e) {
         AppLoggerHelper.error('Failed to import session ${s.id}: $e');
       }
@@ -284,13 +302,8 @@ class AuthState extends _$AuthState {
 
   Future<void> clearLocalDataAfterLogin() async {
     await gDatabase.wipeLocalData();
-    ref.invalidate(sessionsProvider);
-    ref.invalidate(trainingsProvider);
-    ref.invalidate(favTrainingsProvider);
-    ref.invalidate(allTrainingsProvider);
-    ref.invalidate(pinnedTrainingsProvider);
-    ref.invalidate(assessmentsProvider);
     ref.invalidate(sensorConfigsProvider);
+    ref.invalidateSelf();
   }
 
   Future<void> _saveUserToDb(auth_models.User user) async {

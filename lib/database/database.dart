@@ -690,6 +690,12 @@ class AppDatabase extends _$AppDatabase {
     await (delete(assessments)..where((a) => a.id.equals(id))).go();
   }
 
+  Future<List<Assessment>> getAssessmentsForSession(String sessionId) {
+    return (select(
+      assessments,
+    )..where((a) => a.sessionId.equals(sessionId))).get();
+  }
+
   /// Get the assessments done.
   /// Allow to filter on `type`.
   /// If the `rightHand` parameter is set, it will only return the results for the given hand.
