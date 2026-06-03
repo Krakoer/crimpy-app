@@ -9,6 +9,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/training_item_model.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
@@ -74,72 +75,66 @@ class Assessments extends Table {
   ];
 }
 
-// Stores the available trainings, including builtins and assessments.
+// Stores training templates (user-created and coach-assigned).
+// The generated Drift row class is named TrainingRow to avoid conflict
+// with the domain Training class in training_model.dart.
+@DataClassName('TrainingRow')
 class Trainings extends Table {
   late final TextColumn id = text().clientDefault(() => Uuid().v4())();
 
-  late final TextColumn name = text()();
-  late final TextColumn repeaterId = text().nullable()();
-  late final BoolColumn isBuiltin = boolean().withDefault(
-    const Constant(false),
-  )();
+  late final TextColumn title = text()();
+  late final TextColumn description = text().nullable()();
   late final BoolColumn isFavorite = boolean().withDefault(
     const Constant(false),
   )();
-  late final BoolColumn isAssessment = boolean().withDefault(
+
+  late final DateTimeColumn updatedAt = dateTime().withDefault(
+    currentDateAndTime,
+  )();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Stores individual items within a training.
+// JSONB fields (loads, hand_positions, etc.) are stored as JSON strings.
+// The generated row class is named TrainingItemRow to avoid conflict with
+// the domain TrainingItem class in training_item_model.dart.
+@DataClassName('TrainingItemRow')
+class TrainingItems extends Table {
+  late final TextColumn id = text().clientDefault(() => Uuid().v4())();
+  late final TextColumn trainingId = text()();
+  late final TextColumn parentId = text().nullable()();
+  late final TextColumn type = text()();
+  late final IntColumn position = integer().withDefault(const Constant(0))();
+
+  // Repeater and circuit cycles
+  late final IntColumn cycles = integer().nullable()();
+  late final IntColumn cycleRestSeconds = integer().nullable()();
+
+  // Reps (per cycle for repeaters, total for exercises)
+  late final IntColumn reps = integer().nullable()();
+  // Explicit duration in seconds (exercises, free items)
+  late final IntColumn duration = integer().nullable()();
+  // Rest after the item or between reps
+  late final IntColumn restSeconds = integer().nullable()();
+  // Worktime per rep (repeater and hangboard_rep)
+  late final IntColumn worktimeSeconds = integer().nullable()();
+  // Hand: 'both', 'split', 'left', 'right'
+  late final TextColumn hand = text().nullable()();
+
+  // Per-rep JSON arrays
+  late final TextColumn loadsJson = text().nullable()();
+  late final TextColumn leftLoadsJson = text().nullable()();
+  late final TextColumn handPositionsJson = text().nullable()();
+  late final TextColumn edgeSizesMmJson = text().nullable()();
+
+  late final BoolColumn loadIsMax = boolean().withDefault(
     const Constant(false),
   )();
-
-  late final DateTimeColumn updatedAt = dateTime().withDefault(
-    currentDateAndTime,
-  )();
-
-  @override
-  Set<Column> get primaryKey => {id};
-
-  @override
-  List<String> get customConstraints => [
-    'FOREIGN KEY (repeater_id) REFERENCES repeaters(id) ON DELETE CASCADE',
-  ];
-}
-
-// Stores the repeaters trainings, including builtins and assessments.
-class Repeaters extends Table {
-  late final TextColumn id = text().clientDefault(() => Uuid().v4())();
-
-  late final IntColumn sets = integer()();
-  late final IntColumn reps = integer()();
-  late final IntColumn worktime = integer()();
-  late final IntColumn resttime = integer()();
-  late final IntColumn setRest = integer()();
-  late final RealColumn targetWeigthRight = real().nullable()();
-  late final RealColumn targetWeigthLeft = real().nullable()();
-  late final BoolColumn splitHand = boolean()();
-  late final IntColumn gripPosition = integer().withDefault(
-    const Constant(0),
-  )(); // 0 = halfCrimp (default)
-
-  late final DateTimeColumn updatedAt = dateTime().withDefault(
-    currentDateAndTime,
-  )();
-
-  @override
-  Set<Column> get primaryKey => {id};
-}
-
-// Stores the repetitions for the trainings.
-class RepTemplates extends Table {
-  late final TextColumn id = text().clientDefault(() => Uuid().v4())();
-
-  late final BoolColumn isRest = boolean()();
-  late final BoolColumn rightHand = boolean()();
-  late final IntColumn duration = integer()();
-  late final TextColumn trainingId = text()();
-  late final RealColumn targetWeight = real()();
-  late final IntColumn index = integer()();
-  late final IntColumn gripPosition = integer().withDefault(
-    const Constant(0),
-  )(); // 0 = halfCrimp (default)
+  late final TextColumn freeText = text().nullable()();
+  late final TextColumn exerciseId = text().nullable()();
+  late final TextColumn sectionTitle = text().nullable()();
 
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
@@ -258,9 +253,8 @@ class Users extends Table {
     Sessions,
     Assessments,
     Trainings,
-    RepTemplates,
+    TrainingItems,
     RepDatas,
-    Repeaters,
     SensorConfigs,
     BuiltinTrainingWeights,
     PinnedBuiltinTrainings,
@@ -445,220 +439,180 @@ class AppDatabase extends _$AppDatabase {
   }
 
   // ------------------------------------- TRAININGS -------------------------------------
-  /// Save a training with its repetitions.
-  Future<String> saveTrainingWithReps(String name, List<RepModel> reps) async {
+
+  /// Convert a flat list of TrainingItemRow rows into a nested Training object.
+  Training _buildTraining(TrainingRow row, List<TrainingItemRow> allItems) {
+    final topLevel = allItems.where((i) => i.parentId == null).toList()
+      ..sort((a, b) => a.position.compareTo(b.position));
+    return Training(
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      isFavorite: row.isFavorite,
+      items: topLevel.map((i) => _buildItem(i, allItems)).toList(),
+    );
+  }
+
+  TrainingItem _buildItem(TrainingItemRow row, List<TrainingItemRow> allItems) {
+    List<Load>? parseLoads(String? json) {
+      if (json == null || json.isEmpty) return null;
+      final list = jsonDecode(json) as List<dynamic>;
+      return list.map((e) => Load.fromJson(e as Map<String, dynamic>)).toList();
+    }
+
+    List<String>? parseStrings(String? json) {
+      if (json == null || json.isEmpty) return null;
+      final list = jsonDecode(json) as List<dynamic>;
+      return list.map((e) => e as String).toList();
+    }
+
+    List<int>? parseInts(String? json) {
+      if (json == null || json.isEmpty) return null;
+      final list = jsonDecode(json) as List<dynamic>;
+      return list.map((e) => (e as num).toInt()).toList();
+    }
+
+    final children = allItems.where((i) => i.parentId == row.id).toList()
+      ..sort((a, b) => a.position.compareTo(b.position));
+
+    return TrainingItem(
+      id: row.id,
+      type: TrainingItemType.fromString(row.type),
+      position: row.position,
+      parentId: row.parentId,
+      cycles: row.cycles,
+      cycleRestSeconds: row.cycleRestSeconds,
+      reps: row.reps,
+      duration: row.duration,
+      restSeconds: row.restSeconds,
+      worktimeSeconds: row.worktimeSeconds,
+      hand: row.hand,
+      loads: parseLoads(row.loadsJson),
+      leftLoads: parseLoads(row.leftLoadsJson),
+      handPositions: parseStrings(row.handPositionsJson),
+      edgeSizesMm: parseInts(row.edgeSizesMmJson),
+      loadIsMax: row.loadIsMax,
+      freeText: row.freeText,
+      exerciseId: row.exerciseId,
+      sectionTitle: row.sectionTitle,
+      items: children.map((c) => _buildItem(c, allItems)).toList(),
+    );
+  }
+
+  String? _loadsToJson(List<Load>? loads) =>
+      loads == null ? null : jsonEncode(loads.map((l) => l.toJson()).toList());
+
+  String? _stringsToJson(List<String>? list) =>
+      list == null ? null : jsonEncode(list);
+
+  String? _intsToJson(List<int>? list) =>
+      list == null ? null : jsonEncode(list);
+
+  /// Get all trainings for the current user.
+  Future<List<Training>> getAllTrainings({bool onlyFavs = false}) async {
+    final rows = await (select(
+      trainings,
+    )..where((t) => onlyFavs ? t.isFavorite : const Constant(true))).get();
+
+    final result = <Training>[];
+    for (final row in rows) {
+      final itemRows =
+          await (select(trainingItems)
+                ..where((i) => i.trainingId.equals(row.id))
+                ..orderBy([(i) => OrderingTerm(expression: i.position)]))
+              .get();
+      result.add(_buildTraining(row, itemRows));
+    }
+    return result;
+  }
+
+  /// Save a new training (inserts training row and all items recursively).
+  Future<String> saveTraining(Training training) async {
     final trainingRowId = await into(trainings).insert(
-      TrainingsCompanion(name: Value(name), updatedAt: Value(DateTime.now())),
+      TrainingsCompanion(
+        title: Value(training.title),
+        description: Value(training.description),
+        isFavorite: Value(training.isFavorite),
+        updatedAt: Value(DateTime.now()),
+      ),
     );
     final trainingId = (await (select(
       trainings,
     )..where((t) => t.rowId.equals(trainingRowId))).getSingle()).id;
 
-    final companions = reps
-        .asMap()
-        .map(
-          (index, rep) => MapEntry(
-            index,
-            RepTemplatesCompanion(
-              duration: Value(rep.durationInSeconds),
-              index: Value(index),
-              isRest: Value(rep.isRest),
-              rightHand: Value(rep.handSide.isRightHand),
-              trainingId: Value(trainingId),
-              targetWeight: Value(rep.targetWeight),
-              gripPosition: Value(rep.gripPosition.index),
-              updatedAt: Value(DateTime.now()),
-            ),
-          ),
-        )
-        .values
-        .toList();
-
-    batch((batch) {
-      batch.insertAll(repTemplates, companions);
-    });
-
+    await _insertItems(training.items, trainingId, null);
     return trainingId;
+  }
+
+  Future<void> _insertItems(
+    List<TrainingItem> items,
+    String trainingId,
+    String? parentId,
+  ) async {
+    for (final item in items) {
+      final itemRowId = await into(trainingItems).insert(
+        TrainingItemsCompanion(
+          trainingId: Value(trainingId),
+          parentId: Value(parentId),
+          type: Value(item.type.apiValue),
+          position: Value(item.position),
+          cycles: Value(item.cycles),
+          cycleRestSeconds: Value(item.cycleRestSeconds),
+          reps: Value(item.reps),
+          duration: Value(item.duration),
+          restSeconds: Value(item.restSeconds),
+          worktimeSeconds: Value(item.worktimeSeconds),
+          hand: Value(item.hand),
+          loadsJson: Value(_loadsToJson(item.loads)),
+          leftLoadsJson: Value(_loadsToJson(item.leftLoads)),
+          handPositionsJson: Value(_stringsToJson(item.handPositions)),
+          edgeSizesMmJson: Value(_intsToJson(item.edgeSizesMm)),
+          loadIsMax: Value(item.loadIsMax),
+          freeText: Value(item.freeText),
+          exerciseId: Value(item.exerciseId),
+          sectionTitle: Value(item.sectionTitle),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+      final itemId = (await (select(
+        trainingItems,
+      )..where((i) => i.rowId.equals(itemRowId))).getSingle()).id;
+      if (item.items.isNotEmpty) {
+        await _insertItems(item.items, trainingId, itemId);
+      }
+    }
+  }
+
+  /// Update an existing training (replaces all items).
+  Future<void> updateTraining(Training training) async {
+    await (update(trainings)..where((t) => t.id.equals(training.id))).write(
+      TrainingsCompanion(
+        title: Value(training.title),
+        description: Value(training.description),
+        isFavorite: Value(training.isFavorite),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+    await (delete(
+      trainingItems,
+    )..where((i) => i.trainingId.equals(training.id))).go();
+    await _insertItems(training.items, training.id, null);
   }
 
   /// Toggle the favorite status of a training.
   Future<void> toggleFav(String trainingId) async {
-    final oldFav = (await (select(
+    final row = await (select(
       trainings,
-    )..where((t) => t.id.equals(trainingId))).getSingle()).isFavorite;
+    )..where((t) => t.id.equals(trainingId))).getSingle();
     await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
       TrainingsCompanion(
-        isFavorite: Value(!oldFav),
+        isFavorite: Value(!row.isFavorite),
         updatedAt: Value(DateTime.now()),
       ),
     );
   }
 
-  /// Edit a repetitions along with its reps.
-  /// Updates existing reps in place to preserve IDs for sync.
-  /// For a repeater training, use `editRepeaterTraining`
-  Future<void> editTrainingWithReps(
-    String trainingId, {
-    String? name,
-    List<RepModel>? reps,
-  }) async {
-    if (name != null) {
-      await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
-        TrainingsCompanion(name: Value(name), updatedAt: Value(DateTime.now())),
-      );
-    }
-
-    if (reps != null) {
-      final existingReps =
-          await (select(repTemplates)
-                ..where((r) => r.trainingId.equals(trainingId))
-                ..orderBy([(r) => OrderingTerm(expression: r.index)]))
-              .get();
-
-      final now = DateTime.now();
-
-      for (var i = 0; i < reps.length; i++) {
-        final rep = reps[i];
-        final companion = RepTemplatesCompanion(
-          duration: Value(rep.durationInSeconds),
-          index: Value(i),
-          isRest: Value(rep.isRest),
-          rightHand: Value(rep.handSide.isRightHand),
-          trainingId: Value(trainingId),
-          targetWeight: Value(rep.targetWeight),
-          gripPosition: Value(rep.gripPosition.index),
-          updatedAt: Value(now),
-        );
-
-        if (i < existingReps.length) {
-          await (update(
-            repTemplates,
-          )..where((r) => r.id.equals(existingReps[i].id))).write(companion);
-        } else {
-          await into(repTemplates).insert(companion);
-        }
-      }
-
-      // Delete any excess reps that were removed
-      for (var i = reps.length; i < existingReps.length; i++) {
-        await (delete(
-          repTemplates,
-        )..where((r) => r.id.equals(existingReps[i].id))).go();
-      }
-
-      if (name == null) {
-        await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
-          TrainingsCompanion(updatedAt: Value(now)),
-        );
-      }
-    }
-  }
-
-  /// Edit a repeater training.
-  Future<void> editRepeaterTraining(
-    String trainingId, {
-    String? name,
-    RepeaterModel? model,
-  }) async {
-    if (name != null) {
-      await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
-        TrainingsCompanion(name: Value(name), updatedAt: Value(DateTime.now())),
-      );
-    }
-
-    if (model != null) {
-      var r = await (select(
-        trainings,
-      )..where((t) => t.id.equals(trainingId))).getSingle();
-
-      if (r.repeaterId == null) {
-        AppLoggerHelper.error("Template missing repeater ID while updating");
-        return;
-      }
-
-      await (update(
-        repeaters,
-      )..where((tbl) => tbl.id.equals(r.repeaterId!))).write(
-        RepeatersCompanion(
-          reps: Value(model.repsBySet),
-          sets: Value(model.sets),
-          resttime: Value(model.restTime),
-          setRest: Value(model.restBteweenSets),
-          splitHand: Value(model.splitHand),
-          targetWeigthLeft: Value(model.weightLeft),
-          targetWeigthRight: Value(model.weightRight),
-          worktime: Value(model.workTime),
-          gripPosition: Value(model.gripPosition.index),
-          updatedAt: Value(DateTime.now()),
-        ),
-      );
-
-      if (name == null) {
-        await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
-          TrainingsCompanion(updatedAt: Value(DateTime.now())),
-        );
-      }
-    }
-  }
-
-  /// Save a repeater training given a model.
-  Future<String> saveRepeaterTraining(String name, RepeaterModel model) async {
-    final repeaterRowId = await into(repeaters).insert(
-      RepeatersCompanion(
-        reps: Value(model.repsBySet),
-        sets: Value(model.sets),
-        resttime: Value(model.restTime),
-        setRest: Value(model.restBteweenSets),
-        splitHand: Value(model.splitHand),
-        targetWeigthLeft: Value(model.weightLeft),
-        targetWeigthRight: Value(model.weightRight),
-        worktime: Value(model.workTime),
-        gripPosition: Value(model.gripPosition.index),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
-    final repeaterId = (await (select(
-      repeaters,
-    )..where((r) => r.rowId.equals(repeaterRowId))).getSingle()).id;
-
-    final trainingRowId = await into(trainings).insert(
-      TrainingsCompanion(
-        name: Value(name),
-        repeaterId: Value(repeaterId),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
-    final trainingId = (await (select(
-      trainings,
-    )..where((t) => t.rowId.equals(trainingRowId))).getSingle()).id;
-    return trainingId;
-  }
-
-  /// Get a repeater training.
-  Future<Repeater?> getRepeater(String rId) =>
-      (select(repeaters)..where((s) => s.id.equals(rId))).getSingleOrNull();
-
-  /// Get all the trainings without the assessments.
-  Future<List<Training>> getAllTrainingsWithoutAssessments() => (select(
-    trainings,
-  )..where((training) => training.isAssessment.not())).get();
-
-  /// Get all the assessment trainings.
-  Future<List<Training>> getAllAssessmentTrainings() =>
-      (select(trainings)..where((training) => training.isAssessment)).get();
-
-  /// Get all favorite trainings.
-  Future<List<Training>> getFavTrainings() =>
-      (select(trainings)..where((t) => t.isFavorite)).get();
-
-  /// Get the rep templates associated with a training.
-  Future<List<RepTemplate>> getRepsForTraining(String trainingId) =>
-      (select(repTemplates)
-            ..where((r) => r.trainingId.equals(trainingId))
-            ..orderBy([(r) => OrderingTerm(expression: r.index)]))
-          .get();
-
-  /// Delete a training.
+  /// Delete a training and all its items.
   Future<void> deleteTraining(String trainingId) async {
     await (delete(trainings)..where((t) => t.id.equals(trainingId))).go();
   }
@@ -881,21 +835,18 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Clear all user-generated local data (called on logout).
-  /// Builtin trainings are preserved.
   Future<void> wipeLocalData() async {
     await delete(assessments).go();
     await delete(repDatas).go();
     await delete(sessions).go();
-    await delete(repTemplates).go();
-    await (delete(trainings)..where((t) => t.isBuiltin.equals(false))).go();
-    await delete(repeaters).go();
+    await delete(trainings).go();
     await delete(sensorConfigs).go();
     await delete(builtinTrainingWeights).go();
     await delete(pinnedBuiltinTrainings).go();
   }
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -960,7 +911,9 @@ class AppDatabase extends _$AppDatabase {
           TableMigration(
             schema.repeaters,
             columnTransformer: {
-              repeaters.id: Schema3(database: m.database).repeaters.remoteId,
+              schema.repeaters.id: Schema3(
+                database: m.database,
+              ).repeaters.remoteId,
             },
           ),
         );
@@ -978,7 +931,7 @@ class AppDatabase extends _$AppDatabase {
           TableMigration(
             schema.repTemplates,
             columnTransformer: {
-              repTemplates.id: Schema3(
+              schema.repTemplates.id: Schema3(
                 database: m.database,
               ).repTemplates.remoteId,
             },
@@ -1030,15 +983,209 @@ class AppDatabase extends _$AppDatabase {
         // Drop dirty and deleted_at columns from all synced tables
         await m.alterTable(TableMigration(schema.sessions));
         await m.alterTable(TableMigration(schema.assessments));
-        await m.alterTable(TableMigration(schema.repeaters));
-        await m.alterTable(TableMigration(schema.trainings));
-        await m.alterTable(TableMigration(schema.repTemplates));
         await m.alterTable(TableMigration(schema.repDatas));
         await m.alterTable(TableMigration(schema.sensorConfigs));
         await m.alterTable(TableMigration(schema.builtinTrainingWeights));
         await m.alterTable(TableMigration(schema.pinnedBuiltinTrainings));
         // Drop SyncMetadata table
         await m.database.customStatement('DROP TABLE IF EXISTS sync_metadata');
+      },
+      from7To8: (m, _) async {
+        // Migrate trainings/repeaters/rep_templates to the unified schema.
+        // Uses raw SQL to avoid depending on typed Schema8 table accessors.
+        const gripNames = ['halfCrimp', 'threeFinger', 'fullCrimp', 'openHand'];
+        String gripName(int idx) =>
+            idx < gripNames.length ? gripNames[idx] : 'halfCrimp';
+
+        // Read old data before any schema changes
+        final oldRepeaters = await m.database
+            .customSelect('SELECT * FROM repeaters')
+            .get();
+        final oldRepeaterTrainings = await m.database
+            .customSelect(
+              'SELECT id, repeater_id, is_favorite, name FROM trainings '
+              'WHERE repeater_id IS NOT NULL',
+            )
+            .get();
+        final oldCustomTrainings = await m.database
+            .customSelect(
+              'SELECT id, is_favorite, name FROM trainings '
+              'WHERE repeater_id IS NULL',
+            )
+            .get();
+        final oldRepTemplates = await m.database
+            .customSelect(
+              'SELECT training_id, is_rest, right_hand, duration, '
+              'target_weight, "index", grip_position '
+              'FROM rep_templates ORDER BY training_id, "index"',
+            )
+            .get();
+
+        // Replace trainings table with new schema (raw SQLite table rename)
+        await m.database.customStatement('''
+          CREATE TABLE new_trainings (
+            id TEXT NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT,
+            is_favorite INTEGER NOT NULL DEFAULT 0
+              CHECK (is_favorite IN (0, 1)),
+            updated_at INTEGER NOT NULL DEFAULT
+              (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)),
+            PRIMARY KEY (id)
+          )
+        ''');
+        await m.database.customStatement('''
+          INSERT INTO new_trainings (id, title, is_favorite, updated_at)
+          SELECT id, name, is_favorite, updated_at FROM trainings
+        ''');
+        await m.database.customStatement('DROP TABLE trainings');
+        await m.database.customStatement(
+          'ALTER TABLE new_trainings RENAME TO trainings',
+        );
+
+        // Create training_items table
+        await m.database.customStatement('''
+          CREATE TABLE training_items (
+            id TEXT NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' ||
+              lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) ||
+              '-' || lower(hex(randomblob(2))) || '-' ||
+              lower(hex(randomblob(6)))),
+            training_id TEXT NOT NULL,
+            parent_id TEXT,
+            type TEXT NOT NULL,
+            position INTEGER NOT NULL DEFAULT 0,
+            cycles INTEGER,
+            cycle_rest_seconds INTEGER,
+            reps INTEGER,
+            duration INTEGER,
+            rest_seconds INTEGER,
+            worktime_seconds INTEGER,
+            hand TEXT,
+            loads_json TEXT,
+            left_loads_json TEXT,
+            hand_positions_json TEXT,
+            edge_sizes_mm_json TEXT,
+            load_is_max INTEGER NOT NULL DEFAULT 0
+              CHECK (load_is_max IN (0, 1)),
+            free_text TEXT,
+            exercise_id TEXT,
+            section_title TEXT,
+            updated_at INTEGER NOT NULL DEFAULT
+              (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)),
+            PRIMARY KEY (id),
+            FOREIGN KEY (training_id) REFERENCES trainings(id)
+              ON DELETE CASCADE
+          )
+        ''');
+
+        final repeaterMap = {
+          for (final r in oldRepeaters) r.data['id'] as String: r.data,
+        };
+        final now = (DateTime.now().millisecondsSinceEpoch / 1000)
+            .floor()
+            .toString();
+
+        // Insert repeater items
+        for (final t in oldRepeaterTrainings) {
+          final trainingId = t.data['id'] as String;
+          final r = repeaterMap[t.data['repeater_id'] as String];
+          if (r == null) continue;
+
+          final repsCount = (r['reps'] as num).toInt();
+          final splitHand = r['split_hand'] == 1 || r['split_hand'] == true;
+          final weightRight =
+              (r['target_weight_right'] as num?)?.toDouble() ?? 0.0;
+          final weightLeft =
+              (r['target_weight_left'] as num?)?.toDouble() ?? 0.0;
+          final grip = gripName((r['grip_position'] as num? ?? 0).toInt());
+          final loads = jsonEncode(
+            List.filled(repsCount, {'value': weightRight, 'unit': 'kg'}),
+          );
+          final leftLoads = splitHand
+              ? jsonEncode(
+                  List.filled(repsCount, {'value': weightLeft, 'unit': 'kg'}),
+                )
+              : null;
+          final positions = jsonEncode(List.filled(repsCount, grip));
+
+          await m.database.customStatement(
+            'INSERT INTO training_items '
+            '(training_id, type, position, cycles, reps, worktime_seconds, '
+            'rest_seconds, cycle_rest_seconds, hand, loads_json, '
+            'left_loads_json, hand_positions_json, updated_at) '
+            'VALUES (?,?,0,?,?,?,?,?,?,?,?,?,?)',
+            [
+              trainingId,
+              'repeater',
+              (r['sets'] as num).toInt(),
+              repsCount,
+              (r['worktime'] as num).toInt(),
+              (r['resttime'] as num).toInt(),
+              (r['set_rest'] as num).toInt(),
+              splitHand ? 'split' : 'both',
+              loads,
+              leftLoads,
+              positions,
+              now,
+            ],
+          );
+        }
+
+        // Insert hangboard_rep items for custom trainings
+        final repsByTraining = <String, List<Map<String, dynamic>>>{};
+        for (final rt in oldRepTemplates) {
+          final tid = rt.data['training_id'] as String;
+          repsByTraining.putIfAbsent(tid, () => []).add(rt.data);
+        }
+
+        for (final t in oldCustomTrainings) {
+          final trainingId = t.data['id'] as String;
+          final reps = repsByTraining[trainingId] ?? [];
+          int pos = 0;
+          for (int i = 0; i < reps.length; i++) {
+            final rep = reps[i];
+            if (rep['is_rest'] == 1 || rep['is_rest'] == true) continue;
+
+            int restSecs = 0;
+            if (i + 1 < reps.length) {
+              final next = reps[i + 1];
+              if (next['is_rest'] == 1 || next['is_rest'] == true) {
+                restSecs = (next['duration'] as num).toInt();
+              }
+            }
+
+            final rightHand =
+                rep['right_hand'] == 1 || rep['right_hand'] == true;
+            final weight = (rep['target_weight'] as num).toDouble();
+            final grip = gripName((rep['grip_position'] as num? ?? 0).toInt());
+            final loads = jsonEncode([
+              {'value': weight, 'unit': 'kg'},
+            ]);
+            final positions = jsonEncode([grip]);
+
+            await m.database.customStatement(
+              'INSERT INTO training_items '
+              '(training_id, type, position, worktime_seconds, rest_seconds, '
+              'hand, loads_json, hand_positions_json, updated_at) '
+              'VALUES (?,?,?,?,?,?,?,?,?)',
+              [
+                trainingId,
+                'hangboard_rep',
+                pos++,
+                (rep['duration'] as num).toInt(),
+                restSecs,
+                rightHand ? 'right' : 'left',
+                loads,
+                positions,
+                now,
+              ],
+            );
+          }
+        }
+
+        // Drop legacy tables
+        await m.database.customStatement('DROP TABLE IF EXISTS rep_templates');
+        await m.database.customStatement('DROP TABLE IF EXISTS repeaters');
       },
     ),
   );

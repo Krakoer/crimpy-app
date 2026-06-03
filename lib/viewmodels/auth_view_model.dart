@@ -5,7 +5,7 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/repositories/remote_assessment_repository.dart';
-import 'package:crimpy/repositories/remote_training_repository.dart';
+import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/auth_service.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
@@ -167,7 +167,7 @@ class AuthState extends _$AuthState {
 
   Future<LocalImportStatus> checkLocalDataBeforeLogin() async {
     final sessions = await gDatabase.getAllSessions();
-    final trainings = await gDatabase.getAllTrainingsWithoutAssessments();
+    final trainings = await gDatabase.getAllTrainings();
     return LocalImportStatus(
       sessionCount: sessions.length,
       trainingCount: trainings.length,
@@ -252,46 +252,11 @@ class AuthState extends _$AuthState {
       }
     }
 
-    // Import trainings with their rep_templates
-    final trainings = await gDatabase.getAllTrainingsWithoutAssessments();
+    // Import trainings with their items
+    final trainings = await gDatabase.getAllTrainings();
     for (final t in trainings) {
-      if (t.isBuiltin) continue;
       try {
-        if (t.repeaterId != null) {
-          final repeater = await gDatabase.getRepeater(t.repeaterId!);
-          if (repeater != null) {
-            await remoteRepo.saveRepeaterTraining(
-              t.name,
-              RepeaterModel(
-                sets: repeater.sets,
-                repsBySet: repeater.reps,
-                workTime: repeater.worktime,
-                restTime: repeater.resttime,
-                restBteweenSets: repeater.setRest,
-                splitHand: repeater.splitHand,
-                weightRight: repeater.targetWeigthRight,
-                weightLeft: repeater.targetWeigthLeft,
-                gripPosition: GripPosition.values[repeater.gripPosition],
-              ),
-            );
-          }
-        } else {
-          final dbReps = await gDatabase.getRepsForTraining(t.id);
-          final reps = dbReps
-              .map(
-                (r) => RepModel(
-                  id: r.id,
-                  durationInSeconds: r.duration,
-                  isRest: r.isRest,
-                  handSide: r.rightHand ? HandSide.right : HandSide.left,
-                  targetWeight: r.targetWeight,
-                  index: r.index,
-                  gripPosition: GripPosition.values[r.gripPosition],
-                ),
-              )
-              .toList();
-          await remoteRepo.saveTraining(t.name, reps);
-        }
+        await remoteRepo.saveTraining(t);
       } catch (e) {
         AppLoggerHelper.error('Failed to import training ${t.id}: $e');
       }

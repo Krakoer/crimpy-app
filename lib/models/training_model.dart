@@ -564,7 +564,7 @@ class BuiltinTrainingModel {
 
 /// Represents a training item in the list that can be either regular or builtin.
 class TrainingListItem {
-  final TrainingWithReps? training;
+  final Training? training;
   final BuiltinTrainingModel? builtinTraining;
   final bool isAvailable;
   final List<AssessmentRequirement> missingAssessments;
@@ -579,12 +579,12 @@ class TrainingListItem {
   });
 
   /// Create a regular training item.
-  factory TrainingListItem.regular(TrainingWithReps training) {
+  factory TrainingListItem.regular(Training training) {
     return TrainingListItem._(
       training: training,
       isAvailable: true,
       missingAssessments: [],
-      isPinned: training.isFav,
+      isPinned: training.isFavorite,
     );
   }
 
@@ -593,7 +593,7 @@ class TrainingListItem {
     BuiltinTrainingModel builtinTraining,
     bool isAvailable,
     List<AssessmentRequirement> missingAssessments,
-    TrainingWithReps? generatedTraining,
+    Training? generatedTraining,
     bool isPinned,
   ) {
     return TrainingListItem._(
@@ -608,10 +608,10 @@ class TrainingListItem {
   bool get isBuiltin => builtinTraining != null;
   bool get isRegular => !isBuiltin;
 
-  String get name => training?.name ?? builtinTraining?.name ?? '';
+  String get name => training?.title ?? builtinTraining?.name ?? '';
   String get description => builtinTraining?.description ?? '';
-  Duration get totalDuration => training?.totalDuration ?? Duration.zero;
-  String get id => training?.id ?? builtinTraining?.id ?? "";
+  Duration get totalDuration => Duration.zero;
+  String get id => training?.id ?? builtinTraining?.id ?? '';
 }
 
 /// Template for a rep in a training (used for generation).

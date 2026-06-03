@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/logger.dart';
@@ -71,10 +72,7 @@ class DummyDataGenerator {
       // Delete all sessions (cascade will handle related data)
       await gDatabase.delete(gDatabase.sessions).go();
 
-      // Delete all custom trainings (builtins are kept)
-      await (gDatabase.delete(
-        gDatabase.trainings,
-      )..where((t) => t.isBuiltin.equals(false))).go();
+      await gDatabase.delete(gDatabase.trainings).go();
 
       AppLoggerHelper.info('Successfully cleared all data');
     } catch (e) {
@@ -83,114 +81,144 @@ class DummyDataGenerator {
     }
   }
 
+  TrainingItem _repeaterItem({
+    required int sets,
+    required int reps,
+    required int worktime,
+    required int resttime,
+    required int setRest,
+    required bool splitHand,
+    required double weightRight,
+    double? weightLeft,
+    GripPosition gripPosition = GripPosition.halfCrimp,
+  }) {
+    final loadsPerRep = List.filled(reps, Load(value: weightRight, unit: 'kg'));
+    final leftLoads = splitHand && weightLeft != null
+        ? List.filled(reps, Load(value: weightLeft, unit: 'kg'))
+        : null;
+    final positions = List.filled(reps, gripPosition.name);
+    return TrainingItem(
+      id: '',
+      type: TrainingItemType.repeater,
+      position: 0,
+      cycles: sets,
+      reps: reps,
+      worktimeSeconds: worktime,
+      restSeconds: resttime,
+      cycleRestSeconds: setRest,
+      hand: splitHand ? 'split' : 'both',
+      loads: loadsPerRep,
+      leftLoads: leftLoads,
+      handPositions: positions,
+    );
+  }
+
   /// Generate custom training definitions
   Future<void> _generateCustomTrainings() async {
-    // Beginner Repeaters
-    await _trainingRepository.saveRepeaterTraining(
-      'Beginner Repeaters',
-      RepeaterModel(
-        sets: 3,
-        restBteweenSets: 120,
-        repsBySet: 5,
-        workTime: 7,
-        restTime: 3,
-        splitHand: false,
-        weightRight: 15.0,
-        gripPosition: GripPosition.halfCrimp,
+    final trainingId = await _trainingRepository.saveTraining(
+      Training(
+        id: '',
+        title: 'Beginner Repeaters',
+        isFavorite: true,
+        items: [
+          _repeaterItem(
+            sets: 3,
+            reps: 5,
+            worktime: 7,
+            resttime: 3,
+            setRest: 120,
+            splitHand: false,
+            weightRight: 15.0,
+          ),
+        ],
       ),
     );
-    // Mark as favorite (will get the training ID from the trainings table)
-    final beginnerTraining = await (gDatabase.select(
-      gDatabase.trainings,
-    )..where((t) => t.name.equals('Beginner Repeaters'))).getSingleOrNull();
-    if (beginnerTraining != null) {
-      await gDatabase.toggleFav(beginnerTraining.id);
-    }
+    AppLoggerHelper.info('Created Beginner Repeaters: $trainingId');
 
-    // Advanced Hangs
-    await _trainingRepository.saveRepeaterTraining(
-      'Advanced Hangs',
-      RepeaterModel(
-        sets: 5,
-        restBteweenSets: 180,
-        repsBySet: 20,
-        workTime: 10,
-        restTime: 5,
-        splitHand: false,
-        weightRight: 25.0,
-        gripPosition: GripPosition.halfCrimp,
-      ),
-    );
-    // Mark as favorite
-    final advancedTraining = await (gDatabase.select(
-      gDatabase.trainings,
-    )..where((t) => t.name.equals('Advanced Hangs'))).getSingleOrNull();
-    if (advancedTraining != null) {
-      await gDatabase.toggleFav(advancedTraining.id);
-    }
-
-    // Max Hangs
-    await _trainingRepository.saveRepeaterTraining(
-      'Max Hangs',
-      RepeaterModel(
-        sets: 4,
-        restBteweenSets: 240,
-        repsBySet: 3,
-        workTime: 10,
-        restTime: 10,
-        splitHand: false,
-        weightRight: 35.0,
-        gripPosition: GripPosition.halfCrimp,
+    await _trainingRepository.saveTraining(
+      Training(
+        id: '',
+        title: 'Advanced Hangs',
+        isFavorite: true,
+        items: [
+          _repeaterItem(
+            sets: 5,
+            reps: 20,
+            worktime: 10,
+            resttime: 5,
+            setRest: 180,
+            splitHand: false,
+            weightRight: 25.0,
+          ),
+        ],
       ),
     );
 
-    // Resi - Split hand repeater training
-    await _trainingRepository.saveRepeaterTraining(
-      'Resi',
-      RepeaterModel(
-        sets: 3,
-        restBteweenSets: 480, // 8 minutes = 480 seconds
-        repsBySet: 12,
-        workTime: 7,
-        restTime: 3,
-        splitHand: true,
-        weightRight: 31.0,
-        weightLeft: 27.0,
-        gripPosition: GripPosition.halfCrimp,
+    await _trainingRepository.saveTraining(
+      Training(
+        id: '',
+        title: 'Max Hangs',
+        items: [
+          _repeaterItem(
+            sets: 4,
+            reps: 3,
+            worktime: 10,
+            resttime: 10,
+            setRest: 240,
+            splitHand: false,
+            weightRight: 35.0,
+          ),
+        ],
       ),
     );
 
-    // Endurance Workout
-    await _trainingRepository.saveTraining('Endurance Workout', [
-      RepModel(
-        durationInSeconds: 30,
-        isRest: false,
-        handSide: HandSide.right,
-        targetWeight: 20.0,
-        index: 0,
+    await _trainingRepository.saveTraining(
+      Training(
+        id: '',
+        title: 'Resi',
+        items: [
+          _repeaterItem(
+            sets: 3,
+            reps: 12,
+            worktime: 7,
+            resttime: 3,
+            setRest: 480,
+            splitHand: true,
+            weightRight: 31.0,
+            weightLeft: 27.0,
+          ),
+        ],
       ),
-      RepModel(
-        durationInSeconds: 10,
-        isRest: true,
-        handSide: HandSide.left,
-        targetWeight: 0,
-        index: 1,
+    );
+
+    await _trainingRepository.saveTraining(
+      Training(
+        id: '',
+        title: 'Endurance Workout',
+        items: [
+          TrainingItem(
+            id: '',
+            type: TrainingItemType.hangboardRep,
+            position: 0,
+            worktimeSeconds: 30,
+            restSeconds: 10,
+            hand: 'right',
+            loads: [const Load(value: 20.0, unit: 'kg')],
+            handPositions: ['halfCrimp'],
+          ),
+          TrainingItem(
+            id: '',
+            type: TrainingItemType.hangboardRep,
+            position: 1,
+            worktimeSeconds: 30,
+            restSeconds: 120,
+            hand: 'left',
+            loads: [const Load(value: 20.0, unit: 'kg')],
+            handPositions: ['halfCrimp'],
+          ),
+        ],
       ),
-      RepModel(
-        durationInSeconds: 30,
-        isRest: false,
-        handSide: HandSide.left,
-        targetWeight: 20.0,
-        index: 2,
-      ),
-      RepModel(
-        durationInSeconds: 120,
-        isRest: true,
-        handSide: HandSide.left,
-        targetWeight: 0,
-        index: 3,
-      ),
-    ]);
+    );
 
     AppLoggerHelper.info('Generated 5 custom trainings');
   }

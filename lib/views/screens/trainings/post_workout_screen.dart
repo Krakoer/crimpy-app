@@ -9,7 +9,7 @@ import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:crimpy/theme.dart';
 
 class PostWorkoutScreen extends ConsumerStatefulWidget {
-  final TrainingWithReps template;
+  final Training template;
   final List<RepDataModel> results;
 
   /// Show the results of the workout to the user, and allow them to add a note to the session.
@@ -32,7 +32,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
   @override
   void initState() {
     _trainingNameController.text =
-        "${widget.template.name} - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}";
+        "${widget.template.title} - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}";
     super.initState();
   }
 
@@ -87,7 +87,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(widget.template.name)),
+        appBar: AppBar(title: Text(widget.template.title)),
         body: SafeArea(
           child: Column(
             children: [
@@ -170,13 +170,8 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
           style: null,
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              // If this is a repeater workout, save the config with the session
-              RepeaterConfig? repeaterConfig;
-              if (widget.template.repeater != null) {
-                repeaterConfig = RepeaterConfig.fromRepeaterModel(
-                  widget.template.repeater!,
-                );
-              }
+              // Repeater config is no longer stored on the training template
+              const RepeaterConfig? repeaterConfig = null;
 
               ref
                   .read(sessionsProvider.notifier)

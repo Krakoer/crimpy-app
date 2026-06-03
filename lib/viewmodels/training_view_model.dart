@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:crimpy/models/ble_data_model.dart';
-import 'package:crimpy/repositories/remote_training_repository.dart';
 import 'package:crimpy/repositories/remote_assessment_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
@@ -38,15 +37,15 @@ final builtinTrainingRepositoryProvider = Provider<BuiltinTrainingRepository>((
 
 /// Returns favorite trainings.
 final favTrainingsProvider =
-    AsyncNotifierProvider<FavTrainingsNotifier, List<TrainingWithReps>>(
+    AsyncNotifierProvider<FavTrainingsNotifier, List<Training>>(
       FavTrainingsNotifier.new,
     );
 
-class FavTrainingsNotifier extends AsyncNotifier<List<TrainingWithReps>> {
+class FavTrainingsNotifier extends AsyncNotifier<List<Training>> {
   late TrainingRepository _trainingRepository;
 
   @override
-  FutureOr<List<TrainingWithReps>> build() {
+  FutureOr<List<Training>> build() {
     _trainingRepository = ref.watch(trainingRepositoryProvider);
     return _trainingRepository.getAllTrainings(onlyFavs: true);
   }
@@ -59,83 +58,40 @@ class FavTrainingsNotifier extends AsyncNotifier<List<TrainingWithReps>> {
   }
 }
 
-/// Returns all trainings (except for assessments), and allow to edit, create and delete them.
+/// Returns all trainings and allows creating, updating, and deleting them.
 final trainingsProvider =
-    AsyncNotifierProvider<TrainingsNotifier, List<TrainingWithReps>>(
+    AsyncNotifierProvider<TrainingsNotifier, List<Training>>(
       TrainingsNotifier.new,
     );
 
-class TrainingsNotifier extends AsyncNotifier<List<TrainingWithReps>> {
+class TrainingsNotifier extends AsyncNotifier<List<Training>> {
   late TrainingRepository _trainingRepository;
 
   @override
-  Future<List<TrainingWithReps>> build() {
+  Future<List<Training>> build() {
     _trainingRepository = ref.watch(trainingRepositoryProvider);
     return _trainingRepository.getAllTrainings();
   }
 
-  /// Edit a training's name and/or reps.
-  Future<void> editTraining(
-    String trainingId, {
-    String? newName,
-    List<RepModel>? newReps,
-  }) async {
+  /// Save a new training.
+  Future<void> saveTraining(Training training) async {
     state = const AsyncValue.loading();
     try {
-      await _trainingRepository.editTraining(
-        trainingId,
-        name: newName,
-        reps: newReps,
-      );
+      await _trainingRepository.saveTraining(training);
+      ref.invalidate(allTrainingsProvider);
+      ref.invalidateSelf();
+      await future;
+    } catch (e, stackTrace) {
+      state = AsyncValue.error(e, stackTrace);
+    }
+  }
+
+  /// Update an existing training.
+  Future<void> updateTraining(Training training) async {
+    state = const AsyncValue.loading();
+    try {
+      await _trainingRepository.updateTraining(training);
       ref.invalidate(favTrainingsProvider);
-      ref.invalidate(allTrainingsProvider);
-      ref.invalidateSelf();
-      await future;
-    } catch (e, stackTrace) {
-      state = AsyncValue.error(e, stackTrace);
-    }
-  }
-
-  /// Edit a repeater training's name and/or model.
-  Future<void> editRepeaterTraining(
-    String trainingId, {
-    String? newName,
-    RepeaterModel? model,
-  }) async {
-    state = const AsyncValue.loading();
-    try {
-      await _trainingRepository.editRepeaterTraining(
-        trainingId,
-        name: newName,
-        model: model,
-      );
-      ref.invalidate(favTrainingsProvider);
-      ref.invalidate(allTrainingsProvider);
-      ref.invalidateSelf();
-      await future;
-    } catch (e, stackTrace) {
-      state = AsyncValue.error(e, stackTrace);
-    }
-  }
-
-  /// Save a new training into the DB given a name and a set of reps.
-  Future<void> saveTraining(String name, List<RepModel> reps) async {
-    state = const AsyncValue.loading();
-    try {
-      await _trainingRepository.saveTraining(name, reps);
-      ref.invalidate(allTrainingsProvider);
-      ref.invalidateSelf();
-      await future;
-    } catch (e, stackTrace) {
-      state = AsyncValue.error(e, stackTrace);
-    }
-  }
-
-  /// Save a new repeater training given a name and a repeater model.
-  Future<void> saveRepeaterTraining(String name, RepeaterModel model) async {
-    state = const AsyncValue.loading();
-    try {
-      await _trainingRepository.saveRepeaterTraining(name, model);
       ref.invalidate(allTrainingsProvider);
       ref.invalidateSelf();
       await future;
@@ -273,7 +229,6 @@ final sessionWithDataProvider = FutureProvider.family<SessionModel?, String>((
 });
 
 /// Provider that returns filtered sessions based on a given filter.
-/// This provider watches the base sessions provider and applies client-side filtering.
 final filteredSessionsProvider =
     FutureProvider.family<List<SessionModel>, SessionFilter?>((
       ref,
@@ -303,7 +258,6 @@ class PinnedTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
     _trainingRepository = ref.watch(trainingRepositoryProvider);
     _builtinTrainingRepository = ref.watch(builtinTrainingRepositoryProvider);
 
-    // Get favorite regular trainings
     final favoriteTrainings = await _trainingRepository.getAllTrainings(
       onlyFavs: true,
     );
@@ -311,14 +265,10 @@ class PinnedTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
         .map(TrainingListItem.regular)
         .toList();
 
-    // Get pinned builtin training IDs
     final pinnedIds = await _builtinTrainingRepository
         .getPinnedBuiltinTrainingIds();
-
-    // Get all builtin trainings
     final allBuiltins = await _builtinTrainingRepository.getBuiltinTrainings();
 
-    // Filter to only pinned ones and generate them
     final pinnedBuiltinItems = <TrainingListItem>[];
     for (final builtin in allBuiltins) {
       if (pinnedIds.contains(builtin.id)) {
@@ -329,35 +279,30 @@ class PinnedTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
         final generatedTraining = isAvailable
             ? await _builtinTrainingRepository.generateTraining(builtin)
             : null;
-
         pinnedBuiltinItems.add(
           TrainingListItem.builtin(
             builtin,
             isAvailable,
             missingAssessments,
             generatedTraining,
-            true, // isPinned is true since we filtered to only pinned items
+            true,
           ),
         );
       }
     }
 
-    // Combine favorite regular trainings and pinned builtin trainings
     return [...favoriteItems, ...pinnedBuiltinItems];
   }
 
-  /// Toggle pin status for a builtin training.
   Future<void> togglePin(String builtinTrainingId) async {
     final isPinned = await _builtinTrainingRepository.isBuiltinTrainingPinned(
       builtinTrainingId,
     );
-
     if (isPinned) {
       await _builtinTrainingRepository.unpinBuiltinTraining(builtinTrainingId);
     } else {
       await _builtinTrainingRepository.pinBuiltinTraining(builtinTrainingId);
     }
-
     ref.invalidateSelf();
   }
 }
@@ -377,13 +322,11 @@ class AllTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
     _trainingRepository = ref.watch(trainingRepositoryProvider);
     _builtinTrainingRepository = ref.watch(builtinTrainingRepositoryProvider);
 
-    // Get regular trainings
     final regularTrainings = await _trainingRepository.getAllTrainings();
     final regularItems = regularTrainings
         .map(TrainingListItem.regular)
         .toList();
 
-    // Get builtin trainings
     final builtinTrainings = await _builtinTrainingRepository
         .getBuiltinTrainings();
     final builtinItems = <TrainingListItem>[];
@@ -400,7 +343,6 @@ class AllTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
       final isPinned = await _builtinTrainingRepository.isBuiltinTrainingPinned(
         builtin.id,
       );
-
       builtinItems.add(
         TrainingListItem.builtin(
           builtin,
@@ -412,11 +354,9 @@ class AllTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
       );
     }
 
-    // Combine regular and builtin trainings
     return [...regularItems, ...builtinItems];
   }
 
-  /// Refresh builtin trainings availability (call after new assessments).
   Future<void> refreshBuiltinAvailability() async {
     ref.invalidateSelf();
     await future;

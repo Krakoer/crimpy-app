@@ -6,12 +6,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 
 class RepeaterCreationScreen extends ConsumerStatefulWidget {
-  final TrainingWithReps? originalTemplate;
+  final Training? originalTemplate;
 
   /// Screen where the user can create a repeater training.
   /// To edit a training, fill the `originalTemplate` argument.
@@ -41,23 +42,27 @@ class _RepeaterCreationScreenState
   void initState() {
     if (widget.originalTemplate != null) {
       _isEdit = true;
-      _trainingNameController.text = widget.originalTemplate!.name;
-      _setNumberController.text = widget.originalTemplate!.repeater!.sets
-          .toString();
-      _repsNumberController.text = widget.originalTemplate!.repeater!.repsBySet
-          .toString();
-      _trainingNameController.text = widget.originalTemplate!.name;
-      rest = Duration(seconds: widget.originalTemplate!.repeater!.restTime);
-      worktime = Duration(seconds: widget.originalTemplate!.repeater!.workTime);
-      setRest = Duration(
-        seconds: widget.originalTemplate!.repeater!.restBteweenSets,
-      );
-      _gripPosition = widget.originalTemplate!.repeater!.gripPosition;
-      _splitHand = widget.originalTemplate!.repeater!.splitHand;
-      _rightHandWeightController.text =
-          (widget.originalTemplate!.repeater!.weightRight ?? 10.0).toString();
-      _leftHandWeightController.text =
-          (widget.originalTemplate!.repeater!.weightLeft ?? 10.0).toString();
+      _trainingNameController.text = widget.originalTemplate!.title;
+      // Load repeater params from the first repeater item if available
+      final repeaterItem = widget.originalTemplate!.items
+          .where((i) => i.type.apiValue == 'repeater')
+          .firstOrNull;
+      if (repeaterItem != null) {
+        _setNumberController.text = (repeaterItem.cycles ?? 3).toString();
+        _repsNumberController.text = (repeaterItem.reps ?? 10).toString();
+        worktime = Duration(seconds: repeaterItem.worktimeSeconds ?? 7);
+        rest = Duration(seconds: repeaterItem.restSeconds ?? 3);
+        setRest = Duration(seconds: repeaterItem.cycleRestSeconds ?? 480);
+        _splitHand = repeaterItem.hand == 'split';
+        final loads = repeaterItem.loads;
+        final leftLoads = repeaterItem.leftLoads;
+        if (loads != null && loads.isNotEmpty) {
+          _rightHandWeightController.text = loads.first.value.toString();
+        }
+        if (leftLoads != null && leftLoads.isNotEmpty) {
+          _leftHandWeightController.text = leftLoads.first.value.toString();
+        }
+      }
     }
     super.initState();
   }
@@ -95,24 +100,49 @@ class _RepeaterCreationScreenState
         gripPosition: _gripPosition,
       );
 
-      if (_isEdit) {
-        ref
-            .read(trainingsProvider.notifier)
-            .editRepeaterTraining(
-              widget.originalTemplate!.id,
-              newName: _trainingNameController.text,
-              model: repeaterModel,
+      final loadsPerRep = List.filled(
+        repeaterModel.repsBySet,
+        Load(value: repeaterModel.weightRight ?? 0, unit: 'kg'),
+      );
+      final leftLoads = repeaterModel.splitHand
+          ? List.filled(
+              repeaterModel.repsBySet,
+              Load(value: repeaterModel.weightLeft ?? 0, unit: 'kg'),
             )
-            .then((v) {
-              if (mounted) Navigator.of(context).pop();
-            });
+          : null;
+      final positions = List.filled(
+        repeaterModel.repsBySet,
+        repeaterModel.gripPosition.name,
+      );
+      final training = Training(
+        id: widget.originalTemplate?.id ?? '',
+        title: _trainingNameController.text,
+        isFavorite: widget.originalTemplate?.isFavorite ?? false,
+        items: [
+          TrainingItem(
+            id: '',
+            type: TrainingItemType.repeater,
+            position: 0,
+            cycles: repeaterModel.sets,
+            reps: repeaterModel.repsBySet,
+            worktimeSeconds: repeaterModel.workTime,
+            restSeconds: repeaterModel.restTime,
+            cycleRestSeconds: repeaterModel.restBteweenSets,
+            hand: repeaterModel.splitHand ? 'split' : 'both',
+            loads: loadsPerRep,
+            leftLoads: leftLoads,
+            handPositions: positions,
+          ),
+        ],
+      );
+      if (_isEdit) {
+        ref.read(trainingsProvider.notifier).updateTraining(training).then((v) {
+          if (mounted) Navigator.of(context).pop();
+        });
       } else {
-        ref
-            .read(trainingsProvider.notifier)
-            .saveRepeaterTraining(_trainingNameController.text, repeaterModel)
-            .then((v) {
-              if (mounted) Navigator.of(context).pop();
-            });
+        ref.read(trainingsProvider.notifier).saveTraining(training).then((v) {
+          if (mounted) Navigator.of(context).pop();
+        });
       }
     }
   }

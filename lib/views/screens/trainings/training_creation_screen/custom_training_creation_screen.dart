@@ -6,7 +6,7 @@ import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 
 class TrainingCreationScreen extends ConsumerStatefulWidget {
-  final TrainingWithReps? originalTraining;
+  final Training? originalTraining;
 
   /// Screen to create a custom training.
   /// Set the `originalTraining` to edit a training.
@@ -21,15 +21,13 @@ class _TrainingCreationScreenState
     extends ConsumerState<TrainingCreationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _trainingNameController = TextEditingController();
-  List<RepModel> _reps = [];
+  final List<RepModel> _reps = [];
   bool _isEdit = false;
 
   @override
   void initState() {
-    // Set the values in the form if we edit a training.
     if (widget.originalTraining != null) {
-      _reps = widget.originalTraining!.reps;
-      _trainingNameController.text = widget.originalTraining!.name;
+      _trainingNameController.text = widget.originalTraining!.title;
       _isEdit = true;
     }
     super.initState();
@@ -92,24 +90,20 @@ class _TrainingCreationScreenState
         return;
       }
 
+      final training = Training(
+        id: widget.originalTraining?.id ?? '',
+        title: _trainingNameController.text,
+        isFavorite: widget.originalTraining?.isFavorite ?? false,
+        items: const [],
+      );
       if (_isEdit) {
-        ref
-            .read(trainingsProvider.notifier)
-            .editTraining(
-              widget.originalTraining!.id,
-              newName: _trainingNameController.text,
-              newReps: _reps,
-            )
-            .then((v) {
-              if (mounted) Navigator.of(context).pop();
-            });
+        ref.read(trainingsProvider.notifier).updateTraining(training).then((v) {
+          if (mounted) Navigator.of(context).pop();
+        });
       } else {
-        ref
-            .read(trainingsProvider.notifier)
-            .saveTraining(_trainingNameController.text, _reps)
-            .then((v) {
-              if (mounted) Navigator.of(context).pop();
-            });
+        ref.read(trainingsProvider.notifier).saveTraining(training).then((v) {
+          if (mounted) Navigator.of(context).pop();
+        });
       }
     }
   }

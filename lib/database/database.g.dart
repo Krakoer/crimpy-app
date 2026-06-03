@@ -1361,681 +1361,8 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
   }
 }
 
-class $RepeatersTable extends Repeaters
-    with TableInfo<$RepeatersTable, Repeater> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $RepeatersTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    clientDefault: () => Uuid().v4(),
-  );
-  static const VerificationMeta _setsMeta = const VerificationMeta('sets');
-  @override
-  late final GeneratedColumn<int> sets = GeneratedColumn<int>(
-    'sets',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _repsMeta = const VerificationMeta('reps');
-  @override
-  late final GeneratedColumn<int> reps = GeneratedColumn<int>(
-    'reps',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _worktimeMeta = const VerificationMeta(
-    'worktime',
-  );
-  @override
-  late final GeneratedColumn<int> worktime = GeneratedColumn<int>(
-    'worktime',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _resttimeMeta = const VerificationMeta(
-    'resttime',
-  );
-  @override
-  late final GeneratedColumn<int> resttime = GeneratedColumn<int>(
-    'resttime',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _setRestMeta = const VerificationMeta(
-    'setRest',
-  );
-  @override
-  late final GeneratedColumn<int> setRest = GeneratedColumn<int>(
-    'set_rest',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _targetWeigthRightMeta = const VerificationMeta(
-    'targetWeigthRight',
-  );
-  @override
-  late final GeneratedColumn<double> targetWeigthRight =
-      GeneratedColumn<double>(
-        'target_weigth_right',
-        aliasedName,
-        true,
-        type: DriftSqlType.double,
-        requiredDuringInsert: false,
-      );
-  static const VerificationMeta _targetWeigthLeftMeta = const VerificationMeta(
-    'targetWeigthLeft',
-  );
-  @override
-  late final GeneratedColumn<double> targetWeigthLeft = GeneratedColumn<double>(
-    'target_weigth_left',
-    aliasedName,
-    true,
-    type: DriftSqlType.double,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _splitHandMeta = const VerificationMeta(
-    'splitHand',
-  );
-  @override
-  late final GeneratedColumn<bool> splitHand = GeneratedColumn<bool>(
-    'split_hand',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("split_hand" IN (0, 1))',
-    ),
-  );
-  static const VerificationMeta _gripPositionMeta = const VerificationMeta(
-    'gripPosition',
-  );
-  @override
-  late final GeneratedColumn<int> gripPosition = GeneratedColumn<int>(
-    'grip_position',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    sets,
-    reps,
-    worktime,
-    resttime,
-    setRest,
-    targetWeigthRight,
-    targetWeigthLeft,
-    splitHand,
-    gripPosition,
-    updatedAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'repeaters';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<Repeater> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('sets')) {
-      context.handle(
-        _setsMeta,
-        sets.isAcceptableOrUnknown(data['sets']!, _setsMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_setsMeta);
-    }
-    if (data.containsKey('reps')) {
-      context.handle(
-        _repsMeta,
-        reps.isAcceptableOrUnknown(data['reps']!, _repsMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_repsMeta);
-    }
-    if (data.containsKey('worktime')) {
-      context.handle(
-        _worktimeMeta,
-        worktime.isAcceptableOrUnknown(data['worktime']!, _worktimeMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_worktimeMeta);
-    }
-    if (data.containsKey('resttime')) {
-      context.handle(
-        _resttimeMeta,
-        resttime.isAcceptableOrUnknown(data['resttime']!, _resttimeMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_resttimeMeta);
-    }
-    if (data.containsKey('set_rest')) {
-      context.handle(
-        _setRestMeta,
-        setRest.isAcceptableOrUnknown(data['set_rest']!, _setRestMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_setRestMeta);
-    }
-    if (data.containsKey('target_weigth_right')) {
-      context.handle(
-        _targetWeigthRightMeta,
-        targetWeigthRight.isAcceptableOrUnknown(
-          data['target_weigth_right']!,
-          _targetWeigthRightMeta,
-        ),
-      );
-    }
-    if (data.containsKey('target_weigth_left')) {
-      context.handle(
-        _targetWeigthLeftMeta,
-        targetWeigthLeft.isAcceptableOrUnknown(
-          data['target_weigth_left']!,
-          _targetWeigthLeftMeta,
-        ),
-      );
-    }
-    if (data.containsKey('split_hand')) {
-      context.handle(
-        _splitHandMeta,
-        splitHand.isAcceptableOrUnknown(data['split_hand']!, _splitHandMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_splitHandMeta);
-    }
-    if (data.containsKey('grip_position')) {
-      context.handle(
-        _gripPositionMeta,
-        gripPosition.isAcceptableOrUnknown(
-          data['grip_position']!,
-          _gripPositionMeta,
-        ),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  Repeater map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Repeater(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      sets: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}sets'],
-      )!,
-      reps: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}reps'],
-      )!,
-      worktime: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}worktime'],
-      )!,
-      resttime: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}resttime'],
-      )!,
-      setRest: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}set_rest'],
-      )!,
-      targetWeigthRight: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}target_weigth_right'],
-      ),
-      targetWeigthLeft: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}target_weigth_left'],
-      ),
-      splitHand: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}split_hand'],
-      )!,
-      gripPosition: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}grip_position'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
-    );
-  }
-
-  @override
-  $RepeatersTable createAlias(String alias) {
-    return $RepeatersTable(attachedDatabase, alias);
-  }
-}
-
-class Repeater extends DataClass implements Insertable<Repeater> {
-  final String id;
-  final int sets;
-  final int reps;
-  final int worktime;
-  final int resttime;
-  final int setRest;
-  final double? targetWeigthRight;
-  final double? targetWeigthLeft;
-  final bool splitHand;
-  final int gripPosition;
-  final DateTime updatedAt;
-  const Repeater({
-    required this.id,
-    required this.sets,
-    required this.reps,
-    required this.worktime,
-    required this.resttime,
-    required this.setRest,
-    this.targetWeigthRight,
-    this.targetWeigthLeft,
-    required this.splitHand,
-    required this.gripPosition,
-    required this.updatedAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<String>(id);
-    map['sets'] = Variable<int>(sets);
-    map['reps'] = Variable<int>(reps);
-    map['worktime'] = Variable<int>(worktime);
-    map['resttime'] = Variable<int>(resttime);
-    map['set_rest'] = Variable<int>(setRest);
-    if (!nullToAbsent || targetWeigthRight != null) {
-      map['target_weigth_right'] = Variable<double>(targetWeigthRight);
-    }
-    if (!nullToAbsent || targetWeigthLeft != null) {
-      map['target_weigth_left'] = Variable<double>(targetWeigthLeft);
-    }
-    map['split_hand'] = Variable<bool>(splitHand);
-    map['grip_position'] = Variable<int>(gripPosition);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
-    return map;
-  }
-
-  RepeatersCompanion toCompanion(bool nullToAbsent) {
-    return RepeatersCompanion(
-      id: Value(id),
-      sets: Value(sets),
-      reps: Value(reps),
-      worktime: Value(worktime),
-      resttime: Value(resttime),
-      setRest: Value(setRest),
-      targetWeigthRight: targetWeigthRight == null && nullToAbsent
-          ? const Value.absent()
-          : Value(targetWeigthRight),
-      targetWeigthLeft: targetWeigthLeft == null && nullToAbsent
-          ? const Value.absent()
-          : Value(targetWeigthLeft),
-      splitHand: Value(splitHand),
-      gripPosition: Value(gripPosition),
-      updatedAt: Value(updatedAt),
-    );
-  }
-
-  factory Repeater.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Repeater(
-      id: serializer.fromJson<String>(json['id']),
-      sets: serializer.fromJson<int>(json['sets']),
-      reps: serializer.fromJson<int>(json['reps']),
-      worktime: serializer.fromJson<int>(json['worktime']),
-      resttime: serializer.fromJson<int>(json['resttime']),
-      setRest: serializer.fromJson<int>(json['setRest']),
-      targetWeigthRight: serializer.fromJson<double?>(
-        json['targetWeigthRight'],
-      ),
-      targetWeigthLeft: serializer.fromJson<double?>(json['targetWeigthLeft']),
-      splitHand: serializer.fromJson<bool>(json['splitHand']),
-      gripPosition: serializer.fromJson<int>(json['gripPosition']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<String>(id),
-      'sets': serializer.toJson<int>(sets),
-      'reps': serializer.toJson<int>(reps),
-      'worktime': serializer.toJson<int>(worktime),
-      'resttime': serializer.toJson<int>(resttime),
-      'setRest': serializer.toJson<int>(setRest),
-      'targetWeigthRight': serializer.toJson<double?>(targetWeigthRight),
-      'targetWeigthLeft': serializer.toJson<double?>(targetWeigthLeft),
-      'splitHand': serializer.toJson<bool>(splitHand),
-      'gripPosition': serializer.toJson<int>(gripPosition),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-    };
-  }
-
-  Repeater copyWith({
-    String? id,
-    int? sets,
-    int? reps,
-    int? worktime,
-    int? resttime,
-    int? setRest,
-    Value<double?> targetWeigthRight = const Value.absent(),
-    Value<double?> targetWeigthLeft = const Value.absent(),
-    bool? splitHand,
-    int? gripPosition,
-    DateTime? updatedAt,
-  }) => Repeater(
-    id: id ?? this.id,
-    sets: sets ?? this.sets,
-    reps: reps ?? this.reps,
-    worktime: worktime ?? this.worktime,
-    resttime: resttime ?? this.resttime,
-    setRest: setRest ?? this.setRest,
-    targetWeigthRight: targetWeigthRight.present
-        ? targetWeigthRight.value
-        : this.targetWeigthRight,
-    targetWeigthLeft: targetWeigthLeft.present
-        ? targetWeigthLeft.value
-        : this.targetWeigthLeft,
-    splitHand: splitHand ?? this.splitHand,
-    gripPosition: gripPosition ?? this.gripPosition,
-    updatedAt: updatedAt ?? this.updatedAt,
-  );
-  Repeater copyWithCompanion(RepeatersCompanion data) {
-    return Repeater(
-      id: data.id.present ? data.id.value : this.id,
-      sets: data.sets.present ? data.sets.value : this.sets,
-      reps: data.reps.present ? data.reps.value : this.reps,
-      worktime: data.worktime.present ? data.worktime.value : this.worktime,
-      resttime: data.resttime.present ? data.resttime.value : this.resttime,
-      setRest: data.setRest.present ? data.setRest.value : this.setRest,
-      targetWeigthRight: data.targetWeigthRight.present
-          ? data.targetWeigthRight.value
-          : this.targetWeigthRight,
-      targetWeigthLeft: data.targetWeigthLeft.present
-          ? data.targetWeigthLeft.value
-          : this.targetWeigthLeft,
-      splitHand: data.splitHand.present ? data.splitHand.value : this.splitHand,
-      gripPosition: data.gripPosition.present
-          ? data.gripPosition.value
-          : this.gripPosition,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('Repeater(')
-          ..write('id: $id, ')
-          ..write('sets: $sets, ')
-          ..write('reps: $reps, ')
-          ..write('worktime: $worktime, ')
-          ..write('resttime: $resttime, ')
-          ..write('setRest: $setRest, ')
-          ..write('targetWeigthRight: $targetWeigthRight, ')
-          ..write('targetWeigthLeft: $targetWeigthLeft, ')
-          ..write('splitHand: $splitHand, ')
-          ..write('gripPosition: $gripPosition, ')
-          ..write('updatedAt: $updatedAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    id,
-    sets,
-    reps,
-    worktime,
-    resttime,
-    setRest,
-    targetWeigthRight,
-    targetWeigthLeft,
-    splitHand,
-    gripPosition,
-    updatedAt,
-  );
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is Repeater &&
-          other.id == this.id &&
-          other.sets == this.sets &&
-          other.reps == this.reps &&
-          other.worktime == this.worktime &&
-          other.resttime == this.resttime &&
-          other.setRest == this.setRest &&
-          other.targetWeigthRight == this.targetWeigthRight &&
-          other.targetWeigthLeft == this.targetWeigthLeft &&
-          other.splitHand == this.splitHand &&
-          other.gripPosition == this.gripPosition &&
-          other.updatedAt == this.updatedAt);
-}
-
-class RepeatersCompanion extends UpdateCompanion<Repeater> {
-  final Value<String> id;
-  final Value<int> sets;
-  final Value<int> reps;
-  final Value<int> worktime;
-  final Value<int> resttime;
-  final Value<int> setRest;
-  final Value<double?> targetWeigthRight;
-  final Value<double?> targetWeigthLeft;
-  final Value<bool> splitHand;
-  final Value<int> gripPosition;
-  final Value<DateTime> updatedAt;
-  final Value<int> rowid;
-  const RepeatersCompanion({
-    this.id = const Value.absent(),
-    this.sets = const Value.absent(),
-    this.reps = const Value.absent(),
-    this.worktime = const Value.absent(),
-    this.resttime = const Value.absent(),
-    this.setRest = const Value.absent(),
-    this.targetWeigthRight = const Value.absent(),
-    this.targetWeigthLeft = const Value.absent(),
-    this.splitHand = const Value.absent(),
-    this.gripPosition = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  RepeatersCompanion.insert({
-    this.id = const Value.absent(),
-    required int sets,
-    required int reps,
-    required int worktime,
-    required int resttime,
-    required int setRest,
-    this.targetWeigthRight = const Value.absent(),
-    this.targetWeigthLeft = const Value.absent(),
-    required bool splitHand,
-    this.gripPosition = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  }) : sets = Value(sets),
-       reps = Value(reps),
-       worktime = Value(worktime),
-       resttime = Value(resttime),
-       setRest = Value(setRest),
-       splitHand = Value(splitHand);
-  static Insertable<Repeater> custom({
-    Expression<String>? id,
-    Expression<int>? sets,
-    Expression<int>? reps,
-    Expression<int>? worktime,
-    Expression<int>? resttime,
-    Expression<int>? setRest,
-    Expression<double>? targetWeigthRight,
-    Expression<double>? targetWeigthLeft,
-    Expression<bool>? splitHand,
-    Expression<int>? gripPosition,
-    Expression<DateTime>? updatedAt,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (sets != null) 'sets': sets,
-      if (reps != null) 'reps': reps,
-      if (worktime != null) 'worktime': worktime,
-      if (resttime != null) 'resttime': resttime,
-      if (setRest != null) 'set_rest': setRest,
-      if (targetWeigthRight != null) 'target_weigth_right': targetWeigthRight,
-      if (targetWeigthLeft != null) 'target_weigth_left': targetWeigthLeft,
-      if (splitHand != null) 'split_hand': splitHand,
-      if (gripPosition != null) 'grip_position': gripPosition,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  RepeatersCompanion copyWith({
-    Value<String>? id,
-    Value<int>? sets,
-    Value<int>? reps,
-    Value<int>? worktime,
-    Value<int>? resttime,
-    Value<int>? setRest,
-    Value<double?>? targetWeigthRight,
-    Value<double?>? targetWeigthLeft,
-    Value<bool>? splitHand,
-    Value<int>? gripPosition,
-    Value<DateTime>? updatedAt,
-    Value<int>? rowid,
-  }) {
-    return RepeatersCompanion(
-      id: id ?? this.id,
-      sets: sets ?? this.sets,
-      reps: reps ?? this.reps,
-      worktime: worktime ?? this.worktime,
-      resttime: resttime ?? this.resttime,
-      setRest: setRest ?? this.setRest,
-      targetWeigthRight: targetWeigthRight ?? this.targetWeigthRight,
-      targetWeigthLeft: targetWeigthLeft ?? this.targetWeigthLeft,
-      splitHand: splitHand ?? this.splitHand,
-      gripPosition: gripPosition ?? this.gripPosition,
-      updatedAt: updatedAt ?? this.updatedAt,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<String>(id.value);
-    }
-    if (sets.present) {
-      map['sets'] = Variable<int>(sets.value);
-    }
-    if (reps.present) {
-      map['reps'] = Variable<int>(reps.value);
-    }
-    if (worktime.present) {
-      map['worktime'] = Variable<int>(worktime.value);
-    }
-    if (resttime.present) {
-      map['resttime'] = Variable<int>(resttime.value);
-    }
-    if (setRest.present) {
-      map['set_rest'] = Variable<int>(setRest.value);
-    }
-    if (targetWeigthRight.present) {
-      map['target_weigth_right'] = Variable<double>(targetWeigthRight.value);
-    }
-    if (targetWeigthLeft.present) {
-      map['target_weigth_left'] = Variable<double>(targetWeigthLeft.value);
-    }
-    if (splitHand.present) {
-      map['split_hand'] = Variable<bool>(splitHand.value);
-    }
-    if (gripPosition.present) {
-      map['grip_position'] = Variable<int>(gripPosition.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('RepeatersCompanion(')
-          ..write('id: $id, ')
-          ..write('sets: $sets, ')
-          ..write('reps: $reps, ')
-          ..write('worktime: $worktime, ')
-          ..write('resttime: $resttime, ')
-          ..write('setRest: $setRest, ')
-          ..write('targetWeigthRight: $targetWeigthRight, ')
-          ..write('targetWeigthLeft: $targetWeigthLeft, ')
-          ..write('splitHand: $splitHand, ')
-          ..write('gripPosition: $gripPosition, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $TrainingsTable extends Trainings
-    with TableInfo<$TrainingsTable, Training> {
+    with TableInfo<$TrainingsTable, TrainingRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -2050,40 +1377,25 @@ class $TrainingsTable extends Trainings
     requiredDuringInsert: false,
     clientDefault: () => Uuid().v4(),
   );
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
   @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
     aliasedName,
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _repeaterIdMeta = const VerificationMeta(
-    'repeaterId',
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
   );
   @override
-  late final GeneratedColumn<String> repeaterId = GeneratedColumn<String>(
-    'repeater_id',
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
     aliasedName,
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-  );
-  static const VerificationMeta _isBuiltinMeta = const VerificationMeta(
-    'isBuiltin',
-  );
-  @override
-  late final GeneratedColumn<bool> isBuiltin = GeneratedColumn<bool>(
-    'is_builtin',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_builtin" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
   );
   static const VerificationMeta _isFavoriteMeta = const VerificationMeta(
     'isFavorite',
@@ -2100,21 +1412,6 @@ class $TrainingsTable extends Trainings
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _isAssessmentMeta = const VerificationMeta(
-    'isAssessment',
-  );
-  @override
-  late final GeneratedColumn<bool> isAssessment = GeneratedColumn<bool>(
-    'is_assessment',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_assessment" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -2130,11 +1427,9 @@ class $TrainingsTable extends Trainings
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    name,
-    repeaterId,
-    isBuiltin,
+    title,
+    description,
     isFavorite,
-    isAssessment,
     updatedAt,
   ];
   @override
@@ -2144,7 +1439,7 @@ class $TrainingsTable extends Trainings
   static const String $name = 'trainings';
   @override
   VerificationContext validateIntegrity(
-    Insertable<Training> instance, {
+    Insertable<TrainingRow> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -2152,39 +1447,27 @@ class $TrainingsTable extends Trainings
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('name')) {
+    if (data.containsKey('title')) {
       context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
       );
     } else if (isInserting) {
-      context.missing(_nameMeta);
+      context.missing(_titleMeta);
     }
-    if (data.containsKey('repeater_id')) {
+    if (data.containsKey('description')) {
       context.handle(
-        _repeaterIdMeta,
-        repeaterId.isAcceptableOrUnknown(data['repeater_id']!, _repeaterIdMeta),
-      );
-    }
-    if (data.containsKey('is_builtin')) {
-      context.handle(
-        _isBuiltinMeta,
-        isBuiltin.isAcceptableOrUnknown(data['is_builtin']!, _isBuiltinMeta),
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
       );
     }
     if (data.containsKey('is_favorite')) {
       context.handle(
         _isFavoriteMeta,
         isFavorite.isAcceptableOrUnknown(data['is_favorite']!, _isFavoriteMeta),
-      );
-    }
-    if (data.containsKey('is_assessment')) {
-      context.handle(
-        _isAssessmentMeta,
-        isAssessment.isAcceptableOrUnknown(
-          data['is_assessment']!,
-          _isAssessmentMeta,
-        ),
       );
     }
     if (data.containsKey('updated_at')) {
@@ -2199,32 +1482,24 @@ class $TrainingsTable extends Trainings
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  Training map(Map<String, dynamic> data, {String? tablePrefix}) {
+  TrainingRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Training(
+    return TrainingRow(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
-      name: attachedDatabase.typeMapping.read(
+      title: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}name'],
+        data['${effectivePrefix}title'],
       )!,
-      repeaterId: attachedDatabase.typeMapping.read(
+      description: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}repeater_id'],
+        data['${effectivePrefix}description'],
       ),
-      isBuiltin: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_builtin'],
-      )!,
       isFavorite: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_favorite'],
-      )!,
-      isAssessment: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_assessment'],
       )!,
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -2239,34 +1514,28 @@ class $TrainingsTable extends Trainings
   }
 }
 
-class Training extends DataClass implements Insertable<Training> {
+class TrainingRow extends DataClass implements Insertable<TrainingRow> {
   final String id;
-  final String name;
-  final String? repeaterId;
-  final bool isBuiltin;
+  final String title;
+  final String? description;
   final bool isFavorite;
-  final bool isAssessment;
   final DateTime updatedAt;
-  const Training({
+  const TrainingRow({
     required this.id,
-    required this.name,
-    this.repeaterId,
-    required this.isBuiltin,
+    required this.title,
+    this.description,
     required this.isFavorite,
-    required this.isAssessment,
     required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    map['name'] = Variable<String>(name);
-    if (!nullToAbsent || repeaterId != null) {
-      map['repeater_id'] = Variable<String>(repeaterId);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
     }
-    map['is_builtin'] = Variable<bool>(isBuiltin);
     map['is_favorite'] = Variable<bool>(isFavorite);
-    map['is_assessment'] = Variable<bool>(isAssessment);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -2274,29 +1543,25 @@ class Training extends DataClass implements Insertable<Training> {
   TrainingsCompanion toCompanion(bool nullToAbsent) {
     return TrainingsCompanion(
       id: Value(id),
-      name: Value(name),
-      repeaterId: repeaterId == null && nullToAbsent
+      title: Value(title),
+      description: description == null && nullToAbsent
           ? const Value.absent()
-          : Value(repeaterId),
-      isBuiltin: Value(isBuiltin),
+          : Value(description),
       isFavorite: Value(isFavorite),
-      isAssessment: Value(isAssessment),
       updatedAt: Value(updatedAt),
     );
   }
 
-  factory Training.fromJson(
+  factory TrainingRow.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Training(
+    return TrainingRow(
       id: serializer.fromJson<String>(json['id']),
-      name: serializer.fromJson<String>(json['name']),
-      repeaterId: serializer.fromJson<String?>(json['repeaterId']),
-      isBuiltin: serializer.fromJson<bool>(json['isBuiltin']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String?>(json['description']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
-      isAssessment: serializer.fromJson<bool>(json['isAssessment']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -2305,133 +1570,102 @@ class Training extends DataClass implements Insertable<Training> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'name': serializer.toJson<String>(name),
-      'repeaterId': serializer.toJson<String?>(repeaterId),
-      'isBuiltin': serializer.toJson<bool>(isBuiltin),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String?>(description),
       'isFavorite': serializer.toJson<bool>(isFavorite),
-      'isAssessment': serializer.toJson<bool>(isAssessment),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
 
-  Training copyWith({
+  TrainingRow copyWith({
     String? id,
-    String? name,
-    Value<String?> repeaterId = const Value.absent(),
-    bool? isBuiltin,
+    String? title,
+    Value<String?> description = const Value.absent(),
     bool? isFavorite,
-    bool? isAssessment,
     DateTime? updatedAt,
-  }) => Training(
+  }) => TrainingRow(
     id: id ?? this.id,
-    name: name ?? this.name,
-    repeaterId: repeaterId.present ? repeaterId.value : this.repeaterId,
-    isBuiltin: isBuiltin ?? this.isBuiltin,
+    title: title ?? this.title,
+    description: description.present ? description.value : this.description,
     isFavorite: isFavorite ?? this.isFavorite,
-    isAssessment: isAssessment ?? this.isAssessment,
     updatedAt: updatedAt ?? this.updatedAt,
   );
-  Training copyWithCompanion(TrainingsCompanion data) {
-    return Training(
+  TrainingRow copyWithCompanion(TrainingsCompanion data) {
+    return TrainingRow(
       id: data.id.present ? data.id.value : this.id,
-      name: data.name.present ? data.name.value : this.name,
-      repeaterId: data.repeaterId.present
-          ? data.repeaterId.value
-          : this.repeaterId,
-      isBuiltin: data.isBuiltin.present ? data.isBuiltin.value : this.isBuiltin,
+      title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
       isFavorite: data.isFavorite.present
           ? data.isFavorite.value
           : this.isFavorite,
-      isAssessment: data.isAssessment.present
-          ? data.isAssessment.value
-          : this.isAssessment,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('Training(')
+    return (StringBuffer('TrainingRow(')
           ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('repeaterId: $repeaterId, ')
-          ..write('isBuiltin: $isBuiltin, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
           ..write('isFavorite: $isFavorite, ')
-          ..write('isAssessment: $isAssessment, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    name,
-    repeaterId,
-    isBuiltin,
-    isFavorite,
-    isAssessment,
-    updatedAt,
-  );
+  int get hashCode =>
+      Object.hash(id, title, description, isFavorite, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is Training &&
+      (other is TrainingRow &&
           other.id == this.id &&
-          other.name == this.name &&
-          other.repeaterId == this.repeaterId &&
-          other.isBuiltin == this.isBuiltin &&
+          other.title == this.title &&
+          other.description == this.description &&
           other.isFavorite == this.isFavorite &&
-          other.isAssessment == this.isAssessment &&
           other.updatedAt == this.updatedAt);
 }
 
-class TrainingsCompanion extends UpdateCompanion<Training> {
+class TrainingsCompanion extends UpdateCompanion<TrainingRow> {
   final Value<String> id;
-  final Value<String> name;
-  final Value<String?> repeaterId;
-  final Value<bool> isBuiltin;
+  final Value<String> title;
+  final Value<String?> description;
   final Value<bool> isFavorite;
-  final Value<bool> isAssessment;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const TrainingsCompanion({
     this.id = const Value.absent(),
-    this.name = const Value.absent(),
-    this.repeaterId = const Value.absent(),
-    this.isBuiltin = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
     this.isFavorite = const Value.absent(),
-    this.isAssessment = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TrainingsCompanion.insert({
     this.id = const Value.absent(),
-    required String name,
-    this.repeaterId = const Value.absent(),
-    this.isBuiltin = const Value.absent(),
+    required String title,
+    this.description = const Value.absent(),
     this.isFavorite = const Value.absent(),
-    this.isAssessment = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : name = Value(name);
-  static Insertable<Training> custom({
+  }) : title = Value(title);
+  static Insertable<TrainingRow> custom({
     Expression<String>? id,
-    Expression<String>? name,
-    Expression<String>? repeaterId,
-    Expression<bool>? isBuiltin,
+    Expression<String>? title,
+    Expression<String>? description,
     Expression<bool>? isFavorite,
-    Expression<bool>? isAssessment,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (name != null) 'name': name,
-      if (repeaterId != null) 'repeater_id': repeaterId,
-      if (isBuiltin != null) 'is_builtin': isBuiltin,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
       if (isFavorite != null) 'is_favorite': isFavorite,
-      if (isAssessment != null) 'is_assessment': isAssessment,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2439,21 +1673,17 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
 
   TrainingsCompanion copyWith({
     Value<String>? id,
-    Value<String>? name,
-    Value<String?>? repeaterId,
-    Value<bool>? isBuiltin,
+    Value<String>? title,
+    Value<String?>? description,
     Value<bool>? isFavorite,
-    Value<bool>? isAssessment,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
     return TrainingsCompanion(
       id: id ?? this.id,
-      name: name ?? this.name,
-      repeaterId: repeaterId ?? this.repeaterId,
-      isBuiltin: isBuiltin ?? this.isBuiltin,
+      title: title ?? this.title,
+      description: description ?? this.description,
       isFavorite: isFavorite ?? this.isFavorite,
-      isAssessment: isAssessment ?? this.isAssessment,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2465,20 +1695,14 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
     }
-    if (repeaterId.present) {
-      map['repeater_id'] = Variable<String>(repeaterId.value);
-    }
-    if (isBuiltin.present) {
-      map['is_builtin'] = Variable<bool>(isBuiltin.value);
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
     }
     if (isFavorite.present) {
       map['is_favorite'] = Variable<bool>(isFavorite.value);
-    }
-    if (isAssessment.present) {
-      map['is_assessment'] = Variable<bool>(isAssessment.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
@@ -2493,11 +1717,9 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
   String toString() {
     return (StringBuffer('TrainingsCompanion(')
           ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('repeaterId: $repeaterId, ')
-          ..write('isBuiltin: $isBuiltin, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
           ..write('isFavorite: $isFavorite, ')
-          ..write('isAssessment: $isAssessment, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -2505,12 +1727,12 @@ class TrainingsCompanion extends UpdateCompanion<Training> {
   }
 }
 
-class $RepTemplatesTable extends RepTemplates
-    with TableInfo<$RepTemplatesTable, RepTemplate> {
+class $TrainingItemsTable extends TrainingItems
+    with TableInfo<$TrainingItemsTable, TrainingItemRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $RepTemplatesTable(this.attachedDatabase, [this._alias]);
+  $TrainingItemsTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -2520,43 +1742,6 @@ class $RepTemplatesTable extends RepTemplates
     type: DriftSqlType.string,
     requiredDuringInsert: false,
     clientDefault: () => Uuid().v4(),
-  );
-  static const VerificationMeta _isRestMeta = const VerificationMeta('isRest');
-  @override
-  late final GeneratedColumn<bool> isRest = GeneratedColumn<bool>(
-    'is_rest',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_rest" IN (0, 1))',
-    ),
-  );
-  static const VerificationMeta _rightHandMeta = const VerificationMeta(
-    'rightHand',
-  );
-  @override
-  late final GeneratedColumn<bool> rightHand = GeneratedColumn<bool>(
-    'right_hand',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("right_hand" IN (0, 1))',
-    ),
-  );
-  static const VerificationMeta _durationMeta = const VerificationMeta(
-    'duration',
-  );
-  @override
-  late final GeneratedColumn<int> duration = GeneratedColumn<int>(
-    'duration',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
   );
   static const VerificationMeta _trainingIdMeta = const VerificationMeta(
     'trainingId',
@@ -2569,37 +1754,201 @@ class $RepTemplatesTable extends RepTemplates
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _targetWeightMeta = const VerificationMeta(
-    'targetWeight',
+  static const VerificationMeta _parentIdMeta = const VerificationMeta(
+    'parentId',
   );
   @override
-  late final GeneratedColumn<double> targetWeight = GeneratedColumn<double>(
-    'target_weight',
+  late final GeneratedColumn<String> parentId = GeneratedColumn<String>(
+    'parent_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
     aliasedName,
     false,
-    type: DriftSqlType.double,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _indexMeta = const VerificationMeta('index');
-  @override
-  late final GeneratedColumn<int> index = GeneratedColumn<int>(
-    'index',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _gripPositionMeta = const VerificationMeta(
-    'gripPosition',
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
   );
   @override
-  late final GeneratedColumn<int> gripPosition = GeneratedColumn<int>(
-    'grip_position',
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
     aliasedName,
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _cyclesMeta = const VerificationMeta('cycles');
+  @override
+  late final GeneratedColumn<int> cycles = GeneratedColumn<int>(
+    'cycles',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cycleRestSecondsMeta = const VerificationMeta(
+    'cycleRestSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> cycleRestSeconds = GeneratedColumn<int>(
+    'cycle_rest_seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _repsMeta = const VerificationMeta('reps');
+  @override
+  late final GeneratedColumn<int> reps = GeneratedColumn<int>(
+    'reps',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _durationMeta = const VerificationMeta(
+    'duration',
+  );
+  @override
+  late final GeneratedColumn<int> duration = GeneratedColumn<int>(
+    'duration',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _restSecondsMeta = const VerificationMeta(
+    'restSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> restSeconds = GeneratedColumn<int>(
+    'rest_seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _worktimeSecondsMeta = const VerificationMeta(
+    'worktimeSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> worktimeSeconds = GeneratedColumn<int>(
+    'worktime_seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _handMeta = const VerificationMeta('hand');
+  @override
+  late final GeneratedColumn<String> hand = GeneratedColumn<String>(
+    'hand',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _loadsJsonMeta = const VerificationMeta(
+    'loadsJson',
+  );
+  @override
+  late final GeneratedColumn<String> loadsJson = GeneratedColumn<String>(
+    'loads_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _leftLoadsJsonMeta = const VerificationMeta(
+    'leftLoadsJson',
+  );
+  @override
+  late final GeneratedColumn<String> leftLoadsJson = GeneratedColumn<String>(
+    'left_loads_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _handPositionsJsonMeta = const VerificationMeta(
+    'handPositionsJson',
+  );
+  @override
+  late final GeneratedColumn<String> handPositionsJson =
+      GeneratedColumn<String>(
+        'hand_positions_json',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _edgeSizesMmJsonMeta = const VerificationMeta(
+    'edgeSizesMmJson',
+  );
+  @override
+  late final GeneratedColumn<String> edgeSizesMmJson = GeneratedColumn<String>(
+    'edge_sizes_mm_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _loadIsMaxMeta = const VerificationMeta(
+    'loadIsMax',
+  );
+  @override
+  late final GeneratedColumn<bool> loadIsMax = GeneratedColumn<bool>(
+    'load_is_max',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("load_is_max" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _freeTextMeta = const VerificationMeta(
+    'freeText',
+  );
+  @override
+  late final GeneratedColumn<String> freeText = GeneratedColumn<String>(
+    'free_text',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _exerciseIdMeta = const VerificationMeta(
+    'exerciseId',
+  );
+  @override
+  late final GeneratedColumn<String> exerciseId = GeneratedColumn<String>(
+    'exercise_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sectionTitleMeta = const VerificationMeta(
+    'sectionTitle',
+  );
+  @override
+  late final GeneratedColumn<String> sectionTitle = GeneratedColumn<String>(
+    'section_title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
@@ -2616,53 +1965,41 @@ class $RepTemplatesTable extends RepTemplates
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    isRest,
-    rightHand,
-    duration,
     trainingId,
-    targetWeight,
-    index,
-    gripPosition,
+    parentId,
+    type,
+    position,
+    cycles,
+    cycleRestSeconds,
+    reps,
+    duration,
+    restSeconds,
+    worktimeSeconds,
+    hand,
+    loadsJson,
+    leftLoadsJson,
+    handPositionsJson,
+    edgeSizesMmJson,
+    loadIsMax,
+    freeText,
+    exerciseId,
+    sectionTitle,
     updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'rep_templates';
+  static const String $name = 'training_items';
   @override
   VerificationContext validateIntegrity(
-    Insertable<RepTemplate> instance, {
+    Insertable<TrainingItemRow> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('is_rest')) {
-      context.handle(
-        _isRestMeta,
-        isRest.isAcceptableOrUnknown(data['is_rest']!, _isRestMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_isRestMeta);
-    }
-    if (data.containsKey('right_hand')) {
-      context.handle(
-        _rightHandMeta,
-        rightHand.isAcceptableOrUnknown(data['right_hand']!, _rightHandMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_rightHandMeta);
-    }
-    if (data.containsKey('duration')) {
-      context.handle(
-        _durationMeta,
-        duration.isAcceptableOrUnknown(data['duration']!, _durationMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_durationMeta);
     }
     if (data.containsKey('training_id')) {
       context.handle(
@@ -2672,31 +2009,134 @@ class $RepTemplatesTable extends RepTemplates
     } else if (isInserting) {
       context.missing(_trainingIdMeta);
     }
-    if (data.containsKey('target_weight')) {
+    if (data.containsKey('parent_id')) {
       context.handle(
-        _targetWeightMeta,
-        targetWeight.isAcceptableOrUnknown(
-          data['target_weight']!,
-          _targetWeightMeta,
+        _parentIdMeta,
+        parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta),
+      );
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    }
+    if (data.containsKey('cycles')) {
+      context.handle(
+        _cyclesMeta,
+        cycles.isAcceptableOrUnknown(data['cycles']!, _cyclesMeta),
+      );
+    }
+    if (data.containsKey('cycle_rest_seconds')) {
+      context.handle(
+        _cycleRestSecondsMeta,
+        cycleRestSeconds.isAcceptableOrUnknown(
+          data['cycle_rest_seconds']!,
+          _cycleRestSecondsMeta,
         ),
       );
-    } else if (isInserting) {
-      context.missing(_targetWeightMeta);
     }
-    if (data.containsKey('index')) {
+    if (data.containsKey('reps')) {
       context.handle(
-        _indexMeta,
-        index.isAcceptableOrUnknown(data['index']!, _indexMeta),
+        _repsMeta,
+        reps.isAcceptableOrUnknown(data['reps']!, _repsMeta),
       );
-    } else if (isInserting) {
-      context.missing(_indexMeta);
     }
-    if (data.containsKey('grip_position')) {
+    if (data.containsKey('duration')) {
       context.handle(
-        _gripPositionMeta,
-        gripPosition.isAcceptableOrUnknown(
-          data['grip_position']!,
-          _gripPositionMeta,
+        _durationMeta,
+        duration.isAcceptableOrUnknown(data['duration']!, _durationMeta),
+      );
+    }
+    if (data.containsKey('rest_seconds')) {
+      context.handle(
+        _restSecondsMeta,
+        restSeconds.isAcceptableOrUnknown(
+          data['rest_seconds']!,
+          _restSecondsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('worktime_seconds')) {
+      context.handle(
+        _worktimeSecondsMeta,
+        worktimeSeconds.isAcceptableOrUnknown(
+          data['worktime_seconds']!,
+          _worktimeSecondsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('hand')) {
+      context.handle(
+        _handMeta,
+        hand.isAcceptableOrUnknown(data['hand']!, _handMeta),
+      );
+    }
+    if (data.containsKey('loads_json')) {
+      context.handle(
+        _loadsJsonMeta,
+        loadsJson.isAcceptableOrUnknown(data['loads_json']!, _loadsJsonMeta),
+      );
+    }
+    if (data.containsKey('left_loads_json')) {
+      context.handle(
+        _leftLoadsJsonMeta,
+        leftLoadsJson.isAcceptableOrUnknown(
+          data['left_loads_json']!,
+          _leftLoadsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('hand_positions_json')) {
+      context.handle(
+        _handPositionsJsonMeta,
+        handPositionsJson.isAcceptableOrUnknown(
+          data['hand_positions_json']!,
+          _handPositionsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('edge_sizes_mm_json')) {
+      context.handle(
+        _edgeSizesMmJsonMeta,
+        edgeSizesMmJson.isAcceptableOrUnknown(
+          data['edge_sizes_mm_json']!,
+          _edgeSizesMmJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('load_is_max')) {
+      context.handle(
+        _loadIsMaxMeta,
+        loadIsMax.isAcceptableOrUnknown(data['load_is_max']!, _loadIsMaxMeta),
+      );
+    }
+    if (data.containsKey('free_text')) {
+      context.handle(
+        _freeTextMeta,
+        freeText.isAcceptableOrUnknown(data['free_text']!, _freeTextMeta),
+      );
+    }
+    if (data.containsKey('exercise_id')) {
+      context.handle(
+        _exerciseIdMeta,
+        exerciseId.isAcceptableOrUnknown(data['exercise_id']!, _exerciseIdMeta),
+      );
+    }
+    if (data.containsKey('section_title')) {
+      context.handle(
+        _sectionTitleMeta,
+        sectionTitle.isAcceptableOrUnknown(
+          data['section_title']!,
+          _sectionTitleMeta,
         ),
       );
     }
@@ -2712,41 +2152,89 @@ class $RepTemplatesTable extends RepTemplates
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  RepTemplate map(Map<String, dynamic> data, {String? tablePrefix}) {
+  TrainingItemRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return RepTemplate(
+    return TrainingItemRow(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
-      )!,
-      isRest: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_rest'],
-      )!,
-      rightHand: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}right_hand'],
-      )!,
-      duration: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}duration'],
       )!,
       trainingId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}training_id'],
       )!,
-      targetWeight: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}target_weight'],
+      parentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}parent_id'],
+      ),
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
       )!,
-      index: attachedDatabase.typeMapping.read(
+      position: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}index'],
+        data['${effectivePrefix}position'],
       )!,
-      gripPosition: attachedDatabase.typeMapping.read(
+      cycles: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}grip_position'],
+        data['${effectivePrefix}cycles'],
+      ),
+      cycleRestSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cycle_rest_seconds'],
+      ),
+      reps: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reps'],
+      ),
+      duration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration'],
+      ),
+      restSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rest_seconds'],
+      ),
+      worktimeSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}worktime_seconds'],
+      ),
+      hand: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hand'],
+      ),
+      loadsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}loads_json'],
+      ),
+      leftLoadsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}left_loads_json'],
+      ),
+      handPositionsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hand_positions_json'],
+      ),
+      edgeSizesMmJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}edge_sizes_mm_json'],
+      ),
+      loadIsMax: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}load_is_max'],
       )!,
+      freeText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}free_text'],
+      ),
+      exerciseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}exercise_id'],
+      ),
+      sectionTitle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}section_title'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -2755,75 +2243,193 @@ class $RepTemplatesTable extends RepTemplates
   }
 
   @override
-  $RepTemplatesTable createAlias(String alias) {
-    return $RepTemplatesTable(attachedDatabase, alias);
+  $TrainingItemsTable createAlias(String alias) {
+    return $TrainingItemsTable(attachedDatabase, alias);
   }
 }
 
-class RepTemplate extends DataClass implements Insertable<RepTemplate> {
+class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
   final String id;
-  final bool isRest;
-  final bool rightHand;
-  final int duration;
   final String trainingId;
-  final double targetWeight;
-  final int index;
-  final int gripPosition;
+  final String? parentId;
+  final String type;
+  final int position;
+  final int? cycles;
+  final int? cycleRestSeconds;
+  final int? reps;
+  final int? duration;
+  final int? restSeconds;
+  final int? worktimeSeconds;
+  final String? hand;
+  final String? loadsJson;
+  final String? leftLoadsJson;
+  final String? handPositionsJson;
+  final String? edgeSizesMmJson;
+  final bool loadIsMax;
+  final String? freeText;
+  final String? exerciseId;
+  final String? sectionTitle;
   final DateTime updatedAt;
-  const RepTemplate({
+  const TrainingItemRow({
     required this.id,
-    required this.isRest,
-    required this.rightHand,
-    required this.duration,
     required this.trainingId,
-    required this.targetWeight,
-    required this.index,
-    required this.gripPosition,
+    this.parentId,
+    required this.type,
+    required this.position,
+    this.cycles,
+    this.cycleRestSeconds,
+    this.reps,
+    this.duration,
+    this.restSeconds,
+    this.worktimeSeconds,
+    this.hand,
+    this.loadsJson,
+    this.leftLoadsJson,
+    this.handPositionsJson,
+    this.edgeSizesMmJson,
+    required this.loadIsMax,
+    this.freeText,
+    this.exerciseId,
+    this.sectionTitle,
     required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    map['is_rest'] = Variable<bool>(isRest);
-    map['right_hand'] = Variable<bool>(rightHand);
-    map['duration'] = Variable<int>(duration);
     map['training_id'] = Variable<String>(trainingId);
-    map['target_weight'] = Variable<double>(targetWeight);
-    map['index'] = Variable<int>(index);
-    map['grip_position'] = Variable<int>(gripPosition);
+    if (!nullToAbsent || parentId != null) {
+      map['parent_id'] = Variable<String>(parentId);
+    }
+    map['type'] = Variable<String>(type);
+    map['position'] = Variable<int>(position);
+    if (!nullToAbsent || cycles != null) {
+      map['cycles'] = Variable<int>(cycles);
+    }
+    if (!nullToAbsent || cycleRestSeconds != null) {
+      map['cycle_rest_seconds'] = Variable<int>(cycleRestSeconds);
+    }
+    if (!nullToAbsent || reps != null) {
+      map['reps'] = Variable<int>(reps);
+    }
+    if (!nullToAbsent || duration != null) {
+      map['duration'] = Variable<int>(duration);
+    }
+    if (!nullToAbsent || restSeconds != null) {
+      map['rest_seconds'] = Variable<int>(restSeconds);
+    }
+    if (!nullToAbsent || worktimeSeconds != null) {
+      map['worktime_seconds'] = Variable<int>(worktimeSeconds);
+    }
+    if (!nullToAbsent || hand != null) {
+      map['hand'] = Variable<String>(hand);
+    }
+    if (!nullToAbsent || loadsJson != null) {
+      map['loads_json'] = Variable<String>(loadsJson);
+    }
+    if (!nullToAbsent || leftLoadsJson != null) {
+      map['left_loads_json'] = Variable<String>(leftLoadsJson);
+    }
+    if (!nullToAbsent || handPositionsJson != null) {
+      map['hand_positions_json'] = Variable<String>(handPositionsJson);
+    }
+    if (!nullToAbsent || edgeSizesMmJson != null) {
+      map['edge_sizes_mm_json'] = Variable<String>(edgeSizesMmJson);
+    }
+    map['load_is_max'] = Variable<bool>(loadIsMax);
+    if (!nullToAbsent || freeText != null) {
+      map['free_text'] = Variable<String>(freeText);
+    }
+    if (!nullToAbsent || exerciseId != null) {
+      map['exercise_id'] = Variable<String>(exerciseId);
+    }
+    if (!nullToAbsent || sectionTitle != null) {
+      map['section_title'] = Variable<String>(sectionTitle);
+    }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
 
-  RepTemplatesCompanion toCompanion(bool nullToAbsent) {
-    return RepTemplatesCompanion(
+  TrainingItemsCompanion toCompanion(bool nullToAbsent) {
+    return TrainingItemsCompanion(
       id: Value(id),
-      isRest: Value(isRest),
-      rightHand: Value(rightHand),
-      duration: Value(duration),
       trainingId: Value(trainingId),
-      targetWeight: Value(targetWeight),
-      index: Value(index),
-      gripPosition: Value(gripPosition),
+      parentId: parentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(parentId),
+      type: Value(type),
+      position: Value(position),
+      cycles: cycles == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cycles),
+      cycleRestSeconds: cycleRestSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cycleRestSeconds),
+      reps: reps == null && nullToAbsent ? const Value.absent() : Value(reps),
+      duration: duration == null && nullToAbsent
+          ? const Value.absent()
+          : Value(duration),
+      restSeconds: restSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(restSeconds),
+      worktimeSeconds: worktimeSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(worktimeSeconds),
+      hand: hand == null && nullToAbsent ? const Value.absent() : Value(hand),
+      loadsJson: loadsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(loadsJson),
+      leftLoadsJson: leftLoadsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(leftLoadsJson),
+      handPositionsJson: handPositionsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(handPositionsJson),
+      edgeSizesMmJson: edgeSizesMmJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(edgeSizesMmJson),
+      loadIsMax: Value(loadIsMax),
+      freeText: freeText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(freeText),
+      exerciseId: exerciseId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(exerciseId),
+      sectionTitle: sectionTitle == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sectionTitle),
       updatedAt: Value(updatedAt),
     );
   }
 
-  factory RepTemplate.fromJson(
+  factory TrainingItemRow.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return RepTemplate(
+    return TrainingItemRow(
       id: serializer.fromJson<String>(json['id']),
-      isRest: serializer.fromJson<bool>(json['isRest']),
-      rightHand: serializer.fromJson<bool>(json['rightHand']),
-      duration: serializer.fromJson<int>(json['duration']),
       trainingId: serializer.fromJson<String>(json['trainingId']),
-      targetWeight: serializer.fromJson<double>(json['targetWeight']),
-      index: serializer.fromJson<int>(json['index']),
-      gripPosition: serializer.fromJson<int>(json['gripPosition']),
+      parentId: serializer.fromJson<String?>(json['parentId']),
+      type: serializer.fromJson<String>(json['type']),
+      position: serializer.fromJson<int>(json['position']),
+      cycles: serializer.fromJson<int?>(json['cycles']),
+      cycleRestSeconds: serializer.fromJson<int?>(json['cycleRestSeconds']),
+      reps: serializer.fromJson<int?>(json['reps']),
+      duration: serializer.fromJson<int?>(json['duration']),
+      restSeconds: serializer.fromJson<int?>(json['restSeconds']),
+      worktimeSeconds: serializer.fromJson<int?>(json['worktimeSeconds']),
+      hand: serializer.fromJson<String?>(json['hand']),
+      loadsJson: serializer.fromJson<String?>(json['loadsJson']),
+      leftLoadsJson: serializer.fromJson<String?>(json['leftLoadsJson']),
+      handPositionsJson: serializer.fromJson<String?>(
+        json['handPositionsJson'],
+      ),
+      edgeSizesMmJson: serializer.fromJson<String?>(json['edgeSizesMmJson']),
+      loadIsMax: serializer.fromJson<bool>(json['loadIsMax']),
+      freeText: serializer.fromJson<String?>(json['freeText']),
+      exerciseId: serializer.fromJson<String?>(json['exerciseId']),
+      sectionTitle: serializer.fromJson<String?>(json['sectionTitle']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -2832,188 +2438,374 @@ class RepTemplate extends DataClass implements Insertable<RepTemplate> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'isRest': serializer.toJson<bool>(isRest),
-      'rightHand': serializer.toJson<bool>(rightHand),
-      'duration': serializer.toJson<int>(duration),
       'trainingId': serializer.toJson<String>(trainingId),
-      'targetWeight': serializer.toJson<double>(targetWeight),
-      'index': serializer.toJson<int>(index),
-      'gripPosition': serializer.toJson<int>(gripPosition),
+      'parentId': serializer.toJson<String?>(parentId),
+      'type': serializer.toJson<String>(type),
+      'position': serializer.toJson<int>(position),
+      'cycles': serializer.toJson<int?>(cycles),
+      'cycleRestSeconds': serializer.toJson<int?>(cycleRestSeconds),
+      'reps': serializer.toJson<int?>(reps),
+      'duration': serializer.toJson<int?>(duration),
+      'restSeconds': serializer.toJson<int?>(restSeconds),
+      'worktimeSeconds': serializer.toJson<int?>(worktimeSeconds),
+      'hand': serializer.toJson<String?>(hand),
+      'loadsJson': serializer.toJson<String?>(loadsJson),
+      'leftLoadsJson': serializer.toJson<String?>(leftLoadsJson),
+      'handPositionsJson': serializer.toJson<String?>(handPositionsJson),
+      'edgeSizesMmJson': serializer.toJson<String?>(edgeSizesMmJson),
+      'loadIsMax': serializer.toJson<bool>(loadIsMax),
+      'freeText': serializer.toJson<String?>(freeText),
+      'exerciseId': serializer.toJson<String?>(exerciseId),
+      'sectionTitle': serializer.toJson<String?>(sectionTitle),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
 
-  RepTemplate copyWith({
+  TrainingItemRow copyWith({
     String? id,
-    bool? isRest,
-    bool? rightHand,
-    int? duration,
     String? trainingId,
-    double? targetWeight,
-    int? index,
-    int? gripPosition,
+    Value<String?> parentId = const Value.absent(),
+    String? type,
+    int? position,
+    Value<int?> cycles = const Value.absent(),
+    Value<int?> cycleRestSeconds = const Value.absent(),
+    Value<int?> reps = const Value.absent(),
+    Value<int?> duration = const Value.absent(),
+    Value<int?> restSeconds = const Value.absent(),
+    Value<int?> worktimeSeconds = const Value.absent(),
+    Value<String?> hand = const Value.absent(),
+    Value<String?> loadsJson = const Value.absent(),
+    Value<String?> leftLoadsJson = const Value.absent(),
+    Value<String?> handPositionsJson = const Value.absent(),
+    Value<String?> edgeSizesMmJson = const Value.absent(),
+    bool? loadIsMax,
+    Value<String?> freeText = const Value.absent(),
+    Value<String?> exerciseId = const Value.absent(),
+    Value<String?> sectionTitle = const Value.absent(),
     DateTime? updatedAt,
-  }) => RepTemplate(
+  }) => TrainingItemRow(
     id: id ?? this.id,
-    isRest: isRest ?? this.isRest,
-    rightHand: rightHand ?? this.rightHand,
-    duration: duration ?? this.duration,
     trainingId: trainingId ?? this.trainingId,
-    targetWeight: targetWeight ?? this.targetWeight,
-    index: index ?? this.index,
-    gripPosition: gripPosition ?? this.gripPosition,
+    parentId: parentId.present ? parentId.value : this.parentId,
+    type: type ?? this.type,
+    position: position ?? this.position,
+    cycles: cycles.present ? cycles.value : this.cycles,
+    cycleRestSeconds: cycleRestSeconds.present
+        ? cycleRestSeconds.value
+        : this.cycleRestSeconds,
+    reps: reps.present ? reps.value : this.reps,
+    duration: duration.present ? duration.value : this.duration,
+    restSeconds: restSeconds.present ? restSeconds.value : this.restSeconds,
+    worktimeSeconds: worktimeSeconds.present
+        ? worktimeSeconds.value
+        : this.worktimeSeconds,
+    hand: hand.present ? hand.value : this.hand,
+    loadsJson: loadsJson.present ? loadsJson.value : this.loadsJson,
+    leftLoadsJson: leftLoadsJson.present
+        ? leftLoadsJson.value
+        : this.leftLoadsJson,
+    handPositionsJson: handPositionsJson.present
+        ? handPositionsJson.value
+        : this.handPositionsJson,
+    edgeSizesMmJson: edgeSizesMmJson.present
+        ? edgeSizesMmJson.value
+        : this.edgeSizesMmJson,
+    loadIsMax: loadIsMax ?? this.loadIsMax,
+    freeText: freeText.present ? freeText.value : this.freeText,
+    exerciseId: exerciseId.present ? exerciseId.value : this.exerciseId,
+    sectionTitle: sectionTitle.present ? sectionTitle.value : this.sectionTitle,
     updatedAt: updatedAt ?? this.updatedAt,
   );
-  RepTemplate copyWithCompanion(RepTemplatesCompanion data) {
-    return RepTemplate(
+  TrainingItemRow copyWithCompanion(TrainingItemsCompanion data) {
+    return TrainingItemRow(
       id: data.id.present ? data.id.value : this.id,
-      isRest: data.isRest.present ? data.isRest.value : this.isRest,
-      rightHand: data.rightHand.present ? data.rightHand.value : this.rightHand,
-      duration: data.duration.present ? data.duration.value : this.duration,
       trainingId: data.trainingId.present
           ? data.trainingId.value
           : this.trainingId,
-      targetWeight: data.targetWeight.present
-          ? data.targetWeight.value
-          : this.targetWeight,
-      index: data.index.present ? data.index.value : this.index,
-      gripPosition: data.gripPosition.present
-          ? data.gripPosition.value
-          : this.gripPosition,
+      parentId: data.parentId.present ? data.parentId.value : this.parentId,
+      type: data.type.present ? data.type.value : this.type,
+      position: data.position.present ? data.position.value : this.position,
+      cycles: data.cycles.present ? data.cycles.value : this.cycles,
+      cycleRestSeconds: data.cycleRestSeconds.present
+          ? data.cycleRestSeconds.value
+          : this.cycleRestSeconds,
+      reps: data.reps.present ? data.reps.value : this.reps,
+      duration: data.duration.present ? data.duration.value : this.duration,
+      restSeconds: data.restSeconds.present
+          ? data.restSeconds.value
+          : this.restSeconds,
+      worktimeSeconds: data.worktimeSeconds.present
+          ? data.worktimeSeconds.value
+          : this.worktimeSeconds,
+      hand: data.hand.present ? data.hand.value : this.hand,
+      loadsJson: data.loadsJson.present ? data.loadsJson.value : this.loadsJson,
+      leftLoadsJson: data.leftLoadsJson.present
+          ? data.leftLoadsJson.value
+          : this.leftLoadsJson,
+      handPositionsJson: data.handPositionsJson.present
+          ? data.handPositionsJson.value
+          : this.handPositionsJson,
+      edgeSizesMmJson: data.edgeSizesMmJson.present
+          ? data.edgeSizesMmJson.value
+          : this.edgeSizesMmJson,
+      loadIsMax: data.loadIsMax.present ? data.loadIsMax.value : this.loadIsMax,
+      freeText: data.freeText.present ? data.freeText.value : this.freeText,
+      exerciseId: data.exerciseId.present
+          ? data.exerciseId.value
+          : this.exerciseId,
+      sectionTitle: data.sectionTitle.present
+          ? data.sectionTitle.value
+          : this.sectionTitle,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('RepTemplate(')
+    return (StringBuffer('TrainingItemRow(')
           ..write('id: $id, ')
-          ..write('isRest: $isRest, ')
-          ..write('rightHand: $rightHand, ')
-          ..write('duration: $duration, ')
           ..write('trainingId: $trainingId, ')
-          ..write('targetWeight: $targetWeight, ')
-          ..write('index: $index, ')
-          ..write('gripPosition: $gripPosition, ')
+          ..write('parentId: $parentId, ')
+          ..write('type: $type, ')
+          ..write('position: $position, ')
+          ..write('cycles: $cycles, ')
+          ..write('cycleRestSeconds: $cycleRestSeconds, ')
+          ..write('reps: $reps, ')
+          ..write('duration: $duration, ')
+          ..write('restSeconds: $restSeconds, ')
+          ..write('worktimeSeconds: $worktimeSeconds, ')
+          ..write('hand: $hand, ')
+          ..write('loadsJson: $loadsJson, ')
+          ..write('leftLoadsJson: $leftLoadsJson, ')
+          ..write('handPositionsJson: $handPositionsJson, ')
+          ..write('edgeSizesMmJson: $edgeSizesMmJson, ')
+          ..write('loadIsMax: $loadIsMax, ')
+          ..write('freeText: $freeText, ')
+          ..write('exerciseId: $exerciseId, ')
+          ..write('sectionTitle: $sectionTitle, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
-    isRest,
-    rightHand,
-    duration,
     trainingId,
-    targetWeight,
-    index,
-    gripPosition,
+    parentId,
+    type,
+    position,
+    cycles,
+    cycleRestSeconds,
+    reps,
+    duration,
+    restSeconds,
+    worktimeSeconds,
+    hand,
+    loadsJson,
+    leftLoadsJson,
+    handPositionsJson,
+    edgeSizesMmJson,
+    loadIsMax,
+    freeText,
+    exerciseId,
+    sectionTitle,
     updatedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is RepTemplate &&
+      (other is TrainingItemRow &&
           other.id == this.id &&
-          other.isRest == this.isRest &&
-          other.rightHand == this.rightHand &&
-          other.duration == this.duration &&
           other.trainingId == this.trainingId &&
-          other.targetWeight == this.targetWeight &&
-          other.index == this.index &&
-          other.gripPosition == this.gripPosition &&
+          other.parentId == this.parentId &&
+          other.type == this.type &&
+          other.position == this.position &&
+          other.cycles == this.cycles &&
+          other.cycleRestSeconds == this.cycleRestSeconds &&
+          other.reps == this.reps &&
+          other.duration == this.duration &&
+          other.restSeconds == this.restSeconds &&
+          other.worktimeSeconds == this.worktimeSeconds &&
+          other.hand == this.hand &&
+          other.loadsJson == this.loadsJson &&
+          other.leftLoadsJson == this.leftLoadsJson &&
+          other.handPositionsJson == this.handPositionsJson &&
+          other.edgeSizesMmJson == this.edgeSizesMmJson &&
+          other.loadIsMax == this.loadIsMax &&
+          other.freeText == this.freeText &&
+          other.exerciseId == this.exerciseId &&
+          other.sectionTitle == this.sectionTitle &&
           other.updatedAt == this.updatedAt);
 }
 
-class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
+class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
   final Value<String> id;
-  final Value<bool> isRest;
-  final Value<bool> rightHand;
-  final Value<int> duration;
   final Value<String> trainingId;
-  final Value<double> targetWeight;
-  final Value<int> index;
-  final Value<int> gripPosition;
+  final Value<String?> parentId;
+  final Value<String> type;
+  final Value<int> position;
+  final Value<int?> cycles;
+  final Value<int?> cycleRestSeconds;
+  final Value<int?> reps;
+  final Value<int?> duration;
+  final Value<int?> restSeconds;
+  final Value<int?> worktimeSeconds;
+  final Value<String?> hand;
+  final Value<String?> loadsJson;
+  final Value<String?> leftLoadsJson;
+  final Value<String?> handPositionsJson;
+  final Value<String?> edgeSizesMmJson;
+  final Value<bool> loadIsMax;
+  final Value<String?> freeText;
+  final Value<String?> exerciseId;
+  final Value<String?> sectionTitle;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
-  const RepTemplatesCompanion({
+  const TrainingItemsCompanion({
     this.id = const Value.absent(),
-    this.isRest = const Value.absent(),
-    this.rightHand = const Value.absent(),
-    this.duration = const Value.absent(),
     this.trainingId = const Value.absent(),
-    this.targetWeight = const Value.absent(),
-    this.index = const Value.absent(),
-    this.gripPosition = const Value.absent(),
+    this.parentId = const Value.absent(),
+    this.type = const Value.absent(),
+    this.position = const Value.absent(),
+    this.cycles = const Value.absent(),
+    this.cycleRestSeconds = const Value.absent(),
+    this.reps = const Value.absent(),
+    this.duration = const Value.absent(),
+    this.restSeconds = const Value.absent(),
+    this.worktimeSeconds = const Value.absent(),
+    this.hand = const Value.absent(),
+    this.loadsJson = const Value.absent(),
+    this.leftLoadsJson = const Value.absent(),
+    this.handPositionsJson = const Value.absent(),
+    this.edgeSizesMmJson = const Value.absent(),
+    this.loadIsMax = const Value.absent(),
+    this.freeText = const Value.absent(),
+    this.exerciseId = const Value.absent(),
+    this.sectionTitle = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  RepTemplatesCompanion.insert({
+  TrainingItemsCompanion.insert({
     this.id = const Value.absent(),
-    required bool isRest,
-    required bool rightHand,
-    required int duration,
     required String trainingId,
-    required double targetWeight,
-    required int index,
-    this.gripPosition = const Value.absent(),
+    this.parentId = const Value.absent(),
+    required String type,
+    this.position = const Value.absent(),
+    this.cycles = const Value.absent(),
+    this.cycleRestSeconds = const Value.absent(),
+    this.reps = const Value.absent(),
+    this.duration = const Value.absent(),
+    this.restSeconds = const Value.absent(),
+    this.worktimeSeconds = const Value.absent(),
+    this.hand = const Value.absent(),
+    this.loadsJson = const Value.absent(),
+    this.leftLoadsJson = const Value.absent(),
+    this.handPositionsJson = const Value.absent(),
+    this.edgeSizesMmJson = const Value.absent(),
+    this.loadIsMax = const Value.absent(),
+    this.freeText = const Value.absent(),
+    this.exerciseId = const Value.absent(),
+    this.sectionTitle = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : isRest = Value(isRest),
-       rightHand = Value(rightHand),
-       duration = Value(duration),
-       trainingId = Value(trainingId),
-       targetWeight = Value(targetWeight),
-       index = Value(index);
-  static Insertable<RepTemplate> custom({
+  }) : trainingId = Value(trainingId),
+       type = Value(type);
+  static Insertable<TrainingItemRow> custom({
     Expression<String>? id,
-    Expression<bool>? isRest,
-    Expression<bool>? rightHand,
-    Expression<int>? duration,
     Expression<String>? trainingId,
-    Expression<double>? targetWeight,
-    Expression<int>? index,
-    Expression<int>? gripPosition,
+    Expression<String>? parentId,
+    Expression<String>? type,
+    Expression<int>? position,
+    Expression<int>? cycles,
+    Expression<int>? cycleRestSeconds,
+    Expression<int>? reps,
+    Expression<int>? duration,
+    Expression<int>? restSeconds,
+    Expression<int>? worktimeSeconds,
+    Expression<String>? hand,
+    Expression<String>? loadsJson,
+    Expression<String>? leftLoadsJson,
+    Expression<String>? handPositionsJson,
+    Expression<String>? edgeSizesMmJson,
+    Expression<bool>? loadIsMax,
+    Expression<String>? freeText,
+    Expression<String>? exerciseId,
+    Expression<String>? sectionTitle,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (isRest != null) 'is_rest': isRest,
-      if (rightHand != null) 'right_hand': rightHand,
-      if (duration != null) 'duration': duration,
       if (trainingId != null) 'training_id': trainingId,
-      if (targetWeight != null) 'target_weight': targetWeight,
-      if (index != null) 'index': index,
-      if (gripPosition != null) 'grip_position': gripPosition,
+      if (parentId != null) 'parent_id': parentId,
+      if (type != null) 'type': type,
+      if (position != null) 'position': position,
+      if (cycles != null) 'cycles': cycles,
+      if (cycleRestSeconds != null) 'cycle_rest_seconds': cycleRestSeconds,
+      if (reps != null) 'reps': reps,
+      if (duration != null) 'duration': duration,
+      if (restSeconds != null) 'rest_seconds': restSeconds,
+      if (worktimeSeconds != null) 'worktime_seconds': worktimeSeconds,
+      if (hand != null) 'hand': hand,
+      if (loadsJson != null) 'loads_json': loadsJson,
+      if (leftLoadsJson != null) 'left_loads_json': leftLoadsJson,
+      if (handPositionsJson != null) 'hand_positions_json': handPositionsJson,
+      if (edgeSizesMmJson != null) 'edge_sizes_mm_json': edgeSizesMmJson,
+      if (loadIsMax != null) 'load_is_max': loadIsMax,
+      if (freeText != null) 'free_text': freeText,
+      if (exerciseId != null) 'exercise_id': exerciseId,
+      if (sectionTitle != null) 'section_title': sectionTitle,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  RepTemplatesCompanion copyWith({
+  TrainingItemsCompanion copyWith({
     Value<String>? id,
-    Value<bool>? isRest,
-    Value<bool>? rightHand,
-    Value<int>? duration,
     Value<String>? trainingId,
-    Value<double>? targetWeight,
-    Value<int>? index,
-    Value<int>? gripPosition,
+    Value<String?>? parentId,
+    Value<String>? type,
+    Value<int>? position,
+    Value<int?>? cycles,
+    Value<int?>? cycleRestSeconds,
+    Value<int?>? reps,
+    Value<int?>? duration,
+    Value<int?>? restSeconds,
+    Value<int?>? worktimeSeconds,
+    Value<String?>? hand,
+    Value<String?>? loadsJson,
+    Value<String?>? leftLoadsJson,
+    Value<String?>? handPositionsJson,
+    Value<String?>? edgeSizesMmJson,
+    Value<bool>? loadIsMax,
+    Value<String?>? freeText,
+    Value<String?>? exerciseId,
+    Value<String?>? sectionTitle,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
-    return RepTemplatesCompanion(
+    return TrainingItemsCompanion(
       id: id ?? this.id,
-      isRest: isRest ?? this.isRest,
-      rightHand: rightHand ?? this.rightHand,
-      duration: duration ?? this.duration,
       trainingId: trainingId ?? this.trainingId,
-      targetWeight: targetWeight ?? this.targetWeight,
-      index: index ?? this.index,
-      gripPosition: gripPosition ?? this.gripPosition,
+      parentId: parentId ?? this.parentId,
+      type: type ?? this.type,
+      position: position ?? this.position,
+      cycles: cycles ?? this.cycles,
+      cycleRestSeconds: cycleRestSeconds ?? this.cycleRestSeconds,
+      reps: reps ?? this.reps,
+      duration: duration ?? this.duration,
+      restSeconds: restSeconds ?? this.restSeconds,
+      worktimeSeconds: worktimeSeconds ?? this.worktimeSeconds,
+      hand: hand ?? this.hand,
+      loadsJson: loadsJson ?? this.loadsJson,
+      leftLoadsJson: leftLoadsJson ?? this.leftLoadsJson,
+      handPositionsJson: handPositionsJson ?? this.handPositionsJson,
+      edgeSizesMmJson: edgeSizesMmJson ?? this.edgeSizesMmJson,
+      loadIsMax: loadIsMax ?? this.loadIsMax,
+      freeText: freeText ?? this.freeText,
+      exerciseId: exerciseId ?? this.exerciseId,
+      sectionTitle: sectionTitle ?? this.sectionTitle,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -3025,26 +2817,62 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
-    if (isRest.present) {
-      map['is_rest'] = Variable<bool>(isRest.value);
+    if (trainingId.present) {
+      map['training_id'] = Variable<String>(trainingId.value);
     }
-    if (rightHand.present) {
-      map['right_hand'] = Variable<bool>(rightHand.value);
+    if (parentId.present) {
+      map['parent_id'] = Variable<String>(parentId.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (cycles.present) {
+      map['cycles'] = Variable<int>(cycles.value);
+    }
+    if (cycleRestSeconds.present) {
+      map['cycle_rest_seconds'] = Variable<int>(cycleRestSeconds.value);
+    }
+    if (reps.present) {
+      map['reps'] = Variable<int>(reps.value);
     }
     if (duration.present) {
       map['duration'] = Variable<int>(duration.value);
     }
-    if (trainingId.present) {
-      map['training_id'] = Variable<String>(trainingId.value);
+    if (restSeconds.present) {
+      map['rest_seconds'] = Variable<int>(restSeconds.value);
     }
-    if (targetWeight.present) {
-      map['target_weight'] = Variable<double>(targetWeight.value);
+    if (worktimeSeconds.present) {
+      map['worktime_seconds'] = Variable<int>(worktimeSeconds.value);
     }
-    if (index.present) {
-      map['index'] = Variable<int>(index.value);
+    if (hand.present) {
+      map['hand'] = Variable<String>(hand.value);
     }
-    if (gripPosition.present) {
-      map['grip_position'] = Variable<int>(gripPosition.value);
+    if (loadsJson.present) {
+      map['loads_json'] = Variable<String>(loadsJson.value);
+    }
+    if (leftLoadsJson.present) {
+      map['left_loads_json'] = Variable<String>(leftLoadsJson.value);
+    }
+    if (handPositionsJson.present) {
+      map['hand_positions_json'] = Variable<String>(handPositionsJson.value);
+    }
+    if (edgeSizesMmJson.present) {
+      map['edge_sizes_mm_json'] = Variable<String>(edgeSizesMmJson.value);
+    }
+    if (loadIsMax.present) {
+      map['load_is_max'] = Variable<bool>(loadIsMax.value);
+    }
+    if (freeText.present) {
+      map['free_text'] = Variable<String>(freeText.value);
+    }
+    if (exerciseId.present) {
+      map['exercise_id'] = Variable<String>(exerciseId.value);
+    }
+    if (sectionTitle.present) {
+      map['section_title'] = Variable<String>(sectionTitle.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
@@ -3057,15 +2885,27 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplate> {
 
   @override
   String toString() {
-    return (StringBuffer('RepTemplatesCompanion(')
+    return (StringBuffer('TrainingItemsCompanion(')
           ..write('id: $id, ')
-          ..write('isRest: $isRest, ')
-          ..write('rightHand: $rightHand, ')
-          ..write('duration: $duration, ')
           ..write('trainingId: $trainingId, ')
-          ..write('targetWeight: $targetWeight, ')
-          ..write('index: $index, ')
-          ..write('gripPosition: $gripPosition, ')
+          ..write('parentId: $parentId, ')
+          ..write('type: $type, ')
+          ..write('position: $position, ')
+          ..write('cycles: $cycles, ')
+          ..write('cycleRestSeconds: $cycleRestSeconds, ')
+          ..write('reps: $reps, ')
+          ..write('duration: $duration, ')
+          ..write('restSeconds: $restSeconds, ')
+          ..write('worktimeSeconds: $worktimeSeconds, ')
+          ..write('hand: $hand, ')
+          ..write('loadsJson: $loadsJson, ')
+          ..write('leftLoadsJson: $leftLoadsJson, ')
+          ..write('handPositionsJson: $handPositionsJson, ')
+          ..write('edgeSizesMmJson: $edgeSizesMmJson, ')
+          ..write('loadIsMax: $loadIsMax, ')
+          ..write('freeText: $freeText, ')
+          ..write('exerciseId: $exerciseId, ')
+          ..write('sectionTitle: $sectionTitle, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -5286,9 +5126,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $SessionsTable sessions = $SessionsTable(this);
   late final $AssessmentsTable assessments = $AssessmentsTable(this);
-  late final $RepeatersTable repeaters = $RepeatersTable(this);
   late final $TrainingsTable trainings = $TrainingsTable(this);
-  late final $RepTemplatesTable repTemplates = $RepTemplatesTable(this);
+  late final $TrainingItemsTable trainingItems = $TrainingItemsTable(this);
   late final $RepDatasTable repDatas = $RepDatasTable(this);
   late final $SensorConfigsTable sensorConfigs = $SensorConfigsTable(this);
   late final $BuiltinTrainingWeightsTable builtinTrainingWeights =
@@ -5303,9 +5142,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     sessions,
     assessments,
-    repeaters,
     trainings,
-    repTemplates,
+    trainingItems,
     repDatas,
     sensorConfigs,
     builtinTrainingWeights,
@@ -5956,339 +5794,21 @@ typedef $$AssessmentsTableProcessedTableManager =
       Assessment,
       PrefetchHooks Function()
     >;
-typedef $$RepeatersTableCreateCompanionBuilder =
-    RepeatersCompanion Function({
-      Value<String> id,
-      required int sets,
-      required int reps,
-      required int worktime,
-      required int resttime,
-      required int setRest,
-      Value<double?> targetWeigthRight,
-      Value<double?> targetWeigthLeft,
-      required bool splitHand,
-      Value<int> gripPosition,
-      Value<DateTime> updatedAt,
-      Value<int> rowid,
-    });
-typedef $$RepeatersTableUpdateCompanionBuilder =
-    RepeatersCompanion Function({
-      Value<String> id,
-      Value<int> sets,
-      Value<int> reps,
-      Value<int> worktime,
-      Value<int> resttime,
-      Value<int> setRest,
-      Value<double?> targetWeigthRight,
-      Value<double?> targetWeigthLeft,
-      Value<bool> splitHand,
-      Value<int> gripPosition,
-      Value<DateTime> updatedAt,
-      Value<int> rowid,
-    });
-
-class $$RepeatersTableFilterComposer
-    extends Composer<_$AppDatabase, $RepeatersTable> {
-  $$RepeatersTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get sets => $composableBuilder(
-    column: $table.sets,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get reps => $composableBuilder(
-    column: $table.reps,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get worktime => $composableBuilder(
-    column: $table.worktime,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get resttime => $composableBuilder(
-    column: $table.resttime,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get setRest => $composableBuilder(
-    column: $table.setRest,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<double> get targetWeigthRight => $composableBuilder(
-    column: $table.targetWeigthRight,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<double> get targetWeigthLeft => $composableBuilder(
-    column: $table.targetWeigthLeft,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get splitHand => $composableBuilder(
-    column: $table.splitHand,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get gripPosition => $composableBuilder(
-    column: $table.gripPosition,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$RepeatersTableOrderingComposer
-    extends Composer<_$AppDatabase, $RepeatersTable> {
-  $$RepeatersTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get sets => $composableBuilder(
-    column: $table.sets,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get reps => $composableBuilder(
-    column: $table.reps,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get worktime => $composableBuilder(
-    column: $table.worktime,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get resttime => $composableBuilder(
-    column: $table.resttime,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get setRest => $composableBuilder(
-    column: $table.setRest,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<double> get targetWeigthRight => $composableBuilder(
-    column: $table.targetWeigthRight,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<double> get targetWeigthLeft => $composableBuilder(
-    column: $table.targetWeigthLeft,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get splitHand => $composableBuilder(
-    column: $table.splitHand,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get gripPosition => $composableBuilder(
-    column: $table.gripPosition,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$RepeatersTableAnnotationComposer
-    extends Composer<_$AppDatabase, $RepeatersTable> {
-  $$RepeatersTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<int> get sets =>
-      $composableBuilder(column: $table.sets, builder: (column) => column);
-
-  GeneratedColumn<int> get reps =>
-      $composableBuilder(column: $table.reps, builder: (column) => column);
-
-  GeneratedColumn<int> get worktime =>
-      $composableBuilder(column: $table.worktime, builder: (column) => column);
-
-  GeneratedColumn<int> get resttime =>
-      $composableBuilder(column: $table.resttime, builder: (column) => column);
-
-  GeneratedColumn<int> get setRest =>
-      $composableBuilder(column: $table.setRest, builder: (column) => column);
-
-  GeneratedColumn<double> get targetWeigthRight => $composableBuilder(
-    column: $table.targetWeigthRight,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<double> get targetWeigthLeft => $composableBuilder(
-    column: $table.targetWeigthLeft,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<bool> get splitHand =>
-      $composableBuilder(column: $table.splitHand, builder: (column) => column);
-
-  GeneratedColumn<int> get gripPosition => $composableBuilder(
-    column: $table.gripPosition,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-}
-
-class $$RepeatersTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $RepeatersTable,
-          Repeater,
-          $$RepeatersTableFilterComposer,
-          $$RepeatersTableOrderingComposer,
-          $$RepeatersTableAnnotationComposer,
-          $$RepeatersTableCreateCompanionBuilder,
-          $$RepeatersTableUpdateCompanionBuilder,
-          (Repeater, BaseReferences<_$AppDatabase, $RepeatersTable, Repeater>),
-          Repeater,
-          PrefetchHooks Function()
-        > {
-  $$RepeatersTableTableManager(_$AppDatabase db, $RepeatersTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$RepeatersTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$RepeatersTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$RepeatersTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<int> sets = const Value.absent(),
-                Value<int> reps = const Value.absent(),
-                Value<int> worktime = const Value.absent(),
-                Value<int> resttime = const Value.absent(),
-                Value<int> setRest = const Value.absent(),
-                Value<double?> targetWeigthRight = const Value.absent(),
-                Value<double?> targetWeigthLeft = const Value.absent(),
-                Value<bool> splitHand = const Value.absent(),
-                Value<int> gripPosition = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => RepeatersCompanion(
-                id: id,
-                sets: sets,
-                reps: reps,
-                worktime: worktime,
-                resttime: resttime,
-                setRest: setRest,
-                targetWeigthRight: targetWeigthRight,
-                targetWeigthLeft: targetWeigthLeft,
-                splitHand: splitHand,
-                gripPosition: gripPosition,
-                updatedAt: updatedAt,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                required int sets,
-                required int reps,
-                required int worktime,
-                required int resttime,
-                required int setRest,
-                Value<double?> targetWeigthRight = const Value.absent(),
-                Value<double?> targetWeigthLeft = const Value.absent(),
-                required bool splitHand,
-                Value<int> gripPosition = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => RepeatersCompanion.insert(
-                id: id,
-                sets: sets,
-                reps: reps,
-                worktime: worktime,
-                resttime: resttime,
-                setRest: setRest,
-                targetWeigthRight: targetWeigthRight,
-                targetWeigthLeft: targetWeigthLeft,
-                splitHand: splitHand,
-                gripPosition: gripPosition,
-                updatedAt: updatedAt,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$RepeatersTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $RepeatersTable,
-      Repeater,
-      $$RepeatersTableFilterComposer,
-      $$RepeatersTableOrderingComposer,
-      $$RepeatersTableAnnotationComposer,
-      $$RepeatersTableCreateCompanionBuilder,
-      $$RepeatersTableUpdateCompanionBuilder,
-      (Repeater, BaseReferences<_$AppDatabase, $RepeatersTable, Repeater>),
-      Repeater,
-      PrefetchHooks Function()
-    >;
 typedef $$TrainingsTableCreateCompanionBuilder =
     TrainingsCompanion Function({
       Value<String> id,
-      required String name,
-      Value<String?> repeaterId,
-      Value<bool> isBuiltin,
+      required String title,
+      Value<String?> description,
       Value<bool> isFavorite,
-      Value<bool> isAssessment,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
 typedef $$TrainingsTableUpdateCompanionBuilder =
     TrainingsCompanion Function({
       Value<String> id,
-      Value<String> name,
-      Value<String?> repeaterId,
-      Value<bool> isBuiltin,
+      Value<String> title,
+      Value<String?> description,
       Value<bool> isFavorite,
-      Value<bool> isAssessment,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -6307,28 +5827,18 @@ class $$TrainingsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get repeaterId => $composableBuilder(
-    column: $table.repeaterId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get isBuiltin => $composableBuilder(
-    column: $table.isBuiltin,
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
     builder: (column) => ColumnFilters(column),
   );
 
   ColumnFilters<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get isAssessment => $composableBuilder(
-    column: $table.isAssessment,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6352,28 +5862,18 @@ class $$TrainingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get repeaterId => $composableBuilder(
-    column: $table.repeaterId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get isBuiltin => $composableBuilder(
-    column: $table.isBuiltin,
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
     builder: (column) => ColumnOrderings(column),
   );
 
   ColumnOrderings<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get isAssessment => $composableBuilder(
-    column: $table.isAssessment,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -6395,24 +5895,16 @@ class $$TrainingsTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
 
-  GeneratedColumn<String> get repeaterId => $composableBuilder(
-    column: $table.repeaterId,
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
     builder: (column) => column,
   );
-
-  GeneratedColumn<bool> get isBuiltin =>
-      $composableBuilder(column: $table.isBuiltin, builder: (column) => column);
 
   GeneratedColumn<bool> get isFavorite => $composableBuilder(
     column: $table.isFavorite,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<bool> get isAssessment => $composableBuilder(
-    column: $table.isAssessment,
     builder: (column) => column,
   );
 
@@ -6425,14 +5917,17 @@ class $$TrainingsTableTableManager
         RootTableManager<
           _$AppDatabase,
           $TrainingsTable,
-          Training,
+          TrainingRow,
           $$TrainingsTableFilterComposer,
           $$TrainingsTableOrderingComposer,
           $$TrainingsTableAnnotationComposer,
           $$TrainingsTableCreateCompanionBuilder,
           $$TrainingsTableUpdateCompanionBuilder,
-          (Training, BaseReferences<_$AppDatabase, $TrainingsTable, Training>),
-          Training,
+          (
+            TrainingRow,
+            BaseReferences<_$AppDatabase, $TrainingsTable, TrainingRow>,
+          ),
+          TrainingRow,
           PrefetchHooks Function()
         > {
   $$TrainingsTableTableManager(_$AppDatabase db, $TrainingsTable table)
@@ -6449,40 +5944,32 @@ class $$TrainingsTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<String> name = const Value.absent(),
-                Value<String?> repeaterId = const Value.absent(),
-                Value<bool> isBuiltin = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> description = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
-                Value<bool> isAssessment = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TrainingsCompanion(
                 id: id,
-                name: name,
-                repeaterId: repeaterId,
-                isBuiltin: isBuiltin,
+                title: title,
+                description: description,
                 isFavorite: isFavorite,
-                isAssessment: isAssessment,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                required String name,
-                Value<String?> repeaterId = const Value.absent(),
-                Value<bool> isBuiltin = const Value.absent(),
+                required String title,
+                Value<String?> description = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
-                Value<bool> isAssessment = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TrainingsCompanion.insert(
                 id: id,
-                name: name,
-                repeaterId: repeaterId,
-                isBuiltin: isBuiltin,
+                title: title,
+                description: description,
                 isFavorite: isFavorite,
-                isAssessment: isAssessment,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -6498,46 +5985,73 @@ typedef $$TrainingsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
       $TrainingsTable,
-      Training,
+      TrainingRow,
       $$TrainingsTableFilterComposer,
       $$TrainingsTableOrderingComposer,
       $$TrainingsTableAnnotationComposer,
       $$TrainingsTableCreateCompanionBuilder,
       $$TrainingsTableUpdateCompanionBuilder,
-      (Training, BaseReferences<_$AppDatabase, $TrainingsTable, Training>),
-      Training,
+      (
+        TrainingRow,
+        BaseReferences<_$AppDatabase, $TrainingsTable, TrainingRow>,
+      ),
+      TrainingRow,
       PrefetchHooks Function()
     >;
-typedef $$RepTemplatesTableCreateCompanionBuilder =
-    RepTemplatesCompanion Function({
+typedef $$TrainingItemsTableCreateCompanionBuilder =
+    TrainingItemsCompanion Function({
       Value<String> id,
-      required bool isRest,
-      required bool rightHand,
-      required int duration,
       required String trainingId,
-      required double targetWeight,
-      required int index,
-      Value<int> gripPosition,
+      Value<String?> parentId,
+      required String type,
+      Value<int> position,
+      Value<int?> cycles,
+      Value<int?> cycleRestSeconds,
+      Value<int?> reps,
+      Value<int?> duration,
+      Value<int?> restSeconds,
+      Value<int?> worktimeSeconds,
+      Value<String?> hand,
+      Value<String?> loadsJson,
+      Value<String?> leftLoadsJson,
+      Value<String?> handPositionsJson,
+      Value<String?> edgeSizesMmJson,
+      Value<bool> loadIsMax,
+      Value<String?> freeText,
+      Value<String?> exerciseId,
+      Value<String?> sectionTitle,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
-typedef $$RepTemplatesTableUpdateCompanionBuilder =
-    RepTemplatesCompanion Function({
+typedef $$TrainingItemsTableUpdateCompanionBuilder =
+    TrainingItemsCompanion Function({
       Value<String> id,
-      Value<bool> isRest,
-      Value<bool> rightHand,
-      Value<int> duration,
       Value<String> trainingId,
-      Value<double> targetWeight,
-      Value<int> index,
-      Value<int> gripPosition,
+      Value<String?> parentId,
+      Value<String> type,
+      Value<int> position,
+      Value<int?> cycles,
+      Value<int?> cycleRestSeconds,
+      Value<int?> reps,
+      Value<int?> duration,
+      Value<int?> restSeconds,
+      Value<int?> worktimeSeconds,
+      Value<String?> hand,
+      Value<String?> loadsJson,
+      Value<String?> leftLoadsJson,
+      Value<String?> handPositionsJson,
+      Value<String?> edgeSizesMmJson,
+      Value<bool> loadIsMax,
+      Value<String?> freeText,
+      Value<String?> exerciseId,
+      Value<String?> sectionTitle,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
 
-class $$RepTemplatesTableFilterComposer
-    extends Composer<_$AppDatabase, $RepTemplatesTable> {
-  $$RepTemplatesTableFilterComposer({
+class $$TrainingItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $TrainingItemsTable> {
+  $$TrainingItemsTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6549,13 +6063,38 @@ class $$RepTemplatesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<bool> get isRest => $composableBuilder(
-    column: $table.isRest,
+  ColumnFilters<String> get trainingId => $composableBuilder(
+    column: $table.trainingId,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<bool> get rightHand => $composableBuilder(
-    column: $table.rightHand,
+  ColumnFilters<String> get parentId => $composableBuilder(
+    column: $table.parentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get cycles => $composableBuilder(
+    column: $table.cycles,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get cycleRestSeconds => $composableBuilder(
+    column: $table.cycleRestSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reps => $composableBuilder(
+    column: $table.reps,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6564,23 +6103,58 @@ class $$RepTemplatesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get trainingId => $composableBuilder(
-    column: $table.trainingId,
+  ColumnFilters<int> get restSeconds => $composableBuilder(
+    column: $table.restSeconds,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<double> get targetWeight => $composableBuilder(
-    column: $table.targetWeight,
+  ColumnFilters<int> get worktimeSeconds => $composableBuilder(
+    column: $table.worktimeSeconds,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get index => $composableBuilder(
-    column: $table.index,
+  ColumnFilters<String> get hand => $composableBuilder(
+    column: $table.hand,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get gripPosition => $composableBuilder(
-    column: $table.gripPosition,
+  ColumnFilters<String> get loadsJson => $composableBuilder(
+    column: $table.loadsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get leftLoadsJson => $composableBuilder(
+    column: $table.leftLoadsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get handPositionsJson => $composableBuilder(
+    column: $table.handPositionsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get edgeSizesMmJson => $composableBuilder(
+    column: $table.edgeSizesMmJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get loadIsMax => $composableBuilder(
+    column: $table.loadIsMax,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get freeText => $composableBuilder(
+    column: $table.freeText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get exerciseId => $composableBuilder(
+    column: $table.exerciseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sectionTitle => $composableBuilder(
+    column: $table.sectionTitle,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6590,9 +6164,9 @@ class $$RepTemplatesTableFilterComposer
   );
 }
 
-class $$RepTemplatesTableOrderingComposer
-    extends Composer<_$AppDatabase, $RepTemplatesTable> {
-  $$RepTemplatesTableOrderingComposer({
+class $$TrainingItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TrainingItemsTable> {
+  $$TrainingItemsTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6604,13 +6178,38 @@ class $$RepTemplatesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get isRest => $composableBuilder(
-    column: $table.isRest,
+  ColumnOrderings<String> get trainingId => $composableBuilder(
+    column: $table.trainingId,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get rightHand => $composableBuilder(
-    column: $table.rightHand,
+  ColumnOrderings<String> get parentId => $composableBuilder(
+    column: $table.parentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get cycles => $composableBuilder(
+    column: $table.cycles,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get cycleRestSeconds => $composableBuilder(
+    column: $table.cycleRestSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reps => $composableBuilder(
+    column: $table.reps,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -6619,23 +6218,58 @@ class $$RepTemplatesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get trainingId => $composableBuilder(
-    column: $table.trainingId,
+  ColumnOrderings<int> get restSeconds => $composableBuilder(
+    column: $table.restSeconds,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<double> get targetWeight => $composableBuilder(
-    column: $table.targetWeight,
+  ColumnOrderings<int> get worktimeSeconds => $composableBuilder(
+    column: $table.worktimeSeconds,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get index => $composableBuilder(
-    column: $table.index,
+  ColumnOrderings<String> get hand => $composableBuilder(
+    column: $table.hand,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get gripPosition => $composableBuilder(
-    column: $table.gripPosition,
+  ColumnOrderings<String> get loadsJson => $composableBuilder(
+    column: $table.loadsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get leftLoadsJson => $composableBuilder(
+    column: $table.leftLoadsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get handPositionsJson => $composableBuilder(
+    column: $table.handPositionsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get edgeSizesMmJson => $composableBuilder(
+    column: $table.edgeSizesMmJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get loadIsMax => $composableBuilder(
+    column: $table.loadIsMax,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get freeText => $composableBuilder(
+    column: $table.freeText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get exerciseId => $composableBuilder(
+    column: $table.exerciseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sectionTitle => $composableBuilder(
+    column: $table.sectionTitle,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -6645,9 +6279,9 @@ class $$RepTemplatesTableOrderingComposer
   );
 }
 
-class $$RepTemplatesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $RepTemplatesTable> {
-  $$RepTemplatesTableAnnotationComposer({
+class $$TrainingItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TrainingItemsTable> {
+  $$TrainingItemsTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6657,30 +6291,78 @@ class $$RepTemplatesTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<bool> get isRest =>
-      $composableBuilder(column: $table.isRest, builder: (column) => column);
-
-  GeneratedColumn<bool> get rightHand =>
-      $composableBuilder(column: $table.rightHand, builder: (column) => column);
-
-  GeneratedColumn<int> get duration =>
-      $composableBuilder(column: $table.duration, builder: (column) => column);
-
   GeneratedColumn<String> get trainingId => $composableBuilder(
     column: $table.trainingId,
     builder: (column) => column,
   );
 
-  GeneratedColumn<double> get targetWeight => $composableBuilder(
-    column: $table.targetWeight,
+  GeneratedColumn<String> get parentId =>
+      $composableBuilder(column: $table.parentId, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<int> get cycles =>
+      $composableBuilder(column: $table.cycles, builder: (column) => column);
+
+  GeneratedColumn<int> get cycleRestSeconds => $composableBuilder(
+    column: $table.cycleRestSeconds,
     builder: (column) => column,
   );
 
-  GeneratedColumn<int> get index =>
-      $composableBuilder(column: $table.index, builder: (column) => column);
+  GeneratedColumn<int> get reps =>
+      $composableBuilder(column: $table.reps, builder: (column) => column);
 
-  GeneratedColumn<int> get gripPosition => $composableBuilder(
-    column: $table.gripPosition,
+  GeneratedColumn<int> get duration =>
+      $composableBuilder(column: $table.duration, builder: (column) => column);
+
+  GeneratedColumn<int> get restSeconds => $composableBuilder(
+    column: $table.restSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get worktimeSeconds => $composableBuilder(
+    column: $table.worktimeSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get hand =>
+      $composableBuilder(column: $table.hand, builder: (column) => column);
+
+  GeneratedColumn<String> get loadsJson =>
+      $composableBuilder(column: $table.loadsJson, builder: (column) => column);
+
+  GeneratedColumn<String> get leftLoadsJson => $composableBuilder(
+    column: $table.leftLoadsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get handPositionsJson => $composableBuilder(
+    column: $table.handPositionsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get edgeSizesMmJson => $composableBuilder(
+    column: $table.edgeSizesMmJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get loadIsMax =>
+      $composableBuilder(column: $table.loadIsMax, builder: (column) => column);
+
+  GeneratedColumn<String> get freeText =>
+      $composableBuilder(column: $table.freeText, builder: (column) => column);
+
+  GeneratedColumn<String> get exerciseId => $composableBuilder(
+    column: $table.exerciseId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sectionTitle => $composableBuilder(
+    column: $table.sectionTitle,
     builder: (column) => column,
   );
 
@@ -6688,80 +6370,128 @@ class $$RepTemplatesTableAnnotationComposer
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
-class $$RepTemplatesTableTableManager
+class $$TrainingItemsTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $RepTemplatesTable,
-          RepTemplate,
-          $$RepTemplatesTableFilterComposer,
-          $$RepTemplatesTableOrderingComposer,
-          $$RepTemplatesTableAnnotationComposer,
-          $$RepTemplatesTableCreateCompanionBuilder,
-          $$RepTemplatesTableUpdateCompanionBuilder,
+          $TrainingItemsTable,
+          TrainingItemRow,
+          $$TrainingItemsTableFilterComposer,
+          $$TrainingItemsTableOrderingComposer,
+          $$TrainingItemsTableAnnotationComposer,
+          $$TrainingItemsTableCreateCompanionBuilder,
+          $$TrainingItemsTableUpdateCompanionBuilder,
           (
-            RepTemplate,
-            BaseReferences<_$AppDatabase, $RepTemplatesTable, RepTemplate>,
+            TrainingItemRow,
+            BaseReferences<_$AppDatabase, $TrainingItemsTable, TrainingItemRow>,
           ),
-          RepTemplate,
+          TrainingItemRow,
           PrefetchHooks Function()
         > {
-  $$RepTemplatesTableTableManager(_$AppDatabase db, $RepTemplatesTable table)
+  $$TrainingItemsTableTableManager(_$AppDatabase db, $TrainingItemsTable table)
     : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
-              $$RepTemplatesTableFilterComposer($db: db, $table: table),
+              $$TrainingItemsTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
-              $$RepTemplatesTableOrderingComposer($db: db, $table: table),
+              $$TrainingItemsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
-              $$RepTemplatesTableAnnotationComposer($db: db, $table: table),
+              $$TrainingItemsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<bool> isRest = const Value.absent(),
-                Value<bool> rightHand = const Value.absent(),
-                Value<int> duration = const Value.absent(),
                 Value<String> trainingId = const Value.absent(),
-                Value<double> targetWeight = const Value.absent(),
-                Value<int> index = const Value.absent(),
-                Value<int> gripPosition = const Value.absent(),
+                Value<String?> parentId = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<int?> cycles = const Value.absent(),
+                Value<int?> cycleRestSeconds = const Value.absent(),
+                Value<int?> reps = const Value.absent(),
+                Value<int?> duration = const Value.absent(),
+                Value<int?> restSeconds = const Value.absent(),
+                Value<int?> worktimeSeconds = const Value.absent(),
+                Value<String?> hand = const Value.absent(),
+                Value<String?> loadsJson = const Value.absent(),
+                Value<String?> leftLoadsJson = const Value.absent(),
+                Value<String?> handPositionsJson = const Value.absent(),
+                Value<String?> edgeSizesMmJson = const Value.absent(),
+                Value<bool> loadIsMax = const Value.absent(),
+                Value<String?> freeText = const Value.absent(),
+                Value<String?> exerciseId = const Value.absent(),
+                Value<String?> sectionTitle = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => RepTemplatesCompanion(
+              }) => TrainingItemsCompanion(
                 id: id,
-                isRest: isRest,
-                rightHand: rightHand,
-                duration: duration,
                 trainingId: trainingId,
-                targetWeight: targetWeight,
-                index: index,
-                gripPosition: gripPosition,
+                parentId: parentId,
+                type: type,
+                position: position,
+                cycles: cycles,
+                cycleRestSeconds: cycleRestSeconds,
+                reps: reps,
+                duration: duration,
+                restSeconds: restSeconds,
+                worktimeSeconds: worktimeSeconds,
+                hand: hand,
+                loadsJson: loadsJson,
+                leftLoadsJson: leftLoadsJson,
+                handPositionsJson: handPositionsJson,
+                edgeSizesMmJson: edgeSizesMmJson,
+                loadIsMax: loadIsMax,
+                freeText: freeText,
+                exerciseId: exerciseId,
+                sectionTitle: sectionTitle,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                required bool isRest,
-                required bool rightHand,
-                required int duration,
                 required String trainingId,
-                required double targetWeight,
-                required int index,
-                Value<int> gripPosition = const Value.absent(),
+                Value<String?> parentId = const Value.absent(),
+                required String type,
+                Value<int> position = const Value.absent(),
+                Value<int?> cycles = const Value.absent(),
+                Value<int?> cycleRestSeconds = const Value.absent(),
+                Value<int?> reps = const Value.absent(),
+                Value<int?> duration = const Value.absent(),
+                Value<int?> restSeconds = const Value.absent(),
+                Value<int?> worktimeSeconds = const Value.absent(),
+                Value<String?> hand = const Value.absent(),
+                Value<String?> loadsJson = const Value.absent(),
+                Value<String?> leftLoadsJson = const Value.absent(),
+                Value<String?> handPositionsJson = const Value.absent(),
+                Value<String?> edgeSizesMmJson = const Value.absent(),
+                Value<bool> loadIsMax = const Value.absent(),
+                Value<String?> freeText = const Value.absent(),
+                Value<String?> exerciseId = const Value.absent(),
+                Value<String?> sectionTitle = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => RepTemplatesCompanion.insert(
+              }) => TrainingItemsCompanion.insert(
                 id: id,
-                isRest: isRest,
-                rightHand: rightHand,
-                duration: duration,
                 trainingId: trainingId,
-                targetWeight: targetWeight,
-                index: index,
-                gripPosition: gripPosition,
+                parentId: parentId,
+                type: type,
+                position: position,
+                cycles: cycles,
+                cycleRestSeconds: cycleRestSeconds,
+                reps: reps,
+                duration: duration,
+                restSeconds: restSeconds,
+                worktimeSeconds: worktimeSeconds,
+                hand: hand,
+                loadsJson: loadsJson,
+                leftLoadsJson: leftLoadsJson,
+                handPositionsJson: handPositionsJson,
+                edgeSizesMmJson: edgeSizesMmJson,
+                loadIsMax: loadIsMax,
+                freeText: freeText,
+                exerciseId: exerciseId,
+                sectionTitle: sectionTitle,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -6773,21 +6503,21 @@ class $$RepTemplatesTableTableManager
       );
 }
 
-typedef $$RepTemplatesTableProcessedTableManager =
+typedef $$TrainingItemsTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $RepTemplatesTable,
-      RepTemplate,
-      $$RepTemplatesTableFilterComposer,
-      $$RepTemplatesTableOrderingComposer,
-      $$RepTemplatesTableAnnotationComposer,
-      $$RepTemplatesTableCreateCompanionBuilder,
-      $$RepTemplatesTableUpdateCompanionBuilder,
+      $TrainingItemsTable,
+      TrainingItemRow,
+      $$TrainingItemsTableFilterComposer,
+      $$TrainingItemsTableOrderingComposer,
+      $$TrainingItemsTableAnnotationComposer,
+      $$TrainingItemsTableCreateCompanionBuilder,
+      $$TrainingItemsTableUpdateCompanionBuilder,
       (
-        RepTemplate,
-        BaseReferences<_$AppDatabase, $RepTemplatesTable, RepTemplate>,
+        TrainingItemRow,
+        BaseReferences<_$AppDatabase, $TrainingItemsTable, TrainingItemRow>,
       ),
-      RepTemplate,
+      TrainingItemRow,
       PrefetchHooks Function()
     >;
 typedef $$RepDatasTableCreateCompanionBuilder =
@@ -7974,12 +7704,10 @@ class $AppDatabaseManager {
       $$SessionsTableTableManager(_db, _db.sessions);
   $$AssessmentsTableTableManager get assessments =>
       $$AssessmentsTableTableManager(_db, _db.assessments);
-  $$RepeatersTableTableManager get repeaters =>
-      $$RepeatersTableTableManager(_db, _db.repeaters);
   $$TrainingsTableTableManager get trainings =>
       $$TrainingsTableTableManager(_db, _db.trainings);
-  $$RepTemplatesTableTableManager get repTemplates =>
-      $$RepTemplatesTableTableManager(_db, _db.repTemplates);
+  $$TrainingItemsTableTableManager get trainingItems =>
+      $$TrainingItemsTableTableManager(_db, _db.trainingItems);
   $$RepDatasTableTableManager get repDatas =>
       $$RepDatasTableTableManager(_db, _db.repDatas);
   $$SensorConfigsTableTableManager get sensorConfigs =>

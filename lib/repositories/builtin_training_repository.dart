@@ -32,7 +32,7 @@ class BuiltinTrainingRepository {
 
   /// Generate a training if available, returns null if not.
   /// If custom weights are not provided, it will try to load them from the database.
-  Future<TrainingWithReps?> generateTraining(
+  Future<Training?> generateTraining(
     BuiltinTrainingModel training, {
     double? customLoadRight,
     double? customLoadLeft,
@@ -41,7 +41,6 @@ class BuiltinTrainingRepository {
       training.requiredAssessments,
     );
 
-    // If custom weights are not provided, try to load them from database
     if (customLoadRight == null || customLoadLeft == null) {
       final savedWeights = await _database.getBuiltinTrainingWeights(
         training.id,
@@ -50,7 +49,7 @@ class BuiltinTrainingRepository {
       customLoadLeft ??= savedWeights?.customWeightLeft;
     }
 
-    return training.generateTraining(
+    return training.generateNewFormatTraining(
       assessmentValues,
       customLoadRight: customLoadRight,
       customLoadLeft: customLoadLeft,

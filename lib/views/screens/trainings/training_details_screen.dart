@@ -1,36 +1,37 @@
 import 'package:crimpy/models/ble_data_model.dart';
-import 'package:crimpy/models/common.dart';
-import 'package:crimpy/views/widgets/training_visualization/repeater_visualization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
-import 'package:crimpy/theme/crimpy_theme.dart';
 
 class TrainingDetailScreen extends ConsumerWidget {
-  final TrainingWithReps template;
+  final Training template;
   const TrainingDetailScreen(this.template, {super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isRepeater = template.repeater != null;
-
     return Scaffold(
-      appBar: AppBar(title: Text(template.name)),
+      appBar: AppBar(title: Text(template.title)),
       body: SafeArea(
-        child: isRepeater
-            ? SingleChildScrollView(
-                child: RepeaterVisualization(training: template),
-              )
-            : ListView.builder(
-                itemCount: template.reps.length,
-                itemBuilder: (ctx, i) => RepListItem(
-                  key: ValueKey(i),
-                  rep: template.reps[i],
-                  index: i,
-                ),
-              ),
+        child: ListView.builder(
+          itemCount: template.items.length,
+          itemBuilder: (ctx, i) {
+            final item = template.items[i];
+            return ListTile(
+              title: Text(item.type.apiValue),
+              subtitle: Text(switch (item.type.apiValue) {
+                'repeater' =>
+                  '${item.cycles ?? 1}x${item.reps ?? 1} '
+                      '${item.worktimeSeconds ?? 7}s/${item.restSeconds ?? 3}s',
+                'hangboard_rep' =>
+                  '${item.worktimeSeconds ?? 7}s / rest ${item.restSeconds ?? 3}s',
+                'free' => item.freeText ?? '',
+                _ => '',
+              }),
+            );
+          },
+        ),
       ),
       floatingActionButton: IconButton(
         onPressed:
@@ -45,38 +46,6 @@ class TrainingDetailScreen extends ConsumerWidget {
                 );
               },
         icon: Icon(Icons.play_arrow),
-      ),
-    );
-  }
-}
-
-class RepListItem extends StatelessWidget {
-  final RepModel rep;
-  final int index;
-
-  const RepListItem({required Key key, required this.rep, required this.index})
-    : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    String repText = '${rep.durationInSeconds}s';
-    if (!rep.isRest) {
-      repText +=
-          ' | ${rep.handSide.isRightHand ? 'Right' : 'Left'} hand | ${rep.targetWeight.toStringAsFixed(1)}kg';
-    }
-
-    return CrimpyCards.training(
-      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-      padding: const EdgeInsets.all(0),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: rep.isRest
-              ? CrimpyTheme.successColor
-              : CrimpyTheme.errorColor,
-          child: Text('${index + 1}'),
-        ),
-        title: Text(rep.isRest ? "Rest" : "Pull"),
-        subtitle: Text(repText),
       ),
     );
   }

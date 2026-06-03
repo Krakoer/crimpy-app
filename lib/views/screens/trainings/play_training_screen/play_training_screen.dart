@@ -1,10 +1,10 @@
-import 'package:crimpy/views/screens/trainings/training_feedback_screen/training_feedback_screen.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_header.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/hand_label.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_timer_display.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/next_rep_preview.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_progress_info.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_controls.dart';
+import 'package:crimpy/utils/training_expander.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
@@ -17,7 +17,7 @@ import 'package:crimpy/views/widgets/workout_timer.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 
 class PlayTrainingScreen extends ConsumerStatefulWidget {
-  final TrainingWithReps training;
+  final Training training;
 
   /// Play a given training.
   const PlayTrainingScreen(this.training, {super.key});
@@ -38,7 +38,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// Duration of the preparation rest in seconds
   static const int _preparationDuration = 10;
 
-  /// Get reps with a 10-second preparation rest prepended
+  /// Get reps with a 10-second preparation rest prepended.
   List<RepModel> get _repsWithPreparation {
     return [
       RepModel(
@@ -49,7 +49,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         index: -1,
         gripPosition: GripPosition.halfCrimp,
       ),
-      ...widget.training.reps,
+      ...expandTrainingItemsToReps(widget.training),
     ];
   }
 
@@ -112,15 +112,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
           builder:
               // If the training can compute new weights, show feedback screen.
               // Otherwise show regular post-training screen.
-              (context) => widget.training.computeNewWeights == null
-              ? PostWorkoutScreen(
-                  template: widget.training,
-                  results: repResults,
-                )
-              : TrainingFeedbackScreen(
-                  template: widget.training,
-                  results: repResults,
-                ),
+              (context) => PostWorkoutScreen(
+                template: widget.training,
+                results: repResults,
+              ),
         ),
       );
     },
@@ -193,7 +188,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       },
       child: Scaffold(
         backgroundColor: CrimpyTheme.bgPrimary,
-        appBar: AppBar(title: Text(widget.training.name), centerTitle: true),
+        appBar: AppBar(title: Text(widget.training.title), centerTitle: true),
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -218,8 +213,11 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                   TrainingHeader(
                     elapsedMilliseconds: timer.elapsedMilliseconds,
                     remainingMilliseconds:
-                        widget.training.totalDuration.inMilliseconds +
-                        (_preparationDuration * 1000) -
+                        (_repsWithPreparation.fold(
+                              0,
+                              (s, r) => s + r.durationInSeconds,
+                            ) *
+                            1000) -
                         timer.elapsedMilliseconds,
                   ),
                   // Main content area with gauge
@@ -280,8 +278,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                     currentRepIndex: timer.currentRepIndex > 0
                         ? timer.currentRepIndex - 1
                         : 0,
-                    totalReps: widget.training.reps.length,
-                    repeater: widget.training.repeater,
+                    totalReps: expandTrainingItemsToReps(
+                      widget.training,
+                    ).length,
+                    repeater: null,
                   ),
                   const SizedBox(height: 8),
                   // Controls
