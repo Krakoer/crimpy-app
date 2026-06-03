@@ -2,9 +2,47 @@ import "package:crimpy/database/database.dart";
 import "package:crimpy/logger.dart";
 import "package:crimpy/models/common.dart";
 import "package:crimpy/models/training_feedback_model.dart";
+import "package:crimpy/models/training_item_model.dart";
 
 import "ble_data_model.dart";
 import "assessment_model.dart";
+
+/// Unified training with a structured list of items.
+class Training {
+  final String id;
+  final String title;
+  final String? description;
+  final bool isFavorite;
+  final List<TrainingItem> items;
+
+  const Training({
+    required this.id,
+    required this.title,
+    this.description,
+    this.isFavorite = false,
+    this.items = const [],
+  });
+
+  factory Training.fromJson(Map<String, dynamic> json) {
+    final rawItems = json['items'] as List<dynamic>? ?? [];
+    return Training(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String?,
+      isFavorite: json['is_favorite'] as bool? ?? false,
+      items: rawItems
+          .map((e) => TrainingItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'title': title,
+    if (description != null) 'description': description,
+    'is_favorite': isFavorite,
+    'items': items.map((i) => i.toJson()).toList(),
+  };
+}
 
 /// Represents a required assessment with optional grip position.
 class AssessmentRequirement {
@@ -471,6 +509,56 @@ class BuiltinTrainingModel {
       repeater: repeaters.isNotEmpty ? repeaters.first : null,
       computeNewWeights: computeNewWeights,
     );
+  }
+
+  /// Generate a unified Training with repeater items from assessment values.
+  Training? generateNewFormatTraining(
+    List<AssessmentResultModel> assessmentValues, {
+    double? customLoadRight,
+    double? customLoadLeft,
+  }) {
+    if (!isAvailable(assessmentValues)) {
+      return null;
+    }
+
+    final repeaters = trainingGenerator(
+      assessmentValues,
+      customLoadRight: customLoadRight,
+      customLoadLeft: customLoadLeft,
+    );
+
+    final items = repeaters.indexed.map((indexed) {
+      final pos = indexed.$1;
+      final r = indexed.$2;
+      final loadsPerRep = List.filled(
+        r.repsBySet,
+        Load(value: r.weightRight ?? 0.0, unit: 'kg'),
+      );
+      final leftLoadsPerRep = r.splitHand
+          ? List.filled(
+              r.repsBySet,
+              Load(value: r.weightLeft ?? 0.0, unit: 'kg'),
+            )
+          : null;
+      final positionsPerRep = List.filled(r.repsBySet, r.gripPosition.name);
+
+      return TrainingItem(
+        id: '',
+        type: TrainingItemType.repeater,
+        position: pos,
+        cycles: r.sets,
+        reps: r.repsBySet,
+        worktimeSeconds: r.workTime,
+        restSeconds: r.restTime,
+        cycleRestSeconds: r.restBteweenSets,
+        hand: r.splitHand ? 'split' : 'both',
+        loads: loadsPerRep,
+        leftLoads: leftLoadsPerRep,
+        handPositions: positionsPerRep,
+      );
+    }).toList();
+
+    return Training(id: id, title: name, isFavorite: false, items: items);
   }
 }
 
