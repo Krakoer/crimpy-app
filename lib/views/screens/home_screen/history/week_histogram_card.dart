@@ -1,3 +1,4 @@
+import 'package:crimpy/logger.dart';
 import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/home_card.dart';
 import 'package:flutter/material.dart';
@@ -80,7 +81,10 @@ class _HistoryScreenState extends ConsumerState<WeekHistogramCard> {
             maxBarHeight: widget.maxBarHeight,
             startOfWeek: startOfTheWeek,
           ),
-          AsyncError(:final error) => Center(child: Text('Error: $error')),
+          AsyncError(:final error) => () {
+            AppLoggerHelper.error(error.toString());
+            return Center(child: Text('Error: $error'));
+          }(),
           _ => const Center(child: CircularProgressIndicator()),
         },
       ),

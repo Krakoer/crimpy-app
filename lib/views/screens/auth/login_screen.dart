@@ -1,3 +1,4 @@
+import 'package:crimpy/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
@@ -87,6 +88,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();
+        AppLoggerHelper.error(e.toString());
       });
     } finally {
       if (mounted) {

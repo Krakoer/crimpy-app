@@ -1,3 +1,4 @@
+import 'package:crimpy/logger.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/profile_content.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +35,10 @@ class _ClimbingProfileScreenState extends ConsumerState<ClimbingProfileScreen>
         accentRight: accentRight,
         goToAssessments: widget.goToAssessments,
       ),
-      AsyncError(:final error) => Center(child: Text("Error: $error")),
+      AsyncError(:final error) => () {
+        AppLoggerHelper.error('Failed to load assessments', error);
+        return Center(child: Text('Error: $error'));
+      }(),
       AsyncLoading() => const Center(child: CircularProgressIndicator()),
     };
   }
