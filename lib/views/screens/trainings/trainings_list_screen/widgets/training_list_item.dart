@@ -6,7 +6,7 @@ import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/views/screens/trainings/training_details_screen.dart';
-import 'package:crimpy/views/screens/trainings/training_creation_screen/custom_training_creation_screen.dart';
+import 'package:crimpy/views/screens/trainings/training_creation_screen.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/delete_training_dialog.dart';
 
 class TrainingListItemWidget extends ConsumerWidget {
@@ -104,7 +104,7 @@ class TrainingListItemWidget extends ConsumerWidget {
                   ),
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => TrainingCreationScreen(
+                      builder: (_) => UnifiedTrainingCreationScreen(
                         originalTraining: item.training!,
                       ),
                     ),
