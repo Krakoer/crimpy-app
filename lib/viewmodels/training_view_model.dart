@@ -280,31 +280,35 @@ class PinnedTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
         .map(TrainingListItem.regular)
         .toList();
 
+    final allBuiltins = await _builtinTrainingRepository.getBuiltinTrainings();
     final pinnedIds = await _builtinTrainingRepository
         .getPinnedBuiltinTrainingIds();
-    final allBuiltins = await _builtinTrainingRepository.getBuiltinTrainings();
+    final pinnedBuiltins = allBuiltins
+        .where((b) => pinnedIds.contains(b.id))
+        .toList();
 
-    final pinnedBuiltinItems = <TrainingListItem>[];
-    for (final builtin in allBuiltins) {
-      if (pinnedIds.contains(builtin.id)) {
-        final isAvailable = await _builtinTrainingRepository
-            .isTrainingAvailable(builtin);
-        final missingAssessments = await _builtinTrainingRepository
-            .getMissingAssessments(builtin);
-        final generatedTraining = isAvailable
-            ? await _builtinTrainingRepository.generateTraining(builtin)
-            : null;
-        pinnedBuiltinItems.add(
-          TrainingListItem.builtin(
-            builtin,
-            isAvailable,
-            missingAssessments,
-            generatedTraining,
-            true,
-          ),
-        );
-      }
-    }
+    if (pinnedBuiltins.isEmpty) return favoriteItems;
+
+    final allAssessments = await _builtinTrainingRepository
+        .fetchAllAssessments();
+    final allWeights = await _builtinTrainingRepository.fetchAllCustomWeights();
+
+    final pinnedBuiltinItems = pinnedBuiltins.map((builtin) {
+      final w = allWeights[builtin.id];
+      final result = _builtinTrainingRepository.evaluateBuiltinSync(
+        builtin,
+        allAssessments,
+        customWeightRight: w?.weightRight,
+        customWeightLeft: w?.weightLeft,
+      );
+      return TrainingListItem.builtin(
+        builtin,
+        result.isAvailable,
+        result.missing,
+        result.training,
+        true,
+      );
+    }).toList();
 
     return [...favoriteItems, ...pinnedBuiltinItems];
   }
@@ -344,30 +348,32 @@ class AllTrainingsNotifier extends AsyncNotifier<List<TrainingListItem>> {
 
     final builtinTrainings = await _builtinTrainingRepository
         .getBuiltinTrainings();
-    final builtinItems = <TrainingListItem>[];
 
-    for (final builtin in builtinTrainings) {
-      final isAvailable = await _builtinTrainingRepository.isTrainingAvailable(
+    if (builtinTrainings.isEmpty) return regularItems;
+
+    // Fetch all shared data once to avoid N+1 API calls.
+    final allAssessments = await _builtinTrainingRepository
+        .fetchAllAssessments();
+    final allWeights = await _builtinTrainingRepository.fetchAllCustomWeights();
+    final pinnedIds = await _builtinTrainingRepository
+        .getPinnedBuiltinTrainingIds();
+
+    final builtinItems = builtinTrainings.map((builtin) {
+      final w = allWeights[builtin.id];
+      final result = _builtinTrainingRepository.evaluateBuiltinSync(
         builtin,
+        allAssessments,
+        customWeightRight: w?.weightRight,
+        customWeightLeft: w?.weightLeft,
       );
-      final missingAssessments = await _builtinTrainingRepository
-          .getMissingAssessments(builtin);
-      final generatedTraining = isAvailable
-          ? await _builtinTrainingRepository.generateTraining(builtin)
-          : null;
-      final isPinned = await _builtinTrainingRepository.isBuiltinTrainingPinned(
-        builtin.id,
+      return TrainingListItem.builtin(
+        builtin,
+        result.isAvailable,
+        result.missing,
+        result.training,
+        pinnedIds.contains(builtin.id),
       );
-      builtinItems.add(
-        TrainingListItem.builtin(
-          builtin,
-          isAvailable,
-          missingAssessments,
-          generatedTraining,
-          isPinned,
-        ),
-      );
-    }
+    }).toList();
 
     return [...regularItems, ...builtinItems];
   }

@@ -10,6 +10,8 @@ abstract class BuiltinPreferencesRepository {
   Future<({double? weightRight, double? weightLeft})> getCustomWeights(
     String builtinTrainingId,
   );
+  Future<Map<String, ({double? weightRight, double? weightLeft})>>
+  getAllCustomWeights();
   Future<void> saveCustomWeights({
     required String builtinTrainingId,
     required double weightRight,
@@ -46,6 +48,20 @@ class LocalBuiltinPreferencesRepository
   ) async {
     final w = await _database.getBuiltinTrainingWeights(builtinTrainingId);
     return (weightRight: w?.customWeightRight, weightLeft: w?.customWeightLeft);
+  }
+
+  @override
+  Future<Map<String, ({double? weightRight, double? weightLeft})>>
+  getAllCustomWeights() async {
+    final rows = await _database.getAllBuiltinTrainingWeights();
+    return Map.fromEntries(
+      rows.map(
+        (w) => MapEntry(w.builtinTrainingId, (
+          weightRight: w.customWeightRight,
+          weightLeft: w.customWeightLeft,
+        )),
+      ),
+    );
   }
 
   @override
@@ -87,18 +103,25 @@ class RemoteBuiltinPreferencesRepository
   }
 
   @override
+  Future<Map<String, ({double? weightRight, double? weightLeft})>>
+  getAllCustomWeights() async {
+    final weights = await _apiClient.getBuiltinTrainingWeights();
+    return Map.fromEntries(
+      weights.map(
+        (w) => MapEntry(w['BuiltinTraningID'] as String, (
+          weightRight: (w['CustomWeightRight'] as num?)?.toDouble(),
+          weightLeft: (w['CustomWeightLeft'] as num?)?.toDouble(),
+        )),
+      ),
+    );
+  }
+
+  @override
   Future<({double? weightRight, double? weightLeft})> getCustomWeights(
     String builtinTrainingId,
   ) async {
-    final weights = await _apiClient.getBuiltinTrainingWeights();
-    final match = weights
-        .where((w) => w['BuiltinTraningID'] == builtinTrainingId)
-        .firstOrNull;
-    if (match == null) return (weightRight: null, weightLeft: null);
-    return (
-      weightRight: (match['CustomWeightRight'] as num?)?.toDouble(),
-      weightLeft: (match['CustomWeightLeft'] as num?)?.toDouble(),
-    );
+    final all = await getAllCustomWeights();
+    return all[builtinTrainingId] ?? (weightRight: null, weightLeft: null);
   }
 
   @override
