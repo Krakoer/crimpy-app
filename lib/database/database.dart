@@ -841,8 +841,8 @@ class AppDatabase extends _$AppDatabase {
     await delete(sessions).go();
     await delete(trainings).go();
     await delete(sensorConfigs).go();
-    await delete(builtinTrainingWeights).go();
-    await delete(pinnedBuiltinTrainings).go();
+    // pinnedBuiltinTrainings and builtinTrainingWeights are local-only preferences
+    // with no remote equivalent; they must not be wiped on login.
   }
 
   @override
