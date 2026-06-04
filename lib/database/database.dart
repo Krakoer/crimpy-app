@@ -754,6 +754,10 @@ class AppDatabase extends _$AppDatabase {
             ..orderBy([(w) => OrderingTerm.desc(w.updatedAt)]))
           .getSingleOrNull();
 
+  /// Get all custom weights (used when importing local data to the remote API).
+  Future<List<BuiltinTrainingWeight>> getAllBuiltinTrainingWeights() =>
+      select(builtinTrainingWeights).get();
+
   /// Save or update custom weights for a builtin training.
   Future<void> saveBuiltinTrainingWeights({
     required String builtinTrainingId,
@@ -834,15 +838,15 @@ class AppDatabase extends _$AppDatabase {
     await delete(users).go();
   }
 
-  /// Clear all user-generated local data (called on logout).
+  /// Clear all user-generated local data (called on logout after remote import).
   Future<void> wipeLocalData() async {
     await delete(assessments).go();
     await delete(repDatas).go();
     await delete(sessions).go();
     await delete(trainings).go();
     await delete(sensorConfigs).go();
-    // pinnedBuiltinTrainings and builtinTrainingWeights are local-only preferences
-    // with no remote equivalent; they must not be wiped on login.
+    await delete(builtinTrainingWeights).go();
+    await delete(pinnedBuiltinTrainings).go();
   }
 
   @override

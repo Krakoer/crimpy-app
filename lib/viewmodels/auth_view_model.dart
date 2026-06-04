@@ -262,6 +262,33 @@ class AuthState extends _$AuthState {
       }
     }
 
+    // Import pinned builtin trainings
+    final pinnedIds = await gDatabase.getPinnedBuiltinTrainingIds();
+    for (final id in pinnedIds) {
+      try {
+        await apiClient.pinBuiltinTrainingApi(id);
+      } catch (e) {
+        AppLoggerHelper.error('Failed to import pinned builtin $id: $e');
+      }
+    }
+
+    // Import builtin training weights
+    final weights = await gDatabase.getAllBuiltinTrainingWeights();
+    for (final w in weights) {
+      try {
+        await apiClient.createBuiltinTrainingWeight({
+          'id': w.id,
+          'builtin_training_id': w.builtinTrainingId,
+          'custom_weight_right': w.customWeightRight ?? 0.0,
+          'custom_weight_left': w.customWeightLeft ?? 0.0,
+        });
+      } catch (e) {
+        AppLoggerHelper.error(
+          'Failed to import builtin weight ${w.builtinTrainingId}: $e',
+        );
+      }
+    }
+
     AppLoggerHelper.info('Local data import complete');
   }
 

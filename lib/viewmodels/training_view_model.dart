@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/repositories/builtin_preferences_repository.dart';
 import 'package:crimpy/repositories/remote_assessment_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
@@ -27,12 +28,26 @@ final assessmentRepositoryProvider = Provider<AssessmentRepository>((ref) {
   return LocalAssessmentRepository();
 });
 
-/// Returns the builtin trainings repository, injecting the appropriate AssessmentRepository.
+/// Returns the builtin preferences repository (local in guest mode, remote when authenticated).
+final builtinPreferencesRepositoryProvider =
+    Provider<BuiltinPreferencesRepository>((ref) {
+      final user = ref.watch(authStateProvider).asData?.value;
+      if (user != null) {
+        return RemoteBuiltinPreferencesRepository(ref.read(apiClientProvider));
+      }
+      return LocalBuiltinPreferencesRepository();
+    });
+
+/// Returns the builtin trainings repository, injecting the appropriate dependencies.
 final builtinTrainingRepositoryProvider = Provider<BuiltinTrainingRepository>((
   ref,
 ) {
   final assessmentRepo = ref.watch(assessmentRepositoryProvider);
-  return BuiltinTrainingRepository(assessmentRepository: assessmentRepo);
+  final preferencesRepo = ref.watch(builtinPreferencesRepositoryProvider);
+  return BuiltinTrainingRepository(
+    assessmentRepository: assessmentRepo,
+    preferencesRepository: preferencesRepo,
+  );
 });
 
 /// Returns favorite trainings.
