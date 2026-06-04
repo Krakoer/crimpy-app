@@ -1,47 +1,77 @@
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training_model.dart';
+import 'package:flutter/foundation.dart';
 
-/// Expands a Training's items into a flat list of RepModels for execution.
-/// Handles repeater and hangboard_rep item types; free/exercise/circuit/section
-/// items are logged and skipped until they are fully supported in A6.
-List<RepModel> expandTrainingItemsToReps(Training training) {
-  final reps = <RepModel>[];
-  int globalIndex = 0;
-
+List<TrainingExecutionItem> expandTrainingItems(Training training) {
+  final out = <TrainingExecutionItem>[];
   for (final item in training.items) {
-    globalIndex = _expandItem(item, reps, globalIndex);
+    _expandItem(item, out);
   }
-  return reps;
+  return out;
 }
 
-int _expandItem(TrainingItem item, List<RepModel> reps, int startIndex) {
-  int idx = startIndex;
+void _expandItem(TrainingItem item, List<TrainingExecutionItem> out) {
   switch (item.type) {
     case TrainingItemType.repeater:
-      idx = _expandRepeater(item, reps, idx);
+      _expandRepeater(item, out);
     case TrainingItemType.hangboardRep:
-      idx = _expandHangboardRep(item, reps, idx);
+      _expandHangboardRep(item, out);
     case TrainingItemType.free:
-      if ((item.duration ?? 0) > 0) {
-        reps.add(
-          RepModel(
-            durationInSeconds: item.duration!,
-            isRest: true,
-            handSide: HandSide.both,
-            targetWeight: 0,
-            index: idx++,
-          ),
-        );
-      }
+      _expandFree(item, out);
     default:
-      // exercise, circuit, section not yet supported
-      break;
+      debugPrint('TrainingExpander: unsupported item type ${item.type}');
+      out.add(ConfirmItem(label: item.sectionTitle ?? item.type.apiValue));
   }
-  return idx;
 }
 
-int _expandRepeater(TrainingItem item, List<RepModel> reps, int startIndex) {
+void _expandFree(TrainingItem item, List<TrainingExecutionItem> out) {
+  final duration = item.duration ?? 0;
+  if (duration > 0) {
+    out.add(
+      TimedItem(
+        label: item.freeText ?? 'Free',
+        durationSeconds: duration,
+        targetLoad: 0,
+        handSide: HandSide.both,
+        gripPosition: GripPosition.halfCrimp,
+        collectSensorData: false,
+      ),
+    );
+  } else {
+    out.add(ConfirmItem(label: item.freeText ?? 'Free'));
+  }
+}
+
+void _expandHangboardRep(TrainingItem item, List<TrainingExecutionItem> out) {
+  final worktime = item.worktimeSeconds ?? 7;
+  final resttime = item.restSeconds ?? 3;
+  final hand = item.hand ?? 'both';
+  final grip = _parseGrip(item.handPositions?.firstOrNull);
+  final w = item.loads?.firstOrNull?.value ?? 0.0;
+  final handSide = switch (hand) {
+    'left' => HandSide.left,
+    'right' => HandSide.right,
+    _ => HandSide.both,
+  };
+
+  out.add(
+    TimedItem(
+      label: 'Hang',
+      durationSeconds: worktime,
+      targetLoad: w,
+      handSide: handSide,
+      gripPosition: grip,
+      collectSensorData: true,
+    ),
+  );
+  if (resttime > 0) {
+    out.add(RestItem(durationSeconds: resttime));
+  }
+}
+
+void _expandRepeater(TrainingItem item, List<TrainingExecutionItem> out) {
   final cycles = item.cycles ?? 1;
   final repsPerCycle = item.reps ?? 1;
   final worktime = item.worktimeSeconds ?? 7;
@@ -50,189 +80,87 @@ int _expandRepeater(TrainingItem item, List<RepModel> reps, int startIndex) {
   final hand = item.hand ?? 'both';
   final splitHand = hand == 'split';
   final grip = _parseGrip(item.handPositions?.firstOrNull);
-
   final loads = item.loads ?? [];
   final leftLoads = item.leftLoads ?? [];
-
-  int idx = startIndex;
 
   if (splitHand) {
     for (int cycle = 0; cycle < cycles; cycle++) {
       for (int rep = 0; rep < repsPerCycle; rep++) {
         final wR = loads.isNotEmpty ? loads[rep % loads.length].value : 0.0;
-        reps.add(
-          RepModel(
-            durationInSeconds: worktime,
-            isRest: false,
+        out.add(
+          TimedItem(
+            label: 'Right hang',
+            durationSeconds: worktime,
+            targetLoad: wR,
             handSide: HandSide.right,
-            targetWeight: wR,
-            index: idx++,
             gripPosition: grip,
+            collectSensorData: true,
           ),
         );
         if (rep < repsPerCycle - 1) {
-          reps.add(
-            RepModel(
-              durationInSeconds: resttime,
-              isRest: true,
-              handSide: HandSide.right,
-              targetWeight: 0,
-              index: idx++,
-            ),
-          );
+          out.add(RestItem(durationSeconds: resttime));
         }
       }
       final setDuration =
           repsPerCycle * worktime + (repsPerCycle - 1) * resttime;
       final restBetweenHands = ((cycleRest - setDuration) / 2).floor();
-      reps.add(
-        RepModel(
-          durationInSeconds: restBetweenHands,
-          isRest: true,
-          handSide: HandSide.right,
-          targetWeight: 0,
-          index: idx++,
-        ),
-      );
+      out.add(RestItem(durationSeconds: restBetweenHands));
       for (int rep = 0; rep < repsPerCycle; rep++) {
         final wL = leftLoads.isNotEmpty
             ? leftLoads[rep % leftLoads.length].value
             : 0.0;
-        reps.add(
-          RepModel(
-            durationInSeconds: worktime,
-            isRest: false,
+        out.add(
+          TimedItem(
+            label: 'Left hang',
+            durationSeconds: worktime,
+            targetLoad: wL,
             handSide: HandSide.left,
-            targetWeight: wL,
-            index: idx++,
             gripPosition: grip,
+            collectSensorData: true,
           ),
         );
         if (rep < repsPerCycle - 1) {
-          reps.add(
-            RepModel(
-              durationInSeconds: resttime,
-              isRest: true,
-              handSide: HandSide.left,
-              targetWeight: 0,
-              index: idx++,
-            ),
-          );
+          out.add(RestItem(durationSeconds: resttime));
         }
       }
       if (cycle < cycles - 1) {
-        reps.add(
-          RepModel(
-            durationInSeconds: restBetweenHands,
-            isRest: true,
-            handSide: HandSide.left,
-            targetWeight: 0,
-            index: idx++,
-          ),
-        );
+        out.add(RestItem(durationSeconds: restBetweenHands));
       }
     }
   } else {
     for (int cycle = 0; cycle < cycles; cycle++) {
       for (int rep = 0; rep < repsPerCycle; rep++) {
         final w = loads.isNotEmpty ? loads[rep % loads.length].value : 0.0;
-        reps.add(
-          RepModel(
-            durationInSeconds: worktime,
-            isRest: false,
+        out.add(
+          TimedItem(
+            label: 'Right hang',
+            durationSeconds: worktime,
+            targetLoad: w,
             handSide: HandSide.right,
-            targetWeight: w,
-            index: idx++,
             gripPosition: grip,
+            collectSensorData: true,
           ),
         );
-        reps.add(
-          RepModel(
-            durationInSeconds: resttime,
-            isRest: true,
-            handSide: HandSide.right,
-            targetWeight: 0,
-            index: idx++,
-          ),
-        );
-        reps.add(
-          RepModel(
-            durationInSeconds: worktime,
-            isRest: false,
+        out.add(RestItem(durationSeconds: resttime));
+        out.add(
+          TimedItem(
+            label: 'Left hang',
+            durationSeconds: worktime,
+            targetLoad: w,
             handSide: HandSide.left,
-            targetWeight: w,
-            index: idx++,
             gripPosition: grip,
+            collectSensorData: true,
           ),
         );
         if (rep < repsPerCycle - 1) {
-          reps.add(
-            RepModel(
-              durationInSeconds: resttime,
-              isRest: true,
-              handSide: HandSide.left,
-              targetWeight: 0,
-              index: idx++,
-            ),
-          );
+          out.add(RestItem(durationSeconds: resttime));
         }
       }
       if (cycle < cycles - 1 && cycleRest > 0) {
-        reps.add(
-          RepModel(
-            durationInSeconds: cycleRest,
-            isRest: true,
-            handSide: HandSide.right,
-            targetWeight: 0,
-            index: idx++,
-          ),
-        );
+        out.add(RestItem(durationSeconds: cycleRest));
       }
     }
   }
-  return idx;
-}
-
-int _expandHangboardRep(
-  TrainingItem item,
-  List<RepModel> reps,
-  int startIndex,
-) {
-  final worktime = item.worktimeSeconds ?? 7;
-  final resttime = item.restSeconds ?? 3;
-  final hand = item.hand ?? 'both';
-  final grip = _parseGrip(item.handPositions?.firstOrNull);
-  final w = item.loads?.firstOrNull?.value ?? 0.0;
-
-  final handSide = switch (hand) {
-    'left' => HandSide.left,
-    'right' => HandSide.right,
-    _ => HandSide.both,
-  };
-
-  int idx = startIndex;
-  reps.add(
-    RepModel(
-      durationInSeconds: worktime,
-      isRest: false,
-      handSide: handSide,
-      targetWeight: w,
-      index: idx++,
-      gripPosition: grip,
-    ),
-  );
-  if (resttime > 0) {
-    reps.add(
-      RepModel(
-        durationInSeconds: resttime,
-        isRest: true,
-        handSide: handSide,
-        targetWeight: 0,
-        index: idx++,
-      ),
-    );
-  }
-  return idx;
 }
 
 GripPosition _parseGrip(String? name) => switch (name) {

@@ -4,6 +4,7 @@ import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/trai
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/next_rep_preview.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_progress_info.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_controls.dart';
+import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/utils/training_expander.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,19 +39,55 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// Duration of the preparation rest in seconds
   static const int _preparationDuration = 10;
 
-  /// Get reps with a 10-second preparation rest prepended.
-  List<RepModel> get _repsWithPreparation {
+  late final List<RepModel> _repsWithPreparation = _buildReps();
+
+  List<RepModel> _buildReps() {
     return [
       RepModel(
         durationInSeconds: _preparationDuration,
         isRest: true,
-        handSide: HandSide.left,
+        handSide: HandSide.both,
         targetWeight: 0.0,
         index: -1,
         gripPosition: GripPosition.halfCrimp,
       ),
-      ...expandTrainingItemsToReps(widget.training),
+      ..._executionToRepModels(expandTrainingItems(widget.training)),
     ];
+  }
+
+  static List<RepModel> _executionToRepModels(
+    List<TrainingExecutionItem> items,
+  ) {
+    final result = <RepModel>[];
+    int idx = 0;
+    for (final item in items) {
+      switch (item) {
+        case TimedItem():
+          result.add(
+            RepModel(
+              durationInSeconds: item.durationSeconds,
+              isRest: !item.collectSensorData,
+              handSide: item.handSide,
+              targetWeight: item.targetLoad,
+              index: idx++,
+              gripPosition: item.gripPosition,
+            ),
+          );
+        case RestItem():
+          result.add(
+            RepModel(
+              durationInSeconds: item.durationSeconds,
+              isRest: true,
+              handSide: HandSide.both,
+              targetWeight: 0,
+              index: idx++,
+            ),
+          );
+        case ConfirmItem():
+          debugPrint('PlayTrainingScreen: ConfirmItem skipped: ${item.label}');
+      }
+    }
+    return result;
   }
 
   // Setup the workout timer
@@ -109,13 +146,8 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder:
-              // If the training can compute new weights, show feedback screen.
-              // Otherwise show regular post-training screen.
-              (context) => PostWorkoutScreen(
-                template: widget.training,
-                results: repResults,
-              ),
+          builder: (context) =>
+              PostWorkoutScreen(template: widget.training, results: repResults),
         ),
       );
     },
@@ -207,18 +239,18 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
               // Scale timer text based on available space
               final timerFontSize = (availableHeight * 0.06).clamp(32.0, 48.0);
 
+              final totalTrainingSeconds = _repsWithPreparation.fold(
+                0,
+                (s, r) => s + r.durationInSeconds,
+              );
+
               return Column(
                 children: [
                   // Header
                   TrainingHeader(
                     elapsedMilliseconds: timer.elapsedMilliseconds,
                     remainingMilliseconds:
-                        (_repsWithPreparation.fold(
-                              0,
-                              (s, r) => s + r.durationInSeconds,
-                            ) *
-                            1000) -
-                        timer.elapsedMilliseconds,
+                        totalTrainingSeconds * 1000 - timer.elapsedMilliseconds,
                   ),
                   // Main content area with gauge
                   Expanded(
@@ -278,10 +310,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                     currentRepIndex: timer.currentRepIndex > 0
                         ? timer.currentRepIndex - 1
                         : 0,
-                    totalReps: expandTrainingItemsToReps(
-                      widget.training,
-                    ).length,
-                    repeater: null,
+                    totalReps: _repsWithPreparation.length - 1,
                   ),
                   const SizedBox(height: 8),
                   // Controls
