@@ -550,6 +550,32 @@ class BuiltinTrainingModel {
   }
 }
 
+int _trainingItemDurationSeconds(TrainingItem item) {
+  switch (item.type) {
+    case TrainingItemType.repeater:
+      final cycles = item.cycles ?? 1;
+      final reps = item.reps ?? 1;
+      final work = item.worktimeSeconds ?? 0;
+      final rest = item.restSeconds ?? 0;
+      final cycleRest = item.cycleRestSeconds ?? 0;
+      if (item.hand == 'split') {
+        final setDuration = reps * work + (reps > 1 ? reps - 1 : 0) * rest;
+        return cycles * 2 * setDuration +
+            (cycles > 1 ? cycles - 1 : 0) * cycleRest;
+      }
+      // Non-split: R hang + rest + L hang, then [rest if not last rep] per cycle
+      return cycles *
+              (2 * reps * work + (2 * reps > 1 ? 2 * reps - 1 : 0) * rest) +
+          (cycles > 1 ? cycles - 1 : 0) * cycleRest;
+    case TrainingItemType.hangboardRep:
+      return (item.worktimeSeconds ?? 0) + (item.restSeconds ?? 0);
+    case TrainingItemType.free:
+      return item.duration ?? 0;
+    default:
+      return 0;
+  }
+}
+
 /// Represents a training item in the list that can be either regular or builtin.
 class TrainingListItem {
   final Training? training;
@@ -598,7 +624,16 @@ class TrainingListItem {
 
   String get name => training?.title ?? builtinTraining?.name ?? '';
   String get description => builtinTraining?.description ?? '';
-  Duration get totalDuration => Duration.zero;
+
+  Duration get totalDuration {
+    if (training == null) return Duration.zero;
+    final seconds = training!.items.fold(
+      0,
+      (sum, item) => sum + _trainingItemDurationSeconds(item),
+    );
+    return Duration(seconds: seconds);
+  }
+
   String get id => training?.id ?? builtinTraining?.id ?? '';
 }
 
