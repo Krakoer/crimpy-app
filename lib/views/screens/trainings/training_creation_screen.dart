@@ -4,12 +4,17 @@ import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Unified screen for creating and editing trainings.
-/// Supports repeater, hangboard_rep, and free item types.
+enum TrainingCreationMode { repeater, manual }
+
 class UnifiedTrainingCreationScreen extends ConsumerStatefulWidget {
   final Training? originalTraining;
+  final TrainingCreationMode? mode;
 
-  const UnifiedTrainingCreationScreen({super.key, this.originalTraining});
+  const UnifiedTrainingCreationScreen({
+    super.key,
+    this.originalTraining,
+    this.mode,
+  });
 
   @override
   ConsumerState<UnifiedTrainingCreationScreen> createState() =>
@@ -20,15 +25,54 @@ class _UnifiedTrainingCreationScreenState
     extends ConsumerState<UnifiedTrainingCreationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
+  late final TrainingCreationMode _mode;
+
+  // Repeater mode state
+  int _cycles = 3;
+  int _reps = 6;
+  int _worktime = 7;
+  int _rest = 3;
+  int _cycleRest = 180;
+  bool _splitHand = false;
+  double _loadRight = 0;
+  double _loadLeft = 0;
+  String _grip = 'halfCrimp';
+
+  // Manual mode state
   final List<TrainingItem> _items = [];
+
   bool get _isEdit => widget.originalTraining != null;
 
   @override
   void initState() {
     super.initState();
-    if (widget.originalTraining != null) {
-      _titleController.text = widget.originalTraining!.title;
-      _items.addAll(widget.originalTraining!.items);
+    final original = widget.originalTraining;
+    if (original != null) {
+      _titleController.text = original.title;
+      final hasRepeater = original.items.any(
+        (i) => i.type == TrainingItemType.repeater,
+      );
+      _mode = hasRepeater
+          ? TrainingCreationMode.repeater
+          : TrainingCreationMode.manual;
+      if (_mode == TrainingCreationMode.repeater) {
+        final r = original.items.firstWhere(
+          (i) => i.type == TrainingItemType.repeater,
+        );
+        _cycles = r.cycles ?? 3;
+        _reps = r.reps ?? 6;
+        _worktime = r.worktimeSeconds ?? 7;
+        _rest = r.restSeconds ?? 3;
+        _cycleRest = r.cycleRestSeconds ?? 180;
+        _splitHand = r.hand == 'split';
+        _loadRight = r.loads?.firstOrNull?.value ?? 0;
+        _loadLeft = r.leftLoads?.firstOrNull?.value ?? 0;
+        _grip = r.handPositions?.firstOrNull ?? 'halfCrimp';
+      } else {
+        _items.addAll(original.items);
+      }
+    } else {
+      _mode = widget.mode ?? TrainingCreationMode.manual;
     }
   }
 
@@ -38,106 +82,52 @@ class _UnifiedTrainingCreationScreenState
     super.dispose();
   }
 
-  void _showAddItemSheet() {
-    showModalBottomSheet<TrainingItemType>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.repeat),
-              title: const Text('Repeater'),
-              subtitle: const Text('Sets x reps of timed hangs'),
-              onTap: () => Navigator.pop(ctx, TrainingItemType.repeater),
-            ),
-            ListTile(
-              leading: const Icon(Icons.pan_tool),
-              title: const Text('Hangboard Rep'),
-              subtitle: const Text('Single timed hang'),
-              onTap: () => Navigator.pop(ctx, TrainingItemType.hangboardRep),
-            ),
-            ListTile(
-              leading: const Icon(Icons.notes),
-              title: const Text('Free Note'),
-              subtitle: const Text('Text note with optional duration'),
-              onTap: () => Navigator.pop(ctx, TrainingItemType.free),
-            ),
-          ],
-        ),
-      ),
-    ).then((type) {
-      if (type != null) _addItem(type);
-    });
-  }
-
-  void _addItem(TrainingItemType type) {
-    final defaults = switch (type) {
-      TrainingItemType.repeater => TrainingItem(
-        id: '',
-        type: type,
-        position: _items.length,
-        cycles: 3,
-        reps: 6,
-        worktimeSeconds: 7,
-        restSeconds: 3,
-        cycleRestSeconds: 180,
-        hand: 'both',
-        loads: [const Load(value: 0, unit: 'kg')],
-        handPositions: ['halfCrimp'],
-      ),
-      TrainingItemType.hangboardRep => TrainingItem(
-        id: '',
-        type: type,
-        position: _items.length,
-        worktimeSeconds: 7,
-        restSeconds: 3,
-        hand: 'both',
-        loads: [const Load(value: 0, unit: 'kg')],
-        handPositions: ['halfCrimp'],
-      ),
-      _ => TrainingItem(
-        id: '',
-        type: type,
-        position: _items.length,
-        freeText: '',
-      ),
-    };
-    _showItemEditor(defaults, isNew: true);
-  }
-
-  void _showItemEditor(TrainingItem item, {bool isNew = false}) {
-    showDialog<TrainingItem>(
-      context: context,
-      builder: (ctx) => _ItemEditorDialog(item: item),
-    ).then((edited) {
-      if (edited != null) {
-        setState(() {
-          if (isNew) {
-            _items.add(edited);
-          } else {
-            final idx = _items.indexWhere((i) => i.position == item.position);
-            if (idx >= 0) _items[idx] = edited;
-          }
-        });
-      }
-    });
+  TrainingItem _buildRepeaterItem() {
+    final existingId = _isEdit
+        ? widget.originalTraining!.items
+              .firstWhere(
+                (i) => i.type == TrainingItemType.repeater,
+                orElse: () => const TrainingItem(
+                  id: '',
+                  type: TrainingItemType.repeater,
+                  position: 0,
+                ),
+              )
+              .id
+        : '';
+    final hand = _splitHand ? 'split' : 'both';
+    return TrainingItem(
+      id: existingId,
+      type: TrainingItemType.repeater,
+      position: 0,
+      cycles: _cycles,
+      reps: _reps,
+      worktimeSeconds: _worktime,
+      restSeconds: _rest,
+      cycleRestSeconds: _cycleRest,
+      hand: hand,
+      loads: List.filled(_reps, Load(value: _loadRight, unit: 'kg')),
+      leftLoads: _splitHand
+          ? List.filled(_reps, Load(value: _loadLeft, unit: 'kg'))
+          : null,
+      handPositions: List.filled(_reps, _grip),
+    );
   }
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_items.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Add at least one item')));
-      return;
-    }
 
-    final training = Training(
-      id: widget.originalTraining?.id ?? '',
-      title: _titleController.text.trim(),
-      isFavorite: widget.originalTraining?.isFavorite ?? false,
-      items: _items.indexed
+    List<TrainingItem> items;
+    if (_mode == TrainingCreationMode.repeater) {
+      items = [_buildRepeaterItem()];
+    } else {
+      if (_items.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Add at least one hang rep')),
+        );
+        return;
+      }
+      items = _items.indexed
           .map(
             (e) => TrainingItem(
               id: e.$2.id,
@@ -161,7 +151,14 @@ class _UnifiedTrainingCreationScreenState
               sectionTitle: e.$2.sectionTitle,
             ),
           )
-          .toList(),
+          .toList();
+    }
+
+    final training = Training(
+      id: widget.originalTraining?.id ?? '',
+      title: _titleController.text.trim(),
+      isFavorite: widget.originalTraining?.isFavorite ?? false,
+      items: items,
     );
 
     if (_isEdit) {
@@ -173,19 +170,55 @@ class _UnifiedTrainingCreationScreenState
     if (mounted) Navigator.of(context).pop();
   }
 
+  void _addHangboardRep() {
+    final defaults = TrainingItem(
+      id: '',
+      type: TrainingItemType.hangboardRep,
+      position: _items.length,
+      worktimeSeconds: 7,
+      restSeconds: 3,
+      hand: 'both',
+      loads: [const Load(value: 0, unit: 'kg')],
+      handPositions: ['halfCrimp'],
+    );
+    showDialog<TrainingItem>(
+      context: context,
+      builder: (ctx) => _ItemEditorDialog(item: defaults),
+    ).then((edited) {
+      if (edited != null) setState(() => _items.add(edited));
+    });
+  }
+
+  void _editItem(int index) {
+    showDialog<TrainingItem>(
+      context: context,
+      builder: (ctx) => _ItemEditorDialog(item: _items[index]),
+    ).then((edited) {
+      if (edited != null) setState(() => _items[index] = edited);
+    });
+  }
+
+  String get _appBarTitle {
+    if (_isEdit) return 'Edit Training';
+    return _mode == TrainingCreationMode.repeater
+        ? 'New Repeater'
+        : 'New Manual Training';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isEdit ? 'Edit Training' : 'New Training'),
+        title: Text(_appBarTitle),
         actions: [TextButton(onPressed: _save, child: const Text('Save'))],
       ),
       body: Form(
         key: _formKey,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
@@ -196,36 +229,131 @@ class _UnifiedTrainingCreationScreenState
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
             ),
+            const SizedBox(height: 8),
             Expanded(
-              child: _items.isEmpty
-                  ? const Center(child: Text('Tap + to add items'))
-                  : ReorderableListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: _items.length,
-                      onReorder: (oldIdx, newIdx) {
-                        setState(() {
-                          if (oldIdx < newIdx) newIdx--;
-                          final item = _items.removeAt(oldIdx);
-                          _items.insert(newIdx, item);
-                        });
-                      },
-                      itemBuilder: (ctx, i) {
-                        final item = _items[i];
-                        return _TrainingItemCard(
-                          key: ValueKey(i),
-                          item: item,
-                          onEdit: () => _showItemEditor(item),
-                          onDelete: () => setState(() => _items.removeAt(i)),
-                        );
-                      },
-                    ),
+              child: _mode == TrainingCreationMode.repeater
+                  ? _buildRepeaterBody()
+                  : _buildManualBody(),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddItemSheet,
-        child: const Icon(Icons.add),
+      floatingActionButton: _mode == TrainingCreationMode.manual
+          ? FloatingActionButton(
+              onPressed: _addHangboardRep,
+              child: const Icon(Icons.add),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildRepeaterBody() {
+    const grips = ['halfCrimp', 'threeFinger', 'fullCrimp', 'openHand'];
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _intRow('Sets', _cycles, (v) => setState(() => _cycles = v)),
+        _intRow('Reps / set', _reps, (v) => setState(() => _reps = v)),
+        _intRow(
+          'Work time (s)',
+          _worktime,
+          (v) => setState(() => _worktime = v),
+        ),
+        _intRow('Rest (s)', _rest, (v) => setState(() => _rest = v)),
+        _intRow(
+          'Set rest (s)',
+          _cycleRest,
+          (v) => setState(() => _cycleRest = v),
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Split hand'),
+          subtitle: const Text('Alternate R/L sets'),
+          value: _splitHand,
+          onChanged: (v) => setState(() => _splitHand = v),
+        ),
+        _doubleRow(
+          _splitHand ? 'Load right (kg)' : 'Load (kg)',
+          _loadRight,
+          (v) => setState(() => _loadRight = v),
+        ),
+        if (_splitHand)
+          _doubleRow(
+            'Load left (kg)',
+            _loadLeft,
+            (v) => setState(() => _loadLeft = v),
+          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: DropdownButtonFormField<String>(
+            initialValue: _grip,
+            decoration: const InputDecoration(labelText: 'Grip'),
+            items: grips
+                .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                .toList(),
+            onChanged: (v) => setState(() => _grip = v ?? 'halfCrimp'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildManualBody() {
+    if (_items.isEmpty) {
+      return const Center(child: Text('Tap + to add hangboard reps'));
+    }
+    return ReorderableListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: _items.length,
+      onReorder: (oldIdx, newIdx) {
+        setState(() {
+          if (oldIdx < newIdx) newIdx--;
+          final item = _items.removeAt(oldIdx);
+          _items.insert(newIdx, item);
+        });
+      },
+      itemBuilder: (ctx, i) {
+        final item = _items[i];
+        return _TrainingItemCard(
+          key: ValueKey(i),
+          item: item,
+          onEdit: () => _editItem(i),
+          onDelete: () => setState(() => _items.removeAt(i)),
+        );
+      },
+    );
+  }
+
+  Widget _intRow(String label, int value, void Function(int) onChanged) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: TextFormField(
+        initialValue: value.toString(),
+        decoration: InputDecoration(labelText: label),
+        keyboardType: TextInputType.number,
+        onChanged: (v) {
+          final n = int.tryParse(v);
+          if (n != null && n > 0) onChanged(n);
+        },
+      ),
+    );
+  }
+
+  Widget _doubleRow(
+    String label,
+    double value,
+    void Function(double) onChanged,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: TextFormField(
+        initialValue: value.toString(),
+        decoration: InputDecoration(labelText: label),
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        onChanged: (v) {
+          final n = double.tryParse(v);
+          if (n != null && n >= 0) onChanged(n);
+        },
       ),
     );
   }
@@ -243,31 +371,17 @@ class _TrainingItemCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  String get _subtitle => switch (item.type) {
-    TrainingItemType.repeater =>
-      '${item.cycles ?? 1} sets x ${item.reps ?? 1} reps, '
-          '${item.worktimeSeconds ?? 7}s on / ${item.restSeconds ?? 3}s off',
-    TrainingItemType.hangboardRep =>
-      '${item.worktimeSeconds ?? 7}s hang, ${item.restSeconds ?? 3}s rest, '
-          '${item.hand ?? 'both'} hand',
-    TrainingItemType.free => item.freeText ?? '',
-    _ => item.type.apiValue,
-  };
-
-  String get _typeLabel => switch (item.type) {
-    TrainingItemType.repeater => 'Repeater',
-    TrainingItemType.hangboardRep => 'Hang Rep',
-    TrainingItemType.free => 'Free',
-    _ => item.type.apiValue,
-  };
+  String get _subtitle =>
+      '${item.worktimeSeconds ?? 7}s hang / ${item.restSeconds ?? 3}s rest  '
+      '${item.hand ?? 'both'} hand';
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
-        title: Text(_typeLabel),
-        subtitle: Text(_subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+        title: const Text('Hang Rep'),
+        subtitle: Text(_subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -287,7 +401,6 @@ class _TrainingItemCard extends StatelessWidget {
   }
 }
 
-/// Dialog for editing a single training item.
 class _ItemEditorDialog extends StatefulWidget {
   final TrainingItem item;
   const _ItemEditorDialog({required this.item});
@@ -297,93 +410,42 @@ class _ItemEditorDialog extends StatefulWidget {
 }
 
 class _ItemEditorDialogState extends State<_ItemEditorDialog> {
-  late int _cycles;
-  late int _reps;
   late int _worktime;
   late int _rest;
-  late int _cycleRest;
   late String _hand;
   late double _loadRight;
-  late double _loadLeft;
-  late bool _splitHand;
   late bool _loadIsMax;
-  late String _freeText;
-  late int? _duration;
 
   @override
   void initState() {
     super.initState();
     final item = widget.item;
-    _cycles = item.cycles ?? 3;
-    _reps = item.reps ?? 6;
     _worktime = item.worktimeSeconds ?? 7;
     _rest = item.restSeconds ?? 3;
-    _cycleRest = item.cycleRestSeconds ?? 180;
     _hand = item.hand ?? 'both';
-    _splitHand = _hand == 'split';
     _loadRight = item.loads?.firstOrNull?.value ?? 0.0;
-    _loadLeft = item.leftLoads?.firstOrNull?.value ?? 0.0;
     _loadIsMax = item.loadIsMax;
-    _freeText = item.freeText ?? '';
-    _duration = item.duration;
   }
 
   TrainingItem _buildItem() {
     final item = widget.item;
-    switch (item.type) {
-      case TrainingItemType.repeater:
-        final hand = _splitHand ? 'split' : _hand;
-        final loadsPerRep = List.filled(
-          _reps,
-          Load(value: _loadRight, unit: 'kg'),
-        );
-        final leftLoads = _splitHand
-            ? List.filled(_reps, Load(value: _loadLeft, unit: 'kg'))
-            : null;
-        return TrainingItem(
-          id: item.id,
-          type: item.type,
-          position: item.position,
-          cycles: _cycles,
-          reps: _reps,
-          worktimeSeconds: _worktime,
-          restSeconds: _rest,
-          cycleRestSeconds: _cycleRest,
-          hand: hand,
-          loads: loadsPerRep,
-          leftLoads: leftLoads,
-          handPositions: List.filled(
-            _reps,
-            item.handPositions?.firstOrNull ?? 'halfCrimp',
-          ),
-        );
-      case TrainingItemType.hangboardRep:
-        return TrainingItem(
-          id: item.id,
-          type: item.type,
-          position: item.position,
-          worktimeSeconds: _worktime,
-          restSeconds: _rest,
-          hand: _hand,
-          loads: [Load(value: _loadRight, unit: _loadIsMax ? 'max' : 'kg')],
-          loadIsMax: _loadIsMax,
-          handPositions: [item.handPositions?.firstOrNull ?? 'halfCrimp'],
-        );
-      default:
-        return TrainingItem(
-          id: item.id,
-          type: item.type,
-          position: item.position,
-          freeText: _freeText,
-          duration: _duration,
-        );
-    }
+    return TrainingItem(
+      id: item.id,
+      type: item.type,
+      position: item.position,
+      worktimeSeconds: _worktime,
+      restSeconds: _rest,
+      hand: _hand,
+      loads: [Load(value: _loadRight, unit: _loadIsMax ? 'max' : 'kg')],
+      loadIsMax: _loadIsMax,
+      handPositions: [item.handPositions?.firstOrNull ?? 'halfCrimp'],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Edit ${widget.item.type.apiValue}'),
+      title: const Text('Hang Rep'),
       content: SingleChildScrollView(child: _buildForm()),
       actions: [
         TextButton(
@@ -399,101 +461,39 @@ class _ItemEditorDialogState extends State<_ItemEditorDialog> {
   }
 
   Widget _buildForm() {
-    return switch (widget.item.type) {
-      TrainingItemType.repeater => _repeaterForm(),
-      TrainingItemType.hangboardRep => _hangboardRepForm(),
-      _ => _freeForm(),
-    };
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _intField(
+          'Work time (s)',
+          _worktime,
+          (v) => setState(() => _worktime = v),
+        ),
+        _intField('Rest (s)', _rest, (v) => setState(() => _rest = v)),
+        DropdownButtonFormField<String>(
+          initialValue: _hand,
+          decoration: const InputDecoration(labelText: 'Hand'),
+          items: const [
+            DropdownMenuItem(value: 'both', child: Text('Both')),
+            DropdownMenuItem(value: 'left', child: Text('Left')),
+            DropdownMenuItem(value: 'right', child: Text('Right')),
+          ],
+          onChanged: (v) => setState(() => _hand = v ?? 'both'),
+        ),
+        SwitchListTile(
+          title: const Text('As hard as possible'),
+          value: _loadIsMax,
+          onChanged: (v) => setState(() => _loadIsMax = v),
+        ),
+        if (!_loadIsMax)
+          _doubleField(
+            'Load (kg)',
+            _loadRight,
+            (v) => setState(() => _loadRight = v),
+          ),
+      ],
+    );
   }
-
-  Widget _repeaterForm() => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      _intField('Sets', _cycles, (v) => setState(() => _cycles = v)),
-      _intField('Reps / set', _reps, (v) => setState(() => _reps = v)),
-      _intField(
-        'Work time (s)',
-        _worktime,
-        (v) => setState(() => _worktime = v),
-      ),
-      _intField('Rest (s)', _rest, (v) => setState(() => _rest = v)),
-      _intField(
-        'Set rest (s)',
-        _cycleRest,
-        (v) => setState(() => _cycleRest = v),
-      ),
-      SwitchListTile(
-        title: const Text('Split hand'),
-        subtitle: const Text('Alternate R/L sets'),
-        value: _splitHand,
-        onChanged: (v) => setState(() {
-          _splitHand = v;
-          _hand = v ? 'split' : 'both';
-        }),
-      ),
-      _doubleField(
-        _splitHand ? 'Load right (kg)' : 'Load (kg)',
-        _loadRight,
-        (v) => setState(() => _loadRight = v),
-      ),
-      if (_splitHand)
-        _doubleField(
-          'Load left (kg)',
-          _loadLeft,
-          (v) => setState(() => _loadLeft = v),
-        ),
-    ],
-  );
-
-  Widget _hangboardRepForm() => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      _intField(
-        'Work time (s)',
-        _worktime,
-        (v) => setState(() => _worktime = v),
-      ),
-      _intField('Rest (s)', _rest, (v) => setState(() => _rest = v)),
-      DropdownButtonFormField<String>(
-        // ignore: deprecated_member_use
-        value: _hand,
-        decoration: const InputDecoration(labelText: 'Hand'),
-        items: const [
-          DropdownMenuItem(value: 'both', child: Text('Both')),
-          DropdownMenuItem(value: 'left', child: Text('Left')),
-          DropdownMenuItem(value: 'right', child: Text('Right')),
-        ],
-        onChanged: (v) => setState(() => _hand = v ?? 'both'),
-      ),
-      SwitchListTile(
-        title: const Text('As hard as possible'),
-        value: _loadIsMax,
-        onChanged: (v) => setState(() => _loadIsMax = v),
-      ),
-      if (!_loadIsMax)
-        _doubleField(
-          'Load (kg)',
-          _loadRight,
-          (v) => setState(() => _loadRight = v),
-        ),
-    ],
-  );
-
-  Widget _freeForm() => Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      TextFormField(
-        initialValue: _freeText,
-        decoration: const InputDecoration(labelText: 'Text'),
-        onChanged: (v) => _freeText = v,
-      ),
-      _intField(
-        'Duration (s, optional)',
-        _duration ?? 0,
-        (v) => setState(() => _duration = v > 0 ? v : null),
-      ),
-    ],
-  );
 
   Widget _intField(String label, int value, void Function(int) onChanged) {
     return Padding(
