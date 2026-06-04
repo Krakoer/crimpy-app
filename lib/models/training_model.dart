@@ -187,18 +187,6 @@ class RepDataModel {
   });
 }
 
-class RepeaterTraining {
-  final RepeaterModel repeater;
-  final int id;
-  final String name;
-
-  RepeaterTraining({
-    required this.id,
-    required this.name,
-    required this.repeater,
-  });
-}
-
 class RepeaterModel {
   final int sets;
   final int restBteweenSets;
