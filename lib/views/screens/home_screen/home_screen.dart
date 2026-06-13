@@ -1,6 +1,7 @@
 import 'package:crimpy/views/screens/home_screen/history/week_histogram_card.dart';
 import 'package:crimpy/views/screens/home_screen/favorite_training.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/log_session_buttons.dart';
+import 'package:crimpy/views/screens/home_screen/widgets/today_training_card.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -23,6 +24,8 @@ class _HomeScreenState extends State<HomeScreen>
         padding: EdgeInsetsGeometry.all(16),
         child: Column(
           children: [
+            // Today's scheduled training from the active program.
+            TodayTrainingCard(),
             // Weekly session histogram.
             WeekHistogramCard(maxBarHeight: 75),
             // Log session buttons.
