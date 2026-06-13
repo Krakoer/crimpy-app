@@ -5,6 +5,7 @@ import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/missing_assessments_dialog.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/training_list_item.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/create_training_fab.dart';
+import 'package:crimpy/views/screens/trainings/programs/widgets/program_summary_card.dart';
 
 class TrainingScreen extends ConsumerStatefulWidget {
   final VoidCallback goToAssessments;
@@ -46,15 +47,16 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen>
               top: 16.0,
               bottom: 80.0, // Extra padding for FAB
             ),
-            children: value
-                .map(
-                  (item) => TrainingListItemWidget(
-                    item: item,
-                    onMissingAssessments: () =>
-                        showMissingAssessmentsDialog(item.missingAssessments),
-                  ),
-                )
-                .toList(),
+            children: [
+              const ProgramSummaryCard(),
+              ...value.map(
+                (item) => TrainingListItemWidget(
+                  item: item,
+                  onMissingAssessments: () =>
+                      showMissingAssessmentsDialog(item.missingAssessments),
+                ),
+              ),
+            ],
           ),
           AsyncError(:final error) => Text('Oops $error'),
           _ => const Center(child: CircularProgressIndicator()),
