@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-/// Home hero for the training scheduled today, with a one-tap start.
+/// Compact home card for the training scheduled today, with a one-tap start.
 /// Renders nothing when the user has no program, a rest-day card otherwise.
 class TodayTrainingCard extends ConsumerWidget {
   const TodayTrainingCard({super.key});
@@ -19,7 +19,7 @@ class TodayTrainingCard extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
       data: (today) {
-        if (today != null) return _hero(context, today);
+        if (today != null) return _compactCard(context, today);
         final hasProgram = ref.watch(activeProgramProvider).asData?.value;
         if (hasProgram == null) return const SizedBox.shrink();
         return _restDay();
@@ -27,7 +27,7 @@ class TodayTrainingCard extends ConsumerWidget {
     );
   }
 
-  Widget _hero(BuildContext context, TodayTraining today) {
+  Widget _compactCard(BuildContext context, TodayTraining today) {
     final session = today.session;
     final type = session.sessionType;
     final color = programSessionColor(type);
@@ -49,92 +49,79 @@ class TodayTrainingCard extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 16),
       child: CrimpyCard.category(
         accentColor: color,
-        padding: EdgeInsets.zero,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         onTap: openProgram,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              color: CrimpyTheme.primaryOrange,
-              child: const Text(
-                "TODAY'S TRAINING",
-                style: TextStyle(
-                  fontFamily: 'JetBrainsMono',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                  color: CrimpyTheme.bgPrimary,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(14),
+            SessionTypeTile(type: type, size: 42),
+            const SizedBox(width: 12),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      SessionTypeTile(type: type, size: 48),
-                      const SizedBox(width: 13),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              session.trainingTitle,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontFamily: 'JetBrainsMono',
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: CrimpyTheme.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              programSessionLabel(type),
-                              style: TextStyle(
-                                fontFamily: 'JetBrainsMono',
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: color,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'TODAY - ${programSessionLabel(type)}',
+                    style: TextStyle(
+                      fontFamily: 'JetBrainsMono',
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.6,
+                      color: CrimpyTheme.primaryOrange,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    session.trainingTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'JetBrainsMono',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: CrimpyTheme.textPrimary,
+                    ),
                   ),
                   if ((session.notes ?? '').isNotEmpty) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 1),
                     Text(
                       session.notes!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontFamily: 'JetBrainsMono',
-                        fontSize: 12,
-                        height: 1.45,
+                        fontSize: 10.5,
                         color: CrimpyTheme.textSecondary,
                       ),
                     ),
                   ],
-                  const SizedBox(height: 14),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: openSession,
-                      icon: const Icon(Icons.play_arrow),
-                      label: const Text('START'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: CrimpyTheme.primaryOrange,
-                        foregroundColor: CrimpyTheme.bgPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                      ),
-                    ),
-                  ),
                 ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            GestureDetector(
+              onTap: openSession,
+              child: Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: CrimpyTheme.primaryOrange,
+                  border: Border.all(
+                    color: CrimpyTheme.borderDefault,
+                    width: 2,
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: CrimpyTheme.borderDefault,
+                      offset: Offset(2, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.play_arrow,
+                  color: CrimpyTheme.bgPrimary,
+                  size: 20,
+                ),
               ),
             ),
           ],
