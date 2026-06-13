@@ -1,4 +1,6 @@
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/models/training_model.dart';
 
 /// Maps a backend training_type string to the app SessionType.
 SessionType sessionTypeFromApi(String? value) => switch (value) {
@@ -208,4 +210,27 @@ class SessionOverride {
         itemId: json['item_id'] as String,
         overrides: (json['overrides'] as Map<String, dynamic>? ?? {}),
       );
+}
+
+/// Applies a session's sparse per-item overrides on top of a training template,
+/// walking the full item tree and matching by item id.
+Training effectiveTraining(Training base, List<SessionOverride> overrides) {
+  if (overrides.isEmpty) return base;
+  final byItemId = {for (final o in overrides) o.itemId: o.overrides};
+
+  List<TrainingItem> apply(List<TrainingItem> items) => items.map((item) {
+    final merged = byItemId.containsKey(item.id)
+        ? item.applyOverride(byItemId[item.id]!)
+        : item;
+    if (merged.items.isEmpty) return merged;
+    return merged.copyWith(items: apply(merged.items));
+  }).toList();
+
+  return Training(
+    id: base.id,
+    title: base.title,
+    description: base.description,
+    isFavorite: base.isFavorite,
+    items: apply(base.items),
+  );
 }

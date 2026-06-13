@@ -188,4 +188,73 @@ class TrainingItem {
     }
     return map;
   }
+
+  TrainingItem copyWith({
+    int? worktimeSeconds,
+    int? restSeconds,
+    int? cycles,
+    int? cycleRestSeconds,
+    int? reps,
+    int? duration,
+    String? hand,
+    List<Load>? loads,
+    List<Load>? leftLoads,
+    List<String>? handPositions,
+    List<int>? edgeSizesMm,
+    bool? loadIsMax,
+    List<TrainingItem>? items,
+  }) {
+    return TrainingItem(
+      id: id,
+      type: type,
+      position: position,
+      parentId: parentId,
+      worktimeSeconds: worktimeSeconds ?? this.worktimeSeconds,
+      restSeconds: restSeconds ?? this.restSeconds,
+      cycles: cycles ?? this.cycles,
+      cycleRestSeconds: cycleRestSeconds ?? this.cycleRestSeconds,
+      reps: reps ?? this.reps,
+      duration: duration ?? this.duration,
+      hand: hand ?? this.hand,
+      loads: loads ?? this.loads,
+      leftLoads: leftLoads ?? this.leftLoads,
+      handPositions: handPositions ?? this.handPositions,
+      edgeSizesMm: edgeSizesMm ?? this.edgeSizesMm,
+      loadIsMax: loadIsMax ?? this.loadIsMax,
+      freeText: freeText,
+      exerciseId: exerciseId,
+      sectionTitle: sectionTitle,
+      items: items ?? this.items,
+    );
+  }
+
+  /// Returns a copy with the sparse program override applied. Only keys present
+  /// in [override] replace base values; missing keys are kept.
+  TrainingItem applyOverride(Map<String, dynamic> override) {
+    if (override.isEmpty) return this;
+
+    List<Load>? parseLoads(dynamic raw) => raw == null
+        ? null
+        : (raw as List<dynamic>)
+              .map((e) => Load.fromJson(e as Map<String, dynamic>))
+              .toList();
+
+    final bothHands = override['both_hands'] as bool?;
+    return copyWith(
+      loads: parseLoads(override['loads']),
+      leftLoads: parseLoads(override['left_loads']),
+      handPositions: (override['hand_positions'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      edgeSizesMm: (override['edge_sizes_mm'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList(),
+      reps: (override['reps'] as num?)?.toInt(),
+      cycles: (override['cycles'] as num?)?.toInt(),
+      cycleRestSeconds: (override['cycle_rest_seconds'] as num?)?.toInt(),
+      restSeconds: (override['rest_seconds'] as num?)?.toInt(),
+      worktimeSeconds: (override['hb_worktime_seconds'] as num?)?.toInt(),
+      hand: bothHands == null ? null : (bothHands ? 'both' : 'split'),
+    );
+  }
 }
