@@ -282,6 +282,40 @@ class ApiClient {
     await delete('/api/trainings/$id');
   }
 
+  // ----- Programs (coachee, read-only) -----
+  Future<List<Map<String, dynamic>>> getMyPrograms() async {
+    final res = await get('/api/user/programs');
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> getMyProgram(String programId) async {
+    final res = await get('/api/user/programs/$programId');
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<List<Map<String, dynamic>>> getMyWeeks(String programId) async {
+    final res = await get('/api/user/programs/$programId/weeks');
+    return (res.data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> getMyWeek(
+    String programId,
+    int weekNumber,
+  ) async {
+    final res = await get('/api/user/programs/$programId/weeks/$weekNumber');
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getMyProgramTraining(
+    String programId,
+    String trainingId,
+  ) async {
+    final res = await get(
+      '/api/user/programs/$programId/trainings/$trainingId',
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
   // ----- Repeaters -----
   Future<List<Map<String, dynamic>>> getRepeaters() async {
     final res = await get('/api/repeaters');
