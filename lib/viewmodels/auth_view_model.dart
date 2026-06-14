@@ -46,12 +46,17 @@ class AuthState extends _$AuthState {
     final dbUser = await gDatabase.getCurrentUser();
     if (dbUser == null) return null;
 
-    // A stored user without a token is a stale, inconsistent state (e.g. the
-    // token expired or was cleared by the 401 interceptor). Treat it as logged
-    // out so the app falls back to guest mode instead of looping on
-    // unauthorized requests.
-    final hasToken = await ref.read(apiClientProvider).hasToken();
-    if (!hasToken) return null;
+    // A stored user with no credentials at all is a stale, inconsistent state
+    // (e.g. tokens were cleared after a failed refresh). Treat it as logged out
+    // so the app falls back to guest mode instead of looping on unauthorized
+    // requests. A refresh token alone is enough: a new access token is minted
+    // on the first request.
+    final apiClient = ref.read(apiClientProvider);
+    final hasAccessToken = await apiClient.hasToken();
+    final refreshToken = await apiClient.getRefreshToken();
+    if (!hasAccessToken && (refreshToken == null || refreshToken.isEmpty)) {
+      return null;
+    }
 
     return auth_models.User(
       id: dbUser.id,
