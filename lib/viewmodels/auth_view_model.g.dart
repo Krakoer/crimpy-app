@@ -48,7 +48,7 @@ final class ApiClientProvider
   }
 }
 
-String _$apiClientHash() => r'a0eb8837fc3cfc2ac414f9bdd23761e2186e929e';
+String _$apiClientHash() => r'2ce13b5486412cbcb4912a269cb8b4807c154f71';
 
 @ProviderFor(authService)
 const authServiceProvider = AuthServiceProvider._();
@@ -115,7 +115,7 @@ final class AuthStateProvider
   AuthState create() => AuthState();
 }
 
-String _$authStateHash() => r'4ede3f0ba1908a3eb7592d37703ccb4c4be11b15';
+String _$authStateHash() => r'82715a1ea251bbceaa5352d92bd0a157c69e3135';
 
 abstract class _$AuthState extends $AsyncNotifier<auth_models.User?> {
   FutureOr<auth_models.User?> build();
