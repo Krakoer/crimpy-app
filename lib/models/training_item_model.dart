@@ -42,6 +42,20 @@ class Load {
   Map<String, dynamic> toJson() => {'value': value, 'unit': unit};
 
   bool get isBodyweight => unit == 'bw' || value == 0.0;
+
+  /// Human-readable load, e.g. "+35 kg", "100 %BW", or "BW".
+  String get label {
+    if (isBodyweight) return 'BW';
+    final n = value.truncateToDouble() == value
+        ? value.toStringAsFixed(0)
+        : value.toStringAsFixed(1);
+    final u = switch (unit) {
+      'percent_bw' => '%BW',
+      'bw' => 'BW',
+      _ => unit,
+    };
+    return '$n $u';
+  }
 }
 
 /// Flattens nested JSON arrays into a single-level list. Per-rep fields such as
@@ -126,6 +140,33 @@ class TrainingItem {
     this.sectionTitle,
     this.items = const [],
   });
+
+  /// Reps to perform when this is a rep-based item, null otherwise.
+  /// An item is never both rep-based and time-based.
+  int? get effectiveReps => (reps ?? 0) > 0 ? reps : null;
+
+  /// Duration in seconds when this is a time-based item, null otherwise.
+  int? get effectiveDuration => (duration ?? 0) > 0 ? duration : null;
+
+  /// First-rep load shown to the user, or null when bodyweight / unset.
+  String? get loadLabel {
+    if (loadIsMax) return 'MAX';
+    final first = loads?.firstOrNull;
+    if (first == null || first.isBodyweight) return null;
+    return first.label;
+  }
+
+  /// Whether this item can be performed with the crimpy force sensor: a
+  /// single-hand hangboard/repeater item with a non-bodyweight target load.
+  bool get usesSensor {
+    if (type != TrainingItemType.hangboardRep &&
+        type != TrainingItemType.repeater) {
+      return false;
+    }
+    if (hand == null || hand == 'both') return false;
+    bool hasLoad(List<Load>? l) => (l ?? []).any((e) => !e.isBodyweight);
+    return hasLoad(loads) || hasLoad(leftLoads);
+  }
 
   factory TrainingItem.fromJson(Map<String, dynamic> json) {
     List<Load>? parseLoads(dynamic raw) {

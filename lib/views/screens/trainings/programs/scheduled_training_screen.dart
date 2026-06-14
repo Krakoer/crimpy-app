@@ -396,38 +396,33 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   };
 
   String _itemDetail(TrainingItem item) {
-    String load() {
-      final l = item.loads;
-      if (l == null || l.isEmpty) return '';
-      final first = l.first;
-      return first.isBodyweight
-          ? 'BW'
-          : '${first.value.toStringAsFixed(first.value.truncateToDouble() == first.value ? 0 : 1)} ${first.unit}';
-    }
+    final load = item.loadLabel;
+    // An item is either rep-based or time-based, never both.
+    final amount = item.effectiveReps != null
+        ? '${item.effectiveReps} reps'
+        : item.effectiveDuration != null
+        ? '${item.effectiveDuration}s'
+        : null;
 
     switch (item.type) {
       case TrainingItemType.repeater:
         return '${item.cycles ?? 1}x${item.reps ?? 1} - ${item.worktimeSeconds ?? 7}s on / ${item.restSeconds ?? 3}s off';
       case TrainingItemType.hangboardRep:
-        final parts = [
-          '${item.reps ?? 1} reps',
+        return [
+          if (item.effectiveReps != null) '${item.effectiveReps} reps',
           '${item.worktimeSeconds ?? 7}s on / ${item.restSeconds ?? 3}s off',
-          if (load().isNotEmpty) load(),
-        ];
-        return parts.join(' - ');
+          if (load != null) load,
+        ].join(' - ');
       case TrainingItemType.exercise:
-        final parts = [
-          if (item.reps != null) '${item.reps} reps',
-          if (item.duration != null) '${item.duration}s',
-          if (load().isNotEmpty) load(),
-        ];
-        return parts.join(' - ');
+        return [if (amount != null) amount, if (load != null) load].join(' - ');
       case TrainingItemType.circuit:
         return '${item.cycles ?? 1} cycles';
       case TrainingItemType.section:
         return '';
       case TrainingItemType.free:
-        return '';
+        return item.effectiveDuration != null
+            ? '${item.effectiveDuration}s'
+            : '';
     }
   }
 

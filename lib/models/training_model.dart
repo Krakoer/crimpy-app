@@ -55,6 +55,13 @@ class Training {
     'is_favorite': isFavorite,
     'items': items.map((i) => i.toJson()).toList(),
   };
+
+  /// Whether any exercise in the tree can be performed with the force sensor.
+  bool get canUseSensor {
+    bool any(List<TrainingItem> items) =>
+        items.any((item) => item.usesSensor || any(item.items));
+    return any(items);
+  }
 }
 
 /// Represents a required assessment with optional grip position.
