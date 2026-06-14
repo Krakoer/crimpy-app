@@ -20,8 +20,11 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 class PlayTrainingScreen extends ConsumerStatefulWidget {
   final Training training;
 
+  /// Whether to run with the force sensor (live gauge + data collection).
+  final bool useSensor;
+
   /// Play a given training.
-  const PlayTrainingScreen(this.training, {super.key});
+  const PlayTrainingScreen(this.training, {this.useSensor = true, super.key});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -51,7 +54,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         index: -1,
         gripPosition: GripPosition.halfCrimp,
       ),
-      ..._executionToRepModels(expandTrainingItems(widget.training)),
+      ..._executionToRepModels(
+        expandTrainingItems(widget.training, useSensor: widget.useSensor),
+      ),
     ];
   }
 
@@ -66,11 +71,13 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
           result.add(
             RepModel(
               durationInSeconds: item.durationSeconds,
-              isRest: !item.collectSensorData,
+              isRest: false,
               handSide: item.handSide,
               targetWeight: item.targetLoad,
               index: idx++,
               gripPosition: item.gripPosition,
+              showGauge: item.collectSensorData,
+              label: item.label,
             ),
           );
         case RestItem():
@@ -84,7 +91,19 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             ),
           );
         case ConfirmItem():
-          debugPrint('PlayTrainingScreen: ConfirmItem skipped: ${item.label}');
+          result.add(
+            RepModel(
+              durationInSeconds: 0,
+              isRest: false,
+              isConfirm: true,
+              handSide: HandSide.both,
+              targetWeight: 0,
+              index: idx++,
+              label: item.label,
+              reps: item.reps,
+              load: item.load,
+            ),
+          );
       }
     }
     return result;
@@ -103,10 +122,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
           RepDataModel(
             handSide: timer.currentRep.handSide,
             targetWeight: timer.currentRep.targetWeight,
-            // Add avg if it was not a rest
-            averageWeight: timer.currentRep.isRest
-                ? 0
-                : ref.read(bleSessionProvider).avg,
+            // Only collect a sensor average for gauge (sensor) steps.
+            averageWeight: timer.currentRep.showGauge
+                ? ref.read(bleSessionProvider).avg
+                : 0,
             duration: timer.currentRep.durationInSeconds,
             index: timer.currentRep.index,
             isRest: timer.currentRep.isRest,
@@ -132,10 +151,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
           RepDataModel(
             handSide: timer.currentRep.handSide,
             targetWeight: timer.currentRep.targetWeight,
-            // Add avg if it was not a rest
-            averageWeight: timer.currentRep.isRest
-                ? 0
-                : ref.read(bleSessionProvider).avg,
+            // Only collect a sensor average for gauge (sensor) steps.
+            averageWeight: timer.currentRep.showGauge
+                ? ref.read(bleSessionProvider).avg
+                : 0,
             duration: timer.currentRep.durationInSeconds,
             index: timer.currentRep.index,
             isRest: timer.currentRep.isRest,
@@ -182,6 +201,107 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     timer.dispose();
     _serieController.dispose();
     super.dispose();
+  }
+
+  Widget _buildTimedContent(double gaugeSize, double timerFontSize) {
+    final rep = timer.currentRep;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Label above the gauge during work.
+        if (!rep.isRest)
+          rep.showGauge
+              ? HandLabel(
+                  handSide: rep.handSide,
+                  gripPosition: rep.gripPosition,
+                )
+              : Text(
+                  (rep.label ?? 'WORK').toUpperCase(),
+                  style: const TextStyle(
+                    fontFamily: 'JetBrainsMono',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: CrimpyTheme.textSecondary,
+                  ),
+                ),
+        SizedBox(
+          width: gaugeSize,
+          height: gaugeSize,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              if (rep.showGauge) Gauge(rep.targetWeight),
+              AnimatedBuilder(
+                animation: _serieController,
+                builder: (ctx, child) => WorkoutCircle(
+                  value: _serieController.value,
+                  rest: rep.isRest,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 32),
+        TrainingTimerDisplay(
+          secondsRemaining: timer.currentRepRemaining,
+          isRest: rep.isRest,
+          fontSize: timerFontSize * 1.4,
+          isPrep: timer.currentRepIndex == 0,
+        ),
+        if (rep.isRest && timer.currentRepIndex < timer.repetitions.length - 1)
+          NextRepPreview(nextRep: timer.repetitions[timer.currentRepIndex + 1]),
+      ],
+    );
+  }
+
+  Widget _buildConfirmContent(double timerFontSize) {
+    final rep = timer.currentRep;
+    final details = [
+      if (rep.reps != null) '${rep.reps} reps',
+      if (rep.load != null) rep.load!,
+    ].join('  -  ');
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            (rep.label ?? 'Exercise').toUpperCase(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'JetBrainsMono',
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: CrimpyTheme.textPrimary,
+            ),
+          ),
+          if (details.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              details,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'JetBrainsMono',
+                fontSize: timerFontSize,
+                fontWeight: FontWeight.w800,
+                color: CrimpyTheme.primaryOrange,
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          const Text(
+            'Tap DONE when finished',
+            style: TextStyle(
+              fontFamily: 'JetBrainsMono',
+              fontSize: 12,
+              color: CrimpyTheme.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -252,55 +372,12 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                     remainingMilliseconds:
                         totalTrainingSeconds * 1000 - timer.elapsedMilliseconds,
                   ),
-                  // Main content area with gauge
+                  // Main content area
                   Expanded(
                     child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Hand label (above gauge during work)
-                          if (!timer.currentRep.isRest)
-                            HandLabel(
-                              handSide: timer.currentRep.handSide,
-                              gripPosition: timer.currentRep.gripPosition,
-                            ),
-                          // Workout circle with gauge
-                          SizedBox(
-                            width: gaugeSize,
-                            height: gaugeSize,
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Gauge(timer.currentRep.targetWeight),
-                                AnimatedBuilder(
-                                  animation: _serieController,
-                                  builder: (ctx, child) => WorkoutCircle(
-                                    value: _serieController.value,
-                                    rest: timer.currentRep.isRest,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          // Timer and status display
-                          TrainingTimerDisplay(
-                            secondsRemaining: timer.currentRepRemaining,
-                            isRest: timer.currentRep.isRest,
-                            fontSize: timerFontSize * 1.4,
-                            isPrep: timer.currentRepIndex == 0,
-                          ),
-                          // Next rep preview (during rest)
-                          if (timer.currentRep.isRest &&
-                              timer.currentRepIndex <
-                                  timer.repetitions.length - 1)
-                            NextRepPreview(
-                              nextRep:
-                                  timer.repetitions[timer.currentRepIndex + 1],
-                            ),
-                        ],
-                      ),
+                      child: timer.currentRep.isConfirm
+                          ? _buildConfirmContent(timerFontSize)
+                          : _buildTimedContent(gaugeSize, timerFontSize),
                     ),
                   ),
                   // Progress info
@@ -314,14 +391,35 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                   ),
                   const SizedBox(height: 8),
                   // Controls
-                  TrainingControls(
-                    isRunning: timer.isRunning,
-                    onPlayPause: timer.isRunning ? _stop : _start,
-                    onSkip: () {
-                      _start();
-                      timer.skipRep();
-                    },
-                  ),
+                  if (timer.currentRep.isConfirm)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            if (!timer.isRunning) _start();
+                            setState(() => timer.confirmRep());
+                          },
+                          icon: const Icon(Icons.check),
+                          label: const Text('DONE'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: CrimpyTheme.primaryOrange,
+                            foregroundColor: CrimpyTheme.bgPrimary,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    TrainingControls(
+                      isRunning: timer.isRunning,
+                      onPlayPause: timer.isRunning ? _stop : _start,
+                      onSkip: () {
+                        _start();
+                        timer.skipRep();
+                      },
+                    ),
                 ],
               );
             },

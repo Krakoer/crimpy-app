@@ -154,6 +154,21 @@ class RepModel {
   int index;
   GripPosition gripPosition;
 
+  /// Whether the live force gauge is shown and sensor data collected.
+  final bool showGauge;
+
+  /// Self-paced step: no countdown, the user taps "Done" to advance.
+  final bool isConfirm;
+
+  /// Optional label shown during the step (e.g. exercise name).
+  final String? label;
+
+  /// Optional rep count shown for self-paced exercises.
+  final int? reps;
+
+  /// Optional load label shown for self-paced exercises (e.g. "+10 kg").
+  final String? load;
+
   RepModel({
     this.id,
     required this.durationInSeconds,
@@ -162,6 +177,11 @@ class RepModel {
     required this.targetWeight,
     required this.index,
     this.gripPosition = GripPosition.halfCrimp, // Default to half crimp
+    this.showGauge = false,
+    this.isConfirm = false,
+    this.label,
+    this.reps,
+    this.load,
   });
 }
 

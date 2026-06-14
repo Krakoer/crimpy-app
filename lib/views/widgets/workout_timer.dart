@@ -79,8 +79,10 @@ class WorkoutTimer {
           playerBip.resume();
         }
       }
-      if (_stopwatch.elapsedMilliseconds >
-          startCurrentRep + currentRep.durationInSeconds * 1000) {
+      // Self-paced steps never advance on time; the user taps "Done".
+      if (!currentRep.isConfirm &&
+          _stopwatch.elapsedMilliseconds >
+              startCurrentRep + currentRep.durationInSeconds * 1000) {
         if (currentRepIndex < repetitions.length - 1) {
           if (!currentRep.isRest) {
             repCount += 1;
@@ -101,6 +103,27 @@ class WorkoutTimer {
         }
       }
     });
+  }
+
+  /// Advance from a self-paced confirm step once the user marks it done.
+  void confirmRep() {
+    if (currentRepIndex < repetitions.length - 1) {
+      if (!currentRep.isRest) {
+        repCount += 1;
+      }
+      startCurrentRep = _stopwatch.elapsedMilliseconds;
+      if (onNextRep != null) {
+        onNextRep!(nextRep!.durationInSeconds);
+      }
+      currentRepIndex += 1;
+    } else {
+      _stopwatch.stop();
+      timer.cancel();
+      finished = true;
+      if (onFinished != null) {
+        onFinished!();
+      }
+    }
   }
 
   void skipRep() {

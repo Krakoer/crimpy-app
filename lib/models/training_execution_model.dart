@@ -31,13 +31,20 @@ final class RestItem extends TrainingExecutionItem {
   const RestItem({required this.durationSeconds});
 }
 
-// Defined for future use (section headers, free items without duration, exercise reps with no
-// timed countdown). Not yet wired to the play screen UI.
+/// A self-paced step the user completes manually (e.g. a rep-based exercise or
+/// a free item without a duration). The user taps "Done" to advance.
 final class ConfirmItem extends TrainingExecutionItem {
   final String label;
   final String? instructions;
+  final int? reps;
+  final String? load;
 
-  const ConfirmItem({required this.label, this.instructions});
+  const ConfirmItem({
+    required this.label,
+    this.instructions,
+    this.reps,
+    this.load,
+  });
 
   @override
   int get durationSeconds => 0;

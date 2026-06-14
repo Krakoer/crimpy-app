@@ -45,15 +45,19 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Percentage of reps the user has succeded.
-    final workingReps = widget.results.where((r) => !r.isRest).toList();
-    final int percentageSuccess =
-        (workingReps
-                    .where((rep) => rep.averageWeight >= rep.targetWeight)
-                    .length /
-                workingReps.length *
-                100)
-            .round();
+    // Success percentage, computed only from sensor reps that have a target.
+    final sensorReps = widget.results
+        .where((r) => !r.isRest && r.targetWeight > 0)
+        .toList();
+    final bool hasSensorData = sensorReps.isNotEmpty;
+    final int percentageSuccess = hasSensorData
+        ? (sensorReps
+                      .where((rep) => rep.averageWeight >= rep.targetWeight)
+                      .length /
+                  sensorReps.length *
+                  100)
+              .round()
+        : 0;
 
     return PopScope(
       canPop: false,
@@ -96,31 +100,32 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                 "Well done! 💪",
                 style: Theme.of(context).textTheme.displaySmall,
               ),
-              // Show the success percentage
-              Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: "you managed to do ",
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: CrimpyTheme.gray500,
+              // Show the success percentage only when sensor data was captured.
+              if (hasSensorData)
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "you managed to do ",
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: CrimpyTheme.gray500,
+                        ),
                       ),
-                    ),
-                    TextSpan(
-                      text: "$percentageSuccess%",
-                      style: Theme.of(
-                        context,
-                      ).textTheme.labelLarge?.copyWith(fontSize: 12),
-                    ),
-                    TextSpan(
-                      text: " of the reps",
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: CrimpyTheme.gray500,
+                      TextSpan(
+                        text: "$percentageSuccess%",
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelLarge?.copyWith(fontSize: 12),
                       ),
-                    ),
-                  ],
+                      TextSpan(
+                        text: " of the reps",
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: CrimpyTheme.gray500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               SizedBox(height: 25),
               // Form for session name and notes.
               Padding(

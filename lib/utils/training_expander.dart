@@ -2,33 +2,99 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training_model.dart';
-import 'package:flutter/foundation.dart';
 
-List<TrainingExecutionItem> expandTrainingItems(Training training) {
+/// Expands a training tree into a flat, runnable sequence of execution items.
+/// [useSensor] controls whether hangboard/repeater hangs collect live force
+/// data (and thus show the gauge); when false the whole training runs without
+/// a sensor.
+List<TrainingExecutionItem> expandTrainingItems(
+  Training training, {
+  bool useSensor = true,
+}) {
   final out = <TrainingExecutionItem>[];
   for (final item in training.items) {
-    _expandItem(item, out);
+    _expandItem(item, out, useSensor);
   }
   return out;
 }
 
-void _expandItem(TrainingItem item, List<TrainingExecutionItem> out) {
+void _expandItem(
+  TrainingItem item,
+  List<TrainingExecutionItem> out,
+  bool useSensor,
+) {
   switch (item.type) {
     case TrainingItemType.repeater:
-      _expandRepeater(item, out);
+      _expandRepeater(item, out, useSensor);
     case TrainingItemType.hangboardRep:
-      _expandHangboardRep(item, out);
+      _expandHangboardRep(item, out, useSensor);
+    case TrainingItemType.circuit:
+      _expandCircuit(item, out, useSensor);
+    case TrainingItemType.section:
+      _expandSection(item, out, useSensor);
+    case TrainingItemType.exercise:
+      _expandExercise(item, out);
     case TrainingItemType.free:
       _expandFree(item, out);
-    default:
-      debugPrint('TrainingExpander: unsupported item type ${item.type}');
-      out.add(ConfirmItem(label: item.sectionTitle ?? item.type.apiValue));
   }
 }
 
+void _expandSection(
+  TrainingItem item,
+  List<TrainingExecutionItem> out,
+  bool useSensor,
+) {
+  for (final child in item.items) {
+    _expandItem(child, out, useSensor);
+  }
+}
+
+void _expandCircuit(
+  TrainingItem item,
+  List<TrainingExecutionItem> out,
+  bool useSensor,
+) {
+  final cycles = item.cycles ?? 1;
+  final cycleRest = item.cycleRestSeconds ?? 0;
+  for (int cycle = 0; cycle < cycles; cycle++) {
+    for (final child in item.items) {
+      _expandItem(child, out, useSensor);
+    }
+    if (cycle < cycles - 1 && cycleRest > 0) {
+      out.add(RestItem(durationSeconds: cycleRest));
+    }
+  }
+}
+
+void _expandExercise(TrainingItem item, List<TrainingExecutionItem> out) {
+  final duration = item.effectiveDuration;
+  if (duration != null) {
+    out.add(
+      TimedItem(
+        label: 'Exercise',
+        durationSeconds: duration,
+        targetLoad: 0,
+        handSide: HandSide.both,
+        gripPosition: GripPosition.halfCrimp,
+        collectSensorData: false,
+      ),
+    );
+  } else {
+    out.add(
+      ConfirmItem(
+        label: 'Exercise',
+        reps: item.effectiveReps,
+        load: item.loadLabel,
+      ),
+    );
+  }
+  final rest = item.restSeconds ?? 0;
+  if (rest > 0) out.add(RestItem(durationSeconds: rest));
+}
+
 void _expandFree(TrainingItem item, List<TrainingExecutionItem> out) {
-  final duration = item.duration ?? 0;
-  if (duration > 0) {
+  final duration = item.effectiveDuration;
+  if (duration != null) {
     out.add(
       TimedItem(
         label: item.freeText ?? 'Free',
@@ -44,7 +110,11 @@ void _expandFree(TrainingItem item, List<TrainingExecutionItem> out) {
   }
 }
 
-void _expandHangboardRep(TrainingItem item, List<TrainingExecutionItem> out) {
+void _expandHangboardRep(
+  TrainingItem item,
+  List<TrainingExecutionItem> out,
+  bool useSensor,
+) {
   final worktime = item.worktimeSeconds ?? 7;
   final resttime = item.restSeconds ?? 3;
   final hand = item.hand ?? 'both';
@@ -63,7 +133,7 @@ void _expandHangboardRep(TrainingItem item, List<TrainingExecutionItem> out) {
       targetLoad: w,
       handSide: handSide,
       gripPosition: grip,
-      collectSensorData: true,
+      collectSensorData: useSensor,
     ),
   );
   if (resttime > 0) {
@@ -71,7 +141,11 @@ void _expandHangboardRep(TrainingItem item, List<TrainingExecutionItem> out) {
   }
 }
 
-void _expandRepeater(TrainingItem item, List<TrainingExecutionItem> out) {
+void _expandRepeater(
+  TrainingItem item,
+  List<TrainingExecutionItem> out,
+  bool useSensor,
+) {
   final cycles = item.cycles ?? 1;
   final repsPerCycle = item.reps ?? 1;
   final worktime = item.worktimeSeconds ?? 7;
@@ -94,7 +168,7 @@ void _expandRepeater(TrainingItem item, List<TrainingExecutionItem> out) {
             targetLoad: wR,
             handSide: HandSide.right,
             gripPosition: grip,
-            collectSensorData: true,
+            collectSensorData: useSensor,
           ),
         );
         if (rep < repsPerCycle - 1) {
@@ -116,7 +190,7 @@ void _expandRepeater(TrainingItem item, List<TrainingExecutionItem> out) {
             targetLoad: wL,
             handSide: HandSide.left,
             gripPosition: grip,
-            collectSensorData: true,
+            collectSensorData: useSensor,
           ),
         );
         if (rep < repsPerCycle - 1) {
@@ -138,7 +212,7 @@ void _expandRepeater(TrainingItem item, List<TrainingExecutionItem> out) {
             targetLoad: w,
             handSide: HandSide.right,
             gripPosition: grip,
-            collectSensorData: true,
+            collectSensorData: useSensor,
           ),
         );
         out.add(RestItem(durationSeconds: resttime));
@@ -149,7 +223,7 @@ void _expandRepeater(TrainingItem item, List<TrainingExecutionItem> out) {
             targetLoad: w,
             handSide: HandSide.left,
             gripPosition: grip,
-            collectSensorData: true,
+            collectSensorData: useSensor,
           ),
         );
         if (rep < repsPerCycle - 1) {
