@@ -310,34 +310,24 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
       data: (week) {
         if (week == null) return _notPlanned();
 
-        final byDay = {for (final s in week.scheduledSessions) s.dayOfWeek!: s};
         final today = DateTime.now();
-        var selected = _selectedDay;
-        selected ??= week.scheduledSessions
-            .firstWhere(
-              (s) =>
-                  s.scheduledDate(widget.program, widget.weekNumber) != null &&
-                  _isSameDay(
-                    s.scheduledDate(widget.program, widget.weekNumber)!,
-                    today,
-                  ),
-              orElse: () => week.scheduledSessions.isNotEmpty
-                  ? week.scheduledSessions.first
-                  : const WeekSession(
-                      id: '',
-                      trainingId: '',
-                      trainingTitle: '',
-                      trainingType: '',
-                      dayOfWeek: 0,
-                      position: 0,
-                    ),
-            )
-            .dayOfWeek;
+        // Each day carries its day-specific sessions plus the everyday ones.
+        final byDay = {for (var d = 0; d < 7; d++) d: week.sessionsOnDay(d)};
+        final todayIndex = today.weekday - 1;
+        final todayInWeek = _isSameDay(_dateForDay(todayIndex), today);
 
-        final selectedSession = byDay[selected];
-        final selectedDate = widget.program.startDate.add(
-          Duration(days: (widget.weekNumber - 1) * 7 + selected!),
-        );
+        final selected =
+            _selectedDay ??
+            (todayInWeek
+                ? todayIndex
+                : List.generate(
+                    7,
+                    (d) => d,
+                  ).firstWhere((d) => byDay[d]!.isNotEmpty, orElse: () => 0));
+
+        final selectedSessions = byDay[selected]!;
+        final selectedDate = _dateForDay(selected);
+        final timesPerWeek = week.timesPerWeekSessions;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -361,22 +351,27 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
               ),
             ),
             const SizedBox(height: 8),
-            if (selectedSession != null)
-              ScheduledTrainingRow(
-                session: selectedSession,
-                date: selectedDate,
-                onTap: () => widget.onOpen(selectedSession, widget.weekNumber),
-              )
+            if (selectedSessions.isEmpty)
+              _restDay()
             else
-              _restDay(),
-            if (week.flexibleSessions.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              const ProgramSectionLabel('Any day this week'),
-              const SizedBox(height: 10),
-              ...week.flexibleSessions.map(
+              ...selectedSessions.map(
                 (s) => Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: ScheduledTrainingRow(
+                    session: s,
+                    date: selectedDate,
+                    onTap: () => widget.onOpen(s, widget.weekNumber),
+                  ),
+                ),
+              ),
+            if (timesPerWeek.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              const ProgramSectionLabel('Any day this week'),
+              const SizedBox(height: 10),
+              ...timesPerWeek.map(
+                (s) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: FlexTrainingRow(
                     session: s,
                     onTap: () => widget.onOpen(s, widget.weekNumber),
                   ),
@@ -389,18 +384,20 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
     );
   }
 
-  Widget _dayPicker(Map<int, WeekSession> byDay, int selected) {
+  DateTime _dateForDay(int dayOfWeek) => widget.program.startDate.add(
+    Duration(days: (widget.weekNumber - 1) * 7 + dayOfWeek),
+  );
+
+  Widget _dayPicker(Map<int, List<WeekSession>> byDay, int selected) {
     final today = DateTime.now();
     return Row(
       children: List.generate(7, (d) {
-        final session = byDay[d];
-        final date = widget.program.startDate.add(
-          Duration(days: (widget.weekNumber - 1) * 7 + d),
-        );
+        final daySessions = byDay[d]!;
+        final date = _dateForDay(d);
         final isSelected = d == selected;
         final isToday = _isSameDay(date, today);
-        final dot = session != null
-            ? programSessionColor(session.sessionType)
+        final dot = daySessions.isNotEmpty
+            ? programSessionColor(daySessions.first.sessionType)
             : null;
         return Expanded(
           child: GestureDetector(
@@ -678,7 +675,7 @@ class _CalendarRow extends ConsumerWidget {
         : null;
     final byDay = {
       if (week != null)
-        for (final s in week.scheduledSessions) s.dayOfWeek!: s,
+        for (var d = 0; d < 7; d++) d: week.sessionsOnDay(d),
     };
     final today = DateTime.now();
 
@@ -697,7 +694,8 @@ class _CalendarRow extends ConsumerWidget {
           ),
         ),
         ...List.generate(7, (d) {
-          final session = byDay[d];
+          final daySessions = byDay[d] ?? const <WeekSession>[];
+          final session = daySessions.isNotEmpty ? daySessions.first : null;
           final date = program.startDate.add(
             Duration(days: (weekNumber - 1) * 7 + d),
           );

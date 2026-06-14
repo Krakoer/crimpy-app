@@ -87,14 +87,11 @@ final todayTrainingProvider = FutureProvider<TodayTraining?>((ref) async {
   );
   if (week == null) return null;
   final dayOfWeek = today.weekday - 1; // Dart Mon=1..Sun=7 -> 0..6
-  for (final session in week.scheduledSessions) {
-    if (session.dayOfWeek == dayOfWeek) {
-      return TodayTraining(
-        program: program,
-        weekNumber: weekNumber,
-        session: session,
-      );
-    }
-  }
-  return null;
+  final todays = week.sessionsOnDay(dayOfWeek);
+  if (todays.isEmpty) return null;
+  return TodayTraining(
+    program: program,
+    weekNumber: weekNumber,
+    session: todays.first,
+  );
 });

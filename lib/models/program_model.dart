@@ -122,12 +122,24 @@ class Week {
 
   /// Sessions placed on a specific day of the week, ordered by day then position.
   List<WeekSession> get scheduledSessions =>
-      sessions.where((s) => s.dayOfWeek != null).toList()
-        ..sort((a, b) => a.dayOfWeek!.compareTo(b.dayOfWeek!));
+      sessions.where((s) => s.dayOfWeek != null).toList()..sort((a, b) {
+        final byDay = a.dayOfWeek!.compareTo(b.dayOfWeek!);
+        return byDay != 0 ? byDay : a.position.compareTo(b.position);
+      });
 
-  /// Sessions to be done any day (times_per_week or everyday).
-  List<WeekSession> get flexibleSessions =>
-      sessions.where((s) => s.dayOfWeek == null).toList();
+  /// Sessions to be done on every day of the week.
+  List<WeekSession> get everydaySessions =>
+      sessions.where((s) => s.isEveryday).toList();
+
+  /// Sessions to be done a number of times per week, on no specific day.
+  List<WeekSession> get timesPerWeekSessions =>
+      sessions.where((s) => s.dayOfWeek == null && !s.isEveryday).toList();
+
+  /// All sessions occurring on [dayOfWeek] (0=Mon..6=Sun): the ones explicitly
+  /// scheduled that day plus the everyday sessions, ordered by position.
+  List<WeekSession> sessionsOnDay(int dayOfWeek) =>
+      [...sessions.where((s) => s.dayOfWeek == dayOfWeek), ...everydaySessions]
+        ..sort((a, b) => a.position.compareTo(b.position));
 }
 
 /// How a session is scheduled within a week.

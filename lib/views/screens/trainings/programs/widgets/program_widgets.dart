@@ -1,6 +1,7 @@
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -240,6 +241,102 @@ class ScheduledTrainingRow extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               ScheduleStatusTag(status: status),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A "do it N times this week" training, shown with a dashed border and a row
+/// of frequency pips (no completion data is available from the coachee API).
+class FlexTrainingRow extends StatelessWidget {
+  final WeekSession session;
+  final VoidCallback? onTap;
+
+  const FlexTrainingRow({required this.session, this.onTap, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final type = session.sessionType;
+    final color = programSessionColor(type);
+    final times = session.timesPerWeek ?? 0;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: DottedBorder(
+        options: RoundedRectDottedBorderOptions(
+          dashPattern: const [6, 4],
+          strokeWidth: 2,
+          radius: Radius.zero,
+          color: CrimpyTheme.borderDefault,
+        ),
+        child: Container(
+          color: CrimpyTheme.bgPrimary,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              SessionTypeTile(type: type, size: 34),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      session.trainingTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'JetBrainsMono',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: CrimpyTheme.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      programSessionLabel(type),
+                      style: TextStyle(
+                        fontFamily: 'JetBrainsMono',
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${times}x / WEEK',
+                    style: TextStyle(
+                      fontFamily: 'JetBrainsMono',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(
+                      times,
+                      (i) => Container(
+                        width: 8,
+                        height: 8,
+                        margin: EdgeInsets.only(left: i == 0 ? 0 : 3),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: color, width: 1.5),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
