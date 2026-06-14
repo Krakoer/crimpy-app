@@ -15,9 +15,13 @@ class ApiClient {
   final Dio _dio;
   final FlutterSecureStorage _storage;
 
-  /// Called after the token is cleared on a 401 for a protected request so the
-  /// auth state can drop to guest mode instead of looping on denied requests.
+  /// Called when refresh fails on a 401 so the auth state can drop to guest
+  /// mode / the login screen instead of looping on denied requests.
   void Function()? onUnauthorized;
+
+  /// Guards against firing concurrent refreshes when several requests 401 at
+  /// once; they all await the same in-flight refresh.
+  Future<bool>? _refreshFuture;
 
   ApiClient({FlutterSecureStorage? storage})
     : _storage = storage ?? const FlutterSecureStorage(),
@@ -43,9 +47,23 @@ class ApiClient {
         },
         onError: (error, handler) async {
           final isProtected = error.requestOptions.path.startsWith('/api/');
-          if (error.response?.statusCode == 401 && isProtected) {
-            AppLoggerHelper.info('Token expired, clearing stored token');
+          final alreadyRetried = error.requestOptions.extra['retried'] == true;
+          if (error.response?.statusCode == 401 &&
+              isProtected &&
+              !alreadyRetried) {
+            if (await _refreshToken()) {
+              try {
+                final options = error.requestOptions;
+                options.extra['retried'] = true;
+                final retryResponse = await _dio.fetch(options);
+                return handler.resolve(retryResponse);
+              } catch (_) {
+                // Retry still failed; fall through to the logout path below.
+              }
+            }
+            AppLoggerHelper.info('Refresh failed, clearing tokens');
             await clearToken();
+            await clearRefreshToken();
             onUnauthorized?.call();
           }
           _logDeniedRequest(error);
@@ -106,6 +124,46 @@ class ApiClient {
       await _storage.delete(key: refreshTokenKey);
     } catch (e) {
       AppLoggerHelper.error('Failed to clear refresh token: $e');
+    }
+  }
+
+  /// Exchanges the stored refresh token for a new access token, deduplicating
+  /// concurrent callers. Returns whether a fresh access token was stored.
+  Future<bool> _refreshToken() {
+    return _refreshFuture ??= _performRefresh().whenComplete(() {
+      _refreshFuture = null;
+    });
+  }
+
+  Future<bool> _performRefresh() async {
+    final refreshToken = await getRefreshToken();
+    if (refreshToken == null || refreshToken.isEmpty) return false;
+    try {
+      // A bare Dio without the auth interceptor avoids recursion on 401.
+      final refreshDio = Dio(
+        BaseOptions(
+          baseUrl: baseUrl,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+      final res = await refreshDio.post(
+        '/auth/refresh',
+        data: {'refresh_token': refreshToken},
+      );
+      final data = res.data as Map<String, dynamic>;
+      final newToken = data['token'] as String?;
+      final newRefresh = data['refresh_token'] as String?;
+      if (newToken == null) return false;
+      await saveToken(newToken);
+      if (newRefresh != null) await saveRefreshToken(newRefresh);
+      AppLoggerHelper.info('Access token refreshed');
+      return true;
+    } catch (e) {
+      AppLoggerHelper.info('Token refresh failed: $e');
+      return false;
     }
   }
 
