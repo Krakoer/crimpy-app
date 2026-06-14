@@ -242,6 +242,8 @@ Training effectiveTraining(Training base, List<SessionOverride> overrides) {
     id: base.id,
     title: base.title,
     description: base.description,
+    goal: base.goal,
+    comment: base.comment,
     isFavorite: base.isFavorite,
     items: apply(base.items),
   );
