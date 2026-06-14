@@ -44,6 +44,22 @@ class Load {
   bool get isBodyweight => unit == 'bw' || value == 0.0;
 }
 
+/// Flattens nested JSON arrays into a single-level list. Per-rep fields such as
+/// hand_positions are stored two-dimensionally for split-hand items
+/// (one array per hand); flattening keeps parsing robust to both shapes.
+List<dynamic> flattenJsonList(dynamic raw) {
+  if (raw is! List) return raw == null ? const [] : [raw];
+  final out = <dynamic>[];
+  for (final element in raw) {
+    if (element is List) {
+      out.addAll(flattenJsonList(element));
+    } else {
+      out.add(element);
+    }
+  }
+  return out;
+}
+
 class TrainingItem {
   final String id;
   final TrainingItemType type;
@@ -113,24 +129,21 @@ class TrainingItem {
 
   factory TrainingItem.fromJson(Map<String, dynamic> json) {
     List<Load>? parseLoads(dynamic raw) {
-      if (raw == null) return null;
-      final list = raw as List<dynamic>;
-      if (list.isEmpty) return null;
-      return list.map((e) => Load.fromJson(e as Map<String, dynamic>)).toList();
+      final flat = flattenJsonList(raw);
+      if (flat.isEmpty) return null;
+      return flat.map((e) => Load.fromJson(e as Map<String, dynamic>)).toList();
     }
 
     List<String>? parseStringList(dynamic raw) {
-      if (raw == null) return null;
-      final list = raw as List<dynamic>;
-      if (list.isEmpty) return null;
-      return list.map((e) => e as String).toList();
+      final flat = flattenJsonList(raw);
+      if (flat.isEmpty) return null;
+      return flat.map((e) => e.toString()).toList();
     }
 
     List<int>? parseIntList(dynamic raw) {
-      if (raw == null) return null;
-      final list = raw as List<dynamic>;
-      if (list.isEmpty) return null;
-      return list.map((e) => (e as num).toInt()).toList();
+      final flat = flattenJsonList(raw);
+      if (flat.isEmpty) return null;
+      return flat.map((e) => (e as num).toInt()).toList();
     }
 
     final nestedRaw = json['items'] as List<dynamic>?;
@@ -233,22 +246,27 @@ class TrainingItem {
   TrainingItem applyOverride(Map<String, dynamic> override) {
     if (override.isEmpty) return this;
 
-    List<Load>? parseLoads(dynamic raw) => raw == null
-        ? null
-        : (raw as List<dynamic>)
-              .map((e) => Load.fromJson(e as Map<String, dynamic>))
-              .toList();
+    List<Load>? parseLoads(dynamic raw) {
+      if (raw == null) return null;
+      return flattenJsonList(
+        raw,
+      ).map((e) => Load.fromJson(e as Map<String, dynamic>)).toList();
+    }
 
     final bothHands = override['both_hands'] as bool?;
     return copyWith(
       loads: parseLoads(override['loads']),
       leftLoads: parseLoads(override['left_loads']),
-      handPositions: (override['hand_positions'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList(),
-      edgeSizesMm: (override['edge_sizes_mm'] as List<dynamic>?)
-          ?.map((e) => (e as num).toInt())
-          .toList(),
+      handPositions: override['hand_positions'] == null
+          ? null
+          : flattenJsonList(
+              override['hand_positions'],
+            ).map((e) => e.toString()).toList(),
+      edgeSizesMm: override['edge_sizes_mm'] == null
+          ? null
+          : flattenJsonList(
+              override['edge_sizes_mm'],
+            ).map((e) => (e as num).toInt()).toList(),
       reps: (override['reps'] as num?)?.toInt(),
       cycles: (override['cycles'] as num?)?.toInt(),
       cycleRestSeconds: (override['cycle_rest_seconds'] as num?)?.toInt(),
