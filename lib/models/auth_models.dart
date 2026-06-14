@@ -60,8 +60,11 @@ sealed class RegisterResponse with _$RegisterResponse {
 
 @Freezed(toJson: true)
 sealed class AuthResponse with _$AuthResponse {
-  const factory AuthResponse({required String token, required User user}) =
-      _AuthResponse;
+  const factory AuthResponse({
+    required String token,
+    @JsonKey(name: 'refresh_token') String? refreshToken,
+    required User user,
+  }) = _AuthResponse;
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) =>
       _$AuthResponseFromJson(json);

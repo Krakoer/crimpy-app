@@ -69,11 +69,16 @@ Map<String, dynamic> _$RegisterResponseToJson(_RegisterResponse instance) =>
 _AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) =>
     _AuthResponse(
       token: json['token'] as String,
+      refreshToken: json['refresh_token'] as String?,
       user: User.fromJson(json['user'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$AuthResponseToJson(_AuthResponse instance) =>
-    <String, dynamic>{'token': instance.token, 'user': instance.user};
+    <String, dynamic>{
+      'token': instance.token,
+      'refresh_token': instance.refreshToken,
+      'user': instance.user,
+    };
 
 _VerifyEmailRequest _$VerifyEmailRequestFromJson(Map<String, dynamic> json) =>
     _VerifyEmailRequest(token: json['token'] as String);

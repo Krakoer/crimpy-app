@@ -10,6 +10,7 @@ class ApiClient {
       ? 'http://192.168.1.15:3000'
       : 'https://api.crimpy.app';
   static const String tokenKey = 'auth_token';
+  static const String refreshTokenKey = 'refresh_token';
 
   final Dio _dio;
   final FlutterSecureStorage _storage;
@@ -79,6 +80,32 @@ class ApiClient {
       AppLoggerHelper.info('Auth token cleared');
     } catch (e) {
       AppLoggerHelper.error('Failed to clear auth token: $e');
+    }
+  }
+
+  Future<void> saveRefreshToken(String token) async {
+    try {
+      await _storage.write(key: refreshTokenKey, value: token);
+    } catch (e) {
+      AppLoggerHelper.error('Failed to save refresh token: $e');
+      rethrow;
+    }
+  }
+
+  Future<String?> getRefreshToken() async {
+    try {
+      return await _storage.read(key: refreshTokenKey);
+    } catch (e) {
+      AppLoggerHelper.error('Failed to read refresh token: $e');
+      return null;
+    }
+  }
+
+  Future<void> clearRefreshToken() async {
+    try {
+      await _storage.delete(key: refreshTokenKey);
+    } catch (e) {
+      AppLoggerHelper.error('Failed to clear refresh token: $e');
     }
   }
 

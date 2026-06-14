@@ -15,6 +15,9 @@ class AuthService {
 
     final authResponse = AuthResponse.fromJson(response.data);
     await _apiClient.saveToken(authResponse.token);
+    if (authResponse.refreshToken != null) {
+      await _apiClient.saveRefreshToken(authResponse.refreshToken!);
+    }
 
     AppLoggerHelper.info(
       'User logged in successfully: ${authResponse.user.email}',
@@ -74,7 +77,19 @@ class AuthService {
   }
 
   Future<void> logout() async {
+    final refreshToken = await _apiClient.getRefreshToken();
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      try {
+        await _apiClient.post(
+          '/auth/logout',
+          data: {'refresh_token': refreshToken},
+        );
+      } catch (e) {
+        AppLoggerHelper.error('Failed to revoke refresh token: $e');
+      }
+    }
     await _apiClient.clearToken();
+    await _apiClient.clearRefreshToken();
     AppLoggerHelper.info('User logged out');
   }
 
