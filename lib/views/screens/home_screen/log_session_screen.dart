@@ -9,7 +9,11 @@ import 'package:intl/intl.dart';
 class LogSessionScreen extends ConsumerStatefulWidget {
   final SessionType sessionType;
 
-  const LogSessionScreen({super.key, required this.sessionType});
+  /// Optional session name, e.g. the title of a scheduled program training.
+  /// Defaults to the session type's display name.
+  final String? name;
+
+  const LogSessionScreen({super.key, required this.sessionType, this.name});
 
   @override
   ConsumerState<LogSessionScreen> createState() => _LogSessionScreenState();
@@ -218,7 +222,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
     );
 
     final session = SessionModel(
-      name: widget.sessionType.displayName,
+      name: widget.name ?? widget.sessionType.displayName,
       isAssessment: false,
       sessionType: widget.sessionType,
       durationInSeconds: _durationMinutes * 60,

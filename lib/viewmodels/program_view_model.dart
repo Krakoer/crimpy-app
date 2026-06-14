@@ -55,8 +55,9 @@ final weekDetailProvider = FutureProvider.family<Week?, WeekKey>((
 typedef ProgramTrainingKey = (String programId, String trainingId);
 
 /// The training tree referenced by a session in one of the user's programs.
-final programTrainingProvider =
-    FutureProvider.family<Training, ProgramTrainingKey>((ref, key) async {
+/// Auto-disposed so reopening a training always re-fetches fresh content.
+final programTrainingProvider = FutureProvider.autoDispose
+    .family<Training, ProgramTrainingKey>((ref, key) async {
       final repo = ref.watch(programRepositoryProvider);
       if (repo == null) throw StateError('Not authenticated');
       return repo.getProgramTraining(key.$1, key.$2);

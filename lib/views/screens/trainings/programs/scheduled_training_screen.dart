@@ -1,10 +1,12 @@
 import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
+import 'package:crimpy/views/screens/home_screen/log_session_screen.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.dart';
 import 'package:flutter/material.dart';
@@ -94,15 +96,43 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 _tunedBanner(context),
               ],
-              const SizedBox(height: 16),
-              const ProgramSectionLabel('Exercises'),
-              const SizedBox(height: 8),
-              ..._buildItems(context, training.items, overrideByItem, 0),
+              if (training.goal != null) ...[
+                const SizedBox(height: 16),
+                const ProgramSectionLabel('Goal'),
+                const SizedBox(height: 8),
+                _textBlock(training.goal!),
+              ],
+              if (training.comment != null) ...[
+                const SizedBox(height: 16),
+                const ProgramSectionLabel('Instructions'),
+                const SizedBox(height: 8),
+                _textBlock(training.comment!),
+              ],
+              if (training.items.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const ProgramSectionLabel('Exercises'),
+                const SizedBox(height: 8),
+                ..._buildItems(context, training.items, overrideByItem, 0),
+              ],
             ],
           ),
         ),
-        _startBar(context, ref, training),
+        _actionBar(context, ref, training),
       ],
+    );
+  }
+
+  Widget _textBlock(String text) {
+    return CrimpyCard.simple(
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontFamily: 'JetBrainsMono',
+          fontSize: 12,
+          height: 1.5,
+          color: CrimpyTheme.textPrimary,
+        ),
+      ),
     );
   }
 
@@ -450,9 +480,27 @@ class ScheduledTrainingScreen extends ConsumerWidget {
         .toList();
   }
 
-  Widget _startBar(BuildContext context, WidgetRef ref, Training training) {
-    final connected =
-        ref.watch(connectionStateProvider) == BleConnectionState.connected;
+  /// Whether this session occurs today: an exact date match for day-of-week
+  /// sessions, or the current week for everyday / times-per-week ones.
+  bool _isScheduledToday() {
+    final today = DateTime.now();
+    bool sameDay(DateTime a, DateTime b) =>
+        a.year == b.year && a.month == b.month && a.day == b.day;
+    switch (session.schedule) {
+      case SessionSchedule.dayOfWeek:
+        final date = session.scheduledDate(program, weekNumber);
+        return date != null && sameDay(date, today);
+      case SessionSchedule.everyday:
+      case SessionSchedule.timesPerWeek:
+        return program.isActiveOn(today) &&
+            program.currentWeekNumber(today) == weekNumber;
+    }
+  }
+
+  Widget _actionBar(BuildContext context, WidgetRef ref, Training training) {
+    // Only sensor (hangboard) trainings are run live; the others
+    // (climbing, mobility, workout) are logged as completed sessions.
+    final isSensorTraining = session.sessionType == SessionType.crimpy;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
       decoration: const BoxDecoration(
@@ -463,25 +511,66 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       ),
       child: SizedBox(
         width: double.infinity,
-        child: ElevatedButton.icon(
-          onPressed: connected
-              ? () {
-                  ref.read(bleSessionProvider.notifier).reset();
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (ctx) => PlayTrainingScreen(training),
-                    ),
-                  );
-                }
-              : null,
-          icon: const Icon(Icons.play_arrow),
-          label: Text(connected ? 'START TRAINING' : 'CONNECT SENSOR TO START'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: CrimpyTheme.primaryOrange,
-            foregroundColor: CrimpyTheme.bgPrimary,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-          ),
-        ),
+        child: isSensorTraining
+            ? _startButton(context, ref, training)
+            : _logButton(context),
+      ),
+    );
+  }
+
+  Widget _startButton(BuildContext context, WidgetRef ref, Training training) {
+    final connected =
+        ref.watch(connectionStateProvider) == BleConnectionState.connected;
+    return ElevatedButton.icon(
+      onPressed: connected
+          ? () {
+              ref.read(bleSessionProvider.notifier).reset();
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (ctx) => PlayTrainingScreen(training),
+                ),
+              );
+            }
+          : null,
+      icon: const Icon(Icons.play_arrow),
+      label: Text(connected ? 'START TRAINING' : 'CONNECT SENSOR TO START'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: CrimpyTheme.primaryOrange,
+        foregroundColor: CrimpyTheme.bgPrimary,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+      ),
+    );
+  }
+
+  Widget _logButton(BuildContext context) {
+    final color = programSessionColor(session.sessionType);
+    final canLog = _isScheduledToday();
+    final date = session.scheduledDate(program, weekNumber);
+    final label = canLog
+        ? 'LOG AS DONE'
+        : date != null
+        ? 'SCHEDULED ${date.day} ${_months[date.month - 1]}'
+        : 'NOT SCHEDULED TODAY';
+
+    return ElevatedButton.icon(
+      onPressed: canLog
+          ? () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => LogSessionScreen(
+                    sessionType: session.sessionType,
+                    name: session.trainingTitle,
+                  ),
+                ),
+              );
+            }
+          : null,
+      icon: const Icon(Icons.check),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: CrimpyTheme.bgPrimary,
+        padding: const EdgeInsets.symmetric(vertical: 14),
       ),
     );
   }
