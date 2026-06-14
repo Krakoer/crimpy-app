@@ -14,6 +14,10 @@ class ApiClient {
   final Dio _dio;
   final FlutterSecureStorage _storage;
 
+  /// Called after the token is cleared on a 401 for a protected request so the
+  /// auth state can drop to guest mode instead of looping on denied requests.
+  void Function()? onUnauthorized;
+
   ApiClient({FlutterSecureStorage? storage})
     : _storage = storage ?? const FlutterSecureStorage(),
       _dio = Dio(
@@ -37,9 +41,11 @@ class ApiClient {
           return handler.next(options);
         },
         onError: (error, handler) async {
-          if (error.response?.statusCode == 401) {
+          final isProtected = error.requestOptions.path.startsWith('/api/');
+          if (error.response?.statusCode == 401 && isProtected) {
             AppLoggerHelper.info('Token expired, clearing stored token');
             await clearToken();
+            onUnauthorized?.call();
           }
           _logDeniedRequest(error);
           return handler.next(error);

@@ -28,7 +28,9 @@ class LocalImportStatus {
 
 @riverpod
 ApiClient apiClient(Ref ref) {
-  return ApiClient();
+  final client = ApiClient();
+  client.onUnauthorized = () => ref.invalidate(authStateProvider);
+  return client;
 }
 
 @riverpod
@@ -43,6 +45,13 @@ class AuthState extends _$AuthState {
   Future<auth_models.User?> build() async {
     final dbUser = await gDatabase.getCurrentUser();
     if (dbUser == null) return null;
+
+    // A stored user without a token is a stale, inconsistent state (e.g. the
+    // token expired or was cleared by the 401 interceptor). Treat it as logged
+    // out so the app falls back to guest mode instead of looping on
+    // unauthorized requests.
+    final hasToken = await ref.read(apiClientProvider).hasToken();
+    if (!hasToken) return null;
 
     return auth_models.User(
       id: dbUser.id,
