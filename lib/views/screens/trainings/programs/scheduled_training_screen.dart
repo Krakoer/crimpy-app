@@ -15,15 +15,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-const _dowLong = [
-  'MONDAY',
-  'TUESDAY',
-  'WEDNESDAY',
-  'THURSDAY',
-  'FRIDAY',
-  'SATURDAY',
-  'SUNDAY',
-];
 const _months = [
   'JAN',
   'FEB',
@@ -143,7 +134,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     final color = programSessionColor(type);
     final schedule = switch (session.schedule) {
       SessionSchedule.dayOfWeek when date != null =>
-        '${_dowLong[session.dayOfWeek!]} - ${date.day} ${_months[date.month - 1]}',
+        '${weekdayShort(date)} - ${date.day} ${_months[date.month - 1]}',
       SessionSchedule.everyday => 'EVERY DAY',
       _ => '${session.timesPerWeek ?? 0}x - ANY DAY',
     };

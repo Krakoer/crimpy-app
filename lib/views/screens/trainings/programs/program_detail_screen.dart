@@ -10,8 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-const _dayInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-const _dowLong = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 const _months = [
   'JAN',
   'FEB',
@@ -315,13 +313,15 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
         final today = DateTime.now();
         // Each day carries its day-specific sessions plus the everyday ones.
         final byDay = {for (var d = 0; d < 7; d++) d: week.sessionsOnDay(d)};
-        final todayIndex = today.weekday - 1;
-        final todayInWeek = _isSameDay(_dateForDay(todayIndex), today);
+        // day_of_week is an offset from the week start, so find today's column
+        // by its actual date rather than by the calendar weekday.
+        final todayCol = widget.program.dayOffsetOf(widget.weekNumber, today);
+        final todayInWeek = todayCol >= 0 && todayCol < 7;
 
         final selected =
             _selectedDay ??
             (todayInWeek
-                ? todayIndex
+                ? todayCol
                 : List.generate(
                     7,
                     (d) => d,
@@ -344,7 +344,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
             Text(
               _isSameDay(selectedDate, today)
                   ? 'TODAY - ${_shortDate(selectedDate)}'
-                  : '${_dowLong[selected]} - ${_shortDate(selectedDate)}',
+                  : '${weekdayShort(selectedDate)} - ${_shortDate(selectedDate)}',
               style: const TextStyle(
                 fontFamily: 'JetBrainsMono',
                 fontSize: 11,
@@ -437,7 +437,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
               child: Column(
                 children: [
                   Text(
-                    _dayInitials[d],
+                    weekdayInitial(date),
                     style: TextStyle(
                       fontFamily: 'JetBrainsMono',
                       fontSize: 9,
@@ -604,7 +604,8 @@ class _CalendarView extends StatelessWidget {
                 (d) => Expanded(
                   child: Center(
                     child: Text(
-                      _dayInitials[d],
+                      // Offset d from the program start; label its real weekday.
+                      weekdayInitial(program.startDate.add(Duration(days: d))),
                       style: const TextStyle(
                         fontFamily: 'JetBrainsMono',
                         fontSize: 9,

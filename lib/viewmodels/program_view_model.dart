@@ -114,9 +114,10 @@ final activeProgramWeekProvider = FutureProvider<ActiveProgramWeek?>((
 final todayTrainingsProvider = FutureProvider<List<TodayTraining>>((ref) async {
   final active = await ref.watch(activeProgramWeekProvider.future);
   if (active == null) return [];
-  final dayOfWeek = DateTime.now().weekday - 1; // Mon=1..Sun=7 -> 0..6
+  // day_of_week is an offset from the program start, not a calendar weekday.
+  final offset = active.program.dayOffsetOf(active.weekNumber, DateTime.now());
   return active.week
-      .sessionsOnDay(dayOfWeek)
+      .sessionsOnDay(offset)
       .map(
         (s) => TodayTraining(
           program: active.program,

@@ -75,6 +75,23 @@ void main() {
     );
   });
 
+  test('day offset is measured from the week start, not the weekday', () {
+    // Program starting on a Sunday: day_of_week is an offset, not a weekday.
+    final program = Program(
+      id: 'p',
+      coachId: 'c',
+      userId: 'u',
+      name: 'Block',
+      startDate: DateTime(2026, 6, 7), // Sunday
+      durationWeeks: 6,
+      createdAt: DateTime(2026, 6, 7),
+      updatedAt: DateTime(2026, 6, 7),
+    );
+    expect(program.weekStart(2), DateTime(2026, 6, 14));
+    // Monday 15 Jun is offset 1 within week 2, not weekday-index 0.
+    expect(program.dayOffsetOf(2, DateTime(2026, 6, 15)), 1);
+  });
+
   test('sessions outside the week are not counted', () {
     final program = _program();
     final s = _flexSession();

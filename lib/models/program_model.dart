@@ -68,6 +68,16 @@ class Program {
     final end = endDate;
     return end == null || !d.isAfter(end);
   }
+
+  /// First calendar day of [weekNumber]. day_of_week is an offset from here, so
+  /// the program need not start on a Monday.
+  DateTime weekStart(int weekNumber) =>
+      _dateOnly(startDate).add(Duration(days: (weekNumber - 1) * 7));
+
+  /// The day-of-week offset (0..6) that [date] occupies within [weekNumber],
+  /// or a value outside 0..6 when [date] is not in that week.
+  int dayOffsetOf(int weekNumber, DateTime date) =>
+      _dateOnly(date).difference(weekStart(weekNumber)).inDays;
 }
 
 /// A week entry in the program list (no sessions).

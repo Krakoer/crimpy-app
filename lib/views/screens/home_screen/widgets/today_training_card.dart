@@ -139,8 +139,11 @@ class _ProgramTodayCard extends ConsumerWidget {
     final activeWeek = ref.watch(activeProgramWeekProvider).asData?.value;
     if (activeWeek == null) return const SizedBox.shrink();
     final sessions = ref.watch(sessionsProvider).asData?.value ?? [];
-    final dayOfWeek = DateTime.now().weekday - 1;
-    final today = activeWeek.week.sessionsOnDay(dayOfWeek);
+    final offset = activeWeek.program.dayOffsetOf(
+      activeWeek.weekNumber,
+      DateTime.now(),
+    );
+    final today = activeWeek.week.sessionsOnDay(offset);
     final flex = activeWeek.week.timesPerWeekSessions;
 
     return Padding(

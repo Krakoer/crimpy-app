@@ -8,6 +8,15 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 /// Accent color for a session type (reuses SessionType.colorValue).
 Color programSessionColor(SessionType type) => Color(type.colorValue);
 
+const _weekdayInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S']; // Mon..Sun
+const _weekdayShort = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+
+/// Single-letter label for the real weekday of [date].
+String weekdayInitial(DateTime date) => _weekdayInitials[date.weekday - 1];
+
+/// Three-letter label for the real weekday of [date].
+String weekdayShort(DateTime date) => _weekdayShort[date.weekday - 1];
+
 /// Short uppercase label for a session type, matching the program design.
 String programSessionLabel(SessionType type) => switch (type) {
   SessionType.crimpy => 'HANGBOARD',
