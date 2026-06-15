@@ -17,16 +17,6 @@ bool _matchesTraining(String sessionName, String trainingTitle) {
       sessionName.startsWith('$trainingTitle-');
 }
 
-/// First day (inclusive) of [weekNumber] for [program].
-DateTime weekStartDate(Program program, int weekNumber) {
-  final start = DateTime(
-    program.startDate.year,
-    program.startDate.month,
-    program.startDate.day,
-  );
-  return start.add(Duration(days: (weekNumber - 1) * 7));
-}
-
 /// How many matching sessions were completed during [weekNumber].
 int completionsInWeek(
   List<SessionModel> sessions,
@@ -34,7 +24,7 @@ int completionsInWeek(
   int weekNumber,
   WeekSession scheduled,
 ) {
-  final start = weekStartDate(program, weekNumber);
+  final start = program.weekStart(weekNumber);
   final end = start.add(const Duration(days: 7));
   return sessions
       .where(

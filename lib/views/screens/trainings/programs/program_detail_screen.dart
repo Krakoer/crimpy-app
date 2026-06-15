@@ -400,9 +400,9 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
     );
   }
 
-  DateTime _dateForDay(int dayOfWeek) => widget.program.startDate.add(
-    Duration(days: (widget.weekNumber - 1) * 7 + dayOfWeek),
-  );
+  DateTime _dateForDay(int dayOfWeek) => widget.program
+      .weekStart(widget.weekNumber)
+      .add(Duration(days: dayOfWeek));
 
   Widget _dayPicker(Map<int, List<WeekSession>> byDay, int selected) {
     final today = DateTime.now();
@@ -604,8 +604,10 @@ class _CalendarView extends StatelessWidget {
                 (d) => Expanded(
                   child: Center(
                     child: Text(
-                      // Offset d from the program start; label its real weekday.
-                      weekdayInitial(program.startDate.add(Duration(days: d))),
+                      // Columns run Monday-Sunday.
+                      weekdayInitial(
+                        program.weekStart(1).add(Duration(days: d)),
+                      ),
                       style: const TextStyle(
                         fontFamily: 'JetBrainsMono',
                         fontSize: 9,

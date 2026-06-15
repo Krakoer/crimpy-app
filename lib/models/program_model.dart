@@ -52,11 +52,11 @@ class Program {
   /// Inclusive last day of the program, or null when duration is unset.
   DateTime? get endDate => durationWeeks == null
       ? null
-      : _dateOnly(startDate).add(Duration(days: durationWeeks! * 7 - 1));
+      : weekStart(1).add(Duration(days: durationWeeks! * 7 - 1));
 
   /// 1-based week number containing [day], clamped to at least 1.
   int currentWeekNumber(DateTime day) {
-    final diff = _dateOnly(day).difference(_dateOnly(startDate)).inDays;
+    final diff = _mondayOf(day).difference(weekStart(1)).inDays;
     final week = (diff ~/ 7) + 1;
     return week < 1 ? 1 : week;
   }
@@ -69,15 +69,21 @@ class Program {
     return end == null || !d.isAfter(end);
   }
 
-  /// First calendar day of [weekNumber]. day_of_week is an offset from here, so
-  /// the program need not start on a Monday.
+  /// First day (a Monday) of [weekNumber]. Weeks always run Monday-Sunday, so
+  /// day_of_week 0 is Monday even when the program starts mid-week.
   DateTime weekStart(int weekNumber) =>
-      _dateOnly(startDate).add(Duration(days: (weekNumber - 1) * 7));
+      _mondayOf(startDate).add(Duration(days: (weekNumber - 1) * 7));
 
-  /// The day-of-week offset (0..6) that [date] occupies within [weekNumber],
-  /// or a value outside 0..6 when [date] is not in that week.
+  /// The day-of-week index (0=Mon..6=Sun) that [date] occupies within
+  /// [weekNumber], or a value outside 0..6 when [date] is not in that week.
   int dayOffsetOf(int weekNumber, DateTime date) =>
       _dateOnly(date).difference(weekStart(weekNumber)).inDays;
+}
+
+/// The Monday of the calendar week containing [d].
+DateTime _mondayOf(DateTime d) {
+  final day = _dateOnly(d);
+  return day.subtract(Duration(days: day.weekday - 1));
 }
 
 /// A week entry in the program list (no sessions).
@@ -208,9 +214,7 @@ class WeekSession {
   /// Null for flexible (non day-of-week) sessions.
   DateTime? scheduledDate(Program program, int weekNumber) {
     if (dayOfWeek == null) return null;
-    return _dateOnly(
-      program.startDate,
-    ).add(Duration(days: (weekNumber - 1) * 7 + dayOfWeek!));
+    return program.weekStart(weekNumber).add(Duration(days: dayOfWeek!));
   }
 }
 
