@@ -1,4 +1,3 @@
-import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
@@ -9,6 +8,7 @@ import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/log_session_screen.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.dart';
+import 'package:crimpy/views/widgets/ble/connection_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -493,9 +493,8 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   }
 
   Widget _actionBar(BuildContext context, WidgetRef ref, Training training) {
-    // Only sensor (hangboard) trainings are run live; the others
-    // (climbing, mobility, workout) are logged as completed sessions.
-    final isSensorTraining = session.sessionType == SessionType.crimpy;
+    // Every training can be run except climbing, which is only logged.
+    final logOnly = session.sessionType == SessionType.climbing;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
       decoration: const BoxDecoration(
@@ -506,33 +505,70 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       ),
       child: SizedBox(
         width: double.infinity,
-        child: isSensorTraining
-            ? _startButton(context, ref, training)
-            : _logButton(context),
+        child: logOnly
+            ? _logButton(context)
+            : _startButton(context, ref, training),
       ),
     );
   }
 
   Widget _startButton(BuildContext context, WidgetRef ref, Training training) {
-    final connected =
-        ref.watch(connectionStateProvider) == BleConnectionState.connected;
     return ElevatedButton.icon(
-      onPressed: connected
-          ? () {
-              ref.read(bleSessionProvider.notifier).reset();
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: (ctx) => PlayTrainingScreen(training),
-                ),
-              );
-            }
-          : null,
+      onPressed: () => _startRun(context, ref, training),
       icon: const Icon(Icons.play_arrow),
-      label: Text(connected ? 'START TRAINING' : 'CONNECT SENSOR TO START'),
+      label: const Text('START TRAINING'),
       style: ElevatedButton.styleFrom(
         backgroundColor: CrimpyTheme.primaryOrange,
         foregroundColor: CrimpyTheme.bgPrimary,
         padding: const EdgeInsets.symmetric(vertical: 14),
+      ),
+    );
+  }
+
+  /// Starts the run. If the training can be measured with the force sensor,
+  /// asks whether the user has one and lets them connect; otherwise (or if they
+  /// decline) the training runs without the gauge.
+  Future<void> _startRun(
+    BuildContext context,
+    WidgetRef ref,
+    Training training,
+  ) async {
+    var useSensor = false;
+    if (training.canUseSensor) {
+      final hasSensor = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Force sensor'),
+          content: const Text(
+            'Do you have a Crimpy force sensor to measure this training?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Run without'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Yes, connect'),
+            ),
+          ],
+        ),
+      );
+      if (!context.mounted) return;
+      if (hasSensor == true) {
+        final connected = await showDialog<bool>(
+          context: context,
+          builder: (_) => const ConnectionDialog(),
+        );
+        if (!context.mounted) return;
+        useSensor = connected == true;
+      }
+    }
+    ref.read(bleSessionProvider.notifier).reset();
+    if (!context.mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PlayTrainingScreen(training, useSensor: useSensor),
       ),
     );
   }
