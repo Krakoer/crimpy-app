@@ -174,11 +174,13 @@ class WeekProgressBar extends StatelessWidget {
 class ScheduledTrainingRow extends StatelessWidget {
   final WeekSession session;
   final DateTime? date;
+  final bool done;
   final VoidCallback? onTap;
 
   const ScheduledTrainingRow({
     required this.session,
     this.date,
+    this.done = false,
     this.onTap,
     super.key,
   });
@@ -188,7 +190,7 @@ class ScheduledTrainingRow extends StatelessWidget {
     final type = session.sessionType;
     final color = programSessionColor(type);
     final status = scheduleStatusFor(date, DateTime.now());
-    final due = status == ScheduleStatus.due;
+    final due = status == ScheduleStatus.due && !done;
     final borderColor = due
         ? CrimpyTheme.primaryOrange
         : CrimpyTheme.borderDefault;
@@ -219,11 +221,14 @@ class ScheduledTrainingRow extends StatelessWidget {
                       session.trainingTitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'JetBrainsMono',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: CrimpyTheme.textPrimary,
+                        color: done
+                            ? CrimpyTheme.textMuted
+                            : CrimpyTheme.textPrimary,
+                        decoration: done ? TextDecoration.lineThrough : null,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -240,7 +245,14 @@ class ScheduledTrainingRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              ScheduleStatusTag(status: status),
+              if (done)
+                Icon(
+                  FontAwesomeIcons.circleCheck,
+                  size: 20,
+                  color: CrimpyTheme.statusSuccess,
+                )
+              else
+                ScheduleStatusTag(status: status),
             ],
           ),
         ),
@@ -250,18 +262,25 @@ class ScheduledTrainingRow extends StatelessWidget {
 }
 
 /// A "do it N times this week" training, shown with a dashed border and a row
-/// of frequency pips (no completion data is available from the coachee API).
+/// of frequency pips filled up to [doneCount].
 class FlexTrainingRow extends StatelessWidget {
   final WeekSession session;
+  final int doneCount;
   final VoidCallback? onTap;
 
-  const FlexTrainingRow({required this.session, this.onTap, super.key});
+  const FlexTrainingRow({
+    required this.session,
+    this.doneCount = 0,
+    this.onTap,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     final type = session.sessionType;
     final color = programSessionColor(type);
     final times = session.timesPerWeek ?? 0;
+    final complete = doneCount >= times;
 
     return GestureDetector(
       onTap: onTap,
@@ -312,12 +331,12 @@ class FlexTrainingRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${times}x / WEEK',
+                    complete ? 'DONE' : '$doneCount/${times}x',
                     style: TextStyle(
                       fontFamily: 'JetBrainsMono',
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: color,
+                      color: complete ? CrimpyTheme.statusSuccess : color,
                     ),
                   ),
                   const SizedBox(height: 5),
@@ -330,6 +349,7 @@ class FlexTrainingRow extends StatelessWidget {
                         height: 8,
                         margin: EdgeInsets.only(left: i == 0 ? 0 : 3),
                         decoration: BoxDecoration(
+                          color: i < doneCount ? color : null,
                           border: Border.all(color: color, width: 1.5),
                         ),
                       ),

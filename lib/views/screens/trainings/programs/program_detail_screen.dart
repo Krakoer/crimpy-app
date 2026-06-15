@@ -1,7 +1,9 @@
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/program_completion.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
+import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/trainings/programs/scheduled_training_screen.dart';
 import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.dart';
 import 'package:flutter/material.dart';
@@ -328,6 +330,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
         final selectedSessions = byDay[selected]!;
         final selectedDate = _dateForDay(selected);
         final timesPerWeek = week.timesPerWeekSessions;
+        final sessions = ref.watch(sessionsProvider).asData?.value ?? [];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,6 +363,13 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
                   child: ScheduledTrainingRow(
                     session: s,
                     date: selectedDate,
+                    done: isScheduledTrainingDone(
+                      sessions,
+                      widget.program,
+                      widget.weekNumber,
+                      s,
+                      date: selectedDate,
+                    ),
                     onTap: () => widget.onOpen(s, widget.weekNumber),
                   ),
                 ),
@@ -373,6 +383,12 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
                   padding: const EdgeInsets.only(bottom: 10),
                   child: FlexTrainingRow(
                     session: s,
+                    doneCount: completionsInWeek(
+                      sessions,
+                      widget.program,
+                      widget.weekNumber,
+                      s,
+                    ),
                     onTap: () => widget.onOpen(s, widget.weekNumber),
                   ),
                 ),

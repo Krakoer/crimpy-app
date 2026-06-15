@@ -3,8 +3,10 @@ import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/program_completion.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
+import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/log_session_screen.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.dart';
@@ -495,6 +497,14 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   Widget _actionBar(BuildContext context, WidgetRef ref, Training training) {
     // Every training can be run except climbing, which is only logged.
     final logOnly = session.sessionType == SessionType.climbing;
+    final sessions = ref.watch(sessionsProvider).asData?.value ?? [];
+    final done = isScheduledTrainingDone(
+      sessions,
+      program,
+      weekNumber,
+      session,
+      date: session.scheduledDate(program, weekNumber) ?? DateTime.now(),
+    );
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
       decoration: const BoxDecoration(
@@ -505,9 +515,42 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       ),
       child: SizedBox(
         width: double.infinity,
-        child: logOnly
+        child: done
+            ? _doneButton()
+            : logOnly
             ? _logButton(context)
             : _startButton(context, ref, training),
+      ),
+    );
+  }
+
+  Widget _doneButton() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: CrimpyTheme.statusSuccess.withValues(alpha: 0.12),
+        border: Border.all(color: CrimpyTheme.statusSuccess, width: 2),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            FontAwesomeIcons.circleCheck,
+            size: 16,
+            color: CrimpyTheme.statusSuccess,
+          ),
+          const SizedBox(width: 8),
+          const Text(
+            'DONE',
+            style: TextStyle(
+              fontFamily: 'JetBrainsMono',
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: CrimpyTheme.statusSuccess,
+            ),
+          ),
+        ],
       ),
     );
   }
