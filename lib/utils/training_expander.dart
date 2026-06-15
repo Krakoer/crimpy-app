@@ -18,6 +18,13 @@ List<TrainingExecutionItem> expandTrainingItems(
   return out;
 }
 
+/// Total timed duration of a training in seconds. Self-paced (rep-based) steps
+/// contribute 0, so this is an estimate for trainings that mix the two.
+int trainingDurationSeconds(Training training) => expandTrainingItems(
+  training,
+  useSensor: false,
+).fold(0, (sum, item) => sum + item.durationSeconds);
+
 void _expandItem(
   TrainingItem item,
   List<TrainingExecutionItem> out,

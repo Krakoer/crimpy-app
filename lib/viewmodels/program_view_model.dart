@@ -63,7 +63,7 @@ final programTrainingProvider = FutureProvider.autoDispose
       return repo.getProgramTraining(key.$1, key.$2);
     });
 
-/// Today's scheduled training within the active program.
+/// A scheduled training within the active program, with its context.
 class TodayTraining {
   final Program program;
   final int weekNumber;
@@ -76,8 +76,23 @@ class TodayTraining {
   });
 }
 
-/// The training scheduled for today, or null on a rest day / with no program.
-final todayTrainingProvider = FutureProvider<TodayTraining?>((ref) async {
+/// The active program together with the week covering today, or null when
+/// there is no active program or the current week is not defined.
+class ActiveProgramWeek {
+  final Program program;
+  final int weekNumber;
+  final Week week;
+
+  const ActiveProgramWeek({
+    required this.program,
+    required this.weekNumber,
+    required this.week,
+  });
+}
+
+final activeProgramWeekProvider = FutureProvider<ActiveProgramWeek?>((
+  ref,
+) async {
   final program = await ref.watch(activeProgramProvider.future);
   if (program == null) return null;
   final today = DateTime.now();
@@ -87,12 +102,33 @@ final todayTrainingProvider = FutureProvider<TodayTraining?>((ref) async {
     weekDetailProvider((program.id, weekNumber)).future,
   );
   if (week == null) return null;
-  final dayOfWeek = today.weekday - 1; // Dart Mon=1..Sun=7 -> 0..6
-  final todays = week.sessionsOnDay(dayOfWeek);
-  if (todays.isEmpty) return null;
-  return TodayTraining(
+  return ActiveProgramWeek(
     program: program,
     weekNumber: weekNumber,
-    session: todays.first,
+    week: week,
   );
+});
+
+/// All trainings scheduled for today (day-of-week + everyday) in the active
+/// program. Empty on a rest day or with no active program.
+final todayTrainingsProvider = FutureProvider<List<TodayTraining>>((ref) async {
+  final active = await ref.watch(activeProgramWeekProvider.future);
+  if (active == null) return [];
+  final dayOfWeek = DateTime.now().weekday - 1; // Mon=1..Sun=7 -> 0..6
+  return active.week
+      .sessionsOnDay(dayOfWeek)
+      .map(
+        (s) => TodayTraining(
+          program: active.program,
+          weekNumber: active.weekNumber,
+          session: s,
+        ),
+      )
+      .toList();
+});
+
+/// The first training scheduled for today, or null on a rest day.
+final todayTrainingProvider = FutureProvider<TodayTraining?>((ref) async {
+  final list = await ref.watch(todayTrainingsProvider.future);
+  return list.isEmpty ? null : list.first;
 });
