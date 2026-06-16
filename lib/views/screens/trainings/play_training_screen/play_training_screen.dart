@@ -218,28 +218,32 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       isPrep: isPrep,
     );
 
-    // Header above the circle (kind-specific), in a fixed-height slot so the
-    // circle stays at the same place for sensor / no-sensor / rest steps.
+    // Header above the circle (kind-specific).
     final Widget header = sensor
         ? HandLabel(handSide: rep.handSide, gripPosition: rep.gripPosition)
         : rep.isRest
         ? const SizedBox.shrink()
         : _stageHeader(rep.label, rep.targetWeight);
 
-    // Content below the circle, also in a fixed-height slot.
+    // Content below the circle.
     final Widget below = sensor
         ? timerDisplay
         : (rep.isRest && hasNext)
         ? NextRepPreview(nextRep: timer.repetitions[timer.currentRepIndex + 1])
         : const SizedBox.shrink();
 
+    // Equal flexible regions above and below keep the circle vertically
+    // centred at the same place regardless of step kind, and absorb any slack
+    // so the column never overflows. Surrounding content scales down to fit.
+    Widget slot(Widget child) => Expanded(
+      child: Center(
+        child: FittedBox(fit: BoxFit.scaleDown, child: child),
+      ),
+    );
+
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(height: 80, child: Center(child: header)),
-        // The circle: live gauge for sensor hangs, the countdown centred
-        // inside the timer ring otherwise (no empty circle).
+        slot(header),
         SizedBox(
           width: gaugeSize,
           height: gaugeSize,
@@ -257,7 +261,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             ],
           ),
         ),
-        SizedBox(height: 130, child: Center(child: below)),
+        slot(below),
       ],
     );
   }
