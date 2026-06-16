@@ -223,11 +223,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       mainAxisSize: MainAxisSize.min,
       children: [
         // Header above the circle.
-        if (sensor) ...[
-          HandLabel(handSide: rep.handSide, gripPosition: rep.gripPosition),
-          if (rep.subtitle != null) _subtitleText(rep.subtitle!),
-        ] else if (!rep.isRest)
-          _stageHeader(rep.label, rep.subtitle, rep.targetWeight),
+        if (sensor)
+          HandLabel(handSide: rep.handSide, gripPosition: rep.gripPosition)
+        else if (!rep.isRest)
+          _stageHeader(rep.label, rep.targetWeight),
         // The circle: live gauge for sensor hangs, the countdown centred
         // inside the timer ring otherwise (no empty circle).
         SizedBox(
@@ -256,6 +255,28 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     );
   }
 
+  /// Set/rep/round context of the current step, or the next upcoming step that
+  /// has one (so it stays visible during rests and the preparation period).
+  String? _currentContext() {
+    for (var i = timer.currentRepIndex; i < timer.repetitions.length; i++) {
+      final subtitle = timer.repetitions[i].subtitle;
+      if (subtitle != null) return subtitle;
+    }
+    return null;
+  }
+
+  Widget _contextSlot() {
+    final context = _currentContext();
+    return SizedBox(
+      height: 40,
+      child: Center(
+        child: context == null
+            ? const SizedBox.shrink()
+            : _subtitleText(context),
+      ),
+    );
+  }
+
   Widget _subtitleText(String text) => Container(
     margin: const EdgeInsets.only(bottom: 8),
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
@@ -276,7 +297,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     ),
   );
 
-  Widget _stageHeader(String? label, String? subtitle, double targetWeight) {
+  Widget _stageHeader(String? label, double targetWeight) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -293,10 +314,6 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
               color: CrimpyTheme.primaryOrange,
             ),
           ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 4),
-            _subtitleText(subtitle),
-          ],
           if (targetWeight > 0)
             Text(
               'TARGET ${targetWeight.toStringAsFixed(targetWeight.truncateToDouble() == targetWeight ? 0 : 1)} kg',
@@ -324,10 +341,6 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (rep.subtitle != null) ...[
-            _subtitleText(rep.subtitle!),
-            const SizedBox(height: 4),
-          ],
           Text(
             (rep.label ?? 'Exercise').toUpperCase(),
             textAlign: TextAlign.center,
@@ -437,6 +450,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                       (r) => r.isConfirm,
                     ),
                   ),
+                  // Fixed context slot (set/rep/round), always at the same place
+                  // and shown during rests via look-ahead to the next step.
+                  _contextSlot(),
                   // Main content area
                   Expanded(
                     child: Center(
