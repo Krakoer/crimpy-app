@@ -78,6 +78,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
               gripPosition: item.gripPosition,
               showGauge: item.collectSensorData,
               label: item.label,
+              subtitle: item.subtitle,
             ),
           );
         case RestItem():
@@ -102,6 +103,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
               label: item.label,
               reps: item.reps,
               load: item.load,
+              subtitle: item.subtitle,
             ),
           );
       }
@@ -205,33 +207,35 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
   Widget _buildTimedContent(double gaugeSize, double timerFontSize) {
     final rep = timer.currentRep;
+    final isPrep = timer.currentRepIndex == 0;
+    final hasNext = timer.currentRepIndex < timer.repetitions.length - 1;
+    final sensor = rep.showGauge;
+
+    final timerDisplay = TrainingTimerDisplay(
+      secondsRemaining: timer.currentRepRemaining,
+      isRest: rep.isRest,
+      fontSize: sensor ? timerFontSize * 1.4 : timerFontSize,
+      isPrep: isPrep,
+    );
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Label above the gauge during work.
-        if (!rep.isRest)
-          rep.showGauge
-              ? HandLabel(
-                  handSide: rep.handSide,
-                  gripPosition: rep.gripPosition,
-                )
-              : Text(
-                  (rep.label ?? 'WORK').toUpperCase(),
-                  style: const TextStyle(
-                    fontFamily: 'JetBrainsMono',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: CrimpyTheme.textSecondary,
-                  ),
-                ),
+        // Header above the circle.
+        if (sensor) ...[
+          HandLabel(handSide: rep.handSide, gripPosition: rep.gripPosition),
+          if (rep.subtitle != null) _subtitleText(rep.subtitle!),
+        ] else if (!rep.isRest)
+          _stageHeader(rep.label, rep.subtitle, rep.targetWeight),
+        // The circle: live gauge for sensor hangs, the countdown centred
+        // inside the timer ring otherwise (no empty circle).
         SizedBox(
           width: gaugeSize,
           height: gaugeSize,
           child: Stack(
             alignment: Alignment.center,
             children: [
-              if (rep.showGauge) Gauge(rep.targetWeight),
               AnimatedBuilder(
                 animation: _serieController,
                 builder: (ctx, child) => WorkoutCircle(
@@ -239,19 +243,66 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                   rest: rep.isRest,
                 ),
               ),
+              if (sensor) Gauge(rep.targetWeight) else timerDisplay,
             ],
           ),
         ),
-        const SizedBox(height: 32),
-        TrainingTimerDisplay(
-          secondsRemaining: timer.currentRepRemaining,
-          isRest: rep.isRest,
-          fontSize: timerFontSize * 1.4,
-          isPrep: timer.currentRepIndex == 0,
-        ),
-        if (rep.isRest && timer.currentRepIndex < timer.repetitions.length - 1)
+        if (sensor) ...[const SizedBox(height: 24), timerDisplay],
+        if (rep.isRest && hasNext) ...[
+          const SizedBox(height: 16),
           NextRepPreview(nextRep: timer.repetitions[timer.currentRepIndex + 1]),
+        ],
       ],
+    );
+  }
+
+  Widget _subtitleText(String text) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Text(
+      text,
+      style: const TextStyle(
+        fontFamily: 'JetBrainsMono',
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.5,
+        color: CrimpyTheme.textSecondary,
+      ),
+    ),
+  );
+
+  Widget _stageHeader(String? label, String? subtitle, double targetWeight) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            (label ?? 'WORK').toUpperCase(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'JetBrainsMono',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+              color: CrimpyTheme.primaryOrange,
+            ),
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 4),
+            _subtitleText(subtitle),
+          ],
+          if (targetWeight > 0)
+            Text(
+              'TARGET ${targetWeight.toStringAsFixed(targetWeight.truncateToDouble() == targetWeight ? 0 : 1)} kg',
+              style: const TextStyle(
+                fontFamily: 'JetBrainsMono',
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: CrimpyTheme.textMuted,
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -267,6 +318,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (rep.subtitle != null) ...[
+            _subtitleText(rep.subtitle!),
+            const SizedBox(height: 4),
+          ],
           Text(
             (rep.label ?? 'Exercise').toUpperCase(),
             textAlign: TextAlign.center,

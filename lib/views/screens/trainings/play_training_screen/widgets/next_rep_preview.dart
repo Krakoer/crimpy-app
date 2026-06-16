@@ -20,15 +20,26 @@ class NextRepPreview extends StatelessWidget {
   }
 
   String _getDescription() {
-    if (nextRep.isRest) {
-      final duration = nextRep.durationInSeconds;
-      return 'Rest ${duration}s';
-    } else {
-      final hand = _getHandLabel(nextRep.handSide);
-      final weight = nextRep.targetWeight;
-      final duration = nextRep.durationInSeconds;
-      return '$hand, ${weight.toStringAsFixed(weight.truncateToDouble() == weight ? 0 : 1)}kg, ${duration}s';
+    final r = nextRep;
+    if (r.isRest) return 'Rest ${r.durationInSeconds}s';
+    if (r.isConfirm) {
+      return [
+        r.label ?? 'Exercise',
+        if (r.reps != null) '${r.reps} reps',
+        if (r.load != null) r.load!,
+      ].join(' - ');
     }
+    if (r.showGauge) {
+      final w = r.targetWeight;
+      return [
+        _getHandLabel(r.handSide),
+        r.gripPosition.shortName,
+        if (w > 0) '${w.toStringAsFixed(w.truncateToDouble() == w ? 0 : 1)}kg',
+        '${r.durationInSeconds}s',
+      ].join(' - ');
+    }
+    // Timed work without a sensor (e.g. a duration exercise).
+    return '${r.label ?? 'Work'} - ${r.durationInSeconds}s';
   }
 
   @override

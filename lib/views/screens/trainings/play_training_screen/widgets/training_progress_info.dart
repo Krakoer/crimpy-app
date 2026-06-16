@@ -13,17 +13,19 @@ class TrainingProgressInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final value = totalReps <= 0
+        ? 0.0
+        : (currentRepIndex / totalReps).clamp(0.0, 1.0);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Center(
-        child: Text(
-          '${currentRepIndex + 1}/$totalReps',
-          style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-            color: CrimpyTheme.primaryBlack,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: LinearProgressIndicator(
+          value: value,
+          minHeight: 6,
+          backgroundColor: CrimpyTheme.gray200,
+          color: CrimpyTheme.primaryOrange,
         ),
       ),
     );
