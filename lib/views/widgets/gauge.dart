@@ -65,9 +65,9 @@ class WeightGaugePainter extends CustomPainter {
       ..color = CrimpyTheme.gray100
       ..style = PaintingStyle.fill;
 
-    // Paint for dark gray fill
+    // Paint for the liquid fill: turns green once the target is reached.
     final darkGrayPaint = Paint()
-      ..color = targetMatched ? CrimpyTheme.primaryBlack : CrimpyTheme.gray600
+      ..color = targetMatched ? CrimpyTheme.statusSuccess : CrimpyTheme.gray600
       ..style = PaintingStyle.fill;
 
     // Draw light gray background circle
@@ -152,6 +152,30 @@ class WeightGaugePainter extends CustomPainter {
       fillPercentage: fillPercentage,
       size: size,
     );
+
+    // "ON TARGET" cue once the target weight is reached.
+    if (targetMatched && targetWeight > 0) {
+      final onTargetPainter = TextPainter(
+        text: const TextSpan(
+          text: "ON TARGET",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+            color: CrimpyTheme.statusSuccess,
+          ),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      )..layout();
+      onTargetPainter.paint(
+        canvas,
+        Offset(
+          center.dx - onTargetPainter.width / 2,
+          size.height - onTargetPainter.height - innerRadius / 4,
+        ),
+      );
+    }
   }
 
   void _drawTextWithColorTransition({
