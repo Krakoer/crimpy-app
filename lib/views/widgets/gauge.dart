@@ -7,24 +7,26 @@ import '../../theme/crimpy_theme.dart';
 
 class Gauge extends ConsumerWidget {
   final double targetWeight;
+  final double size;
 
-  const Gauge(this.targetWeight, {super.key});
+  const Gauge(this.targetWeight, {this.size = 300, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final forceState = ref.watch(bleDataStreamProvider);
+    final points = ref.watch(bleDataStreamProvider).value;
+    final currentWeight = (points == null || points.isEmpty)
+        ? 0.0
+        : points.last.value;
     final double fillPercentage = targetWeight == 0
         ? 0
-        : min(100, (forceState.value!.last.value / targetWeight) * 100 * 0.67);
+        : min(100.0, (currentWeight / targetWeight) * 100 * 0.67);
     return SizedBox(
-      width: 300,
-      height: 300,
+      width: size,
+      height: size,
       child: CustomPaint(
         painter: WeightGaugePainter(
           fillPercentage: fillPercentage,
-          currentWeight: forceState.value != null
-              ? forceState.value!.last.value
-              : 0,
+          currentWeight: currentWeight,
           targetWeight: targetWeight,
         ),
       ),

@@ -258,9 +258,13 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                 builder: (ctx, child) => WorkoutCircle(
                   value: _serieController.value,
                   rest: rep.isRest,
+                  size: gaugeSize,
                 ),
               ),
-              if (sensor) Gauge(rep.targetWeight) else timerDisplay,
+              if (sensor)
+                Gauge(rep.targetWeight, size: gaugeSize)
+              else
+                timerDisplay,
             ],
           ),
         ),
