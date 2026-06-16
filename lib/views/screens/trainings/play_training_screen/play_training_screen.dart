@@ -256,8 +256,14 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     );
   }
 
-  Widget _subtitleText(String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
+  Widget _subtitleText(String text) => Container(
+    margin: const EdgeInsets.only(bottom: 8),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+    decoration: BoxDecoration(
+      color: CrimpyTheme.primaryOrange.withValues(alpha: 0.12),
+      border: Border.all(color: CrimpyTheme.primaryOrange, width: 1.5),
+      borderRadius: BorderRadius.circular(4),
+    ),
     child: Text(
       text,
       style: const TextStyle(
@@ -265,7 +271,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         fontSize: 13,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.5,
-        color: CrimpyTheme.textSecondary,
+        color: CrimpyTheme.primaryOrange,
       ),
     ),
   );

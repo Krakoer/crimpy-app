@@ -22,24 +22,29 @@ class NextRepPreview extends StatelessWidget {
   String _getDescription() {
     final r = nextRep;
     if (r.isRest) return 'Rest ${r.durationInSeconds}s';
+    // Prefix the set/rep/round context when present (e.g. "ROUND 2/3").
+    final ctx = r.subtitle != null ? '${r.subtitle} - ' : '';
     if (r.isConfirm) {
-      return [
-        r.label ?? 'Exercise',
-        if (r.reps != null) '${r.reps} reps',
-        if (r.load != null) r.load!,
-      ].join(' - ');
+      return ctx +
+          [
+            r.label ?? 'Exercise',
+            if (r.reps != null) '${r.reps} reps',
+            if (r.load != null) r.load!,
+          ].join(' - ');
     }
     if (r.showGauge) {
       final w = r.targetWeight;
-      return [
-        _getHandLabel(r.handSide),
-        r.gripPosition.shortName,
-        if (w > 0) '${w.toStringAsFixed(w.truncateToDouble() == w ? 0 : 1)}kg',
-        '${r.durationInSeconds}s',
-      ].join(' - ');
+      return ctx +
+          [
+            _getHandLabel(r.handSide),
+            r.gripPosition.shortName,
+            if (w > 0)
+              '${w.toStringAsFixed(w.truncateToDouble() == w ? 0 : 1)}kg',
+            '${r.durationInSeconds}s',
+          ].join(' - ');
     }
     // Timed work without a sensor (e.g. a duration exercise).
-    return '${r.label ?? 'Work'} - ${r.durationInSeconds}s';
+    return '$ctx${r.label ?? 'Work'} - ${r.durationInSeconds}s';
   }
 
   @override
