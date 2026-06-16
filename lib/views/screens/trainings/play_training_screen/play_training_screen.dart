@@ -16,6 +16,7 @@ import 'package:crimpy/views/screens/trainings/post_workout_screen.dart';
 import 'package:crimpy/views/widgets/workout_circle.dart';
 import 'package:crimpy/views/widgets/workout_timer.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class PlayTrainingScreen extends ConsumerStatefulWidget {
   final Training training;
@@ -184,6 +185,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       vsync: this,
       duration: Duration(seconds: timer.currentRep.durationInSeconds),
     );
+    WakelockPlus.enable();
     super.initState();
   }
 
@@ -203,6 +205,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
   @override
   void dispose() {
+    WakelockPlus.disable();
     timer.dispose();
     _serieController.dispose();
     super.dispose();
