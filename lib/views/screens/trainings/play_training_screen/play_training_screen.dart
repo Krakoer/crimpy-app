@@ -366,11 +366,15 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
               return Column(
                 children: [
-                  // Header
+                  // Header. The total time is only meaningful when every step
+                  // is timed; self-paced (rep-based) steps make it unknown.
                   TrainingHeader(
                     elapsedMilliseconds: timer.elapsedMilliseconds,
                     remainingMilliseconds:
                         totalTrainingSeconds * 1000 - timer.elapsedMilliseconds,
+                    showRemaining: !_repsWithPreparation.any(
+                      (r) => r.isConfirm,
+                    ),
                   ),
                   // Main content area
                   Expanded(

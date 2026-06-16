@@ -5,10 +5,15 @@ class TrainingHeader extends StatelessWidget {
   final int elapsedMilliseconds;
   final int remainingMilliseconds;
 
+  /// Whether to show the total remaining time. Hidden for self-paced
+  /// (rep-based) trainings where the total duration is unknown.
+  final bool showRemaining;
+
   const TrainingHeader({
     super.key,
     required this.elapsedMilliseconds,
     required this.remainingMilliseconds,
+    this.showRemaining = true,
   });
 
   String formatTime(int milliseconds) {
@@ -16,6 +21,32 @@ class TrainingHeader extends StatelessWidget {
     final minutes = totalSeconds ~/ 60;
     final seconds = totalSeconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Widget _time(BuildContext context, String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'JetBrainsMono',
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.6,
+            color: CrimpyTheme.textMuted,
+          ),
+        ),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.headlineSmall!.copyWith(
+            color: CrimpyTheme.primaryBlack,
+            fontWeight: FontWeight.w500,
+            fontSize: 25,
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -26,22 +57,9 @@ class TrainingHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            formatTime(elapsedMilliseconds),
-            style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-              color: CrimpyTheme.primaryBlack,
-              fontWeight: FontWeight.w500,
-              fontSize: 25,
-            ),
-          ),
-          Text(
-            formatTime(remainingMilliseconds),
-            style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-              color: CrimpyTheme.primaryBlack,
-              fontWeight: FontWeight.w500,
-              fontSize: 25,
-            ),
-          ),
+          _time(context, 'ELAPSED', formatTime(elapsedMilliseconds)),
+          if (showRemaining)
+            _time(context, 'LEFT', formatTime(remainingMilliseconds)),
         ],
       ),
     );
