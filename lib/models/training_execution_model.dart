@@ -14,6 +14,10 @@ final class TimedItem extends TrainingExecutionItem {
   final GripPosition gripPosition;
   final bool collectSensorData;
 
+  /// Position context shown during the step, e.g. "SET 2/3 - REP 4/6" or
+  /// "ROUND 1/3".
+  final String? subtitle;
+
   const TimedItem({
     required this.label,
     required this.durationSeconds,
@@ -21,6 +25,7 @@ final class TimedItem extends TrainingExecutionItem {
     required this.handSide,
     required this.gripPosition,
     required this.collectSensorData,
+    this.subtitle,
   });
 }
 
@@ -39,11 +44,15 @@ final class ConfirmItem extends TrainingExecutionItem {
   final int? reps;
   final String? load;
 
+  /// Position context shown during the step, e.g. "ROUND 1/3".
+  final String? subtitle;
+
   const ConfirmItem({
     required this.label,
     this.instructions,
     this.reps,
     this.load,
+    this.subtitle,
   });
 
   @override

@@ -169,6 +169,9 @@ class RepModel {
   /// Optional load label shown for self-paced exercises (e.g. "+10 kg").
   final String? load;
 
+  /// Position context shown during the step, e.g. "SET 2/3 - REP 4/6".
+  final String? subtitle;
+
   RepModel({
     this.id,
     required this.durationInSeconds,
@@ -182,6 +185,7 @@ class RepModel {
     this.label,
     this.reps,
     this.load,
+    this.subtitle,
   });
 }
 

@@ -45,6 +45,31 @@ void main() {
     expect((out[0] as ConfirmItem).reps, 10);
     expect((out[1] as TimedItem).durationSeconds, 30);
     expect((out[2] as RestItem).durationSeconds, 60);
+    // Round context per cycle.
+    expect((out[0] as ConfirmItem).subtitle, 'ROUND 1/2');
+    expect((out[3] as ConfirmItem).subtitle, 'ROUND 2/2');
+  });
+
+  test('repeater hangs carry set/rep context', () {
+    final training = _training([
+      TrainingItem(
+        id: 'r',
+        type: TrainingItemType.repeater,
+        position: 0,
+        cycles: 2,
+        reps: 3,
+        hand: 'right',
+        worktimeSeconds: 7,
+        restSeconds: 3,
+      ),
+    ]);
+
+    final out = expandTrainingItems(
+      training,
+      useSensor: false,
+    ).whereType<TimedItem>().toList();
+    expect(out.first.subtitle, 'SET 1/2 - REP 1/3');
+    expect(out.last.subtitle, 'SET 2/2 - REP 3/3');
   });
 
   test('section flattens its children', () {

@@ -28,8 +28,9 @@ int trainingDurationSeconds(Training training) => expandTrainingItems(
 void _expandItem(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor,
-) {
+  bool useSensor, {
+  String? context,
+}) {
   switch (item.type) {
     case TrainingItemType.repeater:
       _expandRepeater(item, out, useSensor);
@@ -38,21 +39,22 @@ void _expandItem(
     case TrainingItemType.circuit:
       _expandCircuit(item, out, useSensor);
     case TrainingItemType.section:
-      _expandSection(item, out, useSensor);
+      _expandSection(item, out, useSensor, context: context);
     case TrainingItemType.exercise:
-      _expandExercise(item, out);
+      _expandExercise(item, out, context: context);
     case TrainingItemType.free:
-      _expandFree(item, out);
+      _expandFree(item, out, context: context);
   }
 }
 
 void _expandSection(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor,
-) {
+  bool useSensor, {
+  String? context,
+}) {
   for (final child in item.items) {
-    _expandItem(child, out, useSensor);
+    _expandItem(child, out, useSensor, context: context);
   }
 }
 
@@ -64,8 +66,9 @@ void _expandCircuit(
   final cycles = item.cycles ?? 1;
   final cycleRest = item.cycleRestSeconds ?? 0;
   for (int cycle = 0; cycle < cycles; cycle++) {
+    final context = cycles > 1 ? 'ROUND ${cycle + 1}/$cycles' : null;
     for (final child in item.items) {
-      _expandItem(child, out, useSensor);
+      _expandItem(child, out, useSensor, context: context);
     }
     if (cycle < cycles - 1 && cycleRest > 0) {
       out.add(RestItem(durationSeconds: cycleRest));
@@ -73,7 +76,11 @@ void _expandCircuit(
   }
 }
 
-void _expandExercise(TrainingItem item, List<TrainingExecutionItem> out) {
+void _expandExercise(
+  TrainingItem item,
+  List<TrainingExecutionItem> out, {
+  String? context,
+}) {
   final duration = item.effectiveDuration;
   final name = item.exerciseName ?? 'Exercise';
   if (duration != null) {
@@ -85,18 +92,28 @@ void _expandExercise(TrainingItem item, List<TrainingExecutionItem> out) {
         handSide: HandSide.both,
         gripPosition: GripPosition.halfCrimp,
         collectSensorData: false,
+        subtitle: context,
       ),
     );
   } else {
     out.add(
-      ConfirmItem(label: name, reps: item.effectiveReps, load: item.loadLabel),
+      ConfirmItem(
+        label: name,
+        reps: item.effectiveReps,
+        load: item.loadLabel,
+        subtitle: context,
+      ),
     );
   }
   final rest = item.restSeconds ?? 0;
   if (rest > 0) out.add(RestItem(durationSeconds: rest));
 }
 
-void _expandFree(TrainingItem item, List<TrainingExecutionItem> out) {
+void _expandFree(
+  TrainingItem item,
+  List<TrainingExecutionItem> out, {
+  String? context,
+}) {
   final duration = item.effectiveDuration;
   if (duration != null) {
     out.add(
@@ -107,10 +124,11 @@ void _expandFree(TrainingItem item, List<TrainingExecutionItem> out) {
         handSide: HandSide.both,
         gripPosition: GripPosition.halfCrimp,
         collectSensorData: false,
+        subtitle: context,
       ),
     );
   } else {
-    out.add(ConfirmItem(label: item.freeText ?? 'Free'));
+    out.add(ConfirmItem(label: item.freeText ?? 'Free', subtitle: context));
   }
 }
 
@@ -161,6 +179,9 @@ void _expandRepeater(
   final loads = item.loads ?? [];
   final leftLoads = item.leftLoads ?? [];
 
+  String setRep(int cycle, int rep) =>
+      'SET ${cycle + 1}/$cycles - REP ${rep + 1}/$repsPerCycle';
+
   if (splitHand) {
     for (int cycle = 0; cycle < cycles; cycle++) {
       for (int rep = 0; rep < repsPerCycle; rep++) {
@@ -173,6 +194,7 @@ void _expandRepeater(
             handSide: HandSide.right,
             gripPosition: grip,
             collectSensorData: useSensor,
+            subtitle: setRep(cycle, rep),
           ),
         );
         if (rep < repsPerCycle - 1) {
@@ -195,6 +217,7 @@ void _expandRepeater(
             handSide: HandSide.left,
             gripPosition: grip,
             collectSensorData: useSensor,
+            subtitle: setRep(cycle, rep),
           ),
         );
         if (rep < repsPerCycle - 1) {
@@ -217,6 +240,7 @@ void _expandRepeater(
             handSide: HandSide.right,
             gripPosition: grip,
             collectSensorData: useSensor,
+            subtitle: setRep(cycle, rep),
           ),
         );
         out.add(RestItem(durationSeconds: resttime));
@@ -228,6 +252,7 @@ void _expandRepeater(
             handSide: HandSide.left,
             gripPosition: grip,
             collectSensorData: useSensor,
+            subtitle: setRep(cycle, rep),
           ),
         );
         if (rep < repsPerCycle - 1) {
