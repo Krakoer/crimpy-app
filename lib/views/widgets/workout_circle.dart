@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class WorkoutCircle extends StatefulWidget {
   const WorkoutCircle({
@@ -17,8 +18,6 @@ class WorkoutCircle extends StatefulWidget {
 }
 
 class _WorkoutCircleState extends State<WorkoutCircle> {
-  final greenColor = Color.fromARGB(255, 93, 133, 1);
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -27,8 +26,9 @@ class _WorkoutCircleState extends State<WorkoutCircle> {
       child: CircularProgressIndicator(
         value: widget.value,
         color: widget.rest
-            ? greenColor
-            : const Color.fromARGB(255, 149, 21, 12),
+            ? CrimpyTheme.statusSuccess
+            : CrimpyTheme.primaryOrange,
+        backgroundColor: CrimpyTheme.gray200,
         strokeWidth: 8,
         strokeCap: StrokeCap.round,
       ),

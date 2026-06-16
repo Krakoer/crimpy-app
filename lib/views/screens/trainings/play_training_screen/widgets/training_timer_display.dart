@@ -38,7 +38,9 @@ class TrainingTimerDisplay extends StatelessWidget {
               ? 'REST'
               : 'WORK',
           style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-            color: isRest ? CrimpyTheme.accentTeal : CrimpyTheme.accentYellow,
+            color: isRest
+                ? CrimpyTheme.statusSuccess
+                : CrimpyTheme.primaryOrange,
             fontWeight: FontWeight.bold,
             letterSpacing: 4,
             fontSize: 16,
