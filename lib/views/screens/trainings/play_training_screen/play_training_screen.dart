@@ -218,15 +218,26 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       isPrep: isPrep,
     );
 
+    // Header above the circle (kind-specific), in a fixed-height slot so the
+    // circle stays at the same place for sensor / no-sensor / rest steps.
+    final Widget header = sensor
+        ? HandLabel(handSide: rep.handSide, gripPosition: rep.gripPosition)
+        : rep.isRest
+        ? const SizedBox.shrink()
+        : _stageHeader(rep.label, rep.targetWeight);
+
+    // Content below the circle, also in a fixed-height slot.
+    final Widget below = sensor
+        ? timerDisplay
+        : (rep.isRest && hasNext)
+        ? NextRepPreview(nextRep: timer.repetitions[timer.currentRepIndex + 1])
+        : const SizedBox.shrink();
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Header above the circle.
-        if (sensor)
-          HandLabel(handSide: rep.handSide, gripPosition: rep.gripPosition)
-        else if (!rep.isRest)
-          _stageHeader(rep.label, rep.targetWeight),
+        SizedBox(height: 80, child: Center(child: header)),
         // The circle: live gauge for sensor hangs, the countdown centred
         // inside the timer ring otherwise (no empty circle).
         SizedBox(
@@ -246,11 +257,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             ],
           ),
         ),
-        if (sensor) ...[const SizedBox(height: 24), timerDisplay],
-        if (rep.isRest && hasNext) ...[
-          const SizedBox(height: 16),
-          NextRepPreview(nextRep: timer.repetitions[timer.currentRepIndex + 1]),
-        ],
+        SizedBox(height: 130, child: Center(child: below)),
       ],
     );
   }
@@ -421,10 +428,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
               // Calculate available height
               final availableHeight = constraints.maxHeight;
 
-              // Determine sizes based on available height
-              // Reserve space for header (~60), footer (~70), controls (~70), spacing (~40)
-              // Remaining space for gauge and timer
-              final reservedSpace = 240;
+              // Determine sizes based on available height. Reserves the top
+              // header + context pill, the fixed header/below slots around the
+              // circle, the progress bar and the controls.
+              final reservedSpace = 320;
               final gaugeSpace = availableHeight - reservedSpace;
 
               // Calculate gauge size (max 300, but scale down if needed)
