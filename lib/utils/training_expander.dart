@@ -75,10 +75,11 @@ void _expandCircuit(
 
 void _expandExercise(TrainingItem item, List<TrainingExecutionItem> out) {
   final duration = item.effectiveDuration;
+  final name = item.exerciseName ?? 'Exercise';
   if (duration != null) {
     out.add(
       TimedItem(
-        label: 'Exercise',
+        label: name,
         durationSeconds: duration,
         targetLoad: 0,
         handSide: HandSide.both,
@@ -88,11 +89,7 @@ void _expandExercise(TrainingItem item, List<TrainingExecutionItem> out) {
     );
   } else {
     out.add(
-      ConfirmItem(
-        label: 'Exercise',
-        reps: item.effectiveReps,
-        load: item.loadLabel,
-      ),
+      ConfirmItem(label: name, reps: item.effectiveReps, load: item.loadLabel),
     );
   }
   final rest = item.restSeconds ?? 0;

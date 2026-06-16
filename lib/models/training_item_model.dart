@@ -112,6 +112,9 @@ class TrainingItem {
   // Exercise reference
   final String? exerciseId;
 
+  // Exercise display name (denormalized from the referenced exercise)
+  final String? exerciseName;
+
   // Section label
   final String? sectionTitle;
 
@@ -137,6 +140,7 @@ class TrainingItem {
     this.loadIsMax = false,
     this.freeText,
     this.exerciseId,
+    this.exerciseName,
     this.sectionTitle,
     this.items = const [],
   });
@@ -213,6 +217,7 @@ class TrainingItem {
       loadIsMax: json['load_is_max'] as bool? ?? false,
       freeText: json['free_text'] as String?,
       exerciseId: json['exercise_id'] as String?,
+      exerciseName: json['exercise_name'] as String?,
       sectionTitle: json['section_title'] as String?,
       items: nestedItems,
     );
@@ -277,6 +282,7 @@ class TrainingItem {
       loadIsMax: loadIsMax ?? this.loadIsMax,
       freeText: freeText,
       exerciseId: exerciseId,
+      exerciseName: exerciseName,
       sectionTitle: sectionTitle,
       items: items ?? this.items,
     );

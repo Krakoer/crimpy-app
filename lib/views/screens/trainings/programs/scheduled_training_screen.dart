@@ -384,7 +384,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     TrainingItemType.circuit => 'Circuit',
     TrainingItemType.repeater => 'Repeater',
     TrainingItemType.hangboardRep => 'Hangboard',
-    TrainingItemType.exercise => 'Exercise',
+    TrainingItemType.exercise => item.exerciseName ?? 'Exercise',
     TrainingItemType.free => item.freeText ?? 'Note',
   };
 
