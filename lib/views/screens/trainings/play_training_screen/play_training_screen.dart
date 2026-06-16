@@ -215,6 +215,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     final rep = timer.currentRep;
     final isPrep = timer.currentRepIndex == 0;
     final hasNext = timer.currentRepIndex < timer.repetitions.length - 1;
+    final nextRep = hasNext
+        ? timer.repetitions[timer.currentRepIndex + 1]
+        : null;
     final sensor = rep.showGauge;
 
     final timerDisplay = TrainingTimerDisplay(
@@ -231,11 +234,13 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         ? const SizedBox.shrink()
         : _stageHeader(rep.label, rep.targetWeight);
 
-    // Content below the circle.
+    // Content below the circle: preview the next step during a rest, or while
+    // working when a rest is coming up next.
+    final bool showNext = nextRep != null && (rep.isRest || nextRep.isRest);
     final Widget below = sensor
         ? timerDisplay
-        : (rep.isRest && hasNext)
-        ? NextRepPreview(nextRep: timer.repetitions[timer.currentRepIndex + 1])
+        : showNext
+        ? NextRepPreview(nextRep: nextRep)
         : const SizedBox.shrink();
 
     // Equal flexible regions above and below keep the circle vertically
