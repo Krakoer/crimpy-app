@@ -33,4 +33,34 @@ void main() {
       expect(item.loads, hasLength(2));
     });
   });
+
+  group('TrainingItem.fromJson comment', () {
+    test('parses an optional coach comment', () {
+      final item = TrainingItem.fromJson({
+        'id': 'i3',
+        'type': 'exercise',
+        'position': 0,
+        'comment': 'First rep in pronation, second in supination',
+      });
+      expect(item.comment, 'First rep in pronation, second in supination');
+    });
+
+    test('comment is null when absent and round-trips through toJson', () {
+      final item = TrainingItem.fromJson({
+        'id': 'i4',
+        'type': 'exercise',
+        'position': 0,
+      });
+      expect(item.comment, isNull);
+      expect(item.toJson().containsKey('comment'), isFalse);
+
+      final withComment = TrainingItem.fromJson({
+        'id': 'i5',
+        'type': 'exercise',
+        'position': 0,
+        'comment': 'Keep elbows tucked',
+      });
+      expect(withComment.toJson()['comment'], 'Keep elbows tucked');
+    });
+  });
 }

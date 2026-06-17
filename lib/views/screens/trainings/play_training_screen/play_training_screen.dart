@@ -80,6 +80,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
               showGauge: item.collectSensorData,
               label: item.label,
               subtitle: item.subtitle,
+              comment: item.comment,
             ),
           );
         case RestItem():
@@ -105,6 +106,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
               reps: item.reps,
               load: item.load,
               subtitle: item.subtitle,
+              comment: item.comment,
             ),
           );
       }
@@ -237,10 +239,13 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     // Content below the circle: preview the next step during a rest, or while
     // working when a rest is coming up next.
     final bool showNext = nextRep != null && (rep.isRest || nextRep.isRest);
+    final bool hasComment = rep.comment?.trim().isNotEmpty ?? false;
     final Widget below = sensor
         ? timerDisplay
         : showNext
         ? NextRepPreview(nextRep: nextRep)
+        : (!rep.isRest && hasComment)
+        ? _commentBox(rep.comment!)
         : const SizedBox.shrink();
 
     // Equal flexible regions above and below keep the circle vertically
@@ -355,6 +360,34 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     );
   }
 
+  /// Coach comment shown during a step. Width-constrained and scrollable so a
+  /// long comment wraps and stays readable instead of overflowing.
+  Widget _commentBox(String text) => ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: 360, maxHeight: 160),
+    child: SingleChildScrollView(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: CrimpyTheme.primaryOrange.withValues(alpha: 0.10),
+          border: Border.all(
+            color: CrimpyTheme.primaryOrange.withValues(alpha: 0.4),
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontFamily: 'JetBrainsMono',
+            fontSize: 13,
+            height: 1.4,
+            color: CrimpyTheme.textSecondary,
+          ),
+        ),
+      ),
+    ),
+  );
+
   Widget _buildConfirmContent(double timerFontSize) {
     final rep = timer.currentRep;
     final details = [
@@ -389,6 +422,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                 color: CrimpyTheme.primaryOrange,
               ),
             ),
+          ],
+          if (rep.comment?.trim().isNotEmpty ?? false) ...[
+            const SizedBox(height: 16),
+            _commentBox(rep.comment!),
           ],
           const SizedBox(height: 16),
           const Text(

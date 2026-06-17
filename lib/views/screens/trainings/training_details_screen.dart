@@ -18,17 +18,33 @@ class TrainingDetailScreen extends ConsumerWidget {
           itemCount: template.items.length,
           itemBuilder: (ctx, i) {
             final item = template.items[i];
+            final details = switch (item.type.apiValue) {
+              'repeater' =>
+                '${item.cycles ?? 1}x${item.reps ?? 1} '
+                    '${item.worktimeSeconds ?? 7}s/${item.restSeconds ?? 3}s',
+              'hangboard_rep' =>
+                '${item.worktimeSeconds ?? 7}s / rest ${item.restSeconds ?? 3}s',
+              'free' => item.freeText ?? '',
+              _ => '',
+            };
+            final comment = item.comment?.trim();
             return ListTile(
               title: Text(item.type.apiValue),
-              subtitle: Text(switch (item.type.apiValue) {
-                'repeater' =>
-                  '${item.cycles ?? 1}x${item.reps ?? 1} '
-                      '${item.worktimeSeconds ?? 7}s/${item.restSeconds ?? 3}s',
-                'hangboard_rep' =>
-                  '${item.worktimeSeconds ?? 7}s / rest ${item.restSeconds ?? 3}s',
-                'free' => item.freeText ?? '',
-                _ => '',
-              }),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (details.isNotEmpty) Text(details),
+                  if (comment != null && comment.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        comment,
+                        style: const TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                    ),
+                ],
+              ),
             );
           },
         ),

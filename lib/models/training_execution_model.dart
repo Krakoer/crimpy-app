@@ -18,6 +18,9 @@ final class TimedItem extends TrainingExecutionItem {
   /// "ROUND 1/3".
   final String? subtitle;
 
+  /// Optional coach comment shown to the athlete during the step.
+  final String? comment;
+
   const TimedItem({
     required this.label,
     required this.durationSeconds,
@@ -26,6 +29,7 @@ final class TimedItem extends TrainingExecutionItem {
     required this.gripPosition,
     required this.collectSensorData,
     this.subtitle,
+    this.comment,
   });
 }
 
@@ -47,12 +51,16 @@ final class ConfirmItem extends TrainingExecutionItem {
   /// Position context shown during the step, e.g. "ROUND 1/3".
   final String? subtitle;
 
+  /// Optional coach comment shown to the athlete during the step.
+  final String? comment;
+
   const ConfirmItem({
     required this.label,
     this.instructions,
     this.reps,
     this.load,
     this.subtitle,
+    this.comment,
   });
 
   @override

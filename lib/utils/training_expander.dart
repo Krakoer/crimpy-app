@@ -93,6 +93,7 @@ void _expandExercise(
         gripPosition: GripPosition.halfCrimp,
         collectSensorData: false,
         subtitle: context,
+        comment: item.comment,
       ),
     );
   } else {
@@ -102,6 +103,7 @@ void _expandExercise(
         reps: item.effectiveReps,
         load: item.loadLabel,
         subtitle: context,
+        comment: item.comment,
       ),
     );
   }

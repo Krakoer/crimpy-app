@@ -172,6 +172,9 @@ class RepModel {
   /// Position context shown during the step, e.g. "SET 2/3 - REP 4/6".
   final String? subtitle;
 
+  /// Optional coach comment shown to the athlete during the step.
+  final String? comment;
+
   RepModel({
     this.id,
     required this.durationInSeconds,
@@ -186,6 +189,7 @@ class RepModel {
     this.reps,
     this.load,
     this.subtitle,
+    this.comment,
   });
 }
 

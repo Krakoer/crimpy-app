@@ -112,4 +112,32 @@ void main() {
     final without = expandTrainingItems(_training([hb]), useSensor: false);
     expect((without.first as TimedItem).collectSensorData, isFalse);
   });
+
+  test('exercise comment propagates to the execution item', () {
+    final repsExercise = TrainingItem(
+      id: 'e1',
+      type: TrainingItemType.exercise,
+      position: 0,
+      reps: 8,
+      comment: 'First rep in pronation, second in supination',
+    );
+    final timedExercise = TrainingItem(
+      id: 'e2',
+      type: TrainingItemType.exercise,
+      position: 1,
+      duration: 30,
+      comment: 'Keep hips level',
+    );
+
+    final out = expandTrainingItems(
+      _training([repsExercise, timedExercise]),
+      useSensor: false,
+    );
+
+    expect(
+      (out[0] as ConfirmItem).comment,
+      'First rep in pronation, second in supination',
+    );
+    expect((out[1] as TimedItem).comment, 'Keep hips level');
+  });
 }

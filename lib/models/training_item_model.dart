@@ -109,6 +109,9 @@ class TrainingItem {
   // Free item text
   final String? freeText;
 
+  // Optional coach comment shown to the athlete (e.g. "first rep in pronation")
+  final String? comment;
+
   // Exercise reference
   final String? exerciseId;
 
@@ -139,6 +142,7 @@ class TrainingItem {
     this.edgeSizesMm,
     this.loadIsMax = false,
     this.freeText,
+    this.comment,
     this.exerciseId,
     this.exerciseName,
     this.sectionTitle,
@@ -216,6 +220,7 @@ class TrainingItem {
       edgeSizesMm: parseIntList(json['edge_sizes_mm']),
       loadIsMax: json['load_is_max'] as bool? ?? false,
       freeText: json['free_text'] as String?,
+      comment: json['comment'] as String?,
       exerciseId: json['exercise_id'] as String?,
       exerciseName: json['exercise_name'] as String?,
       sectionTitle: json['section_title'] as String?,
@@ -240,6 +245,7 @@ class TrainingItem {
     if (edgeSizesMm != null) map['edge_sizes_mm'] = edgeSizesMm;
     map['load_is_max'] = loadIsMax;
     if (freeText != null) map['free_text'] = freeText;
+    if (comment != null) map['comment'] = comment;
     if (exerciseId != null) map['exercise_id'] = exerciseId;
     if (sectionTitle != null) map['section_title'] = sectionTitle;
     if (items.isNotEmpty) {
@@ -281,6 +287,7 @@ class TrainingItem {
       edgeSizesMm: edgeSizesMm ?? this.edgeSizesMm,
       loadIsMax: loadIsMax ?? this.loadIsMax,
       freeText: freeText,
+      comment: comment,
       exerciseId: exerciseId,
       exerciseName: exerciseName,
       sectionTitle: sectionTitle,
