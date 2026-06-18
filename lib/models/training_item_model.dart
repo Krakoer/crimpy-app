@@ -41,10 +41,14 @@ class Load {
 
   Map<String, dynamic> toJson() => {'value': value, 'unit': unit};
 
-  bool get isBodyweight => unit == 'bw' || value == 0.0;
+  bool get isBodyweight => unit == 'bw' || (unit != 'max' && value == 0.0);
 
-  /// Human-readable load, e.g. "+35 kg", "100 %BW", or "BW".
+  /// Whether this rep is performed at maximum effort rather than a fixed load.
+  bool get isMax => unit == 'max';
+
+  /// Human-readable load, e.g. "+35 kg", "100 %BW", "MAX", or "BW".
   String get label {
+    if (isMax) return 'MAX';
     if (isBodyweight) return 'BW';
     final n = value.truncateToDouble() == value
         ? value.toStringAsFixed(0)
@@ -158,8 +162,8 @@ class TrainingItem {
 
   /// First-rep load shown to the user, or null when bodyweight / unset.
   String? get loadLabel {
-    if (loadIsMax) return 'MAX';
     final first = loads?.firstOrNull;
+    if (loadIsMax || (first?.isMax ?? false)) return 'MAX';
     if (first == null || first.isBodyweight) return null;
     return first.label;
   }
