@@ -134,7 +134,7 @@ class TrainingItems extends Table {
   )();
   late final TextColumn freeText = text().nullable()();
   late final TextColumn exerciseId = text().nullable()();
-  late final TextColumn sectionTitle = text().nullable()();
+  late final TextColumn groupTitle = text().nullable()();
 
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
@@ -494,7 +494,7 @@ class AppDatabase extends _$AppDatabase {
       loadIsMax: row.loadIsMax,
       freeText: row.freeText,
       exerciseId: row.exerciseId,
-      sectionTitle: row.sectionTitle,
+      groupTitle: row.groupTitle,
       items: children.map((c) => _buildItem(c, allItems)).toList(),
     );
   }
@@ -570,7 +570,7 @@ class AppDatabase extends _$AppDatabase {
           loadIsMax: Value(item.loadIsMax),
           freeText: Value(item.freeText),
           exerciseId: Value(item.exerciseId),
-          sectionTitle: Value(item.sectionTitle),
+          groupTitle: Value(item.groupTitle),
           updatedAt: Value(DateTime.now()),
         ),
       );
@@ -850,7 +850,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -994,7 +994,7 @@ class AppDatabase extends _$AppDatabase {
         // Drop SyncMetadata table
         await m.database.customStatement('DROP TABLE IF EXISTS sync_metadata');
       },
-      from7To8: (m, _) async {
+      from7To9: (m, schema) async {
         // Migrate trainings/repeaters/rep_templates to the unified schema.
         // Uses raw SQL to avoid depending on typed Schema8 table accessors.
         const gripNames = ['halfCrimp', 'threeFinger', 'fullCrimp', 'openHand'];
@@ -1190,6 +1190,7 @@ class AppDatabase extends _$AppDatabase {
         // Drop legacy tables
         await m.database.customStatement('DROP TABLE IF EXISTS rep_templates');
         await m.database.customStatement('DROP TABLE IF EXISTS repeaters');
+        await m.alterTable(TableMigration(schema.trainingItems));
       },
     ),
   );

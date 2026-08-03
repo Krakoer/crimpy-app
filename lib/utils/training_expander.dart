@@ -38,8 +38,8 @@ void _expandItem(
       _expandHangboardRep(item, out, useSensor);
     case TrainingItemType.circuit:
       _expandCircuit(item, out, useSensor);
-    case TrainingItemType.section:
-      _expandSection(item, out, useSensor, context: context);
+    case TrainingItemType.group:
+      _expandGroup(item, out, useSensor, context: context);
     case TrainingItemType.exercise:
       _expandExercise(item, out, context: context);
     case TrainingItemType.free:
@@ -47,7 +47,7 @@ void _expandItem(
   }
 }
 
-void _expandSection(
+void _expandGroup(
   TrainingItem item,
   List<TrainingExecutionItem> out,
   bool useSensor, {

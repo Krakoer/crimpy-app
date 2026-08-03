@@ -1139,562 +1139,6 @@ class AssessmentsCompanion extends UpdateCompanion<AssessmentsData> {
   }
 }
 
-class Repeaters extends Table with TableInfo<Repeaters, RepeatersData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  Repeaters(this.attachedDatabase, [this._alias]);
-  late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  late final GeneratedColumn<int> sets = GeneratedColumn<int>(
-    'sets',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  late final GeneratedColumn<int> reps = GeneratedColumn<int>(
-    'reps',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  late final GeneratedColumn<int> worktime = GeneratedColumn<int>(
-    'worktime',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  late final GeneratedColumn<int> resttime = GeneratedColumn<int>(
-    'resttime',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  late final GeneratedColumn<int> setRest = GeneratedColumn<int>(
-    'set_rest',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  late final GeneratedColumn<double> targetWeigthRight =
-      GeneratedColumn<double>(
-        'target_weigth_right',
-        aliasedName,
-        true,
-        type: DriftSqlType.double,
-        requiredDuringInsert: false,
-        $customConstraints: 'NULL',
-      );
-  late final GeneratedColumn<double> targetWeigthLeft = GeneratedColumn<double>(
-    'target_weigth_left',
-    aliasedName,
-    true,
-    type: DriftSqlType.double,
-    requiredDuringInsert: false,
-    $customConstraints: 'NULL',
-  );
-  late final GeneratedColumn<int> splitHand = GeneratedColumn<int>(
-    'split_hand',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL CHECK (split_hand IN (0, 1))',
-  );
-  late final GeneratedColumn<int> gripPosition = GeneratedColumn<int>(
-    'grip_position',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL DEFAULT 0',
-    defaultValue: const CustomExpression('0'),
-  );
-  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints:
-        'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-    defaultValue: const CustomExpression(
-      'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
-    ),
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    sets,
-    reps,
-    worktime,
-    resttime,
-    setRest,
-    targetWeigthRight,
-    targetWeigthLeft,
-    splitHand,
-    gripPosition,
-    updatedAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'repeaters';
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  RepeatersData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return RepeatersData(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      sets: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}sets'],
-      )!,
-      reps: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}reps'],
-      )!,
-      worktime: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}worktime'],
-      )!,
-      resttime: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}resttime'],
-      )!,
-      setRest: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}set_rest'],
-      )!,
-      targetWeigthRight: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}target_weigth_right'],
-      ),
-      targetWeigthLeft: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}target_weigth_left'],
-      ),
-      splitHand: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}split_hand'],
-      )!,
-      gripPosition: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}grip_position'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}updated_at'],
-      )!,
-    );
-  }
-
-  @override
-  Repeaters createAlias(String alias) {
-    return Repeaters(attachedDatabase, alias);
-  }
-
-  @override
-  List<String> get customConstraints => const ['PRIMARY KEY(id)'];
-  @override
-  bool get dontWriteConstraints => true;
-}
-
-class RepeatersData extends DataClass implements Insertable<RepeatersData> {
-  final String id;
-  final int sets;
-  final int reps;
-  final int worktime;
-  final int resttime;
-  final int setRest;
-  final double? targetWeigthRight;
-  final double? targetWeigthLeft;
-  final int splitHand;
-  final int gripPosition;
-  final int updatedAt;
-  const RepeatersData({
-    required this.id,
-    required this.sets,
-    required this.reps,
-    required this.worktime,
-    required this.resttime,
-    required this.setRest,
-    this.targetWeigthRight,
-    this.targetWeigthLeft,
-    required this.splitHand,
-    required this.gripPosition,
-    required this.updatedAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<String>(id);
-    map['sets'] = Variable<int>(sets);
-    map['reps'] = Variable<int>(reps);
-    map['worktime'] = Variable<int>(worktime);
-    map['resttime'] = Variable<int>(resttime);
-    map['set_rest'] = Variable<int>(setRest);
-    if (!nullToAbsent || targetWeigthRight != null) {
-      map['target_weigth_right'] = Variable<double>(targetWeigthRight);
-    }
-    if (!nullToAbsent || targetWeigthLeft != null) {
-      map['target_weigth_left'] = Variable<double>(targetWeigthLeft);
-    }
-    map['split_hand'] = Variable<int>(splitHand);
-    map['grip_position'] = Variable<int>(gripPosition);
-    map['updated_at'] = Variable<int>(updatedAt);
-    return map;
-  }
-
-  RepeatersCompanion toCompanion(bool nullToAbsent) {
-    return RepeatersCompanion(
-      id: Value(id),
-      sets: Value(sets),
-      reps: Value(reps),
-      worktime: Value(worktime),
-      resttime: Value(resttime),
-      setRest: Value(setRest),
-      targetWeigthRight: targetWeigthRight == null && nullToAbsent
-          ? const Value.absent()
-          : Value(targetWeigthRight),
-      targetWeigthLeft: targetWeigthLeft == null && nullToAbsent
-          ? const Value.absent()
-          : Value(targetWeigthLeft),
-      splitHand: Value(splitHand),
-      gripPosition: Value(gripPosition),
-      updatedAt: Value(updatedAt),
-    );
-  }
-
-  factory RepeatersData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return RepeatersData(
-      id: serializer.fromJson<String>(json['id']),
-      sets: serializer.fromJson<int>(json['sets']),
-      reps: serializer.fromJson<int>(json['reps']),
-      worktime: serializer.fromJson<int>(json['worktime']),
-      resttime: serializer.fromJson<int>(json['resttime']),
-      setRest: serializer.fromJson<int>(json['setRest']),
-      targetWeigthRight: serializer.fromJson<double?>(
-        json['targetWeigthRight'],
-      ),
-      targetWeigthLeft: serializer.fromJson<double?>(json['targetWeigthLeft']),
-      splitHand: serializer.fromJson<int>(json['splitHand']),
-      gripPosition: serializer.fromJson<int>(json['gripPosition']),
-      updatedAt: serializer.fromJson<int>(json['updatedAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<String>(id),
-      'sets': serializer.toJson<int>(sets),
-      'reps': serializer.toJson<int>(reps),
-      'worktime': serializer.toJson<int>(worktime),
-      'resttime': serializer.toJson<int>(resttime),
-      'setRest': serializer.toJson<int>(setRest),
-      'targetWeigthRight': serializer.toJson<double?>(targetWeigthRight),
-      'targetWeigthLeft': serializer.toJson<double?>(targetWeigthLeft),
-      'splitHand': serializer.toJson<int>(splitHand),
-      'gripPosition': serializer.toJson<int>(gripPosition),
-      'updatedAt': serializer.toJson<int>(updatedAt),
-    };
-  }
-
-  RepeatersData copyWith({
-    String? id,
-    int? sets,
-    int? reps,
-    int? worktime,
-    int? resttime,
-    int? setRest,
-    Value<double?> targetWeigthRight = const Value.absent(),
-    Value<double?> targetWeigthLeft = const Value.absent(),
-    int? splitHand,
-    int? gripPosition,
-    int? updatedAt,
-  }) => RepeatersData(
-    id: id ?? this.id,
-    sets: sets ?? this.sets,
-    reps: reps ?? this.reps,
-    worktime: worktime ?? this.worktime,
-    resttime: resttime ?? this.resttime,
-    setRest: setRest ?? this.setRest,
-    targetWeigthRight: targetWeigthRight.present
-        ? targetWeigthRight.value
-        : this.targetWeigthRight,
-    targetWeigthLeft: targetWeigthLeft.present
-        ? targetWeigthLeft.value
-        : this.targetWeigthLeft,
-    splitHand: splitHand ?? this.splitHand,
-    gripPosition: gripPosition ?? this.gripPosition,
-    updatedAt: updatedAt ?? this.updatedAt,
-  );
-  RepeatersData copyWithCompanion(RepeatersCompanion data) {
-    return RepeatersData(
-      id: data.id.present ? data.id.value : this.id,
-      sets: data.sets.present ? data.sets.value : this.sets,
-      reps: data.reps.present ? data.reps.value : this.reps,
-      worktime: data.worktime.present ? data.worktime.value : this.worktime,
-      resttime: data.resttime.present ? data.resttime.value : this.resttime,
-      setRest: data.setRest.present ? data.setRest.value : this.setRest,
-      targetWeigthRight: data.targetWeigthRight.present
-          ? data.targetWeigthRight.value
-          : this.targetWeigthRight,
-      targetWeigthLeft: data.targetWeigthLeft.present
-          ? data.targetWeigthLeft.value
-          : this.targetWeigthLeft,
-      splitHand: data.splitHand.present ? data.splitHand.value : this.splitHand,
-      gripPosition: data.gripPosition.present
-          ? data.gripPosition.value
-          : this.gripPosition,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('RepeatersData(')
-          ..write('id: $id, ')
-          ..write('sets: $sets, ')
-          ..write('reps: $reps, ')
-          ..write('worktime: $worktime, ')
-          ..write('resttime: $resttime, ')
-          ..write('setRest: $setRest, ')
-          ..write('targetWeigthRight: $targetWeigthRight, ')
-          ..write('targetWeigthLeft: $targetWeigthLeft, ')
-          ..write('splitHand: $splitHand, ')
-          ..write('gripPosition: $gripPosition, ')
-          ..write('updatedAt: $updatedAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    id,
-    sets,
-    reps,
-    worktime,
-    resttime,
-    setRest,
-    targetWeigthRight,
-    targetWeigthLeft,
-    splitHand,
-    gripPosition,
-    updatedAt,
-  );
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is RepeatersData &&
-          other.id == this.id &&
-          other.sets == this.sets &&
-          other.reps == this.reps &&
-          other.worktime == this.worktime &&
-          other.resttime == this.resttime &&
-          other.setRest == this.setRest &&
-          other.targetWeigthRight == this.targetWeigthRight &&
-          other.targetWeigthLeft == this.targetWeigthLeft &&
-          other.splitHand == this.splitHand &&
-          other.gripPosition == this.gripPosition &&
-          other.updatedAt == this.updatedAt);
-}
-
-class RepeatersCompanion extends UpdateCompanion<RepeatersData> {
-  final Value<String> id;
-  final Value<int> sets;
-  final Value<int> reps;
-  final Value<int> worktime;
-  final Value<int> resttime;
-  final Value<int> setRest;
-  final Value<double?> targetWeigthRight;
-  final Value<double?> targetWeigthLeft;
-  final Value<int> splitHand;
-  final Value<int> gripPosition;
-  final Value<int> updatedAt;
-  final Value<int> rowid;
-  const RepeatersCompanion({
-    this.id = const Value.absent(),
-    this.sets = const Value.absent(),
-    this.reps = const Value.absent(),
-    this.worktime = const Value.absent(),
-    this.resttime = const Value.absent(),
-    this.setRest = const Value.absent(),
-    this.targetWeigthRight = const Value.absent(),
-    this.targetWeigthLeft = const Value.absent(),
-    this.splitHand = const Value.absent(),
-    this.gripPosition = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  RepeatersCompanion.insert({
-    required String id,
-    required int sets,
-    required int reps,
-    required int worktime,
-    required int resttime,
-    required int setRest,
-    this.targetWeigthRight = const Value.absent(),
-    this.targetWeigthLeft = const Value.absent(),
-    required int splitHand,
-    this.gripPosition = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       sets = Value(sets),
-       reps = Value(reps),
-       worktime = Value(worktime),
-       resttime = Value(resttime),
-       setRest = Value(setRest),
-       splitHand = Value(splitHand);
-  static Insertable<RepeatersData> custom({
-    Expression<String>? id,
-    Expression<int>? sets,
-    Expression<int>? reps,
-    Expression<int>? worktime,
-    Expression<int>? resttime,
-    Expression<int>? setRest,
-    Expression<double>? targetWeigthRight,
-    Expression<double>? targetWeigthLeft,
-    Expression<int>? splitHand,
-    Expression<int>? gripPosition,
-    Expression<int>? updatedAt,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (sets != null) 'sets': sets,
-      if (reps != null) 'reps': reps,
-      if (worktime != null) 'worktime': worktime,
-      if (resttime != null) 'resttime': resttime,
-      if (setRest != null) 'set_rest': setRest,
-      if (targetWeigthRight != null) 'target_weigth_right': targetWeigthRight,
-      if (targetWeigthLeft != null) 'target_weigth_left': targetWeigthLeft,
-      if (splitHand != null) 'split_hand': splitHand,
-      if (gripPosition != null) 'grip_position': gripPosition,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  RepeatersCompanion copyWith({
-    Value<String>? id,
-    Value<int>? sets,
-    Value<int>? reps,
-    Value<int>? worktime,
-    Value<int>? resttime,
-    Value<int>? setRest,
-    Value<double?>? targetWeigthRight,
-    Value<double?>? targetWeigthLeft,
-    Value<int>? splitHand,
-    Value<int>? gripPosition,
-    Value<int>? updatedAt,
-    Value<int>? rowid,
-  }) {
-    return RepeatersCompanion(
-      id: id ?? this.id,
-      sets: sets ?? this.sets,
-      reps: reps ?? this.reps,
-      worktime: worktime ?? this.worktime,
-      resttime: resttime ?? this.resttime,
-      setRest: setRest ?? this.setRest,
-      targetWeigthRight: targetWeigthRight ?? this.targetWeigthRight,
-      targetWeigthLeft: targetWeigthLeft ?? this.targetWeigthLeft,
-      splitHand: splitHand ?? this.splitHand,
-      gripPosition: gripPosition ?? this.gripPosition,
-      updatedAt: updatedAt ?? this.updatedAt,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<String>(id.value);
-    }
-    if (sets.present) {
-      map['sets'] = Variable<int>(sets.value);
-    }
-    if (reps.present) {
-      map['reps'] = Variable<int>(reps.value);
-    }
-    if (worktime.present) {
-      map['worktime'] = Variable<int>(worktime.value);
-    }
-    if (resttime.present) {
-      map['resttime'] = Variable<int>(resttime.value);
-    }
-    if (setRest.present) {
-      map['set_rest'] = Variable<int>(setRest.value);
-    }
-    if (targetWeigthRight.present) {
-      map['target_weigth_right'] = Variable<double>(targetWeigthRight.value);
-    }
-    if (targetWeigthLeft.present) {
-      map['target_weigth_left'] = Variable<double>(targetWeigthLeft.value);
-    }
-    if (splitHand.present) {
-      map['split_hand'] = Variable<int>(splitHand.value);
-    }
-    if (gripPosition.present) {
-      map['grip_position'] = Variable<int>(gripPosition.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<int>(updatedAt.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('RepeatersCompanion(')
-          ..write('id: $id, ')
-          ..write('sets: $sets, ')
-          ..write('reps: $reps, ')
-          ..write('worktime: $worktime, ')
-          ..write('resttime: $resttime, ')
-          ..write('setRest: $setRest, ')
-          ..write('targetWeigthRight: $targetWeigthRight, ')
-          ..write('targetWeigthLeft: $targetWeigthLeft, ')
-          ..write('splitHand: $splitHand, ')
-          ..write('gripPosition: $gripPosition, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -1708,30 +1152,21 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-    'name',
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
     aliasedName,
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  late final GeneratedColumn<String> repeaterId = GeneratedColumn<String>(
-    'repeater_id',
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
     aliasedName,
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
     $customConstraints: 'NULL',
-  );
-  late final GeneratedColumn<int> isBuiltin = GeneratedColumn<int>(
-    'is_builtin',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_builtin IN (0, 1))',
-    defaultValue: const CustomExpression('0'),
   );
   late final GeneratedColumn<int> isFavorite = GeneratedColumn<int>(
     'is_favorite',
@@ -1740,15 +1175,6 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_favorite IN (0, 1))',
-    defaultValue: const CustomExpression('0'),
-  );
-  late final GeneratedColumn<int> isAssessment = GeneratedColumn<int>(
-    'is_assessment',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_assessment IN (0, 1))',
     defaultValue: const CustomExpression('0'),
   );
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
@@ -1766,11 +1192,9 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    name,
-    repeaterId,
-    isBuiltin,
+    title,
+    description,
     isFavorite,
-    isAssessment,
     updatedAt,
   ];
   @override
@@ -1788,25 +1212,17 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
-      name: attachedDatabase.typeMapping.read(
+      title: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}name'],
+        data['${effectivePrefix}title'],
       )!,
-      repeaterId: attachedDatabase.typeMapping.read(
+      description: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}repeater_id'],
+        data['${effectivePrefix}description'],
       ),
-      isBuiltin: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}is_builtin'],
-      )!,
       isFavorite: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}is_favorite'],
-      )!,
-      isAssessment: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}is_assessment'],
       )!,
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -1821,42 +1237,33 @@ class Trainings extends Table with TableInfo<Trainings, TrainingsData> {
   }
 
   @override
-  List<String> get customConstraints => const [
-    'PRIMARY KEY(id)',
-    'FOREIGN KEY(repeater_id)REFERENCES repeaters(id)ON DELETE CASCADE',
-  ];
+  List<String> get customConstraints => const ['PRIMARY KEY(id)'];
   @override
   bool get dontWriteConstraints => true;
 }
 
 class TrainingsData extends DataClass implements Insertable<TrainingsData> {
   final String id;
-  final String name;
-  final String? repeaterId;
-  final int isBuiltin;
+  final String title;
+  final String? description;
   final int isFavorite;
-  final int isAssessment;
   final int updatedAt;
   const TrainingsData({
     required this.id,
-    required this.name,
-    this.repeaterId,
-    required this.isBuiltin,
+    required this.title,
+    this.description,
     required this.isFavorite,
-    required this.isAssessment,
     required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    map['name'] = Variable<String>(name);
-    if (!nullToAbsent || repeaterId != null) {
-      map['repeater_id'] = Variable<String>(repeaterId);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
     }
-    map['is_builtin'] = Variable<int>(isBuiltin);
     map['is_favorite'] = Variable<int>(isFavorite);
-    map['is_assessment'] = Variable<int>(isAssessment);
     map['updated_at'] = Variable<int>(updatedAt);
     return map;
   }
@@ -1864,13 +1271,11 @@ class TrainingsData extends DataClass implements Insertable<TrainingsData> {
   TrainingsCompanion toCompanion(bool nullToAbsent) {
     return TrainingsCompanion(
       id: Value(id),
-      name: Value(name),
-      repeaterId: repeaterId == null && nullToAbsent
+      title: Value(title),
+      description: description == null && nullToAbsent
           ? const Value.absent()
-          : Value(repeaterId),
-      isBuiltin: Value(isBuiltin),
+          : Value(description),
       isFavorite: Value(isFavorite),
-      isAssessment: Value(isAssessment),
       updatedAt: Value(updatedAt),
     );
   }
@@ -1882,11 +1287,9 @@ class TrainingsData extends DataClass implements Insertable<TrainingsData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return TrainingsData(
       id: serializer.fromJson<String>(json['id']),
-      name: serializer.fromJson<String>(json['name']),
-      repeaterId: serializer.fromJson<String?>(json['repeaterId']),
-      isBuiltin: serializer.fromJson<int>(json['isBuiltin']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String?>(json['description']),
       isFavorite: serializer.fromJson<int>(json['isFavorite']),
-      isAssessment: serializer.fromJson<int>(json['isAssessment']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
     );
   }
@@ -1895,46 +1298,36 @@ class TrainingsData extends DataClass implements Insertable<TrainingsData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'name': serializer.toJson<String>(name),
-      'repeaterId': serializer.toJson<String?>(repeaterId),
-      'isBuiltin': serializer.toJson<int>(isBuiltin),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String?>(description),
       'isFavorite': serializer.toJson<int>(isFavorite),
-      'isAssessment': serializer.toJson<int>(isAssessment),
       'updatedAt': serializer.toJson<int>(updatedAt),
     };
   }
 
   TrainingsData copyWith({
     String? id,
-    String? name,
-    Value<String?> repeaterId = const Value.absent(),
-    int? isBuiltin,
+    String? title,
+    Value<String?> description = const Value.absent(),
     int? isFavorite,
-    int? isAssessment,
     int? updatedAt,
   }) => TrainingsData(
     id: id ?? this.id,
-    name: name ?? this.name,
-    repeaterId: repeaterId.present ? repeaterId.value : this.repeaterId,
-    isBuiltin: isBuiltin ?? this.isBuiltin,
+    title: title ?? this.title,
+    description: description.present ? description.value : this.description,
     isFavorite: isFavorite ?? this.isFavorite,
-    isAssessment: isAssessment ?? this.isAssessment,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   TrainingsData copyWithCompanion(TrainingsCompanion data) {
     return TrainingsData(
       id: data.id.present ? data.id.value : this.id,
-      name: data.name.present ? data.name.value : this.name,
-      repeaterId: data.repeaterId.present
-          ? data.repeaterId.value
-          : this.repeaterId,
-      isBuiltin: data.isBuiltin.present ? data.isBuiltin.value : this.isBuiltin,
+      title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
       isFavorite: data.isFavorite.present
           ? data.isFavorite.value
           : this.isFavorite,
-      isAssessment: data.isAssessment.present
-          ? data.isAssessment.value
-          : this.isAssessment,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -1943,86 +1336,65 @@ class TrainingsData extends DataClass implements Insertable<TrainingsData> {
   String toString() {
     return (StringBuffer('TrainingsData(')
           ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('repeaterId: $repeaterId, ')
-          ..write('isBuiltin: $isBuiltin, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
           ..write('isFavorite: $isFavorite, ')
-          ..write('isAssessment: $isAssessment, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    name,
-    repeaterId,
-    isBuiltin,
-    isFavorite,
-    isAssessment,
-    updatedAt,
-  );
+  int get hashCode =>
+      Object.hash(id, title, description, isFavorite, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is TrainingsData &&
           other.id == this.id &&
-          other.name == this.name &&
-          other.repeaterId == this.repeaterId &&
-          other.isBuiltin == this.isBuiltin &&
+          other.title == this.title &&
+          other.description == this.description &&
           other.isFavorite == this.isFavorite &&
-          other.isAssessment == this.isAssessment &&
           other.updatedAt == this.updatedAt);
 }
 
 class TrainingsCompanion extends UpdateCompanion<TrainingsData> {
   final Value<String> id;
-  final Value<String> name;
-  final Value<String?> repeaterId;
-  final Value<int> isBuiltin;
+  final Value<String> title;
+  final Value<String?> description;
   final Value<int> isFavorite;
-  final Value<int> isAssessment;
   final Value<int> updatedAt;
   final Value<int> rowid;
   const TrainingsCompanion({
     this.id = const Value.absent(),
-    this.name = const Value.absent(),
-    this.repeaterId = const Value.absent(),
-    this.isBuiltin = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
     this.isFavorite = const Value.absent(),
-    this.isAssessment = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TrainingsCompanion.insert({
     required String id,
-    required String name,
-    this.repeaterId = const Value.absent(),
-    this.isBuiltin = const Value.absent(),
+    required String title,
+    this.description = const Value.absent(),
     this.isFavorite = const Value.absent(),
-    this.isAssessment = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       name = Value(name);
+       title = Value(title);
   static Insertable<TrainingsData> custom({
     Expression<String>? id,
-    Expression<String>? name,
-    Expression<String>? repeaterId,
-    Expression<int>? isBuiltin,
+    Expression<String>? title,
+    Expression<String>? description,
     Expression<int>? isFavorite,
-    Expression<int>? isAssessment,
     Expression<int>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (name != null) 'name': name,
-      if (repeaterId != null) 'repeater_id': repeaterId,
-      if (isBuiltin != null) 'is_builtin': isBuiltin,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
       if (isFavorite != null) 'is_favorite': isFavorite,
-      if (isAssessment != null) 'is_assessment': isAssessment,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2030,21 +1402,17 @@ class TrainingsCompanion extends UpdateCompanion<TrainingsData> {
 
   TrainingsCompanion copyWith({
     Value<String>? id,
-    Value<String>? name,
-    Value<String?>? repeaterId,
-    Value<int>? isBuiltin,
+    Value<String>? title,
+    Value<String?>? description,
     Value<int>? isFavorite,
-    Value<int>? isAssessment,
     Value<int>? updatedAt,
     Value<int>? rowid,
   }) {
     return TrainingsCompanion(
       id: id ?? this.id,
-      name: name ?? this.name,
-      repeaterId: repeaterId ?? this.repeaterId,
-      isBuiltin: isBuiltin ?? this.isBuiltin,
+      title: title ?? this.title,
+      description: description ?? this.description,
       isFavorite: isFavorite ?? this.isFavorite,
-      isAssessment: isAssessment ?? this.isAssessment,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2056,20 +1424,14 @@ class TrainingsCompanion extends UpdateCompanion<TrainingsData> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
     }
-    if (repeaterId.present) {
-      map['repeater_id'] = Variable<String>(repeaterId.value);
-    }
-    if (isBuiltin.present) {
-      map['is_builtin'] = Variable<int>(isBuiltin.value);
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
     }
     if (isFavorite.present) {
       map['is_favorite'] = Variable<int>(isFavorite.value);
-    }
-    if (isAssessment.present) {
-      map['is_assessment'] = Variable<int>(isAssessment.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
@@ -2084,11 +1446,9 @@ class TrainingsCompanion extends UpdateCompanion<TrainingsData> {
   String toString() {
     return (StringBuffer('TrainingsCompanion(')
           ..write('id: $id, ')
-          ..write('name: $name, ')
-          ..write('repeaterId: $repeaterId, ')
-          ..write('isBuiltin: $isBuiltin, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
           ..write('isFavorite: $isFavorite, ')
-          ..write('isAssessment: $isAssessment, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -2096,41 +1456,17 @@ class TrainingsCompanion extends UpdateCompanion<TrainingsData> {
   }
 }
 
-class RepTemplates extends Table
-    with TableInfo<RepTemplates, RepTemplatesData> {
+class TrainingItems extends Table
+    with TableInfo<TrainingItems, TrainingItemsData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  RepTemplates(this.attachedDatabase, [this._alias]);
+  TrainingItems(this.attachedDatabase, [this._alias]);
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
     'id',
     aliasedName,
     false,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  late final GeneratedColumn<int> isRest = GeneratedColumn<int>(
-    'is_rest',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL CHECK (is_rest IN (0, 1))',
-  );
-  late final GeneratedColumn<int> rightHand = GeneratedColumn<int>(
-    'right_hand',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL CHECK (right_hand IN (0, 1))',
-  );
-  late final GeneratedColumn<int> duration = GeneratedColumn<int>(
-    'duration',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
@@ -2142,30 +1478,152 @@ class RepTemplates extends Table
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  late final GeneratedColumn<double> targetWeight = GeneratedColumn<double>(
-    'target_weight',
+  late final GeneratedColumn<String> parentId = GeneratedColumn<String>(
+    'parent_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
     aliasedName,
     false,
-    type: DriftSqlType.double,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
     $customConstraints: 'NOT NULL',
   );
-  late final GeneratedColumn<int> index = GeneratedColumn<int>(
-    'index',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    $customConstraints: 'NOT NULL',
-  );
-  late final GeneratedColumn<int> gripPosition = GeneratedColumn<int>(
-    'grip_position',
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
     aliasedName,
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
+  );
+  late final GeneratedColumn<int> cycles = GeneratedColumn<int>(
+    'cycles',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<int> cycleRestSeconds = GeneratedColumn<int>(
+    'cycle_rest_seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<int> reps = GeneratedColumn<int>(
+    'reps',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<int> duration = GeneratedColumn<int>(
+    'duration',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<int> restSeconds = GeneratedColumn<int>(
+    'rest_seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<int> worktimeSeconds = GeneratedColumn<int>(
+    'worktime_seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<String> hand = GeneratedColumn<String>(
+    'hand',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<String> loadsJson = GeneratedColumn<String>(
+    'loads_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<String> leftLoadsJson = GeneratedColumn<String>(
+    'left_loads_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<String> handPositionsJson =
+      GeneratedColumn<String>(
+        'hand_positions_json',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        $customConstraints: 'NULL',
+      );
+  late final GeneratedColumn<String> edgeSizesMmJson = GeneratedColumn<String>(
+    'edge_sizes_mm_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<int> loadIsMax = GeneratedColumn<int>(
+    'load_is_max',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0 CHECK (load_is_max IN (0, 1))',
+    defaultValue: const CustomExpression('0'),
+  );
+  late final GeneratedColumn<String> freeText = GeneratedColumn<String>(
+    'free_text',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<String> exerciseId = GeneratedColumn<String>(
+    'exercise_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
+  late final GeneratedColumn<String> groupTitle = GeneratedColumn<String>(
+    'group_title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
   );
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
     'updated_at',
@@ -2182,58 +1640,118 @@ class RepTemplates extends Table
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    isRest,
-    rightHand,
-    duration,
     trainingId,
-    targetWeight,
-    index,
-    gripPosition,
+    parentId,
+    type,
+    position,
+    cycles,
+    cycleRestSeconds,
+    reps,
+    duration,
+    restSeconds,
+    worktimeSeconds,
+    hand,
+    loadsJson,
+    leftLoadsJson,
+    handPositionsJson,
+    edgeSizesMmJson,
+    loadIsMax,
+    freeText,
+    exerciseId,
+    groupTitle,
     updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'rep_templates';
+  static const String $name = 'training_items';
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  RepTemplatesData map(Map<String, dynamic> data, {String? tablePrefix}) {
+  TrainingItemsData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return RepTemplatesData(
+    return TrainingItemsData(
       id: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}id'],
-      )!,
-      isRest: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}is_rest'],
-      )!,
-      rightHand: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}right_hand'],
-      )!,
-      duration: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}duration'],
       )!,
       trainingId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}training_id'],
       )!,
-      targetWeight: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}target_weight'],
+      parentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}parent_id'],
+      ),
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
       )!,
-      index: attachedDatabase.typeMapping.read(
+      position: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}index'],
+        data['${effectivePrefix}position'],
       )!,
-      gripPosition: attachedDatabase.typeMapping.read(
+      cycles: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}grip_position'],
+        data['${effectivePrefix}cycles'],
+      ),
+      cycleRestSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cycle_rest_seconds'],
+      ),
+      reps: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reps'],
+      ),
+      duration: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration'],
+      ),
+      restSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rest_seconds'],
+      ),
+      worktimeSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}worktime_seconds'],
+      ),
+      hand: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hand'],
+      ),
+      loadsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}loads_json'],
+      ),
+      leftLoadsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}left_loads_json'],
+      ),
+      handPositionsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hand_positions_json'],
+      ),
+      edgeSizesMmJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}edge_sizes_mm_json'],
+      ),
+      loadIsMax: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}load_is_max'],
       )!,
+      freeText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}free_text'],
+      ),
+      exerciseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}exercise_id'],
+      ),
+      groupTitle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_title'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
@@ -2242,8 +1760,8 @@ class RepTemplates extends Table
   }
 
   @override
-  RepTemplates createAlias(String alias) {
-    return RepTemplates(attachedDatabase, alias);
+  TrainingItems createAlias(String alias) {
+    return TrainingItems(attachedDatabase, alias);
   }
 
   @override
@@ -2255,71 +1773,189 @@ class RepTemplates extends Table
   bool get dontWriteConstraints => true;
 }
 
-class RepTemplatesData extends DataClass
-    implements Insertable<RepTemplatesData> {
+class TrainingItemsData extends DataClass
+    implements Insertable<TrainingItemsData> {
   final String id;
-  final int isRest;
-  final int rightHand;
-  final int duration;
   final String trainingId;
-  final double targetWeight;
-  final int index;
-  final int gripPosition;
+  final String? parentId;
+  final String type;
+  final int position;
+  final int? cycles;
+  final int? cycleRestSeconds;
+  final int? reps;
+  final int? duration;
+  final int? restSeconds;
+  final int? worktimeSeconds;
+  final String? hand;
+  final String? loadsJson;
+  final String? leftLoadsJson;
+  final String? handPositionsJson;
+  final String? edgeSizesMmJson;
+  final int loadIsMax;
+  final String? freeText;
+  final String? exerciseId;
+  final String? groupTitle;
   final int updatedAt;
-  const RepTemplatesData({
+  const TrainingItemsData({
     required this.id,
-    required this.isRest,
-    required this.rightHand,
-    required this.duration,
     required this.trainingId,
-    required this.targetWeight,
-    required this.index,
-    required this.gripPosition,
+    this.parentId,
+    required this.type,
+    required this.position,
+    this.cycles,
+    this.cycleRestSeconds,
+    this.reps,
+    this.duration,
+    this.restSeconds,
+    this.worktimeSeconds,
+    this.hand,
+    this.loadsJson,
+    this.leftLoadsJson,
+    this.handPositionsJson,
+    this.edgeSizesMmJson,
+    required this.loadIsMax,
+    this.freeText,
+    this.exerciseId,
+    this.groupTitle,
     required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    map['is_rest'] = Variable<int>(isRest);
-    map['right_hand'] = Variable<int>(rightHand);
-    map['duration'] = Variable<int>(duration);
     map['training_id'] = Variable<String>(trainingId);
-    map['target_weight'] = Variable<double>(targetWeight);
-    map['index'] = Variable<int>(index);
-    map['grip_position'] = Variable<int>(gripPosition);
+    if (!nullToAbsent || parentId != null) {
+      map['parent_id'] = Variable<String>(parentId);
+    }
+    map['type'] = Variable<String>(type);
+    map['position'] = Variable<int>(position);
+    if (!nullToAbsent || cycles != null) {
+      map['cycles'] = Variable<int>(cycles);
+    }
+    if (!nullToAbsent || cycleRestSeconds != null) {
+      map['cycle_rest_seconds'] = Variable<int>(cycleRestSeconds);
+    }
+    if (!nullToAbsent || reps != null) {
+      map['reps'] = Variable<int>(reps);
+    }
+    if (!nullToAbsent || duration != null) {
+      map['duration'] = Variable<int>(duration);
+    }
+    if (!nullToAbsent || restSeconds != null) {
+      map['rest_seconds'] = Variable<int>(restSeconds);
+    }
+    if (!nullToAbsent || worktimeSeconds != null) {
+      map['worktime_seconds'] = Variable<int>(worktimeSeconds);
+    }
+    if (!nullToAbsent || hand != null) {
+      map['hand'] = Variable<String>(hand);
+    }
+    if (!nullToAbsent || loadsJson != null) {
+      map['loads_json'] = Variable<String>(loadsJson);
+    }
+    if (!nullToAbsent || leftLoadsJson != null) {
+      map['left_loads_json'] = Variable<String>(leftLoadsJson);
+    }
+    if (!nullToAbsent || handPositionsJson != null) {
+      map['hand_positions_json'] = Variable<String>(handPositionsJson);
+    }
+    if (!nullToAbsent || edgeSizesMmJson != null) {
+      map['edge_sizes_mm_json'] = Variable<String>(edgeSizesMmJson);
+    }
+    map['load_is_max'] = Variable<int>(loadIsMax);
+    if (!nullToAbsent || freeText != null) {
+      map['free_text'] = Variable<String>(freeText);
+    }
+    if (!nullToAbsent || exerciseId != null) {
+      map['exercise_id'] = Variable<String>(exerciseId);
+    }
+    if (!nullToAbsent || groupTitle != null) {
+      map['group_title'] = Variable<String>(groupTitle);
+    }
     map['updated_at'] = Variable<int>(updatedAt);
     return map;
   }
 
-  RepTemplatesCompanion toCompanion(bool nullToAbsent) {
-    return RepTemplatesCompanion(
+  TrainingItemsCompanion toCompanion(bool nullToAbsent) {
+    return TrainingItemsCompanion(
       id: Value(id),
-      isRest: Value(isRest),
-      rightHand: Value(rightHand),
-      duration: Value(duration),
       trainingId: Value(trainingId),
-      targetWeight: Value(targetWeight),
-      index: Value(index),
-      gripPosition: Value(gripPosition),
+      parentId: parentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(parentId),
+      type: Value(type),
+      position: Value(position),
+      cycles: cycles == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cycles),
+      cycleRestSeconds: cycleRestSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cycleRestSeconds),
+      reps: reps == null && nullToAbsent ? const Value.absent() : Value(reps),
+      duration: duration == null && nullToAbsent
+          ? const Value.absent()
+          : Value(duration),
+      restSeconds: restSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(restSeconds),
+      worktimeSeconds: worktimeSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(worktimeSeconds),
+      hand: hand == null && nullToAbsent ? const Value.absent() : Value(hand),
+      loadsJson: loadsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(loadsJson),
+      leftLoadsJson: leftLoadsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(leftLoadsJson),
+      handPositionsJson: handPositionsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(handPositionsJson),
+      edgeSizesMmJson: edgeSizesMmJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(edgeSizesMmJson),
+      loadIsMax: Value(loadIsMax),
+      freeText: freeText == null && nullToAbsent
+          ? const Value.absent()
+          : Value(freeText),
+      exerciseId: exerciseId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(exerciseId),
+      groupTitle: groupTitle == null && nullToAbsent
+          ? const Value.absent()
+          : Value(groupTitle),
       updatedAt: Value(updatedAt),
     );
   }
 
-  factory RepTemplatesData.fromJson(
+  factory TrainingItemsData.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return RepTemplatesData(
+    return TrainingItemsData(
       id: serializer.fromJson<String>(json['id']),
-      isRest: serializer.fromJson<int>(json['isRest']),
-      rightHand: serializer.fromJson<int>(json['rightHand']),
-      duration: serializer.fromJson<int>(json['duration']),
       trainingId: serializer.fromJson<String>(json['trainingId']),
-      targetWeight: serializer.fromJson<double>(json['targetWeight']),
-      index: serializer.fromJson<int>(json['index']),
-      gripPosition: serializer.fromJson<int>(json['gripPosition']),
+      parentId: serializer.fromJson<String?>(json['parentId']),
+      type: serializer.fromJson<String>(json['type']),
+      position: serializer.fromJson<int>(json['position']),
+      cycles: serializer.fromJson<int?>(json['cycles']),
+      cycleRestSeconds: serializer.fromJson<int?>(json['cycleRestSeconds']),
+      reps: serializer.fromJson<int?>(json['reps']),
+      duration: serializer.fromJson<int?>(json['duration']),
+      restSeconds: serializer.fromJson<int?>(json['restSeconds']),
+      worktimeSeconds: serializer.fromJson<int?>(json['worktimeSeconds']),
+      hand: serializer.fromJson<String?>(json['hand']),
+      loadsJson: serializer.fromJson<String?>(json['loadsJson']),
+      leftLoadsJson: serializer.fromJson<String?>(json['leftLoadsJson']),
+      handPositionsJson: serializer.fromJson<String?>(
+        json['handPositionsJson'],
+      ),
+      edgeSizesMmJson: serializer.fromJson<String?>(json['edgeSizesMmJson']),
+      loadIsMax: serializer.fromJson<int>(json['loadIsMax']),
+      freeText: serializer.fromJson<String?>(json['freeText']),
+      exerciseId: serializer.fromJson<String?>(json['exerciseId']),
+      groupTitle: serializer.fromJson<String?>(json['groupTitle']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
     );
   }
@@ -2328,189 +1964,375 @@ class RepTemplatesData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'isRest': serializer.toJson<int>(isRest),
-      'rightHand': serializer.toJson<int>(rightHand),
-      'duration': serializer.toJson<int>(duration),
       'trainingId': serializer.toJson<String>(trainingId),
-      'targetWeight': serializer.toJson<double>(targetWeight),
-      'index': serializer.toJson<int>(index),
-      'gripPosition': serializer.toJson<int>(gripPosition),
+      'parentId': serializer.toJson<String?>(parentId),
+      'type': serializer.toJson<String>(type),
+      'position': serializer.toJson<int>(position),
+      'cycles': serializer.toJson<int?>(cycles),
+      'cycleRestSeconds': serializer.toJson<int?>(cycleRestSeconds),
+      'reps': serializer.toJson<int?>(reps),
+      'duration': serializer.toJson<int?>(duration),
+      'restSeconds': serializer.toJson<int?>(restSeconds),
+      'worktimeSeconds': serializer.toJson<int?>(worktimeSeconds),
+      'hand': serializer.toJson<String?>(hand),
+      'loadsJson': serializer.toJson<String?>(loadsJson),
+      'leftLoadsJson': serializer.toJson<String?>(leftLoadsJson),
+      'handPositionsJson': serializer.toJson<String?>(handPositionsJson),
+      'edgeSizesMmJson': serializer.toJson<String?>(edgeSizesMmJson),
+      'loadIsMax': serializer.toJson<int>(loadIsMax),
+      'freeText': serializer.toJson<String?>(freeText),
+      'exerciseId': serializer.toJson<String?>(exerciseId),
+      'groupTitle': serializer.toJson<String?>(groupTitle),
       'updatedAt': serializer.toJson<int>(updatedAt),
     };
   }
 
-  RepTemplatesData copyWith({
+  TrainingItemsData copyWith({
     String? id,
-    int? isRest,
-    int? rightHand,
-    int? duration,
     String? trainingId,
-    double? targetWeight,
-    int? index,
-    int? gripPosition,
+    Value<String?> parentId = const Value.absent(),
+    String? type,
+    int? position,
+    Value<int?> cycles = const Value.absent(),
+    Value<int?> cycleRestSeconds = const Value.absent(),
+    Value<int?> reps = const Value.absent(),
+    Value<int?> duration = const Value.absent(),
+    Value<int?> restSeconds = const Value.absent(),
+    Value<int?> worktimeSeconds = const Value.absent(),
+    Value<String?> hand = const Value.absent(),
+    Value<String?> loadsJson = const Value.absent(),
+    Value<String?> leftLoadsJson = const Value.absent(),
+    Value<String?> handPositionsJson = const Value.absent(),
+    Value<String?> edgeSizesMmJson = const Value.absent(),
+    int? loadIsMax,
+    Value<String?> freeText = const Value.absent(),
+    Value<String?> exerciseId = const Value.absent(),
+    Value<String?> groupTitle = const Value.absent(),
     int? updatedAt,
-  }) => RepTemplatesData(
+  }) => TrainingItemsData(
     id: id ?? this.id,
-    isRest: isRest ?? this.isRest,
-    rightHand: rightHand ?? this.rightHand,
-    duration: duration ?? this.duration,
     trainingId: trainingId ?? this.trainingId,
-    targetWeight: targetWeight ?? this.targetWeight,
-    index: index ?? this.index,
-    gripPosition: gripPosition ?? this.gripPosition,
+    parentId: parentId.present ? parentId.value : this.parentId,
+    type: type ?? this.type,
+    position: position ?? this.position,
+    cycles: cycles.present ? cycles.value : this.cycles,
+    cycleRestSeconds: cycleRestSeconds.present
+        ? cycleRestSeconds.value
+        : this.cycleRestSeconds,
+    reps: reps.present ? reps.value : this.reps,
+    duration: duration.present ? duration.value : this.duration,
+    restSeconds: restSeconds.present ? restSeconds.value : this.restSeconds,
+    worktimeSeconds: worktimeSeconds.present
+        ? worktimeSeconds.value
+        : this.worktimeSeconds,
+    hand: hand.present ? hand.value : this.hand,
+    loadsJson: loadsJson.present ? loadsJson.value : this.loadsJson,
+    leftLoadsJson: leftLoadsJson.present
+        ? leftLoadsJson.value
+        : this.leftLoadsJson,
+    handPositionsJson: handPositionsJson.present
+        ? handPositionsJson.value
+        : this.handPositionsJson,
+    edgeSizesMmJson: edgeSizesMmJson.present
+        ? edgeSizesMmJson.value
+        : this.edgeSizesMmJson,
+    loadIsMax: loadIsMax ?? this.loadIsMax,
+    freeText: freeText.present ? freeText.value : this.freeText,
+    exerciseId: exerciseId.present ? exerciseId.value : this.exerciseId,
+    groupTitle: groupTitle.present ? groupTitle.value : this.groupTitle,
     updatedAt: updatedAt ?? this.updatedAt,
   );
-  RepTemplatesData copyWithCompanion(RepTemplatesCompanion data) {
-    return RepTemplatesData(
+  TrainingItemsData copyWithCompanion(TrainingItemsCompanion data) {
+    return TrainingItemsData(
       id: data.id.present ? data.id.value : this.id,
-      isRest: data.isRest.present ? data.isRest.value : this.isRest,
-      rightHand: data.rightHand.present ? data.rightHand.value : this.rightHand,
-      duration: data.duration.present ? data.duration.value : this.duration,
       trainingId: data.trainingId.present
           ? data.trainingId.value
           : this.trainingId,
-      targetWeight: data.targetWeight.present
-          ? data.targetWeight.value
-          : this.targetWeight,
-      index: data.index.present ? data.index.value : this.index,
-      gripPosition: data.gripPosition.present
-          ? data.gripPosition.value
-          : this.gripPosition,
+      parentId: data.parentId.present ? data.parentId.value : this.parentId,
+      type: data.type.present ? data.type.value : this.type,
+      position: data.position.present ? data.position.value : this.position,
+      cycles: data.cycles.present ? data.cycles.value : this.cycles,
+      cycleRestSeconds: data.cycleRestSeconds.present
+          ? data.cycleRestSeconds.value
+          : this.cycleRestSeconds,
+      reps: data.reps.present ? data.reps.value : this.reps,
+      duration: data.duration.present ? data.duration.value : this.duration,
+      restSeconds: data.restSeconds.present
+          ? data.restSeconds.value
+          : this.restSeconds,
+      worktimeSeconds: data.worktimeSeconds.present
+          ? data.worktimeSeconds.value
+          : this.worktimeSeconds,
+      hand: data.hand.present ? data.hand.value : this.hand,
+      loadsJson: data.loadsJson.present ? data.loadsJson.value : this.loadsJson,
+      leftLoadsJson: data.leftLoadsJson.present
+          ? data.leftLoadsJson.value
+          : this.leftLoadsJson,
+      handPositionsJson: data.handPositionsJson.present
+          ? data.handPositionsJson.value
+          : this.handPositionsJson,
+      edgeSizesMmJson: data.edgeSizesMmJson.present
+          ? data.edgeSizesMmJson.value
+          : this.edgeSizesMmJson,
+      loadIsMax: data.loadIsMax.present ? data.loadIsMax.value : this.loadIsMax,
+      freeText: data.freeText.present ? data.freeText.value : this.freeText,
+      exerciseId: data.exerciseId.present
+          ? data.exerciseId.value
+          : this.exerciseId,
+      groupTitle: data.groupTitle.present
+          ? data.groupTitle.value
+          : this.groupTitle,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('RepTemplatesData(')
+    return (StringBuffer('TrainingItemsData(')
           ..write('id: $id, ')
-          ..write('isRest: $isRest, ')
-          ..write('rightHand: $rightHand, ')
-          ..write('duration: $duration, ')
           ..write('trainingId: $trainingId, ')
-          ..write('targetWeight: $targetWeight, ')
-          ..write('index: $index, ')
-          ..write('gripPosition: $gripPosition, ')
+          ..write('parentId: $parentId, ')
+          ..write('type: $type, ')
+          ..write('position: $position, ')
+          ..write('cycles: $cycles, ')
+          ..write('cycleRestSeconds: $cycleRestSeconds, ')
+          ..write('reps: $reps, ')
+          ..write('duration: $duration, ')
+          ..write('restSeconds: $restSeconds, ')
+          ..write('worktimeSeconds: $worktimeSeconds, ')
+          ..write('hand: $hand, ')
+          ..write('loadsJson: $loadsJson, ')
+          ..write('leftLoadsJson: $leftLoadsJson, ')
+          ..write('handPositionsJson: $handPositionsJson, ')
+          ..write('edgeSizesMmJson: $edgeSizesMmJson, ')
+          ..write('loadIsMax: $loadIsMax, ')
+          ..write('freeText: $freeText, ')
+          ..write('exerciseId: $exerciseId, ')
+          ..write('groupTitle: $groupTitle, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
-    isRest,
-    rightHand,
-    duration,
     trainingId,
-    targetWeight,
-    index,
-    gripPosition,
+    parentId,
+    type,
+    position,
+    cycles,
+    cycleRestSeconds,
+    reps,
+    duration,
+    restSeconds,
+    worktimeSeconds,
+    hand,
+    loadsJson,
+    leftLoadsJson,
+    handPositionsJson,
+    edgeSizesMmJson,
+    loadIsMax,
+    freeText,
+    exerciseId,
+    groupTitle,
     updatedAt,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is RepTemplatesData &&
+      (other is TrainingItemsData &&
           other.id == this.id &&
-          other.isRest == this.isRest &&
-          other.rightHand == this.rightHand &&
-          other.duration == this.duration &&
           other.trainingId == this.trainingId &&
-          other.targetWeight == this.targetWeight &&
-          other.index == this.index &&
-          other.gripPosition == this.gripPosition &&
+          other.parentId == this.parentId &&
+          other.type == this.type &&
+          other.position == this.position &&
+          other.cycles == this.cycles &&
+          other.cycleRestSeconds == this.cycleRestSeconds &&
+          other.reps == this.reps &&
+          other.duration == this.duration &&
+          other.restSeconds == this.restSeconds &&
+          other.worktimeSeconds == this.worktimeSeconds &&
+          other.hand == this.hand &&
+          other.loadsJson == this.loadsJson &&
+          other.leftLoadsJson == this.leftLoadsJson &&
+          other.handPositionsJson == this.handPositionsJson &&
+          other.edgeSizesMmJson == this.edgeSizesMmJson &&
+          other.loadIsMax == this.loadIsMax &&
+          other.freeText == this.freeText &&
+          other.exerciseId == this.exerciseId &&
+          other.groupTitle == this.groupTitle &&
           other.updatedAt == this.updatedAt);
 }
 
-class RepTemplatesCompanion extends UpdateCompanion<RepTemplatesData> {
+class TrainingItemsCompanion extends UpdateCompanion<TrainingItemsData> {
   final Value<String> id;
-  final Value<int> isRest;
-  final Value<int> rightHand;
-  final Value<int> duration;
   final Value<String> trainingId;
-  final Value<double> targetWeight;
-  final Value<int> index;
-  final Value<int> gripPosition;
+  final Value<String?> parentId;
+  final Value<String> type;
+  final Value<int> position;
+  final Value<int?> cycles;
+  final Value<int?> cycleRestSeconds;
+  final Value<int?> reps;
+  final Value<int?> duration;
+  final Value<int?> restSeconds;
+  final Value<int?> worktimeSeconds;
+  final Value<String?> hand;
+  final Value<String?> loadsJson;
+  final Value<String?> leftLoadsJson;
+  final Value<String?> handPositionsJson;
+  final Value<String?> edgeSizesMmJson;
+  final Value<int> loadIsMax;
+  final Value<String?> freeText;
+  final Value<String?> exerciseId;
+  final Value<String?> groupTitle;
   final Value<int> updatedAt;
   final Value<int> rowid;
-  const RepTemplatesCompanion({
+  const TrainingItemsCompanion({
     this.id = const Value.absent(),
-    this.isRest = const Value.absent(),
-    this.rightHand = const Value.absent(),
-    this.duration = const Value.absent(),
     this.trainingId = const Value.absent(),
-    this.targetWeight = const Value.absent(),
-    this.index = const Value.absent(),
-    this.gripPosition = const Value.absent(),
+    this.parentId = const Value.absent(),
+    this.type = const Value.absent(),
+    this.position = const Value.absent(),
+    this.cycles = const Value.absent(),
+    this.cycleRestSeconds = const Value.absent(),
+    this.reps = const Value.absent(),
+    this.duration = const Value.absent(),
+    this.restSeconds = const Value.absent(),
+    this.worktimeSeconds = const Value.absent(),
+    this.hand = const Value.absent(),
+    this.loadsJson = const Value.absent(),
+    this.leftLoadsJson = const Value.absent(),
+    this.handPositionsJson = const Value.absent(),
+    this.edgeSizesMmJson = const Value.absent(),
+    this.loadIsMax = const Value.absent(),
+    this.freeText = const Value.absent(),
+    this.exerciseId = const Value.absent(),
+    this.groupTitle = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  RepTemplatesCompanion.insert({
+  TrainingItemsCompanion.insert({
     required String id,
-    required int isRest,
-    required int rightHand,
-    required int duration,
     required String trainingId,
-    required double targetWeight,
-    required int index,
-    this.gripPosition = const Value.absent(),
+    this.parentId = const Value.absent(),
+    required String type,
+    this.position = const Value.absent(),
+    this.cycles = const Value.absent(),
+    this.cycleRestSeconds = const Value.absent(),
+    this.reps = const Value.absent(),
+    this.duration = const Value.absent(),
+    this.restSeconds = const Value.absent(),
+    this.worktimeSeconds = const Value.absent(),
+    this.hand = const Value.absent(),
+    this.loadsJson = const Value.absent(),
+    this.leftLoadsJson = const Value.absent(),
+    this.handPositionsJson = const Value.absent(),
+    this.edgeSizesMmJson = const Value.absent(),
+    this.loadIsMax = const Value.absent(),
+    this.freeText = const Value.absent(),
+    this.exerciseId = const Value.absent(),
+    this.groupTitle = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       isRest = Value(isRest),
-       rightHand = Value(rightHand),
-       duration = Value(duration),
        trainingId = Value(trainingId),
-       targetWeight = Value(targetWeight),
-       index = Value(index);
-  static Insertable<RepTemplatesData> custom({
+       type = Value(type);
+  static Insertable<TrainingItemsData> custom({
     Expression<String>? id,
-    Expression<int>? isRest,
-    Expression<int>? rightHand,
-    Expression<int>? duration,
     Expression<String>? trainingId,
-    Expression<double>? targetWeight,
-    Expression<int>? index,
-    Expression<int>? gripPosition,
+    Expression<String>? parentId,
+    Expression<String>? type,
+    Expression<int>? position,
+    Expression<int>? cycles,
+    Expression<int>? cycleRestSeconds,
+    Expression<int>? reps,
+    Expression<int>? duration,
+    Expression<int>? restSeconds,
+    Expression<int>? worktimeSeconds,
+    Expression<String>? hand,
+    Expression<String>? loadsJson,
+    Expression<String>? leftLoadsJson,
+    Expression<String>? handPositionsJson,
+    Expression<String>? edgeSizesMmJson,
+    Expression<int>? loadIsMax,
+    Expression<String>? freeText,
+    Expression<String>? exerciseId,
+    Expression<String>? groupTitle,
     Expression<int>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (isRest != null) 'is_rest': isRest,
-      if (rightHand != null) 'right_hand': rightHand,
-      if (duration != null) 'duration': duration,
       if (trainingId != null) 'training_id': trainingId,
-      if (targetWeight != null) 'target_weight': targetWeight,
-      if (index != null) 'index': index,
-      if (gripPosition != null) 'grip_position': gripPosition,
+      if (parentId != null) 'parent_id': parentId,
+      if (type != null) 'type': type,
+      if (position != null) 'position': position,
+      if (cycles != null) 'cycles': cycles,
+      if (cycleRestSeconds != null) 'cycle_rest_seconds': cycleRestSeconds,
+      if (reps != null) 'reps': reps,
+      if (duration != null) 'duration': duration,
+      if (restSeconds != null) 'rest_seconds': restSeconds,
+      if (worktimeSeconds != null) 'worktime_seconds': worktimeSeconds,
+      if (hand != null) 'hand': hand,
+      if (loadsJson != null) 'loads_json': loadsJson,
+      if (leftLoadsJson != null) 'left_loads_json': leftLoadsJson,
+      if (handPositionsJson != null) 'hand_positions_json': handPositionsJson,
+      if (edgeSizesMmJson != null) 'edge_sizes_mm_json': edgeSizesMmJson,
+      if (loadIsMax != null) 'load_is_max': loadIsMax,
+      if (freeText != null) 'free_text': freeText,
+      if (exerciseId != null) 'exercise_id': exerciseId,
+      if (groupTitle != null) 'group_title': groupTitle,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
-  RepTemplatesCompanion copyWith({
+  TrainingItemsCompanion copyWith({
     Value<String>? id,
-    Value<int>? isRest,
-    Value<int>? rightHand,
-    Value<int>? duration,
     Value<String>? trainingId,
-    Value<double>? targetWeight,
-    Value<int>? index,
-    Value<int>? gripPosition,
+    Value<String?>? parentId,
+    Value<String>? type,
+    Value<int>? position,
+    Value<int?>? cycles,
+    Value<int?>? cycleRestSeconds,
+    Value<int?>? reps,
+    Value<int?>? duration,
+    Value<int?>? restSeconds,
+    Value<int?>? worktimeSeconds,
+    Value<String?>? hand,
+    Value<String?>? loadsJson,
+    Value<String?>? leftLoadsJson,
+    Value<String?>? handPositionsJson,
+    Value<String?>? edgeSizesMmJson,
+    Value<int>? loadIsMax,
+    Value<String?>? freeText,
+    Value<String?>? exerciseId,
+    Value<String?>? groupTitle,
     Value<int>? updatedAt,
     Value<int>? rowid,
   }) {
-    return RepTemplatesCompanion(
+    return TrainingItemsCompanion(
       id: id ?? this.id,
-      isRest: isRest ?? this.isRest,
-      rightHand: rightHand ?? this.rightHand,
-      duration: duration ?? this.duration,
       trainingId: trainingId ?? this.trainingId,
-      targetWeight: targetWeight ?? this.targetWeight,
-      index: index ?? this.index,
-      gripPosition: gripPosition ?? this.gripPosition,
+      parentId: parentId ?? this.parentId,
+      type: type ?? this.type,
+      position: position ?? this.position,
+      cycles: cycles ?? this.cycles,
+      cycleRestSeconds: cycleRestSeconds ?? this.cycleRestSeconds,
+      reps: reps ?? this.reps,
+      duration: duration ?? this.duration,
+      restSeconds: restSeconds ?? this.restSeconds,
+      worktimeSeconds: worktimeSeconds ?? this.worktimeSeconds,
+      hand: hand ?? this.hand,
+      loadsJson: loadsJson ?? this.loadsJson,
+      leftLoadsJson: leftLoadsJson ?? this.leftLoadsJson,
+      handPositionsJson: handPositionsJson ?? this.handPositionsJson,
+      edgeSizesMmJson: edgeSizesMmJson ?? this.edgeSizesMmJson,
+      loadIsMax: loadIsMax ?? this.loadIsMax,
+      freeText: freeText ?? this.freeText,
+      exerciseId: exerciseId ?? this.exerciseId,
+      groupTitle: groupTitle ?? this.groupTitle,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2522,26 +2344,62 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplatesData> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
-    if (isRest.present) {
-      map['is_rest'] = Variable<int>(isRest.value);
+    if (trainingId.present) {
+      map['training_id'] = Variable<String>(trainingId.value);
     }
-    if (rightHand.present) {
-      map['right_hand'] = Variable<int>(rightHand.value);
+    if (parentId.present) {
+      map['parent_id'] = Variable<String>(parentId.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (cycles.present) {
+      map['cycles'] = Variable<int>(cycles.value);
+    }
+    if (cycleRestSeconds.present) {
+      map['cycle_rest_seconds'] = Variable<int>(cycleRestSeconds.value);
+    }
+    if (reps.present) {
+      map['reps'] = Variable<int>(reps.value);
     }
     if (duration.present) {
       map['duration'] = Variable<int>(duration.value);
     }
-    if (trainingId.present) {
-      map['training_id'] = Variable<String>(trainingId.value);
+    if (restSeconds.present) {
+      map['rest_seconds'] = Variable<int>(restSeconds.value);
     }
-    if (targetWeight.present) {
-      map['target_weight'] = Variable<double>(targetWeight.value);
+    if (worktimeSeconds.present) {
+      map['worktime_seconds'] = Variable<int>(worktimeSeconds.value);
     }
-    if (index.present) {
-      map['index'] = Variable<int>(index.value);
+    if (hand.present) {
+      map['hand'] = Variable<String>(hand.value);
     }
-    if (gripPosition.present) {
-      map['grip_position'] = Variable<int>(gripPosition.value);
+    if (loadsJson.present) {
+      map['loads_json'] = Variable<String>(loadsJson.value);
+    }
+    if (leftLoadsJson.present) {
+      map['left_loads_json'] = Variable<String>(leftLoadsJson.value);
+    }
+    if (handPositionsJson.present) {
+      map['hand_positions_json'] = Variable<String>(handPositionsJson.value);
+    }
+    if (edgeSizesMmJson.present) {
+      map['edge_sizes_mm_json'] = Variable<String>(edgeSizesMmJson.value);
+    }
+    if (loadIsMax.present) {
+      map['load_is_max'] = Variable<int>(loadIsMax.value);
+    }
+    if (freeText.present) {
+      map['free_text'] = Variable<String>(freeText.value);
+    }
+    if (exerciseId.present) {
+      map['exercise_id'] = Variable<String>(exerciseId.value);
+    }
+    if (groupTitle.present) {
+      map['group_title'] = Variable<String>(groupTitle.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
@@ -2554,15 +2412,27 @@ class RepTemplatesCompanion extends UpdateCompanion<RepTemplatesData> {
 
   @override
   String toString() {
-    return (StringBuffer('RepTemplatesCompanion(')
+    return (StringBuffer('TrainingItemsCompanion(')
           ..write('id: $id, ')
-          ..write('isRest: $isRest, ')
-          ..write('rightHand: $rightHand, ')
-          ..write('duration: $duration, ')
           ..write('trainingId: $trainingId, ')
-          ..write('targetWeight: $targetWeight, ')
-          ..write('index: $index, ')
-          ..write('gripPosition: $gripPosition, ')
+          ..write('parentId: $parentId, ')
+          ..write('type: $type, ')
+          ..write('position: $position, ')
+          ..write('cycles: $cycles, ')
+          ..write('cycleRestSeconds: $cycleRestSeconds, ')
+          ..write('reps: $reps, ')
+          ..write('duration: $duration, ')
+          ..write('restSeconds: $restSeconds, ')
+          ..write('worktimeSeconds: $worktimeSeconds, ')
+          ..write('hand: $hand, ')
+          ..write('loadsJson: $loadsJson, ')
+          ..write('leftLoadsJson: $leftLoadsJson, ')
+          ..write('handPositionsJson: $handPositionsJson, ')
+          ..write('edgeSizesMmJson: $edgeSizesMmJson, ')
+          ..write('loadIsMax: $loadIsMax, ')
+          ..write('freeText: $freeText, ')
+          ..write('exerciseId: $exerciseId, ')
+          ..write('groupTitle: $groupTitle, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -4447,13 +4317,12 @@ class UsersCompanion extends UpdateCompanion<UsersData> {
   }
 }
 
-class DatabaseAtV7 extends GeneratedDatabase {
-  DatabaseAtV7(QueryExecutor e) : super(e);
+class DatabaseAtV9 extends GeneratedDatabase {
+  DatabaseAtV9(QueryExecutor e) : super(e);
   late final Sessions sessions = Sessions(this);
   late final Assessments assessments = Assessments(this);
-  late final Repeaters repeaters = Repeaters(this);
   late final Trainings trainings = Trainings(this);
-  late final RepTemplates repTemplates = RepTemplates(this);
+  late final TrainingItems trainingItems = TrainingItems(this);
   late final RepDatas repDatas = RepDatas(this);
   late final SensorConfigs sensorConfigs = SensorConfigs(this);
   late final BuiltinTrainingWeights builtinTrainingWeights =
@@ -4468,9 +4337,8 @@ class DatabaseAtV7 extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     sessions,
     assessments,
-    repeaters,
     trainings,
-    repTemplates,
+    trainingItems,
     repDatas,
     sensorConfigs,
     builtinTrainingWeights,
@@ -4488,17 +4356,10 @@ class DatabaseAtV7 extends GeneratedDatabase {
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
-        'repeaters',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('trainings', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
         'trainings',
         limitUpdateKind: UpdateKind.delete,
       ),
-      result: [TableUpdate('rep_templates', kind: UpdateKind.delete)],
+      result: [TableUpdate('training_items', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -4509,5 +4370,5 @@ class DatabaseAtV7 extends GeneratedDatabase {
     ),
   ]);
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 9;
 }

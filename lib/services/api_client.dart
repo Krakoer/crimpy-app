@@ -6,8 +6,8 @@ import 'package:crimpy/services/api_exception.dart';
 
 class ApiClient {
   static const String baseUrl = kDebugMode
-      // ? 'https://devapi.crimpy.app'
-      ? 'http://192.168.1.15:3000'
+      ? 'https://devapi.crimpy.app'
+      // ? 'http://192.168.1.15:3000'
       : 'https://api.crimpy.app';
   static const String tokenKey = 'auth_token';
   static const String refreshTokenKey = 'refresh_token';

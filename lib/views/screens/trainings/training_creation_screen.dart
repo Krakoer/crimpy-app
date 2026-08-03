@@ -148,7 +148,7 @@ class _UnifiedTrainingCreationScreenState
               loadIsMax: e.$2.loadIsMax,
               freeText: e.$2.freeText,
               exerciseId: e.$2.exerciseId,
-              sectionTitle: e.$2.sectionTitle,
+              groupTitle: e.$2.groupTitle,
             ),
           )
           .toList();

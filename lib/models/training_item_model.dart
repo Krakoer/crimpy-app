@@ -4,7 +4,7 @@ enum TrainingItemType {
   free,
   exercise,
   circuit,
-  section;
+  group;
 
   static TrainingItemType fromString(String value) => switch (value) {
     'repeater' => TrainingItemType.repeater,
@@ -12,7 +12,7 @@ enum TrainingItemType {
     'free' => TrainingItemType.free,
     'exercise' => TrainingItemType.exercise,
     'circuit' => TrainingItemType.circuit,
-    'section' => TrainingItemType.section,
+    'group' => TrainingItemType.group,
     _ => TrainingItemType.free,
   };
 
@@ -22,7 +22,7 @@ enum TrainingItemType {
     TrainingItemType.free => 'free',
     TrainingItemType.exercise => 'exercise',
     TrainingItemType.circuit => 'circuit',
-    TrainingItemType.section => 'section',
+    TrainingItemType.group => 'group',
   };
 }
 
@@ -122,8 +122,8 @@ class TrainingItem {
   // Exercise display name (denormalized from the referenced exercise)
   final String? exerciseName;
 
-  // Section label
-  final String? sectionTitle;
+  // Group label
+  final String? groupTitle;
 
   // Nested items (circuits and sections)
   final List<TrainingItem> items;
@@ -149,7 +149,7 @@ class TrainingItem {
     this.comment,
     this.exerciseId,
     this.exerciseName,
-    this.sectionTitle,
+    this.groupTitle,
     this.items = const [],
   });
 
@@ -227,7 +227,7 @@ class TrainingItem {
       comment: json['comment'] as String?,
       exerciseId: json['exercise_id'] as String?,
       exerciseName: json['exercise_name'] as String?,
-      sectionTitle: json['section_title'] as String?,
+      groupTitle: json['group_title'] as String?,
       items: nestedItems,
     );
   }
@@ -251,7 +251,7 @@ class TrainingItem {
     if (freeText != null) map['free_text'] = freeText;
     if (comment != null) map['comment'] = comment;
     if (exerciseId != null) map['exercise_id'] = exerciseId;
-    if (sectionTitle != null) map['section_title'] = sectionTitle;
+    if (groupTitle != null) map['group_title'] = groupTitle;
     if (items.isNotEmpty) {
       map['items'] = items.map((i) => i.toJson()).toList();
     }
@@ -294,7 +294,7 @@ class TrainingItem {
       comment: comment,
       exerciseId: exerciseId,
       exerciseName: exerciseName,
-      sectionTitle: sectionTitle,
+      groupTitle: groupTitle,
       items: items ?? this.items,
     );
   }

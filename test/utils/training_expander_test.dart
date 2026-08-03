@@ -76,9 +76,9 @@ void main() {
     final training = _training([
       TrainingItem(
         id: 's',
-        type: TrainingItemType.section,
+        type: TrainingItemType.group,
         position: 0,
-        sectionTitle: 'Warmup',
+        groupTitle: 'Warmup',
         items: [
           TrainingItem(
             id: 'e1',

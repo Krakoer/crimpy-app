@@ -1939,12 +1939,12 @@ class $TrainingItemsTable extends TrainingItems
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _sectionTitleMeta = const VerificationMeta(
-    'sectionTitle',
+  static const VerificationMeta _groupTitleMeta = const VerificationMeta(
+    'groupTitle',
   );
   @override
-  late final GeneratedColumn<String> sectionTitle = GeneratedColumn<String>(
-    'section_title',
+  late final GeneratedColumn<String> groupTitle = GeneratedColumn<String>(
+    'group_title',
     aliasedName,
     true,
     type: DriftSqlType.string,
@@ -1983,7 +1983,7 @@ class $TrainingItemsTable extends TrainingItems
     loadIsMax,
     freeText,
     exerciseId,
-    sectionTitle,
+    groupTitle,
     updatedAt,
   ];
   @override
@@ -2131,13 +2131,10 @@ class $TrainingItemsTable extends TrainingItems
         exerciseId.isAcceptableOrUnknown(data['exercise_id']!, _exerciseIdMeta),
       );
     }
-    if (data.containsKey('section_title')) {
+    if (data.containsKey('group_title')) {
       context.handle(
-        _sectionTitleMeta,
-        sectionTitle.isAcceptableOrUnknown(
-          data['section_title']!,
-          _sectionTitleMeta,
-        ),
+        _groupTitleMeta,
+        groupTitle.isAcceptableOrUnknown(data['group_title']!, _groupTitleMeta),
       );
     }
     if (data.containsKey('updated_at')) {
@@ -2231,9 +2228,9 @@ class $TrainingItemsTable extends TrainingItems
         DriftSqlType.string,
         data['${effectivePrefix}exercise_id'],
       ),
-      sectionTitle: attachedDatabase.typeMapping.read(
+      groupTitle: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}section_title'],
+        data['${effectivePrefix}group_title'],
       ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -2268,7 +2265,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
   final bool loadIsMax;
   final String? freeText;
   final String? exerciseId;
-  final String? sectionTitle;
+  final String? groupTitle;
   final DateTime updatedAt;
   const TrainingItemRow({
     required this.id,
@@ -2290,7 +2287,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     required this.loadIsMax,
     this.freeText,
     this.exerciseId,
-    this.sectionTitle,
+    this.groupTitle,
     required this.updatedAt,
   });
   @override
@@ -2343,8 +2340,8 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     if (!nullToAbsent || exerciseId != null) {
       map['exercise_id'] = Variable<String>(exerciseId);
     }
-    if (!nullToAbsent || sectionTitle != null) {
-      map['section_title'] = Variable<String>(sectionTitle);
+    if (!nullToAbsent || groupTitle != null) {
+      map['group_title'] = Variable<String>(groupTitle);
     }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -2395,9 +2392,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
       exerciseId: exerciseId == null && nullToAbsent
           ? const Value.absent()
           : Value(exerciseId),
-      sectionTitle: sectionTitle == null && nullToAbsent
+      groupTitle: groupTitle == null && nullToAbsent
           ? const Value.absent()
-          : Value(sectionTitle),
+          : Value(groupTitle),
       updatedAt: Value(updatedAt),
     );
   }
@@ -2429,7 +2426,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
       loadIsMax: serializer.fromJson<bool>(json['loadIsMax']),
       freeText: serializer.fromJson<String?>(json['freeText']),
       exerciseId: serializer.fromJson<String?>(json['exerciseId']),
-      sectionTitle: serializer.fromJson<String?>(json['sectionTitle']),
+      groupTitle: serializer.fromJson<String?>(json['groupTitle']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -2456,7 +2453,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
       'loadIsMax': serializer.toJson<bool>(loadIsMax),
       'freeText': serializer.toJson<String?>(freeText),
       'exerciseId': serializer.toJson<String?>(exerciseId),
-      'sectionTitle': serializer.toJson<String?>(sectionTitle),
+      'groupTitle': serializer.toJson<String?>(groupTitle),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -2481,7 +2478,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     bool? loadIsMax,
     Value<String?> freeText = const Value.absent(),
     Value<String?> exerciseId = const Value.absent(),
-    Value<String?> sectionTitle = const Value.absent(),
+    Value<String?> groupTitle = const Value.absent(),
     DateTime? updatedAt,
   }) => TrainingItemRow(
     id: id ?? this.id,
@@ -2513,7 +2510,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     loadIsMax: loadIsMax ?? this.loadIsMax,
     freeText: freeText.present ? freeText.value : this.freeText,
     exerciseId: exerciseId.present ? exerciseId.value : this.exerciseId,
-    sectionTitle: sectionTitle.present ? sectionTitle.value : this.sectionTitle,
+    groupTitle: groupTitle.present ? groupTitle.value : this.groupTitle,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   TrainingItemRow copyWithCompanion(TrainingItemsCompanion data) {
@@ -2553,9 +2550,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
       exerciseId: data.exerciseId.present
           ? data.exerciseId.value
           : this.exerciseId,
-      sectionTitle: data.sectionTitle.present
-          ? data.sectionTitle.value
-          : this.sectionTitle,
+      groupTitle: data.groupTitle.present
+          ? data.groupTitle.value
+          : this.groupTitle,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -2582,7 +2579,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
           ..write('loadIsMax: $loadIsMax, ')
           ..write('freeText: $freeText, ')
           ..write('exerciseId: $exerciseId, ')
-          ..write('sectionTitle: $sectionTitle, ')
+          ..write('groupTitle: $groupTitle, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -2609,7 +2606,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     loadIsMax,
     freeText,
     exerciseId,
-    sectionTitle,
+    groupTitle,
     updatedAt,
   ]);
   @override
@@ -2635,7 +2632,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
           other.loadIsMax == this.loadIsMax &&
           other.freeText == this.freeText &&
           other.exerciseId == this.exerciseId &&
-          other.sectionTitle == this.sectionTitle &&
+          other.groupTitle == this.groupTitle &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -2659,7 +2656,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
   final Value<bool> loadIsMax;
   final Value<String?> freeText;
   final Value<String?> exerciseId;
-  final Value<String?> sectionTitle;
+  final Value<String?> groupTitle;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const TrainingItemsCompanion({
@@ -2682,7 +2679,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     this.loadIsMax = const Value.absent(),
     this.freeText = const Value.absent(),
     this.exerciseId = const Value.absent(),
-    this.sectionTitle = const Value.absent(),
+    this.groupTitle = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -2706,7 +2703,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     this.loadIsMax = const Value.absent(),
     this.freeText = const Value.absent(),
     this.exerciseId = const Value.absent(),
-    this.sectionTitle = const Value.absent(),
+    this.groupTitle = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : trainingId = Value(trainingId),
@@ -2731,7 +2728,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     Expression<bool>? loadIsMax,
     Expression<String>? freeText,
     Expression<String>? exerciseId,
-    Expression<String>? sectionTitle,
+    Expression<String>? groupTitle,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -2755,7 +2752,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
       if (loadIsMax != null) 'load_is_max': loadIsMax,
       if (freeText != null) 'free_text': freeText,
       if (exerciseId != null) 'exercise_id': exerciseId,
-      if (sectionTitle != null) 'section_title': sectionTitle,
+      if (groupTitle != null) 'group_title': groupTitle,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2781,7 +2778,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     Value<bool>? loadIsMax,
     Value<String?>? freeText,
     Value<String?>? exerciseId,
-    Value<String?>? sectionTitle,
+    Value<String?>? groupTitle,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -2805,7 +2802,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
       loadIsMax: loadIsMax ?? this.loadIsMax,
       freeText: freeText ?? this.freeText,
       exerciseId: exerciseId ?? this.exerciseId,
-      sectionTitle: sectionTitle ?? this.sectionTitle,
+      groupTitle: groupTitle ?? this.groupTitle,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2871,8 +2868,8 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     if (exerciseId.present) {
       map['exercise_id'] = Variable<String>(exerciseId.value);
     }
-    if (sectionTitle.present) {
-      map['section_title'] = Variable<String>(sectionTitle.value);
+    if (groupTitle.present) {
+      map['group_title'] = Variable<String>(groupTitle.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
@@ -2905,7 +2902,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
           ..write('loadIsMax: $loadIsMax, ')
           ..write('freeText: $freeText, ')
           ..write('exerciseId: $exerciseId, ')
-          ..write('sectionTitle: $sectionTitle, ')
+          ..write('groupTitle: $groupTitle, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -6019,7 +6016,7 @@ typedef $$TrainingItemsTableCreateCompanionBuilder =
       Value<bool> loadIsMax,
       Value<String?> freeText,
       Value<String?> exerciseId,
-      Value<String?> sectionTitle,
+      Value<String?> groupTitle,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -6044,7 +6041,7 @@ typedef $$TrainingItemsTableUpdateCompanionBuilder =
       Value<bool> loadIsMax,
       Value<String?> freeText,
       Value<String?> exerciseId,
-      Value<String?> sectionTitle,
+      Value<String?> groupTitle,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -6153,8 +6150,8 @@ class $$TrainingItemsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get sectionTitle => $composableBuilder(
-    column: $table.sectionTitle,
+  ColumnFilters<String> get groupTitle => $composableBuilder(
+    column: $table.groupTitle,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6268,8 +6265,8 @@ class $$TrainingItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get sectionTitle => $composableBuilder(
-    column: $table.sectionTitle,
+  ColumnOrderings<String> get groupTitle => $composableBuilder(
+    column: $table.groupTitle,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -6361,8 +6358,8 @@ class $$TrainingItemsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<String> get sectionTitle => $composableBuilder(
-    column: $table.sectionTitle,
+  GeneratedColumn<String> get groupTitle => $composableBuilder(
+    column: $table.groupTitle,
     builder: (column) => column,
   );
 
@@ -6420,7 +6417,7 @@ class $$TrainingItemsTableTableManager
                 Value<bool> loadIsMax = const Value.absent(),
                 Value<String?> freeText = const Value.absent(),
                 Value<String?> exerciseId = const Value.absent(),
-                Value<String?> sectionTitle = const Value.absent(),
+                Value<String?> groupTitle = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TrainingItemsCompanion(
@@ -6443,7 +6440,7 @@ class $$TrainingItemsTableTableManager
                 loadIsMax: loadIsMax,
                 freeText: freeText,
                 exerciseId: exerciseId,
-                sectionTitle: sectionTitle,
+                groupTitle: groupTitle,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -6468,7 +6465,7 @@ class $$TrainingItemsTableTableManager
                 Value<bool> loadIsMax = const Value.absent(),
                 Value<String?> freeText = const Value.absent(),
                 Value<String?> exerciseId = const Value.absent(),
-                Value<String?> sectionTitle = const Value.absent(),
+                Value<String?> groupTitle = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TrainingItemsCompanion.insert(
@@ -6491,7 +6488,7 @@ class $$TrainingItemsTableTableManager
                 loadIsMax: loadIsMax,
                 freeText: freeText,
                 exerciseId: exerciseId,
-                sectionTitle: sectionTitle,
+                groupTitle: groupTitle,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),

@@ -380,7 +380,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   }
 
   String _itemTitle(TrainingItem item) => switch (item.type) {
-    TrainingItemType.section => item.sectionTitle ?? 'Section',
+    TrainingItemType.group => item.groupTitle ?? 'Group',
     TrainingItemType.circuit => 'Circuit',
     TrainingItemType.repeater => 'Repeater',
     TrainingItemType.hangboardRep => 'Hangboard',
@@ -410,7 +410,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
         return [if (amount != null) amount, if (load != null) load].join(' - ');
       case TrainingItemType.circuit:
         return '${item.cycles ?? 1} cycles';
-      case TrainingItemType.section:
+      case TrainingItemType.group:
         return '';
       case TrainingItemType.free:
         return item.effectiveDuration != null
