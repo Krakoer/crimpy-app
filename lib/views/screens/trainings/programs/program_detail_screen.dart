@@ -715,9 +715,9 @@ class _CalendarRow extends ConsumerWidget {
         ...List.generate(7, (d) {
           final daySessions = byDay[d] ?? const <WeekSession>[];
           final session = daySessions.isNotEmpty ? daySessions.first : null;
-          final date = program.startDate.add(
-            Duration(days: (weekNumber - 1) * 7 + d),
-          );
+          // Columns are Monday-anchored, so offset from the week start rather
+          // than from the program start date.
+          final date = program.weekStart(weekNumber).add(Duration(days: d));
           final isToday = _isSameDay(date, today);
           final fill = session != null
               ? programSessionColor(session.sessionType)
