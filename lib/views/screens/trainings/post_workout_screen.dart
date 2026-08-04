@@ -175,9 +175,6 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
           style: null,
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              // Repeater config is no longer stored on the training template
-              const RepeaterConfig? repeaterConfig = null;
-
               ref
                   .read(sessionsProvider.notifier)
                   .saveSession(
@@ -186,7 +183,6 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                       date: DateTime.now(),
                       notes: _noteController.text,
                       isAssessment: false,
-                      repeaterConfig: repeaterConfig,
                     ),
                     widget.results,
                   );
