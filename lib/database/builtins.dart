@@ -8,10 +8,13 @@ import 'package:crimpy/models/training_model.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:collection/collection.dart';
 import 'package:crimpy/models/common.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-/// Number of pulls in the Critical Force protocol.
-const criticalForceRepCount = 24;
+/// Number of pulls in the Critical Force protocol. Debug builds run a short
+/// version so the assessment can be exercised end to end without sitting
+/// through the full four minutes; release builds always run the real protocol.
+const criticalForceRepCount = kDebugMode ? 4 : 24;
 
 /// Seconds of pulling in one Critical Force rep.
 const criticalForceWorkTime = 7;
