@@ -14,7 +14,7 @@ Always source `~/.zshrc` before running commands.
 
 We value code that explains itself through clear class, method, and variable names. Comments may be used when necessary to explain tricky logic, but should otherwise be avoided. Write self-documenting code with descriptive names rather than relying on comments.
 
-**Use small unitary commits with concise and comprehensive commit messages to make the review easier.**
+**Create atomic and comprehensive commits in the current branch to ease the code review. The commits messages should be 2 lines long maximum and should not contain any reference to Claude code.**
 
 Never use unicode characters such as long dashes, triple dots, arrows or emojis, in the code or in the doc.
 
