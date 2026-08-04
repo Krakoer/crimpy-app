@@ -171,6 +171,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         );
       }
 
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) =>
