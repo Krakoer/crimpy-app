@@ -11,6 +11,7 @@ import 'package:crimpy/views/screens/settings_screen/settings_screen.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../viewmodels/ble_view_model.dart';
 import '../viewmodels/app_info_view_model.dart';
+import '../viewmodels/notification_view_model.dart';
 import 'widgets/ble/connection_dialog.dart';
 import 'widgets/whats_new_dialog.dart';
 
@@ -93,6 +94,15 @@ class _MainPageState extends ConsumerState<MainPage>
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Coming back to the app is the moment the plan may have gone stale: a day
+    // has passed, or a training was logged elsewhere.
+    if (state == AppLifecycleState.resumed) {
+      ref.invalidate(trainingReminderSyncProvider);
+    }
+  }
+
   /// Check if the app has been updated and show the "What's New" dialog
   Future<void> _checkForUpdates() async {
     final whatsNewManager = ref.read(whatsNewProvider);
@@ -111,6 +121,9 @@ class _MainPageState extends ConsumerState<MainPage>
   @override
   Widget build(BuildContext context) {
     final connectionState = ref.watch(connectionStateProvider);
+    // Keeps the reminder plan in step with the settings, the coach program and
+    // the logged sessions for as long as the app is running.
+    ref.watch(trainingReminderSyncProvider);
 
     return Scaffold(
       bottomNavigationBar: SafeArea(
