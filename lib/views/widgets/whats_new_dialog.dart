@@ -37,38 +37,23 @@ class WhatsNewDialog extends ConsumerWidget {
             const SizedBox(height: 16),
             _buildFeatureItem(
               context,
-              '📅 Calendar View',
-              'Navigate your training sessions with the new calendar view and prev/next week buttons',
+              'Coach programs',
+              'Follow the program your coach assigned you, week by week, with today\'s trainings on the home screen.',
             ),
             _buildFeatureItem(
               context,
-              '📊 Waveform Visualization',
-              'See waveform visualization for repeater trainings to better understand your performance',
+              'Run any training',
+              'Circuits, groups, timed and rep-based exercises can all be run, with or without a force sensor.',
             ),
             _buildFeatureItem(
               context,
-              '⚡ Preparation Reps',
-              'Trainings now include preparation reps at the start with clear PREPARATION text',
+              'Guided workouts',
+              'Audio countdown cues, an on-target indicator and coach comments shown during each step.',
             ),
             _buildFeatureItem(
               context,
-              '📱 Enhanced Navigation',
-              'Smoother navigation with swipe support and removed animation lag',
-            ),
-            _buildFeatureItem(
-              context,
-              '🐛 Bug Reporter',
-              'Easily report bugs and send feedback directly from the settings screen',
-            ),
-            _buildFeatureItem(
-              context,
-              '✏️ Edit Session Times',
-              'Set custom times when logging sessions and edit them later',
-            ),
-            _buildFeatureItem(
-              context,
-              '🗑️ Delete Sessions',
-              'Added ability to delete sessions you no longer need',
+              'Screen stays awake',
+              'The screen no longer turns off in the middle of a workout.',
             ),
             const SizedBox(height: 8),
             Text(
