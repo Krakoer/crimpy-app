@@ -2,6 +2,8 @@ import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/calibration/start_calibration_dialog.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/create_sensor_config_dialog.dart';
 import 'package:crimpy/viewmodels/app_info_view_model.dart';
+import 'package:crimpy/viewmodels/program_view_model.dart';
+import 'package:crimpy/views/screens/settings_screen/notification_settings_screen.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/debug_modal.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/sensor_settings_list.dart';
 import 'package:flutter/material.dart';
@@ -157,6 +159,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       ),
                     ],
                   ),
+                  // Reminders only exist for coach-assigned programs.
+                  if (ref.watch(activeProgramProvider).asData?.value != null)
+                    ListTile(
+                      leading: const Icon(Icons.notifications_none),
+                      title: const Text('Training reminders'),
+                      subtitle: const Text(
+                        'Get reminded of the trainings your coach scheduled',
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (ctx) => const NotificationSettingsScreen(),
+                        ),
+                      ),
+                    ),
                   // List of saved presets.
                   SensorSettingsList(),
                 ],
