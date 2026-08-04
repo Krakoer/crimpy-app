@@ -287,12 +287,15 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     );
   }
 
-  /// Set/rep/round context of the current step, or the next upcoming step that
-  /// has one (so it stays visible during rests and the preparation period).
+  /// Set/rep/round context of the current step. During a rest the context of
+  /// the step the rest leads into is shown, so the pill stays filled between
+  /// reps. The look-ahead stops at the next working step to avoid borrowing a
+  /// label from an unrelated block later in the training.
   String? _currentContext() {
     for (var i = timer.currentRepIndex; i < timer.repetitions.length; i++) {
-      final subtitle = timer.repetitions[i].subtitle;
-      if (subtitle != null) return subtitle;
+      final rep = timer.repetitions[i];
+      if (rep.subtitle != null) return rep.subtitle;
+      if (!rep.isRest) return null;
     }
     return null;
   }
