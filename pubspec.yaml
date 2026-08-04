@@ -82,7 +82,9 @@ dev_dependencies:
   freezed: ^3.0.0
   json_serializable: ^6.8.0
   riverpod_generator: ^3.0.0-dev.17
-  riverpod_lint: ^3.0.0-dev.17
+  # 3.1.x requires a newer custom_lint_builder than riverpod 3.0.3 resolves to,
+  # and custom_lint resolves its plugin client independently of pubspec.lock.
+  riverpod_lint: ">=3.0.3 <3.1.0"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
