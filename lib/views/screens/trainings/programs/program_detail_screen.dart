@@ -282,7 +282,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
   @override
   Widget build(BuildContext context) {
     final weekAsync = ref.watch(
-      weekDetailProvider((widget.program.id, widget.weekNumber)),
+      weekDetailProvider(widget.program.id, widget.weekNumber),
     );
 
     return weekAsync.when(
@@ -671,7 +671,7 @@ class _CalendarRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final week = defined
-        ? ref.watch(weekDetailProvider((program.id, weekNumber))).asData?.value
+        ? ref.watch(weekDetailProvider(program.id, weekNumber)).asData?.value
         : null;
     final byDay = {
       if (week != null)

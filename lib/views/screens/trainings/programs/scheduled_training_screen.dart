@@ -33,7 +33,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trainingAsync = ref.watch(
-      programTrainingProvider((program.id, session.trainingId)),
+      programTrainingProvider(program.id, session.trainingId),
     );
 
     return Scaffold(

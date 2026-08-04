@@ -289,7 +289,7 @@ class _TodayTrainingRow extends ConsumerWidget {
       date: DateTime.now(),
     );
     final training = ref
-        .watch(programTrainingProvider((program.id, session.trainingId)))
+        .watch(programTrainingProvider(program.id, session.trainingId))
         .asData
         ?.value;
     final seconds = training == null ? 0 : trainingDurationSeconds(training);
