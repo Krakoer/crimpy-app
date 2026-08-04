@@ -11,14 +11,14 @@ import 'package:crimpy/views/widgets/assessment_tutorial_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/session.dart';
-import 'package:crimpy/models/workout_protocol.dart';
+import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/widgets/workout_lifecycle.dart';
 import 'package:crimpy/views/widgets/workout_timer.dart';
 import 'package:intl/intl.dart';
 
 class MvcRunScreen extends ConsumerStatefulWidget {
-  final List<RepModel> reps;
+  final List<TrainingExecutionItem> reps;
   final AssessmentType type;
   const MvcRunScreen({required this.reps, super.key, required this.type});
 
@@ -32,36 +32,35 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
   double rightMax = -1;
   // Store max score for left hand
   double leftMax = -1;
+  GripPosition get _gripPosition =>
+      widget.reps.whereType<TimedItem>().first.gripPosition;
+
+  /// Stores the peak reached during the step that just ended, against the hand
+  /// that step was for. Rests carry no result.
+  void _recordMaxForFinishedStep() {
+    final step = timer.currentItem;
+    if (step is! TimedItem) return;
+    if (step.handSide.isRightHand) {
+      rightMax = ref.read(bleSessionProvider).max;
+    } else {
+      leftMax = ref.read(bleSessionProvider).max;
+    }
+  }
+
   late WorkoutTimer timer = WorkoutTimer(
-    repetitions: widget.reps,
+    items: widget.reps,
     onNextRep: (_) {
-      // When current rep was a workout rep
-      if (!timer.currentRep.isRest) {
-        // Store the result in the correct variable.
-        if (timer.currentRep.handSide.isRightHand) {
-          rightMax = ref.read(bleSessionProvider).max;
-        } else {
-          leftMax = ref.read(bleSessionProvider).max;
-        }
-      }
+      _recordMaxForFinishedStep();
       // Reset session stats for next rep.
       ref.read(bleSessionProvider.notifier).reset();
     },
     onFinished: () async {
       // Add final rep (onNextRep is not called when finished)
-      if (!timer.currentRep.isRest) {
-        if (timer.currentRep.handSide.isRightHand) {
-          rightMax = ref.read(bleSessionProvider).max;
-        } else {
-          leftMax = ref.read(bleSessionProvider).max;
-        }
-      }
+      _recordMaxForFinishedStep();
       // Get previous values for printing results screen.
       // Not ideal, if it takes time the screen will just freeze.
       // TODO: Move this logic to PostAssessmentScreen and show progress indicator/error text accordingly.
-      final gripPosition = widget.reps
-          .firstWhere((r) => !r.isRest)
-          .gripPosition;
+      final gripPosition = _gripPosition;
       final prevValueRight = await ref
           .read(assessmentsProvider(widget.type).notifier)
           .getLastValueForHand(HandSide.right, gripPosition: gripPosition);
@@ -81,13 +80,11 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                 type: widget.type,
                 rightValue: rightMax,
                 leftValue: leftMax,
-                gripPosition: widget.reps
-                    .firstWhere((r) => !r.isRest)
-                    .gripPosition,
+                gripPosition: _gripPosition,
               ),
               saveTraining: SessionModel(
                 name:
-                    "MVC assessment (${widget.reps.firstWhere((r) => !r.isRest).gripPosition.shortName}) - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}",
+                    "MVC assessment (${_gripPosition.shortName}) - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}",
                 isAssessment: true,
               ),
               saveReps: buildRepsData([rightMax, leftMax], widget.reps),
@@ -203,10 +200,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                   timer.stop();
                 });
 
-                // Get grip position from first non-rest rep
-                final gripPosition = widget.reps
-                    .firstWhere((r) => !r.isRest)
-                    .gripPosition;
+                final gripPosition = _gripPosition;
 
                 // Show tutorial (forced, no "don't show again")
                 showTutorialIfNeeded(
@@ -255,7 +249,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       shape: BoxShape.rectangle,
-                      color: timer.currentRep.isRest
+                      color: timer.currentItem is RestItem
                           ? Colors.transparent
                           : CrimpyTheme.accentYellow.withValues(alpha: 0.5),
                     ),
@@ -285,9 +279,9 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                         ),
                       ],
                     ),
-                    child: !timer.currentRep.isRest
+                    child: timer.currentItem is! RestItem
                         ? Text(
-                            "Pull!\n${timer.currentRepRemaining}",
+                            "Pull!\n${timer.currentItemRemaining}",
                             style: TextStyle(
                               fontSize: 39,
                               color: CrimpyTheme.primaryWhite,
@@ -297,7 +291,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                         : Column(
                             children: [
                               Text(
-                                "Pulling with ${timer.currentRepIndex == 0 ? "right" : "left"} hand in",
+                                "Pulling with ${timer.currentItemIndex == 0 ? "right" : "left"} hand in",
                                 style: TextStyle(
                                   fontSize: 29,
                                   color: CrimpyTheme.primaryWhite,
@@ -305,7 +299,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                                 textAlign: TextAlign.center,
                               ),
                               Text(
-                                "${timer.currentRepRemaining}",
+                                "${timer.currentItemRemaining}",
                                 style: TextStyle(
                                   fontSize: 39,
                                   color: CrimpyTheme.primaryWhite,
@@ -318,7 +312,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                 ),
               ),
               // If on an active rep, show the max bar with max value.
-              if (!timer.currentRep.isRest)
+              if (timer.currentItem is! RestItem)
                 Padding(
                   padding: EdgeInsets.only(bottom: paddingMax),
                   child: Column(

@@ -1,24 +1,23 @@
 import 'package:crimpy/models/common.dart';
-import 'package:crimpy/models/workout_protocol.dart';
+import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/views/widgets/workout_timer.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-RepModel rep({
-  required int seconds,
-  required bool isRest,
-  required int index,
-}) => RepModel(
-  durationInSeconds: seconds,
-  isRest: isRest,
-  handSide: HandSide.right,
-  targetWeight: 0,
-  index: index,
-  id: "",
-);
+TrainingExecutionItem step({required int seconds, required bool isRest}) =>
+    isRest
+    ? RestItem(durationSeconds: seconds)
+    : TimedItem(
+        label: 'Pull',
+        durationSeconds: seconds,
+        targetLoad: 0,
+        handSide: HandSide.right,
+        gripPosition: GripPosition.halfCrimp,
+        collectSensorData: true,
+      );
 
-List<RepModel> repsOf(List<(int, bool)> spec) => [
-  for (final (i, s) in spec.indexed) rep(seconds: s.$1, isRest: s.$2, index: i),
+List<TrainingExecutionItem> stepsOf(List<(int, bool)> spec) => [
+  for (final s in spec) step(seconds: s.$1, isRest: s.$2),
 ];
 
 class TimerRun {
@@ -33,7 +32,7 @@ class TimerRun {
 /// paint: one frame per `onSecondChange`, which the timer also fires on every
 /// rep transition.
 TimerRun run(
-  List<RepModel> reps, {
+  List<TrainingExecutionItem> reps, {
   required int seconds,
   int stepMillis = 100,
   int offsetMillis = 0,
@@ -45,11 +44,11 @@ TimerRun run(
   fakeAsync((async) {
     final watch = ManualCrimpyWatch();
     timer = WorkoutTimer(
-      repetitions: reps,
+      items: reps,
       watch: watch,
       onSecondChange: () => frames.add(
-        '${timer.currentRep.isRest ? "rest" : "pull"} '
-        '${timer.currentRepRemaining}',
+        '${timer.currentItem is RestItem ? "rest" : "pull"} '
+        '${timer.currentItemRemaining}',
       ),
       onFinished: () async => finished = true,
     );
@@ -72,7 +71,7 @@ TimerRun run(
 }
 
 void main() {
-  final protocol = repsOf([(3, true), (7, false), (3, true), (7, false)]);
+  final protocol = stepsOf([(3, true), (7, false), (3, true), (7, false)]);
 
   group('WorkoutTimer countdown', () {
     test('counts each second down and never displays zero', () {
@@ -131,7 +130,7 @@ void main() {
 
     test('does not count rests', () {
       final result = run(
-        repsOf([(3, true), (7, false), (3, true)]),
+        stepsOf([(3, true), (7, false), (3, true)]),
         seconds: 30,
       );
 

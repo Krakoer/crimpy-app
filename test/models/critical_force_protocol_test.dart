@@ -1,9 +1,9 @@
 import 'package:crimpy/database/builtins.dart';
 import 'package:crimpy/models/assessment_model.dart';
-import 'package:crimpy/models/workout_protocol.dart';
+import 'package:crimpy/models/training_execution_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-List<RepModel> criticalForceReps() => builtinAssessments
+List<TrainingExecutionItem> criticalForceReps() => builtinAssessments
     .firstWhere((a) => a.type == AssessmentType.criticalForce)
     .trainingGenerator()
     .reps;
@@ -11,7 +11,7 @@ List<RepModel> criticalForceReps() => builtinAssessments
 void main() {
   group('critical force protocol', () {
     test('has exactly one work rep per configured pull', () {
-      final pulls = criticalForceReps().where((r) => !r.isRest).toList();
+      final pulls = criticalForceReps().whereType<TimedItem>().toList();
 
       expect(pulls, hasLength(criticalForceRepCount));
     });
@@ -19,15 +19,15 @@ void main() {
     test('starts with the lead-in rest', () {
       final reps = criticalForceReps();
 
-      expect(reps.first.isRest, isTrue);
-      expect(reps.first.durationInSeconds, criticalForceLeadInTime);
+      expect(reps.first, isA<RestItem>());
+      expect(reps.first.durationSeconds, criticalForceLeadInTime);
     });
 
     test('ends on a pull rather than a trailing rest', () {
       final reps = criticalForceReps();
 
-      expect(reps.last.isRest, isFalse);
-      expect(reps.last.durationInSeconds, criticalForceWorkTime);
+      expect(reps.last, isA<TimedItem>());
+      expect(reps.last.durationSeconds, criticalForceWorkTime);
     });
 
     test('alternates work and rest after the lead-in', () {
@@ -37,12 +37,12 @@ void main() {
         final rep = afterLeadIn[i];
         // Even positions are pulls, odd ones the rest that follows.
         expect(
-          rep.isRest,
+          rep is RestItem,
           i.isOdd,
           reason: 'rep at position $i has the wrong kind',
         );
         expect(
-          rep.durationInSeconds,
+          rep.durationSeconds,
           i.isOdd ? criticalForceRestTime : criticalForceWorkTime,
         );
       }
@@ -51,7 +51,7 @@ void main() {
     test('runs for the expected total duration', () {
       final total = criticalForceReps().fold<int>(
         0,
-        (sum, rep) => sum + rep.durationInSeconds,
+        (sum, rep) => sum + rep.durationSeconds,
       );
 
       expect(
@@ -59,15 +59,6 @@ void main() {
         criticalForceLeadInTime +
             criticalForceRepCount * criticalForceWorkTime +
             (criticalForceRepCount - 1) * criticalForceRestTime,
-      );
-    });
-
-    test('indexes reps consecutively from zero', () {
-      final reps = criticalForceReps();
-
-      expect(
-        reps.map((r) => r.index).toList(),
-        List.generate(reps.length, (i) => i),
       );
     });
   });

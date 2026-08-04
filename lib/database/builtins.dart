@@ -5,6 +5,7 @@ library;
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_feedback_model.dart';
 import 'package:crimpy/models/builtin_training.dart';
+import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/models/workout_protocol.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:collection/collection.dart';
@@ -29,40 +30,24 @@ const criticalForceLeadInTime = 10;
 /// separated by a short rest, all on the single hand being assessed. The
 /// trailing rest after the last pull is omitted so the recording ends on the
 /// final pull.
-List<RepModel> _criticalForceReps() {
-  final reps = <RepModel>[
-    RepModel(
-      durationInSeconds: criticalForceLeadInTime,
-      isRest: true,
-      handSide: HandSide.right,
-      targetWeight: 0,
-      index: 0,
-      id: "",
-    ),
+List<TrainingExecutionItem> _criticalForceReps() {
+  final reps = <TrainingExecutionItem>[
+    const RestItem(durationSeconds: criticalForceLeadInTime),
   ];
 
   for (var pull = 0; pull < criticalForceRepCount; pull++) {
     reps.add(
-      RepModel(
-        durationInSeconds: criticalForceWorkTime,
-        isRest: false,
+      const TimedItem(
+        label: "Pull",
+        durationSeconds: criticalForceWorkTime,
+        targetLoad: 0,
         handSide: HandSide.right,
-        targetWeight: 0,
-        index: reps.length,
-        id: "",
+        gripPosition: GripPosition.halfCrimp,
+        collectSensorData: true,
       ),
     );
     if (pull < criticalForceRepCount - 1) {
-      reps.add(
-        RepModel(
-          durationInSeconds: criticalForceRestTime,
-          isRest: true,
-          handSide: HandSide.right,
-          targetWeight: 0,
-          index: reps.length,
-          id: "",
-        ),
-      );
+      reps.add(const RestItem(durationSeconds: criticalForceRestTime));
     }
   }
 
@@ -83,41 +68,23 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
         id: "248a87c4-039e-464a-a351-b883ff68c147",
         name: "Max Force",
         reps: [
-          RepModel(
-            id: "",
-            durationInSeconds: 10,
-            isRest: true,
-            handSide: HandSide.left,
-            targetWeight: 0,
-            index: 0,
-            gripPosition: grip,
-          ),
-          RepModel(
-            id: "",
-            durationInSeconds: 5,
-            isRest: false,
+          const RestItem(durationSeconds: 10),
+          TimedItem(
+            label: "Pull right",
+            durationSeconds: 5,
+            targetLoad: 0,
             handSide: HandSide.right,
-            targetWeight: 0,
-            index: 1,
             gripPosition: grip,
+            collectSensorData: true,
           ),
-          RepModel(
-            id: "",
-            durationInSeconds: 10,
-            isRest: true,
+          const RestItem(durationSeconds: 10),
+          TimedItem(
+            label: "Pull left",
+            durationSeconds: 5,
+            targetLoad: 0,
             handSide: HandSide.left,
-            targetWeight: 0,
-            index: 2,
             gripPosition: grip,
-          ),
-          RepModel(
-            id: "",
-            durationInSeconds: 5,
-            isRest: false,
-            handSide: HandSide.left,
-            targetWeight: 0,
-            index: 3,
-            gripPosition: grip,
+            collectSensorData: true,
           ),
         ],
       );

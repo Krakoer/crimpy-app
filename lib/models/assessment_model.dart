@@ -1,5 +1,6 @@
 import 'package:crimpy/models/common.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/models/workout_protocol.dart';
 
 enum AssessmentType { criticalForce, mvc, endurance60 }
@@ -56,11 +57,7 @@ class AssessmentTrainingModel {
     if (gripPosition != null) {
       return gripPosition;
     }
-    try {
-      return training.reps.firstWhere((r) => !r.isRest).gripPosition;
-    } catch (_) {
-      return null;
-    }
+    return training.reps.whereType<TimedItem>().firstOrNull?.gripPosition;
   }
 }
 

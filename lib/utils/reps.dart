@@ -1,23 +1,33 @@
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
-import 'package:crimpy/models/workout_protocol.dart';
+import 'package:crimpy/models/training_execution_model.dart';
 
-List<RepDataModel> buildRepsData(List<double> avgs, List<RepModel> reps) {
-  var i = 0;
-  final List<RepDataModel> res = [];
-  for (var r in reps) {
-    res.add(
+/// Pairs the recorded averages with the protocol steps they came from.
+///
+/// [averages] holds one entry per working step, in order; rests contribute a
+/// zero average and consume no entry.
+List<RepDataModel> buildRepsData(
+  List<double> averages,
+  List<TrainingExecutionItem> items, {
+  HandSide? handSide,
+}) {
+  var next = 0;
+  final result = <RepDataModel>[];
+  for (final (index, item) in items.indexed) {
+    final timed = item is TimedItem ? item : null;
+    result.add(
       RepDataModel(
-        duration: r.durationInSeconds,
-        isRest: r.isRest,
-        handSide: r.handSide,
-        targetWeight: r.targetWeight,
-        averageWeight: r.isRest ? 0 : avgs[i],
-        index: r.index,
+        duration: item.durationSeconds,
+        isRest: item is RestItem,
+        handSide: handSide ?? timed?.handSide ?? HandSide.both,
+        targetWeight: timed?.targetLoad ?? 0,
+        averageWeight: timed == null
+            ? 0
+            : (next < averages.length ? averages[next++] : 0),
+        index: index,
+        gripPosition: timed?.gripPosition ?? GripPosition.halfCrimp,
       ),
     );
-    if (!r.isRest) {
-      i += 1;
-    }
   }
-  return res;
+  return result;
 }

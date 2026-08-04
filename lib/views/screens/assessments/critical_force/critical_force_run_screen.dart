@@ -4,6 +4,7 @@ import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/utils/reps.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
@@ -17,12 +18,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:crimpy/models/session.dart';
-import 'package:crimpy/models/workout_protocol.dart';
+import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/views/widgets/workout_lifecycle.dart';
 import 'package:crimpy/views/widgets/workout_timer.dart';
 
 class CriticalForceRunScreen extends ConsumerStatefulWidget {
-  final List<RepModel> reps;
+  final List<TrainingExecutionItem> reps;
   final HandSide hand;
   const CriticalForceRunScreen({
     required this.reps,
@@ -37,10 +38,10 @@ class CriticalForceRunScreen extends ConsumerStatefulWidget {
 
 class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
     with WorkoutLifecycleMixin {
-  int get _totalPulls => widget.reps.where((rep) => !rep.isRest).length;
+  int get _totalPulls => widget.reps.whereType<TimedItem>().length;
 
   late WorkoutTimer timer = WorkoutTimer(
-    repetitions: widget.reps,
+    items: widget.reps,
     onSecondChange: () => setState(() => {}),
     onFinished: () async {
       final data = ref.read(bleDataStreamProvider.notifier).getData();
@@ -72,20 +73,13 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
           leftValue: !widget.hand.isRightHand ? criticalLoad : null,
         );
         // Create rep models
-        final saveReps = widget.reps
-            .map(
-              (r) => RepDataModel(
-                averageWeight: 0,
-                duration: r.durationInSeconds,
-                index: r.index,
-                isRest: r.isRest,
-                // The protocol reps are hand agnostic; the assessed hand is the
-                // one picked when starting the run.
-                handSide: widget.hand,
-                targetWeight: r.targetWeight,
-              ),
-            )
-            .toList();
+        final saveReps = buildRepsData(
+          const [],
+          widget.reps,
+          // The protocol steps are hand agnostic; the assessed hand is the one
+          // picked when starting the run.
+          handSide: widget.hand,
+        );
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
@@ -228,7 +222,8 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
 
                 // Get grip position from first non-rest rep
                 final gripPosition = widget.reps
-                    .firstWhere((r) => !r.isRest)
+                    .whereType<TimedItem>()
+                    .first
                     .gripPosition;
 
                 // Show tutorial (forced, no "don't show again")
@@ -282,9 +277,9 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                         ),
                       ],
                     ),
-                    child: !timer.currentRep.isRest
+                    child: timer.currentItem is! RestItem
                         ? Text(
-                            "Pull!\n${timer.currentRepRemaining}",
+                            "Pull!\n${timer.currentItemRemaining}",
                             style: TextStyle(
                               fontSize: 39,
                               color: CrimpyTheme.primaryWhite,
@@ -302,7 +297,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                                 textAlign: TextAlign.center,
                               ),
                               Text(
-                                "${timer.currentRepRemaining}",
+                                "${timer.currentItemRemaining}",
                                 style: TextStyle(
                                   fontSize: 39,
                                   color: CrimpyTheme.primaryWhite,

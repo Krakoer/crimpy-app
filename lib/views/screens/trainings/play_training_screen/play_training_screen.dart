@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
-import 'package:crimpy/models/workout_protocol.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/widgets/gauge.dart';
@@ -46,104 +45,43 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// Duration of the preparation rest in seconds
   static const int _preparationDuration = 10;
 
-  late final List<RepModel> _repsWithPreparation = _buildReps();
+  late final List<TrainingExecutionItem> _itemsWithPreparation = [
+    const RestItem(durationSeconds: _preparationDuration),
+    ...expandTrainingItems(widget.training, useSensor: widget.useSensor),
+  ];
 
-  List<RepModel> _buildReps() {
-    return [
-      RepModel(
-        durationInSeconds: _preparationDuration,
-        isRest: true,
-        handSide: HandSide.both,
-        targetWeight: 0.0,
-        index: -1,
-        gripPosition: GripPosition.halfCrimp,
+  /// Records the step that just finished. The preparation rest sits at index 0
+  /// and is not part of the training, so it is skipped.
+  void _recordFinishedItem() {
+    if (timer.currentItemIndex == 0) return;
+    final item = timer.currentItem;
+    final timed = item is TimedItem ? item : null;
+    repResults.add(
+      RepDataModel(
+        handSide: timed?.handSide ?? HandSide.both,
+        targetWeight: timed?.targetLoad ?? 0,
+        // Only collect a sensor average for gauge (sensor) steps.
+        averageWeight: (timed?.collectSensorData ?? false)
+            ? ref.read(bleSessionProvider).avg
+            : 0,
+        duration: item.durationSeconds,
+        index: timer.currentItemIndex - 1,
+        isRest: item is RestItem,
+        gripPosition: timed?.gripPosition ?? GripPosition.halfCrimp,
       ),
-      ..._executionToRepModels(
-        expandTrainingItems(widget.training, useSensor: widget.useSensor),
-      ),
-    ];
-  }
-
-  static List<RepModel> _executionToRepModels(
-    List<TrainingExecutionItem> items,
-  ) {
-    final result = <RepModel>[];
-    int idx = 0;
-    for (final item in items) {
-      switch (item) {
-        case TimedItem():
-          result.add(
-            RepModel(
-              durationInSeconds: item.durationSeconds,
-              isRest: false,
-              handSide: item.handSide,
-              targetWeight: item.targetLoad,
-              index: idx++,
-              gripPosition: item.gripPosition,
-              showGauge: item.collectSensorData,
-              label: item.label,
-              subtitle: item.subtitle,
-              comment: item.comment,
-            ),
-          );
-        case RestItem():
-          result.add(
-            RepModel(
-              durationInSeconds: item.durationSeconds,
-              isRest: true,
-              handSide: HandSide.both,
-              targetWeight: 0,
-              index: idx++,
-            ),
-          );
-        case ConfirmItem():
-          result.add(
-            RepModel(
-              durationInSeconds: 0,
-              isRest: false,
-              isConfirm: true,
-              handSide: HandSide.both,
-              targetWeight: 0,
-              index: idx++,
-              label: item.label,
-              reps: item.reps,
-              load: item.load,
-              subtitle: item.subtitle,
-              comment: item.comment,
-            ),
-          );
-      }
-    }
-    return result;
+    );
   }
 
   // Setup the workout timer
   late WorkoutTimer timer = WorkoutTimer(
-    repetitions: _repsWithPreparation,
+    items: _itemsWithPreparation,
     // Audible 3-2-1 countdown + transition cue, useful when the phone is on
     // the ground during a hangboard session.
     playSound: true,
     // Set state each second to update the UI.
     onSecondChange: () => setState(() {}),
     onNextRep: (nextRepDuration) {
-      // Only save rep results for actual training reps (not the preparation rest)
-      // The preparation rest has index -1
-      if (timer.currentRep.index >= 0) {
-        repResults.add(
-          RepDataModel(
-            handSide: timer.currentRep.handSide,
-            targetWeight: timer.currentRep.targetWeight,
-            // Only collect a sensor average for gauge (sensor) steps.
-            averageWeight: timer.currentRep.showGauge
-                ? ref.read(bleSessionProvider).avg
-                : 0,
-            duration: timer.currentRep.durationInSeconds,
-            index: timer.currentRep.index,
-            isRest: timer.currentRep.isRest,
-            gripPosition: timer.currentRep.gripPosition,
-          ),
-        );
-      }
+      _recordFinishedItem();
 
       // Setup the animation controller for the next rep.
       _serieController.duration = Duration(seconds: nextRepDuration);
@@ -156,23 +94,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     },
     onFinished: () async {
       _serieController.stop();
-      // Add the final average (only if it's an actual training rep, not preparation)
-      if (timer.currentRep.index >= 0) {
-        repResults.add(
-          RepDataModel(
-            handSide: timer.currentRep.handSide,
-            targetWeight: timer.currentRep.targetWeight,
-            // Only collect a sensor average for gauge (sensor) steps.
-            averageWeight: timer.currentRep.showGauge
-                ? ref.read(bleSessionProvider).avg
-                : 0,
-            duration: timer.currentRep.durationInSeconds,
-            index: timer.currentRep.index,
-            isRest: timer.currentRep.isRest,
-            gripPosition: timer.currentRep.gripPosition,
-          ),
-        );
-      }
+      _recordFinishedItem();
 
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -189,7 +111,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     timer.init();
     _serieController = AnimationController(
       vsync: this,
-      duration: Duration(seconds: timer.currentRep.durationInSeconds),
+      duration: Duration(seconds: timer.currentItem.durationSeconds),
     );
     WakelockPlus.enable();
     super.initState();
@@ -240,38 +162,38 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   }
 
   Widget _buildTimedContent(double gaugeSize, double timerFontSize) {
-    final rep = timer.currentRep;
-    final isPrep = timer.currentRepIndex == 0;
-    final hasNext = timer.currentRepIndex < timer.repetitions.length - 1;
-    final nextRep = hasNext
-        ? timer.repetitions[timer.currentRepIndex + 1]
-        : null;
-    final sensor = rep.showGauge;
+    final item = timer.currentItem;
+    final rep = item is TimedItem ? item : null;
+    final isPrep = timer.currentItemIndex == 0;
+    final hasNext = timer.currentItemIndex < timer.items.length - 1;
+    final nextRep = hasNext ? timer.items[timer.currentItemIndex + 1] : null;
+    final sensor = rep?.collectSensorData ?? false;
 
     final timerDisplay = TrainingTimerDisplay(
-      secondsRemaining: timer.currentRepRemaining,
-      isRest: rep.isRest,
+      secondsRemaining: timer.currentItemRemaining,
+      isRest: item is RestItem,
       fontSize: sensor ? timerFontSize * 1.4 : timerFontSize,
       isPrep: isPrep,
     );
 
     // Header above the circle (kind-specific).
     final Widget header = sensor
-        ? HandLabel(handSide: rep.handSide, gripPosition: rep.gripPosition)
-        : rep.isRest
+        ? HandLabel(handSide: rep!.handSide, gripPosition: rep.gripPosition)
+        : item is RestItem
         ? const SizedBox.shrink()
-        : _stageHeader(rep.label, rep.targetWeight);
+        : _stageHeader(rep?.label, rep?.targetLoad ?? 0);
 
     // Content below the circle: preview the next step during a rest, or while
     // working when a rest is coming up next.
-    final bool showNext = nextRep != null && (rep.isRest || nextRep.isRest);
-    final bool hasComment = rep.comment?.trim().isNotEmpty ?? false;
+    final bool showNext =
+        nextRep != null && (item is RestItem || nextRep is RestItem);
+    final bool hasComment = rep?.comment?.trim().isNotEmpty ?? false;
     final Widget below = sensor
         ? timerDisplay
         : showNext
         ? NextRepPreview(nextRep: nextRep)
-        : (!rep.isRest && hasComment)
-        ? _commentBox(rep.comment!)
+        : (item is! RestItem && hasComment)
+        ? _commentBox(rep!.comment!)
         : const SizedBox.shrink();
 
     // Equal flexible regions above and below keep the circle vertically
@@ -296,12 +218,12 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                 animation: _serieController,
                 builder: (ctx, child) => WorkoutCircle(
                   value: _serieController.value,
-                  rest: rep.isRest,
+                  rest: item is RestItem,
                   size: gaugeSize,
                 ),
               ),
               if (sensor)
-                Gauge(rep.targetWeight, size: gaugeSize)
+                Gauge(rep!.targetLoad, size: gaugeSize)
               else
                 timerDisplay,
             ],
@@ -317,10 +239,15 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// reps. The look-ahead stops at the next working step to avoid borrowing a
   /// label from an unrelated block later in the training.
   String? _currentContext() {
-    for (var i = timer.currentRepIndex; i < timer.repetitions.length; i++) {
-      final rep = timer.repetitions[i];
-      if (rep.subtitle != null) return rep.subtitle;
-      if (!rep.isRest) return null;
+    for (var i = timer.currentItemIndex; i < timer.items.length; i++) {
+      final item = timer.items[i];
+      final subtitle = switch (item) {
+        TimedItem() => item.subtitle,
+        ConfirmItem() => item.subtitle,
+        RestItem() => null,
+      };
+      if (subtitle != null) return subtitle;
+      if (item is! RestItem) return null;
     }
     return null;
   }
@@ -418,7 +345,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   );
 
   Widget _buildConfirmContent(double timerFontSize) {
-    final rep = timer.currentRep;
+    final rep = timer.currentItem as ConfirmItem;
     final details = [
       if (rep.reps != null) '${rep.reps} reps',
       if (rep.load != null) rep.load!,
@@ -430,7 +357,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            (rep.label ?? 'Exercise').toUpperCase(),
+            rep.label.toUpperCase(),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontFamily: 'JetBrainsMono',
@@ -525,9 +452,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
               // Scale timer text based on available space
               final timerFontSize = (availableHeight * 0.06).clamp(32.0, 48.0);
 
-              final totalTrainingSeconds = _repsWithPreparation.fold(
+              final totalTrainingSeconds = _itemsWithPreparation.fold(
                 0,
-                (s, r) => s + r.durationInSeconds,
+                (s, r) => s + r.durationSeconds,
               );
 
               return Column(
@@ -538,8 +465,8 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                     elapsedMilliseconds: timer.elapsedMilliseconds,
                     remainingMilliseconds:
                         totalTrainingSeconds * 1000 - timer.elapsedMilliseconds,
-                    showRemaining: !_repsWithPreparation.any(
-                      (r) => r.isConfirm,
+                    showRemaining: !_itemsWithPreparation.any(
+                      (r) => r is ConfirmItem,
                     ),
                   ),
                   // Fixed context slot (set/rep/round), always at the same place
@@ -548,7 +475,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                   // Main content area
                   Expanded(
                     child: Center(
-                      child: timer.currentRep.isConfirm
+                      child: timer.currentItem is ConfirmItem
                           ? _buildConfirmContent(timerFontSize)
                           : _buildTimedContent(gaugeSize, timerFontSize),
                     ),
@@ -557,14 +484,14 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                   // Adjust indices: preparation rep is at index 0, actual training starts at index 1
                   // So we subtract 1 to show the correct rep number relative to the actual training
                   TrainingProgressInfo(
-                    currentRepIndex: timer.currentRepIndex > 0
-                        ? timer.currentRepIndex - 1
+                    currentRepIndex: timer.currentItemIndex > 0
+                        ? timer.currentItemIndex - 1
                         : 0,
-                    totalReps: _repsWithPreparation.length - 1,
+                    totalReps: _itemsWithPreparation.length - 1,
                   ),
                   const SizedBox(height: 8),
                   // Controls
-                  if (timer.currentRep.isConfirm)
+                  if (timer.currentItem is ConfirmItem)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: SizedBox(

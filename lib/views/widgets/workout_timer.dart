@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:crimpy/models/workout_protocol.dart';
+import 'package:crimpy/models/training_execution_model.dart';
 
 /// Wrapper around StopWatch that allows to skip time.
 class CrimpyWatch {
@@ -45,15 +45,15 @@ class ManualCrimpyWatch extends CrimpyWatch {
   void skip(int millis) => _elapsed += millis;
 }
 
-/// Timer that manages the logic of repetitions in workout.
-/// This timer exposes callbacks to be called on rep changes, on second changes and on training finish.
+/// Drives a workout: walks the execution items in order, counting each one
+/// down and reporting transitions.
 class WorkoutTimer {
   WorkoutTimer({
     this.onTick,
     this.onNextRep,
     this.onSecondChange,
     this.onFinished,
-    required this.repetitions,
+    required this.items,
     this.playSound = false,
     CrimpyWatch? watch,
   }) : _stopwatch = watch ?? CrimpyWatch();
@@ -62,13 +62,13 @@ class WorkoutTimer {
   final void Function(int)? onNextRep;
   final void Function()? onSecondChange;
   final Future<void> Function()? onFinished;
-  final List<RepModel> repetitions;
+  final List<TrainingExecutionItem> items;
   final bool playSound;
 
   final CrimpyWatch _stopwatch;
 
   var elaspedTime = 0;
-  var currentRepIndex = 0;
+  var currentItemIndex = 0;
   var finished = false;
   var startCurrentRep = 0;
   var isRunning = false;
@@ -107,13 +107,13 @@ class WorkoutTimer {
       // countdown to zero is the one that moves on.
       // Self-paced steps never advance on time; the user taps "Done".
       var advanced = false;
-      if (!currentRep.isConfirm &&
+      if (currentItem is! ConfirmItem &&
           _stopwatch.elapsedMilliseconds >=
-              startCurrentRep + currentRep.durationInSeconds * 1000) {
-        if (playSound && currentRepIndex < repetitions.length - 1) {
+              startCurrentRep + currentItem.durationSeconds * 1000) {
+        if (playSound && currentItemIndex < items.length - 1) {
           _playerBiiip?.resume();
         }
-        _advance(() => startCurrentRep + currentRep.durationInSeconds * 1000);
+        _advance(() => startCurrentRep + currentItem.durationSeconds * 1000);
         advanced = true;
       }
 
@@ -121,22 +121,22 @@ class WorkoutTimer {
         // A rep change already reported itself from within _advance, and its
         // transition tone stands in for the countdown beep on that tick.
         onSecondChange?.call();
-        if (playSound && [3, 2, 1].contains(currentRepRemaining)) {
+        if (playSound && [3, 2, 1].contains(currentItemRemaining)) {
           _playerBip?.resume();
         }
       }
     });
   }
 
-  /// Moves to the next repetition, or finishes the workout when the current one
-  /// is the last. `nextStart` gives the reference point the following rep counts
+  /// Moves to the next item, or finishes the workout when the current one is
+  /// the last. `nextStart` gives the reference point the following rep counts
   /// down from, evaluated before the index moves.
   void _advance(int Function() nextStart) {
-    if (!currentRep.isRest) {
+    if (currentItem is! RestItem) {
       repCount += 1;
     }
 
-    if (currentRepIndex >= repetitions.length - 1) {
+    if (currentItemIndex >= items.length - 1) {
       _stopwatch.stop();
       timer.cancel();
       finished = true;
@@ -145,8 +145,8 @@ class WorkoutTimer {
     }
 
     startCurrentRep = nextStart();
-    onNextRep?.call(nextRep!.durationInSeconds);
-    currentRepIndex += 1;
+    onNextRep?.call(nextItem!.durationSeconds);
+    currentItemIndex += 1;
     // A transition does not always coincide with a second change: skipping or
     // confirming a rep moves the reference point mid-second. Repaint here so
     // the new rep is shown immediately instead of leaving the previous value
@@ -160,9 +160,9 @@ class WorkoutTimer {
   }
 
   void skipRep() {
-    if (currentRepIndex < repetitions.length - 1) {
+    if (currentItemIndex < items.length - 1) {
       _stopwatch.skip(
-        currentRep.durationInSeconds * 1000 -
+        currentItem.durationSeconds * 1000 -
             (_stopwatch.elapsedMilliseconds - startCurrentRep),
       );
     }
@@ -171,25 +171,25 @@ class WorkoutTimer {
 
   int get elapsedMilliseconds => _stopwatch.elapsedMilliseconds;
 
-  RepModel get currentRep {
-    return repetitions[currentRepIndex];
+  TrainingExecutionItem get currentItem {
+    return items[currentItemIndex];
   }
 
-  RepModel? get nextRep {
-    if (currentRepIndex < repetitions.length - 1) {
-      return repetitions[currentRepIndex + 1];
+  TrainingExecutionItem? get nextItem {
+    if (currentItemIndex < items.length - 1) {
+      return items[currentItemIndex + 1];
     } else {
       return null;
     }
   }
 
-  /// Whole seconds left in the current rep, counting down to 1 and never to 0:
-  /// reaching zero is the moment the rep ends, and that frame belongs to the
-  /// next rep.
-  int get currentRepRemaining {
+  /// Whole seconds left in the current item, counting down to 1 and never to 0:
+  /// reaching zero is the moment the item ends, and that frame belongs to the
+  /// next one.
+  int get currentItemRemaining {
     final remainingMs =
         startCurrentRep +
-        currentRep.durationInSeconds * 1000 -
+        currentItem.durationSeconds * 1000 -
         _stopwatch.elapsedMilliseconds;
     if (remainingMs <= 0) return 0;
     return (remainingMs / 1000).ceil();

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/common.dart';
-import 'package:crimpy/models/workout_protocol.dart';
+import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 
 class NextRepPreview extends StatelessWidget {
-  final RepModel nextRep;
+  final TrainingExecutionItem nextRep;
 
   const NextRepPreview({super.key, required this.nextRep});
 
@@ -19,28 +19,29 @@ class NextRepPreview extends StatelessWidget {
     }
   }
 
-  String _getDescription() {
-    final r = nextRep;
-    if (r.isRest) return 'Rest ${r.durationInSeconds}s';
-    if (r.isConfirm) {
-      return [
-        r.label ?? 'Exercise',
-        if (r.reps != null) '${r.reps} reps',
-        if (r.load != null) r.load!,
-      ].join(' - ');
+  String _describeTimed(TimedItem item) {
+    if (!item.collectSensorData) {
+      // Timed work without a sensor (e.g. a duration exercise).
+      return '${item.label} - ${item.durationSeconds}s';
     }
-    if (r.showGauge) {
-      final w = r.targetWeight;
-      return [
-        _getHandLabel(r.handSide),
-        r.gripPosition.shortName,
-        if (w > 0) '${w.toStringAsFixed(w.truncateToDouble() == w ? 0 : 1)}kg',
-        '${r.durationInSeconds}s',
-      ].join(' - ');
-    }
-    // Timed work without a sensor (e.g. a duration exercise).
-    return '${r.label ?? 'Work'} - ${r.durationInSeconds}s';
+    final w = item.targetLoad;
+    return [
+      _getHandLabel(item.handSide),
+      item.gripPosition.shortName,
+      if (w > 0) '${w.toStringAsFixed(w.truncateToDouble() == w ? 0 : 1)}kg',
+      '${item.durationSeconds}s',
+    ].join(' - ');
   }
+
+  String _getDescription() => switch (nextRep) {
+    RestItem(:final durationSeconds) => 'Rest ${durationSeconds}s',
+    ConfirmItem(:final label, :final reps, :final load) => [
+      label,
+      if (reps != null) '$reps reps',
+      if (load != null) load,
+    ].join(' - '),
+    TimedItem() => _describeTimed(nextRep as TimedItem),
+  };
 
   @override
   Widget build(BuildContext context) {
