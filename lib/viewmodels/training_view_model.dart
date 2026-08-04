@@ -210,55 +210,64 @@ Future<List<SessionModel>> filteredSessions(
       .toList();
 }
 
+/// Builds a training list: the user's own trainings followed by the builtin
+/// ones, each evaluated against the latest assessments.
+///
+/// The pinned list and the full list differ only in how much they keep, so they
+/// share this and cannot drift apart.
+Future<List<TrainingListItem>> _buildTrainingList({
+  required TrainingRepository trainings,
+  required BuiltinTrainingRepository builtins,
+  required bool onlyPinned,
+}) async {
+  final regular = await trainings.getAllTrainings(onlyFavs: onlyPinned);
+  final regularItems = regular.map(TrainingListItem.regular).toList();
+
+  final allBuiltins = await builtins.getBuiltinTrainings();
+  final pinnedIds = await builtins.getPinnedBuiltinTrainingIds();
+  final selected = onlyPinned
+      ? allBuiltins.where((b) => pinnedIds.contains(b.id)).toList()
+      : allBuiltins;
+
+  if (selected.isEmpty) return regularItems;
+
+  // Fetch all shared data once to avoid N+1 API calls.
+  final allAssessments = await builtins.fetchAllAssessments();
+  final allWeights = await builtins.fetchAllCustomWeights();
+
+  final builtinItems = selected.map((builtin) {
+    final w = allWeights[builtin.id];
+    final result = builtins.evaluateBuiltinSync(
+      builtin,
+      allAssessments,
+      customWeightRight: w?.weightRight,
+      customWeightLeft: w?.weightLeft,
+    );
+    return TrainingListItem.builtin(
+      builtin,
+      result.isAvailable,
+      result.missing,
+      result.training,
+      pinnedIds.contains(builtin.id),
+    );
+  }).toList();
+
+  return [...regularItems, ...builtinItems];
+}
+
 /// Provider for pinned builtin trainings (with favorites).
 @Riverpod(keepAlive: true)
 class PinnedTrainings extends _$PinnedTrainings {
-  late TrainingRepository _trainingRepository;
   late BuiltinTrainingRepository _builtinTrainingRepository;
 
   @override
-  Future<List<TrainingListItem>> build() async {
-    _trainingRepository = ref.watch(trainingRepositoryProvider);
+  Future<List<TrainingListItem>> build() {
     _builtinTrainingRepository = ref.watch(builtinTrainingRepositoryProvider);
-
-    final favoriteTrainings = await _trainingRepository.getAllTrainings(
-      onlyFavs: true,
+    return _buildTrainingList(
+      trainings: ref.watch(trainingRepositoryProvider),
+      builtins: _builtinTrainingRepository,
+      onlyPinned: true,
     );
-    final favoriteItems = favoriteTrainings
-        .map(TrainingListItem.regular)
-        .toList();
-
-    final allBuiltins = await _builtinTrainingRepository.getBuiltinTrainings();
-    final pinnedIds = await _builtinTrainingRepository
-        .getPinnedBuiltinTrainingIds();
-    final pinnedBuiltins = allBuiltins
-        .where((b) => pinnedIds.contains(b.id))
-        .toList();
-
-    if (pinnedBuiltins.isEmpty) return favoriteItems;
-
-    final allAssessments = await _builtinTrainingRepository
-        .fetchAllAssessments();
-    final allWeights = await _builtinTrainingRepository.fetchAllCustomWeights();
-
-    final pinnedBuiltinItems = pinnedBuiltins.map((builtin) {
-      final w = allWeights[builtin.id];
-      final result = _builtinTrainingRepository.evaluateBuiltinSync(
-        builtin,
-        allAssessments,
-        customWeightRight: w?.weightRight,
-        customWeightLeft: w?.weightLeft,
-      );
-      return TrainingListItem.builtin(
-        builtin,
-        result.isAvailable,
-        result.missing,
-        result.training,
-        true,
-      );
-    }).toList();
-
-    return [...favoriteItems, ...pinnedBuiltinItems];
   }
 
   Future<void> togglePin(String builtinTrainingId) async {
@@ -277,50 +286,12 @@ class PinnedTrainings extends _$PinnedTrainings {
 /// Provider for combined training list (regular + builtin trainings).
 @Riverpod(keepAlive: true)
 class AllTrainings extends _$AllTrainings {
-  late TrainingRepository _trainingRepository;
-  late BuiltinTrainingRepository _builtinTrainingRepository;
-
   @override
-  Future<List<TrainingListItem>> build() async {
-    _trainingRepository = ref.watch(trainingRepositoryProvider);
-    _builtinTrainingRepository = ref.watch(builtinTrainingRepositoryProvider);
-
-    final regularTrainings = await _trainingRepository.getAllTrainings();
-    final regularItems = regularTrainings
-        .map(TrainingListItem.regular)
-        .toList();
-
-    final builtinTrainings = await _builtinTrainingRepository
-        .getBuiltinTrainings();
-
-    if (builtinTrainings.isEmpty) return regularItems;
-
-    // Fetch all shared data once to avoid N+1 API calls.
-    final allAssessments = await _builtinTrainingRepository
-        .fetchAllAssessments();
-    final allWeights = await _builtinTrainingRepository.fetchAllCustomWeights();
-    final pinnedIds = await _builtinTrainingRepository
-        .getPinnedBuiltinTrainingIds();
-
-    final builtinItems = builtinTrainings.map((builtin) {
-      final w = allWeights[builtin.id];
-      final result = _builtinTrainingRepository.evaluateBuiltinSync(
-        builtin,
-        allAssessments,
-        customWeightRight: w?.weightRight,
-        customWeightLeft: w?.weightLeft,
-      );
-      return TrainingListItem.builtin(
-        builtin,
-        result.isAvailable,
-        result.missing,
-        result.training,
-        pinnedIds.contains(builtin.id),
-      );
-    }).toList();
-
-    return [...regularItems, ...builtinItems];
-  }
+  Future<List<TrainingListItem>> build() => _buildTrainingList(
+    trainings: ref.watch(trainingRepositoryProvider),
+    builtins: ref.watch(builtinTrainingRepositoryProvider),
+    onlyPinned: false,
+  );
 
   Future<void> refreshBuiltinAvailability() async {
     ref.invalidateSelf();
