@@ -93,6 +93,7 @@ class TrainingsNotifier extends AsyncNotifier<List<Training>> {
     state = const AsyncValue.loading();
     try {
       await _trainingRepository.saveTraining(training);
+      ref.invalidate(favTrainingsProvider);
       ref.invalidate(allTrainingsProvider);
       ref.invalidateSelf();
       await future;
