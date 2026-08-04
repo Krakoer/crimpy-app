@@ -505,7 +505,7 @@ class _ItemEditorDialogState extends State<_ItemEditorDialog> {
         keyboardType: TextInputType.number,
         onChanged: (v) {
           final n = int.tryParse(v);
-          if (n != null) onChanged(n);
+          if (n != null && n > 0) onChanged(n);
         },
       ),
     );
@@ -524,7 +524,7 @@ class _ItemEditorDialogState extends State<_ItemEditorDialog> {
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         onChanged: (v) {
           final n = double.tryParse(v);
-          if (n != null) onChanged(n);
+          if (n != null && n >= 0) onChanged(n);
         },
       ),
     );
