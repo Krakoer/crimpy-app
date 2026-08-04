@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:crimpy/models/common.dart';
@@ -92,10 +95,17 @@ class _CriticalForceRunScreenState
           );
         }
       } catch (exception) {
-        // On error, save the session data for debugging purposes
-        ref
-            .read(sessionsProvider.notifier)
-            .saveSession(saveSession, [], data: data);
+        // On error, save the session data for debugging purposes. This is best
+        // effort: a failed save must not hide the analysis error being reported.
+        unawaited(
+          ref
+              .read(sessionsProvider.notifier)
+              .saveSession(saveSession, [], data: data)
+              .catchError((Object e) {
+                AppLoggerHelper.error('Failed to save debug session: $e');
+                return "";
+              }),
+        );
         // Show error screen
         if (mounted) {
           Navigator.of(context).pushReplacement(

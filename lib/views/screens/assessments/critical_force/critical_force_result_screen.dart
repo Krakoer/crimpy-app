@@ -119,16 +119,27 @@ class CriticalForceResultScreen extends ConsumerWidget {
         children: [
           TextButton(
             onPressed: () async {
-              await ref
-                  .read(
-                    assessmentsProvider(AssessmentType.criticalForce).notifier,
-                  )
-                  .saveAssessment(
-                    saveAssessment,
-                    saveSession,
-                    saveReps,
-                    data: data,
+              try {
+                await ref
+                    .read(
+                      assessmentsProvider(
+                        AssessmentType.criticalForce,
+                      ).notifier,
+                    )
+                    .saveAssessment(
+                      saveAssessment,
+                      saveSession,
+                      saveReps,
+                      data: data,
+                    );
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error saving assessment: $e')),
                   );
+                }
+                return;
+              }
               if (context.mounted) {
                 Navigator.of(context).pop();
               }

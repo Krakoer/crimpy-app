@@ -114,11 +114,22 @@ class PostAssessmentScreen extends ConsumerWidget {
           children: [
             TextButton(
               child: Text("Save new result"),
-              onPressed: () {
-                ref
-                    .read(assessmentsProvider(type).notifier)
-                    .saveAssessment(saveAssessment, saveTraining, saveReps);
-                Navigator.of(context).pop();
+              onPressed: () async {
+                try {
+                  await ref
+                      .read(assessmentsProvider(type).notifier)
+                      .saveAssessment(saveAssessment, saveTraining, saveReps);
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error saving assessment: $e')),
+                    );
+                  }
+                  return;
+                }
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
               },
             ),
             TextButton(

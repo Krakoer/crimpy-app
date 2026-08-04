@@ -173,9 +173,12 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: ElevatedButton(
           style: null,
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              ref
+          onPressed: () async {
+            if (!_formKey.currentState!.validate()) {
+              return;
+            }
+            try {
+              await ref
                   .read(sessionsProvider.notifier)
                   .saveSession(
                     SessionModel(
@@ -186,6 +189,15 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                     ),
                     widget.results,
                   );
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error saving training: $e')),
+                );
+              }
+              return;
+            }
+            if (context.mounted) {
               Navigator.of(context).pop();
             }
           },

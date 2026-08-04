@@ -191,7 +191,7 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
       if (ref.mounted) {
         state = AsyncValue.error(e, stackTrace);
       }
-      return "";
+      rethrow;
     }
   }
 

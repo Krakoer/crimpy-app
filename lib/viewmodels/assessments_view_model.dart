@@ -61,24 +61,19 @@ class AssessmentNotifier extends AsyncNotifier<List<AssessmentModel>> {
       await _assessmentRepository.deleteAssessment(prevAssessmentId);
     }
 
-    // Save the session
+    // Save the session. A failure here must reach the caller: without a session
+    // to attach it to, the assessment cannot be stored either.
     final sessionId = await ref
         .read(sessionsProvider.notifier)
         .saveSession(session, reps, data: data);
-    if (sessionId != "") {
-      // Save the assessment
-      await _assessmentRepository.saveAssessment(assessmentModel, sessionId);
-    }
+    await _assessmentRepository.saveAssessment(assessmentModel, sessionId);
+
     if (ref.mounted) {
       ref.invalidateSelf();
       // Invalidate the null provider as well, since it fetches all trainings.
       ref.invalidate(assessmentsProvider(null));
       // Refresh builtin trainings availability since we have new assessment data
-      try {
-        ref.invalidate(allTrainingsProvider);
-      } catch (e) {
-        // Provider might not be mounted yet, ignore
-      }
+      ref.invalidate(allTrainingsProvider);
     }
   }
 
