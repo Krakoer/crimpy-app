@@ -44,6 +44,13 @@ class BleRepository {
   /// Stores the connected BLE characteristic.
   BluetoothCharacteristic? _characteristic;
 
+  /// Subscriptions to the connected device. They are held so a reconnection
+  /// replaces them instead of stacking a second set on top: every extra
+  /// listener re-emits the same notification, which doubles the apparent
+  /// sample rate and the connection state events.
+  StreamSubscription<BluetoothConnectionState>? _connectionSubscription;
+  StreamSubscription<List<int>>? _characteristicSubscription;
+
   /// returns whether a device is connected and a characteristic is listened to.
   bool get isConnected => _device != null && _characteristic != null;
 
@@ -82,7 +89,8 @@ class BleRepository {
       _device = device;
 
       // Listen to connection state updates
-      device.connectionState.listen((event) {
+      await _connectionSubscription?.cancel();
+      _connectionSubscription = device.connectionState.listen((event) {
         switch (event) {
           case BluetoothConnectionState.connected:
             _connectionStateController.add(BleConnectionState.connected);
@@ -110,40 +118,42 @@ class BleRepository {
 
               // Set up notification
               await characteristic.setNotifyValue(true);
-              characteristic.lastValueStream.listen((value) {
-                if (value.isNotEmpty) {
-                  // Convert the received bytes to a numerical value
-                  var (origValue, calibratedValue) = _parseValueFromBytes(
-                    value,
-                    tare,
-                    calibrationCoef,
-                  );
+              await _characteristicSubscription?.cancel();
+              _characteristicSubscription = characteristic.lastValueStream
+                  .listen((value) {
+                    if (value.isNotEmpty) {
+                      // Convert the received bytes to a numerical value
+                      var (origValue, calibratedValue) = _parseValueFromBytes(
+                        value,
+                        tare,
+                        calibrationCoef,
+                      );
 
-                  // Save last original value for calibration
-                  lastOriginalValue = origValue;
+                      // Save last original value for calibration
+                      lastOriginalValue = origValue;
 
-                  // Create data point and add to stream
-                  final dataPoint = BleDataPoint(
-                    calibratedValue,
-                    DateTime.now(),
-                  );
+                      // Create data point and add to stream
+                      final dataPoint = BleDataPoint(
+                        calibratedValue,
+                        DateTime.now(),
+                      );
 
-                  // Store in current session data
-                  if (_streamDataOn) {
-                    // Add to stream
-                    _dataStreamController.add(dataPoint);
-                  }
+                      // Store in current session data
+                      if (_streamDataOn) {
+                        // Add to stream
+                        _dataStreamController.add(dataPoint);
+                      }
 
-                  if (calibrationOn) {
-                    _calibrationMean =
-                        _calibrationMean *
-                            _calibrationMeanCount /
-                            (_calibrationMeanCount + 1) +
-                        origValue / (_calibrationMeanCount + 1);
-                    _calibrationMeanCount += 1;
-                  }
-                }
-              });
+                      if (calibrationOn) {
+                        _calibrationMean =
+                            _calibrationMean *
+                                _calibrationMeanCount /
+                                (_calibrationMeanCount + 1) +
+                            origValue / (_calibrationMeanCount + 1);
+                        _calibrationMeanCount += 1;
+                      }
+                    }
+                  });
               return true;
             }
           }
@@ -172,6 +182,10 @@ class BleRepository {
   }
 
   Future<void> disconnect() async {
+    await _connectionSubscription?.cancel();
+    _connectionSubscription = null;
+    await _characteristicSubscription?.cancel();
+    _characteristicSubscription = null;
     if (_device != null) {
       if (_characteristic != null && _device!.isConnected) {
         _characteristic = null;
