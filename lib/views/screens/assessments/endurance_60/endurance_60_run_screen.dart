@@ -174,8 +174,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final lastValue =
-        ref.watch(bleDataStreamProvider.notifier).lastValue() ?? 0;
+    final lastValue = ref.watch(bleLastValueProvider) ?? 0;
     final bleData = ref.watch(bleDataStreamProvider);
 
     return PopScope(

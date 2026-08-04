@@ -111,8 +111,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
   @override
   Widget build(BuildContext context) {
     // Last BLE value to print on screen & compute the height of the colored box.
-    final lastValue =
-        ref.watch(bleDataStreamProvider.notifier).lastValue() ?? 0;
+    final lastValue = ref.watch(bleLastValueProvider) ?? 0;
     // BLE session stats to watch the max value and compute the height of the max bar.
     final bleSession = ref.watch(bleSessionProvider);
     // Height of the screen

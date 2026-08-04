@@ -127,6 +127,15 @@ class BleDataStreamNotifier extends StreamNotifier<List<BleDataPoint>> {
   }
 }
 
+/// The most recent calibrated value, or null before the first sample.
+/// Watching this instead of the notifier gives widgets a dependency that
+/// actually changes when a sample arrives, and filters out samples that repeat
+/// the previous value.
+final bleLastValueProvider = Provider<double?>((ref) {
+  final points = ref.watch(bleDataStreamProvider).value;
+  return (points == null || points.isEmpty) ? null : points.last.value;
+});
+
 /// Class to hold the current BLE session statistics.
 class BleSessionStats {
   final Duration elapsed;

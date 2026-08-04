@@ -13,14 +13,11 @@ class TareDialog extends ConsumerStatefulWidget {
 class _TareDialogState extends ConsumerState<TareDialog> {
   @override
   Widget build(BuildContext context) {
-    final bleValue = ref.watch(bleDataStreamProvider);
+    final lastValue = ref.watch(bleLastValueProvider);
     final connected =
         ref.watch(connectionStateProvider) == BleConnectionState.connected;
     final bleString =
-        "${switch (bleValue) {
-          AsyncData(:final value) => value.lastOrNull == null ? "--" : value.lastOrNull!.value.toStringAsFixed(2),
-          _ => "--",
-        }} kg";
+        "${lastValue == null ? "--" : lastValue.toStringAsFixed(2)} kg";
     return AlertDialog(
       title: Text("Tare sensor"),
       actions: [
