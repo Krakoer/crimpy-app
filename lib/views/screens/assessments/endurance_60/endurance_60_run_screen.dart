@@ -8,6 +8,7 @@ import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/screens/assessments/post_assessment_screen.dart';
 import 'package:crimpy/views/widgets/assessment_tutorial_dialog.dart';
+import 'package:crimpy/views/widgets/workout_lifecycle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -32,7 +33,8 @@ class Endurance60RunScreen extends ConsumerStatefulWidget {
       _Endurance60RunScreenState();
 }
 
-class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen> {
+class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
+    with WorkoutLifecycleMixin {
   // Assessment state
   bool _isInTargetZone = false;
   DateTime? _targetZoneEntryTime;
@@ -70,6 +72,35 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen> {
     _timer?.cancel();
     _stopwatch.stop();
     super.dispose();
+  }
+
+  // The measurement is time to failure holding 60% of MVC, so a break in the
+  // hold ends the attempt. There is nothing to resume: the run is discarded.
+  var _interrupted = false;
+
+  @override
+  void onLeftForeground() {
+    if (_assessmentEnded || _interrupted) return;
+    _interrupted = true;
+    _timer?.cancel();
+    _stopwatch.stop();
+    ref.read(bleRepositoryProvider).pauseStreaming();
+  }
+
+  @override
+  void onReturnedToForeground() async {
+    if (!_interrupted) return;
+    final navigator = Navigator.of(context);
+    await showAssessmentInterruptedDialog(
+      context,
+      reason:
+          'The 60% Endurance test measures how long you can hold the target '
+          'force without letting go, so it cannot be paused and resumed.',
+    );
+    // The run is over, but the sensor feed is shared: hand it back before
+    // leaving or the rest of the app sees a frozen reading.
+    ref.read(bleRepositoryProvider).resumeStreaming();
+    navigator.pop();
   }
 
   void _checkAssessmentState() {

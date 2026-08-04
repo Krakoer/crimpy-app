@@ -14,6 +14,7 @@ import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/widgets/gauge.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen.dart';
 import 'package:crimpy/views/widgets/workout_circle.dart';
+import 'package:crimpy/views/widgets/workout_lifecycle.dart';
 import 'package:crimpy/views/widgets/workout_timer.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -33,7 +34,7 @@ class PlayTrainingScreen extends ConsumerStatefulWidget {
 }
 
 class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WorkoutLifecycleMixin {
   // Controller that controls the circle around the gauge.
   late AnimationController _serieController;
 
@@ -204,6 +205,28 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       timer.stop();
       _serieController.stop();
     });
+  }
+
+  /// Whether the background took the workout down, as opposed to the user
+  /// pausing it themselves. Only the former resumes on its own.
+  var _pausedByBackground = false;
+
+  @override
+  void onLeftForeground() {
+    if (timer.finished || !timer.isRunning) return;
+    _pausedByBackground = true;
+    _stop();
+    ref.read(bleRepositoryProvider).pauseStreaming();
+  }
+
+  @override
+  void onReturnedToForeground() async {
+    if (!_pausedByBackground) return;
+    _pausedByBackground = false;
+    await showWorkoutPausedDialog(context);
+    if (!mounted) return;
+    ref.read(bleRepositoryProvider).resumeStreaming();
+    _start();
   }
 
   @override

@@ -215,6 +215,17 @@ class BleRepository {
     _streamDataOn = true;
   }
 
+  /// Stops feeding incoming samples to the data stream without touching what
+  /// has already been recorded, so a run can be suspended and picked up again.
+  void pauseStreaming() {
+    _streamDataOn = false;
+  }
+
+  /// Resumes after [pauseStreaming].
+  void resumeStreaming() {
+    _streamDataOn = true;
+  }
+
   /// Given a list of bytes where the 2nd to the 6th bytes represent a floating value,
   /// and a calibration tare and coef, returns the raw decoded value and (decoded-tare)*coef
   (double, double) _parseValueFromBytes(

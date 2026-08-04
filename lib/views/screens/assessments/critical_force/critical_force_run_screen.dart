@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/views/widgets/workout_lifecycle.dart';
 import 'package:crimpy/views/widgets/workout_timer.dart';
 
 class CriticalForceRunScreen extends ConsumerStatefulWidget {
@@ -33,8 +34,8 @@ class CriticalForceRunScreen extends ConsumerStatefulWidget {
       _CriticalForceRunScreenState();
 }
 
-class _CriticalForceRunScreenState
-    extends ConsumerState<CriticalForceRunScreen> {
+class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
+    with WorkoutLifecycleMixin {
   int get _totalPulls => widget.reps.where((rep) => !rep.isRest).length;
 
   late WorkoutTimer timer = WorkoutTimer(
@@ -136,6 +137,37 @@ class _CriticalForceRunScreenState
   void dispose() {
     timer.dispose();
     super.dispose();
+  }
+
+  // Critical Force is the asymptote of the force decline under continuous
+  // pulling, so the fatigue curve is the measurement. Any extra rest lets the
+  // forearm recover and inflates the result, and the analysis cannot detect it:
+  // it models every interval as a fixed work + rest cycle and never looks at
+  // the real gap between pulls. An interrupted run is therefore discarded.
+  var _interrupted = false;
+
+  @override
+  void onLeftForeground() {
+    if (timer.finished || _interrupted) return;
+    _interrupted = true;
+    timer.stop();
+    ref.read(bleRepositoryProvider).pauseStreaming();
+  }
+
+  @override
+  void onReturnedToForeground() async {
+    if (!_interrupted) return;
+    final navigator = Navigator.of(context);
+    await showAssessmentInterruptedDialog(
+      context,
+      reason:
+          'Critical Force measures how your pulling force declines without a '
+          'break, so the test has to run start to finish in one go.',
+    );
+    // The run is over, but the sensor feed is shared: hand it back before
+    // leaving or the rest of the app sees a frozen reading.
+    ref.read(bleRepositoryProvider).resumeStreaming();
+    navigator.pop();
   }
 
   @override

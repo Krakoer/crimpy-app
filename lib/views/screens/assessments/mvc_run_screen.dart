@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
+import 'package:crimpy/views/widgets/workout_lifecycle.dart';
 import 'package:crimpy/views/widgets/workout_timer.dart';
 import 'package:intl/intl.dart';
 
@@ -24,7 +25,8 @@ class MvcRunScreen extends ConsumerStatefulWidget {
   ConsumerState<ConsumerStatefulWidget> createState() => _MvcRunScreenState();
 }
 
-class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
+class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
+    with WorkoutLifecycleMixin {
   // Store max score for right hand
   double rightMax = -1;
   // Store max score for left hand
@@ -106,6 +108,25 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen> {
   void dispose() {
     timer.dispose();
     super.dispose();
+  }
+
+  // Max Force is measured per pull with rest in between, so extra rest does not
+  // affect the result: the run is suspended and picked up where it left off,
+  // keeping everything already recorded.
+  @override
+  void onLeftForeground() {
+    if (timer.finished) return;
+    timer.stop();
+    ref.read(bleRepositoryProvider).pauseStreaming();
+  }
+
+  @override
+  void onReturnedToForeground() async {
+    if (timer.finished) return;
+    await showWorkoutPausedDialog(context);
+    if (!mounted) return;
+    ref.read(bleRepositoryProvider).resumeStreaming();
+    setState(() => timer.play());
   }
 
   @override
