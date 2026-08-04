@@ -1,7 +1,7 @@
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/training.dart';
 
 /// Expands a training tree into a flat, runnable sequence of execution items.
 /// [useSensor] controls whether hangboard/repeater hangs collect live force

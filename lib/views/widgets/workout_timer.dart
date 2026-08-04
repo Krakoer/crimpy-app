@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/workout_protocol.dart';
 
 /// Wrapper around StopWatch that allows to skip time.
 class CrimpyWatch {

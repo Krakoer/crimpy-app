@@ -1,7 +1,7 @@
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/training.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 

@@ -12,7 +12,7 @@ import 'package:crimpy/views/widgets/workout_lifecycle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 

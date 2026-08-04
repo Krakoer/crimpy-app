@@ -1,6 +1,6 @@
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_item_model.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/training.dart';
 
 /// Maps a backend training_type string to the app SessionType.
 SessionType sessionTypeFromApi(String? value) => switch (value) {

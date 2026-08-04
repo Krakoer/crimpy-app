@@ -2,7 +2,7 @@ import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session_filter.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
 import 'package:drift/native.dart';

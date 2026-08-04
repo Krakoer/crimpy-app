@@ -1,5 +1,5 @@
 import 'package:crimpy/models/program_model.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/utils/program_completion.dart';

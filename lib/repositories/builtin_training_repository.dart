@@ -2,7 +2,8 @@ import 'package:collection/collection.dart';
 import 'package:crimpy/database/builtins.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/builtin_training.dart';
+import 'package:crimpy/models/training.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/repositories/builtin_preferences_repository.dart';
 

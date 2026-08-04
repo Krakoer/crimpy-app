@@ -1,6 +1,6 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/assessments/post_assessment_screen.dart';
 import 'package:flutter/material.dart';

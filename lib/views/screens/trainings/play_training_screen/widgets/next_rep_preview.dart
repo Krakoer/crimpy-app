@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/common.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/workout_protocol.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 
 class NextRepPreview extends StatelessWidget {

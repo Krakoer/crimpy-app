@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/common.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 /// Data source for Syncfusion calendar to display session appointments

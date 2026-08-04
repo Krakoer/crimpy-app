@@ -1,4 +1,4 @@
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
 
 /// Represents the filters available for filtering sessions.
 ///

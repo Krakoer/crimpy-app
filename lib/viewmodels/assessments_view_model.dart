@@ -4,7 +4,7 @@ import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/assessment_model.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

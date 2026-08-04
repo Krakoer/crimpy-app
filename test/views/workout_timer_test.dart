@@ -1,5 +1,5 @@
 import 'package:crimpy/models/common.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/workout_protocol.dart';
 import 'package:crimpy/views/widgets/workout_timer.dart';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -1,7 +1,8 @@
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
+import 'package:crimpy/models/training.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/models/session_filter.dart';
 

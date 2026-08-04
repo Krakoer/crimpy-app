@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
-import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 
 class MissingAssessmentsDialog extends StatelessWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 
 class SetsViewWidget extends StatelessWidget {

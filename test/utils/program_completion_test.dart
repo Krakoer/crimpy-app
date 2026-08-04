@@ -1,5 +1,5 @@
 import 'package:crimpy/models/program_model.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
 import 'package:crimpy/utils/program_completion.dart';
 import 'package:flutter_test/flutter_test.dart';
 

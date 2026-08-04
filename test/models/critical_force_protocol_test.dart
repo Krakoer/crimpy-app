@@ -1,6 +1,6 @@
 import 'package:crimpy/database/builtins.dart';
 import 'package:crimpy/models/assessment_model.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/workout_protocol.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 List<RepModel> criticalForceReps() => builtinAssessments

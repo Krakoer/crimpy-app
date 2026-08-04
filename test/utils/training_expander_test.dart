@@ -1,6 +1,6 @@
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/training.dart';
 import 'package:crimpy/utils/training_expander.dart';
 import 'package:flutter_test/flutter_test.dart';
 

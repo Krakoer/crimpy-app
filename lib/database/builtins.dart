@@ -4,7 +4,8 @@ library;
 
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_feedback_model.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/builtin_training.dart';
+import 'package:crimpy/models/workout_protocol.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:collection/collection.dart';
 import 'package:crimpy/models/common.dart';

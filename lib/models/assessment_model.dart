@@ -1,6 +1,6 @@
 import 'package:crimpy/models/common.dart';
 import 'package:flutter/material.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/workout_protocol.dart';
 
 enum AssessmentType { criticalForce, mvc, endurance60 }
 
@@ -172,4 +172,22 @@ class BuiltinAssessmentModel {
       gripPosition: gripPosition,
     );
   }
+}
+
+/// Represents a required assessment with optional grip position.
+class AssessmentRequirement {
+  final AssessmentType type;
+  final GripPosition? gripPosition;
+
+  const AssessmentRequirement({required this.type, this.gripPosition});
+
+  @override
+  bool operator ==(Object other) {
+    return other is AssessmentRequirement &&
+        other.type == type &&
+        other.gripPosition == gripPosition;
+  }
+
+  @override
+  int get hashCode => Object.hash(type, gripPosition);
 }

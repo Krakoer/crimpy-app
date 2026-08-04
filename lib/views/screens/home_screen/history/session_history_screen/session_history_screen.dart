@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/history/session_detail_screen.dart';
 import 'package:intl/intl.dart';

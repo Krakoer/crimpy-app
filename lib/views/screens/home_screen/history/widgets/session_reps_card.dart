@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/common.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/sets_view_widget.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/rep_item_widget.dart';

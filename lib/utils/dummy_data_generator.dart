@@ -1,7 +1,8 @@
 import 'dart:math';
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/common.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
+import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/repositories/training_repository.dart';

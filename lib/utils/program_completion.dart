@@ -1,6 +1,6 @@
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/utils/format.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
 
 /// Completion of program trainings is derived from the user's logged/ran
 /// sessions rather than stored on the program: a scheduled training counts as

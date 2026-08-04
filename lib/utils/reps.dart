@@ -1,4 +1,5 @@
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/session.dart';
+import 'package:crimpy/models/workout_protocol.dart';
 
 List<RepDataModel> buildRepsData(List<double> avgs, List<RepModel> reps) {
   var i = 0;

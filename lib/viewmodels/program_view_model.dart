@@ -1,5 +1,5 @@
 import 'package:crimpy/models/program_model.dart';
-import 'package:crimpy/models/training_model.dart';
+import 'package:crimpy/models/training.dart';
 import 'package:crimpy/repositories/program_repository.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
