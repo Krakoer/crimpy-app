@@ -92,7 +92,6 @@ class BuiltinAssessmentModel {
   /// Generate an AssessmentTrainingModel with training data
   AssessmentTrainingModel generateAssessment({GripPosition? gripPosition}) {
     return AssessmentTrainingModel(
-      trainingId: id,
       training: trainingGenerator(gripPosition: gripPosition),
       type: type,
       icon: icon,
@@ -115,7 +114,6 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
       return TrainingWithReps(
         id: "248a87c4-039e-464a-a351-b883ff68c147",
         name: "Max Force",
-        isFav: false,
         reps: [
           RepModel(
             id: "",
@@ -167,7 +165,6 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
     trainingGenerator: ({GripPosition? gripPosition}) => TrainingWithReps(
       id: "55970ac0-4544-4945-80cd-4841f7c58fe5",
       name: "Critical Force",
-      isFav: false,
       reps: _criticalForceReps(),
     ),
   ),
@@ -180,7 +177,6 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
     trainingGenerator: ({GripPosition? gripPosition}) => TrainingWithReps(
       id: "493acbdd-6fe7-4f25-987c-575ccf433293",
       name: "60% Endurance",
-      isFav: false,
       reps: [],
     ),
   ),

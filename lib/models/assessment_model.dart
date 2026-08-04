@@ -40,11 +40,9 @@ class AssessmentTrainingModel {
   final AssessmentType type;
   final IconData icon;
   final String description;
-  final String trainingId;
   final GripPosition? gripPosition;
 
   AssessmentTrainingModel({
-    required this.trainingId,
     required this.training,
     required this.type,
     required this.icon,

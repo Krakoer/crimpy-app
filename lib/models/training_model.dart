@@ -234,23 +234,16 @@ class RepModel {
   });
 }
 
+/// A flat sequence of steps, as used by the assessment protocols.
+///
+/// Assessments are a straight run of pulls and rests with no nesting, so they
+/// keep this shape rather than the [Training] item tree.
 class TrainingWithReps {
   final String id;
   final String name;
   final List<RepModel> reps;
-  final RepeaterModel? repeater;
-  final bool isFav;
-  // Used by builtin trainings
-  final LoadAdjustmentFunction? computeNewWeights;
 
-  TrainingWithReps({
-    required this.id,
-    required this.name,
-    required this.reps,
-    required this.isFav,
-    this.repeater,
-    this.computeNewWeights,
-  });
+  TrainingWithReps({required this.id, required this.name, required this.reps});
 
   Duration get totalDuration =>
       Duration(seconds: reps.fold(0, (prev, r) => prev + r.durationInSeconds));
