@@ -226,20 +226,19 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
 }
 
 /// Provider for getting a single session with full data by ID.
-final sessionWithDataProvider = FutureProvider.family<SessionModel?, String>((
-  ref,
-  sessionId,
-) {
-  final trainingRepository = ref.watch(trainingRepositoryProvider);
-  return trainingRepository.getSessionWithData(sessionId);
-});
+/// Auto-disposed: a loaded session carries its whole BLE sample array, so one
+/// cached entry per visited session would keep growing for the whole run.
+final sessionWithDataProvider = FutureProvider.autoDispose
+    .family<SessionModel?, String>((ref, sessionId) {
+      final trainingRepository = ref.watch(trainingRepositoryProvider);
+      return trainingRepository.getSessionWithData(sessionId);
+    });
 
 /// Provider that returns filtered sessions based on a given filter.
-final filteredSessionsProvider =
-    FutureProvider.family<List<SessionModel>, SessionFilter?>((
-      ref,
-      filter,
-    ) async {
+/// Auto-disposed: the filtered list is derived from the cached sessions, so
+/// recomputing it is cheap compared to holding one list per filter used.
+final filteredSessionsProvider = FutureProvider.autoDispose
+    .family<List<SessionModel>, SessionFilter?>((ref, filter) async {
       final allSessions = await ref.watch(sessionsProvider.future);
       if (filter == null) {
         return allSessions;
