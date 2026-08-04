@@ -35,8 +35,8 @@ class Load {
   static const Load bodyweight = Load(value: 0.0, unit: 'bw');
 
   factory Load.fromJson(Map<String, dynamic> json) => Load(
-    value: (json['value'] as num).toDouble(),
-    unit: json['unit'] as String,
+    value: (json['value'] as num?)?.toDouble() ?? 0.0,
+    unit: json['unit'] as String? ?? 'kg',
   );
 
   Map<String, dynamic> toJson() => {'value': value, 'unit': unit};
@@ -184,7 +184,7 @@ class TrainingItem {
     List<Load>? parseLoads(dynamic raw) {
       final flat = flattenJsonList(raw);
       if (flat.isEmpty) return null;
-      return flat.map((e) => Load.fromJson(e as Map<String, dynamic>)).toList();
+      return flat.whereType<Map<String, dynamic>>().map(Load.fromJson).toList();
     }
 
     List<String>? parseStringList(dynamic raw) {
@@ -196,7 +196,7 @@ class TrainingItem {
     List<int>? parseIntList(dynamic raw) {
       final flat = flattenJsonList(raw);
       if (flat.isEmpty) return null;
-      return flat.map((e) => (e as num).toInt()).toList();
+      return flat.whereType<num>().map((e) => e.toInt()).toList();
     }
 
     final nestedRaw = json['items'] as List<dynamic>?;
@@ -308,7 +308,7 @@ class TrainingItem {
       if (raw == null) return null;
       return flattenJsonList(
         raw,
-      ).map((e) => Load.fromJson(e as Map<String, dynamic>)).toList();
+      ).whereType<Map<String, dynamic>>().map(Load.fromJson).toList();
     }
 
     final bothHands = override['both_hands'] as bool?;
@@ -324,7 +324,7 @@ class TrainingItem {
           ? null
           : flattenJsonList(
               override['edge_sizes_mm'],
-            ).map((e) => (e as num).toInt()).toList(),
+            ).whereType<num>().map((e) => e.toInt()).toList(),
       reps: (override['reps'] as num?)?.toInt(),
       cycles: (override['cycles'] as num?)?.toInt(),
       cycleRestSeconds: (override['cycle_rest_seconds'] as num?)?.toInt(),
