@@ -199,14 +199,18 @@ void _expandRepeater(
             subtitle: setRep(cycle, rep),
           ),
         );
-        if (rep < repsPerCycle - 1) {
+        if (rep < repsPerCycle - 1 && resttime > 0) {
           out.add(RestItem(durationSeconds: resttime));
         }
       }
+      // The configured cycle rest covers both hands plus the gap between them,
+      // so a short cycle rest can leave nothing to split.
       final setDuration =
           repsPerCycle * worktime + (repsPerCycle - 1) * resttime;
       final restBetweenHands = ((cycleRest - setDuration) / 2).floor();
-      out.add(RestItem(durationSeconds: restBetweenHands));
+      if (restBetweenHands > 0) {
+        out.add(RestItem(durationSeconds: restBetweenHands));
+      }
       for (int rep = 0; rep < repsPerCycle; rep++) {
         final wL = leftLoads.isNotEmpty
             ? leftLoads[rep % leftLoads.length].value
@@ -222,11 +226,11 @@ void _expandRepeater(
             subtitle: setRep(cycle, rep),
           ),
         );
-        if (rep < repsPerCycle - 1) {
+        if (rep < repsPerCycle - 1 && resttime > 0) {
           out.add(RestItem(durationSeconds: resttime));
         }
       }
-      if (cycle < cycles - 1) {
+      if (cycle < cycles - 1 && restBetweenHands > 0) {
         out.add(RestItem(durationSeconds: restBetweenHands));
       }
     }
@@ -245,7 +249,9 @@ void _expandRepeater(
             subtitle: setRep(cycle, rep),
           ),
         );
-        out.add(RestItem(durationSeconds: resttime));
+        if (resttime > 0) {
+          out.add(RestItem(durationSeconds: resttime));
+        }
         out.add(
           TimedItem(
             label: 'Left hang',
@@ -257,7 +263,7 @@ void _expandRepeater(
             subtitle: setRep(cycle, rep),
           ),
         );
-        if (rep < repsPerCycle - 1) {
+        if (rep < repsPerCycle - 1 && resttime > 0) {
           out.add(RestItem(durationSeconds: resttime));
         }
       }

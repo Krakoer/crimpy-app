@@ -140,4 +140,25 @@ void main() {
     );
     expect((out[1] as TimedItem).comment, 'Keep hips level');
   });
+
+  test('split hand repeater never emits a negative rest', () {
+    // A cycle rest shorter than one hand's set leaves nothing to split.
+    final training = _training([
+      TrainingItem(
+        id: 'r',
+        type: TrainingItemType.repeater,
+        position: 0,
+        cycles: 2,
+        reps: 6,
+        worktimeSeconds: 7,
+        restSeconds: 3,
+        cycleRestSeconds: 30,
+        hand: 'split',
+      ),
+    ]);
+
+    final out = expandTrainingItems(training, useSensor: false);
+
+    expect(out.whereType<RestItem>().every((r) => r.durationSeconds > 0), true);
+  });
 }
