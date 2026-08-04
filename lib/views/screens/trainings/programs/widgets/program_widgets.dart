@@ -288,7 +288,8 @@ class FlexTrainingRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final type = session.sessionType;
     final color = programSessionColor(type);
-    final times = session.timesPerWeek ?? 0;
+    // An unset target still means "do it once", never "already done".
+    final times = session.timesPerWeek ?? 1;
     final complete = doneCount >= times;
 
     return GestureDetector(

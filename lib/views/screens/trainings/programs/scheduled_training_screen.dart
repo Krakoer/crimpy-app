@@ -136,7 +136,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       SessionSchedule.dayOfWeek when date != null =>
         '${weekdayShort(date)} - ${date.day} ${_months[date.month - 1]}',
       SessionSchedule.everyday => 'EVERY DAY',
-      _ => '${session.timesPerWeek ?? 0}x - ANY DAY',
+      _ => '${session.timesPerWeek ?? 1}x - ANY DAY',
     };
 
     return CrimpyCard.category(
