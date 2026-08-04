@@ -5,8 +5,8 @@ import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class FakeSessionsNotifier extends SessionsNotifier {
-  FakeSessionsNotifier(this.sessions);
+class FakeSessions extends Sessions {
+  FakeSessions(this.sessions);
 
   final List<SessionModel> sessions;
 
@@ -35,7 +35,7 @@ void main() {
     ProviderContainer containerWithSessions() => ProviderContainer.test(
       overrides: [
         sessionsProvider.overrideWith(
-          () => FakeSessionsNotifier([january, assessment, march]),
+          () => FakeSessions([january, assessment, march]),
         ),
       ],
     );
