@@ -1,6 +1,7 @@
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/utils/program_completion.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
@@ -9,23 +10,6 @@ import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
-const _months = [
-  'JAN',
-  'FEB',
-  'MAR',
-  'APR',
-  'MAY',
-  'JUN',
-  'JUL',
-  'AUG',
-  'SEP',
-  'OCT',
-  'NOV',
-  'DEC',
-];
-
-String _shortDate(DateTime d) => '${d.day} ${_months[d.month - 1]}';
 
 /// Program overview: header, week selector and a week-strip / calendar schedule.
 class ProgramDetailScreen extends ConsumerStatefulWidget {
@@ -107,7 +91,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
   }
 
   Widget _header() {
-    final start = _shortDate(program.startDate);
+    final start = formatDayMonth(program.startDate);
     final end = program.endDate;
     return CrimpyCard.simple(
       child: Column(
@@ -126,7 +110,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
           const SizedBox(height: 12),
           _tag(
             FontAwesomeIcons.calendar,
-            end == null ? start : '$start - ${_shortDate(end)}',
+            end == null ? start : '$start - ${formatDayMonth(end)}',
           ),
           const SizedBox(height: 14),
           const Divider(thickness: 2, height: 2),
@@ -342,9 +326,9 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
             _dayPicker(byDay, selected),
             const SizedBox(height: 14),
             Text(
-              _isSameDay(selectedDate, today)
-                  ? 'TODAY - ${_shortDate(selectedDate)}'
-                  : '${weekdayShort(selectedDate)} - ${_shortDate(selectedDate)}',
+              isSameDay(selectedDate, today)
+                  ? 'TODAY - ${formatDayMonth(selectedDate)}'
+                  : '${weekdayShort(selectedDate)} - ${formatDayMonth(selectedDate)}',
               style: const TextStyle(
                 fontFamily: 'JetBrainsMono',
                 fontSize: 11,
@@ -411,7 +395,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
         final daySessions = byDay[d]!;
         final date = _dateForDay(d);
         final isSelected = d == selected;
-        final isToday = _isSameDay(date, today);
+        final isToday = isSameDay(date, today);
         final dot = daySessions.isNotEmpty
             ? programSessionColor(daySessions.first.sessionType)
             : null;
@@ -573,9 +557,6 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
   }
 }
 
-bool _isSameDay(DateTime a, DateTime b) =>
-    a.year == b.year && a.month == b.month && a.day == b.day;
-
 /// Full-program calendar grid: one row per week, colored dots per scheduled day.
 class _CalendarView extends StatelessWidget {
   final Program program;
@@ -718,7 +699,7 @@ class _CalendarRow extends ConsumerWidget {
           // Columns are Monday-anchored, so offset from the week start rather
           // than from the program start date.
           final date = program.weekStart(weekNumber).add(Duration(days: d));
-          final isToday = _isSameDay(date, today);
+          final isToday = isSameDay(date, today);
           final fill = session != null
               ? programSessionColor(session.sessionType)
               : null;

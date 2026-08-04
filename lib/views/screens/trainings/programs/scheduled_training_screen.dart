@@ -3,6 +3,7 @@ import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/utils/program_completion.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
@@ -14,21 +15,6 @@ import 'package:crimpy/views/widgets/ble/connection_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
-const _months = [
-  'JAN',
-  'FEB',
-  'MAR',
-  'APR',
-  'MAY',
-  'JUN',
-  'JUL',
-  'AUG',
-  'SEP',
-  'OCT',
-  'NOV',
-  'DEC',
-];
 
 /// Detail of a single training scheduled within a program week, with its
 /// exercises (overrides merged) and a Start button into the run screen.
@@ -134,7 +120,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     final color = programSessionColor(type);
     final schedule = switch (session.schedule) {
       SessionSchedule.dayOfWeek when date != null =>
-        '${weekdayShort(date)} - ${date.day} ${_months[date.month - 1]}',
+        '${weekdayShort(date)} - ${formatDayMonth(date)}',
       SessionSchedule.everyday => 'EVERY DAY',
       _ => '${session.timesPerWeek ?? 1}x - ANY DAY',
     };
@@ -474,12 +460,10 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   /// sessions, or the current week for everyday / times-per-week ones.
   bool _isScheduledToday() {
     final today = DateTime.now();
-    bool sameDay(DateTime a, DateTime b) =>
-        a.year == b.year && a.month == b.month && a.day == b.day;
     switch (session.schedule) {
       case SessionSchedule.dayOfWeek:
         final date = session.scheduledDate(program, weekNumber);
-        return date != null && sameDay(date, today);
+        return date != null && isSameDay(date, today);
       case SessionSchedule.everyday:
       case SessionSchedule.timesPerWeek:
         return program.isActiveOn(today) &&
@@ -616,7 +600,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     final label = canLog
         ? 'LOG AS DONE'
         : date != null
-        ? 'SCHEDULED ${date.day} ${_months[date.month - 1]}'
+        ? 'SCHEDULED ${formatDayMonth(date)}'
         : 'NOT SCHEDULED TODAY';
 
     return ElevatedButton.icon(

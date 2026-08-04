@@ -1,12 +1,10 @@
 import 'package:crimpy/models/program_model.dart';
+import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/models/training_model.dart';
 
 /// Completion of program trainings is derived from the user's logged/ran
 /// sessions rather than stored on the program: a scheduled training counts as
 /// done when a session with a matching name exists on the relevant day(s).
-
-bool _sameDay(DateTime a, DateTime b) =>
-    a.year == b.year && a.month == b.month && a.day == b.day;
 
 /// A session matches a scheduled training when its name equals the training
 /// title or starts with it (the run flow appends a date suffix).
@@ -43,7 +41,7 @@ bool isDoneOn(
   DateTime date,
 ) {
   return sessions.any(
-    (s) => _sameDay(s.date, date) && _matchesTraining(s.name, trainingTitle),
+    (s) => isSameDay(s.date, date) && _matchesTraining(s.name, trainingTitle),
   );
 }
 

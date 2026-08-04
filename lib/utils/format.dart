@@ -30,3 +30,26 @@ String formatDurationHMS(int seconds) {
     return minutes > 0 ? '${hours}h ${minutes}m' : '${hours}h';
   }
 }
+
+const _monthAbbreviations = [
+  'JAN',
+  'FEB',
+  'MAR',
+  'APR',
+  'MAY',
+  'JUN',
+  'JUL',
+  'AUG',
+  'SEP',
+  'OCT',
+  'NOV',
+  'DEC',
+];
+
+/// Day and abbreviated month, e.g. "4 AUG".
+String formatDayMonth(DateTime date) =>
+    '${date.day} ${_monthAbbreviations[date.month - 1]}';
+
+/// Whether two instants fall on the same calendar day.
+bool isSameDay(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
