@@ -30,6 +30,7 @@ class LocalImportStatus {
 ApiClient apiClient(Ref ref) {
   final client = ApiClient();
   client.onUnauthorized = () => ref.invalidate(authStateProvider);
+  ref.onDispose(client.dispose);
   return client;
 }
 

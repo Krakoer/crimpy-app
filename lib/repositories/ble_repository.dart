@@ -234,11 +234,22 @@ class BleRepository {
   /// Current calibration coef to use.
   double calibrationCoef = 1;
 
+  /// Completes once `initConfig` has applied the stored config, so callers can
+  /// tell the persisted values apart from the defaults.
+  Future<void> get configReady => _configReady.future;
+  final _configReady = Completer<void>();
+
+  /// Whether the stored config has already been applied.
+  bool get isConfigLoaded => _configReady.isCompleted;
+
   /// Load the sensor calibration config stored on device.
   Future<void> initConfig() async {
     final prefs = await SharedPreferences.getInstance();
     tare = prefs.getDouble('tare') ?? tare;
     calibrationCoef = prefs.getDouble('calibration') ?? calibrationCoef;
+    if (!_configReady.isCompleted) {
+      _configReady.complete();
+    }
   }
 
   /// Set the calibration coef to a new value.

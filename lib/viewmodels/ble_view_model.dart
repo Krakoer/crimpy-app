@@ -9,10 +9,10 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 /// Main provider, gives access to the BLE repository.
 final bleRepositoryProvider = Provider<BleRepository>((ref) {
   final repository = BleRepository();
-  repository.initConfig();
-  ref.onDispose(() {
-    repository.dispose();
-  });
+  // Loads the stored calibration in the background. Consumers that need the
+  // persisted values wait on `configReady` instead of blocking creation here.
+  unawaited(repository.initConfig());
+  ref.onDispose(repository.dispose);
   return repository;
 });
 
@@ -198,6 +198,15 @@ class BleConfigNotifier extends Notifier<BleConfig> {
   @override
   BleConfig build() {
     _bleRepository = ref.watch(bleRepositoryProvider);
+
+    // The stored config is loaded asynchronously, so the first build can only
+    // see the defaults. Rebuild once the real values land.
+    if (!_bleRepository.isConfigLoaded) {
+      _bleRepository.configReady.then((_) {
+        if (ref.mounted) ref.invalidateSelf();
+      });
+    }
+
     return BleConfig(
       tare: _bleRepository.tare,
       calibration: _bleRepository.calibrationCoef,

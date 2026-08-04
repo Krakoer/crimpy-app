@@ -521,4 +521,11 @@ class ApiClient {
   Future<void> deleteAssessmentApi(String id) async {
     await delete('/api/assessments/$id');
   }
+
+  /// Releases the idle HTTP connections and drops the unauthorized callback so
+  /// a discarded client cannot call back into a disposed provider.
+  void dispose() {
+    onUnauthorized = null;
+    _dio.close();
+  }
 }
