@@ -1,29 +1,15 @@
-import 'package:crimpy/database/database.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/auth_models.dart' as auth_models;
-import 'package:crimpy/models/common.dart';
-import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/repositories/remote_assessment_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
+import 'package:crimpy/repositories/user_repository.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/auth_service.dart';
+import 'package:crimpy/services/local_data_migration.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:drift/drift.dart' as drift;
 
 part 'auth_view_model.g.dart';
-
-class LocalImportStatus {
-  final int sessionCount;
-  final int trainingCount;
-
-  const LocalImportStatus({
-    required this.sessionCount,
-    required this.trainingCount,
-  });
-
-  bool get hasData => sessionCount > 0 || trainingCount > 0;
-}
 
 @Riverpod(keepAlive: true)
 ApiClient apiClient(Ref ref) {
@@ -40,6 +26,21 @@ ApiClient apiClient(Ref ref) {
 bool isAuthenticated(Ref ref) =>
     ref.watch(authStateProvider).asData?.value != null;
 
+/// Uploads guest-mode data to the API after a sign in.
+@Riverpod(keepAlive: true)
+LocalDataMigration localDataMigration(Ref ref) {
+  final apiClient = ref.watch(apiClientProvider);
+  return LocalDataMigration(
+    apiClient: apiClient,
+    remoteTrainings: RemoteTrainingRepository(apiClient),
+    remoteAssessments: RemoteAssessmentRepository(apiClient),
+  );
+}
+
+/// Persists the signed-in user on the device.
+@Riverpod(keepAlive: true)
+UserRepository userRepository(Ref ref) => UserRepository();
+
 @Riverpod(keepAlive: true)
 AuthService authService(Ref ref) {
   final apiClient = ref.watch(apiClientProvider);
@@ -50,8 +51,8 @@ AuthService authService(Ref ref) {
 class AuthState extends _$AuthState {
   @override
   Future<auth_models.User?> build() async {
-    final dbUser = await gDatabase.getCurrentUser();
-    if (dbUser == null) return null;
+    final user = await ref.read(userRepositoryProvider).currentUser();
+    if (user == null) return null;
 
     // A stored user with no credentials at all is a stale, inconsistent state
     // (e.g. tokens were cleared after a failed refresh). Treat it as logged out
@@ -65,17 +66,7 @@ class AuthState extends _$AuthState {
       return null;
     }
 
-    return auth_models.User(
-      id: dbUser.id,
-      email: dbUser.email,
-      firstname: dbUser.firstname,
-      lastname: dbUser.lastname,
-      emailVerified: dbUser.emailVerified,
-      isAdmin: dbUser.isAdmin,
-      isCoach: dbUser.isCoach,
-      coachValidated: dbUser.coachValidated,
-      createdAt: dbUser.createdAt.toIso8601String(),
-    );
+    return user;
   }
 
   Future<void> login(String email, String password) async {
@@ -123,16 +114,8 @@ class AuthState extends _$AuthState {
       final authService = ref.read(authServiceProvider);
       await authService.verifyEmail(token);
 
-      final currentUser = await gDatabase.getCurrentUser();
-      if (currentUser != null) {
-        await gDatabase.saveCurrentUser(
-          UsersCompanion(
-            id: drift.Value(currentUser.id),
-            emailVerified: const drift.Value(true),
-          ),
-        );
-        ref.invalidateSelf();
-      }
+      await ref.read(userRepositoryProvider).markEmailVerified();
+      ref.invalidateSelf();
 
       AppLoggerHelper.info('Email verification successful');
     } catch (e) {
@@ -173,8 +156,7 @@ class AuthState extends _$AuthState {
       final authService = ref.read(authServiceProvider);
       await authService.logout();
 
-      await gDatabase.wipeLocalData();
-      await gDatabase.deleteCurrentUser();
+      await ref.read(userRepositoryProvider).clear();
 
       ref.invalidate(sensorConfigsProvider);
       ref.invalidateSelf();
@@ -186,128 +168,18 @@ class AuthState extends _$AuthState {
     }
   }
 
-  Future<LocalImportStatus> checkLocalDataBeforeLogin() async {
-    final sessions = await gDatabase.getAllSessions();
-    final trainings = await gDatabase.getAllTrainings();
-    return LocalImportStatus(
-      sessionCount: sessions.length,
-      trainingCount: trainings.length,
-    );
-  }
+  Future<LocalImportStatus> checkLocalDataBeforeLogin() =>
+      ref.read(localDataMigrationProvider).pendingData();
 
-  /// Uploads every locally stored entity to the API. Individual failures are
-  /// logged and counted rather than aborting the run, so a single bad row does
-  /// not block the rest; the returned count tells the caller whether the local
-  /// copy is now safe to delete.
-  Future<int> importLocalDataToApi() async {
-    final apiClient = ref.read(apiClientProvider);
-    final remoteRepo = RemoteTrainingRepository(apiClient);
-    final remoteAssessmentRepo = RemoteAssessmentRepository(apiClient);
-    var failures = 0;
-
-    // Import sessions with their rep_datas and assessments
-    final sessions = await gDatabase.getAllSessions();
-    for (final s in sessions) {
-      try {
-        final dbReps = await gDatabase.getRepsForSession(s.id);
-        final session = s.toModel();
-        final serverSessionId = await remoteRepo.saveSession(session, dbReps);
-
-        if (s.isAssessment) {
-          final dbAssessments = await gDatabase.getAssessmentsForSession(s.id);
-          for (final a in dbAssessments) {
-            try {
-              await remoteAssessmentRepo.saveAssessment(
-                AssessmentResultModel(
-                  type: AssessmentType.values[a.type],
-                  rightValue: a.rightValue,
-                  leftValue: a.leftValue,
-                  gripPosition: a.gripPosition != null
-                      ? GripPosition.values[a.gripPosition!]
-                      : null,
-                ),
-                serverSessionId,
-              );
-            } catch (e) {
-              failures++;
-              AppLoggerHelper.error(
-                'Failed to import assessment for session ${s.id}: $e',
-              );
-            }
-          }
-        }
-      } catch (e) {
-        failures++;
-        AppLoggerHelper.error('Failed to import session ${s.id}: $e');
-      }
-    }
-
-    // Import trainings with their items
-    final trainings = await gDatabase.getAllTrainings();
-    for (final t in trainings) {
-      try {
-        await remoteRepo.saveTraining(t);
-      } catch (e) {
-        failures++;
-        AppLoggerHelper.error('Failed to import training ${t.id}: $e');
-      }
-    }
-
-    // Import pinned builtin trainings
-    final pinnedIds = await gDatabase.getPinnedBuiltinTrainingIds();
-    for (final id in pinnedIds) {
-      try {
-        await apiClient.pinBuiltinTrainingApi(id);
-      } catch (e) {
-        failures++;
-        AppLoggerHelper.error('Failed to import pinned builtin $id: $e');
-      }
-    }
-
-    // Import builtin training weights
-    final weights = await gDatabase.getAllBuiltinTrainingWeights();
-    for (final w in weights) {
-      try {
-        await apiClient.createBuiltinTrainingWeight({
-          'id': w.id,
-          'builtin_training_id': w.builtinTrainingId,
-          'custom_weight_right': w.customWeightRight ?? 0.0,
-          'custom_weight_left': w.customWeightLeft ?? 0.0,
-        });
-      } catch (e) {
-        failures++;
-        AppLoggerHelper.error(
-          'Failed to import builtin weight ${w.builtinTrainingId}: $e',
-        );
-      }
-    }
-
-    AppLoggerHelper.info('Local data import complete, $failures failure(s)');
-    return failures;
-  }
+  Future<int> importLocalDataToApi() =>
+      ref.read(localDataMigrationProvider).uploadAll();
 
   Future<void> clearLocalDataAfterLogin() async {
-    await gDatabase.wipeLocalData();
+    await ref.read(localDataMigrationProvider).clearLocalData();
     ref.invalidate(sensorConfigsProvider);
     ref.invalidateSelf();
   }
 
-  Future<void> _saveUserToDb(auth_models.User user) async {
-    await gDatabase.saveCurrentUser(
-      UsersCompanion.insert(
-        id: user.id,
-        email: user.email,
-        firstname: user.firstname,
-        lastname: user.lastname,
-        emailVerified: drift.Value(user.emailVerified),
-        isAdmin: drift.Value(user.isAdmin),
-        isCoach: drift.Value(user.isCoach),
-        coachValidated: drift.Value(user.coachValidated),
-        // DateTime are in format "2006-01-02 15:04:05.999999999 +0000 UTC"
-        createdAt: drift.Value(
-          DateTime.parse(user.createdAt.replaceAll(" +0000 UTC", "")),
-        ),
-      ),
-    );
-  }
+  Future<void> _saveUserToDb(auth_models.User user) =>
+      ref.read(userRepositoryProvider).save(user);
 }

@@ -102,6 +102,105 @@ final class IsAuthenticatedProvider
 
 String _$isAuthenticatedHash() => r'2a194a6c4ac56aa35a101cf7c8097a66a1bfa175';
 
+/// Uploads guest-mode data to the API after a sign in.
+
+@ProviderFor(localDataMigration)
+const localDataMigrationProvider = LocalDataMigrationProvider._();
+
+/// Uploads guest-mode data to the API after a sign in.
+
+final class LocalDataMigrationProvider
+    extends
+        $FunctionalProvider<
+          LocalDataMigration,
+          LocalDataMigration,
+          LocalDataMigration
+        >
+    with $Provider<LocalDataMigration> {
+  /// Uploads guest-mode data to the API after a sign in.
+  const LocalDataMigrationProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'localDataMigrationProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$localDataMigrationHash();
+
+  @$internal
+  @override
+  $ProviderElement<LocalDataMigration> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  LocalDataMigration create(Ref ref) {
+    return localDataMigration(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(LocalDataMigration value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<LocalDataMigration>(value),
+    );
+  }
+}
+
+String _$localDataMigrationHash() =>
+    r'8e57b9cecf584b03b6fe57c4b70fde782ce93b5f';
+
+/// Persists the signed-in user on the device.
+
+@ProviderFor(userRepository)
+const userRepositoryProvider = UserRepositoryProvider._();
+
+/// Persists the signed-in user on the device.
+
+final class UserRepositoryProvider
+    extends $FunctionalProvider<UserRepository, UserRepository, UserRepository>
+    with $Provider<UserRepository> {
+  /// Persists the signed-in user on the device.
+  const UserRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'userRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$userRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<UserRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  UserRepository create(Ref ref) {
+    return userRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UserRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UserRepository>(value),
+    );
+  }
+}
+
+String _$userRepositoryHash() => r'6f33c0662d4bd5e514fd4f4f99ff0bcb31cd094d';
+
 @ProviderFor(authService)
 const authServiceProvider = AuthServiceProvider._();
 
@@ -167,7 +266,7 @@ final class AuthStateProvider
   AuthState create() => AuthState();
 }
 
-String _$authStateHash() => r'fb1910c36882e59b68751fa86b7d960a8480728a';
+String _$authStateHash() => r'474b1b86f0021bc915413818fa39702c364d1a76';
 
 abstract class _$AuthState extends $AsyncNotifier<auth_models.User?> {
   FutureOr<auth_models.User?> build();

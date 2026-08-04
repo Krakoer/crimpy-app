@@ -1102,3 +1102,19 @@ extension SessionRowToModel on Session {
     repeaterConfig: repeaterConfigOrNull,
   );
 }
+
+/// Maps a stored assessment row onto the domain result model.
+extension AssessmentRowToModel on Assessment {
+  AssessmentResultModel toResult() => AssessmentResultModel(
+    type: enumFromIndex(
+      AssessmentType.values,
+      type,
+      AssessmentType.criticalForce,
+    ),
+    rightValue: rightValue,
+    leftValue: leftValue,
+    gripPosition: gripPosition == null
+        ? null
+        : enumFromIndex<GripPosition?>(GripPosition.values, gripPosition, null),
+  );
+}
