@@ -1073,7 +1073,7 @@ class AppDatabase extends _$AppDatabase {
               CHECK (load_is_max IN (0, 1)),
             free_text TEXT,
             exercise_id TEXT,
-            section_title TEXT,
+            group_title TEXT,
             updated_at INTEGER NOT NULL DEFAULT
               (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)),
             PRIMARY KEY (id),
