@@ -556,7 +556,7 @@ final class SensorPresetsProvider
   SensorPresets create() => SensorPresets();
 }
 
-String _$sensorPresetsHash() => r'fe86f2de0877c4d495af8bb9c804b71a7b0200d4';
+String _$sensorPresetsHash() => r'f3f9aff39adea47b89848efd84b4e07458e39235';
 
 /// Returns the saved calibration presets.
 /// Allows the creation, edition and deletion of presets.
