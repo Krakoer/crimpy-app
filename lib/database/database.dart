@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:crimpy/database/database.steps.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/common.dart';
-import 'package:crimpy/viewmodels/training_view_model.dart';
+import 'package:crimpy/models/session_filter.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:crimpy/models/assessment_model.dart';

@@ -4,6 +4,7 @@ import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:crimpy/models/session_filter.dart';
 
 class FakeSessions extends Sessions {
   FakeSessions(this.sessions);

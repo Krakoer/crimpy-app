@@ -3,7 +3,7 @@ import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/services/api_client.dart';
-import 'package:crimpy/viewmodels/training_view_model.dart';
+import 'package:crimpy/models/session_filter.dart';
 
 abstract class TrainingRepository {
   Future<List<Training>> getAllTrainings({bool onlyFavs = false});

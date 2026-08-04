@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/models/session_filter.dart';
 import 'package:crimpy/repositories/builtin_preferences_repository.dart';
 import 'package:crimpy/repositories/remote_assessment_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -114,39 +115,6 @@ class Trainings extends _$Trainings {
     await _trainingRepository.deleteTraining(trainingId);
     ref.invalidate(favTrainingsProvider);
   });
-}
-
-/// Represents the filters available for filtering sessions.
-class SessionFilter {
-  final DateTime? startDate;
-  final DateTime? endDate;
-  final bool? isAssessment;
-
-  const SessionFilter({this.startDate, this.endDate, this.isAssessment});
-
-  @override
-  bool operator ==(Object other) {
-    return other is SessionFilter &&
-        other.startDate == startDate &&
-        other.endDate == endDate &&
-        other.isAssessment == isAssessment;
-  }
-
-  @override
-  int get hashCode => Object.hash(startDate, endDate, isAssessment);
-
-  bool matchesSession(SessionModel session) {
-    if (isAssessment != null && session.isAssessment != isAssessment) {
-      return false;
-    }
-    if (startDate != null && session.date.isBefore(startDate!)) {
-      return false;
-    }
-    if (endDate != null && session.date.isAfter(endDate!)) {
-      return false;
-    }
-    return true;
-  }
 }
 
 /// Returns the list of all sessions, and allows the creation of new sessions.

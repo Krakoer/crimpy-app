@@ -9,6 +9,7 @@ import 'widgets/calendar_card.dart';
 import 'widgets/date_group.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/error_state.dart';
+import 'package:crimpy/models/session_filter.dart';
 
 class SessionHistoryScreen extends ConsumerStatefulWidget {
   const SessionHistoryScreen({super.key});

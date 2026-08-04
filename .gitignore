@@ -48,3 +48,5 @@ app.*.map.json
 sentry.properties
 
 archive/
+# Sensor data pulled off a device for debugging
+data.json
