@@ -1,28 +1,33 @@
 import 'dart:async';
 import 'package:crimpy/database/database.dart';
+// Needed for the hand-written sensorConfigsProvider below; riverpod_annotation
+// alone does not expose the manual provider types.
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:crimpy/models/config.dart';
 import '../models/ble_data_model.dart';
 import '../repositories/ble_repository.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+part 'ble_view_model.g.dart';
+
+/// Retry policy that gives up immediately.
+Duration? noRetry(int retryCount, Object error) => null;
+
 /// Main provider, gives access to the BLE repository.
-final bleRepositoryProvider = Provider<BleRepository>((ref) {
+@Riverpod(keepAlive: true)
+BleRepository bleRepository(Ref ref) {
   final repository = BleRepository();
   // Loads the stored calibration in the background. Consumers that need the
   // persisted values wait on `configReady` instead of blocking creation here.
   unawaited(repository.initConfig());
   ref.onDispose(repository.dispose);
   return repository;
-});
+}
 
 /// Adapter state provider
-final bleAdapterStateProvider =
-    NotifierProvider<BleAdapterStateNotifier, BluetoothAdapterState>(
-      BleAdapterStateNotifier.new,
-    );
-
-class BleAdapterStateNotifier extends Notifier<BluetoothAdapterState> {
+@Riverpod(keepAlive: true)
+class BleAdapterState extends _$BleAdapterState {
   @override
   BluetoothAdapterState build() {
     final repo = ref.watch(bleRepositoryProvider);
@@ -37,13 +42,8 @@ class BleAdapterStateNotifier extends Notifier<BluetoothAdapterState> {
 }
 
 /// Returns the BLE connection state. Allows to (dis)connect to/from a BLE device.
-final connectionStateProvider =
-    NotifierProvider<BleConnectionNotifier, BleConnectionState>(
-      BleConnectionNotifier.new,
-    );
-
-/// ConnectionState notifier
-class BleConnectionNotifier extends Notifier<BleConnectionState> {
+@Riverpod(keepAlive: true, name: 'connectionStateProvider')
+class BleConnection extends _$BleConnection {
   late BleRepository _bleRepository;
 
   @override
@@ -65,21 +65,17 @@ class BleConnectionNotifier extends Notifier<BleConnectionState> {
 }
 
 /// Returns the connected device info, if any.
-final connectedDeviceProvider = Provider<BluetoothDevice?>((ref) {
+@Riverpod(keepAlive: true)
+BluetoothDevice? connectedDevice(Ref ref) {
   return ref.watch(bleRepositoryProvider).connectedDevice;
-});
+}
 
 /// Returns the results of a BLE scan.
 /// A scan that fails because the adapter is off must not be retried on its own:
 /// the user turns Bluetooth back on and triggers a new scan explicitly.
 /// TODO: Maybe convert to a Stream provider so that we don't have to wait till the end of the scan to see the results ?
-final scanResultsProvider =
-    AsyncNotifierProvider<ScanResultsNotifier, List<BluetoothDevice>>(
-      ScanResultsNotifier.new,
-      retry: (retryCount, error) => null,
-    );
-
-class ScanResultsNotifier extends AsyncNotifier<List<BluetoothDevice>> {
+@Riverpod(keepAlive: true, retry: noRetry)
+class ScanResults extends _$ScanResults {
   @override
   Future<List<BluetoothDevice>> build() {
     final bleRepository = ref.watch(bleRepositoryProvider);
@@ -88,12 +84,8 @@ class ScanResultsNotifier extends AsyncNotifier<List<BluetoothDevice>> {
 }
 
 /// Returns a stream of calibrated BleDataPoint sent by the BLE device.
-final bleDataStreamProvider =
-    StreamNotifierProvider<BleDataStreamNotifier, List<BleDataPoint>>(
-      BleDataStreamNotifier.new,
-    );
-
-class BleDataStreamNotifier extends StreamNotifier<List<BleDataPoint>> {
+@Riverpod(keepAlive: true)
+class BleDataStream extends _$BleDataStream {
   late BleRepository _bleRepository;
   final List<BleDataPoint> _dataPoints = [];
 
@@ -131,10 +123,11 @@ class BleDataStreamNotifier extends StreamNotifier<List<BleDataPoint>> {
 /// Watching this instead of the notifier gives widgets a dependency that
 /// actually changes when a sample arrives, and filters out samples that repeat
 /// the previous value.
-final bleLastValueProvider = Provider<double?>((ref) {
+@Riverpod(keepAlive: true)
+double? bleLastValue(Ref ref) {
   final points = ref.watch(bleDataStreamProvider).value;
   return (points == null || points.isEmpty) ? null : points.last.value;
-});
+}
 
 /// Class to hold the current BLE session statistics.
 class BleSessionStats {
@@ -153,12 +146,8 @@ class BleSessionStats {
 
 /// Returns the current session stats.
 /// Allows the session to be reset.
-final bleSessionProvider =
-    NotifierProvider<BleSessionNotifier, BleSessionStats>(
-      BleSessionNotifier.new,
-    );
-
-class BleSessionNotifier extends Notifier<BleSessionStats> {
+@Riverpod(keepAlive: true)
+class BleSession extends _$BleSession {
   late BleRepository _bleRepository;
   DateTime? _startTime;
 
@@ -197,11 +186,8 @@ class BleSessionNotifier extends Notifier<BleSessionStats> {
 
 /// Returns the current BLE config state (calibration coef and tare).
 /// Allows the config to be edited, either manually or through calibration.
-final bleConfigProvider = NotifierProvider<BleConfigNotifier, BleConfig>(
-  BleConfigNotifier.new,
-);
-
-class BleConfigNotifier extends Notifier<BleConfig> {
+@Riverpod(keepAlive: true, name: 'bleConfigProvider')
+class BleConfigController extends _$BleConfigController {
   late BleRepository _bleRepository;
 
   @override
@@ -271,6 +257,9 @@ class BleConfigNotifier extends Notifier<BleConfig> {
 
 /// Returns the saved calibration configurations.
 /// Allows the creation, edition and deletion of configurations.
+/// Declared by hand rather than generated: `SensorConfig` is a drift row class
+/// emitted into a part file, and riverpod_generator cannot write an import for
+/// a type that has no importable library of its own.
 final sensorConfigsProvider =
     AsyncNotifierProvider<SensorConfigsNotifier, List<SensorConfig>>(
       SensorConfigsNotifier.new,

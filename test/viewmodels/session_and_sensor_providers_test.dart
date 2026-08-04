@@ -14,8 +14,8 @@ class FakeSessions extends Sessions {
   Future<List<SessionModel>> build() async => sessions;
 }
 
-class FakeBleDataStreamNotifier extends BleDataStreamNotifier {
-  FakeBleDataStreamNotifier(this.points);
+class FakeBleDataStream extends BleDataStream {
+  FakeBleDataStream(this.points);
 
   final List<BleDataPoint> points;
 
@@ -83,9 +83,7 @@ void main() {
     Future<double?> lastValueFor(List<BleDataPoint> points) async {
       final container = ProviderContainer.test(
         overrides: [
-          bleDataStreamProvider.overrideWith(
-            () => FakeBleDataStreamNotifier(points),
-          ),
+          bleDataStreamProvider.overrideWith(() => FakeBleDataStream(points)),
         ],
       );
       container.listen(bleLastValueProvider, (previous, next) {});
