@@ -259,6 +259,7 @@ class TrainingItem {
   }
 
   TrainingItem copyWith({
+    int? position,
     int? worktimeSeconds,
     int? restSeconds,
     int? cycles,
@@ -276,7 +277,7 @@ class TrainingItem {
     return TrainingItem(
       id: id,
       type: type,
-      position: position,
+      position: position ?? this.position,
       parentId: parentId,
       worktimeSeconds: worktimeSeconds ?? this.worktimeSeconds,
       restSeconds: restSeconds ?? this.restSeconds,

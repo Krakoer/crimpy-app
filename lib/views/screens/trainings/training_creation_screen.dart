@@ -127,31 +127,9 @@ class _UnifiedTrainingCreationScreenState
         );
         return;
       }
-      items = _items.indexed
-          .map(
-            (e) => TrainingItem(
-              id: e.$2.id,
-              type: e.$2.type,
-              position: e.$1,
-              parentId: e.$2.parentId,
-              cycles: e.$2.cycles,
-              cycleRestSeconds: e.$2.cycleRestSeconds,
-              reps: e.$2.reps,
-              duration: e.$2.duration,
-              restSeconds: e.$2.restSeconds,
-              worktimeSeconds: e.$2.worktimeSeconds,
-              hand: e.$2.hand,
-              loads: e.$2.loads,
-              leftLoads: e.$2.leftLoads,
-              handPositions: e.$2.handPositions,
-              edgeSizesMm: e.$2.edgeSizesMm,
-              loadIsMax: e.$2.loadIsMax,
-              freeText: e.$2.freeText,
-              exerciseId: e.$2.exerciseId,
-              groupTitle: e.$2.groupTitle,
-            ),
-          )
-          .toList();
+      // copyWith keeps every field this editor does not expose (nested items,
+      // coach comments, exercise names) instead of dropping them on save.
+      items = _items.indexed.map((e) => e.$2.copyWith(position: e.$1)).toList();
     }
 
     final training = Training(
@@ -188,6 +166,11 @@ class _UnifiedTrainingCreationScreenState
       if (edited != null) setState(() => _items.add(edited));
     });
   }
+
+  /// Stable list identity: saved items have an id, new ones fall back to the
+  /// object identity assigned when they were added.
+  Object _keyFor(TrainingItem item) =>
+      item.id.isEmpty ? identityHashCode(item) : item.id;
 
   void _editItem(int index) {
     showDialog<TrainingItem>(
@@ -315,9 +298,14 @@ class _UnifiedTrainingCreationScreenState
       itemBuilder: (ctx, i) {
         final item = _items[i];
         return _TrainingItemCard(
-          key: ValueKey(i),
+          // Identity must survive a reorder, so key by the item, not its index.
+          key: ValueKey(_keyFor(item)),
           item: item,
-          onEdit: () => _editItem(i),
+          // Only hangboard reps are editable here; other item types carry
+          // fields this editor cannot represent.
+          onEdit: item.type == TrainingItemType.hangboardRep
+              ? () => _editItem(i)
+              : null,
           onDelete: () => setState(() => _items.removeAt(i)),
         );
       },
@@ -361,7 +349,7 @@ class _UnifiedTrainingCreationScreenState
 
 class _TrainingItemCard extends StatelessWidget {
   final TrainingItem item;
-  final VoidCallback onEdit;
+  final VoidCallback? onEdit;
   final VoidCallback onDelete;
 
   const _TrainingItemCard({
@@ -371,16 +359,34 @@ class _TrainingItemCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  String get _subtitle =>
+  String get _title => switch (item.type) {
+    TrainingItemType.hangboardRep => 'Hang Rep',
+    TrainingItemType.repeater => 'Repeater',
+    TrainingItemType.circuit => 'Circuit',
+    TrainingItemType.group => item.groupTitle ?? 'Group',
+    TrainingItemType.exercise => item.exerciseName ?? 'Exercise',
+    TrainingItemType.free => item.freeText ?? 'Note',
+  };
+
+  String get _subtitle => switch (item.type) {
+    TrainingItemType.hangboardRep || TrainingItemType.repeater =>
       '${item.worktimeSeconds ?? 7}s hang / ${item.restSeconds ?? 3}s rest  '
-      '${item.hand ?? 'both'} hand';
+          '${item.hand ?? 'both'} hand',
+    TrainingItemType.circuit ||
+    TrainingItemType.group => '${item.items.length} item(s)',
+    TrainingItemType.exercise =>
+      item.effectiveReps != null
+          ? '${item.effectiveReps} reps'
+          : '${item.effectiveDuration ?? 0}s',
+    TrainingItemType.free => '',
+  };
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
-        title: const Text('Hang Rep'),
+        title: Text(_title),
         subtitle: Text(_subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -428,17 +434,12 @@ class _ItemEditorDialogState extends State<_ItemEditorDialog> {
   }
 
   TrainingItem _buildItem() {
-    final item = widget.item;
-    return TrainingItem(
-      id: item.id,
-      type: item.type,
-      position: item.position,
+    return widget.item.copyWith(
       worktimeSeconds: _worktime,
       restSeconds: _rest,
       hand: _hand,
       loads: [Load(value: _loadRight, unit: _loadIsMax ? 'max' : 'kg')],
       loadIsMax: _loadIsMax,
-      handPositions: [item.handPositions?.firstOrNull ?? 'halfCrimp'],
     );
   }
 
