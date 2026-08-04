@@ -82,6 +82,9 @@ class RemoteAssessmentRepository implements AssessmentRepository {
       result = result.where((a) => a.gripPosition == gripPosition).toList();
     }
 
+    // Callers take the last entry as the most recent one, so do not rely on the
+    // order the API happened to return.
+    result.sort((a, b) => a.date.compareTo(b.date));
     return result;
   }
 
