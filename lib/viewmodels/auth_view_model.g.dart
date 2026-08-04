@@ -21,7 +21,7 @@ final class ApiClientProvider
         argument: null,
         retry: null,
         name: r'apiClientProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -48,7 +48,7 @@ final class ApiClientProvider
   }
 }
 
-String _$apiClientHash() => r'9debf269c4ba7ca4655c3481dbc83853c13984c0';
+String _$apiClientHash() => r'194a500119323a61b0fe18da62a65d2496a2025a';
 
 /// Whether a user is signed in. Repositories watch this rather than the whole
 /// auth state: it only changes when the user signs in or out, so refreshing the
@@ -73,7 +73,7 @@ final class IsAuthenticatedProvider
         argument: null,
         retry: null,
         name: r'isAuthenticatedProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -100,7 +100,7 @@ final class IsAuthenticatedProvider
   }
 }
 
-String _$isAuthenticatedHash() => r'b7661edebf2147b55a6f62df240a947794dcbc0c';
+String _$isAuthenticatedHash() => r'2a194a6c4ac56aa35a101cf7c8097a66a1bfa175';
 
 @ProviderFor(authService)
 const authServiceProvider = AuthServiceProvider._();
@@ -114,7 +114,7 @@ final class AuthServiceProvider
         argument: null,
         retry: null,
         name: r'authServiceProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -141,7 +141,7 @@ final class AuthServiceProvider
   }
 }
 
-String _$authServiceHash() => r'c74ad1a6e6e05cff38347532619242d786560cfe';
+String _$authServiceHash() => r'93c59e06939cae44bd06b13de59335959aa6ecc4';
 
 @ProviderFor(AuthState)
 const authStateProvider = AuthStateProvider._();
@@ -154,7 +154,7 @@ final class AuthStateProvider
         argument: null,
         retry: null,
         name: r'authStateProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -167,7 +167,7 @@ final class AuthStateProvider
   AuthState create() => AuthState();
 }
 
-String _$authStateHash() => r'ff50f161084ac649f75cee1cea69ef0251b58295';
+String _$authStateHash() => r'fb1910c36882e59b68751fa86b7d960a8480728a';
 
 abstract class _$AuthState extends $AsyncNotifier<auth_models.User?> {
   FutureOr<auth_models.User?> build();
