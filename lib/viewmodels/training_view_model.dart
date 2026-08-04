@@ -88,46 +88,40 @@ class TrainingsNotifier extends AsyncNotifier<List<Training>> {
     return _trainingRepository.getAllTrainings();
   }
 
-  /// Save a new training.
-  Future<void> saveTraining(Training training) async {
-    state = const AsyncValue.loading();
+  /// Runs a repository mutation and reloads the list. `invalidateSelf` re-emits
+  /// the previous value as loading, so the list keeps its content on screen
+  /// instead of flashing empty for the duration of the write.
+  Future<void> _mutate(Future<void> Function() mutation) async {
     try {
-      await _trainingRepository.saveTraining(training);
-      ref.invalidate(favTrainingsProvider);
-      ref.invalidate(allTrainingsProvider);
+      await mutation();
       ref.invalidateSelf();
-      await future;
+      if (ref.mounted) await future;
     } catch (e, stackTrace) {
-      state = AsyncValue.error(e, stackTrace);
+      if (ref.mounted) {
+        state = AsyncValue.error(e, stackTrace);
+      }
     }
   }
+
+  /// Save a new training.
+  Future<void> saveTraining(Training training) => _mutate(() async {
+    await _trainingRepository.saveTraining(training);
+    ref.invalidate(favTrainingsProvider);
+    ref.invalidate(allTrainingsProvider);
+  });
 
   /// Update an existing training.
-  Future<void> updateTraining(Training training) async {
-    state = const AsyncValue.loading();
-    try {
-      await _trainingRepository.updateTraining(training);
-      ref.invalidate(favTrainingsProvider);
-      ref.invalidate(allTrainingsProvider);
-      ref.invalidateSelf();
-      await future;
-    } catch (e, stackTrace) {
-      state = AsyncValue.error(e, stackTrace);
-    }
-  }
+  Future<void> updateTraining(Training training) => _mutate(() async {
+    await _trainingRepository.updateTraining(training);
+    ref.invalidate(favTrainingsProvider);
+    ref.invalidate(allTrainingsProvider);
+  });
 
   /// Delete a training.
-  Future<void> deleteTraining(String trainingId) async {
-    state = const AsyncValue.loading();
-    try {
-      await _trainingRepository.deleteTraining(trainingId);
-      ref.invalidate(favTrainingsProvider);
-      ref.invalidateSelf();
-      await future;
-    } catch (e, stackTrace) {
-      state = AsyncValue.error(e, stackTrace);
-    }
-  }
+  Future<void> deleteTraining(String trainingId) => _mutate(() async {
+    await _trainingRepository.deleteTraining(trainingId);
+    ref.invalidate(favTrainingsProvider);
+  });
 }
 
 /// Represents the filters available for filtering sessions.
@@ -184,7 +178,6 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
     List<RepDataModel> reps, {
     List<BleDataPoint>? data,
   }) async {
-    state = const AsyncValue.loading();
     try {
       final id = await _trainingRepository.saveSession(
         session,
@@ -209,7 +202,6 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
 
   /// Update an existing session.
   Future<void> updateSession(SessionModel session) async {
-    state = const AsyncValue.loading();
     try {
       await _trainingRepository.updateSession(session);
       ref.invalidateSelf();
@@ -223,13 +215,14 @@ class SessionsNotifier extends AsyncNotifier<List<SessionModel>> {
   }
 
   Future<void> deleteSession(String sessionId) async {
-    state = const AsyncValue.loading();
     try {
       await _trainingRepository.deleteSession(sessionId);
       ref.invalidateSelf();
-      await future;
+      if (ref.mounted) await future;
     } catch (e, stackTrace) {
-      state = AsyncValue.error(e, stackTrace);
+      if (ref.mounted) {
+        state = AsyncValue.error(e, stackTrace);
+      }
       rethrow;
     }
   }
