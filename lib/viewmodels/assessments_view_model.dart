@@ -2,45 +2,40 @@ import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'assessments_view_model.g.dart';
 
 /// Returns the list of available assessment trainings.
-final assessmentTrainingsProvider =
-    FutureProvider<List<AssessmentTrainingModel>>((ref) {
-      final repository = ref.watch(assessmentRepositoryProvider);
-      return repository.getAssessmentTrainings();
-    });
+@Riverpod(keepAlive: true)
+Future<List<AssessmentTrainingModel>> assessmentTrainings(Ref ref) {
+  final repository = ref.watch(assessmentRepositoryProvider);
+  return repository.getAssessmentTrainings();
+}
 
 /// Return an assessment training given its type.
-final assessmentTrainingProvider =
-    FutureProvider.family<AssessmentTrainingModel, AssessmentType>((
-      ref,
-      type,
-    ) async {
-      final repository = ref.watch(assessmentRepositoryProvider);
-      final assessments = await repository.getAssessmentTrainings();
-      return assessments.firstWhere((a) => a.type == type);
-    });
+@Riverpod(keepAlive: true)
+Future<AssessmentTrainingModel> assessmentTraining(
+  Ref ref,
+  AssessmentType type,
+) async {
+  final repository = ref.watch(assessmentRepositoryProvider);
+  final assessments = await repository.getAssessmentTrainings();
+  return assessments.firstWhere((a) => a.type == type);
+}
 
 /// Returns the list of assessments.
 /// Allow to filter on `type`.
-final assessmentsProvider = AsyncNotifierProvider.autoDispose
-    .family<AssessmentNotifier, List<AssessmentModel>, AssessmentType?>(
-      AssessmentNotifier.new,
-    );
-
-class AssessmentNotifier extends AsyncNotifier<List<AssessmentModel>> {
-  AssessmentNotifier(this.type);
-  final AssessmentType? type;
-
+@riverpod
+class Assessments extends _$Assessments {
   late AssessmentRepository _assessmentRepository;
 
   @override
-  Future<List<AssessmentModel>> build() {
+  Future<List<AssessmentModel>> build(AssessmentType? type) {
     _assessmentRepository = ref.watch(assessmentRepositoryProvider);
     return _assessmentRepository.getAssessments(type: type);
   }
