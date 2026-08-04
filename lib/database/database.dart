@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:crimpy/database/database.steps.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/models/sensor_preset.dart';
 import 'package:crimpy/models/session_filter.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -678,45 +679,36 @@ class AppDatabase extends _$AppDatabase {
 
   // ------------------------------------- SENSOR CONFIGS -------------------------------------
   /// Get the saved sensor configs.
-  Future<List<SensorConfig>> getSensorConfigs() async => (select(
-    sensorConfigs,
-  )..orderBy([(r) => OrderingTerm.desc(r.index)])).get();
+  Future<List<SensorPreset>> getSensorPresets() async =>
+      (await (select(
+            sensorConfigs,
+          )..orderBy([(r) => OrderingTerm.desc(r.index)])).get())
+          .map((row) => row.toModel())
+          .toList();
 
   /// Save a new sensor config.
-  Future<int> addSensorConfig(SensorConfigsCompanion config) async {
-    final maxConfIndex = await (select(
-      sensorConfigs,
-    )..orderBy([(u) => OrderingTerm.desc(u.index)])).getSingleOrNull();
+  Future<int> addSensorPreset(NewSensorPreset preset) async {
+    // Only the highest position is needed. Without the limit this reads every
+    // row and getSingleOrNull throws as soon as a second preset exists.
+    final maxConfIndex =
+        await (select(sensorConfigs)
+              ..orderBy([(u) => OrderingTerm.desc(u.index)])
+              ..limit(1))
+            .getSingleOrNull();
     final newIndex = maxConfIndex == null ? 1 : maxConfIndex.index + 1;
     final newConf = SensorConfigsCompanion(
-      coef: config.coef,
-      tare: config.tare,
+      coef: Value(preset.coef),
+      tare: Value(preset.tare),
       index: Value(newIndex),
-      name: config.name,
+      name: Value(preset.name),
       updatedAt: Value(DateTime.now()),
     );
     final rowId = await into(sensorConfigs).insert(newConf);
     return rowId;
   }
 
-  /// Update a list of sensor configs.
-  Future<void> updateSensorConfigs(List<SensorConfig> configs) async {
-    final now = DateTime.now();
-    for (final entry in configs) {
-      await (update(sensorConfigs)..where((s) => s.id.equals(entry.id))).write(
-        SensorConfigsCompanion(
-          name: Value(entry.name),
-          index: Value(entry.index),
-          tare: Value(entry.tare),
-          coef: Value(entry.coef),
-          updatedAt: Value(now),
-        ),
-      );
-    }
-  }
-
   /// Delete a sensor config.
-  Future<void> deleteSensorConfig(String id) async {
+  Future<void> deleteSensorPreset(String id) async {
     await (delete(sensorConfigs)..where((s) => s.id.equals(id))).go();
   }
 
@@ -1118,4 +1110,10 @@ extension AssessmentRowToModel on Assessment {
         ? null
         : enumFromIndex<GripPosition?>(GripPosition.values, gripPosition, null),
   );
+}
+
+/// Maps a stored sensor calibration row onto the domain model.
+extension SensorConfigRowToModel on SensorConfig {
+  SensorPreset toModel() =>
+      SensorPreset(id: id, name: name, index: index, tare: tare, coef: coef);
 }

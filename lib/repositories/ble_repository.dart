@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../models/ble_data_model.dart';
 import '../database/database.dart';
+import 'package:crimpy/models/sensor_preset.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BleRepository {
@@ -291,30 +292,21 @@ class BleRepository {
     tare = newValue;
   }
 
-  /// Update a list of sesnor calibration configs.
-  Future<void> updateSensorConfigs(List<SensorConfig> configs) async {
-    await gDatabase.updateSensorConfigs(configs);
-  }
+  /// Delete a preset by its ID.
+  Future<void> deleteSensorPreset(String id) =>
+      gDatabase.deleteSensorPreset(id);
 
-  /// Delete a sensor config by its ID.
-  Future<void> deleteSensorConfig(String id) async {
-    await gDatabase.deleteSensorConfig(id);
-  }
+  /// Save a new calibration preset.
+  Future<void> addSensorPreset(NewSensorPreset preset) =>
+      gDatabase.addSensorPreset(preset);
 
-  /// Add a sensor calibration config to DB.
-  Future<void> addSensorConfig(SensorConfigsCompanion config) async {
-    await gDatabase.addSensorConfig(config);
-  }
+  /// Get all saved calibration presets.
+  Future<List<SensorPreset>> getSensorPresets() => gDatabase.getSensorPresets();
 
-  /// Get all sensor calibration configs.
-  Future<List<SensorConfig>> getSensorConfigs() async {
-    return await gDatabase.getSensorConfigs();
-  }
-
-  /// Start to use a given calibration config.
-  void loadConfig(SensorConfig config) {
-    tare = config.tare;
-    calibrationCoef = config.coef;
+  /// Start to use a given calibration preset.
+  void loadPreset(SensorPreset preset) {
+    tare = preset.tare;
+    calibrationCoef = preset.coef;
   }
 
   /// Activate calibration mode.

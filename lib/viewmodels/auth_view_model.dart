@@ -158,7 +158,7 @@ class AuthState extends _$AuthState {
 
       await ref.read(userRepositoryProvider).clear();
 
-      ref.invalidate(sensorConfigsProvider);
+      ref.invalidate(sensorPresetsProvider);
       ref.invalidateSelf();
 
       AppLoggerHelper.info('Logout successful, data providers invalidated');
@@ -176,7 +176,7 @@ class AuthState extends _$AuthState {
 
   Future<void> clearLocalDataAfterLogin() async {
     await ref.read(localDataMigrationProvider).clearLocalData();
-    ref.invalidate(sensorConfigsProvider);
+    ref.invalidate(sensorPresetsProvider);
     ref.invalidateSelf();
   }
 

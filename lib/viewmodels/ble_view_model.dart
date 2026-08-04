@@ -1,10 +1,7 @@
 import 'dart:async';
-import 'package:crimpy/database/database.dart';
-// Needed for the hand-written sensorConfigsProvider below; riverpod_annotation
-// alone does not expose the manual provider types.
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:crimpy/models/config.dart';
+import 'package:crimpy/models/sensor_preset.dart';
 import '../models/ble_data_model.dart';
 import '../repositories/ble_repository.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -233,46 +230,33 @@ class BleConfigController extends _$BleConfigController {
     ref.invalidateSelf();
   }
 
-  /// Load a saved calibration config.
-  Future<void> loadConfig(SensorConfig config) async {
-    _bleRepository.loadConfig(config);
+  /// Start using a saved calibration preset.
+  Future<void> loadPreset(SensorPreset preset) async {
+    _bleRepository.loadPreset(preset);
     ref.invalidateSelf();
   }
 }
 
-/// Returns the saved calibration configurations.
-/// Allows the creation, edition and deletion of configurations.
-/// Declared by hand rather than generated: `SensorConfig` is a drift row class
-/// emitted into a part file, and riverpod_generator cannot write an import for
-/// a type that has no importable library of its own.
-final sensorConfigsProvider =
-    AsyncNotifierProvider<SensorConfigsNotifier, List<SensorConfig>>(
-      SensorConfigsNotifier.new,
-    );
-
-class SensorConfigsNotifier extends AsyncNotifier<List<SensorConfig>> {
+/// Returns the saved calibration presets.
+/// Allows the creation, edition and deletion of presets.
+@Riverpod(keepAlive: true)
+class SensorPresets extends _$SensorPresets {
   late BleRepository _bleRepository;
 
   @override
-  Future<List<SensorConfig>> build() {
+  Future<List<SensorPreset>> build() {
     _bleRepository = ref.watch(bleRepositoryProvider);
-    return _bleRepository.getSensorConfigs();
+    return _bleRepository.getSensorPresets();
   }
 
-  Future<void> updateSensorConfigs(List<SensorConfig> configs) async {
-    await _bleRepository.updateSensorConfigs(configs);
+  Future<void> deletePreset(String id) async {
+    await _bleRepository.deleteSensorPreset(id);
     ref.invalidateSelf();
     await future;
   }
 
-  Future<void> deleteSensorConfig(String id) async {
-    await _bleRepository.deleteSensorConfig(id);
-    ref.invalidateSelf();
-    await future;
-  }
-
-  Future<void> addSensorConfig(SensorConfigsCompanion config) async {
-    await _bleRepository.addSensorConfig(config);
+  Future<void> addPreset(NewSensorPreset preset) async {
+    await _bleRepository.addSensorPreset(preset);
     ref.invalidateSelf();
     await future;
   }

@@ -16,7 +16,7 @@ class _SensorSettingsListState extends ConsumerState<SensorSettingsList> {
   @override
   Widget build(BuildContext context) {
     // Get all configs from DB.
-    final configs = ref.watch(sensorConfigsProvider);
+    final configs = ref.watch(sensorPresetsProvider);
     return switch (configs) {
       AsyncData(:final value) =>
         value.isEmpty
@@ -63,7 +63,7 @@ class _SensorSettingsListState extends ConsumerState<SensorSettingsList> {
                               onPressed: () {
                                 ref
                                     .read(bleConfigProvider.notifier)
-                                    .loadConfig(config);
+                                    .loadPreset(config);
                               },
                               child: Text("Load"),
                             ),
@@ -71,8 +71,8 @@ class _SensorSettingsListState extends ConsumerState<SensorSettingsList> {
                         ),
                         onDismissed: (direction) {
                           ref
-                              .read(sensorConfigsProvider.notifier)
-                              .deleteSensorConfig(config.id);
+                              .read(sensorPresetsProvider.notifier)
+                              .deletePreset(config.id);
                         },
                       ),
                     )

@@ -1,14 +1,13 @@
-import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/calibration/start_calibration_dialog.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/create_sensor_config_dialog.dart';
 import 'package:crimpy/viewmodels/app_info_view_model.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/debug_modal.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/sensor_settings_list.dart';
-import 'package:drift/drift.dart' as dr;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
+import 'package:crimpy/models/sensor_preset.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   /// Screen that allow the user to manage the app settings, including:
@@ -203,12 +202,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         builder: (ctx) => CreatePresetDialog(
           onSave: (String presetName) {
             ref
-                .read(sensorConfigsProvider.notifier)
-                .addSensorConfig(
-                  SensorConfigsCompanion(
-                    coef: dr.Value(double.parse(_calibrationController.text)),
-                    tare: dr.Value(double.parse(_tareController.text)),
-                    name: dr.Value(presetName),
+                .read(sensorPresetsProvider.notifier)
+                .addPreset(
+                  NewSensorPreset(
+                    name: presetName,
+                    coef: double.parse(_calibrationController.text),
+                    tare: double.parse(_tareController.text),
                   ),
                 );
           },

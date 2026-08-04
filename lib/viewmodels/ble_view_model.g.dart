@@ -501,7 +501,7 @@ final class BleConfigControllerProvider
 }
 
 String _$bleConfigControllerHash() =>
-    r'889e1627d73455b8f8408441403ea468e824eaab';
+    r'7cff50cb3aa7c6c7840e76f96b4e01e02128d6b3';
 
 /// Returns the current BLE config state (calibration coef and tare).
 /// Allows the config to be edited, either manually or through calibration.
@@ -518,6 +518,62 @@ abstract class _$BleConfigController extends $Notifier<BleConfig> {
             as $ClassProviderElement<
               AnyNotifier<BleConfig, BleConfig>,
               BleConfig,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
+
+/// Returns the saved calibration presets.
+/// Allows the creation, edition and deletion of presets.
+
+@ProviderFor(SensorPresets)
+const sensorPresetsProvider = SensorPresetsProvider._();
+
+/// Returns the saved calibration presets.
+/// Allows the creation, edition and deletion of presets.
+final class SensorPresetsProvider
+    extends $AsyncNotifierProvider<SensorPresets, List<SensorPreset>> {
+  /// Returns the saved calibration presets.
+  /// Allows the creation, edition and deletion of presets.
+  const SensorPresetsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'sensorPresetsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$sensorPresetsHash();
+
+  @$internal
+  @override
+  SensorPresets create() => SensorPresets();
+}
+
+String _$sensorPresetsHash() => r'fe86f2de0877c4d495af8bb9c804b71a7b0200d4';
+
+/// Returns the saved calibration presets.
+/// Allows the creation, edition and deletion of presets.
+
+abstract class _$SensorPresets extends $AsyncNotifier<List<SensorPreset>> {
+  FutureOr<List<SensorPreset>> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref =
+        this.ref as $Ref<AsyncValue<List<SensorPreset>>, List<SensorPreset>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<List<SensorPreset>>, List<SensorPreset>>,
+              AsyncValue<List<SensorPreset>>,
               Object?,
               Object?
             >;
