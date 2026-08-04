@@ -78,10 +78,9 @@ final scanResultsProvider =
 
 class ScanResultsNotifier extends AsyncNotifier<List<BluetoothDevice>> {
   @override
-  Future<List<BluetoothDevice>> build() async {
+  Future<List<BluetoothDevice>> build() {
     final bleRepository = ref.watch(bleRepositoryProvider);
-    state = AsyncValue.loading();
-    return await bleRepository.scanForDevices();
+    return bleRepository.scanForDevices();
   }
 }
 
