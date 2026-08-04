@@ -10,13 +10,13 @@ class BuiltinTrainingRepository {
   final AssessmentRepository _assessmentRepository;
   final BuiltinPreferencesRepository _preferences;
 
+  /// Both collaborators are required: defaulting them to the local backends
+  /// would silently serve guest data to a signed-in user.
   BuiltinTrainingRepository({
-    AssessmentRepository? assessmentRepository,
-    BuiltinPreferencesRepository? preferencesRepository,
-  }) : _assessmentRepository =
-           assessmentRepository ?? LocalAssessmentRepository(),
-       _preferences =
-           preferencesRepository ?? LocalBuiltinPreferencesRepository();
+    required AssessmentRepository assessmentRepository,
+    required BuiltinPreferencesRepository preferencesRepository,
+  }) : _assessmentRepository = assessmentRepository,
+       _preferences = preferencesRepository;
 
   Future<List<BuiltinTrainingModel>> getBuiltinTrainings() async {
     return builtinTrainings;

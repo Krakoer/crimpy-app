@@ -1,10 +1,8 @@
-import 'package:crimpy/database/builtins.dart';
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 
 abstract class AssessmentRepository {
-  Future<List<AssessmentTrainingModel>> getAssessmentTrainings();
   Future<void> saveAssessment(
     AssessmentResultModel assessment,
     String sessionId,
@@ -15,58 +13,49 @@ abstract class AssessmentRepository {
     HandSide? handSide,
     GripPosition? gripPosition,
   });
+
+  /// The most recent result for [handSide], or null when there is none.
+  ///
+  /// Derived from [getAssessments] so both backends agree on what "most recent"
+  /// means: implementations only have to return the matching assessments in
+  /// chronological order.
   Future<double?> getLastValueForHand(
     AssessmentType type,
     HandSide handSide, {
     GripPosition? gripPosition,
-  });
+  }) async {
+    final last = (await getAssessments(
+      type: type,
+      handSide: handSide,
+      gripPosition: gripPosition,
+    )).lastOrNull;
+    return handSide.isRightHand ? last?.rightValue : last?.leftValue;
+  }
 }
 
-class LocalAssessmentRepository implements AssessmentRepository {
-  @override
-  Future<List<AssessmentTrainingModel>> getAssessmentTrainings() async {
-    return builtinAssessments.map((a) => a.generateAssessment()).toList();
-  }
+class LocalAssessmentRepository extends AssessmentRepository {
+  final AppDatabase _database;
+
+  LocalAssessmentRepository({AppDatabase? database})
+    : _database = database ?? gDatabase;
 
   @override
   Future<void> saveAssessment(
     AssessmentResultModel assessment,
     String sessionId,
-  ) async {
-    await gDatabase.saveAssessment(assessment, sessionId);
-  }
+  ) => _database.saveAssessment(assessment, sessionId);
 
   @override
-  Future<void> deleteAssessment(String id) async {
-    await gDatabase.deleteAssessment(id);
-  }
+  Future<void> deleteAssessment(String id) => _database.deleteAssessment(id);
 
   @override
   Future<List<AssessmentModel>> getAssessments({
     AssessmentType? type,
     HandSide? handSide,
     GripPosition? gripPosition,
-  }) async {
-    return await gDatabase.getAssessments(
-      type: type,
-      handSide: handSide,
-      gripPosition: gripPosition,
-    );
-  }
-
-  @override
-  Future<double?> getLastValueForHand(
-    AssessmentType type,
-    HandSide handSide, {
-    GripPosition? gripPosition,
-  }) async {
-    final assessment = (await gDatabase.getAssessments(
-      type: type,
-      handSide: handSide,
-      gripPosition: gripPosition,
-    )).lastOrNull;
-    return handSide.isRightHand
-        ? assessment?.rightValue
-        : assessment?.leftValue;
-  }
+  }) => _database.getAssessments(
+    type: type,
+    handSide: handSide,
+    gripPosition: gripPosition,
+  );
 }

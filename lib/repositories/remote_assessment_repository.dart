@@ -1,19 +1,12 @@
-import 'package:crimpy/database/builtins.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/services/api_client.dart';
 
-class RemoteAssessmentRepository implements AssessmentRepository {
+class RemoteAssessmentRepository extends AssessmentRepository {
   final ApiClient _apiClient;
 
   RemoteAssessmentRepository(this._apiClient);
-
-  @override
-  Future<List<AssessmentTrainingModel>> getAssessmentTrainings() async {
-    // Assessment trainings are derived from builtin definitions, not stored remotely
-    return builtinAssessments.map((a) => a.generateAssessment()).toList();
-  }
 
   @override
   Future<void> saveAssessment(
@@ -86,20 +79,5 @@ class RemoteAssessmentRepository implements AssessmentRepository {
     // order the API happened to return.
     result.sort((a, b) => a.date.compareTo(b.date));
     return result;
-  }
-
-  @override
-  Future<double?> getLastValueForHand(
-    AssessmentType type,
-    HandSide handSide, {
-    GripPosition? gripPosition,
-  }) async {
-    final assessments = await getAssessments(
-      type: type,
-      handSide: handSide,
-      gripPosition: gripPosition,
-    );
-    final last = assessments.lastOrNull;
-    return handSide.isRightHand ? last?.rightValue : last?.leftValue;
   }
 }

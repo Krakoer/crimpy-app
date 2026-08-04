@@ -1,3 +1,4 @@
+import 'package:crimpy/database/builtins.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
@@ -10,23 +11,18 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'assessments_view_model.g.dart';
 
-/// Returns the list of available assessment trainings.
+/// The assessment protocols the app ships with.
+///
+/// These are compiled-in definitions, not stored data, so they do not depend on
+/// whether the user is signed in.
 @Riverpod(keepAlive: true)
-Future<List<AssessmentTrainingModel>> assessmentTrainings(Ref ref) {
-  final repository = ref.watch(assessmentRepositoryProvider);
-  return repository.getAssessmentTrainings();
-}
+List<AssessmentTrainingModel> assessmentTrainings(Ref ref) =>
+    builtinAssessments.map((a) => a.generateAssessment()).toList();
 
 /// Return an assessment training given its type.
 @Riverpod(keepAlive: true)
-Future<AssessmentTrainingModel> assessmentTraining(
-  Ref ref,
-  AssessmentType type,
-) async {
-  final repository = ref.watch(assessmentRepositoryProvider);
-  final assessments = await repository.getAssessmentTrainings();
-  return assessments.firstWhere((a) => a.type == type);
-}
+AssessmentTrainingModel assessmentTraining(Ref ref, AssessmentType type) =>
+    ref.watch(assessmentTrainingsProvider).firstWhere((a) => a.type == type);
 
 /// Returns the list of assessments.
 /// Allow to filter on `type`.

@@ -22,59 +22,64 @@ abstract class TrainingRepository {
   Future<void> deleteSession(String sessionId);
 }
 
-class LocalTrainingRepository implements TrainingRepository {
+class LocalTrainingRepository extends TrainingRepository {
+  final AppDatabase _database;
+
+  LocalTrainingRepository({AppDatabase? database})
+    : _database = database ?? gDatabase;
+
   @override
   Future<List<Training>> getAllTrainings({bool onlyFavs = false}) =>
-      gDatabase.getAllTrainings(onlyFavs: onlyFavs);
+      _database.getAllTrainings(onlyFavs: onlyFavs);
 
   @override
   Future<String> saveTraining(Training training) =>
-      gDatabase.saveTraining(training);
+      _database.saveTraining(training);
 
   @override
   Future<void> updateTraining(Training training) =>
-      gDatabase.updateTraining(training);
+      _database.updateTraining(training);
 
   @override
-  Future<void> toggleFav(String trainingId) => gDatabase.toggleFav(trainingId);
+  Future<void> toggleFav(String trainingId) => _database.toggleFav(trainingId);
 
   @override
   Future<void> deleteTraining(String trainingId) =>
-      gDatabase.deleteTraining(trainingId);
+      _database.deleteTraining(trainingId);
 
   @override
   Future<List<SessionModel>> getAllSessionsWithReps({
     SessionFilter? filters,
   }) async {
-    final sessions = await gDatabase.getAllSessions(filters: filters);
+    final sessions = await _database.getAllSessions(filters: filters);
     final result = <SessionModel>[];
     for (final s in sessions) {
-      result.add(s.toModel(reps: await gDatabase.getRepsForSession(s.id)));
+      result.add(s.toModel(reps: await _database.getRepsForSession(s.id)));
     }
     return result;
   }
 
   @override
   Future<SessionModel?> getSessionWithData(String sessionId) =>
-      gDatabase.getSessionWithData(sessionId);
+      _database.getSessionWithData(sessionId);
 
   @override
   Future<String> saveSession(
     SessionModel session,
     List<RepDataModel> reps, {
     List<BleDataPoint>? data,
-  }) => gDatabase.saveSession(session, reps, points: data);
+  }) => _database.saveSession(session, reps, points: data);
 
   @override
   Future<void> updateSession(SessionModel session) =>
-      gDatabase.updateSession(session);
+      _database.updateSession(session);
 
   @override
   Future<void> deleteSession(String sessionId) =>
-      gDatabase.deleteSession(sessionId);
+      _database.deleteSession(sessionId);
 }
 
-class RemoteTrainingRepository implements TrainingRepository {
+class RemoteTrainingRepository extends TrainingRepository {
   final ApiClient _apiClient;
 
   RemoteTrainingRepository(this._apiClient);

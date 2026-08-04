@@ -8,24 +8,31 @@ part of 'assessments_view_model.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Returns the list of available assessment trainings.
+/// The assessment protocols the app ships with.
+///
+/// These are compiled-in definitions, not stored data, so they do not depend on
+/// whether the user is signed in.
 
 @ProviderFor(assessmentTrainings)
 const assessmentTrainingsProvider = AssessmentTrainingsProvider._();
 
-/// Returns the list of available assessment trainings.
+/// The assessment protocols the app ships with.
+///
+/// These are compiled-in definitions, not stored data, so they do not depend on
+/// whether the user is signed in.
 
 final class AssessmentTrainingsProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<AssessmentTrainingModel>>,
           List<AssessmentTrainingModel>,
-          FutureOr<List<AssessmentTrainingModel>>
+          List<AssessmentTrainingModel>,
+          List<AssessmentTrainingModel>
         >
-    with
-        $FutureModifier<List<AssessmentTrainingModel>>,
-        $FutureProvider<List<AssessmentTrainingModel>> {
-  /// Returns the list of available assessment trainings.
+    with $Provider<List<AssessmentTrainingModel>> {
+  /// The assessment protocols the app ships with.
+  ///
+  /// These are compiled-in definitions, not stored data, so they do not depend on
+  /// whether the user is signed in.
   const AssessmentTrainingsProvider._()
     : super(
         from: null,
@@ -42,18 +49,28 @@ final class AssessmentTrainingsProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<AssessmentTrainingModel>> $createElement(
+  $ProviderElement<List<AssessmentTrainingModel>> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) => $ProviderElement(pointer);
 
   @override
-  FutureOr<List<AssessmentTrainingModel>> create(Ref ref) {
+  List<AssessmentTrainingModel> create(Ref ref) {
     return assessmentTrainings(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<AssessmentTrainingModel> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<AssessmentTrainingModel>>(
+        value,
+      ),
+    );
   }
 }
 
 String _$assessmentTrainingsHash() =>
-    r'e5c79ba8e910b170243ef3bef44c0797b8b317b3';
+    r'ca76dc19857245b419ddfe9d97610bb3779dbdbc';
 
 /// Return an assessment training given its type.
 
@@ -65,13 +82,11 @@ const assessmentTrainingProvider = AssessmentTrainingFamily._();
 final class AssessmentTrainingProvider
     extends
         $FunctionalProvider<
-          AsyncValue<AssessmentTrainingModel>,
           AssessmentTrainingModel,
-          FutureOr<AssessmentTrainingModel>
+          AssessmentTrainingModel,
+          AssessmentTrainingModel
         >
-    with
-        $FutureModifier<AssessmentTrainingModel>,
-        $FutureProvider<AssessmentTrainingModel> {
+    with $Provider<AssessmentTrainingModel> {
   /// Return an assessment training given its type.
   const AssessmentTrainingProvider._({
     required AssessmentTrainingFamily super.from,
@@ -96,14 +111,22 @@ final class AssessmentTrainingProvider
 
   @$internal
   @override
-  $FutureProviderElement<AssessmentTrainingModel> $createElement(
+  $ProviderElement<AssessmentTrainingModel> $createElement(
     $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  ) => $ProviderElement(pointer);
 
   @override
-  FutureOr<AssessmentTrainingModel> create(Ref ref) {
+  AssessmentTrainingModel create(Ref ref) {
     final argument = this.argument as AssessmentType;
     return assessmentTraining(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AssessmentTrainingModel value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AssessmentTrainingModel>(value),
+    );
   }
 
   @override
@@ -118,16 +141,12 @@ final class AssessmentTrainingProvider
 }
 
 String _$assessmentTrainingHash() =>
-    r'ba395e4aed11b969e591bda9154203140cdfa988';
+    r'97edf47cf9b71999b358b5aa46551eeca9c2e0ea';
 
 /// Return an assessment training given its type.
 
 final class AssessmentTrainingFamily extends $Family
-    with
-        $FunctionalFamilyOverride<
-          FutureOr<AssessmentTrainingModel>,
-          AssessmentType
-        > {
+    with $FunctionalFamilyOverride<AssessmentTrainingModel, AssessmentType> {
   const AssessmentTrainingFamily._()
     : super(
         retry: null,

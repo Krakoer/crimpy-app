@@ -6,10 +6,6 @@ abstract class BuiltinPreferencesRepository {
   Future<List<String>> getPinnedBuiltinTrainingIds();
   Future<void> pinBuiltinTraining(String builtinTrainingId);
   Future<void> unpinBuiltinTraining(String builtinTrainingId);
-  Future<bool> isBuiltinTrainingPinned(String builtinTrainingId);
-  Future<({double? weightRight, double? weightLeft})> getCustomWeights(
-    String builtinTrainingId,
-  );
   Future<Map<String, ({double? weightRight, double? weightLeft})>>
   getAllCustomWeights();
   Future<void> saveCustomWeights({
@@ -17,10 +13,20 @@ abstract class BuiltinPreferencesRepository {
     required double weightRight,
     required double weightLeft,
   });
+
+  /// Derived from the batch lookups so both backends cannot disagree.
+  /// Backends able to answer these directly may override them.
+  Future<bool> isBuiltinTrainingPinned(String builtinTrainingId) async =>
+      (await getPinnedBuiltinTrainingIds()).contains(builtinTrainingId);
+
+  Future<({double? weightRight, double? weightLeft})> getCustomWeights(
+    String builtinTrainingId,
+  ) async =>
+      (await getAllCustomWeights())[builtinTrainingId] ??
+      (weightRight: null, weightLeft: null);
 }
 
-class LocalBuiltinPreferencesRepository
-    implements BuiltinPreferencesRepository {
+class LocalBuiltinPreferencesRepository extends BuiltinPreferencesRepository {
   final AppDatabase _database;
 
   LocalBuiltinPreferencesRepository({AppDatabase? database})
@@ -76,8 +82,7 @@ class LocalBuiltinPreferencesRepository
   );
 }
 
-class RemoteBuiltinPreferencesRepository
-    implements BuiltinPreferencesRepository {
+class RemoteBuiltinPreferencesRepository extends BuiltinPreferencesRepository {
   final ApiClient _apiClient;
 
   RemoteBuiltinPreferencesRepository(this._apiClient);
@@ -97,12 +102,6 @@ class RemoteBuiltinPreferencesRepository
       _apiClient.unpinBuiltinTrainingApi(builtinTrainingId);
 
   @override
-  Future<bool> isBuiltinTrainingPinned(String builtinTrainingId) async {
-    final ids = await getPinnedBuiltinTrainingIds();
-    return ids.contains(builtinTrainingId);
-  }
-
-  @override
   Future<Map<String, ({double? weightRight, double? weightLeft})>>
   getAllCustomWeights() async {
     final weights = await _apiClient.getBuiltinTrainingWeights();
@@ -114,14 +113,6 @@ class RemoteBuiltinPreferencesRepository
         )),
       ),
     );
-  }
-
-  @override
-  Future<({double? weightRight, double? weightLeft})> getCustomWeights(
-    String builtinTrainingId,
-  ) async {
-    final all = await getAllCustomWeights();
-    return all[builtinTrainingId] ?? (weightRight: null, weightLeft: null);
   }
 
   @override
