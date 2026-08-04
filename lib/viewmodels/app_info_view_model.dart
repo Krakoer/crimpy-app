@@ -1,6 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+part 'app_info_view_model.g.dart';
 
 /// Model to hold app information
 class AppInfo {
@@ -20,7 +22,8 @@ class AppInfo {
 }
 
 /// Provider that returns app information
-final appInfoProvider = FutureProvider<AppInfo>((ref) async {
+@Riverpod(keepAlive: true)
+Future<AppInfo> appInfo(Ref ref) async {
   final packageInfo = await PackageInfo.fromPlatform();
   return AppInfo(
     version: packageInfo.version,
@@ -28,12 +31,13 @@ final appInfoProvider = FutureProvider<AppInfo>((ref) async {
     appName: packageInfo.appName,
     packageName: packageInfo.packageName,
   );
-});
+}
 
 /// Provider for managing "What's New" dialog state
-final whatsNewProvider = Provider<WhatsNewManager>((ref) {
+@Riverpod(keepAlive: true)
+WhatsNewManager whatsNew(Ref ref) {
   return WhatsNewManager();
-});
+}
 
 class WhatsNewManager {
   static const String _lastVersionKey = 'last_version_shown';

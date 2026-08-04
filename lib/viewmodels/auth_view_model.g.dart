@@ -48,7 +48,7 @@ final class ApiClientProvider
   }
 }
 
-String _$apiClientHash() => r'2ce13b5486412cbcb4912a269cb8b4807c154f71';
+String _$apiClientHash() => r'9debf269c4ba7ca4655c3481dbc83853c13984c0';
 
 /// Whether a user is signed in. Repositories watch this rather than the whole
 /// auth state: it only changes when the user signs in or out, so refreshing the
