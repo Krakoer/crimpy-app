@@ -850,7 +850,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -859,144 +859,9 @@ class AppDatabase extends _$AppDatabase {
     },
     onUpgrade: stepByStep(
       from1To2: (m, schema) async {
-        await m.createTable(schema.users);
-      },
-      from2To3: (m, schema) async {
-        await m.addColumn(schema.sessions, schema.sessions.createdAt);
-        await m.addColumn(schema.assessments, schema.assessments.createdAt);
-        await m.addColumn(schema.repDatas, schema.repDatas.createdAt);
-        await m.addColumn(
-          schema.builtinTrainingWeights,
-          schema.builtinTrainingWeights.createdAt,
-        );
-        await m.addColumn(schema.sensorConfigs, schema.sensorConfigs.createdAt);
-        await m.addColumn(schema.repTemplates, schema.repTemplates.createdAt);
-        await m.addColumn(schema.trainings, schema.trainings.createdAt);
-        await m.addColumn(schema.repeaters, schema.repeaters.createdAt);
-        await m.addColumn(
-          schema.pinnedBuiltinTrainings,
-          schema.pinnedBuiltinTrainings.createdAt,
-        );
-      },
-      from3To4: (m, schema) async {
-        await m.alterTable(
-          TableMigration(
-            schema.sessions,
-            columnTransformer: {
-              sessions.id: Schema3(database: m.database).sessions.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.assessments,
-            columnTransformer: {
-              sessions.id: Schema3(database: m.database).sessions.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.trainings,
-            columnTransformer: {
-              trainings.id: Schema3(database: m.database).trainings.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.repDatas,
-            columnTransformer: {
-              repDatas.id: Schema3(database: m.database).repDatas.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.repeaters,
-            columnTransformer: {
-              schema.repeaters.id: Schema3(
-                database: m.database,
-              ).repeaters.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.sensorConfigs,
-            columnTransformer: {
-              sensorConfigs.id: Schema3(
-                database: m.database,
-              ).sensorConfigs.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.repTemplates,
-            columnTransformer: {
-              schema.repTemplates.id: Schema3(
-                database: m.database,
-              ).repTemplates.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.builtinTrainingWeights,
-            columnTransformer: {
-              builtinTrainingWeights.id: Schema3(
-                database: m.database,
-              ).builtinTrainingWeights.remoteId,
-            },
-          ),
-        );
-        await m.alterTable(
-          TableMigration(
-            schema.pinnedBuiltinTrainings,
-            columnTransformer: {
-              pinnedBuiltinTrainings.builtinTrainingId: Schema3(
-                database: m.database,
-              ).pinnedBuiltinTrainings.remoteId,
-            },
-          ),
-        );
-      },
-      from4To5: (m, schema) async {
-        await m.alterTable(TableMigration(schema.pinnedBuiltinTrainings));
-      },
-      from5To6: (m, schema) async {
-        await m.alterTable(TableMigration(schema.sessions));
-        await m.alterTable(TableMigration(schema.assessments));
-        await m.alterTable(TableMigration(schema.repeaters));
-        await m.alterTable(TableMigration(schema.trainings));
-        await m.alterTable(TableMigration(schema.repTemplates));
-        await m.alterTable(TableMigration(schema.repDatas));
-        await m.alterTable(TableMigration(schema.sensorConfigs));
-        await m.alterTable(TableMigration(schema.builtinTrainingWeights));
-        await m.addColumn(
-          schema.pinnedBuiltinTrainings,
-          schema.pinnedBuiltinTrainings.updatedAt,
-        );
-        await m.addColumn(
-          schema.pinnedBuiltinTrainings,
-          schema.pinnedBuiltinTrainings.deletedAt,
-        );
-      },
-      from6To7: (m, schema) async {
-        // Drop dirty and deleted_at columns from all synced tables
-        await m.alterTable(TableMigration(schema.sessions));
-        await m.alterTable(TableMigration(schema.assessments));
-        await m.alterTable(TableMigration(schema.repDatas));
-        await m.alterTable(TableMigration(schema.sensorConfigs));
-        await m.alterTable(TableMigration(schema.builtinTrainingWeights));
-        await m.alterTable(TableMigration(schema.pinnedBuiltinTrainings));
-        // Drop SyncMetadata table
-        await m.database.customStatement('DROP TABLE IF EXISTS sync_metadata');
-      },
-      from7To9: (m, schema) async {
-        // Migrate trainings/repeaters/rep_templates to the unified schema.
-        // Uses raw SQL to avoid depending on typed Schema8 table accessors.
+        // Rebuild trainings from the legacy repeaters / rep_templates
+        // tables into the unified training_items schema. Raw SQL is used
+        // because the legacy tables no longer exist in the Dart schema.
         const gripNames = ['halfCrimp', 'threeFinger', 'fullCrimp', 'openHand'];
         String gripName(int idx) =>
             idx < gripNames.length ? gripNames[idx] : 'halfCrimp';
@@ -1005,18 +870,26 @@ class AppDatabase extends _$AppDatabase {
         final oldRepeaters = await m.database
             .customSelect('SELECT * FROM repeaters')
             .get();
+        // Soft-deleted and assessment trainings have no place in the new
+        // schema, so they are left behind rather than copied over.
+        const liveTrainings =
+            'deleted_at IS NULL AND is_assessment = 0 AND is_builtin = 0';
         final oldRepeaterTrainings = await m.database
             .customSelect(
               'SELECT id, repeater_id, is_favorite, name FROM trainings '
-              'WHERE repeater_id IS NOT NULL',
+              'WHERE repeater_id IS NOT NULL AND $liveTrainings',
             )
             .get();
         final oldCustomTrainings = await m.database
             .customSelect(
               'SELECT id, is_favorite, name FROM trainings '
-              'WHERE repeater_id IS NULL',
+              'WHERE repeater_id IS NULL AND $liveTrainings',
             )
             .get();
+        final keptIds = [
+          ...oldRepeaterTrainings.map((t) => t.data['id'] as String),
+          ...oldCustomTrainings.map((t) => t.data['id'] as String),
+        ];
         final oldRepTemplates = await m.database
             .customSelect(
               'SELECT training_id, is_rest, right_hand, duration, '
@@ -1025,62 +898,23 @@ class AppDatabase extends _$AppDatabase {
             )
             .get();
 
-        // Replace trainings table with new schema (raw SQLite table rename)
-        await m.database.customStatement('''
-          CREATE TABLE new_trainings (
-            id TEXT NOT NULL,
-            title TEXT NOT NULL,
-            description TEXT,
-            is_favorite INTEGER NOT NULL DEFAULT 0
-              CHECK (is_favorite IN (0, 1)),
-            updated_at INTEGER NOT NULL DEFAULT
-              (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)),
-            PRIMARY KEY (id)
-          )
-        ''');
-        await m.database.customStatement('''
-          INSERT INTO new_trainings (id, title, is_favorite, updated_at)
-          SELECT id, name, is_favorite, updated_at FROM trainings
-        ''');
-        await m.database.customStatement('DROP TABLE trainings');
+        // Rebuild trainings on the v2 shape. alterTable emits drift's own
+        // DDL, so the result matches the generated schema exactly.
+        await m.alterTable(
+          TableMigration(
+            schema.trainings,
+            columnTransformer: {
+              schema.trainings.title: const CustomExpression<String>('name'),
+            },
+            newColumns: [schema.trainings.description],
+          ),
+        );
         await m.database.customStatement(
-          'ALTER TABLE new_trainings RENAME TO trainings',
+          'DELETE FROM trainings WHERE id NOT IN (${keptIds.isEmpty ? "''" : keptIds.map((_) => '?').join(',')})',
+          keptIds.isEmpty ? const [] : keptIds,
         );
 
-        // Create training_items table
-        await m.database.customStatement('''
-          CREATE TABLE training_items (
-            id TEXT NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' ||
-              lower(hex(randomblob(2))) || '-' || lower(hex(randomblob(2))) ||
-              '-' || lower(hex(randomblob(2))) || '-' ||
-              lower(hex(randomblob(6)))),
-            training_id TEXT NOT NULL,
-            parent_id TEXT,
-            type TEXT NOT NULL,
-            position INTEGER NOT NULL DEFAULT 0,
-            cycles INTEGER,
-            cycle_rest_seconds INTEGER,
-            reps INTEGER,
-            duration INTEGER,
-            rest_seconds INTEGER,
-            worktime_seconds INTEGER,
-            hand TEXT,
-            loads_json TEXT,
-            left_loads_json TEXT,
-            hand_positions_json TEXT,
-            edge_sizes_mm_json TEXT,
-            load_is_max INTEGER NOT NULL DEFAULT 0
-              CHECK (load_is_max IN (0, 1)),
-            free_text TEXT,
-            exercise_id TEXT,
-            group_title TEXT,
-            updated_at INTEGER NOT NULL DEFAULT
-              (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)),
-            PRIMARY KEY (id),
-            FOREIGN KEY (training_id) REFERENCES trainings(id)
-              ON DELETE CASCADE
-          )
-        ''');
+        await m.createTable(schema.trainingItems);
 
         final repeaterMap = {
           for (final r in oldRepeaters) r.data['id'] as String: r.data,
@@ -1098,9 +932,9 @@ class AppDatabase extends _$AppDatabase {
           final repsCount = (r['reps'] as num).toInt();
           final splitHand = r['split_hand'] == 1 || r['split_hand'] == true;
           final weightRight =
-              (r['target_weight_right'] as num?)?.toDouble() ?? 0.0;
+              (r['target_weigth_right'] as num?)?.toDouble() ?? 0.0;
           final weightLeft =
-              (r['target_weight_left'] as num?)?.toDouble() ?? 0.0;
+              (r['target_weigth_left'] as num?)?.toDouble() ?? 0.0;
           final grip = gripName((r['grip_position'] as num? ?? 0).toInt());
           final loads = jsonEncode(
             List.filled(repsCount, {'value': weightRight, 'unit': 'kg'}),
@@ -1114,11 +948,12 @@ class AppDatabase extends _$AppDatabase {
 
           await m.database.customStatement(
             'INSERT INTO training_items '
-            '(training_id, type, position, cycles, reps, worktime_seconds, '
+            '(id, training_id, type, position, cycles, reps, worktime_seconds, '
             'rest_seconds, cycle_rest_seconds, hand, loads_json, '
             'left_loads_json, hand_positions_json, updated_at) '
-            'VALUES (?,?,0,?,?,?,?,?,?,?,?,?,?)',
+            'VALUES (?,?,?,0,?,?,?,?,?,?,?,?,?,?)',
             [
+              const Uuid().v4(),
               trainingId,
               'repeater',
               (r['sets'] as num).toInt(),
@@ -1169,10 +1004,12 @@ class AppDatabase extends _$AppDatabase {
 
             await m.database.customStatement(
               'INSERT INTO training_items '
-              '(training_id, type, position, worktime_seconds, rest_seconds, '
-              'hand, loads_json, hand_positions_json, updated_at) '
-              'VALUES (?,?,?,?,?,?,?,?,?)',
+              '(id, training_id, type, position, worktime_seconds, '
+              'rest_seconds, hand, loads_json, hand_positions_json, '
+              'updated_at) '
+              'VALUES (?,?,?,?,?,?,?,?,?,?)',
               [
+                const Uuid().v4(),
                 trainingId,
                 'hangboard_rep',
                 pos++,
@@ -1190,7 +1027,16 @@ class AppDatabase extends _$AppDatabase {
         // Drop legacy tables
         await m.database.customStatement('DROP TABLE IF EXISTS rep_templates');
         await m.database.customStatement('DROP TABLE IF EXISTS repeaters');
-        await m.alterTable(TableMigration(schema.trainingItems));
+        await m.database.customStatement('DROP TABLE IF EXISTS sync_metadata');
+
+        // Shed the sync bookkeeping columns (dirty, deleted_at) that the
+        // remote-first repositories replaced.
+        await m.alterTable(TableMigration(schema.sessions));
+        await m.alterTable(TableMigration(schema.assessments));
+        await m.alterTable(TableMigration(schema.repDatas));
+        await m.alterTable(TableMigration(schema.sensorConfigs));
+        await m.alterTable(TableMigration(schema.builtinTrainingWeights));
+        await m.alterTable(TableMigration(schema.pinnedBuiltinTrainings));
       },
     ),
   );

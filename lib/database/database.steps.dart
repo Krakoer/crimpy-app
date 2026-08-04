@@ -10,22 +10,20 @@ final class Schema2 extends i0.VersionedSchema {
   late final List<i1.DatabaseSchemaEntity> entities = [
     sessions,
     assessments,
-    repeaters,
     trainings,
-    repTemplates,
+    trainingItems,
     repDatas,
     sensorConfigs,
     builtinTrainingWeights,
     pinnedBuiltinTrainings,
     users,
-    syncMetadata,
   ];
   late final Shape0 sessions = Shape0(
     source: i0.VersionedTable(
       entityName: 'sessions',
       withoutRowId: false,
       isStrict: false,
-      tableConstraints: [],
+      tableConstraints: ['PRIMARY KEY(id)'],
       columns: [
         _column_0,
         _column_1,
@@ -42,9 +40,6 @@ final class Schema2 extends i0.VersionedSchema {
         _column_12,
         _column_13,
         _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
       ],
       attachedDatabase: database,
     ),
@@ -55,29 +50,43 @@ final class Schema2 extends i0.VersionedSchema {
       entityName: 'assessments',
       withoutRowId: false,
       isStrict: false,
-      tableConstraints: [],
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'FOREIGN KEY(session_id)REFERENCES sessions(id)ON DELETE CASCADE',
+      ],
       columns: [
         _column_0,
-        _column_18,
-        _column_19,
-        _column_20,
-        _column_21,
-        _column_22,
-        _column_14,
         _column_15,
         _column_16,
         _column_17,
+        _column_18,
+        _column_19,
+        _column_14,
       ],
       attachedDatabase: database,
     ),
     alias: null,
   );
-  late final Shape2 repeaters = Shape2(
+  late final Shape2 trainings = Shape2(
     source: i0.VersionedTable(
-      entityName: 'repeaters',
+      entityName: 'trainings',
       withoutRowId: false,
       isStrict: false,
-      tableConstraints: [],
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [_column_0, _column_20, _column_21, _column_22, _column_14],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape3 trainingItems = Shape3(
+    source: i0.VersionedTable(
+      entityName: 'training_items',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'FOREIGN KEY(training_id)REFERENCES trainings(id)ON DELETE CASCADE',
+      ],
       columns: [
         _column_0,
         _column_23,
@@ -89,166 +98,104 @@ final class Schema2 extends i0.VersionedSchema {
         _column_29,
         _column_30,
         _column_31,
-        _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape3 trainings = Shape3(
-    source: i0.VersionedTable(
-      entityName: 'trainings',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [
-        _column_0,
-        _column_1,
         _column_32,
         _column_33,
         _column_34,
-        _column_5,
-        _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape4 repTemplates = Shape4(
-    source: i0.VersionedTable(
-      entityName: 'rep_templates',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [
-        _column_0,
         _column_35,
         _column_36,
         _column_37,
         _column_38,
         _column_39,
         _column_40,
-        _column_31,
+        _column_41,
         _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
       ],
       attachedDatabase: database,
     ),
     alias: null,
   );
-  late final Shape5 repDatas = Shape5(
+  late final Shape4 repDatas = Shape4(
     source: i0.VersionedTable(
       entityName: 'rep_datas',
       withoutRowId: false,
       isStrict: false,
-      tableConstraints: [],
+      tableConstraints: [
+        'PRIMARY KEY(id)',
+        'FOREIGN KEY(session_id)REFERENCES sessions(id)ON DELETE CASCADE',
+      ],
       columns: [
         _column_0,
-        _column_41,
-        _column_21,
-        _column_35,
-        _column_36,
-        _column_37,
-        _column_39,
-        _column_40,
-        _column_31,
+        _column_42,
+        _column_18,
+        _column_43,
+        _column_44,
+        _column_45,
+        _column_46,
+        _column_47,
+        _column_48,
         _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
       ],
       attachedDatabase: database,
     ),
     alias: null,
   );
-  late final Shape6 sensorConfigs = Shape6(
+  late final Shape5 sensorConfigs = Shape5(
     source: i0.VersionedTable(
       entityName: 'sensor_configs',
       withoutRowId: false,
       isStrict: false,
-      tableConstraints: [],
+      tableConstraints: ['PRIMARY KEY(id)'],
       columns: [
         _column_0,
         _column_1,
-        _column_40,
-        _column_42,
-        _column_43,
+        _column_47,
+        _column_49,
+        _column_50,
         _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
       ],
       attachedDatabase: database,
     ),
     alias: null,
   );
-  late final Shape7 builtinTrainingWeights = Shape7(
+  late final Shape6 builtinTrainingWeights = Shape6(
     source: i0.VersionedTable(
       entityName: 'builtin_training_weights',
       withoutRowId: false,
       isStrict: false,
-      tableConstraints: [],
-      columns: [
-        _column_0,
-        _column_44,
-        _column_45,
-        _column_46,
-        _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
-      ],
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [_column_0, _column_51, _column_52, _column_53, _column_14],
       attachedDatabase: database,
     ),
     alias: null,
   );
-  late final Shape8 pinnedBuiltinTrainings = Shape8(
+  late final Shape7 pinnedBuiltinTrainings = Shape7(
     source: i0.VersionedTable(
       entityName: 'pinned_builtin_trainings',
       withoutRowId: false,
       isStrict: false,
       tableConstraints: ['PRIMARY KEY(builtin_training_id)'],
-      columns: [_column_47, _column_14, _column_15, _column_16, _column_17],
+      columns: [_column_51, _column_14],
       attachedDatabase: database,
     ),
     alias: null,
   );
-  late final Shape9 users = Shape9(
+  late final Shape8 users = Shape8(
     source: i0.VersionedTable(
       entityName: 'users',
       withoutRowId: false,
       isStrict: false,
       tableConstraints: ['PRIMARY KEY(id)'],
       columns: [
-        _column_48,
-        _column_49,
-        _column_50,
-        _column_51,
-        _column_52,
-        _column_53,
+        _column_0,
         _column_54,
         _column_55,
         _column_56,
+        _column_57,
+        _column_58,
+        _column_59,
+        _column_60,
+        _column_61,
       ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape10 syncMetadata = Shape10(
-    source: i0.VersionedTable(
-      entityName: 'sync_metadata',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [_column_0, _column_57, _column_58, _column_59],
       attachedDatabase: database,
     ),
     alias: null,
@@ -257,8 +204,8 @@ final class Schema2 extends i0.VersionedSchema {
 
 class Shape0 extends i0.VersionedTable {
   Shape0({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
   i1.GeneratedColumn<String> get name =>
       columnsByName['name']! as i1.GeneratedColumn<String>;
   i1.GeneratedColumn<String> get notes =>
@@ -287,22 +234,15 @@ class Shape0 extends i0.VersionedTable {
       columnsByName['repeater_split_hand']! as i1.GeneratedColumn<int>;
   i1.GeneratedColumn<int> get updatedAt =>
       columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
 }
 
-i1.GeneratedColumn<int> _column_0(String aliasedName) =>
-    i1.GeneratedColumn<int>(
+i1.GeneratedColumn<String> _column_0(String aliasedName) =>
+    i1.GeneratedColumn<String>(
       'id',
       aliasedName,
       false,
-      hasAutoIncrement: true,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL PRIMARY KEY AUTOINCREMENT',
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
     );
 i1.GeneratedColumn<String> _column_1(String aliasedName) =>
     i1.GeneratedColumn<String>(
@@ -429,57 +369,26 @@ i1.GeneratedColumn<int> _column_14(
     'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
   ),
 );
-i1.GeneratedColumn<int> _column_15(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'deleted_at',
-      aliasedName,
-      true,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NULL',
-    );
-i1.GeneratedColumn<int> _column_16(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'dirty',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (dirty IN (0, 1))',
-      defaultValue: const i1.CustomExpression('0'),
-    );
-i1.GeneratedColumn<String> _column_17(String aliasedName) =>
-    i1.GeneratedColumn<String>(
-      'remote_id',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.string,
-      $customConstraints: 'NOT NULL',
-    );
 
 class Shape1 extends i0.VersionedTable {
   Shape1({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
   i1.GeneratedColumn<int> get type =>
       columnsByName['type']! as i1.GeneratedColumn<int>;
   i1.GeneratedColumn<double> get rightValue =>
       columnsByName['right_value']! as i1.GeneratedColumn<double>;
   i1.GeneratedColumn<double> get leftValue =>
       columnsByName['left_value']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get sessionId =>
-      columnsByName['session_id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get sessionId =>
+      columnsByName['session_id']! as i1.GeneratedColumn<String>;
   i1.GeneratedColumn<int> get gripPosition =>
       columnsByName['grip_position']! as i1.GeneratedColumn<int>;
   i1.GeneratedColumn<int> get updatedAt =>
       columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
 }
 
-i1.GeneratedColumn<int> _column_18(String aliasedName) =>
+i1.GeneratedColumn<int> _column_15(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'type',
       aliasedName,
@@ -487,7 +396,7 @@ i1.GeneratedColumn<int> _column_18(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NOT NULL',
     );
-i1.GeneratedColumn<double> _column_19(String aliasedName) =>
+i1.GeneratedColumn<double> _column_16(String aliasedName) =>
     i1.GeneratedColumn<double>(
       'right_value',
       aliasedName,
@@ -495,7 +404,7 @@ i1.GeneratedColumn<double> _column_19(String aliasedName) =>
       type: i1.DriftSqlType.double,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<double> _column_20(String aliasedName) =>
+i1.GeneratedColumn<double> _column_17(String aliasedName) =>
     i1.GeneratedColumn<double>(
       'left_value',
       aliasedName,
@@ -503,15 +412,15 @@ i1.GeneratedColumn<double> _column_20(String aliasedName) =>
       type: i1.DriftSqlType.double,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<int> _column_21(String aliasedName) =>
-    i1.GeneratedColumn<int>(
+i1.GeneratedColumn<String> _column_18(String aliasedName) =>
+    i1.GeneratedColumn<String>(
       'session_id',
       aliasedName,
       false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL REFERENCES sessions(id)',
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
     );
-i1.GeneratedColumn<int> _column_22(String aliasedName) =>
+i1.GeneratedColumn<int> _column_19(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'grip_position',
       aliasedName,
@@ -523,2937 +432,6 @@ i1.GeneratedColumn<int> _column_22(String aliasedName) =>
 
 class Shape2 extends i0.VersionedTable {
   Shape2({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get sets =>
-      columnsByName['sets']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get reps =>
-      columnsByName['reps']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get worktime =>
-      columnsByName['worktime']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get resttime =>
-      columnsByName['resttime']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get setRest =>
-      columnsByName['set_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get targetWeigthRight =>
-      columnsByName['target_weigth_right']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get targetWeigthLeft =>
-      columnsByName['target_weigth_left']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get splitHand =>
-      columnsByName['split_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-i1.GeneratedColumn<int> _column_23(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'sets',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL',
-    );
-i1.GeneratedColumn<int> _column_24(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'reps',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL',
-    );
-i1.GeneratedColumn<int> _column_25(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'worktime',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL',
-    );
-i1.GeneratedColumn<int> _column_26(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'resttime',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL',
-    );
-i1.GeneratedColumn<int> _column_27(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'set_rest',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL',
-    );
-i1.GeneratedColumn<double> _column_28(String aliasedName) =>
-    i1.GeneratedColumn<double>(
-      'target_weigth_right',
-      aliasedName,
-      true,
-      type: i1.DriftSqlType.double,
-      $customConstraints: 'NULL',
-    );
-i1.GeneratedColumn<double> _column_29(String aliasedName) =>
-    i1.GeneratedColumn<double>(
-      'target_weigth_left',
-      aliasedName,
-      true,
-      type: i1.DriftSqlType.double,
-      $customConstraints: 'NULL',
-    );
-i1.GeneratedColumn<int> _column_30(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'split_hand',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL CHECK (split_hand IN (0, 1))',
-    );
-i1.GeneratedColumn<int> _column_31(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'grip_position',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL DEFAULT 0',
-      defaultValue: const i1.CustomExpression('0'),
-    );
-
-class Shape3 extends i0.VersionedTable {
-  Shape3({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get name =>
-      columnsByName['name']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get repeaterId =>
-      columnsByName['repeater_id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isBuiltin =>
-      columnsByName['is_builtin']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isFavorite =>
-      columnsByName['is_favorite']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isAssessment =>
-      columnsByName['is_assessment']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-i1.GeneratedColumn<int> _column_32(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'repeater_id',
-      aliasedName,
-      true,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NULL REFERENCES repeaters(id)ON DELETE CASCADE',
-    );
-i1.GeneratedColumn<int> _column_33(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'is_builtin',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_builtin IN (0, 1))',
-      defaultValue: const i1.CustomExpression('0'),
-    );
-i1.GeneratedColumn<int> _column_34(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'is_favorite',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_favorite IN (0, 1))',
-      defaultValue: const i1.CustomExpression('0'),
-    );
-
-class Shape4 extends i0.VersionedTable {
-  Shape4({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isRest =>
-      columnsByName['is_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get rightHand =>
-      columnsByName['right_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get duration =>
-      columnsByName['duration']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get trainingId =>
-      columnsByName['training_id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get targetWeight =>
-      columnsByName['target_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-i1.GeneratedColumn<int> _column_35(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'is_rest',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL CHECK (is_rest IN (0, 1))',
-    );
-i1.GeneratedColumn<int> _column_36(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'right_hand',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL CHECK (right_hand IN (0, 1))',
-    );
-i1.GeneratedColumn<int> _column_37(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'duration',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL',
-    );
-i1.GeneratedColumn<int> _column_38(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'training_id',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL REFERENCES trainings(id)ON DELETE CASCADE',
-    );
-i1.GeneratedColumn<double> _column_39(String aliasedName) =>
-    i1.GeneratedColumn<double>(
-      'target_weight',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.double,
-      $customConstraints: 'NOT NULL',
-    );
-i1.GeneratedColumn<int> _column_40(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'index',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL',
-    );
-
-class Shape5 extends i0.VersionedTable {
-  Shape5({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get averageWeight =>
-      columnsByName['average_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get sessionId =>
-      columnsByName['session_id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isRest =>
-      columnsByName['is_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get rightHand =>
-      columnsByName['right_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get duration =>
-      columnsByName['duration']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get targetWeight =>
-      columnsByName['target_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-i1.GeneratedColumn<double> _column_41(String aliasedName) =>
-    i1.GeneratedColumn<double>(
-      'average_weight',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.double,
-      $customConstraints: 'NOT NULL',
-    );
-
-class Shape6 extends i0.VersionedTable {
-  Shape6({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get name =>
-      columnsByName['name']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get tare =>
-      columnsByName['tare']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get coef =>
-      columnsByName['coef']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-i1.GeneratedColumn<double> _column_42(String aliasedName) =>
-    i1.GeneratedColumn<double>(
-      'tare',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.double,
-      $customConstraints: 'NOT NULL',
-    );
-i1.GeneratedColumn<double> _column_43(String aliasedName) =>
-    i1.GeneratedColumn<double>(
-      'coef',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.double,
-      $customConstraints: 'NOT NULL',
-    );
-
-class Shape7 extends i0.VersionedTable {
-  Shape7({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get builtinTrainingId =>
-      columnsByName['builtin_training_id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get customWeightRight =>
-      columnsByName['custom_weight_right']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get customWeightLeft =>
-      columnsByName['custom_weight_left']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-i1.GeneratedColumn<int> _column_44(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'builtin_training_id',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL REFERENCES trainings(id)ON DELETE CASCADE',
-    );
-i1.GeneratedColumn<double> _column_45(String aliasedName) =>
-    i1.GeneratedColumn<double>(
-      'custom_weight_right',
-      aliasedName,
-      true,
-      type: i1.DriftSqlType.double,
-      $customConstraints: 'NULL',
-    );
-i1.GeneratedColumn<double> _column_46(String aliasedName) =>
-    i1.GeneratedColumn<double>(
-      'custom_weight_left',
-      aliasedName,
-      true,
-      type: i1.DriftSqlType.double,
-      $customConstraints: 'NULL',
-    );
-
-class Shape8 extends i0.VersionedTable {
-  Shape8({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get builtinTrainingId =>
-      columnsByName['builtin_training_id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-i1.GeneratedColumn<int> _column_47(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'builtin_training_id',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL',
-    );
-
-class Shape9 extends i0.VersionedTable {
-  Shape9({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get email =>
-      columnsByName['email']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get firstname =>
-      columnsByName['firstname']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get lastname =>
-      columnsByName['lastname']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get emailVerified =>
-      columnsByName['email_verified']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isAdmin =>
-      columnsByName['is_admin']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isCoach =>
-      columnsByName['is_coach']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get coachValidated =>
-      columnsByName['coach_validated']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-}
-
-i1.GeneratedColumn<String> _column_48(String aliasedName) =>
-    i1.GeneratedColumn<String>(
-      'id',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.string,
-      $customConstraints: 'NOT NULL',
-    );
-i1.GeneratedColumn<String> _column_49(String aliasedName) =>
-    i1.GeneratedColumn<String>(
-      'email',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.string,
-      $customConstraints: 'NOT NULL',
-    );
-i1.GeneratedColumn<String> _column_50(String aliasedName) =>
-    i1.GeneratedColumn<String>(
-      'firstname',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.string,
-      $customConstraints: 'NOT NULL',
-    );
-i1.GeneratedColumn<String> _column_51(String aliasedName) =>
-    i1.GeneratedColumn<String>(
-      'lastname',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.string,
-      $customConstraints: 'NOT NULL',
-    );
-i1.GeneratedColumn<int> _column_52(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'email_verified',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (email_verified IN (0, 1))',
-      defaultValue: const i1.CustomExpression('0'),
-    );
-i1.GeneratedColumn<int> _column_53(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'is_admin',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_admin IN (0, 1))',
-      defaultValue: const i1.CustomExpression('0'),
-    );
-i1.GeneratedColumn<int> _column_54(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'is_coach',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_coach IN (0, 1))',
-      defaultValue: const i1.CustomExpression('0'),
-    );
-i1.GeneratedColumn<int> _column_55(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'coach_validated',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints:
-          'NOT NULL DEFAULT 0 CHECK (coach_validated IN (0, 1))',
-      defaultValue: const i1.CustomExpression('0'),
-    );
-i1.GeneratedColumn<int> _column_56(
-  String aliasedName,
-) => i1.GeneratedColumn<int>(
-  'created_at',
-  aliasedName,
-  false,
-  type: i1.DriftSqlType.int,
-  $customConstraints:
-      'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
-  defaultValue: const i1.CustomExpression(
-    'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
-  ),
-);
-
-class Shape10 extends i0.VersionedTable {
-  Shape10({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get lastSyncVersion =>
-      columnsByName['last_sync_version']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get lastSyncTime =>
-      columnsByName['last_sync_time']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get pendingChanges =>
-      columnsByName['pending_changes']! as i1.GeneratedColumn<int>;
-}
-
-i1.GeneratedColumn<int> _column_57(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'last_sync_version',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL DEFAULT 0',
-      defaultValue: const i1.CustomExpression('0'),
-    );
-i1.GeneratedColumn<int> _column_58(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'last_sync_time',
-      aliasedName,
-      true,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NULL',
-    );
-i1.GeneratedColumn<int> _column_59(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'pending_changes',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NOT NULL DEFAULT 0',
-      defaultValue: const i1.CustomExpression('0'),
-    );
-
-final class Schema3 extends i0.VersionedSchema {
-  Schema3({required super.database}) : super(version: 3);
-  @override
-  late final List<i1.DatabaseSchemaEntity> entities = [
-    sessions,
-    assessments,
-    repeaters,
-    trainings,
-    repTemplates,
-    repDatas,
-    sensorConfigs,
-    builtinTrainingWeights,
-    pinnedBuiltinTrainings,
-    users,
-    syncMetadata,
-  ];
-  late final Shape11 sessions = Shape11(
-    source: i0.VersionedTable(
-      entityName: 'sessions',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [
-        _column_0,
-        _column_1,
-        _column_2,
-        _column_3,
-        _column_4,
-        _column_5,
-        _column_6,
-        _column_7,
-        _column_8,
-        _column_9,
-        _column_10,
-        _column_11,
-        _column_12,
-        _column_13,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape12 assessments = Shape12(
-    source: i0.VersionedTable(
-      entityName: 'assessments',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [
-        _column_0,
-        _column_18,
-        _column_19,
-        _column_20,
-        _column_21,
-        _column_22,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape13 repeaters = Shape13(
-    source: i0.VersionedTable(
-      entityName: 'repeaters',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [
-        _column_0,
-        _column_23,
-        _column_24,
-        _column_25,
-        _column_26,
-        _column_27,
-        _column_28,
-        _column_29,
-        _column_30,
-        _column_31,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape14 trainings = Shape14(
-    source: i0.VersionedTable(
-      entityName: 'trainings',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [
-        _column_0,
-        _column_1,
-        _column_32,
-        _column_33,
-        _column_34,
-        _column_5,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape15 repTemplates = Shape15(
-    source: i0.VersionedTable(
-      entityName: 'rep_templates',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [
-        _column_0,
-        _column_35,
-        _column_36,
-        _column_37,
-        _column_38,
-        _column_39,
-        _column_40,
-        _column_31,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape16 repDatas = Shape16(
-    source: i0.VersionedTable(
-      entityName: 'rep_datas',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [
-        _column_0,
-        _column_41,
-        _column_21,
-        _column_35,
-        _column_36,
-        _column_37,
-        _column_39,
-        _column_40,
-        _column_31,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape17 sensorConfigs = Shape17(
-    source: i0.VersionedTable(
-      entityName: 'sensor_configs',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [
-        _column_0,
-        _column_1,
-        _column_40,
-        _column_42,
-        _column_43,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape18 builtinTrainingWeights = Shape18(
-    source: i0.VersionedTable(
-      entityName: 'builtin_training_weights',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [
-        _column_0,
-        _column_44,
-        _column_45,
-        _column_46,
-        _column_56,
-        _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape19 pinnedBuiltinTrainings = Shape19(
-    source: i0.VersionedTable(
-      entityName: 'pinned_builtin_trainings',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(builtin_training_id)'],
-      columns: [
-        _column_47,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-        _column_17,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape9 users = Shape9(
-    source: i0.VersionedTable(
-      entityName: 'users',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_49,
-        _column_50,
-        _column_51,
-        _column_52,
-        _column_53,
-        _column_54,
-        _column_55,
-        _column_56,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape10 syncMetadata = Shape10(
-    source: i0.VersionedTable(
-      entityName: 'sync_metadata',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [_column_0, _column_57, _column_58, _column_59],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-}
-
-class Shape11 extends i0.VersionedTable {
-  Shape11({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get name =>
-      columnsByName['name']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get notes =>
-      columnsByName['notes']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get date =>
-      columnsByName['date']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get dataPath =>
-      columnsByName['data_path']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get isAssessment =>
-      columnsByName['is_assessment']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get sessionType =>
-      columnsByName['session_type']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get duration =>
-      columnsByName['duration']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterSets =>
-      columnsByName['repeater_sets']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterReps =>
-      columnsByName['repeater_reps']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterWorkTime =>
-      columnsByName['repeater_work_time']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterRestTime =>
-      columnsByName['repeater_rest_time']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterSetRest =>
-      columnsByName['repeater_set_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterSplitHand =>
-      columnsByName['repeater_split_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-i1.GeneratedColumn<int> _column_60(String aliasedName) =>
-    i1.GeneratedColumn<int>(
-      'created_at',
-      aliasedName,
-      true,
-      type: i1.DriftSqlType.int,
-      $customConstraints: 'NULL',
-    );
-
-class Shape12 extends i0.VersionedTable {
-  Shape12({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get type =>
-      columnsByName['type']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get rightValue =>
-      columnsByName['right_value']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get leftValue =>
-      columnsByName['left_value']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get sessionId =>
-      columnsByName['session_id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-class Shape13 extends i0.VersionedTable {
-  Shape13({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get sets =>
-      columnsByName['sets']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get reps =>
-      columnsByName['reps']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get worktime =>
-      columnsByName['worktime']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get resttime =>
-      columnsByName['resttime']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get setRest =>
-      columnsByName['set_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get targetWeigthRight =>
-      columnsByName['target_weigth_right']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get targetWeigthLeft =>
-      columnsByName['target_weigth_left']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get splitHand =>
-      columnsByName['split_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-class Shape14 extends i0.VersionedTable {
-  Shape14({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get name =>
-      columnsByName['name']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get repeaterId =>
-      columnsByName['repeater_id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isBuiltin =>
-      columnsByName['is_builtin']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isFavorite =>
-      columnsByName['is_favorite']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isAssessment =>
-      columnsByName['is_assessment']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-class Shape15 extends i0.VersionedTable {
-  Shape15({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isRest =>
-      columnsByName['is_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get rightHand =>
-      columnsByName['right_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get duration =>
-      columnsByName['duration']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get trainingId =>
-      columnsByName['training_id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get targetWeight =>
-      columnsByName['target_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-class Shape16 extends i0.VersionedTable {
-  Shape16({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get averageWeight =>
-      columnsByName['average_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get sessionId =>
-      columnsByName['session_id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isRest =>
-      columnsByName['is_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get rightHand =>
-      columnsByName['right_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get duration =>
-      columnsByName['duration']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get targetWeight =>
-      columnsByName['target_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-class Shape17 extends i0.VersionedTable {
-  Shape17({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get name =>
-      columnsByName['name']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get tare =>
-      columnsByName['tare']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get coef =>
-      columnsByName['coef']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-class Shape18 extends i0.VersionedTable {
-  Shape18({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get builtinTrainingId =>
-      columnsByName['builtin_training_id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get customWeightRight =>
-      columnsByName['custom_weight_right']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get customWeightLeft =>
-      columnsByName['custom_weight_left']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-class Shape19 extends i0.VersionedTable {
-  Shape19({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<int> get builtinTrainingId =>
-      columnsByName['builtin_training_id']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get remoteId =>
-      columnsByName['remote_id']! as i1.GeneratedColumn<String>;
-}
-
-final class Schema4 extends i0.VersionedSchema {
-  Schema4({required super.database}) : super(version: 4);
-  @override
-  late final List<i1.DatabaseSchemaEntity> entities = [
-    sessions,
-    assessments,
-    repeaters,
-    trainings,
-    repTemplates,
-    repDatas,
-    sensorConfigs,
-    builtinTrainingWeights,
-    pinnedBuiltinTrainings,
-    users,
-    syncMetadata,
-  ];
-  late final Shape20 sessions = Shape20(
-    source: i0.VersionedTable(
-      entityName: 'sessions',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_1,
-        _column_2,
-        _column_3,
-        _column_4,
-        _column_5,
-        _column_6,
-        _column_7,
-        _column_8,
-        _column_9,
-        _column_10,
-        _column_11,
-        _column_12,
-        _column_13,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape21 assessments = Shape21(
-    source: i0.VersionedTable(
-      entityName: 'assessments',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(session_id)REFERENCES sessions(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_18,
-        _column_19,
-        _column_20,
-        _column_61,
-        _column_22,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape22 repeaters = Shape22(
-    source: i0.VersionedTable(
-      entityName: 'repeaters',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_23,
-        _column_24,
-        _column_25,
-        _column_26,
-        _column_27,
-        _column_28,
-        _column_29,
-        _column_30,
-        _column_31,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape23 trainings = Shape23(
-    source: i0.VersionedTable(
-      entityName: 'trainings',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(repeater_id)REFERENCES repeaters(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_1,
-        _column_62,
-        _column_33,
-        _column_34,
-        _column_5,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape24 repTemplates = Shape24(
-    source: i0.VersionedTable(
-      entityName: 'rep_templates',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(training_id)REFERENCES trainings(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_35,
-        _column_36,
-        _column_37,
-        _column_63,
-        _column_39,
-        _column_40,
-        _column_31,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape25 repDatas = Shape25(
-    source: i0.VersionedTable(
-      entityName: 'rep_datas',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(session_id)REFERENCES sessions(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_41,
-        _column_61,
-        _column_35,
-        _column_36,
-        _column_37,
-        _column_39,
-        _column_40,
-        _column_31,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape26 sensorConfigs = Shape26(
-    source: i0.VersionedTable(
-      entityName: 'sensor_configs',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_1,
-        _column_40,
-        _column_42,
-        _column_43,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape27 builtinTrainingWeights = Shape27(
-    source: i0.VersionedTable(
-      entityName: 'builtin_training_weights',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(builtin_training_id)REFERENCES trainings(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_64,
-        _column_45,
-        _column_46,
-        _column_56,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape28 pinnedBuiltinTrainings = Shape28(
-    source: i0.VersionedTable(
-      entityName: 'pinned_builtin_trainings',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(builtin_training_id)'],
-      columns: [_column_64, _column_60, _column_14, _column_15, _column_16],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape9 users = Shape9(
-    source: i0.VersionedTable(
-      entityName: 'users',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_49,
-        _column_50,
-        _column_51,
-        _column_52,
-        _column_53,
-        _column_54,
-        _column_55,
-        _column_56,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape10 syncMetadata = Shape10(
-    source: i0.VersionedTable(
-      entityName: 'sync_metadata',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [_column_0, _column_57, _column_58, _column_59],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-}
-
-class Shape20 extends i0.VersionedTable {
-  Shape20({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get name =>
-      columnsByName['name']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get notes =>
-      columnsByName['notes']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get date =>
-      columnsByName['date']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get dataPath =>
-      columnsByName['data_path']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get isAssessment =>
-      columnsByName['is_assessment']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get sessionType =>
-      columnsByName['session_type']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get duration =>
-      columnsByName['duration']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterSets =>
-      columnsByName['repeater_sets']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterReps =>
-      columnsByName['repeater_reps']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterWorkTime =>
-      columnsByName['repeater_work_time']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterRestTime =>
-      columnsByName['repeater_rest_time']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterSetRest =>
-      columnsByName['repeater_set_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterSplitHand =>
-      columnsByName['repeater_split_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-class Shape21 extends i0.VersionedTable {
-  Shape21({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get type =>
-      columnsByName['type']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get rightValue =>
-      columnsByName['right_value']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get leftValue =>
-      columnsByName['left_value']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<String> get sessionId =>
-      columnsByName['session_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-i1.GeneratedColumn<String> _column_61(String aliasedName) =>
-    i1.GeneratedColumn<String>(
-      'session_id',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.string,
-      $customConstraints: 'NOT NULL',
-    );
-
-class Shape22 extends i0.VersionedTable {
-  Shape22({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get sets =>
-      columnsByName['sets']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get reps =>
-      columnsByName['reps']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get worktime =>
-      columnsByName['worktime']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get resttime =>
-      columnsByName['resttime']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get setRest =>
-      columnsByName['set_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get targetWeigthRight =>
-      columnsByName['target_weigth_right']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get targetWeigthLeft =>
-      columnsByName['target_weigth_left']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get splitHand =>
-      columnsByName['split_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-class Shape23 extends i0.VersionedTable {
-  Shape23({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get name =>
-      columnsByName['name']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get repeaterId =>
-      columnsByName['repeater_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get isBuiltin =>
-      columnsByName['is_builtin']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isFavorite =>
-      columnsByName['is_favorite']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isAssessment =>
-      columnsByName['is_assessment']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-i1.GeneratedColumn<String> _column_62(String aliasedName) =>
-    i1.GeneratedColumn<String>(
-      'repeater_id',
-      aliasedName,
-      true,
-      type: i1.DriftSqlType.string,
-      $customConstraints: 'NULL',
-    );
-
-class Shape24 extends i0.VersionedTable {
-  Shape24({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get isRest =>
-      columnsByName['is_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get rightHand =>
-      columnsByName['right_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get duration =>
-      columnsByName['duration']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get trainingId =>
-      columnsByName['training_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<double> get targetWeight =>
-      columnsByName['target_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-i1.GeneratedColumn<String> _column_63(String aliasedName) =>
-    i1.GeneratedColumn<String>(
-      'training_id',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.string,
-      $customConstraints: 'NOT NULL',
-    );
-
-class Shape25 extends i0.VersionedTable {
-  Shape25({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<double> get averageWeight =>
-      columnsByName['average_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<String> get sessionId =>
-      columnsByName['session_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get isRest =>
-      columnsByName['is_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get rightHand =>
-      columnsByName['right_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get duration =>
-      columnsByName['duration']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get targetWeight =>
-      columnsByName['target_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-class Shape26 extends i0.VersionedTable {
-  Shape26({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get name =>
-      columnsByName['name']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get tare =>
-      columnsByName['tare']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get coef =>
-      columnsByName['coef']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-class Shape27 extends i0.VersionedTable {
-  Shape27({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get builtinTrainingId =>
-      columnsByName['builtin_training_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<double> get customWeightRight =>
-      columnsByName['custom_weight_right']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get customWeightLeft =>
-      columnsByName['custom_weight_left']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-i1.GeneratedColumn<String> _column_64(String aliasedName) =>
-    i1.GeneratedColumn<String>(
-      'builtin_training_id',
-      aliasedName,
-      false,
-      type: i1.DriftSqlType.string,
-      $customConstraints: 'NOT NULL',
-    );
-
-class Shape28 extends i0.VersionedTable {
-  Shape28({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get builtinTrainingId =>
-      columnsByName['builtin_training_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get createdAt =>
-      columnsByName['created_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-final class Schema5 extends i0.VersionedSchema {
-  Schema5({required super.database}) : super(version: 5);
-  @override
-  late final List<i1.DatabaseSchemaEntity> entities = [
-    sessions,
-    assessments,
-    repeaters,
-    trainings,
-    repTemplates,
-    repDatas,
-    sensorConfigs,
-    builtinTrainingWeights,
-    pinnedBuiltinTrainings,
-    users,
-    syncMetadata,
-  ];
-  late final Shape20 sessions = Shape20(
-    source: i0.VersionedTable(
-      entityName: 'sessions',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_1,
-        _column_2,
-        _column_3,
-        _column_4,
-        _column_5,
-        _column_6,
-        _column_7,
-        _column_8,
-        _column_9,
-        _column_10,
-        _column_11,
-        _column_12,
-        _column_13,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape21 assessments = Shape21(
-    source: i0.VersionedTable(
-      entityName: 'assessments',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(session_id)REFERENCES sessions(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_18,
-        _column_19,
-        _column_20,
-        _column_61,
-        _column_22,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape22 repeaters = Shape22(
-    source: i0.VersionedTable(
-      entityName: 'repeaters',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_23,
-        _column_24,
-        _column_25,
-        _column_26,
-        _column_27,
-        _column_28,
-        _column_29,
-        _column_30,
-        _column_31,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape23 trainings = Shape23(
-    source: i0.VersionedTable(
-      entityName: 'trainings',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(repeater_id)REFERENCES repeaters(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_1,
-        _column_62,
-        _column_33,
-        _column_34,
-        _column_5,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape24 repTemplates = Shape24(
-    source: i0.VersionedTable(
-      entityName: 'rep_templates',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(training_id)REFERENCES trainings(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_35,
-        _column_36,
-        _column_37,
-        _column_63,
-        _column_39,
-        _column_40,
-        _column_31,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape25 repDatas = Shape25(
-    source: i0.VersionedTable(
-      entityName: 'rep_datas',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(session_id)REFERENCES sessions(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_41,
-        _column_61,
-        _column_35,
-        _column_36,
-        _column_37,
-        _column_39,
-        _column_40,
-        _column_31,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape26 sensorConfigs = Shape26(
-    source: i0.VersionedTable(
-      entityName: 'sensor_configs',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_1,
-        _column_40,
-        _column_42,
-        _column_43,
-        _column_60,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape27 builtinTrainingWeights = Shape27(
-    source: i0.VersionedTable(
-      entityName: 'builtin_training_weights',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(builtin_training_id)REFERENCES trainings(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_64,
-        _column_45,
-        _column_46,
-        _column_56,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape29 pinnedBuiltinTrainings = Shape29(
-    source: i0.VersionedTable(
-      entityName: 'pinned_builtin_trainings',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(builtin_training_id)'],
-      columns: [_column_64, _column_16],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape9 users = Shape9(
-    source: i0.VersionedTable(
-      entityName: 'users',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_49,
-        _column_50,
-        _column_51,
-        _column_52,
-        _column_53,
-        _column_54,
-        _column_55,
-        _column_56,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape10 syncMetadata = Shape10(
-    source: i0.VersionedTable(
-      entityName: 'sync_metadata',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [_column_0, _column_57, _column_58, _column_59],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-}
-
-class Shape29 extends i0.VersionedTable {
-  Shape29({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get builtinTrainingId =>
-      columnsByName['builtin_training_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-final class Schema6 extends i0.VersionedSchema {
-  Schema6({required super.database}) : super(version: 6);
-  @override
-  late final List<i1.DatabaseSchemaEntity> entities = [
-    sessions,
-    assessments,
-    repeaters,
-    trainings,
-    repTemplates,
-    repDatas,
-    sensorConfigs,
-    builtinTrainingWeights,
-    pinnedBuiltinTrainings,
-    users,
-    syncMetadata,
-  ];
-  late final Shape30 sessions = Shape30(
-    source: i0.VersionedTable(
-      entityName: 'sessions',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_1,
-        _column_2,
-        _column_3,
-        _column_4,
-        _column_5,
-        _column_6,
-        _column_7,
-        _column_8,
-        _column_9,
-        _column_10,
-        _column_11,
-        _column_12,
-        _column_13,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape31 assessments = Shape31(
-    source: i0.VersionedTable(
-      entityName: 'assessments',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(session_id)REFERENCES sessions(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_18,
-        _column_19,
-        _column_20,
-        _column_61,
-        _column_22,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape32 repeaters = Shape32(
-    source: i0.VersionedTable(
-      entityName: 'repeaters',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_23,
-        _column_24,
-        _column_25,
-        _column_26,
-        _column_27,
-        _column_28,
-        _column_29,
-        _column_30,
-        _column_31,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape33 trainings = Shape33(
-    source: i0.VersionedTable(
-      entityName: 'trainings',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(repeater_id)REFERENCES repeaters(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_1,
-        _column_62,
-        _column_33,
-        _column_34,
-        _column_5,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape34 repTemplates = Shape34(
-    source: i0.VersionedTable(
-      entityName: 'rep_templates',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(training_id)REFERENCES trainings(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_35,
-        _column_36,
-        _column_37,
-        _column_63,
-        _column_39,
-        _column_40,
-        _column_31,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape35 repDatas = Shape35(
-    source: i0.VersionedTable(
-      entityName: 'rep_datas',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(session_id)REFERENCES sessions(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_41,
-        _column_61,
-        _column_35,
-        _column_36,
-        _column_37,
-        _column_39,
-        _column_40,
-        _column_31,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape36 sensorConfigs = Shape36(
-    source: i0.VersionedTable(
-      entityName: 'sensor_configs',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_1,
-        _column_40,
-        _column_42,
-        _column_43,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape37 builtinTrainingWeights = Shape37(
-    source: i0.VersionedTable(
-      entityName: 'builtin_training_weights',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_64,
-        _column_45,
-        _column_46,
-        _column_14,
-        _column_15,
-        _column_16,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape38 pinnedBuiltinTrainings = Shape38(
-    source: i0.VersionedTable(
-      entityName: 'pinned_builtin_trainings',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(builtin_training_id)'],
-      columns: [_column_64, _column_16, _column_14, _column_15],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape9 users = Shape9(
-    source: i0.VersionedTable(
-      entityName: 'users',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_49,
-        _column_50,
-        _column_51,
-        _column_52,
-        _column_53,
-        _column_54,
-        _column_55,
-        _column_56,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape10 syncMetadata = Shape10(
-    source: i0.VersionedTable(
-      entityName: 'sync_metadata',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [],
-      columns: [_column_0, _column_57, _column_58, _column_59],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-}
-
-class Shape30 extends i0.VersionedTable {
-  Shape30({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get name =>
-      columnsByName['name']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get notes =>
-      columnsByName['notes']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get date =>
-      columnsByName['date']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get dataPath =>
-      columnsByName['data_path']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get isAssessment =>
-      columnsByName['is_assessment']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get sessionType =>
-      columnsByName['session_type']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get duration =>
-      columnsByName['duration']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterSets =>
-      columnsByName['repeater_sets']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterReps =>
-      columnsByName['repeater_reps']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterWorkTime =>
-      columnsByName['repeater_work_time']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterRestTime =>
-      columnsByName['repeater_rest_time']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterSetRest =>
-      columnsByName['repeater_set_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterSplitHand =>
-      columnsByName['repeater_split_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-class Shape31 extends i0.VersionedTable {
-  Shape31({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get type =>
-      columnsByName['type']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get rightValue =>
-      columnsByName['right_value']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get leftValue =>
-      columnsByName['left_value']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<String> get sessionId =>
-      columnsByName['session_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-class Shape32 extends i0.VersionedTable {
-  Shape32({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get sets =>
-      columnsByName['sets']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get reps =>
-      columnsByName['reps']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get worktime =>
-      columnsByName['worktime']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get resttime =>
-      columnsByName['resttime']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get setRest =>
-      columnsByName['set_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get targetWeigthRight =>
-      columnsByName['target_weigth_right']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get targetWeigthLeft =>
-      columnsByName['target_weigth_left']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get splitHand =>
-      columnsByName['split_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-class Shape33 extends i0.VersionedTable {
-  Shape33({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get name =>
-      columnsByName['name']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get repeaterId =>
-      columnsByName['repeater_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get isBuiltin =>
-      columnsByName['is_builtin']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isFavorite =>
-      columnsByName['is_favorite']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isAssessment =>
-      columnsByName['is_assessment']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-class Shape34 extends i0.VersionedTable {
-  Shape34({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get isRest =>
-      columnsByName['is_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get rightHand =>
-      columnsByName['right_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get duration =>
-      columnsByName['duration']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get trainingId =>
-      columnsByName['training_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<double> get targetWeight =>
-      columnsByName['target_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-class Shape35 extends i0.VersionedTable {
-  Shape35({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<double> get averageWeight =>
-      columnsByName['average_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<String> get sessionId =>
-      columnsByName['session_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get isRest =>
-      columnsByName['is_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get rightHand =>
-      columnsByName['right_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get duration =>
-      columnsByName['duration']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get targetWeight =>
-      columnsByName['target_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-class Shape36 extends i0.VersionedTable {
-  Shape36({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get name =>
-      columnsByName['name']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get tare =>
-      columnsByName['tare']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get coef =>
-      columnsByName['coef']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-class Shape37 extends i0.VersionedTable {
-  Shape37({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get builtinTrainingId =>
-      columnsByName['builtin_training_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<double> get customWeightRight =>
-      columnsByName['custom_weight_right']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get customWeightLeft =>
-      columnsByName['custom_weight_left']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-}
-
-class Shape38 extends i0.VersionedTable {
-  Shape38({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get builtinTrainingId =>
-      columnsByName['builtin_training_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get dirty =>
-      columnsByName['dirty']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get deletedAt =>
-      columnsByName['deleted_at']! as i1.GeneratedColumn<int>;
-}
-
-final class Schema7 extends i0.VersionedSchema {
-  Schema7({required super.database}) : super(version: 7);
-  @override
-  late final List<i1.DatabaseSchemaEntity> entities = [
-    sessions,
-    assessments,
-    repeaters,
-    trainings,
-    repTemplates,
-    repDatas,
-    sensorConfigs,
-    builtinTrainingWeights,
-    pinnedBuiltinTrainings,
-    users,
-  ];
-  late final Shape39 sessions = Shape39(
-    source: i0.VersionedTable(
-      entityName: 'sessions',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_1,
-        _column_2,
-        _column_3,
-        _column_4,
-        _column_5,
-        _column_6,
-        _column_7,
-        _column_8,
-        _column_9,
-        _column_10,
-        _column_11,
-        _column_12,
-        _column_13,
-        _column_14,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape40 assessments = Shape40(
-    source: i0.VersionedTable(
-      entityName: 'assessments',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(session_id)REFERENCES sessions(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_18,
-        _column_19,
-        _column_20,
-        _column_61,
-        _column_22,
-        _column_14,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape41 repeaters = Shape41(
-    source: i0.VersionedTable(
-      entityName: 'repeaters',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_23,
-        _column_24,
-        _column_25,
-        _column_26,
-        _column_27,
-        _column_28,
-        _column_29,
-        _column_30,
-        _column_31,
-        _column_14,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape42 trainings = Shape42(
-    source: i0.VersionedTable(
-      entityName: 'trainings',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(repeater_id)REFERENCES repeaters(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_1,
-        _column_62,
-        _column_33,
-        _column_34,
-        _column_5,
-        _column_14,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape43 repTemplates = Shape43(
-    source: i0.VersionedTable(
-      entityName: 'rep_templates',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(training_id)REFERENCES trainings(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_35,
-        _column_36,
-        _column_37,
-        _column_63,
-        _column_39,
-        _column_40,
-        _column_31,
-        _column_14,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape44 repDatas = Shape44(
-    source: i0.VersionedTable(
-      entityName: 'rep_datas',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(session_id)REFERENCES sessions(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_41,
-        _column_61,
-        _column_35,
-        _column_36,
-        _column_37,
-        _column_39,
-        _column_40,
-        _column_31,
-        _column_14,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape45 sensorConfigs = Shape45(
-    source: i0.VersionedTable(
-      entityName: 'sensor_configs',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_1,
-        _column_40,
-        _column_42,
-        _column_43,
-        _column_14,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape46 builtinTrainingWeights = Shape46(
-    source: i0.VersionedTable(
-      entityName: 'builtin_training_weights',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [_column_48, _column_64, _column_45, _column_46, _column_14],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape47 pinnedBuiltinTrainings = Shape47(
-    source: i0.VersionedTable(
-      entityName: 'pinned_builtin_trainings',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(builtin_training_id)'],
-      columns: [_column_64, _column_14],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape9 users = Shape9(
-    source: i0.VersionedTable(
-      entityName: 'users',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_49,
-        _column_50,
-        _column_51,
-        _column_52,
-        _column_53,
-        _column_54,
-        _column_55,
-        _column_56,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-}
-
-class Shape39 extends i0.VersionedTable {
-  Shape39({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get name =>
-      columnsByName['name']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get notes =>
-      columnsByName['notes']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get date =>
-      columnsByName['date']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get dataPath =>
-      columnsByName['data_path']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get isAssessment =>
-      columnsByName['is_assessment']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get sessionType =>
-      columnsByName['session_type']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get duration =>
-      columnsByName['duration']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterSets =>
-      columnsByName['repeater_sets']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterReps =>
-      columnsByName['repeater_reps']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterWorkTime =>
-      columnsByName['repeater_work_time']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterRestTime =>
-      columnsByName['repeater_rest_time']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterSetRest =>
-      columnsByName['repeater_set_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get repeaterSplitHand =>
-      columnsByName['repeater_split_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-}
-
-class Shape40 extends i0.VersionedTable {
-  Shape40({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get type =>
-      columnsByName['type']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get rightValue =>
-      columnsByName['right_value']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get leftValue =>
-      columnsByName['left_value']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<String> get sessionId =>
-      columnsByName['session_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-}
-
-class Shape41 extends i0.VersionedTable {
-  Shape41({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get sets =>
-      columnsByName['sets']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get reps =>
-      columnsByName['reps']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get worktime =>
-      columnsByName['worktime']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get resttime =>
-      columnsByName['resttime']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get setRest =>
-      columnsByName['set_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get targetWeigthRight =>
-      columnsByName['target_weigth_right']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get targetWeigthLeft =>
-      columnsByName['target_weigth_left']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get splitHand =>
-      columnsByName['split_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-}
-
-class Shape42 extends i0.VersionedTable {
-  Shape42({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get name =>
-      columnsByName['name']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get repeaterId =>
-      columnsByName['repeater_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get isBuiltin =>
-      columnsByName['is_builtin']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isFavorite =>
-      columnsByName['is_favorite']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get isAssessment =>
-      columnsByName['is_assessment']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-}
-
-class Shape43 extends i0.VersionedTable {
-  Shape43({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get isRest =>
-      columnsByName['is_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get rightHand =>
-      columnsByName['right_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get duration =>
-      columnsByName['duration']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<String> get trainingId =>
-      columnsByName['training_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<double> get targetWeight =>
-      columnsByName['target_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-}
-
-class Shape44 extends i0.VersionedTable {
-  Shape44({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<double> get averageWeight =>
-      columnsByName['average_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<String> get sessionId =>
-      columnsByName['session_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get isRest =>
-      columnsByName['is_rest']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get rightHand =>
-      columnsByName['right_hand']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get duration =>
-      columnsByName['duration']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get targetWeight =>
-      columnsByName['target_weight']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get gripPosition =>
-      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-}
-
-class Shape45 extends i0.VersionedTable {
-  Shape45({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get name =>
-      columnsByName['name']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get index =>
-      columnsByName['index']! as i1.GeneratedColumn<int>;
-  i1.GeneratedColumn<double> get tare =>
-      columnsByName['tare']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get coef =>
-      columnsByName['coef']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-}
-
-class Shape46 extends i0.VersionedTable {
-  Shape46({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get id =>
-      columnsByName['id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<String> get builtinTrainingId =>
-      columnsByName['builtin_training_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<double> get customWeightRight =>
-      columnsByName['custom_weight_right']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<double> get customWeightLeft =>
-      columnsByName['custom_weight_left']! as i1.GeneratedColumn<double>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-}
-
-class Shape47 extends i0.VersionedTable {
-  Shape47({required super.source, required super.alias}) : super.aliased();
-  i1.GeneratedColumn<String> get builtinTrainingId =>
-      columnsByName['builtin_training_id']! as i1.GeneratedColumn<String>;
-  i1.GeneratedColumn<int> get updatedAt =>
-      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
-}
-
-final class Schema9 extends i0.VersionedSchema {
-  Schema9({required super.database}) : super(version: 9);
-  @override
-  late final List<i1.DatabaseSchemaEntity> entities = [
-    sessions,
-    assessments,
-    trainings,
-    trainingItems,
-    repDatas,
-    sensorConfigs,
-    builtinTrainingWeights,
-    pinnedBuiltinTrainings,
-    users,
-  ];
-  late final Shape39 sessions = Shape39(
-    source: i0.VersionedTable(
-      entityName: 'sessions',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_1,
-        _column_2,
-        _column_3,
-        _column_4,
-        _column_5,
-        _column_6,
-        _column_7,
-        _column_8,
-        _column_9,
-        _column_10,
-        _column_11,
-        _column_12,
-        _column_13,
-        _column_14,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape40 assessments = Shape40(
-    source: i0.VersionedTable(
-      entityName: 'assessments',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(session_id)REFERENCES sessions(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_18,
-        _column_19,
-        _column_20,
-        _column_61,
-        _column_22,
-        _column_14,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape48 trainings = Shape48(
-    source: i0.VersionedTable(
-      entityName: 'trainings',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [_column_48, _column_65, _column_66, _column_34, _column_14],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape49 trainingItems = Shape49(
-    source: i0.VersionedTable(
-      entityName: 'training_items',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(training_id)REFERENCES trainings(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_63,
-        _column_67,
-        _column_68,
-        _column_69,
-        _column_70,
-        _column_71,
-        _column_72,
-        _column_73,
-        _column_74,
-        _column_75,
-        _column_76,
-        _column_77,
-        _column_78,
-        _column_79,
-        _column_80,
-        _column_81,
-        _column_82,
-        _column_83,
-        _column_84,
-        _column_14,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape44 repDatas = Shape44(
-    source: i0.VersionedTable(
-      entityName: 'rep_datas',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: [
-        'PRIMARY KEY(id)',
-        'FOREIGN KEY(session_id)REFERENCES sessions(id)ON DELETE CASCADE',
-      ],
-      columns: [
-        _column_48,
-        _column_41,
-        _column_61,
-        _column_35,
-        _column_36,
-        _column_37,
-        _column_39,
-        _column_40,
-        _column_31,
-        _column_14,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape45 sensorConfigs = Shape45(
-    source: i0.VersionedTable(
-      entityName: 'sensor_configs',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_1,
-        _column_40,
-        _column_42,
-        _column_43,
-        _column_14,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape46 builtinTrainingWeights = Shape46(
-    source: i0.VersionedTable(
-      entityName: 'builtin_training_weights',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [_column_48, _column_64, _column_45, _column_46, _column_14],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape47 pinnedBuiltinTrainings = Shape47(
-    source: i0.VersionedTable(
-      entityName: 'pinned_builtin_trainings',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(builtin_training_id)'],
-      columns: [_column_64, _column_14],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-  late final Shape9 users = Shape9(
-    source: i0.VersionedTable(
-      entityName: 'users',
-      withoutRowId: false,
-      isStrict: false,
-      tableConstraints: ['PRIMARY KEY(id)'],
-      columns: [
-        _column_48,
-        _column_49,
-        _column_50,
-        _column_51,
-        _column_52,
-        _column_53,
-        _column_54,
-        _column_55,
-        _column_56,
-      ],
-      attachedDatabase: database,
-    ),
-    alias: null,
-  );
-}
-
-class Shape48 extends i0.VersionedTable {
-  Shape48({required super.source, required super.alias}) : super.aliased();
   i1.GeneratedColumn<String> get id =>
       columnsByName['id']! as i1.GeneratedColumn<String>;
   i1.GeneratedColumn<String> get title =>
@@ -3466,7 +444,7 @@ class Shape48 extends i0.VersionedTable {
       columnsByName['updated_at']! as i1.GeneratedColumn<int>;
 }
 
-i1.GeneratedColumn<String> _column_65(String aliasedName) =>
+i1.GeneratedColumn<String> _column_20(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'title',
       aliasedName,
@@ -3474,7 +452,7 @@ i1.GeneratedColumn<String> _column_65(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NOT NULL',
     );
-i1.GeneratedColumn<String> _column_66(String aliasedName) =>
+i1.GeneratedColumn<String> _column_21(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'description',
       aliasedName,
@@ -3482,9 +460,18 @@ i1.GeneratedColumn<String> _column_66(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NULL',
     );
+i1.GeneratedColumn<int> _column_22(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'is_favorite',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_favorite IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
 
-class Shape49 extends i0.VersionedTable {
-  Shape49({required super.source, required super.alias}) : super.aliased();
+class Shape3 extends i0.VersionedTable {
+  Shape3({required super.source, required super.alias}) : super.aliased();
   i1.GeneratedColumn<String> get id =>
       columnsByName['id']! as i1.GeneratedColumn<String>;
   i1.GeneratedColumn<String> get trainingId =>
@@ -3529,7 +516,15 @@ class Shape49 extends i0.VersionedTable {
       columnsByName['updated_at']! as i1.GeneratedColumn<int>;
 }
 
-i1.GeneratedColumn<String> _column_67(String aliasedName) =>
+i1.GeneratedColumn<String> _column_23(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'training_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_24(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'parent_id',
       aliasedName,
@@ -3537,7 +532,7 @@ i1.GeneratedColumn<String> _column_67(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<String> _column_68(String aliasedName) =>
+i1.GeneratedColumn<String> _column_25(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'type',
       aliasedName,
@@ -3545,7 +540,7 @@ i1.GeneratedColumn<String> _column_68(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NOT NULL',
     );
-i1.GeneratedColumn<int> _column_69(String aliasedName) =>
+i1.GeneratedColumn<int> _column_26(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'position',
       aliasedName,
@@ -3554,7 +549,7 @@ i1.GeneratedColumn<int> _column_69(String aliasedName) =>
       $customConstraints: 'NOT NULL DEFAULT 0',
       defaultValue: const i1.CustomExpression('0'),
     );
-i1.GeneratedColumn<int> _column_70(String aliasedName) =>
+i1.GeneratedColumn<int> _column_27(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'cycles',
       aliasedName,
@@ -3562,7 +557,7 @@ i1.GeneratedColumn<int> _column_70(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<int> _column_71(String aliasedName) =>
+i1.GeneratedColumn<int> _column_28(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'cycle_rest_seconds',
       aliasedName,
@@ -3570,7 +565,7 @@ i1.GeneratedColumn<int> _column_71(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<int> _column_72(String aliasedName) =>
+i1.GeneratedColumn<int> _column_29(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'reps',
       aliasedName,
@@ -3578,7 +573,7 @@ i1.GeneratedColumn<int> _column_72(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<int> _column_73(String aliasedName) =>
+i1.GeneratedColumn<int> _column_30(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'duration',
       aliasedName,
@@ -3586,7 +581,7 @@ i1.GeneratedColumn<int> _column_73(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<int> _column_74(String aliasedName) =>
+i1.GeneratedColumn<int> _column_31(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'rest_seconds',
       aliasedName,
@@ -3594,7 +589,7 @@ i1.GeneratedColumn<int> _column_74(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<int> _column_75(String aliasedName) =>
+i1.GeneratedColumn<int> _column_32(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'worktime_seconds',
       aliasedName,
@@ -3602,7 +597,7 @@ i1.GeneratedColumn<int> _column_75(String aliasedName) =>
       type: i1.DriftSqlType.int,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<String> _column_76(String aliasedName) =>
+i1.GeneratedColumn<String> _column_33(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'hand',
       aliasedName,
@@ -3610,7 +605,7 @@ i1.GeneratedColumn<String> _column_76(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<String> _column_77(String aliasedName) =>
+i1.GeneratedColumn<String> _column_34(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'loads_json',
       aliasedName,
@@ -3618,7 +613,7 @@ i1.GeneratedColumn<String> _column_77(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<String> _column_78(String aliasedName) =>
+i1.GeneratedColumn<String> _column_35(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'left_loads_json',
       aliasedName,
@@ -3626,7 +621,7 @@ i1.GeneratedColumn<String> _column_78(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<String> _column_79(String aliasedName) =>
+i1.GeneratedColumn<String> _column_36(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'hand_positions_json',
       aliasedName,
@@ -3634,7 +629,7 @@ i1.GeneratedColumn<String> _column_79(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<String> _column_80(String aliasedName) =>
+i1.GeneratedColumn<String> _column_37(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'edge_sizes_mm_json',
       aliasedName,
@@ -3642,7 +637,7 @@ i1.GeneratedColumn<String> _column_80(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<int> _column_81(String aliasedName) =>
+i1.GeneratedColumn<int> _column_38(String aliasedName) =>
     i1.GeneratedColumn<int>(
       'load_is_max',
       aliasedName,
@@ -3651,7 +646,7 @@ i1.GeneratedColumn<int> _column_81(String aliasedName) =>
       $customConstraints: 'NOT NULL DEFAULT 0 CHECK (load_is_max IN (0, 1))',
       defaultValue: const i1.CustomExpression('0'),
     );
-i1.GeneratedColumn<String> _column_82(String aliasedName) =>
+i1.GeneratedColumn<String> _column_39(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'free_text',
       aliasedName,
@@ -3659,7 +654,7 @@ i1.GeneratedColumn<String> _column_82(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<String> _column_83(String aliasedName) =>
+i1.GeneratedColumn<String> _column_40(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'exercise_id',
       aliasedName,
@@ -3667,7 +662,7 @@ i1.GeneratedColumn<String> _column_83(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NULL',
     );
-i1.GeneratedColumn<String> _column_84(String aliasedName) =>
+i1.GeneratedColumn<String> _column_41(String aliasedName) =>
     i1.GeneratedColumn<String>(
       'group_title',
       aliasedName,
@@ -3675,14 +670,267 @@ i1.GeneratedColumn<String> _column_84(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NULL',
     );
+
+class Shape4 extends i0.VersionedTable {
+  Shape4({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<double> get averageWeight =>
+      columnsByName['average_weight']! as i1.GeneratedColumn<double>;
+  i1.GeneratedColumn<String> get sessionId =>
+      columnsByName['session_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get isRest =>
+      columnsByName['is_rest']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get rightHand =>
+      columnsByName['right_hand']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get duration =>
+      columnsByName['duration']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<double> get targetWeight =>
+      columnsByName['target_weight']! as i1.GeneratedColumn<double>;
+  i1.GeneratedColumn<int> get index =>
+      columnsByName['index']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get gripPosition =>
+      columnsByName['grip_position']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<double> _column_42(String aliasedName) =>
+    i1.GeneratedColumn<double>(
+      'average_weight',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.double,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_43(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'is_rest',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL CHECK (is_rest IN (0, 1))',
+    );
+i1.GeneratedColumn<int> _column_44(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'right_hand',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL CHECK (right_hand IN (0, 1))',
+    );
+i1.GeneratedColumn<int> _column_45(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'duration',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<double> _column_46(String aliasedName) =>
+    i1.GeneratedColumn<double>(
+      'target_weight',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.double,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_47(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'index',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_48(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'grip_position',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0',
+      defaultValue: const i1.CustomExpression('0'),
+    );
+
+class Shape5 extends i0.VersionedTable {
+  Shape5({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get name =>
+      columnsByName['name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get index =>
+      columnsByName['index']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<double> get tare =>
+      columnsByName['tare']! as i1.GeneratedColumn<double>;
+  i1.GeneratedColumn<double> get coef =>
+      columnsByName['coef']! as i1.GeneratedColumn<double>;
+  i1.GeneratedColumn<int> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<double> _column_49(String aliasedName) =>
+    i1.GeneratedColumn<double>(
+      'tare',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.double,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<double> _column_50(String aliasedName) =>
+    i1.GeneratedColumn<double>(
+      'coef',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.double,
+      $customConstraints: 'NOT NULL',
+    );
+
+class Shape6 extends i0.VersionedTable {
+  Shape6({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get builtinTrainingId =>
+      columnsByName['builtin_training_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<double> get customWeightRight =>
+      columnsByName['custom_weight_right']! as i1.GeneratedColumn<double>;
+  i1.GeneratedColumn<double> get customWeightLeft =>
+      columnsByName['custom_weight_left']! as i1.GeneratedColumn<double>;
+  i1.GeneratedColumn<int> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<String> _column_51(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'builtin_training_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<double> _column_52(String aliasedName) =>
+    i1.GeneratedColumn<double>(
+      'custom_weight_right',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.double,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<double> _column_53(String aliasedName) =>
+    i1.GeneratedColumn<double>(
+      'custom_weight_left',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.double,
+      $customConstraints: 'NULL',
+    );
+
+class Shape7 extends i0.VersionedTable {
+  Shape7({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get builtinTrainingId =>
+      columnsByName['builtin_training_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get updatedAt =>
+      columnsByName['updated_at']! as i1.GeneratedColumn<int>;
+}
+
+class Shape8 extends i0.VersionedTable {
+  Shape8({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get email =>
+      columnsByName['email']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get firstname =>
+      columnsByName['firstname']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get lastname =>
+      columnsByName['lastname']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<int> get emailVerified =>
+      columnsByName['email_verified']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get isAdmin =>
+      columnsByName['is_admin']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get isCoach =>
+      columnsByName['is_coach']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get coachValidated =>
+      columnsByName['coach_validated']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<int> get createdAt =>
+      columnsByName['created_at']! as i1.GeneratedColumn<int>;
+}
+
+i1.GeneratedColumn<String> _column_54(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'email',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_55(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'firstname',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_56(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'lastname',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<int> _column_57(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'email_verified',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (email_verified IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
+i1.GeneratedColumn<int> _column_58(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'is_admin',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_admin IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
+i1.GeneratedColumn<int> _column_59(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'is_coach',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0 CHECK (is_coach IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
+i1.GeneratedColumn<int> _column_60(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'coach_validated',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints:
+          'NOT NULL DEFAULT 0 CHECK (coach_validated IN (0, 1))',
+      defaultValue: const i1.CustomExpression('0'),
+    );
+i1.GeneratedColumn<int> _column_61(
+  String aliasedName,
+) => i1.GeneratedColumn<int>(
+  'created_at',
+  aliasedName,
+  false,
+  type: i1.DriftSqlType.int,
+  $customConstraints:
+      'NOT NULL DEFAULT (CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER))',
+  defaultValue: const i1.CustomExpression(
+    'CAST(strftime(\'%s\', CURRENT_TIMESTAMP) AS INTEGER)',
+  ),
+);
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
-  required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
-  required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
-  required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
-  required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
-  required Future<void> Function(i1.Migrator m, Schema7 schema) from6To7,
-  required Future<void> Function(i1.Migrator m, Schema9 schema) from7To9,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -3691,36 +939,6 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from1To2(migrator, schema);
         return 2;
-      case 2:
-        final schema = Schema3(database: database);
-        final migrator = i1.Migrator(database, schema);
-        await from2To3(migrator, schema);
-        return 3;
-      case 3:
-        final schema = Schema4(database: database);
-        final migrator = i1.Migrator(database, schema);
-        await from3To4(migrator, schema);
-        return 4;
-      case 4:
-        final schema = Schema5(database: database);
-        final migrator = i1.Migrator(database, schema);
-        await from4To5(migrator, schema);
-        return 5;
-      case 5:
-        final schema = Schema6(database: database);
-        final migrator = i1.Migrator(database, schema);
-        await from5To6(migrator, schema);
-        return 6;
-      case 6:
-        final schema = Schema7(database: database);
-        final migrator = i1.Migrator(database, schema);
-        await from6To7(migrator, schema);
-        return 7;
-      case 7:
-        final schema = Schema9(database: database);
-        final migrator = i1.Migrator(database, schema);
-        await from7To9(migrator, schema);
-        return 9;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -3729,20 +947,6 @@ i0.MigrationStepWithVersion migrationSteps({
 
 i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
-  required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
-  required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
-  required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
-  required Future<void> Function(i1.Migrator m, Schema6 schema) from5To6,
-  required Future<void> Function(i1.Migrator m, Schema7 schema) from6To7,
-  required Future<void> Function(i1.Migrator m, Schema9 schema) from7To9,
 }) => i0.VersionedSchema.stepByStepHelper(
-  step: migrationSteps(
-    from1To2: from1To2,
-    from2To3: from2To3,
-    from3To4: from3To4,
-    from4To5: from4To5,
-    from5To6: from5To6,
-    from6To7: from6To7,
-    from7To9: from7To9,
-  ),
+  step: migrationSteps(from1To2: from1To2),
 );

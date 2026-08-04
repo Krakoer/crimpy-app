@@ -18,18 +18,12 @@
           {
             "name": "id",
             "getter_name": "id",
-            "moor_type": "int",
+            "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
-            "defaultConstraints": "PRIMARY KEY AUTOINCREMENT",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "PRIMARY KEY AUTOINCREMENT"
-            },
             "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": [
-              "auto-increment"
-            ]
+            "default_client_dart": "() => Uuid().v4()",
+            "dsl_features": []
           },
           {
             "name": "name",
@@ -178,45 +172,14 @@
             "default_dart": "const CustomExpression('CAST(strftime(\\'%s\\', CURRENT_TIMESTAMP) AS INTEGER)')",
             "default_client_dart": null,
             "dsl_features": []
-          },
-          {
-            "name": "deleted_at",
-            "getter_name": "deletedAt",
-            "moor_type": "dateTime",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "dirty",
-            "getter_name": "dirty",
-            "moor_type": "bool",
-            "nullable": false,
-            "customConstraints": null,
-            "defaultConstraints": "CHECK (\"dirty\" IN (0, 1))",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "CHECK (\"dirty\" IN (0, 1))"
-            },
-            "default_dart": "const CustomExpression('0')",
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "remote_id",
-            "getter_name": "remoteId",
-            "moor_type": "string",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": "() => const Uuid().v4()",
-            "dsl_features": []
           }
         ],
         "is_virtual": false,
         "without_rowid": false,
-        "constraints": []
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
       }
     },
     {
@@ -232,18 +195,12 @@
           {
             "name": "id",
             "getter_name": "id",
-            "moor_type": "int",
+            "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
-            "defaultConstraints": "PRIMARY KEY AUTOINCREMENT",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "PRIMARY KEY AUTOINCREMENT"
-            },
             "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": [
-              "auto-increment"
-            ]
+            "default_client_dart": "() => Uuid().v4()",
+            "dsl_features": []
           },
           {
             "name": "type",
@@ -278,28 +235,12 @@
           {
             "name": "session_id",
             "getter_name": "sessionId",
-            "moor_type": "int",
+            "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
-            "defaultConstraints": "REFERENCES sessions (id)",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "REFERENCES sessions (id)"
-            },
             "default_dart": null,
             "default_client_dart": null,
-            "dsl_features": [
-              {
-                "foreign_key": {
-                  "to": {
-                    "table": "sessions",
-                    "column": "id"
-                  },
-                  "initially_deferred": false,
-                  "on_update": null,
-                  "on_delete": null
-                }
-              }
-            ]
+            "dsl_features": []
           },
           {
             "name": "grip_position",
@@ -320,220 +261,21 @@
             "default_dart": "const CustomExpression('CAST(strftime(\\'%s\\', CURRENT_TIMESTAMP) AS INTEGER)')",
             "default_client_dart": null,
             "dsl_features": []
-          },
-          {
-            "name": "deleted_at",
-            "getter_name": "deletedAt",
-            "moor_type": "dateTime",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "dirty",
-            "getter_name": "dirty",
-            "moor_type": "bool",
-            "nullable": false,
-            "customConstraints": null,
-            "defaultConstraints": "CHECK (\"dirty\" IN (0, 1))",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "CHECK (\"dirty\" IN (0, 1))"
-            },
-            "default_dart": "const CustomExpression('0')",
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "remote_id",
-            "getter_name": "remoteId",
-            "moor_type": "string",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": "() => const Uuid().v4()",
-            "dsl_features": []
           }
         ],
         "is_virtual": false,
         "without_rowid": false,
-        "constraints": []
+        "constraints": [
+          "FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE"
+        ],
+        "explicit_pk": [
+          "id"
+        ]
       }
     },
     {
       "id": 2,
       "references": [],
-      "type": "table",
-      "data": {
-        "name": "repeaters",
-        "was_declared_in_moor": false,
-        "columns": [
-          {
-            "name": "id",
-            "getter_name": "id",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": null,
-            "defaultConstraints": "PRIMARY KEY AUTOINCREMENT",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "PRIMARY KEY AUTOINCREMENT"
-            },
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": [
-              "auto-increment"
-            ]
-          },
-          {
-            "name": "sets",
-            "getter_name": "sets",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "reps",
-            "getter_name": "reps",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "worktime",
-            "getter_name": "worktime",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "resttime",
-            "getter_name": "resttime",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "set_rest",
-            "getter_name": "setRest",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "target_weigth_right",
-            "getter_name": "targetWeigthRight",
-            "moor_type": "double",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "target_weigth_left",
-            "getter_name": "targetWeigthLeft",
-            "moor_type": "double",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "split_hand",
-            "getter_name": "splitHand",
-            "moor_type": "bool",
-            "nullable": false,
-            "customConstraints": null,
-            "defaultConstraints": "CHECK (\"split_hand\" IN (0, 1))",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "CHECK (\"split_hand\" IN (0, 1))"
-            },
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "grip_position",
-            "getter_name": "gripPosition",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": "const CustomExpression('0')",
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "updated_at",
-            "getter_name": "updatedAt",
-            "moor_type": "dateTime",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": "const CustomExpression('CAST(strftime(\\'%s\\', CURRENT_TIMESTAMP) AS INTEGER)')",
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "deleted_at",
-            "getter_name": "deletedAt",
-            "moor_type": "dateTime",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "dirty",
-            "getter_name": "dirty",
-            "moor_type": "bool",
-            "nullable": false,
-            "customConstraints": null,
-            "defaultConstraints": "CHECK (\"dirty\" IN (0, 1))",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "CHECK (\"dirty\" IN (0, 1))"
-            },
-            "default_dart": "const CustomExpression('0')",
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "remote_id",
-            "getter_name": "remoteId",
-            "moor_type": "string",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": "() => const Uuid().v4()",
-            "dsl_features": []
-          }
-        ],
-        "is_virtual": false,
-        "without_rowid": false,
-        "constraints": []
-      }
-    },
-    {
-      "id": 3,
-      "references": [
-        2
-      ],
       "type": "table",
       "data": {
         "name": "trainings",
@@ -542,22 +284,16 @@
           {
             "name": "id",
             "getter_name": "id",
-            "moor_type": "int",
+            "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
-            "defaultConstraints": "PRIMARY KEY AUTOINCREMENT",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "PRIMARY KEY AUTOINCREMENT"
-            },
             "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": [
-              "auto-increment"
-            ]
+            "default_client_dart": "() => Uuid().v4()",
+            "dsl_features": []
           },
           {
-            "name": "name",
-            "getter_name": "name",
+            "name": "title",
+            "getter_name": "title",
             "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
@@ -566,42 +302,12 @@
             "dsl_features": []
           },
           {
-            "name": "repeater_id",
-            "getter_name": "repeaterId",
-            "moor_type": "int",
+            "name": "description",
+            "getter_name": "description",
+            "moor_type": "string",
             "nullable": true,
             "customConstraints": null,
-            "defaultConstraints": "REFERENCES repeaters (id) ON DELETE CASCADE",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "REFERENCES repeaters (id) ON DELETE CASCADE"
-            },
             "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": [
-              {
-                "foreign_key": {
-                  "to": {
-                    "table": "repeaters",
-                    "column": "id"
-                  },
-                  "initially_deferred": false,
-                  "on_update": null,
-                  "on_delete": "cascade"
-                }
-              }
-            ]
-          },
-          {
-            "name": "is_builtin",
-            "getter_name": "isBuiltin",
-            "moor_type": "bool",
-            "nullable": false,
-            "customConstraints": null,
-            "defaultConstraints": "CHECK (\"is_builtin\" IN (0, 1))",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "CHECK (\"is_builtin\" IN (0, 1))"
-            },
-            "default_dart": "const CustomExpression('0')",
             "default_client_dart": null,
             "dsl_features": []
           },
@@ -620,20 +326,6 @@
             "dsl_features": []
           },
           {
-            "name": "is_assessment",
-            "getter_name": "isAssessment",
-            "moor_type": "bool",
-            "nullable": false,
-            "customConstraints": null,
-            "defaultConstraints": "CHECK (\"is_assessment\" IN (0, 1))",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "CHECK (\"is_assessment\" IN (0, 1))"
-            },
-            "default_dart": "const CustomExpression('0')",
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
             "name": "updated_at",
             "getter_name": "updatedAt",
             "moor_type": "dateTime",
@@ -642,11 +334,50 @@
             "default_dart": "const CustomExpression('CAST(strftime(\\'%s\\', CURRENT_TIMESTAMP) AS INTEGER)')",
             "default_client_dart": null,
             "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "references": [
+        2
+      ],
+      "type": "table",
+      "data": {
+        "name": "training_items",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": "() => Uuid().v4()",
+            "dsl_features": []
           },
           {
-            "name": "deleted_at",
-            "getter_name": "deletedAt",
-            "moor_type": "dateTime",
+            "name": "training_id",
+            "getter_name": "trainingId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "parent_id",
+            "getter_name": "parentId",
+            "moor_type": "string",
             "nullable": true,
             "customConstraints": null,
             "default_dart": null,
@@ -654,85 +385,51 @@
             "dsl_features": []
           },
           {
-            "name": "dirty",
-            "getter_name": "dirty",
-            "moor_type": "bool",
+            "name": "type",
+            "getter_name": "type",
+            "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
-            "defaultConstraints": "CHECK (\"dirty\" IN (0, 1))",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "CHECK (\"dirty\" IN (0, 1))"
-            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "position",
+            "getter_name": "position",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
             "default_dart": "const CustomExpression('0')",
             "default_client_dart": null,
             "dsl_features": []
           },
           {
-            "name": "remote_id",
-            "getter_name": "remoteId",
-            "moor_type": "string",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": "() => const Uuid().v4()",
-            "dsl_features": []
-          }
-        ],
-        "is_virtual": false,
-        "without_rowid": false,
-        "constraints": []
-      }
-    },
-    {
-      "id": 4,
-      "references": [
-        3
-      ],
-      "type": "table",
-      "data": {
-        "name": "rep_templates",
-        "was_declared_in_moor": false,
-        "columns": [
-          {
-            "name": "id",
-            "getter_name": "id",
+            "name": "cycles",
+            "getter_name": "cycles",
             "moor_type": "int",
-            "nullable": false,
+            "nullable": true,
             "customConstraints": null,
-            "defaultConstraints": "PRIMARY KEY AUTOINCREMENT",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "PRIMARY KEY AUTOINCREMENT"
-            },
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": [
-              "auto-increment"
-            ]
-          },
-          {
-            "name": "is_rest",
-            "getter_name": "isRest",
-            "moor_type": "bool",
-            "nullable": false,
-            "customConstraints": null,
-            "defaultConstraints": "CHECK (\"is_rest\" IN (0, 1))",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "CHECK (\"is_rest\" IN (0, 1))"
-            },
             "default_dart": null,
             "default_client_dart": null,
             "dsl_features": []
           },
           {
-            "name": "right_hand",
-            "getter_name": "rightHand",
-            "moor_type": "bool",
-            "nullable": false,
+            "name": "cycle_rest_seconds",
+            "getter_name": "cycleRestSeconds",
+            "moor_type": "int",
+            "nullable": true,
             "customConstraints": null,
-            "defaultConstraints": "CHECK (\"right_hand\" IN (0, 1))",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "CHECK (\"right_hand\" IN (0, 1))"
-            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "reps",
+            "getter_name": "reps",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": null,
             "default_dart": null,
             "default_client_dart": null,
             "dsl_features": []
@@ -741,65 +438,123 @@
             "name": "duration",
             "getter_name": "duration",
             "moor_type": "int",
-            "nullable": false,
+            "nullable": true,
             "customConstraints": null,
             "default_dart": null,
             "default_client_dart": null,
             "dsl_features": []
           },
           {
-            "name": "training_id",
-            "getter_name": "trainingId",
+            "name": "rest_seconds",
+            "getter_name": "restSeconds",
             "moor_type": "int",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "worktime_seconds",
+            "getter_name": "worktimeSeconds",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "hand",
+            "getter_name": "hand",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "loads_json",
+            "getter_name": "loadsJson",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "left_loads_json",
+            "getter_name": "leftLoadsJson",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "hand_positions_json",
+            "getter_name": "handPositionsJson",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "edge_sizes_mm_json",
+            "getter_name": "edgeSizesMmJson",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "load_is_max",
+            "getter_name": "loadIsMax",
+            "moor_type": "bool",
             "nullable": false,
             "customConstraints": null,
-            "defaultConstraints": "REFERENCES trainings (id) ON DELETE CASCADE",
+            "defaultConstraints": "CHECK (\"load_is_max\" IN (0, 1))",
             "dialectAwareDefaultConstraints": {
-              "sqlite": "REFERENCES trainings (id) ON DELETE CASCADE"
+              "sqlite": "CHECK (\"load_is_max\" IN (0, 1))"
             },
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": [
-              {
-                "foreign_key": {
-                  "to": {
-                    "table": "trainings",
-                    "column": "id"
-                  },
-                  "initially_deferred": false,
-                  "on_update": null,
-                  "on_delete": "cascade"
-                }
-              }
-            ]
-          },
-          {
-            "name": "target_weight",
-            "getter_name": "targetWeight",
-            "moor_type": "double",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "index",
-            "getter_name": "index",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "grip_position",
-            "getter_name": "gripPosition",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": null,
             "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "free_text",
+            "getter_name": "freeText",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "exercise_id",
+            "getter_name": "exerciseId",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "group_title",
+            "getter_name": "groupTitle",
+            "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
             "default_client_dart": null,
             "dsl_features": []
           },
@@ -812,49 +567,20 @@
             "default_dart": "const CustomExpression('CAST(strftime(\\'%s\\', CURRENT_TIMESTAMP) AS INTEGER)')",
             "default_client_dart": null,
             "dsl_features": []
-          },
-          {
-            "name": "deleted_at",
-            "getter_name": "deletedAt",
-            "moor_type": "dateTime",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "dirty",
-            "getter_name": "dirty",
-            "moor_type": "bool",
-            "nullable": false,
-            "customConstraints": null,
-            "defaultConstraints": "CHECK (\"dirty\" IN (0, 1))",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "CHECK (\"dirty\" IN (0, 1))"
-            },
-            "default_dart": "const CustomExpression('0')",
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "remote_id",
-            "getter_name": "remoteId",
-            "moor_type": "string",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": "() => const Uuid().v4()",
-            "dsl_features": []
           }
         ],
         "is_virtual": false,
         "without_rowid": false,
-        "constraints": []
+        "constraints": [
+          "FOREIGN KEY (training_id) REFERENCES trainings(id) ON DELETE CASCADE"
+        ],
+        "explicit_pk": [
+          "id"
+        ]
       }
     },
     {
-      "id": 5,
+      "id": 4,
       "references": [
         0
       ],
@@ -866,18 +592,12 @@
           {
             "name": "id",
             "getter_name": "id",
-            "moor_type": "int",
+            "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
-            "defaultConstraints": "PRIMARY KEY AUTOINCREMENT",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "PRIMARY KEY AUTOINCREMENT"
-            },
             "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": [
-              "auto-increment"
-            ]
+            "default_client_dart": "() => Uuid().v4()",
+            "dsl_features": []
           },
           {
             "name": "average_weight",
@@ -892,28 +612,12 @@
           {
             "name": "session_id",
             "getter_name": "sessionId",
-            "moor_type": "int",
+            "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
-            "defaultConstraints": "REFERENCES sessions (id)",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "REFERENCES sessions (id)"
-            },
             "default_dart": null,
             "default_client_dart": null,
-            "dsl_features": [
-              {
-                "foreign_key": {
-                  "to": {
-                    "table": "sessions",
-                    "column": "id"
-                  },
-                  "initially_deferred": false,
-                  "on_update": null,
-                  "on_delete": null
-                }
-              }
-            ]
+            "dsl_features": []
           },
           {
             "name": "is_rest",
@@ -992,49 +696,20 @@
             "default_dart": "const CustomExpression('CAST(strftime(\\'%s\\', CURRENT_TIMESTAMP) AS INTEGER)')",
             "default_client_dart": null,
             "dsl_features": []
-          },
-          {
-            "name": "deleted_at",
-            "getter_name": "deletedAt",
-            "moor_type": "dateTime",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "dirty",
-            "getter_name": "dirty",
-            "moor_type": "bool",
-            "nullable": false,
-            "customConstraints": null,
-            "defaultConstraints": "CHECK (\"dirty\" IN (0, 1))",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "CHECK (\"dirty\" IN (0, 1))"
-            },
-            "default_dart": "const CustomExpression('0')",
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "remote_id",
-            "getter_name": "remoteId",
-            "moor_type": "string",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": "() => const Uuid().v4()",
-            "dsl_features": []
           }
         ],
         "is_virtual": false,
         "without_rowid": false,
-        "constraints": []
+        "constraints": [
+          "FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE"
+        ],
+        "explicit_pk": [
+          "id"
+        ]
       }
     },
     {
-      "id": 6,
+      "id": 5,
       "references": [],
       "type": "table",
       "data": {
@@ -1044,18 +719,12 @@
           {
             "name": "id",
             "getter_name": "id",
-            "moor_type": "int",
+            "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
-            "defaultConstraints": "PRIMARY KEY AUTOINCREMENT",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "PRIMARY KEY AUTOINCREMENT"
-            },
             "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": [
-              "auto-increment"
-            ]
+            "default_client_dart": "() => Uuid().v4()",
+            "dsl_features": []
           },
           {
             "name": "name",
@@ -1106,52 +775,19 @@
             "default_dart": "const CustomExpression('CAST(strftime(\\'%s\\', CURRENT_TIMESTAMP) AS INTEGER)')",
             "default_client_dart": null,
             "dsl_features": []
-          },
-          {
-            "name": "deleted_at",
-            "getter_name": "deletedAt",
-            "moor_type": "dateTime",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "dirty",
-            "getter_name": "dirty",
-            "moor_type": "bool",
-            "nullable": false,
-            "customConstraints": null,
-            "defaultConstraints": "CHECK (\"dirty\" IN (0, 1))",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "CHECK (\"dirty\" IN (0, 1))"
-            },
-            "default_dart": "const CustomExpression('0')",
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "remote_id",
-            "getter_name": "remoteId",
-            "moor_type": "string",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": "() => const Uuid().v4()",
-            "dsl_features": []
           }
         ],
         "is_virtual": false,
         "without_rowid": false,
-        "constraints": []
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
       }
     },
     {
-      "id": 7,
-      "references": [
-        3
-      ],
+      "id": 6,
+      "references": [],
       "type": "table",
       "data": {
         "name": "builtin_training_weights",
@@ -1160,44 +796,22 @@
           {
             "name": "id",
             "getter_name": "id",
-            "moor_type": "int",
+            "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
-            "defaultConstraints": "PRIMARY KEY AUTOINCREMENT",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "PRIMARY KEY AUTOINCREMENT"
-            },
             "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": [
-              "auto-increment"
-            ]
+            "default_client_dart": "() => Uuid().v4()",
+            "dsl_features": []
           },
           {
             "name": "builtin_training_id",
             "getter_name": "builtinTrainingId",
-            "moor_type": "int",
+            "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
-            "defaultConstraints": "REFERENCES trainings (id) ON DELETE CASCADE",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "REFERENCES trainings (id) ON DELETE CASCADE"
-            },
             "default_dart": null,
             "default_client_dart": null,
-            "dsl_features": [
-              {
-                "foreign_key": {
-                  "to": {
-                    "table": "trainings",
-                    "column": "id"
-                  },
-                  "initially_deferred": false,
-                  "on_update": null,
-                  "on_delete": "cascade"
-                }
-              }
-            ]
+            "dsl_features": []
           },
           {
             "name": "custom_weight_right",
@@ -1228,49 +842,18 @@
             "default_dart": "const CustomExpression('CAST(strftime(\\'%s\\', CURRENT_TIMESTAMP) AS INTEGER)')",
             "default_client_dart": null,
             "dsl_features": []
-          },
-          {
-            "name": "deleted_at",
-            "getter_name": "deletedAt",
-            "moor_type": "dateTime",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "dirty",
-            "getter_name": "dirty",
-            "moor_type": "bool",
-            "nullable": false,
-            "customConstraints": null,
-            "defaultConstraints": "CHECK (\"dirty\" IN (0, 1))",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "CHECK (\"dirty\" IN (0, 1))"
-            },
-            "default_dart": "const CustomExpression('0')",
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "remote_id",
-            "getter_name": "remoteId",
-            "moor_type": "string",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": "() => const Uuid().v4()",
-            "dsl_features": []
           }
         ],
         "is_virtual": false,
         "without_rowid": false,
-        "constraints": []
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
       }
     },
     {
-      "id": 8,
+      "id": 7,
       "references": [],
       "type": "table",
       "data": {
@@ -1280,7 +863,7 @@
           {
             "name": "builtin_training_id",
             "getter_name": "builtinTrainingId",
-            "moor_type": "int",
+            "moor_type": "string",
             "nullable": false,
             "customConstraints": null,
             "default_dart": null,
@@ -1296,40 +879,6 @@
             "default_dart": "const CustomExpression('CAST(strftime(\\'%s\\', CURRENT_TIMESTAMP) AS INTEGER)')",
             "default_client_dart": null,
             "dsl_features": []
-          },
-          {
-            "name": "deleted_at",
-            "getter_name": "deletedAt",
-            "moor_type": "dateTime",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "dirty",
-            "getter_name": "dirty",
-            "moor_type": "bool",
-            "nullable": false,
-            "customConstraints": null,
-            "defaultConstraints": "CHECK (\"dirty\" IN (0, 1))",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "CHECK (\"dirty\" IN (0, 1))"
-            },
-            "default_dart": "const CustomExpression('0')",
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "remote_id",
-            "getter_name": "remoteId",
-            "moor_type": "string",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": "() => const Uuid().v4()",
-            "dsl_features": []
           }
         ],
         "is_virtual": false,
@@ -1341,7 +890,7 @@
       }
     },
     {
-      "id": 9,
+      "id": 8,
       "references": [],
       "type": "table",
       "data": {
@@ -1462,66 +1011,6 @@
           "id"
         ]
       }
-    },
-    {
-      "id": 10,
-      "references": [],
-      "type": "table",
-      "data": {
-        "name": "sync_metadata",
-        "was_declared_in_moor": false,
-        "columns": [
-          {
-            "name": "id",
-            "getter_name": "id",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": null,
-            "defaultConstraints": "PRIMARY KEY AUTOINCREMENT",
-            "dialectAwareDefaultConstraints": {
-              "sqlite": "PRIMARY KEY AUTOINCREMENT"
-            },
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": [
-              "auto-increment"
-            ]
-          },
-          {
-            "name": "last_sync_version",
-            "getter_name": "lastSyncVersion",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": "const CustomExpression('0')",
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "last_sync_time",
-            "getter_name": "lastSyncTime",
-            "moor_type": "dateTime",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "pending_changes",
-            "getter_name": "pendingChanges",
-            "moor_type": "int",
-            "nullable": false,
-            "customConstraints": null,
-            "default_dart": "const CustomExpression('0')",
-            "default_client_dart": null,
-            "dsl_features": []
-          }
-        ],
-        "is_virtual": false,
-        "without_rowid": false,
-        "constraints": []
-      }
     }
   ],
   "fixed_sql": [
@@ -1530,7 +1019,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"sessions\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"name\" TEXT NOT NULL, \"notes\" TEXT NOT NULL, \"date\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"data_path\" TEXT NOT NULL, \"is_assessment\" INTEGER NOT NULL DEFAULT 0 CHECK (\"is_assessment\" IN (0, 1)), \"session_type\" INTEGER NOT NULL DEFAULT 0, \"duration\" INTEGER NOT NULL DEFAULT 0, \"repeater_sets\" INTEGER NULL, \"repeater_reps\" INTEGER NULL, \"repeater_work_time\" INTEGER NULL, \"repeater_rest_time\" INTEGER NULL, \"repeater_set_rest\" INTEGER NULL, \"repeater_split_hand\" INTEGER NULL CHECK (\"repeater_split_hand\" IN (0, 1)), \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"deleted_at\" INTEGER NULL, \"dirty\" INTEGER NOT NULL DEFAULT 0 CHECK (\"dirty\" IN (0, 1)), \"remote_id\" TEXT NOT NULL);"
+          "sql": "CREATE TABLE IF NOT EXISTS \"sessions\" (\"id\" TEXT NOT NULL, \"name\" TEXT NOT NULL, \"notes\" TEXT NOT NULL, \"date\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"data_path\" TEXT NOT NULL, \"is_assessment\" INTEGER NOT NULL DEFAULT 0 CHECK (\"is_assessment\" IN (0, 1)), \"session_type\" INTEGER NOT NULL DEFAULT 0, \"duration\" INTEGER NOT NULL DEFAULT 0, \"repeater_sets\" INTEGER NULL, \"repeater_reps\" INTEGER NULL, \"repeater_work_time\" INTEGER NULL, \"repeater_rest_time\" INTEGER NULL, \"repeater_set_rest\" INTEGER NULL, \"repeater_split_hand\" INTEGER NULL CHECK (\"repeater_split_hand\" IN (0, 1)), \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), PRIMARY KEY (\"id\"));"
         }
       ]
     },
@@ -1539,16 +1028,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"assessments\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"type\" INTEGER NOT NULL, \"right_value\" REAL NULL, \"left_value\" REAL NULL, \"session_id\" INTEGER NOT NULL REFERENCES sessions (id), \"grip_position\" INTEGER NULL DEFAULT 0, \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"deleted_at\" INTEGER NULL, \"dirty\" INTEGER NOT NULL DEFAULT 0 CHECK (\"dirty\" IN (0, 1)), \"remote_id\" TEXT NOT NULL);"
-        }
-      ]
-    },
-    {
-      "name": "repeaters",
-      "sql": [
-        {
-          "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"repeaters\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"sets\" INTEGER NOT NULL, \"reps\" INTEGER NOT NULL, \"worktime\" INTEGER NOT NULL, \"resttime\" INTEGER NOT NULL, \"set_rest\" INTEGER NOT NULL, \"target_weigth_right\" REAL NULL, \"target_weigth_left\" REAL NULL, \"split_hand\" INTEGER NOT NULL CHECK (\"split_hand\" IN (0, 1)), \"grip_position\" INTEGER NOT NULL DEFAULT 0, \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"deleted_at\" INTEGER NULL, \"dirty\" INTEGER NOT NULL DEFAULT 0 CHECK (\"dirty\" IN (0, 1)), \"remote_id\" TEXT NOT NULL);"
+          "sql": "CREATE TABLE IF NOT EXISTS \"assessments\" (\"id\" TEXT NOT NULL, \"type\" INTEGER NOT NULL, \"right_value\" REAL NULL, \"left_value\" REAL NULL, \"session_id\" TEXT NOT NULL, \"grip_position\" INTEGER NULL DEFAULT 0, \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), PRIMARY KEY (\"id\"), FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE);"
         }
       ]
     },
@@ -1557,16 +1037,16 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"trainings\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"name\" TEXT NOT NULL, \"repeater_id\" INTEGER NULL REFERENCES repeaters (id) ON DELETE CASCADE, \"is_builtin\" INTEGER NOT NULL DEFAULT 0 CHECK (\"is_builtin\" IN (0, 1)), \"is_favorite\" INTEGER NOT NULL DEFAULT 0 CHECK (\"is_favorite\" IN (0, 1)), \"is_assessment\" INTEGER NOT NULL DEFAULT 0 CHECK (\"is_assessment\" IN (0, 1)), \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"deleted_at\" INTEGER NULL, \"dirty\" INTEGER NOT NULL DEFAULT 0 CHECK (\"dirty\" IN (0, 1)), \"remote_id\" TEXT NOT NULL);"
+          "sql": "CREATE TABLE IF NOT EXISTS \"trainings\" (\"id\" TEXT NOT NULL, \"title\" TEXT NOT NULL, \"description\" TEXT NULL, \"is_favorite\" INTEGER NOT NULL DEFAULT 0 CHECK (\"is_favorite\" IN (0, 1)), \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), PRIMARY KEY (\"id\"));"
         }
       ]
     },
     {
-      "name": "rep_templates",
+      "name": "training_items",
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"rep_templates\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"is_rest\" INTEGER NOT NULL CHECK (\"is_rest\" IN (0, 1)), \"right_hand\" INTEGER NOT NULL CHECK (\"right_hand\" IN (0, 1)), \"duration\" INTEGER NOT NULL, \"training_id\" INTEGER NOT NULL REFERENCES trainings (id) ON DELETE CASCADE, \"target_weight\" REAL NOT NULL, \"index\" INTEGER NOT NULL, \"grip_position\" INTEGER NOT NULL DEFAULT 0, \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"deleted_at\" INTEGER NULL, \"dirty\" INTEGER NOT NULL DEFAULT 0 CHECK (\"dirty\" IN (0, 1)), \"remote_id\" TEXT NOT NULL);"
+          "sql": "CREATE TABLE IF NOT EXISTS \"training_items\" (\"id\" TEXT NOT NULL, \"training_id\" TEXT NOT NULL, \"parent_id\" TEXT NULL, \"type\" TEXT NOT NULL, \"position\" INTEGER NOT NULL DEFAULT 0, \"cycles\" INTEGER NULL, \"cycle_rest_seconds\" INTEGER NULL, \"reps\" INTEGER NULL, \"duration\" INTEGER NULL, \"rest_seconds\" INTEGER NULL, \"worktime_seconds\" INTEGER NULL, \"hand\" TEXT NULL, \"loads_json\" TEXT NULL, \"left_loads_json\" TEXT NULL, \"hand_positions_json\" TEXT NULL, \"edge_sizes_mm_json\" TEXT NULL, \"load_is_max\" INTEGER NOT NULL DEFAULT 0 CHECK (\"load_is_max\" IN (0, 1)), \"free_text\" TEXT NULL, \"exercise_id\" TEXT NULL, \"group_title\" TEXT NULL, \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), PRIMARY KEY (\"id\"), FOREIGN KEY (training_id) REFERENCES trainings(id) ON DELETE CASCADE);"
         }
       ]
     },
@@ -1575,7 +1055,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"rep_datas\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"average_weight\" REAL NOT NULL, \"session_id\" INTEGER NOT NULL REFERENCES sessions (id), \"is_rest\" INTEGER NOT NULL CHECK (\"is_rest\" IN (0, 1)), \"right_hand\" INTEGER NOT NULL CHECK (\"right_hand\" IN (0, 1)), \"duration\" INTEGER NOT NULL, \"target_weight\" REAL NOT NULL, \"index\" INTEGER NOT NULL, \"grip_position\" INTEGER NOT NULL DEFAULT 0, \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"deleted_at\" INTEGER NULL, \"dirty\" INTEGER NOT NULL DEFAULT 0 CHECK (\"dirty\" IN (0, 1)), \"remote_id\" TEXT NOT NULL);"
+          "sql": "CREATE TABLE IF NOT EXISTS \"rep_datas\" (\"id\" TEXT NOT NULL, \"average_weight\" REAL NOT NULL, \"session_id\" TEXT NOT NULL, \"is_rest\" INTEGER NOT NULL CHECK (\"is_rest\" IN (0, 1)), \"right_hand\" INTEGER NOT NULL CHECK (\"right_hand\" IN (0, 1)), \"duration\" INTEGER NOT NULL, \"target_weight\" REAL NOT NULL, \"index\" INTEGER NOT NULL, \"grip_position\" INTEGER NOT NULL DEFAULT 0, \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), PRIMARY KEY (\"id\"), FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE);"
         }
       ]
     },
@@ -1584,7 +1064,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"sensor_configs\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"name\" TEXT NOT NULL, \"index\" INTEGER NOT NULL, \"tare\" REAL NOT NULL, \"coef\" REAL NOT NULL, \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"deleted_at\" INTEGER NULL, \"dirty\" INTEGER NOT NULL DEFAULT 0 CHECK (\"dirty\" IN (0, 1)), \"remote_id\" TEXT NOT NULL);"
+          "sql": "CREATE TABLE IF NOT EXISTS \"sensor_configs\" (\"id\" TEXT NOT NULL, \"name\" TEXT NOT NULL, \"index\" INTEGER NOT NULL, \"tare\" REAL NOT NULL, \"coef\" REAL NOT NULL, \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), PRIMARY KEY (\"id\"));"
         }
       ]
     },
@@ -1593,7 +1073,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"builtin_training_weights\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"builtin_training_id\" INTEGER NOT NULL REFERENCES trainings (id) ON DELETE CASCADE, \"custom_weight_right\" REAL NULL, \"custom_weight_left\" REAL NULL, \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"deleted_at\" INTEGER NULL, \"dirty\" INTEGER NOT NULL DEFAULT 0 CHECK (\"dirty\" IN (0, 1)), \"remote_id\" TEXT NOT NULL);"
+          "sql": "CREATE TABLE IF NOT EXISTS \"builtin_training_weights\" (\"id\" TEXT NOT NULL, \"builtin_training_id\" TEXT NOT NULL, \"custom_weight_right\" REAL NULL, \"custom_weight_left\" REAL NULL, \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), PRIMARY KEY (\"id\"));"
         }
       ]
     },
@@ -1602,7 +1082,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"pinned_builtin_trainings\" (\"builtin_training_id\" INTEGER NOT NULL, \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), \"deleted_at\" INTEGER NULL, \"dirty\" INTEGER NOT NULL DEFAULT 0 CHECK (\"dirty\" IN (0, 1)), \"remote_id\" TEXT NOT NULL, PRIMARY KEY (\"builtin_training_id\"));"
+          "sql": "CREATE TABLE IF NOT EXISTS \"pinned_builtin_trainings\" (\"builtin_training_id\" TEXT NOT NULL, \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), PRIMARY KEY (\"builtin_training_id\"));"
         }
       ]
     },
@@ -1612,15 +1092,6 @@
         {
           "dialect": "sqlite",
           "sql": "CREATE TABLE IF NOT EXISTS \"users\" (\"id\" TEXT NOT NULL, \"email\" TEXT NOT NULL, \"firstname\" TEXT NOT NULL, \"lastname\" TEXT NOT NULL, \"email_verified\" INTEGER NOT NULL DEFAULT 0 CHECK (\"email_verified\" IN (0, 1)), \"is_admin\" INTEGER NOT NULL DEFAULT 0 CHECK (\"is_admin\" IN (0, 1)), \"is_coach\" INTEGER NOT NULL DEFAULT 0 CHECK (\"is_coach\" IN (0, 1)), \"coach_validated\" INTEGER NOT NULL DEFAULT 0 CHECK (\"coach_validated\" IN (0, 1)), \"created_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), PRIMARY KEY (\"id\"));"
-        }
-      ]
-    },
-    {
-      "name": "sync_metadata",
-      "sql": [
-        {
-          "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"sync_metadata\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"last_sync_version\" INTEGER NOT NULL DEFAULT 0, \"last_sync_time\" INTEGER NULL, \"pending_changes\" INTEGER NOT NULL DEFAULT 0);"
         }
       ]
     }
