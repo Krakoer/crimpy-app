@@ -25,6 +25,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  void _showImportFailure(int failures) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          '$failures item(s) could not be imported. Your local data was kept.',
+        ),
+      ),
+    );
+  }
+
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -74,13 +84,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
         if (!mounted) return;
 
+        // Local data is only cleared once it is safely on the server. Skipping
+        // the import, or a partial failure, keeps the local copy intact.
         if (shouldImport == true) {
           setState(() => _isLoading = true);
-          await authNotifier.importLocalDataToApi();
+          final failures = await authNotifier.importLocalDataToApi();
+          if (!mounted) return;
+          if (failures == 0) {
+            await authNotifier.clearLocalDataAfterLogin();
+          } else {
+            _showImportFailure(failures);
+          }
         }
       }
-
-      await authNotifier.clearLocalDataAfterLogin();
 
       if (mounted) {
         Navigator.of(context).pop();

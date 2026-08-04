@@ -188,10 +188,15 @@ class AuthState extends _$AuthState {
     );
   }
 
-  Future<void> importLocalDataToApi() async {
+  /// Uploads every locally stored entity to the API. Individual failures are
+  /// logged and counted rather than aborting the run, so a single bad row does
+  /// not block the rest; the returned count tells the caller whether the local
+  /// copy is now safe to delete.
+  Future<int> importLocalDataToApi() async {
     final apiClient = ref.read(apiClientProvider);
     final remoteRepo = RemoteTrainingRepository(apiClient);
     final remoteAssessmentRepo = RemoteAssessmentRepository(apiClient);
+    var failures = 0;
 
     // Import sessions with their rep_datas and assessments
     final sessions = await gDatabase.getAllSessions();
@@ -255,6 +260,7 @@ class AuthState extends _$AuthState {
                 serverSessionId,
               );
             } catch (e) {
+              failures++;
               AppLoggerHelper.error(
                 'Failed to import assessment for session ${s.id}: $e',
               );
@@ -262,6 +268,7 @@ class AuthState extends _$AuthState {
           }
         }
       } catch (e) {
+        failures++;
         AppLoggerHelper.error('Failed to import session ${s.id}: $e');
       }
     }
@@ -272,6 +279,7 @@ class AuthState extends _$AuthState {
       try {
         await remoteRepo.saveTraining(t);
       } catch (e) {
+        failures++;
         AppLoggerHelper.error('Failed to import training ${t.id}: $e');
       }
     }
@@ -282,6 +290,7 @@ class AuthState extends _$AuthState {
       try {
         await apiClient.pinBuiltinTrainingApi(id);
       } catch (e) {
+        failures++;
         AppLoggerHelper.error('Failed to import pinned builtin $id: $e');
       }
     }
@@ -297,13 +306,15 @@ class AuthState extends _$AuthState {
           'custom_weight_left': w.customWeightLeft ?? 0.0,
         });
       } catch (e) {
+        failures++;
         AppLoggerHelper.error(
           'Failed to import builtin weight ${w.builtinTrainingId}: $e',
         );
       }
     }
 
-    AppLoggerHelper.info('Local data import complete');
+    AppLoggerHelper.info('Local data import complete, $failures failure(s)');
+    return failures;
   }
 
   Future<void> clearLocalDataAfterLogin() async {
