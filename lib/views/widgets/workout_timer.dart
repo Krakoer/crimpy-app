@@ -88,7 +88,9 @@ class WorkoutTimer {
             repCount += 1;
           }
           startCurrentRep += currentRep.durationInSeconds * 1000;
-          playerBiiip.resume();
+          if (playSound) {
+            playerBiiip.resume();
+          }
           if (onNextRep != null) {
             onNextRep!(nextRep!.durationInSeconds);
           }
@@ -182,5 +184,7 @@ class WorkoutTimer {
 
   void dispose() {
     timer.cancel();
+    playerBip.dispose();
+    playerBiiip.dispose();
   }
 }
