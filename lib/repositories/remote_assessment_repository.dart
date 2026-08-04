@@ -51,12 +51,18 @@ class RemoteAssessmentRepository implements AssessmentRepository {
               a['Date'] as String? ??
               DateTime.now().toIso8601String(),
         ),
-        type: AssessmentType.values[(a['Type'] as num).toInt()],
+        type: enumFromIndex(
+          AssessmentType.values,
+          a['Type'] as num?,
+          AssessmentType.criticalForce,
+        ),
         rightValue: (a['RightValue'] as num?)?.toDouble(),
         leftValue: (a['LeftValue'] as num?)?.toDouble(),
-        gripPosition: a['GripPosition'] != null
-            ? GripPosition.values[(a['GripPosition'] as num).toInt()]
-            : null,
+        gripPosition: enumFromIndex<GripPosition?>(
+          GripPosition.values,
+          a['GripPosition'] as num?,
+          null,
+        ),
       );
     }).toList();
 

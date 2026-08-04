@@ -53,3 +53,11 @@ extension SessionTypeExtension on SessionType {
     SessionType.workout => 0xFF8B6B9E, // Purple
   };
 }
+
+/// Resolves an enum from a stored or server-supplied index. Indexes outside the
+/// known range resolve to [fallback], so a value added on the backend before the
+/// app supports it degrades gracefully instead of throwing a RangeError.
+T enumFromIndex<T>(List<T> values, num? index, T fallback) {
+  final i = index?.toInt();
+  return (i == null || i < 0 || i >= values.length) ? fallback : values[i];
+}

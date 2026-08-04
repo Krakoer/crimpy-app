@@ -74,7 +74,11 @@ class LocalTrainingRepository implements TrainingRepository {
           date: s.date,
           reps: reps,
           isAssessment: s.isAssessment,
-          sessionType: SessionType.values[s.sessionType],
+          sessionType: enumFromIndex(
+            SessionType.values,
+            s.sessionType,
+            SessionType.crimpy,
+          ),
           durationInSeconds: s.duration,
           repeaterConfig: repeaterConfig,
         ),
@@ -194,7 +198,11 @@ class RemoteTrainingRepository implements TrainingRepository {
       date: DateTime.parse(s['Date'] as String),
       reps: null,
       isAssessment: s['IsAssessment'] as bool? ?? false,
-      sessionType: SessionType.values[(s['SessionType'] as num? ?? 0).toInt()],
+      sessionType: enumFromIndex(
+        SessionType.values,
+        s['SessionType'] as num?,
+        SessionType.crimpy,
+      ),
       durationInSeconds: (s['Duration'] as num? ?? 0).toInt(),
       repeaterConfig: repeaterConfig,
     );
@@ -243,7 +251,11 @@ class RemoteTrainingRepository implements TrainingRepository {
       date: DateTime.parse(s['Date'] as String),
       reps: reps,
       isAssessment: s['IsAssessment'] as bool? ?? false,
-      sessionType: SessionType.values[(s['SessionType'] as num? ?? 0).toInt()],
+      sessionType: enumFromIndex(
+        SessionType.values,
+        s['SessionType'] as num?,
+        SessionType.crimpy,
+      ),
       durationInSeconds: (s['Duration'] as num? ?? 0).toInt(),
       repeaterConfig: repeaterConfig,
     );
