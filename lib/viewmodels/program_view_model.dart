@@ -63,33 +63,6 @@ Future<Training> programTraining(
   return repo.getProgramTraining(programId, trainingId);
 }
 
-/// A scheduled training within the active program, with its context.
-class TodayTraining {
-  final Program program;
-  final int weekNumber;
-  final WeekSession session;
-
-  const TodayTraining({
-    required this.program,
-    required this.weekNumber,
-    required this.session,
-  });
-}
-
-/// The active program together with the week covering today, or null when
-/// there is no active program or the current week is not defined.
-class ActiveProgramWeek {
-  final Program program;
-  final int weekNumber;
-  final Week week;
-
-  const ActiveProgramWeek({
-    required this.program,
-    required this.weekNumber,
-    required this.week,
-  });
-}
-
 @Riverpod(keepAlive: true)
 Future<ActiveProgramWeek?> activeProgramWeek(Ref ref) async {
   final program = await ref.watch(activeProgramProvider.future);

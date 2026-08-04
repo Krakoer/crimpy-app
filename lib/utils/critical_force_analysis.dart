@@ -1,23 +1,6 @@
 // From https://github.com/StuartLittlefair/PyTindeq/blob/main/laptop/src/analysis.py
 import 'dart:math';
-
-class CriticalForceResults {
-  final List<double> tmeans;
-  final List<double> fmeans;
-  final List<double> eFmeans;
-  final double criticalLoad;
-  final double loadAsymptote;
-  final List<double> predictedForce;
-
-  CriticalForceResults({
-    required this.tmeans,
-    required this.fmeans,
-    required this.eFmeans,
-    required this.criticalLoad,
-    required this.loadAsymptote,
-    required this.predictedForce,
-  });
-}
+import 'package:crimpy/models/assessment_model.dart';
 
 List<int> _getRaisingEdgesIndex(List<double> forces, {double threshold = 7}) {
   List<int> raisingEdgesIndex = [];

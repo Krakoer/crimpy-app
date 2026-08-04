@@ -129,21 +129,6 @@ double? bleLastValue(Ref ref) {
   return (points == null || points.isEmpty) ? null : points.last.value;
 }
 
-/// Class to hold the current BLE session statistics.
-class BleSessionStats {
-  final Duration elapsed;
-  final double avg;
-  final double max;
-  final int nbPoints;
-
-  BleSessionStats({
-    this.avg = 0,
-    this.elapsed = Duration.zero,
-    this.max = 0,
-    this.nbPoints = 0,
-  });
-}
-
 /// Returns the current session stats.
 /// Allows the session to be reset.
 @Riverpod(keepAlive: true)

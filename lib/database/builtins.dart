@@ -9,7 +9,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:collection/collection.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 
 /// Number of pulls in the Critical Force protocol. Debug builds run a short
 /// version so the assessment can be exercised end to end without sitting
@@ -67,38 +66,6 @@ List<RepModel> _criticalForceReps() {
   }
 
   return reps;
-}
-
-/// Builtin Assessment Model - similar to BuiltinTrainingModel
-/// Dynamically generates assessment trainings at runtime without DB storage
-class BuiltinAssessmentModel {
-  final String id;
-  final String name;
-  final String description;
-  final AssessmentType type;
-  final IconData icon;
-  final TrainingWithReps Function({GripPosition? gripPosition})
-  trainingGenerator;
-
-  BuiltinAssessmentModel({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.type,
-    required this.icon,
-    required this.trainingGenerator,
-  });
-
-  /// Generate an AssessmentTrainingModel with training data
-  AssessmentTrainingModel generateAssessment({GripPosition? gripPosition}) {
-    return AssessmentTrainingModel(
-      training: trainingGenerator(gripPosition: gripPosition),
-      type: type,
-      icon: icon,
-      description: description,
-      gripPosition: gripPosition,
-    );
-  }
 }
 
 // Stores the built-ins assessment definitions (dynamically generated, not stored in DB)

@@ -8,7 +8,7 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
-import 'package:crimpy/views/screens/assessments/critical_force/analysis.dart';
+import 'package:crimpy/utils/critical_force_analysis.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/analysis_error_screen.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/critical_force_result_screen.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/minimalist_graph.dart';

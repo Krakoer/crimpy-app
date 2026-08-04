@@ -122,3 +122,54 @@ class AssessmentModel {
         : null;
   }
 }
+
+/// Output of the Critical Force analysis over a recorded session.
+class CriticalForceResults {
+  final List<double> tmeans;
+  final List<double> fmeans;
+  final List<double> eFmeans;
+  final double criticalLoad;
+  final double loadAsymptote;
+  final List<double> predictedForce;
+
+  CriticalForceResults({
+    required this.tmeans,
+    required this.fmeans,
+    required this.eFmeans,
+    required this.criticalLoad,
+    required this.loadAsymptote,
+    required this.predictedForce,
+  });
+}
+
+/// Builtin Assessment Model - similar to BuiltinTrainingModel
+/// Dynamically generates assessment trainings at runtime without DB storage
+class BuiltinAssessmentModel {
+  final String id;
+  final String name;
+  final String description;
+  final AssessmentType type;
+  final IconData icon;
+  final TrainingWithReps Function({GripPosition? gripPosition})
+  trainingGenerator;
+
+  BuiltinAssessmentModel({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.type,
+    required this.icon,
+    required this.trainingGenerator,
+  });
+
+  /// Generate an AssessmentTrainingModel with training data
+  AssessmentTrainingModel generateAssessment({GripPosition? gripPosition}) {
+    return AssessmentTrainingModel(
+      training: trainingGenerator(gripPosition: gripPosition),
+      type: type,
+      icon: icon,
+      description: description,
+      gripPosition: gripPosition,
+    );
+  }
+}

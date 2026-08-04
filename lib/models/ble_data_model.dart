@@ -16,3 +16,18 @@ class BleDataPoint {
 
 /// Connection state enum
 enum BleConnectionState { disconnected, connecting, connected, failed }
+
+/// Class to hold the current BLE session statistics.
+class BleSessionStats {
+  final Duration elapsed;
+  final double avg;
+  final double max;
+  final int nbPoints;
+
+  BleSessionStats({
+    this.avg = 0,
+    this.elapsed = Duration.zero,
+    this.max = 0,
+    this.nbPoints = 0,
+  });
+}

@@ -597,7 +597,7 @@ final class PinnedTrainingsProvider
   PinnedTrainings create() => PinnedTrainings();
 }
 
-String _$pinnedTrainingsHash() => r'45b7926c53a94a1968ce23858eac0c21803cb3c9';
+String _$pinnedTrainingsHash() => r'340e0adc411e5fa2d647013997a27ce8ab1a750d';
 
 /// Provider for pinned builtin trainings (with favorites).
 
@@ -654,7 +654,7 @@ final class AllTrainingsProvider
   AllTrainings create() => AllTrainings();
 }
 
-String _$allTrainingsHash() => r'2d0827afe478f5c2de797f22a9cde0bc00867576';
+String _$allTrainingsHash() => r'839d0c316ec92344cf3af4f415aa62093b76aed0';
 
 /// Provider for combined training list (regular + builtin trainings).
 
