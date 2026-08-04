@@ -7,9 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Remote program repository, or null when the user is not authenticated
 /// (programs are coach/server-owned, so there is no guest-mode equivalent).
 final programRepositoryProvider = Provider<ProgramRepository?>((ref) {
-  final user = ref.watch(authStateProvider).asData?.value;
-  if (user == null) return null;
-  return ProgramRepository(ref.read(apiClientProvider));
+  if (!ref.watch(isAuthenticatedProvider)) return null;
+  return ProgramRepository(ref.watch(apiClientProvider));
 });
 
 /// All programs assigned to the user (empty in guest mode).

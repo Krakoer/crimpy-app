@@ -50,6 +50,58 @@ final class ApiClientProvider
 
 String _$apiClientHash() => r'2ce13b5486412cbcb4912a269cb8b4807c154f71';
 
+/// Whether a user is signed in. Repositories watch this rather than the whole
+/// auth state: it only changes when the user signs in or out, so refreshing the
+/// profile no longer tears down and refetches every list in the app.
+
+@ProviderFor(isAuthenticated)
+const isAuthenticatedProvider = IsAuthenticatedProvider._();
+
+/// Whether a user is signed in. Repositories watch this rather than the whole
+/// auth state: it only changes when the user signs in or out, so refreshing the
+/// profile no longer tears down and refetches every list in the app.
+
+final class IsAuthenticatedProvider
+    extends $FunctionalProvider<bool, bool, bool>
+    with $Provider<bool> {
+  /// Whether a user is signed in. Repositories watch this rather than the whole
+  /// auth state: it only changes when the user signs in or out, so refreshing the
+  /// profile no longer tears down and refetches every list in the app.
+  const IsAuthenticatedProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'isAuthenticatedProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$isAuthenticatedHash();
+
+  @$internal
+  @override
+  $ProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  bool create(Ref ref) {
+    return isAuthenticated(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$isAuthenticatedHash() => r'b7661edebf2147b55a6f62df240a947794dcbc0c';
+
 @ProviderFor(authService)
 const authServiceProvider = AuthServiceProvider._();
 
@@ -115,7 +167,7 @@ final class AuthStateProvider
   AuthState create() => AuthState();
 }
 
-String _$authStateHash() => r'73f370826c2636155e275d3fa790806763d2d548';
+String _$authStateHash() => r'ff50f161084ac649f75cee1cea69ef0251b58295';
 
 abstract class _$AuthState extends $AsyncNotifier<auth_models.User?> {
   FutureOr<auth_models.User?> build();

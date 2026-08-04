@@ -12,18 +12,16 @@ import 'package:crimpy/viewmodels/auth_view_model.dart';
 
 /// Returns the trainings repository (local Drift in guest mode, remote API when authenticated).
 final trainingRepositoryProvider = Provider<TrainingRepository>((ref) {
-  final user = ref.watch(authStateProvider).asData?.value;
-  if (user != null) {
-    return RemoteTrainingRepository(ref.read(apiClientProvider));
+  if (ref.watch(isAuthenticatedProvider)) {
+    return RemoteTrainingRepository(ref.watch(apiClientProvider));
   }
   return LocalTrainingRepository();
 });
 
 /// Returns the assessment repository (local Drift in guest mode, remote API when authenticated).
 final assessmentRepositoryProvider = Provider<AssessmentRepository>((ref) {
-  final user = ref.watch(authStateProvider).asData?.value;
-  if (user != null) {
-    return RemoteAssessmentRepository(ref.read(apiClientProvider));
+  if (ref.watch(isAuthenticatedProvider)) {
+    return RemoteAssessmentRepository(ref.watch(apiClientProvider));
   }
   return LocalAssessmentRepository();
 });
@@ -31,9 +29,8 @@ final assessmentRepositoryProvider = Provider<AssessmentRepository>((ref) {
 /// Returns the builtin preferences repository (local in guest mode, remote when authenticated).
 final builtinPreferencesRepositoryProvider =
     Provider<BuiltinPreferencesRepository>((ref) {
-      final user = ref.watch(authStateProvider).asData?.value;
-      if (user != null) {
-        return RemoteBuiltinPreferencesRepository(ref.read(apiClientProvider));
+      if (ref.watch(isAuthenticatedProvider)) {
+        return RemoteBuiltinPreferencesRepository(ref.watch(apiClientProvider));
       }
       return LocalBuiltinPreferencesRepository();
     });

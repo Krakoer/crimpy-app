@@ -33,6 +33,13 @@ ApiClient apiClient(Ref ref) {
   return client;
 }
 
+/// Whether a user is signed in. Repositories watch this rather than the whole
+/// auth state: it only changes when the user signs in or out, so refreshing the
+/// profile no longer tears down and refetches every list in the app.
+@riverpod
+bool isAuthenticated(Ref ref) =>
+    ref.watch(authStateProvider).asData?.value != null;
+
 @riverpod
 AuthService authService(Ref ref) {
   final apiClient = ref.watch(apiClientProvider);
