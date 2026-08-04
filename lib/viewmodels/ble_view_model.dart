@@ -70,10 +70,13 @@ final connectedDeviceProvider = Provider<BluetoothDevice?>((ref) {
 });
 
 /// Returns the results of a BLE scan.
+/// A scan that fails because the adapter is off must not be retried on its own:
+/// the user turns Bluetooth back on and triggers a new scan explicitly.
 /// TODO: Maybe convert to a Stream provider so that we don't have to wait till the end of the scan to see the results ?
 final scanResultsProvider =
     AsyncNotifierProvider<ScanResultsNotifier, List<BluetoothDevice>>(
       ScanResultsNotifier.new,
+      retry: (retryCount, error) => null,
     );
 
 class ScanResultsNotifier extends AsyncNotifier<List<BluetoothDevice>> {

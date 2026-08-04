@@ -8,6 +8,15 @@ import 'views/main_page.dart';
 import 'theme/crimpy_theme.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+/// Riverpod retries every failed provider indefinitely by default. Requests
+/// that fail because the device is offline would otherwise keep backing off in
+/// the background for the whole session, so cap the attempts.
+Duration? boundedRetry(int retryCount, Object error) {
+  const maxAttempts = 3;
+  if (retryCount >= maxAttempts) return null;
+  return Duration(milliseconds: 500 * (1 << retryCount));
+}
+
 Future<void> main() async {
   SentryWidgetsFlutterBinding.ensureInitialized();
   FlutterBluePlus.setLogLevel(LogLevel.warning, color: true);
@@ -16,7 +25,7 @@ Future<void> main() async {
 
   // Only initialize Sentry in release mode
   if (kDebugMode) {
-    runApp(const ProviderScope(child: MyApp()));
+    runApp(ProviderScope(retry: boundedRetry, child: const MyApp()));
   } else {
     await SentryFlutter.init(
       (options) {
@@ -32,8 +41,12 @@ Future<void> main() async {
         // Setting to 1.0 will profile 100% of sampled transactions:
         // options.profilesSampleRate = 1.0;
       },
-      appRunner: () =>
-          runApp(ProviderScope(child: SentryWidget(child: const MyApp()))),
+      appRunner: () => runApp(
+        ProviderScope(
+          retry: boundedRetry,
+          child: SentryWidget(child: const MyApp()),
+        ),
+      ),
     );
   }
 }
