@@ -27,15 +27,12 @@ class BleAdapterStateNotifier extends Notifier<BluetoothAdapterState> {
   BluetoothAdapterState build() {
     final repo = ref.watch(bleRepositoryProvider);
 
-    // set initial state
-    state = repo.currentAdapterState;
-
-    // listen to stream and update state
-    repo.adapterStateStream.listen((s) {
+    final subscription = repo.adapterStateStream.listen((s) {
       state = s;
     });
+    ref.onDispose(subscription.cancel);
 
-    return state;
+    return repo.currentAdapterState;
   }
 }
 
@@ -48,25 +45,17 @@ final connectionStateProvider =
 /// ConnectionState notifier
 class BleConnectionNotifier extends Notifier<BleConnectionState> {
   late BleRepository _bleRepository;
-  StreamSubscription<BleConnectionState>? _sub;
 
   @override
   BleConnectionState build() {
     _bleRepository = ref.watch(bleRepositoryProvider);
-    // set initial state
-    state = _bleRepository.currentConnectionState;
 
-    // subscribe to repo stream
-    _sub?.cancel();
-    _sub = _bleRepository.connectionStateStream.listen((s) {
+    final subscription = _bleRepository.connectionStateStream.listen((s) {
       state = s;
     });
+    ref.onDispose(subscription.cancel);
 
-    ref.onDispose(() {
-      _sub?.cancel();
-    });
-
-    return state;
+    return _bleRepository.currentConnectionState;
   }
 
   Future<void> connectToDevice(BluetoothDevice device) =>
@@ -166,7 +155,8 @@ class BleSessionNotifier extends Notifier<BleSessionStats> {
   BleSessionStats build() {
     _bleRepository = ref.watch(bleRepositoryProvider);
 
-    _bleRepository.dataStream.listen((p) => _update(p));
+    final subscription = _bleRepository.dataStream.listen(_update);
+    ref.onDispose(subscription.cancel);
 
     return BleSessionStats();
   }
