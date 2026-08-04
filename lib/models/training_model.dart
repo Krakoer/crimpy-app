@@ -102,6 +102,28 @@ class RepeaterConfig {
     required this.splitHand,
   });
 
+  /// Builds the config from an API session payload, or null when that session
+  /// was not a repeater. The API returns these fields in PascalCase.
+  static RepeaterConfig? fromJson(Map<String, dynamic> json) {
+    const keys = [
+      'RepeaterSets',
+      'RepeaterReps',
+      'RepeaterWorkTime',
+      'RepeaterRestTime',
+      'RepeaterSetRest',
+      'RepeaterSplitHand',
+    ];
+    if (keys.any((k) => json[k] == null)) return null;
+    return RepeaterConfig(
+      sets: (json['RepeaterSets'] as num).toInt(),
+      repsPerSet: (json['RepeaterReps'] as num).toInt(),
+      workTime: (json['RepeaterWorkTime'] as num).toInt(),
+      restTime: (json['RepeaterRestTime'] as num).toInt(),
+      setRest: (json['RepeaterSetRest'] as num).toInt(),
+      splitHand: json['RepeaterSplitHand'] as bool,
+    );
+  }
+
   /// Create from RepeaterModel
   factory RepeaterConfig.fromRepeaterModel(RepeaterModel model) {
     return RepeaterConfig(
@@ -139,6 +161,26 @@ class SessionModel {
     this.repeaterConfig,
     date,
   }) : date = date ?? DateTime.now();
+
+  /// Parses a session as returned by the API, which uses PascalCase keys.
+  factory SessionModel.fromJson(
+    Map<String, dynamic> json, {
+    List<RepDataModel>? reps,
+  }) => SessionModel(
+    id: json['ID'] as String,
+    name: json['Name'] as String,
+    notes: json['Notes'] as String? ?? '',
+    date: DateTime.parse(json['Date'] as String),
+    reps: reps,
+    isAssessment: json['IsAssessment'] as bool? ?? false,
+    sessionType: enumFromIndex(
+      SessionType.values,
+      json['SessionType'] as num?,
+      SessionType.crimpy,
+    ),
+    durationInSeconds: (json['Duration'] as num? ?? 0).toInt(),
+    repeaterConfig: RepeaterConfig.fromJson(json),
+  );
 
   int get duration =>
       durationInSeconds ??
@@ -233,6 +275,21 @@ class RepDataModel {
     required this.targetWeight,
     this.gripPosition = GripPosition.halfCrimp, // Default to half crimp
   });
+
+  /// Parses a repetition as returned by the API, which uses PascalCase keys.
+  factory RepDataModel.fromJson(Map<String, dynamic> json) => RepDataModel(
+    averageWeight: (json['AverageWeight'] as num).toDouble(),
+    duration: (json['Duration'] as num).toInt(),
+    index: (json['Index'] as num).toInt(),
+    isRest: json['IsRest'] as bool,
+    handSide: (json['RightHand'] as bool) ? HandSide.right : HandSide.left,
+    targetWeight: (json['TargetWeight'] as num).toDouble(),
+    gripPosition: enumFromIndex(
+      GripPosition.values,
+      json['GripPosition'] as num?,
+      GripPosition.halfCrimp,
+    ),
+  );
 }
 
 class RepeaterModel {

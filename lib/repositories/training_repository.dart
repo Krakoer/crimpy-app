@@ -49,40 +49,7 @@ class LocalTrainingRepository implements TrainingRepository {
     final sessions = await gDatabase.getAllSessions(filters: filters);
     final result = <SessionModel>[];
     for (final s in sessions) {
-      final reps = await gDatabase.getRepsForSession(s.id);
-      RepeaterConfig? repeaterConfig;
-      if (s.repeaterSets != null &&
-          s.repeaterReps != null &&
-          s.repeaterWorkTime != null &&
-          s.repeaterRestTime != null &&
-          s.repeaterSetRest != null &&
-          s.repeaterSplitHand != null) {
-        repeaterConfig = RepeaterConfig(
-          sets: s.repeaterSets!,
-          repsPerSet: s.repeaterReps!,
-          workTime: s.repeaterWorkTime!,
-          restTime: s.repeaterRestTime!,
-          setRest: s.repeaterSetRest!,
-          splitHand: s.repeaterSplitHand!,
-        );
-      }
-      result.add(
-        SessionModel(
-          id: s.id,
-          name: s.name,
-          notes: s.notes,
-          date: s.date,
-          reps: reps,
-          isAssessment: s.isAssessment,
-          sessionType: enumFromIndex(
-            SessionType.values,
-            s.sessionType,
-            SessionType.crimpy,
-          ),
-          durationInSeconds: s.duration,
-          repeaterConfig: repeaterConfig,
-        ),
-      );
+      result.add(s.toModel(reps: await gDatabase.getRepsForSession(s.id)));
     }
     return result;
   }
@@ -167,45 +134,11 @@ class RemoteTrainingRepository implements TrainingRepository {
     SessionFilter? filters,
   }) async {
     final sessions = await _apiClient.getSessions();
-    List<SessionModel> result = sessions.map((s) => _parseSession(s)).toList();
+    List<SessionModel> result = sessions.map(SessionModel.fromJson).toList();
     if (filters != null) {
       result = result.where((s) => filters.matchesSession(s)).toList();
     }
     return result;
-  }
-
-  SessionModel _parseSession(Map<String, dynamic> s) {
-    RepeaterConfig? repeaterConfig;
-    if (s['RepeaterSets'] != null &&
-        s['RepeaterReps'] != null &&
-        s['RepeaterWorkTime'] != null &&
-        s['RepeaterRestTime'] != null &&
-        s['RepeaterSetRest'] != null &&
-        s['RepeaterSplitHand'] != null) {
-      repeaterConfig = RepeaterConfig(
-        sets: (s['RepeaterSets'] as num).toInt(),
-        repsPerSet: (s['RepeaterReps'] as num).toInt(),
-        workTime: (s['RepeaterWorkTime'] as num).toInt(),
-        restTime: (s['RepeaterRestTime'] as num).toInt(),
-        setRest: (s['RepeaterSetRest'] as num).toInt(),
-        splitHand: s['RepeaterSplitHand'] as bool,
-      );
-    }
-    return SessionModel(
-      id: s['ID'] as String,
-      name: s['Name'] as String,
-      notes: s['Notes'] as String? ?? '',
-      date: DateTime.parse(s['Date'] as String),
-      reps: null,
-      isAssessment: s['IsAssessment'] as bool? ?? false,
-      sessionType: enumFromIndex(
-        SessionType.values,
-        s['SessionType'] as num?,
-        SessionType.crimpy,
-      ),
-      durationInSeconds: (s['Duration'] as num? ?? 0).toInt(),
-      repeaterConfig: repeaterConfig,
-    );
   }
 
   @override
@@ -215,51 +148,8 @@ class RemoteTrainingRepository implements TrainingRepository {
     final repDatas = (data['rep_datas'] as List<dynamic>? ?? [])
         .cast<Map<String, dynamic>>();
 
-    RepeaterConfig? repeaterConfig;
-    if (s['RepeaterSets'] != null) {
-      repeaterConfig = RepeaterConfig(
-        sets: (s['RepeaterSets'] as num).toInt(),
-        repsPerSet: (s['RepeaterReps'] as num).toInt(),
-        workTime: (s['RepeaterWorkTime'] as num).toInt(),
-        restTime: (s['RepeaterRestTime'] as num).toInt(),
-        setRest: (s['RepeaterSetRest'] as num).toInt(),
-        splitHand: s['RepeaterSplitHand'] as bool,
-      );
-    }
-
-    final reps = repDatas
-        .map(
-          (r) => RepDataModel(
-            averageWeight: (r['AverageWeight'] as num).toDouble(),
-            duration: (r['Duration'] as num).toInt(),
-            index: (r['Index'] as num).toInt(),
-            isRest: r['IsRest'] as bool,
-            handSide: (r['RightHand'] as bool) ? HandSide.right : HandSide.left,
-            targetWeight: (r['TargetWeight'] as num).toDouble(),
-            gripPosition: enumFromIndex(
-              GripPosition.values,
-              r['GripPosition'] as num?,
-              GripPosition.halfCrimp,
-            ),
-          ),
-        )
-        .toList();
-
-    return SessionModel(
-      id: s['ID'] as String,
-      name: s['Name'] as String,
-      notes: s['Notes'] as String? ?? '',
-      date: DateTime.parse(s['Date'] as String),
-      reps: reps,
-      isAssessment: s['IsAssessment'] as bool? ?? false,
-      sessionType: enumFromIndex(
-        SessionType.values,
-        s['SessionType'] as num?,
-        SessionType.crimpy,
-      ),
-      durationInSeconds: (s['Duration'] as num? ?? 0).toInt(),
-      repeaterConfig: repeaterConfig,
-    );
+    final reps = repDatas.map(RepDataModel.fromJson).toList();
+    return SessionModel.fromJson(s, reps: reps);
   }
 
   @override

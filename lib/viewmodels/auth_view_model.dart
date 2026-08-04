@@ -2,7 +2,6 @@ import 'package:crimpy/database/database.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/auth_models.dart' as auth_models;
 import 'package:crimpy/models/common.dart';
-import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/repositories/remote_assessment_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
@@ -211,32 +210,7 @@ class AuthState extends _$AuthState {
     for (final s in sessions) {
       try {
         final dbReps = await gDatabase.getRepsForSession(s.id);
-        RepeaterConfig? repeaterConfig;
-        if (s.repeaterSets != null &&
-            s.repeaterReps != null &&
-            s.repeaterWorkTime != null &&
-            s.repeaterRestTime != null &&
-            s.repeaterSetRest != null &&
-            s.repeaterSplitHand != null) {
-          repeaterConfig = RepeaterConfig(
-            sets: s.repeaterSets!,
-            repsPerSet: s.repeaterReps!,
-            workTime: s.repeaterWorkTime!,
-            restTime: s.repeaterRestTime!,
-            setRest: s.repeaterSetRest!,
-            splitHand: s.repeaterSplitHand!,
-          );
-        }
-        final session = SessionModel(
-          id: s.id,
-          name: s.name,
-          notes: s.notes,
-          date: s.date,
-          isAssessment: s.isAssessment,
-          sessionType: SessionType.values[s.sessionType],
-          durationInSeconds: s.duration,
-          repeaterConfig: repeaterConfig,
-        );
+        final session = s.toModel();
         final serverSessionId = await remoteRepo.saveSession(session, dbReps);
 
         if (s.isAssessment) {

@@ -276,35 +276,7 @@ class AppDatabase extends _$AppDatabase {
         ? []
         : await getSessionData(session.dataPath);
 
-    // Build repeater config if available
-    RepeaterConfig? repeaterConfig;
-    if (session.repeaterSets != null &&
-        session.repeaterReps != null &&
-        session.repeaterWorkTime != null &&
-        session.repeaterRestTime != null &&
-        session.repeaterSetRest != null &&
-        session.repeaterSplitHand != null) {
-      repeaterConfig = RepeaterConfig(
-        sets: session.repeaterSets!,
-        repsPerSet: session.repeaterReps!,
-        workTime: session.repeaterWorkTime!,
-        restTime: session.repeaterRestTime!,
-        setRest: session.repeaterSetRest!,
-        splitHand: session.repeaterSplitHand!,
-      );
-    }
-
-    return SessionModel(
-      name: session.name,
-      date: session.date,
-      id: session.id,
-      notes: session.notes,
-      dataPoints: dataPoints,
-      isAssessment: session.isAssessment,
-      sessionType: SessionType.values[session.sessionType],
-      durationInSeconds: session.duration,
-      repeaterConfig: repeaterConfig,
-    );
+    return session.toModel(dataPoints: dataPoints);
   }
 
   /// Get all saved sessions, with optional filters.
@@ -1085,5 +1057,48 @@ extension RepDataRowToModel on RepData {
       gripPosition,
       GripPosition.halfCrimp,
     ),
+  );
+}
+
+/// Maps a stored session row onto the domain model, optionally with the
+/// repetitions and sensor samples that were loaded alongside it.
+extension SessionRowToModel on Session {
+  RepeaterConfig? get repeaterConfigOrNull {
+    if (repeaterSets == null ||
+        repeaterReps == null ||
+        repeaterWorkTime == null ||
+        repeaterRestTime == null ||
+        repeaterSetRest == null ||
+        repeaterSplitHand == null) {
+      return null;
+    }
+    return RepeaterConfig(
+      sets: repeaterSets!,
+      repsPerSet: repeaterReps!,
+      workTime: repeaterWorkTime!,
+      restTime: repeaterRestTime!,
+      setRest: repeaterSetRest!,
+      splitHand: repeaterSplitHand!,
+    );
+  }
+
+  SessionModel toModel({
+    List<RepDataModel>? reps,
+    List<BleDataPoint>? dataPoints,
+  }) => SessionModel(
+    id: id,
+    name: name,
+    notes: notes,
+    date: date,
+    reps: reps,
+    dataPoints: dataPoints,
+    isAssessment: isAssessment,
+    sessionType: enumFromIndex(
+      SessionType.values,
+      sessionType,
+      SessionType.crimpy,
+    ),
+    durationInSeconds: duration,
+    repeaterConfig: repeaterConfigOrNull,
   );
 }
