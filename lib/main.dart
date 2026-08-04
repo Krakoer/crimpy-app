@@ -33,7 +33,7 @@ Future<void> main() async {
         // options.profilesSampleRate = 1.0;
       },
       appRunner: () =>
-          runApp(SentryWidget(child: const ProviderScope(child: MyApp()))),
+          runApp(ProviderScope(child: SentryWidget(child: const MyApp()))),
     );
   }
 }
