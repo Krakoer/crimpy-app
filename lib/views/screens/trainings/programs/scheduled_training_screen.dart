@@ -420,13 +420,15 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   }
 
   List<Widget> _overrideChips(Map<String, dynamic> overrides) {
+    // Per-rep values arrive nested for split-hand items, so flatten first.
     String fmtLoads(dynamic raw) {
-      final list = (raw as List<dynamic>?) ?? [];
-      if (list.isEmpty) return '';
-      final first = list.first as Map<String, dynamic>;
+      final first = flattenJsonList(raw).firstOrNull;
+      if (first is! Map<String, dynamic>) return '';
       final value = (first['value'] as num?)?.toString() ?? '';
       return '$value ${first['unit'] ?? ''}'.trim();
     }
+
+    String fmtList(dynamic raw) => flattenJsonList(raw).join('/');
 
     final entries = <String>[];
     overrides.forEach((key, value) {
@@ -438,8 +440,8 @@ class ScheduledTrainingScreen extends ConsumerWidget {
         'cycle_rest_seconds' => 'CYCLE REST ${value}s',
         'rest_seconds' => 'REST ${value}s',
         'hb_worktime_seconds' => 'WORK ${value}s',
-        'edge_sizes_mm' => 'EDGE ${(value as List).join('/')}mm',
-        'hand_positions' => 'GRIP ${(value as List).join('/')}',
+        'edge_sizes_mm' => 'EDGE ${fmtList(value)}mm',
+        'hand_positions' => 'GRIP ${fmtList(value)}',
         'both_hands' => value == true ? 'BOTH HANDS' : 'SPLIT HANDS',
         _ => '${key.toUpperCase()} $value',
       };
