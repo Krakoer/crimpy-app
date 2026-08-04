@@ -321,10 +321,14 @@ class ApiClient {
     }
   }
 
+  /// A null body is a valid empty collection, so never cast it blindly.
+  static List<Map<String, dynamic>> _asList(dynamic data) =>
+      (data as List<dynamic>? ?? const []).cast<Map<String, dynamic>>();
+
   // ----- Sessions -----
   Future<List<Map<String, dynamic>>> getSessions() async {
     final res = await get('/api/sessions');
-    return (res.data as List).cast<Map<String, dynamic>>();
+    return _asList(res.data);
   }
 
   Future<Map<String, dynamic>> getSession(String id) async {
@@ -348,7 +352,7 @@ class ApiClient {
   // ----- Trainings -----
   Future<List<Map<String, dynamic>>> getTrainings() async {
     final res = await get('/api/trainings');
-    return (res.data as List).cast<Map<String, dynamic>>();
+    return _asList(res.data);
   }
 
   Future<Map<String, dynamic>> getTraining(String id) async {
@@ -376,7 +380,7 @@ class ApiClient {
   // ----- Programs (coachee, read-only) -----
   Future<List<Map<String, dynamic>>> getMyPrograms() async {
     final res = await get('/api/user/programs');
-    return (res.data as List).cast<Map<String, dynamic>>();
+    return _asList(res.data);
   }
 
   Future<Map<String, dynamic>> getMyProgram(String programId) async {
@@ -386,7 +390,7 @@ class ApiClient {
 
   Future<List<Map<String, dynamic>>> getMyWeeks(String programId) async {
     final res = await get('/api/user/programs/$programId/weeks');
-    return (res.data as List).cast<Map<String, dynamic>>();
+    return _asList(res.data);
   }
 
   Future<Map<String, dynamic>> getMyWeek(
@@ -410,7 +414,7 @@ class ApiClient {
   // ----- Repeaters -----
   Future<List<Map<String, dynamic>>> getRepeaters() async {
     final res = await get('/api/repeaters');
-    return (res.data as List).cast<Map<String, dynamic>>();
+    return _asList(res.data);
   }
 
   Future<Map<String, dynamic>> getRepeater(String id) async {
@@ -438,7 +442,7 @@ class ApiClient {
   // ----- Sensor Configs -----
   Future<List<Map<String, dynamic>>> getSensorConfigs() async {
     final res = await get('/api/sensor-configs');
-    return (res.data as List).cast<Map<String, dynamic>>();
+    return _asList(res.data);
   }
 
   Future<Map<String, dynamic>> createSensorConfig(
@@ -463,7 +467,7 @@ class ApiClient {
   // ----- Pinned Builtin Trainings -----
   Future<List<Map<String, dynamic>>> getPinnedBuiltinTrainings() async {
     final res = await get('/api/pinned-builtin-trainings');
-    return (res.data as List).cast<Map<String, dynamic>>();
+    return _asList(res.data);
   }
 
   Future<void> pinBuiltinTrainingApi(String builtinTrainingId) async {
@@ -480,7 +484,7 @@ class ApiClient {
   // ----- Builtin Training Weights -----
   Future<List<Map<String, dynamic>>> getBuiltinTrainingWeights() async {
     final res = await get('/api/builtin-training-weights');
-    return (res.data as List).cast<Map<String, dynamic>>();
+    return _asList(res.data);
   }
 
   Future<Map<String, dynamic>> createBuiltinTrainingWeight(
@@ -512,10 +516,7 @@ class ApiClient {
 
   Future<List<Map<String, dynamic>>> getAssessmentsApi() async {
     final res = await get('/api/assessments');
-    if (res.data != null) {
-      return (res.data as List).cast<Map<String, dynamic>>();
-    }
-    return [];
+    return _asList(res.data);
   }
 
   Future<void> deleteAssessmentApi(String id) async {
