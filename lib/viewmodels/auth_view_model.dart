@@ -237,20 +237,7 @@ class AuthState extends _$AuthState {
           durationInSeconds: s.duration,
           repeaterConfig: repeaterConfig,
         );
-        final reps = dbReps
-            .map(
-              (r) => RepDataModel(
-                index: r.index,
-                duration: r.duration,
-                isRest: r.isRest,
-                handSide: r.rightHand ? HandSide.right : HandSide.left,
-                targetWeight: r.targetWeight,
-                averageWeight: r.averageWeight,
-                gripPosition: GripPosition.values[r.gripPosition],
-              ),
-            )
-            .toList();
-        final serverSessionId = await remoteRepo.saveSession(session, reps);
+        final serverSessionId = await remoteRepo.saveSession(session, dbReps);
 
         if (s.isAssessment) {
           final dbAssessments = await gDatabase.getAssessmentsForSession(s.id);

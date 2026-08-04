@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:crimpy/database/database.dart';
+import 'package:crimpy/models/common.dart';
+import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 
 class RepItemWidget extends StatelessWidget {
-  final RepData rep;
+  final RepDataModel rep;
   final int index;
   final Color sessionColor;
 
@@ -120,13 +121,15 @@ class RepItemWidget extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          rep.rightHand ? Icons.front_hand : Icons.back_hand,
+                          rep.handSide.isRightHand
+                              ? Icons.front_hand
+                              : Icons.back_hand,
                           size: 16,
                           color: CrimpyTheme.gray700,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          rep.rightHand ? 'Right Hand' : 'Left Hand',
+                          rep.handSide.isRightHand ? 'Right Hand' : 'Left Hand',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,

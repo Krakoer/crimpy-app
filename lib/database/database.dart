@@ -334,7 +334,10 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Get the repetitions data for a given session.
-  Future<List<RepData>> getRepsForSession(String sessionId) =>
+  Future<List<RepDataModel>> getRepsForSession(String sessionId) async =>
+      (await _repRowsForSession(sessionId)).map((r) => r.toModel()).toList();
+
+  Future<List<RepData>> _repRowsForSession(String sessionId) =>
       (select(repDatas)
             ..where((r) => r.sessionId.equals(sessionId))
             ..orderBy([(r) => OrderingTerm(expression: r.index)]))
@@ -1066,3 +1069,21 @@ LazyDatabase _openConnection() {
 }
 
 final AppDatabase gDatabase = AppDatabase();
+
+/// Maps a stored repetition row onto the domain model the rest of the app
+/// works with, so drift's row classes stop at the database layer.
+extension RepDataRowToModel on RepData {
+  RepDataModel toModel() => RepDataModel(
+    averageWeight: averageWeight,
+    duration: duration,
+    index: index,
+    isRest: isRest,
+    handSide: rightHand ? HandSide.right : HandSide.left,
+    targetWeight: targetWeight,
+    gripPosition: enumFromIndex(
+      GripPosition.values,
+      gripPosition,
+      GripPosition.halfCrimp,
+    ),
+  );
+}

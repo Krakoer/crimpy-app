@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:crimpy/database/database.dart';
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/sets_view_widget.dart';
@@ -100,7 +100,7 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
     );
   }
 
-  Widget _buildIndividualRepsView(List<RepData> reps) {
+  Widget _buildIndividualRepsView(List<RepDataModel> reps) {
     // Determine if we should show collapse/expand functionality
     final bool hasMany = reps.length > 10;
     final int displayCount = hasMany && !_repsExpanded ? 5 : reps.length;
@@ -145,16 +145,16 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
 
   /// Group reps into sets using the stored repeater configuration.
   /// For split-hand repeaters, each hand portion is shown as a separate sub-set.
-  List<List<RepData>> _groupRepsIntoSets(List<RepData> reps) {
+  List<List<RepDataModel>> _groupRepsIntoSets(List<RepDataModel> reps) {
     final repeaterConfig = widget.session.repeaterConfig!;
-    final List<List<RepData>> sets = [];
+    final List<List<RepDataModel>> sets = [];
     int repIndex = 0;
 
     if (repeaterConfig.splitHand) {
       // For split hand, group each hand separately
       for (int set = 0; set < repeaterConfig.sets; set++) {
         // Right hand portion
-        final List<RepData> rightHandSet = [];
+        final List<RepDataModel> rightHandSet = [];
         int rightWorkReps = 0;
 
         while (repIndex < reps.length &&
@@ -178,7 +178,7 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
         }
 
         // Left hand portion
-        final List<RepData> leftHandSet = [];
+        final List<RepDataModel> leftHandSet = [];
         int leftWorkReps = 0;
 
         while (repIndex < reps.length &&
@@ -212,8 +212,8 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
       // Non-split hand: separate right and left hand reps within each set
       // In the actual workout, they alternate (R, L, R, L...), but we display them grouped
       for (int set = 0; set < repeaterConfig.sets; set++) {
-        final List<RepData> rightHandReps = [];
-        final List<RepData> leftHandReps = [];
+        final List<RepDataModel> rightHandReps = [];
+        final List<RepDataModel> leftHandReps = [];
         int workRepsCollected = 0;
         final int expectedTotalWorkReps =
             repeaterConfig.repsPerSet * 2; // Both hands
@@ -229,7 +229,7 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
           }
 
           // Separate by hand
-          if (rep.rightHand) {
+          if (rep.handSide.isRightHand) {
             rightHandReps.add(rep);
           } else {
             leftHandReps.add(rep);

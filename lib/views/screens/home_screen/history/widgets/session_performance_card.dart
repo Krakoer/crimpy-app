@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:crimpy/database/database.dart';
+import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 
 class SessionPerformanceCard extends StatelessWidget {
-  final List<RepData> reps;
+  final List<RepDataModel> reps;
 
   const SessionPerformanceCard({super.key, required this.reps});
 

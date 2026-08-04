@@ -1,4 +1,3 @@
-import "package:crimpy/database/database.dart";
 import "package:crimpy/logger.dart";
 import "package:crimpy/models/common.dart";
 import "package:crimpy/models/training_feedback_model.dart";
@@ -122,7 +121,7 @@ class SessionModel {
   final String? notes;
   final DateTime date;
   final List<BleDataPoint>? dataPoints;
-  final List<RepData>? reps;
+  final List<RepDataModel>? reps;
   final bool isAssessment;
   final SessionType sessionType;
   final int? durationInSeconds;

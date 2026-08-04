@@ -229,17 +229,18 @@ class RemoteTrainingRepository implements TrainingRepository {
 
     final reps = repDatas
         .map(
-          (r) => RepData(
-            sessionId: sessionId,
+          (r) => RepDataModel(
             averageWeight: (r['AverageWeight'] as num).toDouble(),
             duration: (r['Duration'] as num).toInt(),
             index: (r['Index'] as num).toInt(),
             isRest: r['IsRest'] as bool,
-            rightHand: r['RightHand'] as bool,
+            handSide: (r['RightHand'] as bool) ? HandSide.right : HandSide.left,
             targetWeight: (r['TargetWeight'] as num).toDouble(),
-            gripPosition: (r['GripPosition'] as num? ?? 0).toInt(),
-            id: r['ID'] as String,
-            updatedAt: DateTime.now(),
+            gripPosition: enumFromIndex(
+              GripPosition.values,
+              r['GripPosition'] as num?,
+              GripPosition.halfCrimp,
+            ),
           ),
         )
         .toList();

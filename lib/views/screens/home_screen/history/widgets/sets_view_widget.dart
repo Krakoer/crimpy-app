@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:crimpy/database/database.dart';
+import 'package:crimpy/models/training_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 
 class SetsViewWidget extends StatelessWidget {
-  final List<List<RepData>> sets;
+  final List<List<RepDataModel>> sets;
   final bool isSplitHand;
   final Color sessionColor;
 
@@ -71,7 +71,7 @@ class SetsViewWidget extends StatelessWidget {
 
 class SetCardWidget extends StatelessWidget {
   final int setNumber;
-  final List<RepData> workReps;
+  final List<RepDataModel> workReps;
   final int successCount;
   final double avgWeight;
   final double avgTarget;
@@ -223,7 +223,7 @@ class SetCardWidget extends StatelessWidget {
 }
 
 class SetPerformanceBar extends StatelessWidget {
-  final List<RepData> workReps;
+  final List<RepDataModel> workReps;
   final Color sessionColor;
 
   const SetPerformanceBar({
