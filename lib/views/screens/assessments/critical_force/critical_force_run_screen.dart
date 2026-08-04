@@ -35,6 +35,8 @@ class CriticalForceRunScreen extends ConsumerStatefulWidget {
 
 class _CriticalForceRunScreenState
     extends ConsumerState<CriticalForceRunScreen> {
+  int get _totalPulls => widget.reps.where((rep) => !rep.isRest).length;
+
   late WorkoutTimer timer = WorkoutTimer(
     repetitions: widget.reps,
     onSecondChange: () => setState(() => {}),
@@ -75,7 +77,9 @@ class _CriticalForceRunScreenState
                 duration: r.durationInSeconds,
                 index: r.index,
                 isRest: r.isRest,
-                handSide: r.handSide,
+                // The protocol reps are hand agnostic; the assessed hand is the
+                // one picked when starting the run.
+                handSide: widget.hand,
                 targetWeight: r.targetWeight,
               ),
             )
@@ -283,7 +287,7 @@ class _CriticalForceRunScreenState
               Positioned(
                 top: 10,
                 child: Text(
-                  "${timer.repCount}/24",
+                  "${timer.repCount}/$_totalPulls",
                   style: Theme.of(context).textTheme.displaySmall,
                 ),
               ),

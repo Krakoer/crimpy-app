@@ -10,6 +10,62 @@ import 'package:collection/collection.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:flutter/material.dart';
 
+/// Number of pulls in the Critical Force protocol.
+const criticalForceRepCount = 24;
+
+/// Seconds of pulling in one Critical Force rep.
+const criticalForceWorkTime = 7;
+
+/// Seconds of rest between two Critical Force pulls.
+const criticalForceRestTime = 3;
+
+/// Seconds of rest before the first pull, giving the climber time to get set up.
+const criticalForceLeadInTime = 10;
+
+/// The Critical Force protocol: a lead-in rest, then a fixed number of pulls
+/// separated by a short rest, all on the single hand being assessed. The
+/// trailing rest after the last pull is omitted so the recording ends on the
+/// final pull.
+List<RepModel> _criticalForceReps() {
+  final reps = <RepModel>[
+    RepModel(
+      durationInSeconds: criticalForceLeadInTime,
+      isRest: true,
+      handSide: HandSide.right,
+      targetWeight: 0,
+      index: 0,
+      id: "",
+    ),
+  ];
+
+  for (var pull = 0; pull < criticalForceRepCount; pull++) {
+    reps.add(
+      RepModel(
+        durationInSeconds: criticalForceWorkTime,
+        isRest: false,
+        handSide: HandSide.right,
+        targetWeight: 0,
+        index: reps.length,
+        id: "",
+      ),
+    );
+    if (pull < criticalForceRepCount - 1) {
+      reps.add(
+        RepModel(
+          durationInSeconds: criticalForceRestTime,
+          isRest: true,
+          handSide: HandSide.right,
+          targetWeight: 0,
+          index: reps.length,
+          id: "",
+        ),
+      );
+    }
+  }
+
+  return reps;
+}
+
 /// Builtin Assessment Model - similar to BuiltinTrainingModel
 /// Dynamically generates assessment trainings at runtime without DB storage
 class BuiltinAssessmentModel {
@@ -109,33 +165,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
       id: "55970ac0-4544-4945-80cd-4841f7c58fe5",
       name: "Critical Force",
       isFav: false,
-      reps: [
-        RepModel(
-          durationInSeconds: 10,
-          isRest: true,
-          handSide: HandSide.right,
-          targetWeight: 0,
-          index: 0,
-          id: "",
-        ),
-        ...RepeaterModel(
-          repsBySet: 24,
-          restBteweenSets: 0,
-          sets: 1,
-          restTime: 3,
-          splitHand: false,
-          workTime: 7,
-        ).generateReps().mapIndexed(
-          (index, rep) => RepModel(
-            durationInSeconds: rep.duration,
-            isRest: rep.isRest,
-            handSide: rep.handSide,
-            targetWeight: rep.targetWeight,
-            index: index + 1,
-            id: "",
-          ),
-        ),
-      ],
+      reps: _criticalForceReps(),
     ),
   ),
   BuiltinAssessmentModel(
