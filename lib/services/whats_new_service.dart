@@ -12,7 +12,11 @@ class WhatsNewManager {
     final currentVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
     final lastVersion = prefs.getString(_lastVersionKey);
 
-    // Show if this is a new version or first install
+    // Don't show what's new when opening the app for the first time
+    if (lastVersion == null) {
+      return false;
+    }
+
     return lastVersion != currentVersion;
   }
 
