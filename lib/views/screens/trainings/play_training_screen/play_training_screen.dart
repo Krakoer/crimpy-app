@@ -485,11 +485,11 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
               // Calculate available height
               final availableHeight = constraints.maxHeight;
 
-              // Determine sizes based on available height. Reserves the top
-              // header + context pill, the fixed header/below slots around the
-              // circle, the progress bar and the controls.
-              final reservedSpace = 320;
-              final gaugeSpace = availableHeight - reservedSpace;
+              // Space taken by the top header + context pill, the fixed
+              // header/below slots around the circle, the progress bar and the
+              // controls. Whatever is left is available to the gauge.
+              const chromeHeight = 320.0;
+              final gaugeSpace = availableHeight - chromeHeight;
 
               // Calculate gauge size (max 300, but scale down if needed)
               final gaugeSize = (gaugeSpace * 0.6).clamp(200.0, 300.0);
