@@ -12,6 +12,7 @@ import 'package:crimpy/views/screens/home_screen/log_session_screen.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.dart';
 import 'package:crimpy/views/widgets/ble/connection_dialog.dart';
+import 'package:crimpy/views/widgets/training_item_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -91,7 +92,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 const ProgramSectionLabel('Exercises'),
                 const SizedBox(height: 8),
-                ..._buildItems(context, training.items, overrideByItem, 0),
+                ..._buildItems(training.items, overrideByItem),
               ],
             ],
           ),
@@ -269,140 +270,27 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   }
 
   List<Widget> _buildItems(
-    BuildContext context,
     List<TrainingItem> items,
     Map<String, SessionOverride> overrideByItem,
-    int depth,
   ) {
-    final widgets = <Widget>[];
-    for (var i = 0; i < items.length; i++) {
-      final item = items[i];
+    bool tuned(TrainingItem item) {
       final override = overrideByItem[item.id];
-      widgets.add(
-        Padding(
-          padding: EdgeInsets.only(left: depth * 14.0, bottom: 10),
-          child: _itemTile(context, item, i + 1, override),
-        ),
-      );
-      if (item.items.isNotEmpty) {
-        widgets.addAll(
-          _buildItems(context, item.items, overrideByItem, depth + 1),
-        );
-      }
+      return override != null && override.overrides.isNotEmpty;
     }
-    return widgets;
-  }
 
-  Widget _itemTile(
-    BuildContext context,
-    TrainingItem item,
-    int number,
-    SessionOverride? override,
-  ) {
-    final tuned = override != null && override.overrides.isNotEmpty;
-    final accent = tuned ? CrimpyTheme.accentYellow : null;
-    final child = Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 26,
-          height: 26,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: CrimpyTheme.bgSecondary,
-            border: Border.all(color: CrimpyTheme.borderDefault, width: 1.5),
-          ),
-          child: Text(
-            '$number',
-            style: const TextStyle(
-              fontFamily: 'JetBrainsMono',
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        const SizedBox(width: 11),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _itemTitle(item),
-                style: const TextStyle(
-                  fontFamily: 'JetBrainsMono',
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
-                  color: CrimpyTheme.textPrimary,
-                ),
+    return buildTrainingItemTiles(
+      items,
+      accentColorOf: (item) => tuned(item) ? CrimpyTheme.accentYellow : null,
+      extraOf: (item) => tuned(item)
+          ? [
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: _overrideChips(overrideByItem[item.id]!.overrides),
               ),
-              if (_itemDetail(item).isNotEmpty) ...[
-                const SizedBox(height: 2),
-                Text(
-                  _itemDetail(item),
-                  style: const TextStyle(
-                    fontFamily: 'JetBrainsMono',
-                    fontSize: 11,
-                    color: CrimpyTheme.textSecondary,
-                  ),
-                ),
-              ],
-              if (tuned) ...[
-                const SizedBox(height: 9),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: _overrideChips(override.overrides),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
+            ]
+          : const [],
     );
-
-    return accent == null
-        ? CrimpyCard.simple(child: child)
-        : CrimpyCard.category(accentColor: accent, child: child);
-  }
-
-  String _itemTitle(TrainingItem item) => switch (item.type) {
-    TrainingItemType.group => item.groupTitle ?? 'Group',
-    TrainingItemType.circuit => 'Circuit',
-    TrainingItemType.repeater => 'Repeater',
-    TrainingItemType.hangboardRep => 'Hangboard',
-    TrainingItemType.exercise => item.exerciseName ?? 'Exercise',
-    TrainingItemType.free => item.freeText ?? 'Note',
-  };
-
-  String _itemDetail(TrainingItem item) {
-    final load = item.loadLabel;
-    // An item is either rep-based or time-based, never both.
-    final amount = item.effectiveReps != null
-        ? '${item.effectiveReps} reps'
-        : item.effectiveDuration != null
-        ? '${item.effectiveDuration}s'
-        : null;
-
-    switch (item.type) {
-      case TrainingItemType.repeater:
-        return '${item.cycles ?? 1}x${item.reps ?? 1} - ${item.worktimeSeconds ?? 7}s on / ${item.restSeconds ?? 3}s off';
-      case TrainingItemType.hangboardRep:
-        return [
-          if (item.effectiveReps != null) '${item.effectiveReps} reps',
-          '${item.worktimeSeconds ?? 7}s on / ${item.restSeconds ?? 3}s off',
-          if (load != null) load,
-        ].join(' - ');
-      case TrainingItemType.exercise:
-        return [if (amount != null) amount, if (load != null) load].join(' - ');
-      case TrainingItemType.circuit:
-        return '${item.cycles ?? 1} cycles';
-      case TrainingItemType.group:
-        return '';
-      case TrainingItemType.free:
-        return item.effectiveDuration != null
-            ? '${item.effectiveDuration}s'
-            : '';
-    }
   }
 
   List<Widget> _overrideChips(Map<String, dynamic> overrides) {
