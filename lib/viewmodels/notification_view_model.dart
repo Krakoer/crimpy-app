@@ -1,4 +1,5 @@
 import 'package:crimpy/logger.dart';
+import 'package:crimpy/models/auth_models.dart' as auth_models;
 import 'package:crimpy/models/cached_program_schedule.dart';
 import 'package:crimpy/models/notification_preferences.dart';
 import 'package:crimpy/models/program_model.dart';
@@ -31,6 +32,17 @@ TrainingReminderScheduler trainingReminderScheduler(Ref ref) =>
 Future<bool> reminderPermission(Ref ref) =>
     ref.watch(notificationServiceProvider).hasPermission();
 
+/// Whether the reminder settings belong to nobody and must be dropped.
+///
+/// Only a resolved absence of user counts. The auth state reads the stored user
+/// and its tokens asynchronously, so it is loading on every cold start, and
+/// treating that as a sign out would wipe the settings on each launch. An auth
+/// failure keeps them too: it says nothing about who owns them.
+bool isSignedOut(AsyncValue<auth_models.User?> auth) => switch (auth) {
+  AsyncData(:final value) => value == null,
+  _ => false,
+};
+
 /// The training reminder settings, and the actions that change them.
 @Riverpod(keepAlive: true)
 class NotificationPreferencesController
@@ -43,7 +55,7 @@ class NotificationPreferencesController
 
     // Reminder settings describe an account, not a device. Keeping them across a
     // sign out would opt the next user in to someone else's program.
-    if (!ref.watch(isAuthenticatedProvider)) {
+    if (isSignedOut(ref.watch(authStateProvider))) {
       await _service.clear();
       return const NotificationPreferences();
     }

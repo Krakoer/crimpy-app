@@ -240,7 +240,7 @@ final class NotificationPreferencesControllerProvider
 }
 
 String _$notificationPreferencesControllerHash() =>
-    r'1d40e3d69b2f184468c15669e1fc19ca10e6126b';
+    r'b6d3a078f6143ea7f6dbd947666423352064c5c5';
 
 /// The training reminder settings, and the actions that change them.
 
