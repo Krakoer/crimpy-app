@@ -55,7 +55,49 @@ final class NotificationServiceProvider
 }
 
 String _$notificationServiceHash() =>
-    r'585c1e42ea844e71a2b76b80b165adfe2c5c8529';
+    r'257c62ad560c1c604bbf05fd183d264e1feb960e';
+
+/// Fires when the user taps snooze on a reminder. The app shell answers it by
+/// asking which hour to postpone to.
+
+@ProviderFor(snoozeRequests)
+const snoozeRequestsProvider = SnoozeRequestsProvider._();
+
+/// Fires when the user taps snooze on a reminder. The app shell answers it by
+/// asking which hour to postpone to.
+
+final class SnoozeRequestsProvider
+    extends
+        $FunctionalProvider<AsyncValue<DateTime>, DateTime, Stream<DateTime>>
+    with $FutureModifier<DateTime>, $StreamProvider<DateTime> {
+  /// Fires when the user taps snooze on a reminder. The app shell answers it by
+  /// asking which hour to postpone to.
+  const SnoozeRequestsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'snoozeRequestsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$snoozeRequestsHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<DateTime> $createElement($ProviderPointer pointer) =>
+      $StreamProviderElement(pointer);
+
+  @override
+  Stream<DateTime> create(Ref ref) {
+    return snoozeRequests(ref);
+  }
+}
+
+String _$snoozeRequestsHash() => r'478a652c6b906037b246b4644410ffa9426fbdc5';
 
 @ProviderFor(notificationPreferencesService)
 const notificationPreferencesServiceProvider =
@@ -240,7 +282,7 @@ final class NotificationPreferencesControllerProvider
 }
 
 String _$notificationPreferencesControllerHash() =>
-    r'b6d3a078f6143ea7f6dbd947666423352064c5c5';
+    r'd6e02e733438e594ba4e893481513d952ee57e7a';
 
 /// The training reminder settings, and the actions that change them.
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:app_settings/app_settings.dart';
@@ -23,6 +24,11 @@ class NotificationService {
     importance: Importance.defaultImportance,
   );
 
+  /// Identifies the snooze button in a notification response, and the iOS
+  /// category the button is registered under.
+  static const String snoozeActionId = 'snooze_training_reminder';
+  static const String _categoryId = 'training_reminder';
+
   static const NotificationDetails _details = NotificationDetails(
     android: AndroidNotificationDetails(
       _channelId,
@@ -30,9 +36,56 @@ class NotificationService {
       channelDescription: _channelDescription,
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
+      actions: <AndroidNotificationAction>[
+        // Picking the new hour needs a picker, so the button has to bring the
+        // app up rather than being handled in the background.
+        AndroidNotificationAction(
+          snoozeActionId,
+          'Snooze',
+          showsUserInterface: true,
+          cancelNotification: true,
+        ),
+      ],
     ),
-    iOS: DarwinNotificationDetails(),
+    iOS: DarwinNotificationDetails(categoryIdentifier: _categoryId),
   );
+
+  static final List<DarwinNotificationCategory> _categories = [
+    DarwinNotificationCategory(
+      _categoryId,
+      actions: [
+        DarwinNotificationAction.plain(
+          snoozeActionId,
+          'Snooze',
+          options: {DarwinNotificationActionOption.foreground},
+        ),
+      ],
+    ),
+  ];
+
+  /// Emits when the user taps the snooze button. The app answers by asking for
+  /// the hour to postpone to, so this only reports the request.
+  ///
+  /// A request raised before anything listens is held rather than dropped: the
+  /// tap is what launched the app, so it always arrives before the shell is up.
+  /// Carries the instant of the tap rather than nothing at all: two identical
+  /// events in a row compare equal, and the second would never be delivered.
+  Stream<DateTime> get snoozeRequests => _snoozeRequests.stream;
+
+  DateTime? _snoozePending;
+  late final StreamController<DateTime> _snoozeRequests =
+      StreamController<DateTime>.broadcast(onListen: _flushPendingSnooze);
+
+  void _flushPendingSnooze() {
+    final pending = _snoozePending;
+    if (pending == null || !_snoozeRequests.hasListener) return;
+    _snoozePending = null;
+    // Never delivered straight from onListen, which runs while the listener is
+    // still being attached.
+    scheduleMicrotask(() => _snoozeRequests.add(pending));
+  }
+
+  void dispose() => _snoozeRequests.close();
 
   final FlutterLocalNotificationsPlugin _plugin;
 
@@ -67,16 +120,33 @@ class NotificationService {
     // the instant, so the alarm still fires at the intended wall clock time.
     tz_data.initializeTimeZones();
     await _plugin.initialize(
-      settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      settings: InitializationSettings(
+        android: const AndroidInitializationSettings('@mipmap/ic_launcher'),
         iOS: DarwinInitializationSettings(
           requestAlertPermission: false,
           requestBadgePermission: false,
           requestSoundPermission: false,
+          notificationCategories: _categories,
         ),
       ),
+      onDidReceiveNotificationResponse: _handleResponse,
     );
     await _androidPlugin?.createNotificationChannel(_channel);
+
+    // A snooze tapped while the app was not running launches it, and the
+    // response callback above can fire before anything is listening. The launch
+    // details keep it until the app shell asks.
+    final launch = await _plugin.getNotificationAppLaunchDetails();
+    if (launch?.didNotificationLaunchApp ?? false) {
+      _handleResponse(launch!.notificationResponse);
+    }
+  }
+
+  void _handleResponse(NotificationResponse? response) {
+    if (response?.actionId != snoozeActionId) return;
+    AppLoggerHelper.debug('Training reminder snoozed from the notification');
+    _snoozePending = DateTime.now();
+    _flushPendingSnooze();
   }
 
   /// Runs the reminder writes one after another. A write is a cancel followed

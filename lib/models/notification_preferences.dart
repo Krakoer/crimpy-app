@@ -48,13 +48,25 @@ class NotificationPreferences {
   /// are stable across weeks, unlike the week session ids.
   final Map<String, Set<int>> flexibleTrainingDays;
 
+  /// The instant a postponed reminder should fire again, set when the user
+  /// snoozes one from the notification. Dropped once it has passed.
+  final DateTime? snoozedUntil;
+
   const NotificationPreferences({
     this.enabled = false,
     this.primaryTime = const ReminderTime(8, 0),
     this.secondaryTime,
     this.activeWeekdays = allWeekdays,
     this.flexibleTrainingDays = const {},
+    this.snoozedUntil,
   });
+
+  /// The same settings with a snooze that has already fired forgotten, so it
+  /// stops being carried around once it is spent.
+  NotificationPreferences withoutStaleSnooze(DateTime now) =>
+      snoozedUntil == null || snoozedUntil!.isAfter(now)
+      ? this
+      : copyWith(clearSnoozedUntil: true);
 
   /// The enabled reminder times, ordered so the index is the notification slot.
   List<ReminderTime> get times => [
@@ -74,6 +86,8 @@ class NotificationPreferences {
     bool clearSecondaryTime = false,
     Set<int>? activeWeekdays,
     Map<String, Set<int>>? flexibleTrainingDays,
+    DateTime? snoozedUntil,
+    bool clearSnoozedUntil = false,
   }) => NotificationPreferences(
     enabled: enabled ?? this.enabled,
     primaryTime: primaryTime ?? this.primaryTime,
@@ -82,6 +96,9 @@ class NotificationPreferences {
         : (secondaryTime ?? this.secondaryTime),
     activeWeekdays: activeWeekdays ?? this.activeWeekdays,
     flexibleTrainingDays: flexibleTrainingDays ?? this.flexibleTrainingDays,
+    snoozedUntil: clearSnoozedUntil
+        ? null
+        : (snoozedUntil ?? this.snoozedUntil),
   );
 
   factory NotificationPreferences.fromJson(Map<String, dynamic> json) {
@@ -108,6 +125,7 @@ class NotificationPreferences {
           ? allWeekdays
           : weekdays,
       flexibleTrainingDays: flexible ?? const {},
+      snoozedUntil: DateTime.tryParse(json['snoozed_until'] as String? ?? ''),
     );
   }
 
@@ -119,5 +137,6 @@ class NotificationPreferences {
     'flexible_training_days': flexibleTrainingDays.map(
       (key, value) => MapEntry(key, value.toList()..sort()),
     ),
+    'snoozed_until': snoozedUntil?.toIso8601String(),
   };
 }

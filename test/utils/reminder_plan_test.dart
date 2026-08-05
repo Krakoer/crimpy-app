@@ -345,6 +345,118 @@ void main() {
       expect(restored.secondaryTime, isNull);
       expect(restored.activeWeekdays, allWeekdays);
       expect(restored.times, hasLength(1));
+      expect(restored.snoozedUntil, isNull);
+    });
+
+    test('a snooze survives the round trip', () {
+      final preferences = _enabled.copyWith(
+        snoozedUntil: DateTime(2026, 6, 1, 19, 30),
+      );
+
+      final restored = NotificationPreferences.fromJson(preferences.toJson());
+
+      expect(restored.snoozedUntil, DateTime(2026, 6, 1, 19, 30));
+    });
+  });
+
+  group('snoozed reminders', () {
+    test('adds one occurrence at the chosen hour', () {
+      final plan = planReminders(
+        preferences: _enabled.copyWith(
+          snoozedUntil: DateTime(2026, 6, 1, 19, 30),
+        ),
+        schedule: _schedule([_everydaySession]),
+        sessions: [],
+        from: _mondayMorning,
+      );
+
+      final snoozed = plan.where((o) => o.isSnoozed).toList();
+      expect(snoozed, hasLength(1));
+      expect(snoozed.single.when, DateTime(2026, 6, 1, 19, 30));
+      expect(snoozed.single.body, 'Mobility');
+    });
+
+    test('keeps an id of its own so it never overwrites a scheduled slot', () {
+      final plan = planReminders(
+        preferences: _enabled.copyWith(
+          snoozedUntil: DateTime(2026, 6, 1, 19, 30),
+        ),
+        schedule: _schedule([_everydaySession]),
+        sessions: [],
+        from: _mondayMorning,
+      );
+
+      final ids = plan.map((o) => o.notificationId).toList();
+      expect(ids.toSet(), hasLength(ids.length));
+      expect(
+        plan.firstWhere((o) => o.isSnoozed).notificationId,
+        snoozeNotificationId,
+      );
+      expect(
+        ids.every(
+          (id) =>
+              id >= reminderIdBase && id < reminderIdBase + reminderIdBlockSize,
+        ),
+        isTrue,
+      );
+    });
+
+    test('fires on a day the reminder is normally silent', () {
+      // The user asked for this hour by hand, so the active weekdays that gate
+      // a scheduled reminder do not apply to it.
+      final plan = planReminders(
+        preferences: _enabled.copyWith(
+          activeWeekdays: {2},
+          snoozedUntil: DateTime(2026, 6, 1, 19, 30),
+        ),
+        schedule: _schedule([_everydaySession]),
+        sessions: [],
+        from: _mondayMorning,
+      );
+
+      expect(plan.where((o) => o.isSnoozed), hasLength(1));
+    });
+
+    test('stays quiet once the training it postponed is logged', () {
+      final plan = planReminders(
+        preferences: _enabled.copyWith(
+          snoozedUntil: DateTime(2026, 6, 1, 19, 30),
+        ),
+        schedule: _schedule([_everydaySession]),
+        sessions: [_logged('Mobility', DateTime(2026, 6, 1, 12))],
+        from: _mondayMorning,
+      );
+
+      expect(plan.where((o) => o.isSnoozed), isEmpty);
+    });
+
+    test('a snooze already gone is not planned', () {
+      final plan = planReminders(
+        preferences: _enabled.copyWith(snoozedUntil: DateTime(2026, 6, 1, 5)),
+        schedule: _schedule([_everydaySession]),
+        sessions: [],
+        from: _mondayMorning,
+      );
+
+      expect(plan.where((o) => o.isSnoozed), isEmpty);
+    });
+
+    test('a spent snooze is forgotten rather than carried around', () {
+      final preferences = _enabled.copyWith(
+        snoozedUntil: DateTime(2026, 6, 1, 5),
+      );
+
+      expect(
+        preferences.withoutStaleSnooze(_mondayMorning).snoozedUntil,
+        isNull,
+      );
+      expect(
+        _enabled
+            .copyWith(snoozedUntil: DateTime(2026, 6, 1, 19))
+            .withoutStaleSnooze(_mondayMorning)
+            .snoozedUntil,
+        DateTime(2026, 6, 1, 19),
+      );
     });
   });
 }

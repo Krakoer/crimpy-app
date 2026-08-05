@@ -14,7 +14,17 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'notification_view_model.g.dart';
 
 @Riverpod(keepAlive: true)
-NotificationService notificationService(Ref ref) => NotificationService();
+NotificationService notificationService(Ref ref) {
+  final service = NotificationService();
+  ref.onDispose(service.dispose);
+  return service;
+}
+
+/// Fires when the user taps snooze on a reminder. The app shell answers it by
+/// asking which hour to postpone to.
+@Riverpod(keepAlive: true)
+Stream<DateTime> snoozeRequests(Ref ref) =>
+    ref.watch(notificationServiceProvider).snoozeRequests;
 
 @Riverpod(keepAlive: true)
 NotificationPreferencesService notificationPreferencesService(Ref ref) =>
@@ -59,8 +69,15 @@ class NotificationPreferencesController
       await _service.clear();
       return const NotificationPreferences();
     }
-    return _service.load();
+    // A snooze that has already fired is spent, and would otherwise be carried
+    // around forever and re-planned on every launch.
+    return (await _service.load()).withoutStaleSnooze(DateTime.now());
   }
+
+  /// Postpones the current reminder to [when]. The plan picks it up as one
+  /// extra occurrence, so it survives every later reschedule.
+  Future<void> snoozeUntil(DateTime when) =>
+      _update((current) => current.copyWith(snoozedUntil: when));
 
   /// Turning reminders on needs the OS permission first: without it the
   /// scheduled notifications would be dropped silently.

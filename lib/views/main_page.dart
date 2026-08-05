@@ -107,6 +107,50 @@ class _MainPageState extends ConsumerState<MainPage>
     }
   }
 
+  /// Asks which hour to postpone the reminder to. An hour already gone means
+  /// tomorrow, so picking 8am in the evening still does something sensible.
+  Future<void> _askSnoozeTime() async {
+    final now = DateTime.now();
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(now.add(const Duration(hours: 1))),
+      helpText: 'Remind me again at',
+    );
+    if (picked == null || !mounted) return;
+
+    var when = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      picked.hour,
+      picked.minute,
+    );
+    final tomorrow = !when.isAfter(now);
+    if (tomorrow) {
+      when = DateTime(
+        now.year,
+        now.month,
+        now.day + 1,
+        picked.hour,
+        picked.minute,
+      );
+    }
+
+    await ref
+        .read(notificationPreferencesControllerProvider.notifier)
+        .snoozeUntil(when);
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Reminder postponed to ${picked.format(context)}'
+          '${tomorrow ? ' tomorrow' : ''}',
+        ),
+      ),
+    );
+  }
+
   /// Check if the app has been updated and show the "What's New" dialog
   Future<void> _checkForUpdates() async {
     final whatsNewManager = ref.read(whatsNewProvider);
@@ -128,6 +172,11 @@ class _MainPageState extends ConsumerState<MainPage>
     // Keeps the reminder plan in step with the settings, the coach program and
     // the logged sessions for as long as the app is running.
     ref.watch(trainingReminderSyncProvider);
+    // Snoozing from the notification brings the app up so the hour can be
+    // picked, which cannot happen from the notification itself.
+    ref.listen(snoozeRequestsProvider, (_, next) {
+      if (next.hasValue) _askSnoozeTime();
+    });
 
     return Scaffold(
       bottomNavigationBar: SafeArea(

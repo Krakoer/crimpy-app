@@ -8,8 +8,13 @@ import 'package:crimpy/utils/program_completion.dart';
 /// whole block so rescheduling can clear it without touching anything else.
 const int reminderIdBase = 900000;
 
-/// Number of notification ids reserved, two slots over a 400 day cycle.
-const int reminderIdBlockSize = 800;
+/// Number of notification ids reserved: two slots over a 400 day cycle, plus
+/// the single snoozed reminder that sits just past them.
+const int reminderIdBlockSize = 801;
+
+/// The postponed reminder owns one id of its own, so re-planning replaces it
+/// without ever colliding with a day and slot.
+const int snoozeNotificationId = reminderIdBase + 800;
 
 /// Days of schedule planned ahead. Reminders are rewritten whenever the app
 /// runs, so this only has to outlast a stretch of the app never being opened.
@@ -32,17 +37,23 @@ class ReminderOccurrence {
   final String title;
   final String body;
 
+  /// Whether this is the one reminder the user postponed rather than one of the
+  /// scheduled slots.
+  final bool isSnoozed;
+
   const ReminderOccurrence({
     required this.when,
     required this.slot,
     required this.title,
     required this.body,
+    this.isSnoozed = false,
   });
 
   /// Derived from the day and the slot so rescheduling the same plan reuses the
   /// same ids and never leaves a stale duplicate behind.
-  int get notificationId =>
-      reminderIdBase + (_epochDay(when) % 400) * 2 + (slot % 2);
+  int get notificationId => isSnoozed
+      ? snoozeNotificationId
+      : reminderIdBase + (_epochDay(when) % 400) * 2 + (slot % 2);
 }
 
 /// The trainings still owed on a given day, as reminder labels.
@@ -80,6 +91,35 @@ List<String> _pendingLabels(
   return labels;
 }
 
+/// The trainings still owed on [day], or empty when the program does not cover
+/// it or the coach has not published its week.
+List<String> _labelsForDay(
+  CachedProgramSchedule schedule,
+  List<SessionModel> sessions,
+  NotificationPreferences preferences,
+  DateTime day,
+) {
+  final program = schedule.program;
+  if (!program.isActiveOn(day)) return const [];
+
+  final weekNumber = program.currentWeekNumber(day);
+  final week = schedule.weekNumbered(weekNumber);
+  if (week == null) return const [];
+
+  return _pendingLabels(
+    program,
+    week,
+    program.dayOffsetOf(weekNumber, day),
+    sessions,
+    preferences,
+    day,
+  );
+}
+
+String _titleFor(List<String> labels) => labels.length == 1
+    ? '1 training today'
+    : '${labels.length} trainings today';
+
 /// Every reminder to schedule over the next [horizonDays] days, from the
 /// cached program schedule and the sessions already logged.
 ///
@@ -103,23 +143,10 @@ List<ReminderOccurrence> planReminders({
     if (!program.isActiveOn(day)) continue;
     if (!preferences.activeWeekdays.contains(day.weekday - 1)) continue;
 
-    final weekNumber = program.currentWeekNumber(day);
-    final week = schedule.weekNumbered(weekNumber);
-    if (week == null) continue;
-
-    final labels = _pendingLabels(
-      program,
-      week,
-      program.dayOffsetOf(weekNumber, day),
-      sessions,
-      preferences,
-      day,
-    );
+    final labels = _labelsForDay(schedule, sessions, preferences, day);
     if (labels.isEmpty) continue;
 
-    final title = labels.length == 1
-        ? '1 training today'
-        : '${labels.length} trainings today';
+    final title = _titleFor(labels);
     final body = labels.join(', ');
 
     for (var slot = 0; slot < times.length; slot++) {
@@ -127,6 +154,25 @@ List<ReminderOccurrence> planReminders({
       if (!when.isAfter(from)) continue;
       occurrences.add(
         ReminderOccurrence(when: when, slot: slot, title: title, body: body),
+      );
+    }
+  }
+
+  final snoozedUntil = preferences.snoozedUntil;
+  if (snoozedUntil != null && snoozedUntil.isAfter(from)) {
+    // The user asked for this one by hand, so it ignores the active weekdays a
+    // scheduled reminder has to respect. It still stays quiet if the training
+    // it was postponing has been logged in the meantime.
+    final labels = _labelsForDay(schedule, sessions, preferences, snoozedUntil);
+    if (labels.isNotEmpty) {
+      occurrences.add(
+        ReminderOccurrence(
+          when: snoozedUntil,
+          slot: 0,
+          title: _titleFor(labels),
+          body: labels.join(', '),
+          isSnoozed: true,
+        ),
       );
     }
   }
