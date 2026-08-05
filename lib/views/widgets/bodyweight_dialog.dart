@@ -1,9 +1,9 @@
-import 'dart:async';
-
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/training.dart';
+import 'package:crimpy/utils/bodyweight_measurement.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
+import 'package:crimpy/views/screens/bodyweight/bodyweight_measure_screen.dart';
 import 'package:crimpy/views/widgets/ble/connection_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,14 +38,8 @@ class BodyweightDialog extends ConsumerStatefulWidget {
 }
 
 class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
-  static const int _measureSeconds = 5;
-
   final TextEditingController _controller = TextEditingController();
-  Timer? _measureTimer;
-  int _secondsLeft = 0;
   String? _error;
-
-  bool get _measuring => _measureTimer != null;
 
   @override
   void initState() {
@@ -56,35 +50,18 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
 
   @override
   void dispose() {
-    _measureTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
   static String _format(double kilograms) => kilograms.toStringAsFixed(1);
 
-  /// Records the peak the sensor sees while the user hangs with their full
-  /// weight on it. The peak, rather than the average, keeps the ramp up at the
-  /// start of the hang out of the result.
-  void _startMeasure() {
-    ref.read(bleSessionProvider.notifier).reset();
-    final timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_secondsLeft > 1) {
-        setState(() => _secondsLeft -= 1);
-        return;
-      }
-      timer.cancel();
-      final measured = ref.read(bleSessionProvider).max;
-      setState(() {
-        _measureTimer = null;
-        _secondsLeft = 0;
-        if (measured > 0) _controller.text = _format(measured);
-      });
-    });
+  Future<void> _measure() async {
+    final measured = await showBodyweightMeasureScreen(context);
+    if (measured == null || !mounted) return;
     setState(() {
       _error = null;
-      _secondsLeft = _measureSeconds;
-      _measureTimer = timer;
+      _controller.text = _format(measured);
     });
   }
 
@@ -99,8 +76,13 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
     final entered = double.tryParse(
       _controller.text.trim().replaceAll(',', '.'),
     );
-    if (entered == null || entered <= 0) {
-      setState(() => _error = 'Enter a weight in kilograms');
+    if (entered == null || !isPlausibleBodyweight(entered)) {
+      setState(
+        () => _error =
+            'Enter a weight between '
+            '${BodyweightMeasurement.minimumPlausibleKg.toStringAsFixed(0)} and '
+            '${BodyweightMeasurement.maximumPlausibleKg.toStringAsFixed(0)} kg',
+      );
       return;
     }
     await ref.read(bodyweightProvider.notifier).set(entered);
@@ -112,7 +94,6 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
   Widget build(BuildContext context) {
     final connected =
         ref.watch(connectionStateProvider) == BleConnectionState.connected;
-    final lastValue = ref.watch(bleLastValueProvider);
 
     return AlertDialog(
       title: const Text('Body weight'),
@@ -127,7 +108,6 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
           const SizedBox(height: 16),
           TextField(
             controller: _controller,
-            enabled: !_measuring,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             onChanged: (_) {
               if (_error != null) setState(() => _error = null);
@@ -142,22 +122,9 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
             ),
           ),
           const SizedBox(height: 16),
-          if (_measuring)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Hang with all your weight on the sensor.'),
-                const SizedBox(height: 8),
-                Text(
-                  '${lastValue == null ? "--" : lastValue.toStringAsFixed(1)} kg'
-                  ' - $_secondsLeft',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-              ],
-            )
-          else if (connected)
+          if (connected)
             OutlinedButton.icon(
-              onPressed: _startMeasure,
+              onPressed: _measure,
               icon: const Icon(Icons.speed),
               label: const Text('Measure with the sensor'),
             )
@@ -171,13 +138,10 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: _measuring ? null : () => Navigator.of(context).pop(),
+          onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        TextButton(
-          onPressed: _measuring ? null : _save,
-          child: const Text('Save'),
-        ),
+        TextButton(onPressed: _save, child: const Text('Save')),
       ],
     );
   }
