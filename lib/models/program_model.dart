@@ -49,6 +49,18 @@ class Program {
     updatedAt: DateTime.parse(json['updated_at'] as String),
   );
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'coach_id': coachId,
+    'user_id': userId,
+    'name': name,
+    'objective': objective,
+    'start_date': startDate.toIso8601String(),
+    'duration_weeks': durationWeeks,
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
+  };
+
   /// Inclusive last day of the program, or null when duration is unset.
   DateTime? get endDate => durationWeeks == null
       ? null
@@ -136,6 +148,14 @@ class Week {
           ..sort((a, b) => a.position.compareTo(b.position)),
   );
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'program_id': programId,
+    'week_number': weekNumber,
+    'notes': notes,
+    'sessions': sessions.map((s) => s.toJson()).toList(),
+  };
+
   /// Sessions placed on a specific day of the week, ordered by day then position.
   List<WeekSession> get scheduledSessions =>
       sessions.where((s) => s.dayOfWeek != null).toList()..sort((a, b) {
@@ -201,6 +221,20 @@ class WeekSession {
         .map((e) => SessionOverride.fromJson(e as Map<String, dynamic>))
         .toList(),
   );
+
+  /// Overrides are deliberately left out: they carry training content, not
+  /// scheduling, and the only consumer of this is the reminder schedule cache.
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'training_id': trainingId,
+    'training_title': trainingTitle,
+    'training_type': trainingType,
+    'day_of_week': dayOfWeek,
+    'times_per_week': timesPerWeek,
+    'is_everyday': isEveryday,
+    'position': position,
+    'notes': notes,
+  };
 
   SessionType get sessionType => sessionTypeFromApi(trainingType);
 
