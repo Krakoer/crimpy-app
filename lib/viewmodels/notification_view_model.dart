@@ -5,6 +5,7 @@ import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/services/notification_preferences_service.dart';
 import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/services/training_reminder_scheduler.dart';
+import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -29,8 +30,15 @@ class NotificationPreferencesController
   late NotificationPreferencesService _service;
 
   @override
-  Future<NotificationPreferences> build() {
+  Future<NotificationPreferences> build() async {
     _service = ref.watch(notificationPreferencesServiceProvider);
+
+    // Reminder settings describe an account, not a device. Keeping them across a
+    // sign out would opt the next user in to someone else's program.
+    if (!ref.watch(isAuthenticatedProvider)) {
+      await _service.clear();
+      return const NotificationPreferences();
+    }
     return _service.load();
   }
 
@@ -83,7 +91,13 @@ Future<CachedProgramSchedule?> programScheduleCache(Ref ref) async {
   final service = ref.watch(notificationPreferencesServiceProvider);
   try {
     final program = await ref.watch(activeProgramProvider.future);
-    if (program == null) return service.loadSchedule();
+    // No active program is an answer, not a failure: the cached copy belongs to
+    // a program that ended or to the account that just signed out. Only the
+    // fetch failure below is allowed to fall back to it.
+    if (program == null) {
+      await service.saveSchedule(null);
+      return null;
+    }
 
     // A 14 day horizon starting mid week spans at most three Monday aligned
     // weeks. Weeks the coach has not published yet come back null.

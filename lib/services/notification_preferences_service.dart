@@ -31,6 +31,15 @@ class NotificationPreferencesService {
     await prefs.setString(_preferencesKey, jsonEncode(preferences.toJson()));
   }
 
+  /// Drops everything the reminders are built from. Called when the account
+  /// signing out means the stored settings and schedule no longer describe
+  /// whoever uses the device next.
+  Future<void> clear() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_preferencesKey);
+    await prefs.remove(_scheduleKey);
+  }
+
   Future<CachedProgramSchedule?> loadSchedule() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_scheduleKey);

@@ -192,7 +192,7 @@ final class NotificationPreferencesControllerProvider
 }
 
 String _$notificationPreferencesControllerHash() =>
-    r'088d28b3b5fb4b8ac3cc1a57cfc2f0bd37bfdf2a';
+    r'b8c4dd7ee42d8edf7b16b6845a011074e062ab8e';
 
 /// The training reminder settings, and the actions that change them.
 
@@ -272,7 +272,7 @@ final class ProgramScheduleCacheProvider
 }
 
 String _$programScheduleCacheHash() =>
-    r'3f9dd114834559c46b1368bf75f821abfaddafda';
+    r'29832590dca5a7027f237a51f578960dca44d269';
 
 /// Rewrites the pending reminders whenever the settings, the program schedule
 /// or the logged sessions change. Watched by the app shell so it stays alive.
