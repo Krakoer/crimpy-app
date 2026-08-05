@@ -1,5 +1,5 @@
 import 'package:crimpy/models/auth_models.dart' as auth_models;
-import 'package:crimpy/viewmodels/notification_view_model.dart';
+import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

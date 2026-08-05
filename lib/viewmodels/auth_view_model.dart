@@ -19,6 +19,17 @@ ApiClient apiClient(Ref ref) {
   return client;
 }
 
+/// Whether device-local settings belong to nobody and must be dropped.
+///
+/// Only a resolved absence of user counts. The auth state reads the stored user
+/// and its tokens asynchronously, so it is loading on every cold start, and
+/// treating that as a sign out would wipe the settings on each launch. An auth
+/// failure keeps them too: it says nothing about who owns them.
+bool isSignedOut(AsyncValue<auth_models.User?> auth) => switch (auth) {
+  AsyncData(:final value) => value == null,
+  _ => false,
+};
+
 /// Whether a user is signed in. Repositories watch this rather than the whole
 /// auth state: it only changes when the user signs in or out, so refreshing the
 /// profile no longer tears down and refetches every list in the app.

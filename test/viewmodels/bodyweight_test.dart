@@ -1,8 +1,43 @@
+import 'package:crimpy/models/auth_models.dart' as auth_models;
 import 'package:crimpy/services/bodyweight_service.dart';
+import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+const _user = auth_models.User(
+  id: 'user-1',
+  email: 'climber@example.com',
+  firstname: 'Test',
+  lastname: 'Climber',
+  emailVerified: true,
+  createdAt: '2026-01-01T00:00:00Z',
+);
+
+class _StubAuthState extends AuthState {
+  _StubAuthState(this._user);
+
+  final auth_models.User? _user;
+
+  @override
+  Future<auth_models.User?> build() async => _user;
+}
+
+/// Auth as it behaves on a cold start: still pending when the rest of the app
+/// first asks for the bodyweight, resolving a moment later.
+class _SlowAuthState extends AuthState {
+  _SlowAuthState(this._user);
+
+  final auth_models.User? _user;
+
+  @override
+  Future<auth_models.User?> build() =>
+      Future.delayed(const Duration(milliseconds: 50), () => _user);
+}
+
+ProviderContainer _containerFor(AuthState Function() auth) =>
+    ProviderContainer.test(overrides: [authStateProvider.overrideWith(auth)]);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -10,14 +45,14 @@ void main() {
   group('bodyweight', () {
     test('is unknown until it is entered', () async {
       SharedPreferences.setMockInitialValues({});
-      final container = ProviderContainer.test();
+      final container = _containerFor(() => _StubAuthState(_user));
 
       expect(await container.read(bodyweightProvider.future), isNull);
     });
 
     test('a saved weight is kept on the device', () async {
       SharedPreferences.setMockInitialValues({});
-      final container = ProviderContainer.test();
+      final container = _containerFor(() => _StubAuthState(_user));
       await container.read(bodyweightProvider.future);
 
       await container.read(bodyweightProvider.notifier).set(68.5);
@@ -28,9 +63,36 @@ void main() {
 
     test('a stored weight is read back on the next launch', () async {
       SharedPreferences.setMockInitialValues({'bodyweight_kg': 72.0});
-      final container = ProviderContainer.test();
+      final container = _containerFor(() => _StubAuthState(_user));
 
       expect(await container.read(bodyweightProvider.future), 72.0);
+    });
+
+    test('a signed out device drops the weight of the previous user', () async {
+      // The regression this guards: the next user to sign in on the device had
+      // their %BW loads resolved against the weight of the one before them.
+      SharedPreferences.setMockInitialValues({'bodyweight_kg': 80.0});
+      final container = _containerFor(() => _StubAuthState(null));
+
+      expect(await container.read(bodyweightProvider.future), isNull);
+      expect(await BodyweightService().load(), isNull);
+    });
+
+    test('the weight survives a cold start, and the wait for it ends', () async {
+      // Two regressions in one: auth is loading on every launch, and reading
+      // that as a sign out wiped the weight each time. Answering before auth
+      // lands is just as bad, because the rebuild that follows strands whoever
+      // was awaiting the first future, hanging the start of a training.
+      SharedPreferences.setMockInitialValues({'bodyweight_kg': 72.0});
+      final container = _containerFor(() => _SlowAuthState(_user));
+
+      expect(
+        await container
+            .read(bodyweightProvider.future)
+            .timeout(const Duration(seconds: 5)),
+        72.0,
+      );
+      expect(await BodyweightService().load(), 72.0);
     });
   });
 }
