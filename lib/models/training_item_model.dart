@@ -245,6 +245,14 @@ class TrainingItem {
     final first = loads?.firstOrNull;
     if (loadIsMax || (first?.isMax ?? false)) return 'MAX';
     if (first == null || first.isBodyweight) return null;
+    // An exercise at 100 %BW is just the athlete doing the movement, which is
+    // how the coach portal writes it and why it hides it there. Showing the
+    // kilograms would read as weight added to a set of pull ups.
+    if (type == TrainingItemType.exercise &&
+        first.unit == 'percent_bw' &&
+        first.value == 100) {
+      return null;
+    }
     return first.label(bodyweightKg: bodyweightKg);
   }
 

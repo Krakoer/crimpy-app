@@ -453,8 +453,6 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     WidgetRef ref,
     Training training,
   ) async {
-    final bodyweight = await resolveBodyweight(context, ref, training);
-    if (!context.mounted) return;
     var useSensor = false;
     if (training.canUseSensor) {
       final hasSensor = await showDialog<bool>(
@@ -486,6 +484,10 @@ class ScheduledTrainingScreen extends ConsumerWidget {
         useSensor = connected == true;
       }
     }
+    // After the sensor, so a user who just connected one is offered the
+    // measurement rather than being asked to connect all over again.
+    final bodyweight = await resolveBodyweight(context, ref, training);
+    if (!context.mounted) return;
     ref.read(bleSessionProvider.notifier).reset();
     if (!context.mounted) return;
     Navigator.of(context).push(
