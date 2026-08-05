@@ -8,13 +8,16 @@ import 'package:crimpy/utils/hangboard_layout.dart';
 /// [useSensor] controls whether hangboard/repeater hangs collect live force
 /// data (and thus show the gauge); when false the whole training runs without
 /// a sensor.
+/// [bodyweightKg] resolves loads the coach expressed as a percentage of the
+/// bodyweight; those loads fall back to no target when it is unknown.
 List<TrainingExecutionItem> expandTrainingItems(
   Training training, {
   bool useSensor = true,
+  double? bodyweightKg,
 }) {
   final out = <TrainingExecutionItem>[];
   for (final item in training.items) {
-    _expandItem(item, out, useSensor);
+    _expandItem(item, out, useSensor, bodyweightKg);
   }
   return out;
 }
@@ -29,7 +32,8 @@ int trainingDurationSeconds(Training training) => expandTrainingItems(
 void _expandItem(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor, {
+  bool useSensor,
+  double? bodyweightKg, {
   String? context,
   String? inheritedComment,
 }) {
@@ -38,15 +42,28 @@ void _expandItem(
   final comment = _cleanComment(item.comment) ?? inheritedComment;
   switch (item.type) {
     case TrainingItemType.repeater:
-      _expandRepeater(item, out, useSensor, comment: comment);
+      _expandRepeater(item, out, useSensor, bodyweightKg, comment: comment);
     case TrainingItemType.hangboardRep:
-      _expandHangboardRep(item, out, useSensor, comment: comment);
+      _expandHangboardRep(item, out, useSensor, bodyweightKg, comment: comment);
     case TrainingItemType.circuit:
-      _expandCircuit(item, out, useSensor, comment: comment);
+      _expandCircuit(item, out, useSensor, bodyweightKg, comment: comment);
     case TrainingItemType.group:
-      _expandGroup(item, out, useSensor, context: context, comment: comment);
+      _expandGroup(
+        item,
+        out,
+        useSensor,
+        bodyweightKg,
+        context: context,
+        comment: comment,
+      );
     case TrainingItemType.exercise:
-      _expandExercise(item, out, context: context, comment: comment);
+      _expandExercise(
+        item,
+        out,
+        bodyweightKg,
+        context: context,
+        comment: comment,
+      );
     case TrainingItemType.free:
       _expandFree(item, out, context: context, comment: comment);
   }
@@ -60,7 +77,8 @@ String? _cleanComment(String? comment) {
 void _expandGroup(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor, {
+  bool useSensor,
+  double? bodyweightKg, {
   String? context,
   String? comment,
 }) {
@@ -69,6 +87,7 @@ void _expandGroup(
       child,
       out,
       useSensor,
+      bodyweightKg,
       context: context,
       inheritedComment: comment,
     );
@@ -78,7 +97,8 @@ void _expandGroup(
 void _expandCircuit(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor, {
+  bool useSensor,
+  double? bodyweightKg, {
   String? comment,
 }) {
   final cycles = item.cycles ?? 1;
@@ -90,6 +110,7 @@ void _expandCircuit(
         child,
         out,
         useSensor,
+        bodyweightKg,
         context: context,
         inheritedComment: comment,
       );
@@ -102,7 +123,8 @@ void _expandCircuit(
 
 void _expandExercise(
   TrainingItem item,
-  List<TrainingExecutionItem> out, {
+  List<TrainingExecutionItem> out,
+  double? bodyweightKg, {
   String? context,
   String? comment,
 }) {
@@ -126,7 +148,7 @@ void _expandExercise(
       ConfirmItem(
         label: name,
         reps: item.effectiveReps,
-        load: item.loadLabel,
+        load: item.loadLabel(bodyweightKg: bodyweightKg),
         subtitle: context,
         comment: comment,
       ),
@@ -170,7 +192,8 @@ void _expandFree(
 void _expandHangboardRep(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor, {
+  bool useSensor,
+  double? bodyweightKg, {
   String? comment,
 }) {
   final worktime = item.worktimeSeconds ?? 7;
@@ -179,7 +202,8 @@ void _expandHangboardRep(
   final layout = HangboardLayout.of(item);
   final leftHand = hand == HangboardHand.left;
   final grip = _parseGrip(layout.grip(0, 0, leftHand: leftHand));
-  final w = layout.load(0, 0, leftHand: leftHand)?.value ?? 0.0;
+  final w =
+      layout.load(0, 0, leftHand: leftHand)?.kilograms(bodyweightKg) ?? 0.0;
   final handSide = switch (hand) {
     HangboardHand.left => HandSide.left,
     HangboardHand.right => HandSide.right,
@@ -208,7 +232,8 @@ void _expandHangboardRep(
 void _expandRepeater(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor, {
+  bool useSensor,
+  double? bodyweightKg, {
   String? comment,
 }) {
   final cycles = item.cycles ?? 1;
@@ -231,7 +256,11 @@ void _expandRepeater(
         HandSide.both => 'Hang',
       },
       durationSeconds: worktime,
-      targetLoad: layout.load(cycle, rep, leftHand: leftHand)?.value ?? 0.0,
+      targetLoad:
+          layout
+              .load(cycle, rep, leftHand: leftHand)
+              ?.kilograms(bodyweightKg) ??
+          0.0,
       handSide: side,
       gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: leftHand)),
       edgeSizeMm: layout.edgeSizeMm(cycle, rep),

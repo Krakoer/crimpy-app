@@ -6,12 +6,14 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/utils/program_completion.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
+import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/log_session_screen.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.dart';
 import 'package:crimpy/views/widgets/ble/connection_dialog.dart';
+import 'package:crimpy/views/widgets/bodyweight_dialog.dart';
 import 'package:crimpy/views/widgets/training_item_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -67,6 +69,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     final date = session.scheduledDate(program, weekNumber);
     final goal = training.goal?.trim() ?? '';
     final instructions = training.comment?.trim() ?? '';
+    final bodyweight = ref.watch(bodyweightProvider).value;
 
     return Column(
       children: [
@@ -95,7 +98,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 const SectionLabel('Exercises'),
                 const SizedBox(height: 8),
-                ..._buildItems(training.items, overrideByItem),
+                ..._buildItems(training.items, overrideByItem, bodyweight),
               ],
             ],
           ),
@@ -261,6 +264,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   List<Widget> _buildItems(
     List<TrainingItem> items,
     Map<String, SessionOverride> overrideByItem,
+    double? bodyweightKg,
   ) {
     bool tuned(TrainingItem item) {
       final override = overrideByItem[item.id];
@@ -269,6 +273,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
 
     return buildTrainingItemTiles(
       items,
+      bodyweightKg: bodyweightKg,
       accentColorOf: (item) => tuned(item) ? CrimpyTheme.accentYellow : null,
       extraOf: (item) => tuned(item)
           ? [
@@ -441,12 +446,15 @@ class ScheduledTrainingScreen extends ConsumerWidget {
 
   /// Starts the run. If the training can be measured with the force sensor,
   /// asks whether the user has one and lets them connect; otherwise (or if they
-  /// decline) the training runs without the gauge.
+  /// decline) the training runs without the gauge. Loads set in percent of the
+  /// body weight also need one, so it is asked for when still missing.
   Future<void> _startRun(
     BuildContext context,
     WidgetRef ref,
     Training training,
   ) async {
+    final bodyweight = await resolveBodyweight(context, ref, training);
+    if (!context.mounted) return;
     var useSensor = false;
     if (training.canUseSensor) {
       final hasSensor = await showDialog<bool>(
@@ -486,6 +494,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
           training,
           useSensor: useSensor,
           sessionType: session.sessionType,
+          bodyweightKg: bodyweight,
         ),
       ),
     );

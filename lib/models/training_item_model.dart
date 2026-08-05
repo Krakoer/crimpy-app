@@ -46,20 +46,43 @@ class Load {
   /// Whether this rep is performed at maximum effort rather than a fixed load.
   bool get isMax => unit == 'max';
 
-  /// Human-readable load, e.g. "+35 kg", "100 %BW", "MAX", or "BW".
-  String get label {
+  /// Whether the load is expressed relative to the athlete bodyweight, and so
+  /// needs one to be turned into kilograms.
+  bool get needsBodyweight => unit == 'percent_bw' && value != 0.0;
+
+  /// The load in kilograms, the unit the sensor measures. Null when it cannot
+  /// be resolved: a max-effort rep, or a bodyweight-relative load without a
+  /// known bodyweight.
+  double? kilograms(double? bodyweightKg) => switch (unit) {
+    'max' => null,
+    'percent_bw' => bodyweightKg == null ? null : bodyweightKg * value / 100,
+    'bw' => bodyweightKg,
+    'lbs' => value * _kgPerPound,
+    _ => value,
+  };
+
+  /// Human-readable load, e.g. "+35 kg", "100 %BW", "MAX", or "BW". A
+  /// bodyweight-relative load also shows the resolved weight when
+  /// [bodyweightKg] is known, e.g. "80 %BW (56 kg)".
+  String label({double? bodyweightKg}) {
     if (isMax) return 'MAX';
     if (isBodyweight) return 'BW';
-    final n = value.truncateToDouble() == value
-        ? value.toStringAsFixed(0)
-        : value.toStringAsFixed(1);
     final u = switch (unit) {
       'percent_bw' => '%BW',
       'bw' => 'BW',
       _ => unit,
     };
-    return '$n $u';
+    final base = '${_format(value)} $u';
+    if (!needsBodyweight) return base;
+    final kg = kilograms(bodyweightKg);
+    return kg == null ? base : '$base (${_format(kg)} kg)';
   }
+
+  static const double _kgPerPound = 0.45359237;
+
+  static String _format(double value) => value.truncateToDouble() == value
+      ? value.toStringAsFixed(0)
+      : value.toStringAsFixed(1);
 }
 
 /// How the two hands are worked. Only [both] puts two hands on the board at the
@@ -213,11 +236,17 @@ class TrainingItem {
   int? get effectiveDuration => (duration ?? 0) > 0 ? duration : null;
 
   /// First-rep load shown to the user, or null when bodyweight / unset.
-  String? get loadLabel {
+  String? loadLabel({double? bodyweightKg}) {
     final first = loads?.firstOrNull;
     if (loadIsMax || (first?.isMax ?? false)) return 'MAX';
     if (first == null || first.isBodyweight) return null;
-    return first.label;
+    return first.label(bodyweightKg: bodyweightKg);
+  }
+
+  /// Whether any rep of this item is loaded relative to the bodyweight.
+  bool get needsBodyweight {
+    bool needs(List<Load>? l) => (l ?? []).any((e) => e.needsBodyweight);
+    return needs(loads) || needs(leftLoads);
   }
 
   /// Whether this item can be performed with the crimpy force sensor: a

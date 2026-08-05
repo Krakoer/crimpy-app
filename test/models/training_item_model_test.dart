@@ -157,6 +157,64 @@ void main() {
     });
   });
 
+  group('Load in kilograms', () {
+    test('percent of bodyweight needs a bodyweight to resolve', () {
+      const load = Load(value: 80, unit: 'percent_bw');
+      expect(load.needsBodyweight, isTrue);
+      expect(load.kilograms(70), closeTo(56, 0.001));
+      expect(load.kilograms(null), isNull);
+    });
+
+    test('kilograms and pounds do not depend on the bodyweight', () {
+      expect(const Load(value: 35, unit: 'kg').needsBodyweight, isFalse);
+      expect(const Load(value: 35, unit: 'kg').kilograms(null), 35);
+      expect(
+        const Load(value: 10, unit: 'lbs').kilograms(null),
+        closeTo(4.536, 0.001),
+      );
+    });
+
+    test('a max effort rep has no load', () {
+      expect(const Load(value: 0, unit: 'max').kilograms(70), isNull);
+      expect(const Load(value: 0, unit: 'max').label(bodyweightKg: 70), 'MAX');
+    });
+
+    test('label adds the resolved weight only for bodyweight loads', () {
+      expect(
+        const Load(value: 80, unit: 'percent_bw').label(bodyweightKg: 70),
+        '80 %BW (56 kg)',
+      );
+      expect(const Load(value: 80, unit: 'percent_bw').label(), '80 %BW');
+      expect(
+        const Load(value: 35, unit: 'kg').label(bodyweightKg: 70),
+        '35 kg',
+      );
+    });
+  });
+
+  group('TrainingItem.needsBodyweight', () {
+    test('is true when any rep is loaded in percent of the bodyweight', () {
+      final item = TrainingItem(
+        id: 'i',
+        type: TrainingItemType.repeater,
+        position: 0,
+        loads: const [Load(value: 35, unit: 'kg')],
+        leftLoads: const [Load(value: 80, unit: 'percent_bw')],
+      );
+      expect(item.needsBodyweight, isTrue);
+    });
+
+    test('is false for absolute loads', () {
+      final item = TrainingItem(
+        id: 'i',
+        type: TrainingItemType.hangboardRep,
+        position: 0,
+        loads: const [Load(value: 35, unit: 'kg')],
+      );
+      expect(item.needsBodyweight, isFalse);
+    });
+  });
+
   group('TrainingItem.fromJson comment', () {
     test('parses an optional coach comment', () {
       final item = TrainingItem.fromJson({
