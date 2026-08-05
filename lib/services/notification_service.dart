@@ -42,8 +42,11 @@ class NotificationService {
 
   /// Reminders are planned in wall clock time, so scheduling needs the device
   /// timezone database loaded first.
+  ///
+  /// The plugin demands per platform settings for every target it was
+  /// registered on, so initializing on desktop would throw rather than degrade.
   Future<void> initialize() async {
-    if (_initialized) return;
+    if (!supportsTrainingReminders || _initialized) return;
     tz_data.initializeTimeZones();
     await _plugin.initialize(
       settings: const InitializationSettings(
@@ -70,8 +73,10 @@ class NotificationService {
       >();
 
   /// Asks the OS for permission to post notifications, returning whether it was
-  /// granted. Android below 13 and platforms without a prompt grant implicitly.
+  /// granted. Android below 13 grants implicitly, desktop never does since it
+  /// cannot deliver a scheduled reminder at all.
   Future<bool> requestPermission() async {
+    if (!supportsTrainingReminders) return false;
     await initialize();
     if (Platform.isAndroid) {
       return await _androidPlugin?.requestNotificationsPermission() ?? true;
@@ -88,6 +93,7 @@ class NotificationService {
   }
 
   Future<bool> hasPermission() async {
+    if (!supportsTrainingReminders) return false;
     await initialize();
     if (Platform.isAndroid) {
       return await _androidPlugin?.areNotificationsEnabled() ?? true;

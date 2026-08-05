@@ -1,4 +1,5 @@
 import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/calibration/start_calibration_dialog.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/create_sensor_config_dialog.dart';
 import 'package:crimpy/viewmodels/app_info_view_model.dart';
@@ -159,8 +160,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       ),
                     ],
                   ),
-                  // Reminders only exist for coach-assigned programs.
-                  if (ref.watch(activeProgramProvider).asData?.value != null)
+                  // Reminders only exist for coach-assigned programs, and only
+                  // on the platforms that can deliver a scheduled notification.
+                  if (supportsTrainingReminders &&
+                      ref.watch(activeProgramProvider).asData?.value != null)
                     ListTile(
                       leading: const Icon(Icons.notifications_none),
                       title: const Text('Training reminders'),
