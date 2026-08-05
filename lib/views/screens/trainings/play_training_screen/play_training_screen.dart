@@ -26,8 +26,16 @@ class PlayTrainingScreen extends ConsumerStatefulWidget {
   /// Whether to run with the force sensor (live gauge + data collection).
   final bool useSensor;
 
+  /// Category the resulting session is logged under.
+  final SessionType sessionType;
+
   /// Play a given training.
-  const PlayTrainingScreen(this.training, {this.useSensor = true, super.key});
+  const PlayTrainingScreen(
+    this.training, {
+    this.useSensor = true,
+    this.sessionType = SessionType.crimpy,
+    super.key,
+  });
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -99,8 +107,11 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) =>
-              PostWorkoutScreen(template: widget.training, results: repResults),
+          builder: (context) => PostWorkoutScreen(
+            template: widget.training,
+            results: repResults,
+            sessionType: widget.sessionType,
+          ),
         ),
       );
     },
