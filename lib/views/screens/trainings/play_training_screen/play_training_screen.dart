@@ -198,14 +198,15 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     // working when a rest is coming up next.
     final bool showNext =
         nextRep != null && (item is RestItem || nextRep is RestItem);
-    final bool hasComment = rep?.comment?.trim().isNotEmpty ?? false;
-    final Widget below = sensor
-        ? timerDisplay
-        : showNext
-        ? NextRepPreview(nextRep: nextRep)
-        : (item is! RestItem && hasComment)
-        ? _commentBox(rep!.comment!)
-        : const SizedBox.shrink();
+    final comment = _currentComment();
+    final Widget below = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (sensor) timerDisplay,
+        if (comment != null) _commentBox(comment),
+        if (showNext) NextRepPreview(nextRep: nextRep),
+      ],
+    );
 
     // Equal flexible regions above and below keep the circle vertically
     // centred at the same place regardless of step kind, and absorb any slack
@@ -258,6 +259,22 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         RestItem() => null,
       };
       if (subtitle != null) return subtitle;
+      if (item is! RestItem) return null;
+    }
+    return null;
+  }
+
+  /// Coach comment of the current step. During a rest the comment of the step
+  /// the rest leads into is shown, so the athlete reads it before starting.
+  String? _currentComment() {
+    for (var i = timer.currentItemIndex; i < timer.items.length; i++) {
+      final item = timer.items[i];
+      final comment = switch (item) {
+        TimedItem() => item.comment,
+        ConfirmItem() => item.comment,
+        RestItem() => null,
+      };
+      if (comment != null && comment.trim().isNotEmpty) return comment;
       if (item is! RestItem) return null;
     }
     return null;
