@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:app_settings/app_settings.dart';
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/utils/reminder_plan.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -256,5 +256,10 @@ bool get hasBatteryOptimization => Platform.isAndroid;
 /// This only shows the settings, it asks for nothing: requesting the exemption
 /// outright needs a policy sensitive permission a training reminder would not
 /// justify.
-Future<void> openBatteryOptimizationSettings() =>
-    AppSettings.openAppSettings(type: AppSettingsType.batteryOptimization);
+Future<void> openBatteryOptimizationSettings() async {
+  if (!hasBatteryOptimization) return;
+  const intent = AndroidIntent(
+    action: 'android.settings.IGNORE_BATTERY_OPTIMIZATION_SETTINGS',
+  );
+  await intent.launch();
+}
