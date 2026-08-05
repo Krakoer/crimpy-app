@@ -588,7 +588,11 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     if (!context.mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PlayTrainingScreen(training, useSensor: useSensor),
+        builder: (_) => PlayTrainingScreen(
+          training,
+          useSensor: useSensor,
+          sessionType: session.sessionType,
+        ),
       ),
     );
   }

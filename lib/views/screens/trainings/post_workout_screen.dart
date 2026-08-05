@@ -1,6 +1,7 @@
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:intl/intl.dart';
@@ -10,10 +11,15 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
   final Training template;
   final List<RepDataModel> results;
 
+  /// Category the session is logged under. Trainings run from the user's own
+  /// library are Crimpy sessions; program trainings carry the coach's type.
+  final SessionType sessionType;
+
   /// Show the results of the workout to the user, and allow them to add a note to the session.
   const PostWorkoutScreen({
     required this.results,
     required this.template,
+    this.sessionType = SessionType.crimpy,
     super.key,
   });
 
@@ -184,6 +190,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                       date: DateTime.now(),
                       notes: _noteController.text,
                       isAssessment: false,
+                      sessionType: widget.sessionType,
                     ),
                     widget.results,
                   );
