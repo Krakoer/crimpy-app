@@ -96,9 +96,13 @@ class _MainPageState extends ConsumerState<MainPage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
     // Coming back to the app is the moment the plan may have gone stale: a day
-    // has passed, or a training was logged elsewhere.
+    // has passed, or a training was logged elsewhere. The cached schedule goes
+    // with it, since its three week window is pinned at the time it was built
+    // and the coach may have published a new week since.
     if (state == AppLifecycleState.resumed) {
+      ref.invalidate(programScheduleCacheProvider);
       ref.invalidate(trainingReminderSyncProvider);
     }
   }
