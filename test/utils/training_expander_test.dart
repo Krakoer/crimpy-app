@@ -141,6 +141,98 @@ void main() {
     expect((out[1] as TimedItem).comment, 'Keep hips level');
   });
 
+  test('hangboard and repeater hangs carry their comment', () {
+    final training = _training([
+      TrainingItem(
+        id: 'h',
+        type: TrainingItemType.hangboardRep,
+        position: 0,
+        hand: 'right',
+        comment: 'Shoulders engaged',
+      ),
+      TrainingItem(
+        id: 'r',
+        type: TrainingItemType.repeater,
+        position: 1,
+        cycles: 1,
+        reps: 2,
+        hand: 'split',
+        comment: 'Stop at the first slip',
+      ),
+    ]);
+
+    final out = expandTrainingItems(
+      training,
+      useSensor: false,
+    ).whereType<TimedItem>().toList();
+
+    expect(out.first.comment, 'Shoulders engaged');
+    expect(
+      out.skip(1).every((item) => item.comment == 'Stop at the first slip'),
+      isTrue,
+    );
+  });
+
+  test('circuit comment applies to children without their own', () {
+    final training = _training([
+      TrainingItem(
+        id: 'c',
+        type: TrainingItemType.circuit,
+        position: 0,
+        cycles: 1,
+        comment: 'Alternate sides each round',
+        items: [
+          TrainingItem(
+            id: 'e1',
+            type: TrainingItemType.exercise,
+            position: 0,
+            duration: 35,
+          ),
+          TrainingItem(
+            id: 'e2',
+            type: TrainingItemType.exercise,
+            position: 1,
+            duration: 35,
+            comment: 'Right leg',
+          ),
+        ],
+      ),
+    ]);
+
+    final out = expandTrainingItems(
+      training,
+      useSensor: false,
+    ).whereType<TimedItem>().toList();
+
+    expect(out[0].comment, 'Alternate sides each round');
+    expect(out[1].comment, 'Right leg');
+  });
+
+  test('blank comment does not shadow the enclosing one', () {
+    final training = _training([
+      TrainingItem(
+        id: 'c',
+        type: TrainingItemType.circuit,
+        position: 0,
+        cycles: 1,
+        comment: 'Slow tempo',
+        items: [
+          TrainingItem(
+            id: 'e1',
+            type: TrainingItemType.exercise,
+            position: 0,
+            duration: 20,
+            comment: '   ',
+          ),
+        ],
+      ),
+    ]);
+
+    final out = expandTrainingItems(training, useSensor: false);
+
+    expect((out.first as TimedItem).comment, 'Slow tempo');
+  });
+
   test('split hand repeater never emits a negative rest', () {
     // A cycle rest shorter than one hand's set leaves nothing to split.
     final training = _training([
