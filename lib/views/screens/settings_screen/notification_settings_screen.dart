@@ -165,12 +165,17 @@ class _TimeTile extends StatelessWidget {
 class _WeekdaySelector extends StatelessWidget {
   final Set<int> selected;
   final bool enabled;
+
+  /// Days the user is allowed to pick. Days outside it are shown disabled
+  /// rather than hidden, so the week keeps its shape.
+  final Set<int> selectableDays;
   final ValueChanged<Set<int>> onChanged;
 
   const _WeekdaySelector({
     required this.selected,
     required this.enabled,
     required this.onChanged,
+    this.selectableDays = allWeekdays,
   });
 
   @override
@@ -179,18 +184,24 @@ class _WeekdaySelector extends StatelessWidget {
     child: Wrap(
       spacing: 8,
       children: [
-        for (var day = 0; day < _weekdayLabels.length; day++)
-          FilterChip(
-            label: Text(_weekdayLabels[day]),
-            selected: selected.contains(day),
-            onSelected: enabled ? (value) => _toggle(day, value) : null,
-          ),
+        for (var day = 0; day < _weekdayLabels.length; day++) _chip(day),
       ],
     ),
   );
 
+  Widget _chip(int day) {
+    final selectable = selectableDays.contains(day);
+    return FilterChip(
+      label: Text(_weekdayLabels[day]),
+      selected: selectable && selected.contains(day),
+      onSelected: enabled && selectable ? (value) => _toggle(day, value) : null,
+    );
+  }
+
   void _toggle(int day, bool value) {
-    final updated = {...selected};
+    // Days that fell out of the selectable set go with the first edit, so the
+    // stored choice never keeps a day the plan would ignore.
+    final updated = {...selected.where(selectableDays.contains)};
     if (value) {
       updated.add(day);
     } else {
@@ -257,9 +268,12 @@ class _FlexibleTrainingTile extends ConsumerWidget {
           title: Text(session.trainingTitle),
           subtitle: Text('$target x / week'),
         ),
+        // A day the reminder never fires on cannot carry a flexible training
+        // either: the plan drops it before it looks at these days.
         _WeekdaySelector(
           selected: preferences.flexibleDaysFor(session.trainingId, target),
           enabled: enabled,
+          selectableDays: preferences.activeWeekdays,
           onChanged: (days) => ref
               .read(notificationPreferencesControllerProvider.notifier)
               .setFlexibleDays(session.trainingId, days),
