@@ -47,23 +47,28 @@ class Load {
   bool get isMax => unit == 'max';
 
   /// Whether the load is expressed relative to the athlete bodyweight, and so
-  /// needs one to be turned into kilograms.
-  bool get needsBodyweight => unit == 'percent_bw' && value != 0.0;
+  /// needs one to be turned into kilograms. Derived from [kilograms] rather
+  /// than listing the units again, so a load that resolves against the
+  /// bodyweight is always a load that asks for one.
+  bool get needsBodyweight =>
+      !isMax && !isBodyweight && kilograms(null) == null;
 
-  /// The load in kilograms, the unit the sensor measures. Null when it cannot
-  /// be resolved: a max-effort rep, or a bodyweight-relative load without a
-  /// known bodyweight.
-  double? kilograms(double? bodyweightKg) => switch (unit) {
-    'max' => null,
-    'percent_bw' => bodyweightKg == null ? null : bodyweightKg * value / 100,
-    'bw' => bodyweightKg,
-    'lbs' => value * _kgPerPound,
-    _ => value,
-  };
+  /// The load in kilograms, the unit the sensor measures. Null when there is no
+  /// number to hit: a max effort rep, a plain bodyweight hang, or a load set as
+  /// a percentage of a bodyweight that is not known yet.
+  double? kilograms(double? bodyweightKg) {
+    if (isMax || isBodyweight) return null;
+    return switch (unit) {
+      'percent_bw' => bodyweightKg == null ? null : bodyweightKg * value / 100,
+      'lbs' => value * _kgPerPound,
+      _ => value,
+    };
+  }
 
-  /// Human-readable load, e.g. "+35 kg", "100 %BW", "MAX", or "BW". A
-  /// bodyweight-relative load also shows the resolved weight when
-  /// [bodyweightKg] is known, e.g. "80 %BW (56 kg)".
+  /// Human-readable load, e.g. "+35 kg", "100 %BW", "MAX", or "BW". A load set
+  /// in any other unit than kilograms also shows what the sensor will ask for,
+  /// e.g. "80 %BW (56 kg)" or "20 lbs (9.1 kg)", since the gauge reads in
+  /// kilograms.
   String label({double? bodyweightKg}) {
     if (isMax) return 'MAX';
     if (isBodyweight) return 'BW';
@@ -73,7 +78,7 @@ class Load {
       _ => unit,
     };
     final base = '${_format(value)} $u';
-    if (!needsBodyweight) return base;
+    if (unit == 'kg') return base;
     final kg = kilograms(bodyweightKg);
     return kg == null ? base : '$base (${_format(kg)} kg)';
   }

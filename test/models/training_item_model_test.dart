@@ -1,3 +1,4 @@
+import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -179,7 +180,7 @@ void main() {
       expect(const Load(value: 0, unit: 'max').label(bodyweightKg: 70), 'MAX');
     });
 
-    test('label adds the resolved weight only for bodyweight loads', () {
+    test('label adds what the gauge will ask for, in kilograms', () {
       expect(
         const Load(value: 80, unit: 'percent_bw').label(bodyweightKg: 70),
         '80 %BW (56 kg)',
@@ -189,6 +190,39 @@ void main() {
         const Load(value: 35, unit: 'kg').label(bodyweightKg: 70),
         '35 kg',
       );
+      // The gauge prints kilograms whatever the coach set the load in, so a
+      // pound load without the conversion left the two screens disagreeing.
+      expect(const Load(value: 20, unit: 'lbs').label(), '20 lbs (9.1 kg)');
+    });
+
+    test('a plain bodyweight hang has no number to hit', () {
+      // Reading these as a target would put the athlete bodyweight on the
+      // gauge for a rep the coach set as an unloaded hang.
+      for (final load in const [
+        Load(value: 0, unit: 'bw'),
+        Load(value: 0, unit: 'percent_bw'),
+        Load(value: 0, unit: 'kg'),
+      ]) {
+        expect(load.kilograms(70), isNull, reason: '$load resolved a target');
+        expect(load.label(bodyweightKg: 70), 'BW');
+      }
+    });
+
+    test('every load resolved against the bodyweight also asks for one', () {
+      // The two used to be listed separately, so a unit could resolve against
+      // a bodyweight the athlete was never prompted for.
+      for (final unit in const ['kg', 'lbs', 'percent_bw', 'bw', 'max']) {
+        for (final value in const [0.0, 80.0]) {
+          final load = Load(value: value, unit: unit);
+          final resolvesAgainstBodyweight =
+              load.kilograms(null) == null && load.kilograms(70) != null;
+          expect(
+            load.needsBodyweight,
+            resolvesAgainstBodyweight,
+            reason: '$value $unit disagrees',
+          );
+        }
+      }
     });
   });
 
@@ -212,6 +246,63 @@ void main() {
         loads: const [Load(value: 35, unit: 'kg')],
       );
       expect(item.needsBodyweight, isFalse);
+    });
+  });
+
+  group('Training.needsBodyweight', () {
+    TrainingItem percentBwRep() => TrainingItem(
+      id: 'rep',
+      type: TrainingItemType.hangboardRep,
+      position: 0,
+      loads: const [Load(value: 80, unit: 'percent_bw')],
+    );
+
+    test('finds a percent of bodyweight load nested in a group', () {
+      // Coaches wrap hangboard work in groups and circuits, so a prompt that
+      // only looked at the top level never fired for a real program.
+      final training = Training(
+        id: 't',
+        title: 'Nested',
+        items: [
+          TrainingItem(
+            id: 'group',
+            type: TrainingItemType.group,
+            position: 0,
+            items: [
+              TrainingItem(
+                id: 'circuit',
+                type: TrainingItemType.circuit,
+                position: 0,
+                items: [percentBwRep()],
+              ),
+            ],
+          ),
+        ],
+      );
+      expect(training.needsBodyweight, isTrue);
+    });
+
+    test('is false for a training with only absolute loads', () {
+      final training = Training(
+        id: 't',
+        title: 'Absolute',
+        items: [
+          TrainingItem(
+            id: 'group',
+            type: TrainingItemType.group,
+            position: 0,
+            items: [
+              TrainingItem(
+                id: 'rep',
+                type: TrainingItemType.hangboardRep,
+                position: 0,
+                loads: const [Load(value: 35, unit: 'kg')],
+              ),
+            ],
+          ),
+        ],
+      );
+      expect(training.needsBodyweight, isFalse);
     });
   });
 
