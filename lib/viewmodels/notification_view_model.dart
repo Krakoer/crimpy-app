@@ -23,6 +23,14 @@ NotificationPreferencesService notificationPreferencesService(Ref ref) =>
 TrainingReminderScheduler trainingReminderScheduler(Ref ref) =>
     TrainingReminderScheduler(ref.watch(notificationServiceProvider));
 
+/// Whether the OS still accepts our notifications. Revoking the permission in
+/// the system settings leaves [NotificationPreferences.enabled] untouched, so
+/// the screen has to ask rather than trust it. Auto disposed to re-ask on every
+/// visit.
+@riverpod
+Future<bool> reminderPermission(Ref ref) =>
+    ref.watch(notificationServiceProvider).hasPermission();
+
 /// The training reminder settings, and the actions that change them.
 @Riverpod(keepAlive: true)
 class NotificationPreferencesController
@@ -78,7 +86,9 @@ class NotificationPreferencesController
   Future<void> _update(
     NotificationPreferences Function(NotificationPreferences) change,
   ) async {
-    final updated = change(state.value ?? const NotificationPreferences());
+    // Waiting on the load rather than falling back to the defaults: editing
+    // mid load would otherwise persist defaults plus the one change.
+    final updated = change(await future);
     await _service.save(updated);
     if (ref.mounted) state = AsyncData(updated);
   }

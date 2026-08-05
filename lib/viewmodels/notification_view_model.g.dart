@@ -156,6 +156,54 @@ final class TrainingReminderSchedulerProvider
 String _$trainingReminderSchedulerHash() =>
     r'abd0017bd89d4d6ef0c27b1bba6eff308e8482aa';
 
+/// Whether the OS still accepts our notifications. Revoking the permission in
+/// the system settings leaves [NotificationPreferences.enabled] untouched, so
+/// the screen has to ask rather than trust it. Auto disposed to re-ask on every
+/// visit.
+
+@ProviderFor(reminderPermission)
+const reminderPermissionProvider = ReminderPermissionProvider._();
+
+/// Whether the OS still accepts our notifications. Revoking the permission in
+/// the system settings leaves [NotificationPreferences.enabled] untouched, so
+/// the screen has to ask rather than trust it. Auto disposed to re-ask on every
+/// visit.
+
+final class ReminderPermissionProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
+    with $FutureModifier<bool>, $FutureProvider<bool> {
+  /// Whether the OS still accepts our notifications. Revoking the permission in
+  /// the system settings leaves [NotificationPreferences.enabled] untouched, so
+  /// the screen has to ask rather than trust it. Auto disposed to re-ask on every
+  /// visit.
+  const ReminderPermissionProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'reminderPermissionProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$reminderPermissionHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<bool> create(Ref ref) {
+    return reminderPermission(ref);
+  }
+}
+
+String _$reminderPermissionHash() =>
+    r'72c02ed8e045705331b60ac8e43eee8bb5256c7a';
+
 /// The training reminder settings, and the actions that change them.
 
 @ProviderFor(NotificationPreferencesController)
@@ -192,7 +240,7 @@ final class NotificationPreferencesControllerProvider
 }
 
 String _$notificationPreferencesControllerHash() =>
-    r'b8c4dd7ee42d8edf7b16b6845a011074e062ab8e';
+    r'1d40e3d69b2f184468c15669e1fc19ca10e6126b';
 
 /// The training reminder settings, and the actions that change them.
 

@@ -5,7 +5,7 @@ import 'package:crimpy/viewmodels/notification_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-const _weekdayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S']; // Mon..Sun
+const _weekdayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
 /// Lets the user configure the daily reminder for the trainings their coach
 /// scheduled: when it fires, on which days, and which days the flexible
@@ -37,9 +37,13 @@ class _Content extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final enabled = preferences.enabled;
 
+    final permissionRevoked =
+        enabled && ref.watch(reminderPermissionProvider).asData?.value == false;
+
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 8),
       children: [
+        if (permissionRevoked) const _PermissionWarning(),
         SwitchListTile(
           title: const Text('Training reminders'),
           subtitle: const Text(
@@ -108,6 +112,24 @@ class _Content extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Reminders can be on here while the OS drops every one of them, which looks
+/// exactly like the feature being broken.
+class _PermissionWarning extends StatelessWidget {
+  const _PermissionWarning();
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+    leading: const Icon(
+      Icons.notifications_off,
+      color: CrimpyTheme.warningColor,
+    ),
+    title: const Text('Notifications are blocked'),
+    subtitle: const Text(
+      'Reminders are on, but your device settings prevent Crimpy from showing them.',
+    ),
+  );
 }
 
 class _SectionTitle extends StatelessWidget {

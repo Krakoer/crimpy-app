@@ -61,6 +61,9 @@ class NotificationService {
   }
 
   Future<void> _initialize() async {
+    // tz.local stays UTC on purpose: every reminder is a one shot absolute
+    // instant with no matchDateTimeComponents, and TZDateTime.from preserves
+    // the instant, so the alarm still fires at the intended wall clock time.
     tz_data.initializeTimeZones();
     await _plugin.initialize(
       settings: const InitializationSettings(
