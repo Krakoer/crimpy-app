@@ -38,15 +38,29 @@ class NotificationService {
   NotificationService([FlutterLocalNotificationsPlugin? plugin])
     : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
 
-  bool _initialized = false;
+  Future<void>? _initialization;
+  Future<void> _pendingWrite = Future.value();
 
   /// Reminders are planned in wall clock time, so scheduling needs the device
   /// timezone database loaded first.
   ///
   /// The plugin demands per platform settings for every target it was
   /// registered on, so initializing on desktop would throw rather than degrade.
+  ///
+  /// The in flight future is what gets shared, not a done flag: permission
+  /// requests and reminder writes race on the first call.
   Future<void> initialize() async {
-    if (!supportsTrainingReminders || _initialized) return;
+    if (!supportsTrainingReminders) return;
+    final started = _initialization ??= _initialize();
+    try {
+      await started;
+    } catch (_) {
+      _initialization = null;
+      rethrow;
+    }
+  }
+
+  Future<void> _initialize() async {
     tz_data.initializeTimeZones();
     await _plugin.initialize(
       settings: const InitializationSettings(
@@ -59,7 +73,15 @@ class NotificationService {
       ),
     );
     await _androidPlugin?.createNotificationChannel(_channel);
-    _initialized = true;
+  }
+
+  /// Runs the reminder writes one after another. A write is a cancel followed
+  /// by a rewrite over dozens of platform calls, so interleaving two of them
+  /// leaves the ids only the older plan used still pending.
+  Future<void> _serialized(Future<void> Function() write) {
+    final result = _pendingWrite.then((_) => write());
+    _pendingWrite = result.catchError((_) {});
+    return result;
   }
 
   AndroidFlutterLocalNotificationsPlugin? get _androidPlugin => _plugin
@@ -103,9 +125,13 @@ class NotificationService {
 
   /// Replaces every pending reminder with [occurrences]. Ids are derived from
   /// the day and slot, so an unchanged plan rewrites itself identically.
-  Future<void> scheduleAll(List<ReminderOccurrence> occurrences) async {
+  Future<void> scheduleAll(List<ReminderOccurrence> occurrences) =>
+      _serialized(() => _scheduleAll(occurrences));
+
+  Future<void> _scheduleAll(List<ReminderOccurrence> occurrences) async {
     await initialize();
-    await cancelAll();
+    if (!supportsTrainingReminders) return;
+    await _cancelAll();
     for (final occurrence in occurrences) {
       await _plugin.zonedSchedule(
         id: occurrence.notificationId,
@@ -122,13 +148,24 @@ class NotificationService {
   }
 
   /// Cancels the reminder id block only, leaving any other notification alone.
-  Future<void> cancelAll() async {
+  Future<void> cancelAll() => _serialized(_cancelAll);
+
+  Future<void> _cancelAll() async {
     await initialize();
+    if (!supportsTrainingReminders) return;
+
     final pending = await _plugin.pendingNotificationRequests();
-    for (final request in pending) {
-      if (request.id >= reminderIdBase &&
-          request.id < reminderIdBase + reminderIdBlockSize) {
-        await _plugin.cancel(id: request.id);
+    // Reminders already sitting in the tray are cancelled too: the training the
+    // user just logged should not keep asking for itself.
+    final active = await _plugin.getActiveNotifications();
+    final ids = <int>{
+      ...pending.map((request) => request.id),
+      ...active.map((notification) => notification.id).nonNulls,
+    };
+
+    for (final id in ids) {
+      if (id >= reminderIdBase && id < reminderIdBase + reminderIdBlockSize) {
+        await _plugin.cancel(id: id);
       }
     }
   }
