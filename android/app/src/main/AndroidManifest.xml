@@ -46,6 +46,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Receives the alarm and posts the reminder. The plugin targets this
+             component explicitly, so without the declaration the alarm fires
+             into nothing and no notification is ever shown. -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
+            android:exported="false" />
         <!-- Reschedules the pending training reminders once the device has
              booted or the app has been replaced. -->
         <receiver
