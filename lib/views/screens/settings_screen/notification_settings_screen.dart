@@ -1,5 +1,6 @@
 import 'package:crimpy/models/notification_preferences.dart';
 import 'package:crimpy/models/program_model.dart';
+import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/notification_view_model.dart';
 import 'package:flutter/material.dart';
@@ -91,6 +92,11 @@ class _Content extends ConsumerWidget {
         ),
         const Divider(),
         _FlexibleTrainings(preferences: preferences),
+        if (enabled && hasBatteryOptimization) ...[
+          const Divider(),
+          _SectionTitle('Troubleshooting'),
+          const _BatteryOptimizationTile(),
+        ],
       ],
     );
   }
@@ -112,6 +118,25 @@ class _Content extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Many Android makers stop background alarms to save battery, which delays or
+/// drops reminders on a device that is otherwise set up correctly. Only the
+/// user can lift that, and only from the system settings.
+class _BatteryOptimizationTile extends StatelessWidget {
+  const _BatteryOptimizationTile();
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+    leading: const Icon(Icons.battery_saver),
+    title: const Text('Reminders arriving late or not at all?'),
+    subtitle: const Text(
+      'Some phones pause background alarms to save battery. Allow Crimpy to '
+      'run in the background to fix it.',
+    ),
+    trailing: const Icon(Icons.open_in_new),
+    onTap: openBatteryOptimizationSettings,
+  );
 }
 
 /// Reminders can be on here while the OS drops every one of them, which looks

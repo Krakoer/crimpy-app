@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:app_settings/app_settings.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/utils/reminder_plan.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -176,3 +177,14 @@ class NotificationService {
 
 /// Whether the current platform can deliver scheduled reminders at all.
 bool get supportsTrainingReminders => Platform.isAndroid || Platform.isIOS;
+
+/// Whether the OS lets an app be exempted from battery optimization. Android
+/// only: iOS hands the schedule to the system, so nothing can drop it there.
+bool get hasBatteryOptimization => Platform.isAndroid;
+
+/// Opens the OS screen listing the apps exempted from battery optimization.
+/// This only shows the settings, it asks for nothing: requesting the exemption
+/// outright needs a policy sensitive permission a training reminder would not
+/// justify.
+Future<void> openBatteryOptimizationSettings() =>
+    AppSettings.openAppSettings(type: AppSettingsType.batteryOptimization);
