@@ -92,6 +92,50 @@ class AssessmentResultModel {
   }
 }
 
+/// The athlete latest result per assessment, used to turn the loads, durations
+/// and reps a coach expressed as a percentage of an assessment into numbers.
+class AssessmentResults {
+  final Map<AssessmentType, AssessmentModel> lastByType;
+
+  const AssessmentResults(this.lastByType);
+
+  /// No assessment data at all, so every assessment-relative value resolves to
+  /// the fallback the coach set.
+  static const AssessmentResults none = AssessmentResults({});
+
+  /// Builds the latest result per type out of a chronological list.
+  factory AssessmentResults.fromHistory(List<AssessmentModel> assessments) {
+    final last = <AssessmentType, AssessmentModel>{};
+    for (final assessment in assessments) {
+      final known = last[assessment.type];
+      if (known == null || !assessment.date.isBefore(known.date)) {
+        last[assessment.type] = assessment;
+      }
+    }
+    return AssessmentResults(last);
+  }
+
+  /// The last result for [type]: the value for [handSide] when the assessment
+  /// measured it, the mean of both hands otherwise. Null when the athlete has
+  /// never done that assessment.
+  double? value(AssessmentType type, {HandSide? handSide}) {
+    final last = lastByType[type];
+    if (last == null) return null;
+    final sided = switch (handSide) {
+      HandSide.right => last.rightValue,
+      HandSide.left => last.leftValue,
+      _ => null,
+    };
+    if (sided != null) return sided;
+    final values = [
+      last.rightValue,
+      last.leftValue,
+    ].whereType<double>().toList();
+    if (values.isEmpty) return null;
+    return values.reduce((a, b) => a + b) / values.length;
+  }
+}
+
 class AssessmentModel {
   final AssessmentType type;
   final String id;

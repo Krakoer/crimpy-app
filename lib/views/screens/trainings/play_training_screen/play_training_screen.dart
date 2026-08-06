@@ -4,6 +4,7 @@ import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/trai
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/next_rep_preview.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_progress_info.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_controls.dart';
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/utils/training_expander.dart';
 import 'package:flutter/material.dart';
@@ -33,12 +34,17 @@ class PlayTrainingScreen extends ConsumerStatefulWidget {
   /// have no target when it is unknown.
   final double? bodyweightKg;
 
+  /// Resolves the loads, durations and reps the coach set as a percentage of an
+  /// assessment. Without it they all run at their fallback.
+  final AssessmentResults results;
+
   /// Play a given training.
   const PlayTrainingScreen(
     this.training, {
     this.useSensor = true,
     this.sessionType = SessionType.crimpy,
     this.bodyweightKg,
+    this.results = AssessmentResults.none,
     super.key,
   });
 
@@ -64,6 +70,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       widget.training,
       useSensor: widget.useSensor,
       bodyweightKg: widget.bodyweightKg,
+      results: widget.results,
     ),
   ];
 

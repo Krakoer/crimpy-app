@@ -24,6 +24,14 @@ List<AssessmentTrainingModel> assessmentTrainings(Ref ref) =>
 AssessmentTrainingModel assessmentTraining(Ref ref, AssessmentType type) =>
     ref.watch(assessmentTrainingsProvider).firstWhere((a) => a.type == type);
 
+/// The athlete latest result per assessment, used to turn the loads, durations
+/// and reps a coach set as a percentage of an assessment into numbers.
+@riverpod
+Future<AssessmentResults> assessmentResults(Ref ref) async =>
+    AssessmentResults.fromHistory(
+      await ref.watch(assessmentsProvider(null).future),
+    );
+
 /// Returns the list of assessments.
 /// Allow to filter on `type`.
 @riverpod

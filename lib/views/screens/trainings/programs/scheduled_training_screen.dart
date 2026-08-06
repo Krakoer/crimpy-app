@@ -1,3 +1,4 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
@@ -5,6 +6,7 @@ import 'package:crimpy/models/training.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/utils/program_completion.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
@@ -57,14 +59,22 @@ class ScheduledTrainingScreen extends ConsumerWidget {
           ),
           data: (training) {
             final merged = effectiveTraining(training, session.overrides);
-            return _content(context, ref, merged);
+            final results =
+                ref.watch(assessmentResultsProvider).value ??
+                AssessmentResults.none;
+            return _content(context, ref, merged, results);
           },
         ),
       ),
     );
   }
 
-  Widget _content(BuildContext context, WidgetRef ref, Training training) {
+  Widget _content(
+    BuildContext context,
+    WidgetRef ref,
+    Training training,
+    AssessmentResults results,
+  ) {
     final overrideByItem = {for (final o in session.overrides) o.itemId: o};
     final date = session.scheduledDate(program, weekNumber);
     final goal = training.goal?.trim() ?? '';
@@ -98,12 +108,17 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 const SectionLabel('Exercises'),
                 const SizedBox(height: 8),
-                ..._buildItems(training.items, overrideByItem, bodyweight),
+                ..._buildItems(
+                  training.items,
+                  overrideByItem,
+                  bodyweight,
+                  results,
+                ),
               ],
             ],
           ),
         ),
-        _actionBar(context, ref, training),
+        _actionBar(context, ref, training, results),
       ],
     );
   }
@@ -265,6 +280,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     List<TrainingItem> items,
     Map<String, SessionOverride> overrideByItem,
     double? bodyweightKg,
+    AssessmentResults results,
   ) {
     bool tuned(TrainingItem item) {
       final override = overrideByItem[item.id];
@@ -274,6 +290,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     return buildTrainingItemTiles(
       items,
       bodyweightKg: bodyweightKg,
+      results: results,
       accentColorOf: (item) => tuned(item) ? CrimpyTheme.accentYellow : null,
       extraOf: (item) => tuned(item)
           ? [
@@ -370,7 +387,12 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     }
   }
 
-  Widget _actionBar(BuildContext context, WidgetRef ref, Training training) {
+  Widget _actionBar(
+    BuildContext context,
+    WidgetRef ref,
+    Training training,
+    AssessmentResults results,
+  ) {
     // Every training can be run except climbing, which is only logged.
     final logOnly = session.sessionType == SessionType.climbing;
     final sessions = ref.watch(sessionsProvider).asData?.value ?? [];
@@ -395,7 +417,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
             ? _doneButton()
             : logOnly
             ? _logButton(context)
-            : _startButton(context, ref, training),
+            : _startButton(context, ref, training, results),
       ),
     );
   }
@@ -431,9 +453,14 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     );
   }
 
-  Widget _startButton(BuildContext context, WidgetRef ref, Training training) {
+  Widget _startButton(
+    BuildContext context,
+    WidgetRef ref,
+    Training training,
+    AssessmentResults results,
+  ) {
     return ElevatedButton.icon(
-      onPressed: () => _startRun(context, ref, training),
+      onPressed: () => _startRun(context, ref, training, results),
       icon: const Icon(Icons.play_arrow),
       label: const Text('START TRAINING'),
       style: ElevatedButton.styleFrom(
@@ -452,6 +479,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     Training training,
+    AssessmentResults results,
   ) async {
     var useSensor = false;
     if (training.canUseSensor) {

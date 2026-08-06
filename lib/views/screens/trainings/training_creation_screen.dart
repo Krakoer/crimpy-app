@@ -540,9 +540,9 @@ class _TrainingItemCard extends StatelessWidget {
     TrainingItemType.circuit ||
     TrainingItemType.group => '${item.items.length} item(s)',
     TrainingItemType.exercise =>
-      item.effectiveReps != null
-          ? '${item.effectiveReps} reps'
-          : '${item.effectiveDuration ?? 0}s',
+      item.effectiveReps() != null
+          ? '${item.effectiveReps()} reps'
+          : '${item.effectiveDuration() ?? 0}s',
     TrainingItemType.free => '',
   };
 

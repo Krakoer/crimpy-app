@@ -1,7 +1,9 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
@@ -15,14 +17,21 @@ class TrainingDetailScreen extends ConsumerWidget {
 
   /// Starts the run, asking for the body weight first when the training is
   /// loaded in percent of it and none is known yet.
-  Future<void> _startRun(BuildContext context, WidgetRef ref) async {
+  Future<void> _startRun(
+    BuildContext context,
+    WidgetRef ref,
+    AssessmentResults results,
+  ) async {
     final bodyweight = await resolveBodyweight(context, ref, template);
     if (!context.mounted) return;
     ref.read(bleSessionProvider.notifier).reset();
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (ctx) =>
-            PlayTrainingScreen(template, bodyweightKg: bodyweight),
+        builder: (ctx) => PlayTrainingScreen(
+          template,
+          bodyweightKg: bodyweight,
+          results: results,
+        ),
       ),
     );
   }
@@ -32,6 +41,8 @@ class TrainingDetailScreen extends ConsumerWidget {
     final goal = template.goal?.trim() ?? '';
     final comment = template.comment?.trim() ?? '';
     final bodyweightKg = ref.watch(bodyweightProvider).value;
+    final results =
+        ref.watch(assessmentResultsProvider).value ?? AssessmentResults.none;
 
     return Scaffold(
       appBar: AppBar(title: Text(template.title)),
@@ -57,6 +68,7 @@ class TrainingDetailScreen extends ConsumerWidget {
               ...buildTrainingItemTiles(
                 template.items,
                 bodyweightKg: bodyweightKg,
+                results: results,
               ),
             ],
           ],
@@ -66,7 +78,7 @@ class TrainingDetailScreen extends ConsumerWidget {
         onPressed:
             ref.watch(connectionStateProvider) != BleConnectionState.connected
             ? null
-            : () => _startRun(context, ref),
+            : () => _startRun(context, ref, results),
         icon: Icon(Icons.play_arrow),
       ),
     );
