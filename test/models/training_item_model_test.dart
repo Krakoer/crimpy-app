@@ -166,13 +166,23 @@ void main() {
       expect(load.kilograms(null), isNull);
     });
 
-    test('kilograms and pounds do not depend on the bodyweight', () {
+    test('kilograms do not depend on the bodyweight', () {
       expect(const Load(value: 35, unit: 'kg').needsBodyweight, isFalse);
       expect(const Load(value: 35, unit: 'kg').kilograms(null), 35);
-      expect(
-        const Load(value: 10, unit: 'lbs').kilograms(null),
-        closeTo(4.536, 0.001),
-      );
+    });
+
+    test('a unit the app does not read gives no target', () {
+      // Kilograms is the only absolute unit. Falling back to the bare number
+      // would put "20" on the gauge for a load that does not mean 20 kg.
+      for (final unit in const ['lbs', 'stone', '']) {
+        final load = Load(value: 20, unit: unit);
+        expect(load.kilograms(70), isNull, reason: '$unit resolved a target');
+        expect(
+          load.needsBodyweight,
+          isFalse,
+          reason: '$unit asked for a weight',
+        );
+      }
     });
 
     test('a max effort rep has no load', () {
@@ -190,9 +200,12 @@ void main() {
         const Load(value: 35, unit: 'kg').label(bodyweightKg: 70),
         '35 kg',
       );
-      // The gauge prints kilograms whatever the coach set the load in, so a
-      // pound load without the conversion left the two screens disagreeing.
-      expect(const Load(value: 20, unit: 'lbs').label(), '20 lbs (9.1 kg)');
+      // A unit with no conversion still names itself rather than claiming a
+      // kilogram figure the app cannot work out.
+      expect(
+        const Load(value: 20, unit: 'lbs').label(bodyweightKg: 70),
+        '20 lbs',
+      );
     });
 
     test('a plain bodyweight hang has no number to hit', () {
@@ -211,7 +224,7 @@ void main() {
     test('every load resolved against the bodyweight also asks for one', () {
       // The two used to be listed separately, so a unit could resolve against
       // a bodyweight the athlete was never prompted for.
-      for (final unit in const ['kg', 'lbs', 'percent_bw', 'bw', 'max']) {
+      for (final unit in const ['kg', 'percent_bw', 'bw', 'max', 'lbs']) {
         for (final value in const [0.0, 80.0]) {
           final load = Load(value: value, unit: unit);
           final resolvesAgainstBodyweight =
