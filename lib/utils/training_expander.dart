@@ -2,6 +2,7 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training.dart';
+import 'package:crimpy/utils/hangboard_layout.dart';
 
 /// Expands a training tree into a flat, runnable sequence of execution items.
 /// [useSensor] controls whether hangboard/repeater hangs collect live force
@@ -175,8 +176,10 @@ void _expandHangboardRep(
   final worktime = item.worktimeSeconds ?? 7;
   final resttime = item.restSeconds ?? 3;
   final hand = item.hand ?? 'both';
-  final grip = _parseGrip(item.handPositions?.firstOrNull);
-  final w = item.loads?.firstOrNull?.value ?? 0.0;
+  final layout = HangboardLayout.of(item);
+  final leftHand = hand == 'left';
+  final grip = _parseGrip(layout.grip(0, 0, leftHand: leftHand));
+  final w = layout.load(0, 0, leftHand: leftHand)?.value ?? 0.0;
   final handSide = switch (hand) {
     'left' => HandSide.left,
     'right' => HandSide.right,
@@ -190,6 +193,8 @@ void _expandHangboardRep(
       targetLoad: w,
       handSide: handSide,
       gripPosition: grip,
+      edgeSizeMm: layout.edgeSizeMm(0, 0),
+      isHang: true,
       collectSensorData: useSensor,
       comment: comment,
     ),
@@ -212,9 +217,7 @@ void _expandRepeater(
   final cycleRest = item.cycleRestSeconds ?? 0;
   final hand = item.hand ?? 'both';
   final splitHand = hand == 'split';
-  final grip = _parseGrip(item.handPositions?.firstOrNull);
-  final loads = item.loads ?? [];
-  final leftLoads = item.leftLoads ?? [];
+  final layout = HangboardLayout.of(item);
 
   String setRep(int cycle, int rep) =>
       'SET ${cycle + 1}/$cycles - REP ${rep + 1}/$repsPerCycle';
@@ -222,14 +225,15 @@ void _expandRepeater(
   if (splitHand) {
     for (int cycle = 0; cycle < cycles; cycle++) {
       for (int rep = 0; rep < repsPerCycle; rep++) {
-        final wR = loads.isNotEmpty ? loads[rep % loads.length].value : 0.0;
         out.add(
           TimedItem(
             label: 'Right hang',
             durationSeconds: worktime,
-            targetLoad: wR,
+            targetLoad: layout.load(cycle, rep, leftHand: false)?.value ?? 0.0,
             handSide: HandSide.right,
-            gripPosition: grip,
+            gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: false)),
+            edgeSizeMm: layout.edgeSizeMm(cycle, rep),
+            isHang: true,
             collectSensorData: useSensor,
             subtitle: setRep(cycle, rep),
             comment: comment,
@@ -248,16 +252,15 @@ void _expandRepeater(
         out.add(RestItem(durationSeconds: restBetweenHands));
       }
       for (int rep = 0; rep < repsPerCycle; rep++) {
-        final wL = leftLoads.isNotEmpty
-            ? leftLoads[rep % leftLoads.length].value
-            : 0.0;
         out.add(
           TimedItem(
             label: 'Left hang',
             durationSeconds: worktime,
-            targetLoad: wL,
+            targetLoad: layout.load(cycle, rep, leftHand: true)?.value ?? 0.0,
             handSide: HandSide.left,
-            gripPosition: grip,
+            gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: true)),
+            edgeSizeMm: layout.edgeSizeMm(cycle, rep),
+            isHang: true,
             collectSensorData: useSensor,
             subtitle: setRep(cycle, rep),
             comment: comment,
@@ -274,14 +277,17 @@ void _expandRepeater(
   } else {
     for (int cycle = 0; cycle < cycles; cycle++) {
       for (int rep = 0; rep < repsPerCycle; rep++) {
-        final w = loads.isNotEmpty ? loads[rep % loads.length].value : 0.0;
+        final w = layout.load(cycle, rep, leftHand: false)?.value ?? 0.0;
+        final edge = layout.edgeSizeMm(cycle, rep);
         out.add(
           TimedItem(
             label: 'Right hang',
             durationSeconds: worktime,
             targetLoad: w,
             handSide: HandSide.right,
-            gripPosition: grip,
+            gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: false)),
+            edgeSizeMm: edge,
+            isHang: true,
             collectSensorData: useSensor,
             subtitle: setRep(cycle, rep),
             comment: comment,
@@ -296,7 +302,9 @@ void _expandRepeater(
             durationSeconds: worktime,
             targetLoad: w,
             handSide: HandSide.left,
-            gripPosition: grip,
+            gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: true)),
+            edgeSizeMm: edge,
+            isHang: true,
             collectSensorData: useSensor,
             subtitle: setRep(cycle, rep),
             comment: comment,
@@ -313,9 +321,14 @@ void _expandRepeater(
   }
 }
 
+/// Grips arrive either as the app's enum names or as the short codes the coach
+/// portal stores, so both vocabularies resolve here.
+/// Every known code is listed, so an unrecognised one falls to the default
+/// rather than hiding among the mapped ones.
 GripPosition _parseGrip(String? name) => switch (name) {
-  'threeFinger' => GripPosition.threeFinger,
-  'fullCrimp' => GripPosition.fullCrimp,
-  'openHand' => GripPosition.openHand,
+  'threeFinger' || '3FD' => GripPosition.threeFinger,
+  'fullCrimp' || 'FC' => GripPosition.fullCrimp,
+  'openHand' || 'OC' || 'OH' => GripPosition.openHand,
+  'halfCrimp' || 'HC' => GripPosition.halfCrimp,
   _ => GripPosition.halfCrimp,
 };

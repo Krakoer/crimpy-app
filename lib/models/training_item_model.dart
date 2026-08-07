@@ -78,6 +78,16 @@ List<dynamic> flattenJsonList(dynamic raw) {
   return out;
 }
 
+/// Reads hand_positions keeping its outer dimension, which the coach portal
+/// uses to carry one grip array per hand. Returns null for the flat array the
+/// app writes, which has no hand dimension to preserve.
+List<List<String>>? parseHandPositionsByHand(dynamic raw) {
+  if (raw is! List || raw.isEmpty || raw.any((e) => e is! List)) return null;
+  return raw
+      .map((hand) => (hand as List).map((e) => e.toString()).toList())
+      .toList();
+}
+
 class TrainingItem {
   final String id;
   final TrainingItemType type;
@@ -106,6 +116,10 @@ class TrainingItem {
   final List<Load>? leftLoads;
   final List<String>? handPositions;
   final List<int>? edgeSizesMm;
+
+  // hand_positions as sent on the wire: one grip array per hand. Kept next to
+  // the flattened [handPositions] so split items can tell the hands apart.
+  final List<List<String>>? handPositionsByHand;
 
   // Whether this item is done at maximum effort rather than a fixed load
   final bool loadIsMax;
@@ -144,6 +158,7 @@ class TrainingItem {
     this.leftLoads,
     this.handPositions,
     this.edgeSizesMm,
+    this.handPositionsByHand,
     this.loadIsMax = false,
     this.freeText,
     this.comment,
@@ -152,6 +167,16 @@ class TrainingItem {
     this.groupTitle,
     this.items = const [],
   });
+
+  /// Grips as one array per hand. Falls back to the flattened positions read
+  /// from legacy app-created items, which carry a single hand array.
+  List<List<String>> get handPositionsPerHand {
+    final byHand = handPositionsByHand;
+    if (byHand != null && byHand.isNotEmpty) return byHand;
+    final flat = handPositions;
+    if (flat == null || flat.isEmpty) return const [];
+    return [flat];
+  }
 
   /// Reps to perform when this is a rep-based item, null otherwise.
   /// An item is never both rep-based and time-based.
@@ -222,6 +247,7 @@ class TrainingItem {
       leftLoads: parseLoads(json['left_loads']),
       handPositions: parseStringList(json['hand_positions']),
       edgeSizesMm: parseIntList(json['edge_sizes_mm']),
+      handPositionsByHand: parseHandPositionsByHand(json['hand_positions']),
       loadIsMax: json['load_is_max'] as bool? ?? false,
       freeText: json['free_text'] as String?,
       comment: json['comment'] as String?,
@@ -245,7 +271,13 @@ class TrainingItem {
     if (leftLoads != null) {
       map['left_loads'] = leftLoads!.map((l) => l.toJson()).toList();
     }
-    if (handPositions != null) map['hand_positions'] = handPositions;
+    // Writing back the per-hand shape keeps a portal-authored item intact when
+    // the app saves it again.
+    if (handPositionsByHand != null) {
+      map['hand_positions'] = handPositionsByHand;
+    } else if (handPositions != null) {
+      map['hand_positions'] = handPositions;
+    }
     if (edgeSizesMm != null) map['edge_sizes_mm'] = edgeSizesMm;
     map['load_is_max'] = loadIsMax;
     if (freeText != null) map['free_text'] = freeText;
@@ -271,9 +303,15 @@ class TrainingItem {
     List<Load>? leftLoads,
     List<String>? handPositions,
     List<int>? edgeSizesMm,
+    List<List<String>>? handPositionsByHand,
     bool? loadIsMax,
     List<TrainingItem>? items,
   }) {
+    // A flat replacement supersedes the per-hand grips it was derived from,
+    // otherwise the stale nested copy would keep winning over the new value.
+    final nextByHand =
+        handPositionsByHand ??
+        (handPositions != null ? null : this.handPositionsByHand);
     return TrainingItem(
       id: id,
       type: type,
@@ -290,6 +328,7 @@ class TrainingItem {
       leftLoads: leftLoads ?? this.leftLoads,
       handPositions: handPositions ?? this.handPositions,
       edgeSizesMm: edgeSizesMm ?? this.edgeSizesMm,
+      handPositionsByHand: nextByHand,
       loadIsMax: loadIsMax ?? this.loadIsMax,
       freeText: freeText,
       comment: comment,
@@ -305,11 +344,19 @@ class TrainingItem {
   TrainingItem applyOverride(Map<String, dynamic> override) {
     if (override.isEmpty) return this;
 
+    // An empty array carries no prescription, so it leaves the base value
+    // alone rather than wiping it. Clearing the edge sizes in particular would
+    // make a split item read its interleaved loads as a flat array.
+    List<T>? orBase<T>(List<T>? parsed) =>
+        parsed == null || parsed.isEmpty ? null : parsed;
+
     List<Load>? parseLoads(dynamic raw) {
       if (raw == null) return null;
-      return flattenJsonList(
-        raw,
-      ).whereType<Map<String, dynamic>>().map(Load.fromJson).toList();
+      return orBase(
+        flattenJsonList(
+          raw,
+        ).whereType<Map<String, dynamic>>().map(Load.fromJson).toList(),
+      );
     }
 
     final bothHands = override['both_hands'] as bool?;
@@ -318,14 +365,19 @@ class TrainingItem {
       leftLoads: parseLoads(override['left_loads']),
       handPositions: override['hand_positions'] == null
           ? null
-          : flattenJsonList(
-              override['hand_positions'],
-            ).map((e) => e.toString()).toList(),
+          : orBase(
+              flattenJsonList(
+                override['hand_positions'],
+              ).map((e) => e.toString()).toList(),
+            ),
+      handPositionsByHand: parseHandPositionsByHand(override['hand_positions']),
       edgeSizesMm: override['edge_sizes_mm'] == null
           ? null
-          : flattenJsonList(
-              override['edge_sizes_mm'],
-            ).whereType<num>().map((e) => e.toInt()).toList(),
+          : orBase(
+              flattenJsonList(
+                override['edge_sizes_mm'],
+              ).whereType<num>().map((e) => e.toInt()).toList(),
+            ),
       reps: (override['reps'] as num?)?.toInt(),
       cycles: (override['cycles'] as num?)?.toInt(),
       cycleRestSeconds: (override['cycle_rest_seconds'] as num?)?.toInt(),

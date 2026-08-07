@@ -439,8 +439,14 @@ class AppDatabase extends _$AppDatabase {
 
     List<String>? parseStrings(String? json) {
       if (json == null || json.isEmpty) return null;
-      final list = jsonDecode(json) as List<dynamic>;
-      return list.map((e) => e as String).toList();
+      final flat = flattenJsonList(jsonDecode(json));
+      if (flat.isEmpty) return null;
+      return flat.map((e) => e.toString()).toList();
+    }
+
+    List<List<String>>? parseHandPositions(String? json) {
+      if (json == null || json.isEmpty) return null;
+      return parseHandPositionsByHand(jsonDecode(json));
     }
 
     List<int>? parseInts(String? json) {
@@ -468,6 +474,7 @@ class AppDatabase extends _$AppDatabase {
       leftLoads: parseLoads(row.leftLoadsJson),
       handPositions: parseStrings(row.handPositionsJson),
       edgeSizesMm: parseInts(row.edgeSizesMmJson),
+      handPositionsByHand: parseHandPositions(row.handPositionsJson),
       loadIsMax: row.loadIsMax,
       freeText: row.freeText,
       exerciseId: row.exerciseId,
@@ -481,6 +488,14 @@ class AppDatabase extends _$AppDatabase {
 
   String? _stringsToJson(List<String>? list) =>
       list == null ? null : jsonEncode(list);
+
+  /// Stores the per-hand shape when the item carries one, so a split item
+  /// authored in the coach portal keeps its two grip arrays across a cache
+  /// round-trip.
+  String? _handPositionsToJson(TrainingItem item) =>
+      item.handPositionsByHand != null
+      ? jsonEncode(item.handPositionsByHand)
+      : _stringsToJson(item.handPositions);
 
   String? _intsToJson(List<int>? list) =>
       list == null ? null : jsonEncode(list);
@@ -542,7 +557,7 @@ class AppDatabase extends _$AppDatabase {
           hand: Value(item.hand),
           loadsJson: Value(_loadsToJson(item.loads)),
           leftLoadsJson: Value(_loadsToJson(item.leftLoads)),
-          handPositionsJson: Value(_stringsToJson(item.handPositions)),
+          handPositionsJson: Value(_handPositionsToJson(item)),
           edgeSizesMmJson: Value(_intsToJson(item.edgeSizesMm)),
           loadIsMax: Value(item.loadIsMax),
           freeText: Value(item.freeText),
