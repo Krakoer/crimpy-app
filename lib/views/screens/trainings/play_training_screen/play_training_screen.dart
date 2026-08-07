@@ -187,26 +187,30 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       isPrep: isPrep,
     );
 
-    // Header above the circle (kind-specific).
-    final Widget header = sensor
-        ? HandLabel(handSide: rep!.handSide, gripPosition: rep.gripPosition)
-        : item is RestItem
+    // Header above the circle (kind-specific), with the coach comment of the
+    // running step right under the name it applies to.
+    final Widget header = item is RestItem
         ? const SizedBox.shrink()
-        : _stageHeader(rep?.label, rep?.targetLoad ?? 0);
+        : _headerBlock(
+            title: sensor
+                ? HandLabel(
+                    handSide: rep!.handSide,
+                    gripPosition: rep.gripPosition,
+                  )
+                : _stageHeader(rep?.label, rep?.targetLoad ?? 0),
+            comment: _commentOf(item),
+          );
 
     // Content below the circle: preview the next step during a rest, or while
-    // working when a rest is coming up next.
+    // working when a rest is coming up next. During a rest the comment of the
+    // upcoming step follows its name, so the athlete reads it before starting.
     final bool showNext =
         nextRep != null && (item is RestItem || nextRep is RestItem);
-    final comment = _currentComment();
-    final Widget below = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (sensor) timerDisplay,
-        if (comment != null) _commentBox(comment),
-        if (showNext) NextRepPreview(nextRep: nextRep),
-      ],
-    );
+    final Widget below = sensor
+        ? timerDisplay
+        : showNext
+        ? _nextUpBlock(nextRep, item is RestItem ? _commentOf(nextRep) : null)
+        : const SizedBox.shrink();
 
     // Equal flexible regions above and below keep the circle vertically
     // centred at the same place regardless of step kind, and absorb any slack
@@ -264,20 +268,16 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     return null;
   }
 
-  /// Coach comment of the current step. During a rest the comment of the step
-  /// the rest leads into is shown, so the athlete reads it before starting.
-  String? _currentComment() {
-    for (var i = timer.currentItemIndex; i < timer.items.length; i++) {
-      final item = timer.items[i];
-      final comment = switch (item) {
-        TimedItem() => item.comment,
-        ConfirmItem() => item.comment,
-        RestItem() => null,
-      };
-      if (comment != null && comment.trim().isNotEmpty) return comment;
-      if (item is! RestItem) return null;
-    }
-    return null;
+  /// Coach comment attached to a step, if it carries one. A rest is not a step
+  /// a coach comments on, so it never has one of its own.
+  String? _commentOf(TrainingExecutionItem? item) {
+    final comment = switch (item) {
+      TimedItem() => item.comment,
+      ConfirmItem() => item.comment,
+      _ => null,
+    };
+    final trimmed = comment?.trim() ?? '';
+    return trimmed.isEmpty ? null : trimmed;
   }
 
   Widget _contextSlot() {
@@ -313,67 +313,80 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   );
 
   Widget _stageHeader(String? label, double targetWeight) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            (label ?? 'WORK').toUpperCase(),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontFamily: 'JetBrainsMono',
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1,
-              color: CrimpyTheme.primaryOrange,
-            ),
-          ),
-          if (targetWeight > 0)
-            Text(
-              'TARGET ${targetWeight.toStringAsFixed(targetWeight.truncateToDouble() == targetWeight ? 0 : 1)} kg',
-              style: const TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: CrimpyTheme.textMuted,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  /// Coach comment shown during a step. Width-constrained and scrollable so a
-  /// long comment wraps and stays readable instead of overflowing.
-  Widget _commentBox(String text) => ConstrainedBox(
-    constraints: const BoxConstraints(maxWidth: 360, maxHeight: 160),
-    child: SingleChildScrollView(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: CrimpyTheme.primaryOrange.withValues(alpha: 0.10),
-          border: Border.all(
-            color: CrimpyTheme.primaryOrange.withValues(alpha: 0.4),
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          text,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          (label ?? 'WORK').toUpperCase(),
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontFamily: 'JetBrainsMono',
-            fontSize: 13,
-            height: 1.4,
-            color: CrimpyTheme.textSecondary,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+            color: CrimpyTheme.primaryOrange,
           ),
         ),
+        if (targetWeight > 0)
+          Text(
+            'TARGET ${targetWeight.toStringAsFixed(targetWeight.truncateToDouble() == targetWeight ? 0 : 1)} kg',
+            style: const TextStyle(
+              fontFamily: 'JetBrainsMono',
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: CrimpyTheme.textMuted,
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Name of the running step and the coach comment that goes with it.
+  Widget _headerBlock({required Widget title, String? comment}) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        title,
+        if (comment != null) ...[
+          const SizedBox(height: 8),
+          _commentText(comment),
+        ],
+      ],
+    ),
+  );
+
+  /// Name of the upcoming step and the coach comment that goes with it.
+  Widget _nextUpBlock(TrainingExecutionItem nextRep, String? comment) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      NextRepPreview(nextRep: nextRep),
+      if (comment != null) ...[
+        const SizedBox(height: 8),
+        _commentText(comment),
+      ],
+    ],
+  );
+
+  /// Coach comment shown during the run. Width-constrained so a long
+  /// instruction wraps instead of shrinking the whole block it belongs to.
+  Widget _commentText(String text) => ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: 320),
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontFamily: 'JetBrainsMono',
+        fontSize: 13,
+        height: 1.4,
+        color: CrimpyTheme.textSecondary,
       ),
     ),
   );
 
   Widget _buildConfirmContent(double timerFontSize) {
     final rep = timer.currentItem as ConfirmItem;
+    final comment = _commentOf(rep);
     final details = [
       if (rep.reps != null) '${rep.reps} reps',
       if (rep.load != null) rep.load!,
@@ -394,6 +407,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
               color: CrimpyTheme.textPrimary,
             ),
           ),
+          if (comment != null) ...[
+            const SizedBox(height: 8),
+            _commentText(comment),
+          ],
           if (details.isNotEmpty) ...[
             const SizedBox(height: 12),
             Text(
@@ -406,10 +423,6 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                 color: CrimpyTheme.primaryOrange,
               ),
             ),
-          ],
-          if (rep.comment?.trim().isNotEmpty ?? false) ...[
-            const SizedBox(height: 16),
-            _commentBox(rep.comment!),
           ],
           const SizedBox(height: 16),
           const Text(
