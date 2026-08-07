@@ -3,6 +3,8 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session_filter.dart';
 import 'package:crimpy/models/session.dart';
+import 'package:crimpy/models/training.dart';
+import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
 import 'package:drift/native.dart';
@@ -117,6 +119,65 @@ void main() {
       await trainings.deleteSession(id);
 
       expect(await trainings.getAllSessionsWithReps(), isEmpty);
+    });
+  });
+
+  group('trainings round-trip', () {
+    test('a cached split item keeps its two grip arrays', () async {
+      await trainings.saveTraining(
+        Training(
+          id: '',
+          title: 'Portal repeaters',
+          items: [
+            TrainingItem(
+              id: '',
+              type: TrainingItemType.repeater,
+              position: 0,
+              hand: 'split',
+              cycles: 2,
+              reps: 2,
+              handPositionsByHand: const [
+                ['HC', 'FC'],
+                ['OC', '3FD'],
+              ],
+              edgeSizesMm: const [20, 20, 14, 14],
+            ),
+          ],
+        ),
+      );
+
+      final item = (await trainings.getAllTrainings()).single.items.single;
+
+      expect(item.handPositionsByHand, [
+        ['HC', 'FC'],
+        ['OC', '3FD'],
+      ]);
+      expect(item.handPositions, ['HC', 'FC', 'OC', '3FD']);
+      expect(item.edgeSizesMm, [20, 20, 14, 14]);
+    });
+
+    test('a flat item stays flat across the cache', () async {
+      await trainings.saveTraining(
+        Training(
+          id: '',
+          title: 'App repeaters',
+          items: [
+            TrainingItem(
+              id: '',
+              type: TrainingItemType.repeater,
+              position: 0,
+              hand: 'right',
+              reps: 2,
+              handPositions: const ['HC', 'FC'],
+            ),
+          ],
+        ),
+      );
+
+      final item = (await trainings.getAllTrainings()).single.items.single;
+
+      expect(item.handPositions, ['HC', 'FC']);
+      expect(item.handPositionsByHand, isNull);
     });
   });
 
