@@ -44,7 +44,7 @@ class HandLabel extends StatelessWidget {
           Text(
             [
               gripPosition!.displayName,
-              if (edgeSizeMm != null) '$edgeSizeMm mm',
+              if (edgeSizeMm != null) '${edgeSizeMm}mm',
             ].join(' - '),
             style: Theme.of(context).textTheme.bodySmall!.copyWith(
               color: CrimpyTheme.gray400,

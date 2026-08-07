@@ -194,6 +194,7 @@ void _expandHangboardRep(
       handSide: handSide,
       gripPosition: grip,
       edgeSizeMm: layout.edgeSizeMm(0, 0),
+      isHang: true,
       collectSensorData: useSensor,
       comment: comment,
     ),
@@ -232,6 +233,7 @@ void _expandRepeater(
             handSide: HandSide.right,
             gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: false)),
             edgeSizeMm: layout.edgeSizeMm(cycle, rep),
+            isHang: true,
             collectSensorData: useSensor,
             subtitle: setRep(cycle, rep),
             comment: comment,
@@ -258,6 +260,7 @@ void _expandRepeater(
             handSide: HandSide.left,
             gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: true)),
             edgeSizeMm: layout.edgeSizeMm(cycle, rep),
+            isHang: true,
             collectSensorData: useSensor,
             subtitle: setRep(cycle, rep),
             comment: comment,
@@ -284,6 +287,7 @@ void _expandRepeater(
             handSide: HandSide.right,
             gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: false)),
             edgeSizeMm: edge,
+            isHang: true,
             collectSensorData: useSensor,
             subtitle: setRep(cycle, rep),
             comment: comment,
@@ -300,6 +304,7 @@ void _expandRepeater(
             handSide: HandSide.left,
             gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: true)),
             edgeSizeMm: edge,
+            isHang: true,
             collectSensorData: useSensor,
             subtitle: setRep(cycle, rep),
             comment: comment,
@@ -318,9 +323,12 @@ void _expandRepeater(
 
 /// Grips arrive either as the app's enum names or as the short codes the coach
 /// portal stores, so both vocabularies resolve here.
+/// Every known code is listed, so an unrecognised one falls to the default
+/// rather than hiding among the mapped ones.
 GripPosition _parseGrip(String? name) => switch (name) {
   'threeFinger' || '3FD' => GripPosition.threeFinger,
   'fullCrimp' || 'FC' => GripPosition.fullCrimp,
   'openHand' || 'OC' || 'OH' => GripPosition.openHand,
+  'halfCrimp' || 'HC' => GripPosition.halfCrimp,
   _ => GripPosition.halfCrimp,
 };

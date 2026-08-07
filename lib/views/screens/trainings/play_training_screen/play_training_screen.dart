@@ -198,7 +198,14 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                     gripPosition: rep.gripPosition,
                     edgeSizeMm: rep.edgeSizeMm,
                   )
-                : _stageHeader(rep?.label, rep?.targetLoad ?? 0),
+                : _stageHeader(
+                    rep?.label,
+                    rep?.targetLoad ?? 0,
+                    gripPosition: rep != null && rep.isHang
+                        ? rep.gripPosition
+                        : null,
+                    edgeSizeMm: rep?.edgeSizeMm,
+                  ),
             comment: _commentOf(item),
           );
 
@@ -313,7 +320,12 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     ),
   );
 
-  Widget _stageHeader(String? label, double targetWeight) {
+  Widget _stageHeader(
+    String? label,
+    double targetWeight, {
+    GripPosition? gripPosition,
+    int? edgeSizeMm,
+  }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -328,6 +340,19 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             color: CrimpyTheme.primaryOrange,
           ),
         ),
+        if (gripPosition != null)
+          Text(
+            [
+              gripPosition.displayName,
+              if (edgeSizeMm != null) '${edgeSizeMm}mm',
+            ].join(' - '),
+            style: const TextStyle(
+              fontFamily: 'JetBrainsMono',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: CrimpyTheme.gray400,
+            ),
+          ),
         if (targetWeight > 0)
           Text(
             'TARGET ${targetWeight.toStringAsFixed(targetWeight.truncateToDouble() == targetWeight ? 0 : 1)} kg',

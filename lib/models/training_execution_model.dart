@@ -17,6 +17,10 @@ final class TimedItem extends TrainingExecutionItem {
   /// Edge depth prescribed for this hang, when the coach set one.
   final int? edgeSizeMm;
 
+  /// Whether the step is a hangboard hang, so its grip and edge are a real
+  /// prescription rather than the filler a duration exercise carries.
+  final bool isHang;
+
   /// Position context shown during the step, e.g. "SET 2/3 - REP 4/6" or
   /// "ROUND 1/3".
   final String? subtitle;
@@ -32,6 +36,7 @@ final class TimedItem extends TrainingExecutionItem {
     required this.gripPosition,
     required this.collectSensorData,
     this.edgeSizeMm,
+    this.isHang = false,
     this.subtitle,
     this.comment,
   });
