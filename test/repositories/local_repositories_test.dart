@@ -123,40 +123,45 @@ void main() {
   });
 
   group('trainings round-trip', () {
-    test('a cached split item keeps its two grip arrays', () async {
-      await trainings.saveTraining(
-        Training(
-          id: '',
-          title: 'Portal repeaters',
-          items: [
-            TrainingItem(
-              id: '',
-              type: TrainingItemType.repeater,
-              position: 0,
-              hand: 'split',
-              cycles: 2,
-              reps: 2,
-              handPositionsByHand: const [
-                ['HC', 'FC'],
-                ['OC', '3FD'],
-              ],
-              edgeSizesMm: const [20, 20, 14, 14],
-            ),
-          ],
-        ),
-      );
+    test(
+      'a split item keeps a grip array per hand and its granularity',
+      () async {
+        await trainings.saveTraining(
+          Training(
+            id: '',
+            title: 'Split repeaters',
+            items: [
+              TrainingItem(
+                id: '',
+                type: TrainingItemType.repeater,
+                position: 0,
+                hand: HangboardHand.split,
+                granularity: HangboardGranularity.perSet,
+                cycles: 2,
+                reps: 2,
+                handPositions: const [
+                  ['HC', 'FC', 'OC', '3FD'],
+                  ['OC', '3FD', 'HC', 'FC'],
+                ],
+                edgeSizesMm: const [20, 20, 14, 14],
+              ),
+            ],
+          ),
+        );
 
-      final item = (await trainings.getAllTrainings()).single.items.single;
+        final item = (await trainings.getAllTrainings()).single.items.single;
 
-      expect(item.handPositionsByHand, [
-        ['HC', 'FC'],
-        ['OC', '3FD'],
-      ]);
-      expect(item.handPositions, ['HC', 'FC', 'OC', '3FD']);
-      expect(item.edgeSizesMm, [20, 20, 14, 14]);
-    });
+        expect(item.hand, HangboardHand.split);
+        expect(item.granularity, HangboardGranularity.perSet);
+        expect(item.handPositions, [
+          ['HC', 'FC', 'OC', '3FD'],
+          ['OC', '3FD', 'HC', 'FC'],
+        ]);
+        expect(item.edgeSizesMm, [20, 20, 14, 14]);
+      },
+    );
 
-    test('a flat item stays flat across the cache', () async {
+    test('a single-hand item keeps its one grip array', () async {
       await trainings.saveTraining(
         Training(
           id: '',
@@ -166,9 +171,12 @@ void main() {
               id: '',
               type: TrainingItemType.repeater,
               position: 0,
-              hand: 'right',
+              hand: HangboardHand.right,
+              granularity: HangboardGranularity.perRep,
               reps: 2,
-              handPositions: const ['HC', 'FC'],
+              handPositions: const [
+                ['HC', 'FC'],
+              ],
             ),
           ],
         ),
@@ -176,8 +184,9 @@ void main() {
 
       final item = (await trainings.getAllTrainings()).single.items.single;
 
-      expect(item.handPositions, ['HC', 'FC']);
-      expect(item.handPositionsByHand, isNull);
+      expect(item.handPositions, [
+        ['HC', 'FC'],
+      ]);
     });
   });
 

@@ -1,5 +1,6 @@
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training.dart';
+import 'package:crimpy/utils/hangboard_config.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,15 +29,11 @@ class _UnifiedTrainingCreationScreenState
   late final TrainingCreationMode _mode;
 
   // Repeater mode state
-  int _cycles = 3;
-  int _reps = 6;
   int _worktime = 7;
   int _rest = 3;
   int _cycleRest = 180;
-  bool _splitHand = false;
-  double _loadRight = 0;
-  double _loadLeft = 0;
-  String _grip = 'halfCrimp';
+  HangboardConfig _config = HangboardConfig.initial();
+  bool _showPerRepDetail = false;
 
   // Manual mode state
   final List<TrainingItem> _items = [];
@@ -59,15 +56,11 @@ class _UnifiedTrainingCreationScreenState
         final r = original.items.firstWhere(
           (i) => i.type == TrainingItemType.repeater,
         );
-        _cycles = r.cycles ?? 3;
-        _reps = r.reps ?? 6;
         _worktime = r.worktimeSeconds ?? 7;
         _rest = r.restSeconds ?? 3;
         _cycleRest = r.cycleRestSeconds ?? 180;
-        _splitHand = r.hand == 'split';
-        _loadRight = r.loads?.firstOrNull?.value ?? 0;
-        _loadLeft = r.leftLoads?.firstOrNull?.value ?? 0;
-        _grip = r.handPositions?.firstOrNull ?? 'halfCrimp';
+        _config = HangboardConfig.fromItem(r);
+        _showPerRepDetail = _config.granularity != HangboardGranularity.uniform;
       } else {
         _items.addAll(original.items);
       }
@@ -95,22 +88,12 @@ class _UnifiedTrainingCreationScreenState
               )
               .id
         : '';
-    final hand = _splitHand ? 'split' : 'both';
-    return TrainingItem(
+    return _config.toItem(
       id: existingId,
-      type: TrainingItemType.repeater,
       position: 0,
-      cycles: _cycles,
-      reps: _reps,
       worktimeSeconds: _worktime,
       restSeconds: _rest,
       cycleRestSeconds: _cycleRest,
-      hand: hand,
-      loads: List.filled(_reps, Load(value: _loadRight, unit: 'kg')),
-      leftLoads: _splitHand
-          ? List.filled(_reps, Load(value: _loadLeft, unit: 'kg'))
-          : null,
-      handPositions: List.filled(_reps, _grip),
     );
   }
 
@@ -155,9 +138,12 @@ class _UnifiedTrainingCreationScreenState
       position: _items.length,
       worktimeSeconds: 7,
       restSeconds: 3,
-      hand: 'both',
+      hand: HangboardHand.both,
+      granularity: HangboardGranularity.uniform,
       loads: [const Load(value: 0, unit: 'kg')],
-      handPositions: ['halfCrimp'],
+      handPositions: const [
+        ['halfCrimp'],
+      ],
     );
     showDialog<TrainingItem>(
       context: context,
@@ -231,12 +217,19 @@ class _UnifiedTrainingCreationScreenState
   }
 
   Widget _buildRepeaterBody() {
-    const grips = ['halfCrimp', 'threeFinger', 'fullCrimp', 'openHand'];
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _intRow('Sets', _cycles, (v) => setState(() => _cycles = v)),
-        _intRow('Reps / set', _reps, (v) => setState(() => _reps = v)),
+        _intRow(
+          'Sets',
+          _config.sets,
+          (v) => setState(() => _config.reshape(sets: v)),
+        ),
+        _intRow(
+          'Reps / set',
+          _config.reps,
+          (v) => setState(() => _config.reshape(reps: v)),
+        ),
         _intRow(
           'Work time (s)',
           _worktime,
@@ -248,36 +241,170 @@ class _UnifiedTrainingCreationScreenState
           _cycleRest,
           (v) => setState(() => _cycleRest = v),
         ),
+        const SizedBox(height: 8),
+        _buildHandSelector(),
+        const Divider(height: 24),
+        // The simple case stays on one screen: a single edge, load and grip.
+        // Everything that varies rep by rep lives behind the detail switch.
+        if (_config.granularity == HangboardGranularity.uniform)
+          _buildRowEditor(0, showLabel: false),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('Split hand'),
-          subtitle: const Text('Alternate R/L sets'),
-          value: _splitHand,
-          onChanged: (v) => setState(() => _splitHand = v),
+          title: const Text('Vary per rep'),
+          subtitle: const Text('Set a different edge, load or grip per rep'),
+          value: _showPerRepDetail,
+          onChanged: _onDetailToggled,
         ),
-        _doubleRow(
-          _splitHand ? 'Load right (kg)' : 'Load (kg)',
-          _loadRight,
-          (v) => setState(() => _loadRight = v),
-        ),
-        if (_splitHand)
-          _doubleRow(
-            'Load left (kg)',
-            _loadLeft,
-            (v) => setState(() => _loadLeft = v),
-          ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: DropdownButtonFormField<String>(
-            initialValue: _grip,
-            decoration: const InputDecoration(labelText: 'Grip'),
-            items: grips
-                .map((g) => DropdownMenuItem(value: g, child: Text(g)))
-                .toList(),
-            onChanged: (v) => setState(() => _grip = v ?? 'halfCrimp'),
-          ),
-        ),
+        if (_showPerRepDetail) ..._buildDetailSection(),
       ],
+    );
+  }
+
+  void _onDetailToggled(bool enabled) {
+    setState(() {
+      _showPerRepDetail = enabled;
+      _config.reshape(
+        granularity: enabled
+            ? HangboardGranularity.perRep
+            : HangboardGranularity.uniform,
+      );
+    });
+  }
+
+  Widget _buildHandSelector() {
+    const modes = [
+      (HangboardHand.both, 'Both', 'Both hands on the board at once'),
+      (HangboardHand.alternate, 'Alternate', 'Right then left within each rep'),
+      (HangboardHand.split, 'Split', 'A whole set on one hand, then the other'),
+      (HangboardHand.left, 'Left', 'Left hand only'),
+      (HangboardHand.right, 'Right', 'Right hand only'),
+    ];
+    final selected = modes.firstWhere(
+      (m) => m.$1 == _config.hand,
+      orElse: () => modes.first,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Hands'),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 8,
+          children: modes
+              .map(
+                (m) => ChoiceChip(
+                  label: Text(m.$2),
+                  selected: _config.hand == m.$1,
+                  onSelected: (_) =>
+                      setState(() => _config.reshape(hand: m.$1)),
+                ),
+              )
+              .toList(),
+        ),
+        const SizedBox(height: 6),
+        Text(selected.$3, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+
+  List<Widget> _buildDetailSection() {
+    return [
+      const SizedBox(height: 8),
+      SegmentedButton<String>(
+        segments: const [
+          ButtonSegment(
+            value: HangboardGranularity.perRep,
+            label: Text('Per rep'),
+          ),
+          ButtonSegment(
+            value: HangboardGranularity.perSet,
+            label: Text('Per set'),
+          ),
+        ],
+        selected: {
+          _config.granularity == HangboardGranularity.perSet
+              ? HangboardGranularity.perSet
+              : HangboardGranularity.perRep,
+        },
+        onSelectionChanged: (s) =>
+            setState(() => _config.reshape(granularity: s.first)),
+      ),
+      const SizedBox(height: 8),
+      for (int row = 0; row < _config.rowCount; row++) _buildRowEditor(row),
+    ];
+  }
+
+  Widget _buildRowEditor(int row, {bool showLabel = true}) {
+    const grips = ['halfCrimp', 'threeFinger', 'fullCrimp', 'openHand'];
+    final separate = _config.worksHandsSeparately;
+
+    Widget gripField(String label, List<String> values) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: DropdownButtonFormField<String>(
+        initialValue: values[row],
+        decoration: InputDecoration(labelText: label),
+        items: grips
+            .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+            .toList(),
+        onChanged: (v) =>
+            setState(() => values[row] = v ?? HangboardConfig.defaultGrip),
+      ),
+    );
+
+    Widget loadField(String label, List<Load> values) => _doubleRow(
+      label,
+      values[row].value,
+      (v) => setState(() => values[row] = Load(value: v, unit: 'kg')),
+    );
+
+    final fields = Column(
+      children: [
+        _intRow(
+          'Edge (mm)',
+          _config.edgeSizesMm[row],
+          (v) => setState(() => _config.edgeSizesMm[row] = v),
+        ),
+        if (!separate) ...[
+          loadField('Load (kg)', _config.loads),
+          gripField('Grip', _config.grips),
+        ] else ...[
+          loadField('Load right (kg)', _config.loads),
+          loadField('Load left (kg)', _config.leftLoads),
+          gripField('Grip right', _config.grips),
+          gripField('Grip left', _config.leftGrips),
+        ],
+      ],
+    );
+
+    if (!showLabel) return fields;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _config.labelOf(row),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                if (row < _config.rowCount - 1)
+                  IconButton(
+                    icon: const Icon(Icons.arrow_downward, size: 20),
+                    tooltip: 'Copy to the rows below',
+                    onPressed: () => setState(() => _config.fillDown(row)),
+                  ),
+              ],
+            ),
+            fields,
+          ],
+        ),
+      ),
     );
   }
 
@@ -474,12 +601,17 @@ class _ItemEditorDialogState extends State<_ItemEditorDialog> {
         DropdownButtonFormField<String>(
           initialValue: _hand,
           decoration: const InputDecoration(labelText: 'Hand'),
+          // A single hang is one hand or both together: the modes that order
+          // the two hands across reps only mean something on a repeater.
           items: const [
-            DropdownMenuItem(value: 'both', child: Text('Both')),
-            DropdownMenuItem(value: 'left', child: Text('Left')),
-            DropdownMenuItem(value: 'right', child: Text('Right')),
+            DropdownMenuItem(
+              value: HangboardHand.both,
+              child: Text('Both hands'),
+            ),
+            DropdownMenuItem(value: HangboardHand.left, child: Text('Left')),
+            DropdownMenuItem(value: HangboardHand.right, child: Text('Right')),
           ],
-          onChanged: (v) => setState(() => _hand = v ?? 'both'),
+          onChanged: (v) => setState(() => _hand = v ?? HangboardHand.both),
         ),
         SwitchListTile(
           title: const Text('As hard as possible'),

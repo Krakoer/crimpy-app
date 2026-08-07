@@ -3,39 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('TrainingItem.fromJson hand_positions', () {
-    test('parses a flat hand_positions array', () {
+    test('reads one grip array per hand', () {
       final item = TrainingItem.fromJson({
         'id': 'i1',
-        'type': 'hangboard_rep',
-        'position': 0,
-        'hand_positions': ['FC', 'OH'],
-      });
-      expect(item.handPositions, ['FC', 'OH']);
-    });
-
-    test('flattens a nested (split-hand) hand_positions array', () {
-      final item = TrainingItem.fromJson({
-        'id': 'i2',
-        'type': 'repeater',
-        'position': 1,
-        'hand_positions': [
-          ['FC', 'FC', 'FC'],
-          ['FC', 'FC', 'FC'],
-        ],
-        'edge_sizes_mm': [10],
-        'loads': [
-          {'unit': 'percent_bw', 'value': 30},
-          {'unit': 'percent_bw', 'value': 100},
-        ],
-      });
-      expect(item.handPositions, ['FC', 'FC', 'FC', 'FC', 'FC', 'FC']);
-      expect(item.edgeSizesMm, [10]);
-      expect(item.loads, hasLength(2));
-    });
-
-    test('keeps the per-hand shape next to the flattened one', () {
-      final item = TrainingItem.fromJson({
-        'id': 'i3',
         'type': 'repeater',
         'position': 0,
         'hand_positions': [
@@ -43,58 +13,72 @@ void main() {
           ['OC', '3FD'],
         ],
       });
-      expect(item.handPositionsByHand, [
+      expect(item.handPositions, [
         ['HC', 'FC'],
         ['OC', '3FD'],
       ]);
-      expect(item.handPositionsPerHand, item.handPositionsByHand);
-      // The per-hand shape survives a save so portal data is not flattened.
+      expect(item.handPositionsPerHand, item.handPositions);
       expect(item.toJson()['hand_positions'], [
         ['HC', 'FC'],
         ['OC', '3FD'],
       ]);
     });
 
-    test('a flat array reads as a single hand array', () {
+    // Items written before the format was unified carried a flat array.
+    test('reads a flat array as the rows of a single hand', () {
       final item = TrainingItem.fromJson({
-        'id': 'i4',
+        'id': 'i2',
         'type': 'repeater',
         'position': 0,
         'hand_positions': ['halfCrimp', 'openHand'],
       });
-      expect(item.handPositionsByHand, isNull);
-      expect(item.handPositionsPerHand, [
+      expect(item.handPositions, [
         ['halfCrimp', 'openHand'],
       ]);
-      // A flat item stays flat on the wire.
-      expect(item.toJson()['hand_positions'], ['halfCrimp', 'openHand']);
+      // It is written back in the shape every client now reads.
+      expect(item.toJson()['hand_positions'], [
+        ['halfCrimp', 'openHand'],
+      ]);
     });
 
     test('an item without hand_positions has no grips at all', () {
       final item = TrainingItem.fromJson({
-        'id': 'i5',
+        'id': 'i3',
         'type': 'repeater',
         'position': 0,
       });
       expect(item.handPositionsPerHand, isEmpty);
       expect(item.toJson().containsKey('hand_positions'), isFalse);
     });
+  });
 
-    test('a flat replacement supersedes the per-hand grips', () {
-      final item = TrainingItem.fromJson({
-        'id': 'i6',
-        'type': 'repeater',
-        'position': 0,
-        'hand_positions': [
-          ['HC'],
-          ['OC'],
-        ],
-      });
-      final edited = item.copyWith(handPositions: ['openHand']);
-      expect(edited.handPositionsByHand, isNull);
-      expect(edited.handPositionsPerHand, [
-        ['openHand'],
-      ]);
+  group('TrainingItem hand modes', () {
+    TrainingItem itemWith(String hand) => TrainingItem.fromJson({
+      'id': 'h1',
+      'type': 'repeater',
+      'position': 0,
+      'hand': hand,
+      'granularity': 'uniform',
+      'loads': [
+        {'unit': 'kg', 'value': 20},
+      ],
+    });
+
+    // Both hands on the board cannot be measured by a single-hand sensor;
+    // every other mode hangs one hand at a time and can.
+    test('only the two-handed mode is outside the sensor', () {
+      expect(itemWith(HangboardHand.both).usesSensor, isFalse);
+      expect(itemWith(HangboardHand.alternate).usesSensor, isTrue);
+      expect(itemWith(HangboardHand.split).usesSensor, isTrue);
+      expect(itemWith(HangboardHand.left).usesSensor, isTrue);
+      expect(itemWith(HangboardHand.right).usesSensor, isTrue);
+    });
+
+    test('the granularity round-trips through toJson', () {
+      final item = itemWith(HangboardHand.split);
+      expect(item.granularity, HangboardGranularity.uniform);
+      expect(item.toJson()['granularity'], 'uniform');
+      expect(item.toJson()['hand'], 'split');
     });
   });
 
@@ -104,14 +88,16 @@ void main() {
       'type': 'repeater',
       'position': 0,
       'hand': 'split',
+      'granularity': 'set',
       'cycles': 2,
       'reps': 2,
       'edge_sizes_mm': [20, 20, 14, 14],
       'hand_positions': [
-        ['HC', 'FC'],
-        ['OC', '3FD'],
+        ['HC', 'FC', 'OC', '3FD'],
+        ['OC', '3FD', 'HC', 'FC'],
       ],
-      'loads': List.generate(8, (i) => {'unit': 'kg', 'value': i + 1}),
+      'loads': List.generate(4, (i) => {'unit': 'kg', 'value': i + 1}),
+      'left_loads': List.generate(4, (i) => {'unit': 'kg', 'value': i + 10}),
     });
 
     test('an empty array leaves the base prescription alone', () {
@@ -122,10 +108,10 @@ void main() {
       });
 
       expect(overridden.edgeSizesMm, [20, 20, 14, 14]);
-      expect(overridden.loads, hasLength(8));
-      expect(overridden.handPositionsByHand, [
-        ['HC', 'FC'],
-        ['OC', '3FD'],
+      expect(overridden.loads, hasLength(4));
+      expect(overridden.handPositions, [
+        ['HC', 'FC', 'OC', '3FD'],
+        ['OC', '3FD', 'HC', 'FC'],
       ]);
     });
 
@@ -135,7 +121,17 @@ void main() {
       });
 
       expect(overridden.edgeSizesMm, [10]);
-      expect(overridden.loads, hasLength(8));
+      expect(overridden.loads, hasLength(4));
+    });
+
+    test('the hand mode and granularity can be overridden', () {
+      final overridden = splitItem().applyOverride({
+        'hand': 'alternate',
+        'granularity': 'rep',
+      });
+
+      expect(overridden.hand, HangboardHand.alternate);
+      expect(overridden.granularity, HangboardGranularity.perRep);
     });
   });
 

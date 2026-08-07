@@ -107,10 +107,11 @@ class DummyDataGenerator {
       worktimeSeconds: worktime,
       restSeconds: resttime,
       cycleRestSeconds: setRest,
-      hand: splitHand ? 'split' : 'both',
+      hand: splitHand ? HangboardHand.split : HangboardHand.alternate,
+      granularity: HangboardGranularity.perRep,
       loads: loadsPerRep,
       leftLoads: leftLoads,
-      handPositions: positions,
+      handPositions: [positions],
     );
   }
 
@@ -203,9 +204,12 @@ class DummyDataGenerator {
             position: 0,
             worktimeSeconds: 30,
             restSeconds: 10,
-            hand: 'right',
+            hand: HangboardHand.right,
+            granularity: HangboardGranularity.uniform,
             loads: [const Load(value: 20.0, unit: 'kg')],
-            handPositions: ['halfCrimp'],
+            handPositions: const [
+              ['halfCrimp'],
+            ],
           ),
           TrainingItem(
             id: '',
@@ -213,9 +217,12 @@ class DummyDataGenerator {
             position: 1,
             worktimeSeconds: 30,
             restSeconds: 120,
-            hand: 'left',
+            hand: HangboardHand.left,
+            granularity: HangboardGranularity.uniform,
             loads: [const Load(value: 20.0, unit: 'kg')],
-            handPositions: ['halfCrimp'],
+            handPositions: const [
+              ['halfCrimp'],
+            ],
           ),
         ],
       ),

@@ -122,8 +122,10 @@ class TrainingItems extends Table {
   late final IntColumn restSeconds = integer().nullable()();
   // Worktime per rep (repeater and hangboard_rep)
   late final IntColumn worktimeSeconds = integer().nullable()();
-  // Hand: 'both', 'split', 'left', 'right'
+  // How the two hands are worked, see HangboardHand.
   late final TextColumn hand = text().nullable()();
+  // Layout of the arrays below, see HangboardGranularity.
+  late final TextColumn granularity = text().nullable()();
 
   // Per-rep JSON arrays
   late final TextColumn loadsJson = text().nullable()();
@@ -437,16 +439,9 @@ class AppDatabase extends _$AppDatabase {
       return list.map((e) => Load.fromJson(e as Map<String, dynamic>)).toList();
     }
 
-    List<String>? parseStrings(String? json) {
+    List<List<String>>? parseGrips(String? json) {
       if (json == null || json.isEmpty) return null;
-      final flat = flattenJsonList(jsonDecode(json));
-      if (flat.isEmpty) return null;
-      return flat.map((e) => e.toString()).toList();
-    }
-
-    List<List<String>>? parseHandPositions(String? json) {
-      if (json == null || json.isEmpty) return null;
-      return parseHandPositionsByHand(jsonDecode(json));
+      return parseHandPositions(jsonDecode(json));
     }
 
     List<int>? parseInts(String? json) {
@@ -470,11 +465,11 @@ class AppDatabase extends _$AppDatabase {
       restSeconds: row.restSeconds,
       worktimeSeconds: row.worktimeSeconds,
       hand: row.hand,
+      granularity: row.granularity,
       loads: parseLoads(row.loadsJson),
       leftLoads: parseLoads(row.leftLoadsJson),
-      handPositions: parseStrings(row.handPositionsJson),
       edgeSizesMm: parseInts(row.edgeSizesMmJson),
-      handPositionsByHand: parseHandPositions(row.handPositionsJson),
+      handPositions: parseGrips(row.handPositionsJson),
       loadIsMax: row.loadIsMax,
       freeText: row.freeText,
       exerciseId: row.exerciseId,
@@ -486,16 +481,8 @@ class AppDatabase extends _$AppDatabase {
   String? _loadsToJson(List<Load>? loads) =>
       loads == null ? null : jsonEncode(loads.map((l) => l.toJson()).toList());
 
-  String? _stringsToJson(List<String>? list) =>
-      list == null ? null : jsonEncode(list);
-
-  /// Stores the per-hand shape when the item carries one, so a split item
-  /// authored in the coach portal keeps its two grip arrays across a cache
-  /// round-trip.
   String? _handPositionsToJson(TrainingItem item) =>
-      item.handPositionsByHand != null
-      ? jsonEncode(item.handPositionsByHand)
-      : _stringsToJson(item.handPositions);
+      item.handPositions == null ? null : jsonEncode(item.handPositions);
 
   String? _intsToJson(List<int>? list) =>
       list == null ? null : jsonEncode(list);
@@ -555,6 +542,7 @@ class AppDatabase extends _$AppDatabase {
           restSeconds: Value(item.restSeconds),
           worktimeSeconds: Value(item.worktimeSeconds),
           hand: Value(item.hand),
+          granularity: Value(item.granularity),
           loadsJson: Value(_loadsToJson(item.loads)),
           leftLoadsJson: Value(_loadsToJson(item.leftLoads)),
           handPositionsJson: Value(_handPositionsToJson(item)),
@@ -833,7 +821,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1020,6 +1008,48 @@ class AppDatabase extends _$AppDatabase {
         await m.alterTable(TableMigration(schema.sensorConfigs));
         await m.alterTable(TableMigration(schema.builtinTrainingWeights));
         await m.alterTable(TableMigration(schema.pinnedBuiltinTrainings));
+      },
+      from2To3: (m, schema) async {
+        await m.addColumn(
+          schema.trainingItems,
+          schema.trainingItems.granularity,
+        );
+
+        // Items used to leave their layout implicit, so declare the one they
+        // were written with. The edge sizes decide it when they are there, and
+        // the load count otherwise, which is all an app-written item carries.
+        await m.database.customStatement(
+          "UPDATE training_items SET granularity = CASE "
+          "WHEN json_array_length(COALESCE(edge_sizes_mm_json, '[]')) > 1 THEN "
+          "  CASE WHEN COALESCE(cycles, 1) > 1 "
+          "        AND json_array_length(edge_sizes_mm_json) "
+          "            = COALESCE(cycles, 1) * COALESCE(reps, 1) "
+          "       THEN 'set' ELSE 'rep' END "
+          "WHEN json_array_length(COALESCE(edge_sizes_mm_json, '[]')) = 1 THEN 'uniform' "
+          "WHEN json_array_length(COALESCE(loads_json, '[]')) > 1 THEN 'rep' "
+          "ELSE 'uniform' END "
+          "WHERE type IN ('repeater', 'hangboard_rep')",
+        );
+
+        // A repeater the app stored as 'both' ran one hand at a time, right
+        // then left within every rep. That is the alternating mode now. Only
+        // the app omits the edge sizes, and a hangboard_rep already meant a
+        // genuine two-handed hang, so neither is reclassified.
+        await m.database.customStatement(
+          "UPDATE training_items SET hand = 'alternate' "
+          "WHERE type = 'repeater' AND hand = 'both' "
+          "AND edge_sizes_mm_json IS NULL",
+        );
+
+        // Grips are stored as one array per hand everywhere, so wrap the flat
+        // array earlier versions wrote.
+        await m.database.customStatement(
+          "UPDATE training_items "
+          "SET hand_positions_json = json_array(json(hand_positions_json)) "
+          "WHERE hand_positions_json IS NOT NULL "
+          "AND json_valid(hand_positions_json) "
+          "AND json_type(hand_positions_json, '\$[0]') != 'array'",
+        );
       },
     ),
   );
