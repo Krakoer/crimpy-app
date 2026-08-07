@@ -21,33 +21,30 @@ class HandLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          _getHandLabel(),
+          style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+            color: CrimpyTheme.primaryOrange,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+            fontSize: 18,
+          ),
+        ),
+        if (gripPosition != null) ...[
+          const SizedBox(height: 2),
           Text(
-            _getHandLabel(),
-            style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-              color: CrimpyTheme.primaryOrange,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2,
-              fontSize: 18,
+            gripPosition!.displayName,
+            style: Theme.of(context).textTheme.bodySmall!.copyWith(
+              color: CrimpyTheme.gray400,
+              fontWeight: FontWeight.w500,
+              fontSize: 12,
             ),
           ),
-          if (gripPosition != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              gripPosition!.displayName,
-              style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                color: CrimpyTheme.gray400,
-                fontWeight: FontWeight.w500,
-                fontSize: 12,
-              ),
-            ),
-          ],
         ],
-      ),
+      ],
     );
   }
 }

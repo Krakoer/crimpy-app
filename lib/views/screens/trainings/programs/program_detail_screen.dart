@@ -10,6 +10,7 @@ import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
 
 /// Program overview: header, week selector and a week-strip / calendar schedule.
 class ProgramDetailScreen extends ConsumerStatefulWidget {
@@ -360,7 +361,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
               ),
             if (timesPerWeek.isNotEmpty) ...[
               const SizedBox(height: 16),
-              const ProgramSectionLabel('Any day this week'),
+              const SectionLabel('Any day this week'),
               const SizedBox(height: 10),
               ...timesPerWeek.map(
                 (s) => Padding(

@@ -30,21 +30,30 @@ void _expandItem(
   List<TrainingExecutionItem> out,
   bool useSensor, {
   String? context,
+  String? inheritedComment,
 }) {
+  // An item without a comment of its own carries the one of the circuit or
+  // group it belongs to, so a coach instruction is never lost during the run.
+  final comment = _cleanComment(item.comment) ?? inheritedComment;
   switch (item.type) {
     case TrainingItemType.repeater:
-      _expandRepeater(item, out, useSensor);
+      _expandRepeater(item, out, useSensor, comment: comment);
     case TrainingItemType.hangboardRep:
-      _expandHangboardRep(item, out, useSensor);
+      _expandHangboardRep(item, out, useSensor, comment: comment);
     case TrainingItemType.circuit:
-      _expandCircuit(item, out, useSensor);
+      _expandCircuit(item, out, useSensor, comment: comment);
     case TrainingItemType.group:
-      _expandGroup(item, out, useSensor, context: context);
+      _expandGroup(item, out, useSensor, context: context, comment: comment);
     case TrainingItemType.exercise:
-      _expandExercise(item, out, context: context);
+      _expandExercise(item, out, context: context, comment: comment);
     case TrainingItemType.free:
-      _expandFree(item, out, context: context);
+      _expandFree(item, out, context: context, comment: comment);
   }
+}
+
+String? _cleanComment(String? comment) {
+  final trimmed = comment?.trim() ?? '';
+  return trimmed.isEmpty ? null : trimmed;
 }
 
 void _expandGroup(
@@ -52,23 +61,37 @@ void _expandGroup(
   List<TrainingExecutionItem> out,
   bool useSensor, {
   String? context,
+  String? comment,
 }) {
   for (final child in item.items) {
-    _expandItem(child, out, useSensor, context: context);
+    _expandItem(
+      child,
+      out,
+      useSensor,
+      context: context,
+      inheritedComment: comment,
+    );
   }
 }
 
 void _expandCircuit(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor,
-) {
+  bool useSensor, {
+  String? comment,
+}) {
   final cycles = item.cycles ?? 1;
   final cycleRest = item.cycleRestSeconds ?? 0;
   for (int cycle = 0; cycle < cycles; cycle++) {
     final context = cycles > 1 ? 'ROUND ${cycle + 1}/$cycles' : null;
     for (final child in item.items) {
-      _expandItem(child, out, useSensor, context: context);
+      _expandItem(
+        child,
+        out,
+        useSensor,
+        context: context,
+        inheritedComment: comment,
+      );
     }
     if (cycle < cycles - 1 && cycleRest > 0) {
       out.add(RestItem(durationSeconds: cycleRest));
@@ -80,6 +103,7 @@ void _expandExercise(
   TrainingItem item,
   List<TrainingExecutionItem> out, {
   String? context,
+  String? comment,
 }) {
   final duration = item.effectiveDuration;
   final name = item.exerciseName ?? 'Exercise';
@@ -93,7 +117,7 @@ void _expandExercise(
         gripPosition: GripPosition.halfCrimp,
         collectSensorData: false,
         subtitle: context,
-        comment: item.comment,
+        comment: comment,
       ),
     );
   } else {
@@ -103,7 +127,7 @@ void _expandExercise(
         reps: item.effectiveReps,
         load: item.loadLabel,
         subtitle: context,
-        comment: item.comment,
+        comment: comment,
       ),
     );
   }
@@ -115,6 +139,7 @@ void _expandFree(
   TrainingItem item,
   List<TrainingExecutionItem> out, {
   String? context,
+  String? comment,
 }) {
   final duration = item.effectiveDuration;
   if (duration != null) {
@@ -127,18 +152,26 @@ void _expandFree(
         gripPosition: GripPosition.halfCrimp,
         collectSensorData: false,
         subtitle: context,
+        comment: comment,
       ),
     );
   } else {
-    out.add(ConfirmItem(label: item.freeText ?? 'Free', subtitle: context));
+    out.add(
+      ConfirmItem(
+        label: item.freeText ?? 'Free',
+        subtitle: context,
+        comment: comment,
+      ),
+    );
   }
 }
 
 void _expandHangboardRep(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor,
-) {
+  bool useSensor, {
+  String? comment,
+}) {
   final worktime = item.worktimeSeconds ?? 7;
   final resttime = item.restSeconds ?? 3;
   final hand = item.hand ?? 'both';
@@ -158,6 +191,7 @@ void _expandHangboardRep(
       handSide: handSide,
       gripPosition: grip,
       collectSensorData: useSensor,
+      comment: comment,
     ),
   );
   if (resttime > 0) {
@@ -168,8 +202,9 @@ void _expandHangboardRep(
 void _expandRepeater(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor,
-) {
+  bool useSensor, {
+  String? comment,
+}) {
   final cycles = item.cycles ?? 1;
   final repsPerCycle = item.reps ?? 1;
   final worktime = item.worktimeSeconds ?? 7;
@@ -197,6 +232,7 @@ void _expandRepeater(
             gripPosition: grip,
             collectSensorData: useSensor,
             subtitle: setRep(cycle, rep),
+            comment: comment,
           ),
         );
         if (rep < repsPerCycle - 1 && resttime > 0) {
@@ -224,6 +260,7 @@ void _expandRepeater(
             gripPosition: grip,
             collectSensorData: useSensor,
             subtitle: setRep(cycle, rep),
+            comment: comment,
           ),
         );
         if (rep < repsPerCycle - 1 && resttime > 0) {
@@ -247,6 +284,7 @@ void _expandRepeater(
             gripPosition: grip,
             collectSensorData: useSensor,
             subtitle: setRep(cycle, rep),
+            comment: comment,
           ),
         );
         if (resttime > 0) {
@@ -261,6 +299,7 @@ void _expandRepeater(
             gripPosition: grip,
             collectSensorData: useSensor,
             subtitle: setRep(cycle, rep),
+            comment: comment,
           ),
         );
         if (rep < repsPerCycle - 1 && resttime > 0) {
