@@ -5,8 +5,14 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 class HandLabel extends StatelessWidget {
   final HandSide handSide;
   final GripPosition? gripPosition;
+  final int? edgeSizeMm;
 
-  const HandLabel({super.key, required this.handSide, this.gripPosition});
+  const HandLabel({
+    super.key,
+    required this.handSide,
+    this.gripPosition,
+    this.edgeSizeMm,
+  });
 
   String _getHandLabel() {
     switch (handSide) {
@@ -36,7 +42,10 @@ class HandLabel extends StatelessWidget {
         if (gripPosition != null) ...[
           const SizedBox(height: 2),
           Text(
-            gripPosition!.displayName,
+            [
+              gripPosition!.displayName,
+              if (edgeSizeMm != null) '$edgeSizeMm mm',
+            ].join(' - '),
             style: Theme.of(context).textTheme.bodySmall!.copyWith(
               color: CrimpyTheme.gray400,
               fontWeight: FontWeight.w500,

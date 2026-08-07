@@ -196,6 +196,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                 ? HandLabel(
                     handSide: rep!.handSide,
                     gripPosition: rep.gripPosition,
+                    edgeSizeMm: rep.edgeSizeMm,
                   )
                 : _stageHeader(rep?.label, rep?.targetLoad ?? 0),
             comment: _commentOf(item),

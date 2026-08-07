@@ -28,6 +28,7 @@ class NextRepPreview extends StatelessWidget {
     return [
       _getHandLabel(item.handSide),
       item.gripPosition.shortName,
+      if (item.edgeSizeMm != null) '${item.edgeSizeMm}mm',
       if (w > 0) '${w.toStringAsFixed(w.truncateToDouble() == w ? 0 : 1)}kg',
       '${item.durationSeconds}s',
     ].join(' - ');
