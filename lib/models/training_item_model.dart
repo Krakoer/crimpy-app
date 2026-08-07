@@ -81,6 +81,16 @@ abstract final class HangboardHand {
   /// Modes that hang the hands separately, each with its own configuration.
   static bool worksHandsSeparately(String? hand) =>
       hand == alternate || hand == split;
+
+  /// Whether the hangs put one hand on the board at a time, which is the only
+  /// case the force sensor can measure. A hangboard_rep runs a single hang, so
+  /// only the explicitly named hands qualify; a repeater also alternates or
+  /// splits its hands across reps. The expanders derive their hand sides the
+  /// same way, so what the sensor is offered for is what actually records.
+  static bool hangsOneHandAtATime(String? hand, {required bool isRepeater}) =>
+      hand == left ||
+      hand == right ||
+      (isRepeater && worksHandsSeparately(hand));
 }
 
 /// Layout of the configuration arrays, declared by the item rather than
@@ -217,7 +227,12 @@ class TrainingItem {
         type != TrainingItemType.repeater) {
       return false;
     }
-    if (hand == null || hand == HangboardHand.both) return false;
+    if (!HangboardHand.hangsOneHandAtATime(
+      hand,
+      isRepeater: type == TrainingItemType.repeater,
+    )) {
+      return false;
+    }
     bool hasLoad(List<Load>? l) => (l ?? []).any((e) => !e.isBodyweight);
     return hasLoad(loads) || hasLoad(leftLoads);
   }

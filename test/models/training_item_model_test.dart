@@ -74,6 +74,28 @@ void main() {
       expect(itemWith(HangboardHand.right).usesSensor, isTrue);
     });
 
+    // A hangboard_rep runs a single hang, so the expander gives it HandSide.both
+    // for anything but an explicitly named hand. Offering the sensor there would
+    // record nothing, so usesSensor has to agree with the expander.
+    test('a hangboard rep only reaches the sensor on a named hand', () {
+      TrainingItem hangboardRepWith(String hand) => TrainingItem.fromJson({
+        'id': 'h2',
+        'type': 'hangboard_rep',
+        'position': 0,
+        'hand': hand,
+        'granularity': 'uniform',
+        'loads': [
+          {'unit': 'kg', 'value': 20},
+        ],
+      });
+
+      expect(hangboardRepWith(HangboardHand.left).usesSensor, isTrue);
+      expect(hangboardRepWith(HangboardHand.right).usesSensor, isTrue);
+      expect(hangboardRepWith(HangboardHand.both).usesSensor, isFalse);
+      expect(hangboardRepWith(HangboardHand.alternate).usesSensor, isFalse);
+      expect(hangboardRepWith(HangboardHand.split).usesSensor, isFalse);
+    });
+
     test('the granularity round-trips through toJson', () {
       final item = itemWith(HangboardHand.split);
       expect(item.granularity, HangboardGranularity.uniform);
