@@ -14,6 +14,9 @@ final class TimedItem extends TrainingExecutionItem {
   final GripPosition gripPosition;
   final bool collectSensorData;
 
+  /// Edge depth prescribed for this hang, when the coach set one.
+  final int? edgeSizeMm;
+
   /// Position context shown during the step, e.g. "SET 2/3 - REP 4/6" or
   /// "ROUND 1/3".
   final String? subtitle;
@@ -28,6 +31,7 @@ final class TimedItem extends TrainingExecutionItem {
     required this.handSide,
     required this.gripPosition,
     required this.collectSensorData,
+    this.edgeSizeMm,
     this.subtitle,
     this.comment,
   });
