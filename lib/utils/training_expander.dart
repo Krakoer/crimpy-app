@@ -51,8 +51,10 @@ void _expandItem(
   }
 }
 
-String? _cleanComment(String? comment) =>
-    (comment == null || comment.trim().isEmpty) ? null : comment;
+String? _cleanComment(String? comment) {
+  final trimmed = comment?.trim() ?? '';
+  return trimmed.isEmpty ? null : trimmed;
+}
 
 void _expandGroup(
   TrainingItem item,

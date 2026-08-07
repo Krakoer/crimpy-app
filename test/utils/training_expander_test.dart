@@ -208,6 +208,68 @@ void main() {
     expect(out[1].comment, 'Right leg');
   });
 
+  test('group comment reaches children nested in a circuit', () {
+    final training = _training([
+      TrainingItem(
+        id: 'c',
+        type: TrainingItemType.circuit,
+        position: 0,
+        cycles: 1,
+        comment: 'Circuit note',
+        items: [
+          TrainingItem(
+            id: 'g',
+            type: TrainingItemType.group,
+            position: 0,
+            groupTitle: 'Left side',
+            comment: 'Group note',
+            items: [
+              TrainingItem(
+                id: 'e1',
+                type: TrainingItemType.exercise,
+                position: 0,
+                duration: 20,
+              ),
+              TrainingItem(
+                id: 'e2',
+                type: TrainingItemType.exercise,
+                position: 1,
+                duration: 20,
+                comment: 'Own note',
+              ),
+            ],
+          ),
+        ],
+      ),
+    ]);
+
+    final out = expandTrainingItems(
+      training,
+      useSensor: false,
+    ).whereType<TimedItem>().toList();
+
+    // The closest enclosing comment wins, and an item with one of its own keeps
+    // it rather than inheriting.
+    expect(out[0].comment, 'Group note');
+    expect(out[1].comment, 'Own note');
+  });
+
+  test('a comment is trimmed before it is carried', () {
+    final training = _training([
+      TrainingItem(
+        id: 'e1',
+        type: TrainingItemType.exercise,
+        position: 0,
+        duration: 20,
+        comment: '\n  Right leg  ',
+      ),
+    ]);
+
+    final out = expandTrainingItems(training, useSensor: false);
+
+    expect((out.first as TimedItem).comment, 'Right leg');
+  });
+
   test('blank comment does not shadow the enclosing one', () {
     final training = _training([
       TrainingItem(
