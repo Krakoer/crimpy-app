@@ -194,6 +194,10 @@ class BleRepository {
       await _device!.disconnect();
       _device = null;
     }
+    // Disposing the repository disconnects and closes the controller without
+    // waiting for the disconnection to complete, so by the time we get here
+    // there may be nothing left to notify.
+    if (_connectionStateController.isClosed) return;
     _connectionStateController.add(BleConnectionState.disconnected);
   }
 
