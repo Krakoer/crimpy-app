@@ -1015,41 +1015,58 @@ class AppDatabase extends _$AppDatabase {
           schema.trainingItems.granularity,
         );
 
-        // Items used to leave their layout implicit, so declare the one they
-        // were written with. The edge sizes decide it when they are there, and
-        // the load count otherwise, which is all an app-written item carries.
-        await m.database.customStatement(
-          "UPDATE training_items SET granularity = CASE "
-          "WHEN json_array_length(COALESCE(edge_sizes_mm_json, '[]')) > 1 THEN "
-          "  CASE WHEN COALESCE(cycles, 1) > 1 "
-          "        AND json_array_length(edge_sizes_mm_json) "
-          "            = COALESCE(cycles, 1) * COALESCE(reps, 1) "
-          "       THEN 'set' ELSE 'rep' END "
-          "WHEN json_array_length(COALESCE(edge_sizes_mm_json, '[]')) = 1 THEN 'uniform' "
-          "WHEN json_array_length(COALESCE(loads_json, '[]')) > 1 THEN 'rep' "
-          "ELSE 'uniform' END "
-          "WHERE type IN ('repeater', 'hangboard_rep')",
-        );
+        // A step that throws after the column exists would leave the schema
+        // ahead of the recorded version, and the retry on the next launch would
+        // fail on the duplicate column with no way back. json_array_length
+        // raises on malformed JSON rather than returning null, so every
+        // statement reading a JSON column guards with json_valid first.
+        await m.database.transaction(() async {
+          // Items used to leave their layout implicit, so declare the one they
+          // were written with. The edge sizes decide it when they are there,
+          // and the load count otherwise, which is all an app-written item
+          // carries.
+          await m.database.customStatement(
+            "UPDATE training_items SET granularity = CASE "
+            "WHEN json_array_length(COALESCE(NULLIF(edge_sizes_mm_json, ''), '[]')) > 1 THEN "
+            "  CASE WHEN COALESCE(cycles, 1) > 1 "
+            "        AND json_array_length(edge_sizes_mm_json) "
+            "            = COALESCE(cycles, 1) * COALESCE(reps, 1) "
+            "       THEN 'set' ELSE 'rep' END "
+            "WHEN json_array_length(COALESCE(NULLIF(edge_sizes_mm_json, ''), '[]')) = 1 THEN 'uniform' "
+            "WHEN json_array_length(COALESCE(NULLIF(loads_json, ''), '[]')) > 1 THEN 'rep' "
+            "ELSE 'uniform' END "
+            "WHERE type IN ('repeater', 'hangboard_rep') "
+            "AND (edge_sizes_mm_json IS NULL OR json_valid(edge_sizes_mm_json)) "
+            "AND (loads_json IS NULL OR json_valid(loads_json))",
+          );
 
-        // A repeater the app stored as 'both' ran one hand at a time, right
-        // then left within every rep. That is the alternating mode now. Only
-        // the app omits the edge sizes, and a hangboard_rep already meant a
-        // genuine two-handed hang, so neither is reclassified.
-        await m.database.customStatement(
-          "UPDATE training_items SET hand = 'alternate' "
-          "WHERE type = 'repeater' AND hand = 'both' "
-          "AND edge_sizes_mm_json IS NULL",
-        );
+          // Anything left holding malformed JSON carries no readable layout, so
+          // it declares the single-row one rather than blocking the migration.
+          await m.database.customStatement(
+            "UPDATE training_items SET granularity = 'uniform' "
+            "WHERE type IN ('repeater', 'hangboard_rep') AND granularity IS NULL",
+          );
 
-        // Grips are stored as one array per hand everywhere, so wrap the flat
-        // array earlier versions wrote.
-        await m.database.customStatement(
-          "UPDATE training_items "
-          "SET hand_positions_json = json_array(json(hand_positions_json)) "
-          "WHERE hand_positions_json IS NOT NULL "
-          "AND json_valid(hand_positions_json) "
-          "AND json_type(hand_positions_json, '\$[0]') != 'array'",
-        );
+          // A repeater the app stored as 'both' ran one hand at a time, right
+          // then left within every rep. That is the alternating mode now. Only
+          // the app omits the edge sizes, and a hangboard_rep already meant a
+          // genuine two-handed hang, so neither is reclassified.
+          await m.database.customStatement(
+            "UPDATE training_items SET hand = 'alternate' "
+            "WHERE type = 'repeater' AND hand = 'both' "
+            "AND edge_sizes_mm_json IS NULL",
+          );
+
+          // Grips are stored as one array per hand everywhere, so wrap the flat
+          // array earlier versions wrote.
+          await m.database.customStatement(
+            "UPDATE training_items "
+            "SET hand_positions_json = json_array(json(hand_positions_json)) "
+            "WHERE hand_positions_json IS NOT NULL "
+            "AND json_valid(hand_positions_json) "
+            "AND json_type(hand_positions_json, '\$[0]') != 'array'",
+          );
+        });
       },
     ),
   );
