@@ -96,38 +96,6 @@ class ScheduleStatusTag extends StatelessWidget {
   }
 }
 
-/// Mono section divider, e.g. "YOUR PROGRAM".
-class ProgramSectionLabel extends StatelessWidget {
-  final String label;
-
-  const ProgramSectionLabel(this.label, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: const TextStyle(
-              fontFamily: 'JetBrainsMono',
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
-              color: CrimpyTheme.textSecondary,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Container(height: 2, color: CrimpyTheme.borderDefault),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// Segmented week-progress bar: "WEEK x / total" + colored ticks.
 class WeekProgressBar extends StatelessWidget {
   final int currentWeek;

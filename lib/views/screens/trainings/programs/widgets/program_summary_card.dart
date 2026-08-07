@@ -7,6 +7,7 @@ import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
 
 /// The "Your Program" section shown above the training library. Hides itself
 /// when the user has no assigned program.
@@ -22,7 +23,7 @@ class ProgramSummaryCard extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const ProgramSectionLabel('Your Program'),
+        const SectionLabel('Your Program'),
         const SizedBox(height: 8),
         CrimpyCard.simple(
           padding: EdgeInsets.zero,
@@ -71,7 +72,7 @@ class ProgramSummaryCard extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 18),
-        const ProgramSectionLabel('Training Library'),
+        const SectionLabel('Training Library'),
         const SizedBox(height: 8),
       ],
     );

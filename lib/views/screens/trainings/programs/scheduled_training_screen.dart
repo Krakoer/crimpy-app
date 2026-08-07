@@ -16,6 +16,7 @@ import 'package:crimpy/views/widgets/training_item_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
 
 /// Detail of a single training scheduled within a program week, with its
 /// exercises (overrides merged) and a Start button into the run screen.
@@ -64,6 +65,8 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   Widget _content(BuildContext context, WidgetRef ref, Training training) {
     final overrideByItem = {for (final o in session.overrides) o.itemId: o};
     final date = session.scheduledDate(program, weekNumber);
+    final goal = training.goal?.trim() ?? '';
+    final instructions = training.comment?.trim() ?? '';
 
     return Column(
       children: [
@@ -76,21 +79,21 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 _tunedBanner(context),
               ],
-              if (training.goal != null) ...[
+              if (goal.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                const ProgramSectionLabel('Goal'),
+                const SectionLabel('Goal'),
                 const SizedBox(height: 8),
-                _textBlock(training.goal!),
+                SectionTextBlock(goal),
               ],
-              if (training.comment != null) ...[
+              if (instructions.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                const ProgramSectionLabel('Instructions'),
+                const SectionLabel('Instructions'),
                 const SizedBox(height: 8),
-                _textBlock(training.comment!),
+                SectionTextBlock(instructions),
               ],
               if (training.items.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                const ProgramSectionLabel('Exercises'),
+                const SectionLabel('Exercises'),
                 const SizedBox(height: 8),
                 ..._buildItems(training.items, overrideByItem),
               ],
@@ -99,20 +102,6 @@ class ScheduledTrainingScreen extends ConsumerWidget {
         ),
         _actionBar(context, ref, training),
       ],
-    );
-  }
-
-  Widget _textBlock(String text) {
-    return CrimpyCard.simple(
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontFamily: 'JetBrainsMono',
-          fontSize: 12,
-          height: 1.5,
-          color: CrimpyTheme.textPrimary,
-        ),
-      ),
     );
   }
 

@@ -12,6 +12,7 @@ import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
 
 /// Home card summarizing the program: today's trainings (with their duration
 /// and done state), the flexible "this week" trainings, a countdown before the
@@ -205,7 +206,7 @@ class _ProgramTodayCard extends ConsumerWidget {
                     ),
                   if (flex.isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    const ProgramSectionLabel('This week'),
+                    const SectionLabel('This week'),
                     const SizedBox(height: 8),
                     ...flex.map(
                       (s) => _FlexTrainingRow(
