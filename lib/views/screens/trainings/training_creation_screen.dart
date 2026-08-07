@@ -35,6 +35,10 @@ class _UnifiedTrainingCreationScreenState
   HangboardConfig _config = HangboardConfig.initial();
   bool _showPerRepDetail = false;
 
+  /// Bumped whenever a reshape moves values between rows, so the fields showing
+  /// those rows are rebuilt instead of keeping the text they were seeded with.
+  int _configGeneration = 0;
+
   // Manual mode state
   final List<TrainingItem> _items = [];
 
@@ -220,16 +224,8 @@ class _UnifiedTrainingCreationScreenState
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _intRow(
-          'Sets',
-          _config.sets,
-          (v) => setState(() => _config.reshape(sets: v)),
-        ),
-        _intRow(
-          'Reps / set',
-          _config.reps,
-          (v) => setState(() => _config.reshape(reps: v)),
-        ),
+        _countRow('Sets', _config.sets, (v) => _reshape(sets: v)),
+        _countRow('Reps / set', _config.reps, (v) => _reshape(reps: v)),
         _intRow(
           'Work time (s)',
           _worktime,
@@ -260,15 +256,29 @@ class _UnifiedTrainingCreationScreenState
     );
   }
 
-  void _onDetailToggled(bool enabled) {
+  /// Reshaping moves values between rows, so the fields showing those rows have
+  /// to be rebuilt from the new state. A TextFormField seeds its controller from
+  /// initialValue once and never follows it, so the row editors are keyed on
+  /// this counter and every reshape goes through here to bump it.
+  void _reshape({int? sets, int? reps, String? granularity, String? hand}) {
     setState(() {
-      _showPerRepDetail = enabled;
       _config.reshape(
-        granularity: enabled
-            ? HangboardGranularity.perRep
-            : HangboardGranularity.uniform,
+        sets: sets,
+        reps: reps,
+        granularity: granularity,
+        hand: hand,
       );
+      _configGeneration++;
     });
+  }
+
+  void _onDetailToggled(bool enabled) {
+    setState(() => _showPerRepDetail = enabled);
+    _reshape(
+      granularity: enabled
+          ? HangboardGranularity.perRep
+          : HangboardGranularity.uniform,
+    );
   }
 
   Widget _buildHandSelector() {
@@ -295,8 +305,7 @@ class _UnifiedTrainingCreationScreenState
                 (m) => ChoiceChip(
                   label: Text(m.$2),
                   selected: _config.hand == m.$1,
-                  onSelected: (_) =>
-                      setState(() => _config.reshape(hand: m.$1)),
+                  onSelected: (_) => _reshape(hand: m.$1),
                 ),
               )
               .toList(),
@@ -326,8 +335,7 @@ class _UnifiedTrainingCreationScreenState
               ? HangboardGranularity.perSet
               : HangboardGranularity.perRep,
         },
-        onSelectionChanged: (s) =>
-            setState(() => _config.reshape(granularity: s.first)),
+        onSelectionChanged: (s) => _reshape(granularity: s.first),
       ),
       const SizedBox(height: 8),
       for (int row = 0; row < _config.rowCount; row++) _buildRowEditor(row),
@@ -376,9 +384,10 @@ class _UnifiedTrainingCreationScreenState
       ],
     );
 
-    if (!showLabel) return fields;
+    if (!showLabel) return KeyedSubtree(key: _rowKey(row), child: fields);
 
     return Card(
+      key: _rowKey(row),
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
@@ -397,7 +406,10 @@ class _UnifiedTrainingCreationScreenState
                   IconButton(
                     icon: const Icon(Icons.arrow_downward, size: 20),
                     tooltip: 'Copy to the rows below',
-                    onPressed: () => setState(() => _config.fillDown(row)),
+                    onPressed: () => setState(() {
+                      _config.fillDown(row);
+                      _configGeneration++;
+                    }),
                   ),
               ],
             ),
@@ -436,6 +448,21 @@ class _UnifiedTrainingCreationScreenState
           onDelete: () => setState(() => _items.removeAt(i)),
         );
       },
+    );
+  }
+
+  Key _rowKey(int row) => ValueKey('hangboard-row-$row-$_configGeneration');
+
+  /// A count field resizes the configuration grid, and a number input holds
+  /// intermediate values while being retyped: going from 6 to 12 passes through
+  /// 1, and resampling there would collapse every row into one and lose what
+  /// the user typed. These commit on blur or on Enter instead.
+  Widget _countRow(String label, int value, void Function(int) onCommit) {
+    return _CountField(
+      key: ValueKey('hangboard-count-$label-$_configGeneration'),
+      label: label,
+      value: value,
+      onCommit: onCommit,
     );
   }
 
@@ -486,6 +513,17 @@ class _TrainingItemCard extends StatelessWidget {
     required this.onDelete,
   });
 
+  /// The stored hand value is a wire code, so the card shows the label the
+  /// editor uses rather than printing the raw value.
+  static String _handLabel(String? hand) =>
+      switch (hand ?? HangboardHand.both) {
+        HangboardHand.alternate => 'alternating hands',
+        HangboardHand.split => 'split hands',
+        HangboardHand.left => 'left hand',
+        HangboardHand.right => 'right hand',
+        _ => 'both hands',
+      };
+
   String get _title => switch (item.type) {
     TrainingItemType.hangboardRep => 'Hang Rep',
     TrainingItemType.repeater => 'Repeater',
@@ -498,7 +536,7 @@ class _TrainingItemCard extends StatelessWidget {
   String get _subtitle => switch (item.type) {
     TrainingItemType.hangboardRep || TrainingItemType.repeater =>
       '${item.worktimeSeconds ?? 7}s hang / ${item.restSeconds ?? 3}s rest  '
-          '${item.hand ?? 'both'} hand',
+          '${_handLabel(item.hand)}',
     TrainingItemType.circuit ||
     TrainingItemType.group => '${item.items.length} item(s)',
     TrainingItemType.exercise =>
@@ -555,7 +593,7 @@ class _ItemEditorDialogState extends State<_ItemEditorDialog> {
     final item = widget.item;
     _worktime = item.worktimeSeconds ?? 7;
     _rest = item.restSeconds ?? 3;
-    _hand = item.hand ?? 'both';
+    _hand = item.hand ?? HangboardHand.both;
     _loadRight = item.loads?.firstOrNull?.value ?? 0.0;
     _loadIsMax = item.loadIsMax;
   }
@@ -658,6 +696,70 @@ class _ItemEditorDialogState extends State<_ItemEditorDialog> {
           final n = double.tryParse(v);
           if (n != null && n >= 0) onChanged(n);
         },
+      ),
+    );
+  }
+}
+
+/// A whole-number field that resizes the configuration grid. It commits on blur
+/// or on Enter rather than on every keystroke, so retyping a count never passes
+/// through an intermediate value that would resample the rows.
+class _CountField extends StatefulWidget {
+  const _CountField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.onCommit,
+  });
+
+  final String label;
+  final int value;
+  final void Function(int) onCommit;
+
+  @override
+  State<_CountField> createState() => _CountFieldState();
+}
+
+class _CountFieldState extends State<_CountField> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.value.toString(),
+  );
+  late final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      if (!_focusNode.hasFocus) _commit();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _commit() {
+    final parsed = int.tryParse(_controller.text);
+    final committed = (parsed == null || parsed < 1) ? widget.value : parsed;
+    if (_controller.text != committed.toString()) {
+      _controller.text = committed.toString();
+    }
+    if (committed != widget.value) widget.onCommit(committed);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: TextFormField(
+        controller: _controller,
+        focusNode: _focusNode,
+        decoration: InputDecoration(labelText: widget.label),
+        keyboardType: TextInputType.number,
+        onEditingComplete: _commit,
       ),
     );
   }
