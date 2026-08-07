@@ -6,7 +6,7 @@ import 'package:crimpy/models/training_item_model.dart';
 /// [uniform]: one value for the whole item.
 /// [perRep]: one value per rep, replayed in every set.
 /// [perSet]: one value per (set, rep) pair.
-enum HangboardGranularity { uniform, perRep, perSet }
+enum _HangboardGranularity { uniform, perRep, perSet }
 
 /// Resolves the edge size, load and grip a hangboard item prescribes for a
 /// given (set, rep) coordinate.
@@ -51,13 +51,13 @@ class HangboardLayout {
 
   /// Granularity of the item as a whole, read from the edge sizes because that
   /// is the array the coach portal always writes.
-  HangboardGranularity get granularity => _granularityOf(_edgeSizesMm.length);
+  _HangboardGranularity get _granularity => _granularityOf(_edgeSizesMm.length);
 
   /// Configuration rows the item carries at its granularity.
-  int get rowCount => switch (granularity) {
-    HangboardGranularity.uniform => 1,
-    HangboardGranularity.perRep => reps,
-    HangboardGranularity.perSet => sets * reps,
+  int get _rowCount => switch (_granularity) {
+    _HangboardGranularity.uniform => 1,
+    _HangboardGranularity.perRep => reps,
+    _HangboardGranularity.perSet => sets * reps,
   };
 
   int? edgeSizeMm(int set, int rep) =>
@@ -87,26 +87,29 @@ class HangboardLayout {
   }
 
   /// Only the portal interleaves, and it always writes edge sizes, so an item
-  /// without them is never read as interleaved.
+  /// without them is never read as interleaved. The edge sizes are what tell
+  /// the two conventions apart when the counts alone are ambiguous: a two-rep
+  /// item written by this app also carries two loads, which would otherwise
+  /// read as one interleaved row.
   bool get _hasInterleavedLoads =>
       split &&
       _leftLoads.isEmpty &&
       _edgeSizesMm.isNotEmpty &&
-      _loads.length == 2 * rowCount;
+      _loads.length == 2 * _rowCount;
 
-  HangboardGranularity _granularityOf(int entries) {
-    if (entries <= 1) return HangboardGranularity.uniform;
-    if (sets > 1 && entries == sets * reps) return HangboardGranularity.perSet;
-    return HangboardGranularity.perRep;
+  _HangboardGranularity _granularityOf(int entries) {
+    if (entries <= 1) return _HangboardGranularity.uniform;
+    if (sets > 1 && entries == sets * reps) return _HangboardGranularity.perSet;
+    return _HangboardGranularity.perRep;
   }
 
   int _rowIn(int entries, int set, int rep) => switch (_granularityOf(
     entries,
   )) {
-    HangboardGranularity.uniform => 0,
-    HangboardGranularity.perSet => set * reps + rep,
+    _HangboardGranularity.uniform => 0,
+    _HangboardGranularity.perSet => set * reps + rep,
     // Shorter arrays than the item has reps stay in range rather than throwing.
-    HangboardGranularity.perRep => rep % entries,
+    _HangboardGranularity.perRep => rep % entries,
   };
 
   T? _at<T>(List<T> values, int index) =>
