@@ -344,11 +344,19 @@ class TrainingItem {
   TrainingItem applyOverride(Map<String, dynamic> override) {
     if (override.isEmpty) return this;
 
+    // An empty array carries no prescription, so it leaves the base value
+    // alone rather than wiping it. Clearing the edge sizes in particular would
+    // make a split item read its interleaved loads as a flat array.
+    List<T>? orBase<T>(List<T>? parsed) =>
+        parsed == null || parsed.isEmpty ? null : parsed;
+
     List<Load>? parseLoads(dynamic raw) {
       if (raw == null) return null;
-      return flattenJsonList(
-        raw,
-      ).whereType<Map<String, dynamic>>().map(Load.fromJson).toList();
+      return orBase(
+        flattenJsonList(
+          raw,
+        ).whereType<Map<String, dynamic>>().map(Load.fromJson).toList(),
+      );
     }
 
     final bothHands = override['both_hands'] as bool?;
@@ -357,15 +365,19 @@ class TrainingItem {
       leftLoads: parseLoads(override['left_loads']),
       handPositions: override['hand_positions'] == null
           ? null
-          : flattenJsonList(
-              override['hand_positions'],
-            ).map((e) => e.toString()).toList(),
+          : orBase(
+              flattenJsonList(
+                override['hand_positions'],
+              ).map((e) => e.toString()).toList(),
+            ),
       handPositionsByHand: parseHandPositionsByHand(override['hand_positions']),
       edgeSizesMm: override['edge_sizes_mm'] == null
           ? null
-          : flattenJsonList(
-              override['edge_sizes_mm'],
-            ).whereType<num>().map((e) => e.toInt()).toList(),
+          : orBase(
+              flattenJsonList(
+                override['edge_sizes_mm'],
+              ).whereType<num>().map((e) => e.toInt()).toList(),
+            ),
       reps: (override['reps'] as num?)?.toInt(),
       cycles: (override['cycles'] as num?)?.toInt(),
       cycleRestSeconds: (override['cycle_rest_seconds'] as num?)?.toInt(),

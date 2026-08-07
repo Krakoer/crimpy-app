@@ -98,6 +98,47 @@ void main() {
     });
   });
 
+  group('TrainingItem.applyOverride', () {
+    TrainingItem splitItem() => TrainingItem.fromJson({
+      'id': 'o1',
+      'type': 'repeater',
+      'position': 0,
+      'hand': 'split',
+      'cycles': 2,
+      'reps': 2,
+      'edge_sizes_mm': [20, 20, 14, 14],
+      'hand_positions': [
+        ['HC', 'FC'],
+        ['OC', '3FD'],
+      ],
+      'loads': List.generate(8, (i) => {'unit': 'kg', 'value': i + 1}),
+    });
+
+    test('an empty array leaves the base prescription alone', () {
+      final overridden = splitItem().applyOverride({
+        'edge_sizes_mm': <int>[],
+        'loads': <Map<String, dynamic>>[],
+        'hand_positions': <String>[],
+      });
+
+      expect(overridden.edgeSizesMm, [20, 20, 14, 14]);
+      expect(overridden.loads, hasLength(8));
+      expect(overridden.handPositionsByHand, [
+        ['HC', 'FC'],
+        ['OC', '3FD'],
+      ]);
+    });
+
+    test('a populated array still replaces the base prescription', () {
+      final overridden = splitItem().applyOverride({
+        'edge_sizes_mm': [10],
+      });
+
+      expect(overridden.edgeSizesMm, [10]);
+      expect(overridden.loads, hasLength(8));
+    });
+  });
+
   group('TrainingItem.fromJson comment', () {
     test('parses an optional coach comment', () {
       final item = TrainingItem.fromJson({
