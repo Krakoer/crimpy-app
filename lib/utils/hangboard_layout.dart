@@ -40,19 +40,10 @@ class HangboardLayout {
     handPositions: item.handPositionsPerHand,
   );
 
-  /// Configuration rows the item carries at its granularity.
-  int get rowCount => switch (granularity) {
-    HangboardGranularity.perSet => sets * reps,
-    HangboardGranularity.perRep => reps,
-    _ => 1,
-  };
+  HangboardGrid get grid =>
+      HangboardGrid(granularity: granularity, sets: sets, reps: reps);
 
-  /// Row holding the configuration of a given set and rep.
-  int _row(int set, int rep) => switch (granularity) {
-    HangboardGranularity.perSet => set * reps + rep,
-    HangboardGranularity.perRep => rep,
-    _ => 0,
-  };
+  int _row(int set, int rep) => grid.rowOf(set, rep);
 
   int? edgeSizeMm(int set, int rep) => _at(_edgeSizesMm, _row(set, rep));
 
@@ -74,4 +65,41 @@ class HangboardLayout {
 
   T? _at<T>(List<T> values, int index) =>
       index >= 0 && index < values.length ? values[index] : null;
+}
+
+/// The (granularity, sets, reps) triple that decides how many configuration
+/// rows an item carries, which row a given set and rep maps to, and which set
+/// and rep a row stands for. Every reader and the editor share it, so a new
+/// granularity is added in one place rather than in four switches.
+class HangboardGrid {
+  const HangboardGrid({
+    required this.granularity,
+    required this.sets,
+    required this.reps,
+  });
+
+  final String granularity;
+  final int sets;
+  final int reps;
+
+  /// Configuration rows the item carries at its granularity.
+  int get rowCount => switch (granularity) {
+    HangboardGranularity.perSet => sets * reps,
+    HangboardGranularity.perRep => reps,
+    _ => 1,
+  };
+
+  /// Row holding the configuration of a given set and rep.
+  int rowOf(int set, int rep) => switch (granularity) {
+    HangboardGranularity.perSet => set * reps + rep,
+    HangboardGranularity.perRep => rep,
+    _ => 0,
+  };
+
+  /// The (set, rep) a configuration row stands for.
+  (int, int) coordinateOf(int row) => switch (granularity) {
+    HangboardGranularity.perSet => (row ~/ reps, row % reps),
+    HangboardGranularity.perRep => (0, row),
+    _ => (0, 0),
+  };
 }

@@ -245,7 +245,15 @@ void _expandRepeater(
 
   switch (hand) {
     case HangboardHand.split:
-      _expandSplitRepeater(item, out, hang, comment: comment);
+      _expandSplitRepeater(
+        out,
+        hang,
+        cycles: cycles,
+        repsPerCycle: repsPerCycle,
+        worktime: worktime,
+        resttime: resttime,
+        cycleRest: cycleRest,
+      );
     case HangboardHand.alternate:
       for (int cycle = 0; cycle < cycles; cycle++) {
         for (int rep = 0; rep < repsPerCycle; rep++) {
@@ -284,17 +292,14 @@ void _expandRepeater(
 /// A split repeater runs every rep of a set on the right hand, rests, then
 /// replays the same set on the left.
 void _expandSplitRepeater(
-  TrainingItem item,
   List<TrainingExecutionItem> out,
   TimedItem Function(int cycle, int rep, HandSide side) hang, {
-  String? comment,
+  required int cycles,
+  required int repsPerCycle,
+  required int worktime,
+  required int resttime,
+  required int cycleRest,
 }) {
-  final cycles = item.cycles ?? 1;
-  final repsPerCycle = item.reps ?? 1;
-  final worktime = item.worktimeSeconds ?? 7;
-  final resttime = item.restSeconds ?? 3;
-  final cycleRest = item.cycleRestSeconds ?? 0;
-
   // The configured cycle rest covers both hands plus the gap between them,
   // so a short cycle rest can leave nothing to split.
   final setDuration = repsPerCycle * worktime + (repsPerCycle - 1) * resttime;

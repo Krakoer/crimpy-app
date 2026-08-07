@@ -81,25 +81,16 @@ class HangboardConfig {
 
   bool get worksHandsSeparately => HangboardHand.worksHandsSeparately(hand);
 
-  int get rowCount => switch (granularity) {
-    HangboardGranularity.perSet => sets * reps,
-    HangboardGranularity.perRep => reps,
-    _ => 1,
-  };
+  HangboardGrid get grid =>
+      HangboardGrid(granularity: granularity, sets: sets, reps: reps);
+
+  int get rowCount => grid.rowCount;
 
   /// The (set, rep) a configuration row stands for.
-  (int, int) coordinateOf(int row) => switch (granularity) {
-    HangboardGranularity.perSet => (row ~/ reps, row % reps),
-    HangboardGranularity.perRep => (0, row),
-    _ => (0, 0),
-  };
+  (int, int) coordinateOf(int row) => grid.coordinateOf(row);
 
   /// Row holding the configuration of a given set and rep.
-  int rowOf(int set, int rep) => switch (granularity) {
-    HangboardGranularity.perSet => set * reps + rep,
-    HangboardGranularity.perRep => rep,
-    _ => 0,
-  };
+  int rowOf(int set, int rep) => grid.rowOf(set, rep);
 
   /// Human label for a row, e.g. "Set 2 - Rep 3".
   String labelOf(int row) {
@@ -208,9 +199,9 @@ class _Snapshot {
       grips = List.of(config.grips),
       leftGrips = List.of(config.leftGrips);
 
-  int rowOf(int set, int rep) => switch (granularity) {
-    HangboardGranularity.perSet => set * reps + rep,
-    HangboardGranularity.perRep => rep,
-    _ => 0,
-  };
+  int rowOf(int set, int rep) => HangboardGrid(
+    granularity: granularity,
+    sets: sets,
+    reps: reps,
+  ).rowOf(set, rep);
 }
