@@ -317,7 +317,7 @@ void main() {
     expect(out.whereType<RestItem>().every((r) => r.durationSeconds > 0), true);
   });
 
-  group('hangboard granularity', () {
+  group('hangboard layout', () {
     List<TimedItem> hangs(Map<String, dynamic> itemJson) => expandTrainingItems(
       _training([TrainingItem.fromJson(itemJson)]),
       useSensor: false,
@@ -329,6 +329,7 @@ void main() {
       required int cycles,
       required int reps,
       required String hand,
+      required String granularity,
       List<int>? edges,
       List<Map<String, dynamic>>? loads,
       List<Map<String, dynamic>>? leftLoads,
@@ -340,6 +341,7 @@ void main() {
       'cycles': cycles,
       'reps': reps,
       'hand': hand,
+      'granularity': granularity,
       'worktime_seconds': 7,
       'rest_seconds': 3,
       if (edges != null) 'edge_sizes_mm': edges,
@@ -353,7 +355,8 @@ void main() {
         repeater(
           cycles: 2,
           reps: 2,
-          hand: 'both',
+          hand: HangboardHand.both,
+          granularity: HangboardGranularity.uniform,
           edges: [20],
           loads: [load(30)],
           handPositions: [
@@ -372,7 +375,8 @@ void main() {
         repeater(
           cycles: 2,
           reps: 3,
-          hand: 'right',
+          hand: HangboardHand.right,
+          granularity: HangboardGranularity.perRep,
           edges: [20, 18, 15],
           loads: [load(10), load(20), load(30)],
           handPositions: [
@@ -381,10 +385,7 @@ void main() {
         ),
       );
 
-      // A non-split repeater hangs each hand in turn, so one row per rep is
-      // read twice; the right-hand hangs alone show the progression.
-      final right = out.where((h) => h.handSide == HandSide.right).toList();
-      expect(right.map((h) => h.targetLoad).toList(), [
+      expect(out.map((h) => h.targetLoad).toList(), [
         10.0,
         20.0,
         30.0,
@@ -392,8 +393,8 @@ void main() {
         20.0,
         30.0,
       ]);
-      expect(right.map((h) => h.edgeSizeMm).toList(), [20, 18, 15, 20, 18, 15]);
-      expect(right.map((h) => h.gripPosition).take(3).toList(), [
+      expect(out.map((h) => h.edgeSizeMm).toList(), [20, 18, 15, 20, 18, 15]);
+      expect(out.map((h) => h.gripPosition).take(3).toList(), [
         GripPosition.halfCrimp,
         GripPosition.fullCrimp,
         GripPosition.openHand,
@@ -405,8 +406,8 @@ void main() {
         repeater(
           cycles: 3,
           reps: 2,
-          hand: 'right',
-          // sets x reps entries, indexed set * reps + rep.
+          hand: HangboardHand.right,
+          granularity: HangboardGranularity.perSet,
           edges: [20, 20, 18, 18, 15, 15],
           loads: [load(60), load(60), load(70), load(70), load(80), load(80)],
           handPositions: [
@@ -415,9 +416,7 @@ void main() {
         ),
       );
 
-      // The regression this card fixes: set 2 and 3 used to replay set 1.
-      final right = out.where((h) => h.handSide == HandSide.right).toList();
-      expect(right.map((h) => h.targetLoad).toList(), [
+      expect(out.map((h) => h.targetLoad).toList(), [
         60.0,
         60.0,
         70.0,
@@ -425,8 +424,8 @@ void main() {
         80.0,
         80.0,
       ]);
-      expect(right.map((h) => h.edgeSizeMm).toList(), [20, 20, 18, 18, 15, 15]);
-      expect(right.map((h) => h.gripPosition).toList(), [
+      expect(out.map((h) => h.edgeSizeMm).toList(), [20, 20, 18, 18, 15, 15]);
+      expect(out.map((h) => h.gripPosition).toList(), [
         GripPosition.halfCrimp,
         GripPosition.halfCrimp,
         GripPosition.fullCrimp,
@@ -436,12 +435,41 @@ void main() {
       ]);
     });
 
-    test('both hands share the row of their rep', () {
+    // The classical fixed hangboard: one hang per rep with both hands on the
+    // board, which no single-hand sensor can measure.
+    test('both hands hang together once per rep', () {
+      final out = hangs(
+        repeater(
+          cycles: 2,
+          reps: 2,
+          hand: HangboardHand.both,
+          granularity: HangboardGranularity.perSet,
+          edges: [20, 20, 15, 15],
+          loads: [load(40), load(41), load(50), load(51)],
+          handPositions: [
+            ['HC', 'HC', 'OC', 'OC'],
+          ],
+        ),
+      );
+
+      expect(out.map((h) => h.handSide).toList(), [
+        HandSide.both,
+        HandSide.both,
+        HandSide.both,
+        HandSide.both,
+      ]);
+      expect(out.map((h) => h.targetLoad).toList(), [40.0, 41.0, 50.0, 51.0]);
+      expect(out.map((h) => h.label).toSet(), {'Hang'});
+    });
+
+    // The "Max force" shape: right then left inside every rep.
+    test('alternate hangs each hand in turn within a rep', () {
       final out = hangs(
         repeater(
           cycles: 2,
           reps: 1,
-          hand: 'both',
+          hand: HangboardHand.alternate,
+          granularity: HangboardGranularity.perSet,
           edges: [20, 15],
           loads: [load(40), load(50)],
           handPositions: [
@@ -450,41 +478,68 @@ void main() {
         ),
       );
 
-      // Right then left for each rep, both on the same configuration row.
       expect(out.map((h) => h.handSide).toList(), [
         HandSide.right,
         HandSide.left,
         HandSide.right,
         HandSide.left,
       ]);
+      // Both hands read the configuration row of their rep.
       expect(out.map((h) => h.targetLoad).toList(), [40.0, 40.0, 50.0, 50.0]);
       expect(out.map((h) => h.edgeSizeMm).toList(), [20, 20, 15, 15]);
     });
 
-    test('split per-set reads the interleaved portal loads and grips', () {
+    test('alternate reads the left load when the item carries one', () {
+      final out = hangs(
+        repeater(
+          cycles: 1,
+          reps: 2,
+          hand: HangboardHand.alternate,
+          granularity: HangboardGranularity.perRep,
+          edges: [20, 15],
+          loads: [load(60), load(65)],
+          leftLoads: [load(50), load(55)],
+          handPositions: [
+            ['HC', 'HC'],
+          ],
+        ),
+      );
+
+      final right = out.where((h) => h.handSide == HandSide.right).toList();
+      final left = out.where((h) => h.handSide == HandSide.left).toList();
+      expect(right.map((h) => h.targetLoad).toList(), [60.0, 65.0]);
+      expect(left.map((h) => h.targetLoad).toList(), [50.0, 55.0]);
+    });
+
+    // The split shape: a whole set on one hand before the other.
+    test('split runs a whole set per hand from the per-hand arrays', () {
       final out = hangs(
         repeater(
           cycles: 2,
           reps: 2,
-          hand: 'split',
+          hand: HangboardHand.split,
+          granularity: HangboardGranularity.perSet,
           edges: [20, 20, 15, 15],
-          // Left at 2 * row, right at 2 * row + 1.
-          loads: [
-            load(1),
-            load(2),
-            load(3),
-            load(4),
-            load(5),
-            load(6),
-            load(7),
-            load(8),
-          ],
+          loads: [load(2), load(4), load(6), load(8)],
+          leftLoads: [load(1), load(3), load(5), load(7)],
           handPositions: [
             ['HC', 'HC', 'FC', 'FC'],
             ['OC', 'OC', '3FD', '3FD'],
           ],
         ),
       );
+
+      // Every rep of a set on the right, then the same set on the left.
+      expect(out.map((h) => h.handSide).toList(), [
+        HandSide.right,
+        HandSide.right,
+        HandSide.left,
+        HandSide.left,
+        HandSide.right,
+        HandSide.right,
+        HandSide.left,
+        HandSide.left,
+      ]);
 
       final right = out.where((h) => h.handSide == HandSide.right).toList();
       final left = out.where((h) => h.handSide == HandSide.left).toList();
@@ -496,16 +551,16 @@ void main() {
       expect(right.map((h) => h.edgeSizeMm).toList(), [20, 20, 15, 15]);
     });
 
-    test('split per-rep is not mistaken for per-set when 2 sets collide', () {
-      // With 2 sets, an interleaved per-rep loads array and a per-set one both
-      // hold sets x reps entries; only the per-hand split tells them apart.
+    test('a per-rep split replays its rows in every set', () {
       final out = hangs(
         repeater(
           cycles: 2,
           reps: 2,
-          hand: 'split',
+          hand: HangboardHand.split,
+          granularity: HangboardGranularity.perRep,
           edges: [20, 15],
-          loads: [load(1), load(2), load(3), load(4)],
+          loads: [load(2), load(4)],
+          leftLoads: [load(1), load(3)],
           handPositions: [
             ['HC', 'FC'],
             ['OC', '3FD'],
@@ -515,7 +570,6 @@ void main() {
 
       final right = out.where((h) => h.handSide == HandSide.right).toList();
       final left = out.where((h) => h.handSide == HandSide.left).toList();
-      // Both sets replay the same two rows.
       expect(right.map((h) => h.targetLoad).toList(), [2.0, 4.0, 2.0, 4.0]);
       expect(left.map((h) => h.targetLoad).toList(), [1.0, 3.0, 1.0, 3.0]);
       expect(right.map((h) => h.edgeSizeMm).toList(), [20, 15, 20, 15]);
@@ -527,28 +581,36 @@ void main() {
       ]);
     });
 
-    test('left_loads wins over the interleaved layout when present', () {
-      final out = hangs(
-        repeater(
-          cycles: 2,
-          reps: 1,
-          hand: 'split',
-          edges: [20, 15],
-          loads: [load(60), load(70)],
-          leftLoads: [load(50), load(55)],
-          handPositions: [
-            ['HC', 'HC'],
-          ],
-        ),
-      );
+    // Only a hang on one hand goes through the sensor.
+    test('a two-handed hang never collects sensor data', () {
+      List<TimedItem> withSensor(String hand) => expandTrainingItems(
+        _training([
+          TrainingItem.fromJson(
+            repeater(
+              cycles: 1,
+              reps: 1,
+              hand: hand,
+              granularity: HangboardGranularity.uniform,
+              edges: [20],
+              loads: [load(30)],
+            ),
+          ),
+        ]),
+      ).whereType<TimedItem>().toList();
 
-      final right = out.where((h) => h.handSide == HandSide.right).toList();
-      final left = out.where((h) => h.handSide == HandSide.left).toList();
-      expect(right.map((h) => h.targetLoad).toList(), [60.0, 70.0]);
-      expect(left.map((h) => h.targetLoad).toList(), [50.0, 55.0]);
+      expect(
+        withSensor(HangboardHand.both).map((h) => h.collectSensorData).toSet(),
+        {false},
+      );
+      expect(
+        withSensor(
+          HangboardHand.alternate,
+        ).map((h) => h.collectSensorData).toSet(),
+        {true},
+      );
     });
 
-    test('app-created item without edge sizes keeps its per-rep loads', () {
+    test('an item without edge sizes keeps its per-rep loads', () {
       final training = _training([
         TrainingItem(
           id: 'r',
@@ -556,7 +618,8 @@ void main() {
           position: 0,
           cycles: 2,
           reps: 3,
-          hand: 'right',
+          hand: HangboardHand.right,
+          granularity: HangboardGranularity.perRep,
           worktimeSeconds: 7,
           restSeconds: 3,
           loads: const [
@@ -564,7 +627,9 @@ void main() {
             Load(value: 20, unit: 'kg'),
             Load(value: 30, unit: 'kg'),
           ],
-          handPositions: const ['openHand', 'openHand', 'openHand'],
+          handPositions: const [
+            ['openHand', 'openHand', 'openHand'],
+          ],
         ),
       ]);
 
@@ -586,7 +651,7 @@ void main() {
       expect(out.map((h) => h.gripPosition).toSet(), {GripPosition.openHand});
     });
 
-    test('app-created split item keeps left_loads and a flat grip list', () {
+    test('a split item reads its two load arrays', () {
       final training = _training([
         TrainingItem(
           id: 'r',
@@ -594,7 +659,8 @@ void main() {
           position: 0,
           cycles: 1,
           reps: 2,
-          hand: 'split',
+          hand: HangboardHand.split,
+          granularity: HangboardGranularity.perRep,
           worktimeSeconds: 7,
           restSeconds: 3,
           loads: const [
@@ -605,7 +671,9 @@ void main() {
             Load(value: 50, unit: 'kg'),
             Load(value: 55, unit: 'kg'),
           ],
-          handPositions: const ['halfCrimp', 'halfCrimp'],
+          handPositions: const [
+            ['halfCrimp', 'halfCrimp'],
+          ],
         ),
       ]);
 

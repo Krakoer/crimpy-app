@@ -69,10 +69,11 @@ class BuiltinTrainingModel {
         worktimeSeconds: r.workTime,
         restSeconds: r.restTime,
         cycleRestSeconds: r.restBteweenSets,
-        hand: r.splitHand ? 'split' : 'both',
+        hand: r.splitHand ? HangboardHand.split : HangboardHand.alternate,
+        granularity: HangboardGranularity.perRep,
         loads: loadsPerRep,
         leftLoads: leftLoadsPerRep,
-        handPositions: positionsPerRep,
+        handPositions: [positionsPerRep],
       );
     }).toList();
 

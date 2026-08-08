@@ -62,30 +62,61 @@ class Load {
   }
 }
 
-/// Flattens nested JSON arrays into a single-level list. Per-rep fields such as
-/// hand_positions are stored two-dimensionally for split-hand items
-/// (one array per hand); flattening keeps parsing robust to both shapes.
-List<dynamic> flattenJsonList(dynamic raw) {
-  if (raw is! List) return raw == null ? const [] : [raw];
-  final out = <dynamic>[];
-  for (final element in raw) {
-    if (element is List) {
-      out.addAll(flattenJsonList(element));
-    } else {
-      out.add(element);
-    }
-  }
-  return out;
+/// How the two hands are worked. Only [both] puts two hands on the board at the
+/// same time; every other mode hangs a single hand and can be measured by the
+/// force sensor.
+abstract final class HangboardHand {
+  /// Both hands on the board together, one hang per rep.
+  static const both = 'both';
+
+  /// One hand at a time, right then left within each rep.
+  static const alternate = 'alternate';
+
+  /// Every rep of a set on one hand, then the same set on the other.
+  static const split = 'split';
+
+  static const left = 'left';
+  static const right = 'right';
+
+  /// Modes that hang the hands separately, each with its own configuration.
+  static bool worksHandsSeparately(String? hand) =>
+      hand == alternate || hand == split;
+
+  /// Whether the hangs put one hand on the board at a time, which is the only
+  /// case the force sensor can measure. A hangboard_rep runs a single hang, so
+  /// only the explicitly named hands qualify; a repeater also alternates or
+  /// splits its hands across reps. The expanders derive their hand sides the
+  /// same way, so what the sensor is offered for is what actually records.
+  static bool hangsOneHandAtATime(String? hand, {required bool isRepeater}) =>
+      hand == left ||
+      hand == right ||
+      (isRepeater && worksHandsSeparately(hand));
 }
 
-/// Reads hand_positions keeping its outer dimension, which the coach portal
-/// uses to carry one grip array per hand. Returns null for the flat array the
-/// app writes, which has no hand dimension to preserve.
-List<List<String>>? parseHandPositionsByHand(dynamic raw) {
-  if (raw is! List || raw.isEmpty || raw.any((e) => e is! List)) return null;
-  return raw
-      .map((hand) => (hand as List).map((e) => e.toString()).toList())
-      .toList();
+/// Layout of the configuration arrays, declared by the item rather than
+/// inferred from any array length.
+abstract final class HangboardGranularity {
+  /// One row for the whole item.
+  static const uniform = 'uniform';
+
+  /// One row per rep, replayed in every set.
+  static const perRep = 'rep';
+
+  /// One row per set and rep, indexed set * reps + rep.
+  static const perSet = 'set';
+}
+
+/// Reads hand_positions, which carries one array of rows per hand with the left
+/// hand first. A flat array written before the format was unified is read as
+/// the rows of a single hand.
+List<List<String>>? parseHandPositions(dynamic raw) {
+  if (raw is! List || raw.isEmpty) return null;
+  if (raw.every((e) => e is List)) {
+    return raw
+        .map((hand) => (hand as List).map((e) => e.toString()).toList())
+        .toList();
+  }
+  return [raw.map((e) => e.toString()).toList()];
 }
 
 class TrainingItem {
@@ -108,18 +139,21 @@ class TrainingItem {
   // Exercise: explicit duration (for timed exercises like planks)
   final int? duration;
 
-  // Hand: 'both', 'split', 'left', 'right'
+  // How the two hands are worked, see [HangboardHand].
   final String? hand;
 
-  // Per-rep arrays (sized by reps for repeater, size 1 for hangboard_rep)
+  // Layout of the arrays below, see [HangboardGranularity].
+  final String? granularity;
+
+  // Configuration arrays, one entry per row. [loads] is the right hand of a
+  // mode that works the hands separately, and the only load otherwise.
   final List<Load>? loads;
   final List<Load>? leftLoads;
-  final List<String>? handPositions;
   final List<int>? edgeSizesMm;
 
-  // hand_positions as sent on the wire: one grip array per hand. Kept next to
-  // the flattened [handPositions] so split items can tell the hands apart.
-  final List<List<String>>? handPositionsByHand;
+  // Grips indexed [hand][row], left hand first. A single array applies to
+  // both hands.
+  final List<List<String>>? handPositions;
 
   // Whether this item is done at maximum effort rather than a fixed load
   final bool loadIsMax;
@@ -154,11 +188,11 @@ class TrainingItem {
     this.reps,
     this.duration,
     this.hand,
+    this.granularity,
     this.loads,
     this.leftLoads,
-    this.handPositions,
     this.edgeSizesMm,
-    this.handPositionsByHand,
+    this.handPositions,
     this.loadIsMax = false,
     this.freeText,
     this.comment,
@@ -168,15 +202,8 @@ class TrainingItem {
     this.items = const [],
   });
 
-  /// Grips as one array per hand. Falls back to the flattened positions read
-  /// from legacy app-created items, which carry a single hand array.
-  List<List<String>> get handPositionsPerHand {
-    final byHand = handPositionsByHand;
-    if (byHand != null && byHand.isNotEmpty) return byHand;
-    final flat = handPositions;
-    if (flat == null || flat.isEmpty) return const [];
-    return [flat];
-  }
+  /// Grips as one array per hand, empty when the item prescribes none.
+  List<List<String>> get handPositionsPerHand => handPositions ?? const [];
 
   /// Reps to perform when this is a rep-based item, null otherwise.
   /// An item is never both rep-based and time-based.
@@ -200,28 +227,25 @@ class TrainingItem {
         type != TrainingItemType.repeater) {
       return false;
     }
-    if (hand == null || hand == 'both') return false;
+    if (!HangboardHand.hangsOneHandAtATime(
+      hand,
+      isRepeater: type == TrainingItemType.repeater,
+    )) {
+      return false;
+    }
     bool hasLoad(List<Load>? l) => (l ?? []).any((e) => !e.isBodyweight);
     return hasLoad(loads) || hasLoad(leftLoads);
   }
 
   factory TrainingItem.fromJson(Map<String, dynamic> json) {
     List<Load>? parseLoads(dynamic raw) {
-      final flat = flattenJsonList(raw);
-      if (flat.isEmpty) return null;
-      return flat.whereType<Map<String, dynamic>>().map(Load.fromJson).toList();
-    }
-
-    List<String>? parseStringList(dynamic raw) {
-      final flat = flattenJsonList(raw);
-      if (flat.isEmpty) return null;
-      return flat.map((e) => e.toString()).toList();
+      if (raw is! List || raw.isEmpty) return null;
+      return raw.whereType<Map<String, dynamic>>().map(Load.fromJson).toList();
     }
 
     List<int>? parseIntList(dynamic raw) {
-      final flat = flattenJsonList(raw);
-      if (flat.isEmpty) return null;
-      return flat.whereType<num>().map((e) => e.toInt()).toList();
+      if (raw is! List || raw.isEmpty) return null;
+      return raw.whereType<num>().map((e) => e.toInt()).toList();
     }
 
     final nestedRaw = json['items'] as List<dynamic>?;
@@ -243,11 +267,11 @@ class TrainingItem {
       reps: (json['reps'] as num?)?.toInt(),
       duration: (json['duration'] as num?)?.toInt(),
       hand: json['hand'] as String?,
+      granularity: json['granularity'] as String?,
       loads: parseLoads(json['loads']),
       leftLoads: parseLoads(json['left_loads']),
-      handPositions: parseStringList(json['hand_positions']),
       edgeSizesMm: parseIntList(json['edge_sizes_mm']),
-      handPositionsByHand: parseHandPositionsByHand(json['hand_positions']),
+      handPositions: parseHandPositions(json['hand_positions']),
       loadIsMax: json['load_is_max'] as bool? ?? false,
       freeText: json['free_text'] as String?,
       comment: json['comment'] as String?,
@@ -267,17 +291,12 @@ class TrainingItem {
     if (reps != null) map['reps'] = reps;
     if (duration != null) map['duration'] = duration;
     if (hand != null) map['hand'] = hand;
+    if (granularity != null) map['granularity'] = granularity;
     if (loads != null) map['loads'] = loads!.map((l) => l.toJson()).toList();
     if (leftLoads != null) {
       map['left_loads'] = leftLoads!.map((l) => l.toJson()).toList();
     }
-    // Writing back the per-hand shape keeps a portal-authored item intact when
-    // the app saves it again.
-    if (handPositionsByHand != null) {
-      map['hand_positions'] = handPositionsByHand;
-    } else if (handPositions != null) {
-      map['hand_positions'] = handPositions;
-    }
+    if (handPositions != null) map['hand_positions'] = handPositions;
     if (edgeSizesMm != null) map['edge_sizes_mm'] = edgeSizesMm;
     map['load_is_max'] = loadIsMax;
     if (freeText != null) map['free_text'] = freeText;
@@ -299,19 +318,14 @@ class TrainingItem {
     int? reps,
     int? duration,
     String? hand,
+    String? granularity,
     List<Load>? loads,
     List<Load>? leftLoads,
-    List<String>? handPositions,
     List<int>? edgeSizesMm,
-    List<List<String>>? handPositionsByHand,
+    List<List<String>>? handPositions,
     bool? loadIsMax,
     List<TrainingItem>? items,
   }) {
-    // A flat replacement supersedes the per-hand grips it was derived from,
-    // otherwise the stale nested copy would keep winning over the new value.
-    final nextByHand =
-        handPositionsByHand ??
-        (handPositions != null ? null : this.handPositionsByHand);
     return TrainingItem(
       id: id,
       type: type,
@@ -324,11 +338,11 @@ class TrainingItem {
       reps: reps ?? this.reps,
       duration: duration ?? this.duration,
       hand: hand ?? this.hand,
+      granularity: granularity ?? this.granularity,
       loads: loads ?? this.loads,
       leftLoads: leftLoads ?? this.leftLoads,
-      handPositions: handPositions ?? this.handPositions,
       edgeSizesMm: edgeSizesMm ?? this.edgeSizesMm,
-      handPositionsByHand: nextByHand,
+      handPositions: handPositions ?? this.handPositions,
       loadIsMax: loadIsMax ?? this.loadIsMax,
       freeText: freeText,
       comment: comment,
@@ -345,45 +359,36 @@ class TrainingItem {
     if (override.isEmpty) return this;
 
     // An empty array carries no prescription, so it leaves the base value
-    // alone rather than wiping it. Clearing the edge sizes in particular would
-    // make a split item read its interleaved loads as a flat array.
+    // alone rather than wiping it.
     List<T>? orBase<T>(List<T>? parsed) =>
         parsed == null || parsed.isEmpty ? null : parsed;
 
     List<Load>? parseLoads(dynamic raw) {
-      if (raw == null) return null;
+      if (raw is! List) return null;
       return orBase(
-        flattenJsonList(
-          raw,
-        ).whereType<Map<String, dynamic>>().map(Load.fromJson).toList(),
+        raw.whereType<Map<String, dynamic>>().map(Load.fromJson).toList(),
       );
     }
 
-    final bothHands = override['both_hands'] as bool?;
     return copyWith(
       loads: parseLoads(override['loads']),
       leftLoads: parseLoads(override['left_loads']),
-      handPositions: override['hand_positions'] == null
+      handPositions: orBase(parseHandPositions(override['hand_positions'])),
+      edgeSizesMm: override['edge_sizes_mm'] is! List
           ? null
           : orBase(
-              flattenJsonList(
-                override['hand_positions'],
-              ).map((e) => e.toString()).toList(),
-            ),
-      handPositionsByHand: parseHandPositionsByHand(override['hand_positions']),
-      edgeSizesMm: override['edge_sizes_mm'] == null
-          ? null
-          : orBase(
-              flattenJsonList(
-                override['edge_sizes_mm'],
-              ).whereType<num>().map((e) => e.toInt()).toList(),
+              (override['edge_sizes_mm'] as List)
+                  .whereType<num>()
+                  .map((e) => e.toInt())
+                  .toList(),
             ),
       reps: (override['reps'] as num?)?.toInt(),
       cycles: (override['cycles'] as num?)?.toInt(),
       cycleRestSeconds: (override['cycle_rest_seconds'] as num?)?.toInt(),
       restSeconds: (override['rest_seconds'] as num?)?.toInt(),
       worktimeSeconds: (override['hb_worktime_seconds'] as num?)?.toInt(),
-      hand: bothHands == null ? null : (bothHands ? 'both' : 'split'),
+      hand: override['hand'] as String?,
+      granularity: override['granularity'] as String?,
     );
   }
 }

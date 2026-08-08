@@ -175,14 +175,14 @@ void _expandHangboardRep(
 }) {
   final worktime = item.worktimeSeconds ?? 7;
   final resttime = item.restSeconds ?? 3;
-  final hand = item.hand ?? 'both';
+  final hand = item.hand ?? HangboardHand.both;
   final layout = HangboardLayout.of(item);
-  final leftHand = hand == 'left';
+  final leftHand = hand == HangboardHand.left;
   final grip = _parseGrip(layout.grip(0, 0, leftHand: leftHand));
   final w = layout.load(0, 0, leftHand: leftHand)?.value ?? 0.0;
   final handSide = switch (hand) {
-    'left' => HandSide.left,
-    'right' => HandSide.right,
+    HangboardHand.left => HandSide.left,
+    HangboardHand.right => HandSide.right,
     _ => HandSide.both,
   };
 
@@ -195,7 +195,8 @@ void _expandHangboardRep(
       gripPosition: grip,
       edgeSizeMm: layout.edgeSizeMm(0, 0),
       isHang: true,
-      collectSensorData: useSensor,
+      // Only a hang on a single hand passes through the sensor.
+      collectSensorData: useSensor && handSide != HandSide.both,
       comment: comment,
     ),
   );
@@ -215,107 +216,106 @@ void _expandRepeater(
   final worktime = item.worktimeSeconds ?? 7;
   final resttime = item.restSeconds ?? 3;
   final cycleRest = item.cycleRestSeconds ?? 0;
-  final hand = item.hand ?? 'both';
-  final splitHand = hand == 'split';
+  final hand = item.hand ?? HangboardHand.both;
   final layout = HangboardLayout.of(item);
 
   String setRep(int cycle, int rep) =>
       'SET ${cycle + 1}/$cycles - REP ${rep + 1}/$repsPerCycle';
 
-  if (splitHand) {
-    for (int cycle = 0; cycle < cycles; cycle++) {
+  TimedItem hang(int cycle, int rep, HandSide side) {
+    final leftHand = side == HandSide.left;
+    return TimedItem(
+      label: switch (side) {
+        HandSide.left => 'Left hang',
+        HandSide.right => 'Right hang',
+        HandSide.both => 'Hang',
+      },
+      durationSeconds: worktime,
+      targetLoad: layout.load(cycle, rep, leftHand: leftHand)?.value ?? 0.0,
+      handSide: side,
+      gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: leftHand)),
+      edgeSizeMm: layout.edgeSizeMm(cycle, rep),
+      isHang: true,
+      // Only a hang on a single hand passes through the sensor.
+      collectSensorData: useSensor && side != HandSide.both,
+      subtitle: setRep(cycle, rep),
+      comment: comment,
+    );
+  }
+
+  switch (hand) {
+    case HangboardHand.split:
+      _expandSplitRepeater(
+        out,
+        hang,
+        cycles: cycles,
+        repsPerCycle: repsPerCycle,
+        worktime: worktime,
+        resttime: resttime,
+        cycleRest: cycleRest,
+      );
+    case HangboardHand.alternate:
+      for (int cycle = 0; cycle < cycles; cycle++) {
+        for (int rep = 0; rep < repsPerCycle; rep++) {
+          out.add(hang(cycle, rep, HandSide.right));
+          if (resttime > 0) out.add(RestItem(durationSeconds: resttime));
+          out.add(hang(cycle, rep, HandSide.left));
+          if (rep < repsPerCycle - 1 && resttime > 0) {
+            out.add(RestItem(durationSeconds: resttime));
+          }
+        }
+        if (cycle < cycles - 1 && cycleRest > 0) {
+          out.add(RestItem(durationSeconds: cycleRest));
+        }
+      }
+    default:
+      // Both hands together, or a single named hand: one hang per rep.
+      final side = switch (hand) {
+        HangboardHand.left => HandSide.left,
+        HangboardHand.right => HandSide.right,
+        _ => HandSide.both,
+      };
+      for (int cycle = 0; cycle < cycles; cycle++) {
+        for (int rep = 0; rep < repsPerCycle; rep++) {
+          out.add(hang(cycle, rep, side));
+          if (rep < repsPerCycle - 1 && resttime > 0) {
+            out.add(RestItem(durationSeconds: resttime));
+          }
+        }
+        if (cycle < cycles - 1 && cycleRest > 0) {
+          out.add(RestItem(durationSeconds: cycleRest));
+        }
+      }
+  }
+}
+
+/// A split repeater runs every rep of a set on the right hand, rests, then
+/// replays the same set on the left.
+void _expandSplitRepeater(
+  List<TrainingExecutionItem> out,
+  TimedItem Function(int cycle, int rep, HandSide side) hang, {
+  required int cycles,
+  required int repsPerCycle,
+  required int worktime,
+  required int resttime,
+  required int cycleRest,
+}) {
+  // The configured cycle rest covers both hands plus the gap between them,
+  // so a short cycle rest can leave nothing to split.
+  final setDuration = repsPerCycle * worktime + (repsPerCycle - 1) * resttime;
+  final restBetweenHands = ((cycleRest - setDuration) / 2).floor();
+
+  for (int cycle = 0; cycle < cycles; cycle++) {
+    for (final side in [HandSide.right, HandSide.left]) {
       for (int rep = 0; rep < repsPerCycle; rep++) {
-        out.add(
-          TimedItem(
-            label: 'Right hang',
-            durationSeconds: worktime,
-            targetLoad: layout.load(cycle, rep, leftHand: false)?.value ?? 0.0,
-            handSide: HandSide.right,
-            gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: false)),
-            edgeSizeMm: layout.edgeSizeMm(cycle, rep),
-            isHang: true,
-            collectSensorData: useSensor,
-            subtitle: setRep(cycle, rep),
-            comment: comment,
-          ),
-        );
+        out.add(hang(cycle, rep, side));
         if (rep < repsPerCycle - 1 && resttime > 0) {
           out.add(RestItem(durationSeconds: resttime));
         }
       }
-      // The configured cycle rest covers both hands plus the gap between them,
-      // so a short cycle rest can leave nothing to split.
-      final setDuration =
-          repsPerCycle * worktime + (repsPerCycle - 1) * resttime;
-      final restBetweenHands = ((cycleRest - setDuration) / 2).floor();
-      if (restBetweenHands > 0) {
+      final lastHandOfLastCycle = side == HandSide.left && cycle == cycles - 1;
+      if (!lastHandOfLastCycle && restBetweenHands > 0) {
         out.add(RestItem(durationSeconds: restBetweenHands));
-      }
-      for (int rep = 0; rep < repsPerCycle; rep++) {
-        out.add(
-          TimedItem(
-            label: 'Left hang',
-            durationSeconds: worktime,
-            targetLoad: layout.load(cycle, rep, leftHand: true)?.value ?? 0.0,
-            handSide: HandSide.left,
-            gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: true)),
-            edgeSizeMm: layout.edgeSizeMm(cycle, rep),
-            isHang: true,
-            collectSensorData: useSensor,
-            subtitle: setRep(cycle, rep),
-            comment: comment,
-          ),
-        );
-        if (rep < repsPerCycle - 1 && resttime > 0) {
-          out.add(RestItem(durationSeconds: resttime));
-        }
-      }
-      if (cycle < cycles - 1 && restBetweenHands > 0) {
-        out.add(RestItem(durationSeconds: restBetweenHands));
-      }
-    }
-  } else {
-    for (int cycle = 0; cycle < cycles; cycle++) {
-      for (int rep = 0; rep < repsPerCycle; rep++) {
-        final w = layout.load(cycle, rep, leftHand: false)?.value ?? 0.0;
-        final edge = layout.edgeSizeMm(cycle, rep);
-        out.add(
-          TimedItem(
-            label: 'Right hang',
-            durationSeconds: worktime,
-            targetLoad: w,
-            handSide: HandSide.right,
-            gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: false)),
-            edgeSizeMm: edge,
-            isHang: true,
-            collectSensorData: useSensor,
-            subtitle: setRep(cycle, rep),
-            comment: comment,
-          ),
-        );
-        if (resttime > 0) {
-          out.add(RestItem(durationSeconds: resttime));
-        }
-        out.add(
-          TimedItem(
-            label: 'Left hang',
-            durationSeconds: worktime,
-            targetLoad: w,
-            handSide: HandSide.left,
-            gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: true)),
-            edgeSizeMm: edge,
-            isHang: true,
-            collectSensorData: useSensor,
-            subtitle: setRep(cycle, rep),
-            comment: comment,
-          ),
-        );
-        if (rep < repsPerCycle - 1 && resttime > 0) {
-          out.add(RestItem(durationSeconds: resttime));
-        }
-      }
-      if (cycle < cycles - 1 && cycleRest > 0) {
-        out.add(RestItem(durationSeconds: cycleRest));
       }
     }
   }

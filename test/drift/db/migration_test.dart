@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'generated/schema.dart';
 
 import 'generated/schema_v1.dart' as v1;
+import 'generated/schema_v2.dart' as v2;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -280,6 +281,141 @@ void main() {
       expect(rep.averageWeight, 22.0);
 
       await db.close();
+    });
+  });
+
+  group('v2 to v3 data migration', () {
+    /// Seeds a v2 database with a raw training item, runs the migration and
+    /// hands back the row as the current schema sees it.
+    Future<TrainingItemRow> migratedItem({
+      required String type,
+      required String hand,
+      String? loadsJson,
+      String? handPositionsJson,
+      String? edgeSizesMmJson,
+      int? cycles,
+      int? reps,
+    }) async {
+      final schema = await verifier.schemaAt(2);
+      final oldDb = v2.DatabaseAtV2(schema.newConnection());
+      await oldDb.customStatement(
+        "INSERT INTO trainings (id, title, is_favorite, updated_at) "
+        "VALUES ('t-1', 'Training', 0, 100)",
+      );
+      await oldDb.customStatement(
+        'INSERT INTO training_items (id, training_id, type, position, cycles, '
+        'reps, hand, loads_json, hand_positions_json, edge_sizes_mm_json, '
+        'load_is_max, updated_at) '
+        'VALUES (?,?,?,0,?,?,?,?,?,?,0,100)',
+        [
+          'i-1',
+          't-1',
+          type,
+          cycles,
+          reps,
+          hand,
+          loadsJson,
+          handPositionsJson,
+          edgeSizesMmJson,
+        ],
+      );
+      await oldDb.close();
+
+      final db = AppDatabase(schema.newConnection());
+      final row = await db.select(db.trainingItems).getSingle();
+      await db.close();
+      return row;
+    }
+
+    String loadsOf(int count) => jsonEncode(
+      List.generate(count, (i) => {'value': 10.0 + i, 'unit': 'kg'}),
+    );
+
+    // The app ran its 'both' repeaters one hand at a time, right then left
+    // inside every rep. That mode is now named for what it does.
+    test('an app repeater stored as both becomes alternate', () async {
+      final row = await migratedItem(
+        type: 'repeater',
+        hand: 'both',
+        cycles: 3,
+        reps: 2,
+        loadsJson: loadsOf(2),
+      );
+
+      expect(row.hand, 'alternate');
+    });
+
+    // A hangboard rep already meant a genuine two-handed hang.
+    test('a hangboard rep stored as both stays both', () async {
+      final row = await migratedItem(
+        type: 'hangboard_rep',
+        hand: 'both',
+        loadsJson: loadsOf(1),
+      );
+
+      expect(row.hand, 'both');
+    });
+
+    test('the layout an item was written with is declared', () async {
+      final perRep = await migratedItem(
+        type: 'repeater',
+        hand: 'right',
+        cycles: 3,
+        reps: 2,
+        loadsJson: loadsOf(2),
+      );
+      expect(perRep.granularity, 'rep');
+
+      final uniform = await migratedItem(
+        type: 'hangboard_rep',
+        hand: 'right',
+        loadsJson: loadsOf(1),
+      );
+      expect(uniform.granularity, 'uniform');
+
+      final perSet = await migratedItem(
+        type: 'repeater',
+        hand: 'right',
+        cycles: 2,
+        reps: 3,
+        loadsJson: loadsOf(6),
+        edgeSizesMmJson: jsonEncode([20, 20, 18, 18, 15, 15]),
+      );
+      expect(perSet.granularity, 'set');
+    });
+
+    test('a flat grip array is wrapped into one array per hand', () async {
+      final row = await migratedItem(
+        type: 'repeater',
+        hand: 'right',
+        cycles: 1,
+        reps: 2,
+        loadsJson: loadsOf(2),
+        handPositionsJson: jsonEncode(['halfCrimp', 'openHand']),
+      );
+
+      expect(jsonDecode(row.handPositionsJson!), [
+        ['halfCrimp', 'openHand'],
+      ]);
+    });
+
+    test('a grip array already held per hand is left alone', () async {
+      final row = await migratedItem(
+        type: 'repeater',
+        hand: 'split',
+        cycles: 1,
+        reps: 2,
+        loadsJson: loadsOf(2),
+        handPositionsJson: jsonEncode([
+          ['HC', 'FC'],
+          ['OC', '3FD'],
+        ]),
+      );
+
+      expect(jsonDecode(row.handPositionsJson!), [
+        ['HC', 'FC'],
+        ['OC', '3FD'],
+      ]);
     });
   });
 }

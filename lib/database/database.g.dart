@@ -1857,6 +1857,17 @@ class $TrainingItemsTable extends TrainingItems
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _granularityMeta = const VerificationMeta(
+    'granularity',
+  );
+  @override
+  late final GeneratedColumn<String> granularity = GeneratedColumn<String>(
+    'granularity',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _loadsJsonMeta = const VerificationMeta(
     'loadsJson',
   );
@@ -1976,6 +1987,7 @@ class $TrainingItemsTable extends TrainingItems
     restSeconds,
     worktimeSeconds,
     hand,
+    granularity,
     loadsJson,
     leftLoadsJson,
     handPositionsJson,
@@ -2078,6 +2090,15 @@ class $TrainingItemsTable extends TrainingItems
       context.handle(
         _handMeta,
         hand.isAcceptableOrUnknown(data['hand']!, _handMeta),
+      );
+    }
+    if (data.containsKey('granularity')) {
+      context.handle(
+        _granularityMeta,
+        granularity.isAcceptableOrUnknown(
+          data['granularity']!,
+          _granularityMeta,
+        ),
       );
     }
     if (data.containsKey('loads_json')) {
@@ -2200,6 +2221,10 @@ class $TrainingItemsTable extends TrainingItems
         DriftSqlType.string,
         data['${effectivePrefix}hand'],
       ),
+      granularity: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}granularity'],
+      ),
       loadsJson: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}loads_json'],
@@ -2258,6 +2283,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
   final int? restSeconds;
   final int? worktimeSeconds;
   final String? hand;
+  final String? granularity;
   final String? loadsJson;
   final String? leftLoadsJson;
   final String? handPositionsJson;
@@ -2280,6 +2306,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     this.restSeconds,
     this.worktimeSeconds,
     this.hand,
+    this.granularity,
     this.loadsJson,
     this.leftLoadsJson,
     this.handPositionsJson,
@@ -2320,6 +2347,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     }
     if (!nullToAbsent || hand != null) {
       map['hand'] = Variable<String>(hand);
+    }
+    if (!nullToAbsent || granularity != null) {
+      map['granularity'] = Variable<String>(granularity);
     }
     if (!nullToAbsent || loadsJson != null) {
       map['loads_json'] = Variable<String>(loadsJson);
@@ -2373,6 +2403,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
           ? const Value.absent()
           : Value(worktimeSeconds),
       hand: hand == null && nullToAbsent ? const Value.absent() : Value(hand),
+      granularity: granularity == null && nullToAbsent
+          ? const Value.absent()
+          : Value(granularity),
       loadsJson: loadsJson == null && nullToAbsent
           ? const Value.absent()
           : Value(loadsJson),
@@ -2417,6 +2450,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
       restSeconds: serializer.fromJson<int?>(json['restSeconds']),
       worktimeSeconds: serializer.fromJson<int?>(json['worktimeSeconds']),
       hand: serializer.fromJson<String?>(json['hand']),
+      granularity: serializer.fromJson<String?>(json['granularity']),
       loadsJson: serializer.fromJson<String?>(json['loadsJson']),
       leftLoadsJson: serializer.fromJson<String?>(json['leftLoadsJson']),
       handPositionsJson: serializer.fromJson<String?>(
@@ -2446,6 +2480,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
       'restSeconds': serializer.toJson<int?>(restSeconds),
       'worktimeSeconds': serializer.toJson<int?>(worktimeSeconds),
       'hand': serializer.toJson<String?>(hand),
+      'granularity': serializer.toJson<String?>(granularity),
       'loadsJson': serializer.toJson<String?>(loadsJson),
       'leftLoadsJson': serializer.toJson<String?>(leftLoadsJson),
       'handPositionsJson': serializer.toJson<String?>(handPositionsJson),
@@ -2471,6 +2506,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     Value<int?> restSeconds = const Value.absent(),
     Value<int?> worktimeSeconds = const Value.absent(),
     Value<String?> hand = const Value.absent(),
+    Value<String?> granularity = const Value.absent(),
     Value<String?> loadsJson = const Value.absent(),
     Value<String?> leftLoadsJson = const Value.absent(),
     Value<String?> handPositionsJson = const Value.absent(),
@@ -2497,6 +2533,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
         ? worktimeSeconds.value
         : this.worktimeSeconds,
     hand: hand.present ? hand.value : this.hand,
+    granularity: granularity.present ? granularity.value : this.granularity,
     loadsJson: loadsJson.present ? loadsJson.value : this.loadsJson,
     leftLoadsJson: leftLoadsJson.present
         ? leftLoadsJson.value
@@ -2535,6 +2572,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
           ? data.worktimeSeconds.value
           : this.worktimeSeconds,
       hand: data.hand.present ? data.hand.value : this.hand,
+      granularity: data.granularity.present
+          ? data.granularity.value
+          : this.granularity,
       loadsJson: data.loadsJson.present ? data.loadsJson.value : this.loadsJson,
       leftLoadsJson: data.leftLoadsJson.present
           ? data.leftLoadsJson.value
@@ -2572,6 +2612,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
           ..write('restSeconds: $restSeconds, ')
           ..write('worktimeSeconds: $worktimeSeconds, ')
           ..write('hand: $hand, ')
+          ..write('granularity: $granularity, ')
           ..write('loadsJson: $loadsJson, ')
           ..write('leftLoadsJson: $leftLoadsJson, ')
           ..write('handPositionsJson: $handPositionsJson, ')
@@ -2599,6 +2640,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     restSeconds,
     worktimeSeconds,
     hand,
+    granularity,
     loadsJson,
     leftLoadsJson,
     handPositionsJson,
@@ -2625,6 +2667,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
           other.restSeconds == this.restSeconds &&
           other.worktimeSeconds == this.worktimeSeconds &&
           other.hand == this.hand &&
+          other.granularity == this.granularity &&
           other.loadsJson == this.loadsJson &&
           other.leftLoadsJson == this.leftLoadsJson &&
           other.handPositionsJson == this.handPositionsJson &&
@@ -2649,6 +2692,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
   final Value<int?> restSeconds;
   final Value<int?> worktimeSeconds;
   final Value<String?> hand;
+  final Value<String?> granularity;
   final Value<String?> loadsJson;
   final Value<String?> leftLoadsJson;
   final Value<String?> handPositionsJson;
@@ -2672,6 +2716,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     this.restSeconds = const Value.absent(),
     this.worktimeSeconds = const Value.absent(),
     this.hand = const Value.absent(),
+    this.granularity = const Value.absent(),
     this.loadsJson = const Value.absent(),
     this.leftLoadsJson = const Value.absent(),
     this.handPositionsJson = const Value.absent(),
@@ -2696,6 +2741,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     this.restSeconds = const Value.absent(),
     this.worktimeSeconds = const Value.absent(),
     this.hand = const Value.absent(),
+    this.granularity = const Value.absent(),
     this.loadsJson = const Value.absent(),
     this.leftLoadsJson = const Value.absent(),
     this.handPositionsJson = const Value.absent(),
@@ -2721,6 +2767,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     Expression<int>? restSeconds,
     Expression<int>? worktimeSeconds,
     Expression<String>? hand,
+    Expression<String>? granularity,
     Expression<String>? loadsJson,
     Expression<String>? leftLoadsJson,
     Expression<String>? handPositionsJson,
@@ -2745,6 +2792,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
       if (restSeconds != null) 'rest_seconds': restSeconds,
       if (worktimeSeconds != null) 'worktime_seconds': worktimeSeconds,
       if (hand != null) 'hand': hand,
+      if (granularity != null) 'granularity': granularity,
       if (loadsJson != null) 'loads_json': loadsJson,
       if (leftLoadsJson != null) 'left_loads_json': leftLoadsJson,
       if (handPositionsJson != null) 'hand_positions_json': handPositionsJson,
@@ -2771,6 +2819,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     Value<int?>? restSeconds,
     Value<int?>? worktimeSeconds,
     Value<String?>? hand,
+    Value<String?>? granularity,
     Value<String?>? loadsJson,
     Value<String?>? leftLoadsJson,
     Value<String?>? handPositionsJson,
@@ -2795,6 +2844,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
       restSeconds: restSeconds ?? this.restSeconds,
       worktimeSeconds: worktimeSeconds ?? this.worktimeSeconds,
       hand: hand ?? this.hand,
+      granularity: granularity ?? this.granularity,
       loadsJson: loadsJson ?? this.loadsJson,
       leftLoadsJson: leftLoadsJson ?? this.leftLoadsJson,
       handPositionsJson: handPositionsJson ?? this.handPositionsJson,
@@ -2847,6 +2897,9 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     if (hand.present) {
       map['hand'] = Variable<String>(hand.value);
     }
+    if (granularity.present) {
+      map['granularity'] = Variable<String>(granularity.value);
+    }
     if (loadsJson.present) {
       map['loads_json'] = Variable<String>(loadsJson.value);
     }
@@ -2895,6 +2948,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
           ..write('restSeconds: $restSeconds, ')
           ..write('worktimeSeconds: $worktimeSeconds, ')
           ..write('hand: $hand, ')
+          ..write('granularity: $granularity, ')
           ..write('loadsJson: $loadsJson, ')
           ..write('leftLoadsJson: $leftLoadsJson, ')
           ..write('handPositionsJson: $handPositionsJson, ')
@@ -6009,6 +6063,7 @@ typedef $$TrainingItemsTableCreateCompanionBuilder =
       Value<int?> restSeconds,
       Value<int?> worktimeSeconds,
       Value<String?> hand,
+      Value<String?> granularity,
       Value<String?> loadsJson,
       Value<String?> leftLoadsJson,
       Value<String?> handPositionsJson,
@@ -6034,6 +6089,7 @@ typedef $$TrainingItemsTableUpdateCompanionBuilder =
       Value<int?> restSeconds,
       Value<int?> worktimeSeconds,
       Value<String?> hand,
+      Value<String?> granularity,
       Value<String?> loadsJson,
       Value<String?> leftLoadsJson,
       Value<String?> handPositionsJson,
@@ -6112,6 +6168,11 @@ class $$TrainingItemsTableFilterComposer
 
   ColumnFilters<String> get hand => $composableBuilder(
     column: $table.hand,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get granularity => $composableBuilder(
+    column: $table.granularity,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6230,6 +6291,11 @@ class $$TrainingItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get granularity => $composableBuilder(
+    column: $table.granularity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get loadsJson => $composableBuilder(
     column: $table.loadsJson,
     builder: (column) => ColumnOrderings(column),
@@ -6329,6 +6395,11 @@ class $$TrainingItemsTableAnnotationComposer
   GeneratedColumn<String> get hand =>
       $composableBuilder(column: $table.hand, builder: (column) => column);
 
+  GeneratedColumn<String> get granularity => $composableBuilder(
+    column: $table.granularity,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get loadsJson =>
       $composableBuilder(column: $table.loadsJson, builder: (column) => column);
 
@@ -6410,6 +6481,7 @@ class $$TrainingItemsTableTableManager
                 Value<int?> restSeconds = const Value.absent(),
                 Value<int?> worktimeSeconds = const Value.absent(),
                 Value<String?> hand = const Value.absent(),
+                Value<String?> granularity = const Value.absent(),
                 Value<String?> loadsJson = const Value.absent(),
                 Value<String?> leftLoadsJson = const Value.absent(),
                 Value<String?> handPositionsJson = const Value.absent(),
@@ -6433,6 +6505,7 @@ class $$TrainingItemsTableTableManager
                 restSeconds: restSeconds,
                 worktimeSeconds: worktimeSeconds,
                 hand: hand,
+                granularity: granularity,
                 loadsJson: loadsJson,
                 leftLoadsJson: leftLoadsJson,
                 handPositionsJson: handPositionsJson,
@@ -6458,6 +6531,7 @@ class $$TrainingItemsTableTableManager
                 Value<int?> restSeconds = const Value.absent(),
                 Value<int?> worktimeSeconds = const Value.absent(),
                 Value<String?> hand = const Value.absent(),
+                Value<String?> granularity = const Value.absent(),
                 Value<String?> loadsJson = const Value.absent(),
                 Value<String?> leftLoadsJson = const Value.absent(),
                 Value<String?> handPositionsJson = const Value.absent(),
@@ -6481,6 +6555,7 @@ class $$TrainingItemsTableTableManager
                 restSeconds: restSeconds,
                 worktimeSeconds: worktimeSeconds,
                 hand: hand,
+                granularity: granularity,
                 loadsJson: loadsJson,
                 leftLoadsJson: leftLoadsJson,
                 handPositionsJson: handPositionsJson,
