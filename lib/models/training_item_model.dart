@@ -73,8 +73,16 @@ class VariableTarget {
     'fallback': fallback,
   };
 
-  /// The prescribed number, or the fallback when the assessment is missing.
-  double resolve(AssessmentResults results, {HandSide? handSide}) {
+  /// The prescribed number, or the fallback when the assessment is missing or
+  /// is not measured in [expects]. A percentage of a force result cannot stand
+  /// in for a duration, so a mismatched reference takes the fallback rather
+  /// than putting a number in the wrong unit on the gauge.
+  double resolve(
+    AssessmentResults results, {
+    required AssessmentUnit expects,
+    HandSide? handSide,
+  }) {
+    if (getAssessmentUnit(assessmentType) != expects) return fallback;
     final measured = results.value(assessmentType, handSide: handSide);
     return measured == null ? fallback : measured * percent / 100;
   }
@@ -147,7 +155,7 @@ class Load {
         assessmentType: assessmentType!,
         percent: value,
         fallback: fallback ?? 0.0,
-      ).resolve(results, handSide: handSide);
+      ).resolve(results, expects: AssessmentUnit.kilograms, handSide: handSide);
     }
     return switch (unit) {
       'percent_bw' => bodyweightKg == null ? null : bodyweightKg * value / 100,
@@ -356,7 +364,9 @@ class TrainingItem {
   int? effectiveReps([AssessmentResults results = AssessmentResults.none]) {
     final target = variableTargets['reps'];
     if (target != null) {
-      final resolved = target.resolve(results).round();
+      final resolved = target
+          .resolve(results, expects: AssessmentUnit.repetitions)
+          .round();
       return resolved > 0 ? resolved : null;
     }
     return (reps ?? 0) > 0 ? reps : null;
@@ -366,7 +376,9 @@ class TrainingItem {
   int? effectiveDuration([AssessmentResults results = AssessmentResults.none]) {
     final target = variableTargets['duration'];
     if (target != null) {
-      final resolved = target.resolve(results).round();
+      final resolved = target
+          .resolve(results, expects: AssessmentUnit.seconds)
+          .round();
       return resolved > 0 ? resolved : null;
     }
     return (duration ?? 0) > 0 ? duration : null;

@@ -5,7 +5,7 @@ import 'package:crimpy/models/workout_protocol.dart';
 
 enum AssessmentType { criticalForce, mvc, endurance60 }
 
-enum AssessmentUnit { kilograms, seconds }
+enum AssessmentUnit { kilograms, seconds, repetitions }
 
 String assessmentTypeToString(AssessmentType type) {
   return switch (type) {
@@ -33,6 +33,8 @@ String formatAssessmentValue(
       showUnit ? "${value.toStringAsFixed(1)} kg" : value.toStringAsFixed(1),
     AssessmentUnit.seconds =>
       showUnit ? "${value.toStringAsFixed(0)}s" : value.toStringAsFixed(0),
+    AssessmentUnit.repetitions =>
+      showUnit ? "${value.toStringAsFixed(0)} reps" : value.toStringAsFixed(0),
   };
 }
 
@@ -94,8 +96,21 @@ class AssessmentResultModel {
 
 /// The athlete latest result per assessment, used to turn the loads, durations
 /// and reps a coach expressed as a percentage of an assessment into numbers.
+/// The athlete latest measurement of one assessment, held per hand because a
+/// run records a single hand: testing the left in January and the right in
+/// February leaves the two on separate rows.
+class AssessmentHandValues {
+  final double? right;
+  final double? left;
+
+  const AssessmentHandValues({this.right, this.left});
+
+  AssessmentHandValues withMeasured({double? right, double? left}) =>
+      AssessmentHandValues(right: right ?? this.right, left: left ?? this.left);
+}
+
 class AssessmentResults {
-  final Map<AssessmentType, AssessmentModel> lastByType;
+  final Map<AssessmentType, AssessmentHandValues> lastByType;
 
   const AssessmentResults(this.lastByType);
 
@@ -103,36 +118,39 @@ class AssessmentResults {
   /// the fallback the coach set.
   static const AssessmentResults none = AssessmentResults({});
 
-  /// Builds the latest result per type out of a chronological list.
+  /// Builds the latest value per assessment and per hand. Each hand keeps its
+  /// own last measurement, so a newer run carrying only the other hand does not
+  /// discard it.
   factory AssessmentResults.fromHistory(List<AssessmentModel> assessments) {
-    final last = <AssessmentType, AssessmentModel>{};
-    for (final assessment in assessments) {
-      final known = last[assessment.type];
-      if (known == null || !assessment.date.isBefore(known.date)) {
-        last[assessment.type] = assessment;
-      }
+    final chronological = [...assessments]
+      ..sort((a, b) => a.date.compareTo(b.date));
+    final last = <AssessmentType, AssessmentHandValues>{};
+    for (final assessment in chronological) {
+      final known = last[assessment.type] ?? const AssessmentHandValues();
+      last[assessment.type] = known.withMeasured(
+        right: assessment.rightValue,
+        left: assessment.leftValue,
+      );
     }
     return AssessmentResults(last);
   }
 
-  /// The last result for [type]: the value for [handSide] when the assessment
-  /// measured it, the mean of both hands otherwise. Null when the athlete has
-  /// never done that assessment.
+  /// The last value measured for [type] on [handSide], or the mean of both
+  /// hands when no hand is asked for. Null when that hand has never been
+  /// measured, so the coach fallback applies rather than the other hand number.
   double? value(AssessmentType type, {HandSide? handSide}) {
     final last = lastByType[type];
     if (last == null) return null;
-    final sided = switch (handSide) {
-      HandSide.right => last.rightValue,
-      HandSide.left => last.leftValue,
-      _ => null,
-    };
-    if (sided != null) return sided;
-    final values = [
-      last.rightValue,
-      last.leftValue,
-    ].whereType<double>().toList();
-    if (values.isEmpty) return null;
-    return values.reduce((a, b) => a + b) / values.length;
+    switch (handSide) {
+      case HandSide.right:
+        return last.right;
+      case HandSide.left:
+        return last.left;
+      default:
+        final values = [last.right, last.left].whereType<double>().toList();
+        if (values.isEmpty) return null;
+        return values.reduce((a, b) => a + b) / values.length;
+    }
   }
 }
 

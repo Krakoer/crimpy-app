@@ -53,6 +53,41 @@ void main() {
     test('is null for an assessment that was never done', () {
       expect(AssessmentResults.none.value(AssessmentType.mvc), isNull);
     });
+
+    test('keeps each hand last measurement when they were run apart', () {
+      final results = AssessmentResults.fromHistory([
+        _assessment(
+          AssessmentType.criticalForce,
+          left: 22,
+          date: DateTime(2026, 1, 1),
+        ),
+        _assessment(
+          AssessmentType.criticalForce,
+          right: 25,
+          date: DateTime(2026, 2, 1),
+        ),
+      ]);
+
+      expect(
+        results.value(AssessmentType.criticalForce, handSide: HandSide.left),
+        22,
+      );
+      expect(
+        results.value(AssessmentType.criticalForce, handSide: HandSide.right),
+        25,
+      );
+    });
+
+    test('is null for a hand that was never measured', () {
+      final results = AssessmentResults.fromHistory([
+        _assessment(AssessmentType.mvc, right: 50),
+      ]);
+
+      expect(
+        results.value(AssessmentType.mvc, handSide: HandSide.left),
+        isNull,
+      );
+    });
   });
 
   group('assessment-relative load', () {
@@ -74,6 +109,20 @@ void main() {
 
     test('falls back when the assessment was never done', () {
       expect(load.kilograms(results: AssessmentResults.none), 25);
+    });
+
+    test('falls back when the assessment is not measured in kilograms', () {
+      const secondsBacked = Load(
+        value: 80,
+        unit: percentAssessmentUnit,
+        assessmentType: AssessmentType.endurance60,
+        fallback: 25,
+      );
+      final measured = AssessmentResults.fromHistory([
+        _assessment(AssessmentType.endurance60, right: 120),
+      ]);
+
+      expect(secondsBacked.kilograms(results: measured), 25);
     });
 
     test(
@@ -148,6 +197,30 @@ void main() {
       });
 
       expect(item.effectiveDuration(), 60);
+    });
+
+    test('falls back when the assessment is measured in another unit', () {
+      final item = itemWith({
+        'duration': {
+          'assessment_type': AssessmentType.mvc.index,
+          'percent': 75,
+          'fallback': 60,
+        },
+      });
+
+      expect(item.effectiveDuration(results), 60);
+    });
+
+    test('falls back on a reps target, nothing being measured in reps', () {
+      final item = itemWith({
+        'reps': {
+          'assessment_type': AssessmentType.endurance60.index,
+          'percent': 50,
+          'fallback': 8,
+        },
+      });
+
+      expect(item.effectiveReps(results), 8);
     });
 
     test('drops a target naming an assessment the app does not know', () {
