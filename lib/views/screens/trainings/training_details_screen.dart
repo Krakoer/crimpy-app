@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
+import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 import 'package:crimpy/views/widgets/bodyweight_dialog.dart';
 import 'package:crimpy/views/widgets/training_item_tile.dart';
@@ -30,6 +31,7 @@ class TrainingDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final goal = template.goal?.trim() ?? '';
     final comment = template.comment?.trim() ?? '';
+    final bodyweightKg = ref.watch(bodyweightProvider).value;
 
     return Scaffold(
       appBar: AppBar(title: Text(template.title)),
@@ -52,7 +54,10 @@ class TrainingDetailScreen extends ConsumerWidget {
             if (template.items.isNotEmpty) ...[
               const SectionLabel('Exercises'),
               const SizedBox(height: 8),
-              ...buildTrainingItemTiles(template.items),
+              ...buildTrainingItemTiles(
+                template.items,
+                bodyweightKg: bodyweightKg,
+              ),
             ],
           ],
         ),
