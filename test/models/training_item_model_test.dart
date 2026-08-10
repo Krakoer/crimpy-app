@@ -260,6 +260,40 @@ void main() {
       );
       expect(item.needsBodyweight, isFalse);
     });
+
+    test('is false for an exercise at 100 percent of the bodyweight', () {
+      // The label is deliberately hidden for a plain set of pull ups, so
+      // nothing would use the answer and the prompt would be unexplained.
+      final item = TrainingItem(
+        id: 'i',
+        type: TrainingItemType.exercise,
+        position: 0,
+        loads: const [Load(value: 100, unit: 'percent_bw')],
+      );
+      expect(item.loadLabel(bodyweightKg: 70), isNull);
+      expect(item.needsBodyweight, isFalse);
+    });
+
+    test('is true for an exercise loaded above the bodyweight', () {
+      final item = TrainingItem(
+        id: 'i',
+        type: TrainingItemType.exercise,
+        position: 0,
+        loads: const [Load(value: 120, unit: 'percent_bw')],
+      );
+      expect(item.loadLabel(bodyweightKg: 70), '120 %BW (84 kg)');
+      expect(item.needsBodyweight, isTrue);
+    });
+
+    test('a hangboard rep at 100 percent still asks, it hits the gauge', () {
+      final item = TrainingItem(
+        id: 'i',
+        type: TrainingItemType.hangboardRep,
+        position: 0,
+        loads: const [Load(value: 100, unit: 'percent_bw')],
+      );
+      expect(item.needsBodyweight, isTrue);
+    });
   });
 
   group('Training.needsBodyweight', () {

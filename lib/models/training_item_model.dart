@@ -237,25 +237,33 @@ class TrainingItem {
   /// Duration in seconds when this is a time-based item, null otherwise.
   int? get effectiveDuration => (duration ?? 0) > 0 ? duration : null;
 
+  /// Whether [load] is an exercise carrying the whole bodyweight and nothing
+  /// more, which is just the athlete doing the movement. That is how the coach
+  /// portal writes it and why it hides it there: showing the kilograms would
+  /// read as weight added to a set of pull ups. Nothing resolves such a load,
+  /// so it must not ask for a bodyweight either.
+  bool _isPlainBodyweightExercise(Load load) =>
+      type == TrainingItemType.exercise &&
+      load.unit == 'percent_bw' &&
+      load.value == 100;
+
   /// First-rep load shown to the user, or null when bodyweight / unset.
   String? loadLabel({double? bodyweightKg}) {
     final first = loads?.firstOrNull;
     if (loadIsMax || (first?.isMax ?? false)) return 'MAX';
     if (first == null || first.isBodyweight) return null;
-    // An exercise at 100 %BW is just the athlete doing the movement, which is
-    // how the coach portal writes it and why it hides it there. Showing the
-    // kilograms would read as weight added to a set of pull ups.
-    if (type == TrainingItemType.exercise &&
-        first.unit == 'percent_bw' &&
-        first.value == 100) {
-      return null;
-    }
+    if (_isPlainBodyweightExercise(first)) return null;
     return first.label(bodyweightKg: bodyweightKg);
   }
 
-  /// Whether any rep of this item is loaded relative to the bodyweight.
+  /// Whether any rep of this item is loaded relative to the bodyweight, and so
+  /// would show or hit a different number once one is known. Kept in step with
+  /// [loadLabel]: a load this item never resolves must not make the app ask for
+  /// a bodyweight it will not use.
   bool get needsBodyweight {
-    bool needs(List<Load>? l) => (l ?? []).any((e) => e.needsBodyweight);
+    bool needs(List<Load>? l) => (l ?? []).any(
+      (e) => e.needsBodyweight && !_isPlainBodyweightExercise(e),
+    );
     return needs(loads) || needs(leftLoads);
   }
 
