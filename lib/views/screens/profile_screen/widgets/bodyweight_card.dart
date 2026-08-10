@@ -39,7 +39,7 @@ class BodyweightCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 12),
-            bodyweight.isLoading
+            bodyweight.isLoading && value == null
                 ? const SizedBox(
                     height: 24,
                     width: 24,

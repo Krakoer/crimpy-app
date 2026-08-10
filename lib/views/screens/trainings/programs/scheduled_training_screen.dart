@@ -489,7 +489,6 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     final bodyweight = await resolveBodyweight(context, ref, training);
     if (!context.mounted) return;
     ref.read(bleSessionProvider.notifier).reset();
-    if (!context.mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => PlayTrainingScreen(

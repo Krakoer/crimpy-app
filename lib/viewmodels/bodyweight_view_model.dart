@@ -39,11 +39,11 @@ class BodyweightController extends _$BodyweightController {
 
   Future<void> set(double kilograms) async {
     await _service.save(kilograms);
-    state = AsyncData(kilograms);
+    if (ref.mounted) state = AsyncData(kilograms);
   }
 
   Future<void> clear() async {
     await _service.clear();
-    state = const AsyncData(null);
+    if (ref.mounted) state = const AsyncData(null);
   }
 }

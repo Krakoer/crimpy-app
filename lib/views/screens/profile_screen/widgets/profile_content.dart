@@ -171,9 +171,12 @@ class ProfileContent extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
-          const BodyweightCard(),
-
-          const SizedBox(height: 16),
+          // The bodyweight is dropped on sign out, so offering to set it while
+          // signed out would hand back a value that the next launch deletes.
+          if (!isSignedOut(authState)) ...[
+            const BodyweightCard(),
+            const SizedBox(height: 16),
+          ],
 
           // Max Force Section with Grip Position Selection
           MvcGripPositionStatContent(
