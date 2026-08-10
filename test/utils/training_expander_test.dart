@@ -296,6 +296,74 @@ void main() {
     expect((out.first as TimedItem).comment, 'Slow tempo');
   });
 
+  test('percent of bodyweight loads become kilograms', () {
+    final training = _training([
+      TrainingItem(
+        id: 'h',
+        type: TrainingItemType.hangboardRep,
+        position: 0,
+        hand: 'right',
+        loads: const [Load(value: 80, unit: 'percent_bw')],
+      ),
+      TrainingItem(
+        id: 'r',
+        type: TrainingItemType.repeater,
+        position: 1,
+        cycles: 1,
+        reps: 1,
+        hand: 'split',
+        loads: const [Load(value: 50, unit: 'percent_bw')],
+        leftLoads: const [Load(value: 40, unit: 'percent_bw')],
+      ),
+    ]);
+
+    final out = expandTrainingItems(
+      training,
+      useSensor: false,
+      bodyweightKg: 70,
+    ).whereType<TimedItem>().toList();
+
+    expect(out[0].targetLoad, closeTo(56, 0.001));
+    expect(out[1].targetLoad, closeTo(35, 0.001));
+    expect(out[2].targetLoad, closeTo(28, 0.001));
+  });
+
+  test('percent of bodyweight loads have no target without a bodyweight', () {
+    final training = _training([
+      TrainingItem(
+        id: 'h',
+        type: TrainingItemType.hangboardRep,
+        position: 0,
+        hand: 'right',
+        loads: const [Load(value: 80, unit: 'percent_bw')],
+      ),
+    ]);
+
+    final out = expandTrainingItems(training, useSensor: false);
+
+    expect((out.first as TimedItem).targetLoad, 0);
+  });
+
+  test('exercise load label shows the resolved kilograms', () {
+    final training = _training([
+      TrainingItem(
+        id: 'e',
+        type: TrainingItemType.exercise,
+        position: 0,
+        reps: 8,
+        loads: const [Load(value: 30, unit: 'percent_bw')],
+      ),
+    ]);
+
+    final out = expandTrainingItems(
+      training,
+      useSensor: false,
+      bodyweightKg: 60,
+    );
+
+    expect((out.first as ConfirmItem).load, '30 %BW (18 kg)');
+  });
+
   test('split hand repeater never emits a negative rest', () {
     // A cycle rest shorter than one hand's set leaves nothing to split.
     final training = _training([

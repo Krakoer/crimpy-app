@@ -29,11 +29,16 @@ class PlayTrainingScreen extends ConsumerStatefulWidget {
   /// Category the resulting session is logged under.
   final SessionType sessionType;
 
+  /// Body weight the loads set in percent of it are computed from. Those loads
+  /// have no target when it is unknown.
+  final double? bodyweightKg;
+
   /// Play a given training.
   const PlayTrainingScreen(
     this.training, {
     this.useSensor = true,
     this.sessionType = SessionType.crimpy,
+    this.bodyweightKg,
     super.key,
   });
 
@@ -55,7 +60,11 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
   late final List<TrainingExecutionItem> _itemsWithPreparation = [
     const RestItem(durationSeconds: _preparationDuration),
-    ...expandTrainingItems(widget.training, useSensor: widget.useSensor),
+    ...expandTrainingItems(
+      widget.training,
+      useSensor: widget.useSensor,
+      bodyweightKg: widget.bodyweightKg,
+    ),
   ];
 
   /// Records the step that just finished. The preparation rest sits at index 0

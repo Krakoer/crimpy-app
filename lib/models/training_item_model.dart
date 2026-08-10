@@ -46,20 +46,45 @@ class Load {
   /// Whether this rep is performed at maximum effort rather than a fixed load.
   bool get isMax => unit == 'max';
 
-  /// Human-readable load, e.g. "+35 kg", "100 %BW", "MAX", or "BW".
-  String get label {
+  /// Whether the load is expressed relative to the athlete bodyweight, and so
+  /// needs one to be turned into kilograms. Kept in step with [kilograms] by
+  /// test, so a load that resolves against the bodyweight always asks for one.
+  bool get needsBodyweight => !isBodyweight && unit == 'percent_bw';
+
+  /// The load in kilograms, the unit the sensor measures. Null when there is no
+  /// number to hit: a max effort rep, a plain bodyweight hang, a load set as a
+  /// percentage of a bodyweight that is not known yet, or a unit the app does
+  /// not read. Guessing at an unknown unit would put its bare number on the
+  /// gauge as if it were kilograms.
+  double? kilograms(double? bodyweightKg) {
+    if (isMax || isBodyweight) return null;
+    return switch (unit) {
+      'percent_bw' => bodyweightKg == null ? null : bodyweightKg * value / 100,
+      'kg' => value,
+      _ => null,
+    };
+  }
+
+  /// Human-readable load, e.g. "+35 kg", "100 %BW", "MAX", or "BW". A load set
+  /// in another unit also shows what the sensor will ask for, e.g.
+  /// "80 %BW (56 kg)", since the gauge reads in kilograms.
+  String label({double? bodyweightKg}) {
     if (isMax) return 'MAX';
     if (isBodyweight) return 'BW';
-    final n = value.truncateToDouble() == value
-        ? value.toStringAsFixed(0)
-        : value.toStringAsFixed(1);
     final u = switch (unit) {
       'percent_bw' => '%BW',
       'bw' => 'BW',
       _ => unit,
     };
-    return '$n $u';
+    final base = '${_format(value)} $u';
+    if (unit == 'kg') return base;
+    final kg = kilograms(bodyweightKg);
+    return kg == null ? base : '$base (${_format(kg)} kg)';
   }
+
+  static String _format(double value) => value.truncateToDouble() == value
+      ? value.toStringAsFixed(0)
+      : value.toStringAsFixed(1);
 }
 
 /// How the two hands are worked. Only [both] puts two hands on the board at the
@@ -212,12 +237,34 @@ class TrainingItem {
   /// Duration in seconds when this is a time-based item, null otherwise.
   int? get effectiveDuration => (duration ?? 0) > 0 ? duration : null;
 
+  /// Whether [load] is an exercise carrying the whole bodyweight and nothing
+  /// more, which is just the athlete doing the movement. That is how the coach
+  /// portal writes it and why it hides it there: showing the kilograms would
+  /// read as weight added to a set of pull ups. Nothing resolves such a load,
+  /// so it must not ask for a bodyweight either.
+  bool _isPlainBodyweightExercise(Load load) =>
+      type == TrainingItemType.exercise &&
+      load.unit == 'percent_bw' &&
+      load.value == 100;
+
   /// First-rep load shown to the user, or null when bodyweight / unset.
-  String? get loadLabel {
+  String? loadLabel({double? bodyweightKg}) {
     final first = loads?.firstOrNull;
     if (loadIsMax || (first?.isMax ?? false)) return 'MAX';
     if (first == null || first.isBodyweight) return null;
-    return first.label;
+    if (_isPlainBodyweightExercise(first)) return null;
+    return first.label(bodyweightKg: bodyweightKg);
+  }
+
+  /// Whether any rep of this item is loaded relative to the bodyweight, and so
+  /// would show or hit a different number once one is known. Kept in step with
+  /// [loadLabel]: a load this item never resolves must not make the app ask for
+  /// a bodyweight it will not use.
+  bool get needsBodyweight {
+    bool needs(List<Load>? l) => (l ?? []).any(
+      (e) => e.needsBodyweight && !_isPlainBodyweightExercise(e),
+    );
+    return needs(loads) || needs(leftLoads);
   }
 
   /// Whether this item can be performed with the crimpy force sensor: a

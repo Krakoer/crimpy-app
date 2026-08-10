@@ -12,8 +12,8 @@ String trainingItemTitle(TrainingItem item) => switch (item.type) {
   TrainingItemType.free => item.freeText ?? 'Note',
 };
 
-String trainingItemDetail(TrainingItem item) {
-  final load = item.loadLabel;
+String trainingItemDetail(TrainingItem item, {double? bodyweightKg}) {
+  final load = item.loadLabel(bodyweightKg: bodyweightKg);
   // An item is either rep-based or time-based, never both.
   final amount = item.effectiveReps != null
       ? '${item.effectiveReps} reps'
@@ -93,17 +93,22 @@ class TrainingItemTile extends StatelessWidget {
   final Color? accentColor;
   final List<Widget> extra;
 
+  /// Resolves the loads the coach set in percent of the bodyweight; the tile
+  /// shows them as a bare percentage when it is unknown.
+  final double? bodyweightKg;
+
   const TrainingItemTile({
     required this.item,
     required this.number,
     this.accentColor,
     this.extra = const [],
+    this.bodyweightKg,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    final detail = trainingItemDetail(item);
+    final detail = trainingItemDetail(item, bodyweightKg: bodyweightKg);
     final comment = item.comment?.trim() ?? '';
     final child = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -172,6 +177,7 @@ class TrainingItemTile extends StatelessWidget {
 List<Widget> buildTrainingItemTiles(
   List<TrainingItem> items, {
   int depth = 0,
+  double? bodyweightKg,
   Color? Function(TrainingItem item)? accentColorOf,
   List<Widget> Function(TrainingItem item)? extraOf,
 }) {
@@ -186,6 +192,7 @@ List<Widget> buildTrainingItemTiles(
           number: i + 1,
           accentColor: accentColorOf?.call(item),
           extra: extraOf?.call(item) ?? const [],
+          bodyweightKg: bodyweightKg,
         ),
       ),
     );
@@ -194,6 +201,7 @@ List<Widget> buildTrainingItemTiles(
         buildTrainingItemTiles(
           item.items,
           depth: depth + 1,
+          bodyweightKg: bodyweightKg,
           accentColorOf: accentColorOf,
           extraOf: extraOf,
         ),

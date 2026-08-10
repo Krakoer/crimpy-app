@@ -3,6 +3,7 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/views/screens/auth/login_screen.dart';
 import 'package:crimpy/views/screens/auth/registration_screen.dart';
+import 'package:crimpy/views/screens/profile_screen/widgets/bodyweight_card.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/stat_content.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/mvc_grip_position_stat_content.dart';
 import 'package:flutter/material.dart';
@@ -169,6 +170,13 @@ class ProfileContent extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
+
+          // The bodyweight is dropped on sign out, so offering to set it while
+          // signed out would hand back a value that the next launch deletes.
+          if (!isSignedOut(authState)) ...[
+            const BodyweightCard(),
+            const SizedBox(height: 16),
+          ],
 
           // Max Force Section with Grip Position Selection
           MvcGripPositionStatContent(

@@ -55,4 +55,12 @@ class Training {
         items.any((item) => item.usesSensor || any(item.items));
     return any(items);
   }
+
+  /// Whether any exercise in the tree is loaded as a percentage of the
+  /// bodyweight, and so cannot be run in kilograms without one.
+  bool get needsBodyweight {
+    bool any(List<TrainingItem> items) =>
+        items.any((item) => item.needsBodyweight || any(item.items));
+    return any(items);
+  }
 }
