@@ -516,6 +516,16 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     // measurement rather than being asked to connect all over again.
     final bodyweight = await resolveBodyweight(context, ref, training);
     if (!context.mounted) return;
+    // Awaited rather than taken from the watched value, so a run started before
+    // the first fetch lands still gets the athlete numbers instead of silently
+    // running everything at the coach fallbacks.
+    var measured = results;
+    try {
+      measured = await ref.read(assessmentResultsProvider.future);
+    } catch (_) {
+      // A failed fetch runs on the fallbacks rather than blocking the training.
+    }
+    if (!context.mounted) return;
     ref.read(bleSessionProvider.notifier).reset();
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -524,6 +534,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
           useSensor: useSensor,
           sessionType: session.sessionType,
           bodyweightKg: bodyweight,
+          results: measured,
         ),
       ),
     );
