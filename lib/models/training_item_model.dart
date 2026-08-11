@@ -1,3 +1,6 @@
+import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/common.dart';
+
 enum TrainingItemType {
   repeater,
   hangboardRep,
@@ -26,22 +29,105 @@ enum TrainingItemType {
   };
 }
 
+/// The unit marking a load set as a percentage of an assessment result. The
+/// load value carries the percentage, as it does for percent_bw.
+const String percentAssessmentUnit = 'percent_assessment';
+
+/// Parses the assessment discriminator shared with the backend and the coach
+/// portal. Null for a value outside the known assessments.
+AssessmentType? assessmentTypeFromIndex(num? index) {
+  if (index == null) return null;
+  final i = index.toInt();
+  return i >= 0 && i < AssessmentType.values.length
+      ? AssessmentType.values[i]
+      : null;
+}
+
+/// A number the coach set as a percentage of the athlete latest result for an
+/// assessment, with the value to use until that assessment is done.
+class VariableTarget {
+  final AssessmentType assessmentType;
+  final double percent;
+  final double fallback;
+
+  const VariableTarget({
+    required this.assessmentType,
+    required this.percent,
+    required this.fallback,
+  });
+
+  static VariableTarget? fromJson(Map<String, dynamic> json) {
+    final type = assessmentTypeFromIndex(json['assessment_type'] as num?);
+    final percent = (json['percent'] as num?)?.toDouble();
+    if (type == null || percent == null) return null;
+    return VariableTarget(
+      assessmentType: type,
+      percent: percent,
+      fallback: (json['fallback'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'assessment_type': assessmentType.index,
+    'percent': percent,
+    'fallback': fallback,
+  };
+
+  /// The prescribed number, or the fallback when the assessment is missing or
+  /// is not measured in [expects]. A percentage of a force result cannot stand
+  /// in for a duration, so a mismatched reference takes the fallback rather
+  /// than putting a number in the wrong unit on the gauge.
+  double resolve(
+    AssessmentResults results, {
+    required AssessmentUnit expects,
+    HandSide? handSide,
+  }) {
+    if (getAssessmentUnit(assessmentType) != expects) return fallback;
+    final measured = results.value(assessmentType, handSide: handSide);
+    return measured == null ? fallback : measured * percent / 100;
+  }
+}
+
 class Load {
   final double value;
   final String unit;
 
-  const Load({required this.value, required this.unit});
+  /// Set only on a percent_assessment load: the assessment the percentage
+  /// applies to, and the kilograms to use until it has been done.
+  final AssessmentType? assessmentType;
+  final double? fallback;
+
+  const Load({
+    required this.value,
+    required this.unit,
+    this.assessmentType,
+    this.fallback,
+  });
 
   static const Load bodyweight = Load(value: 0.0, unit: 'bw');
 
   factory Load.fromJson(Map<String, dynamic> json) => Load(
     value: (json['value'] as num?)?.toDouble() ?? 0.0,
     unit: json['unit'] as String? ?? 'kg',
+    assessmentType: assessmentTypeFromIndex(json['assessment_type'] as num?),
+    fallback: (json['fallback'] as num?)?.toDouble(),
   );
 
-  Map<String, dynamic> toJson() => {'value': value, 'unit': unit};
+  Map<String, dynamic> toJson() => {
+    'value': value,
+    'unit': unit,
+    if (assessmentType != null) 'assessment_type': assessmentType!.index,
+    if (fallback != null) 'fallback': fallback,
+  };
 
-  bool get isBodyweight => unit == 'bw' || (unit != 'max' && value == 0.0);
+  /// Whether the load is a percentage of an assessment result, and so only
+  /// becomes kilograms once that assessment has been done.
+  bool get isAssessmentRelative =>
+      unit == percentAssessmentUnit && assessmentType != null;
+
+  bool get isBodyweight =>
+      !isAssessmentRelative &&
+      (unit == 'bw' || (unit != 'max' && value == 0.0));
 
   /// Whether this rep is performed at maximum effort rather than a fixed load.
   bool get isMax => unit == 'max';
@@ -51,13 +137,26 @@ class Load {
   /// test, so a load that resolves against the bodyweight always asks for one.
   bool get needsBodyweight => !isBodyweight && unit == 'percent_bw';
 
-  /// The load in kilograms, the unit the sensor measures. Null when there is no
-  /// number to hit: a max effort rep, a plain bodyweight hang, a load set as a
-  /// percentage of a bodyweight that is not known yet, or a unit the app does
-  /// not read. Guessing at an unknown unit would put its bare number on the
-  /// gauge as if it were kilograms.
-  double? kilograms(double? bodyweightKg) {
+  /// The load in kilograms, the unit the sensor measures. An assessment-relative
+  /// load resolves against [results] and falls back to the coach value when the
+  /// athlete has never done that assessment. Null when there is no number to
+  /// hit: a max effort rep, a plain bodyweight hang, a load set as a percentage
+  /// of a bodyweight that is not known yet, or a unit the app does not read.
+  /// Guessing at an unknown unit would put its bare number on the gauge as if it
+  /// were kilograms.
+  double? kilograms({
+    double? bodyweightKg,
+    AssessmentResults results = AssessmentResults.none,
+    HandSide? handSide,
+  }) {
     if (isMax || isBodyweight) return null;
+    if (isAssessmentRelative) {
+      return VariableTarget(
+        assessmentType: assessmentType!,
+        percent: value,
+        fallback: fallback ?? 0.0,
+      ).resolve(results, expects: AssessmentUnit.kilograms, handSide: handSide);
+    }
     return switch (unit) {
       'percent_bw' => bodyweightKg == null ? null : bodyweightKg * value / 100,
       'kg' => value,
@@ -67,10 +166,21 @@ class Load {
 
   /// Human-readable load, e.g. "+35 kg", "100 %BW", "MAX", or "BW". A load set
   /// in another unit also shows what the sensor will ask for, e.g.
-  /// "80 %BW (56 kg)", since the gauge reads in kilograms.
-  String label({double? bodyweightKg}) {
+  /// "80 %BW (56 kg)" or "80% Max force (30 kg)", since the gauge reads in
+  /// kilograms.
+  String label({
+    double? bodyweightKg,
+    AssessmentResults results = AssessmentResults.none,
+    HandSide? handSide,
+  }) {
     if (isMax) return 'MAX';
     if (isBodyweight) return 'BW';
+    if (isAssessmentRelative) {
+      final name = assessmentTypeToString(assessmentType!);
+      final kg = kilograms(results: results, handSide: handSide);
+      final base = '${_format(value)}% $name';
+      return kg == null ? base : '$base (${_format(kg)} kg)';
+    }
     final u = switch (unit) {
       'percent_bw' => '%BW',
       'bw' => 'BW',
@@ -78,13 +188,27 @@ class Load {
     };
     final base = '${_format(value)} $u';
     if (unit == 'kg') return base;
-    final kg = kilograms(bodyweightKg);
+    final kg = kilograms(bodyweightKg: bodyweightKg);
     return kg == null ? base : '$base (${_format(kg)} kg)';
   }
 
   static String _format(double value) => value.truncateToDouble() == value
       ? value.toStringAsFixed(0)
       : value.toStringAsFixed(1);
+}
+
+/// Reads the variable targets of an item, dropping any entry that does not name
+/// an assessment this version of the app knows.
+Map<String, VariableTarget> parseVariableTargets(dynamic raw) {
+  if (raw is! Map) return const {};
+  final out = <String, VariableTarget>{};
+  raw.forEach((key, value) {
+    if (value is Map<String, dynamic>) {
+      final target = VariableTarget.fromJson(value);
+      if (target != null) out[key.toString()] = target;
+    }
+  });
+  return out;
 }
 
 /// How the two hands are worked. Only [both] puts two hands on the board at the
@@ -183,6 +307,10 @@ class TrainingItem {
   // Whether this item is done at maximum effort rather than a fixed load
   final bool loadIsMax;
 
+  // Scalar fields the coach set as a percentage of an assessment result,
+  // keyed by field name ('duration', 'reps').
+  final Map<String, VariableTarget> variableTargets;
+
   // Free item text
   final String? freeText;
 
@@ -219,6 +347,7 @@ class TrainingItem {
     this.edgeSizesMm,
     this.handPositions,
     this.loadIsMax = false,
+    this.variableTargets = const {},
     this.freeText,
     this.comment,
     this.exerciseId,
@@ -232,10 +361,28 @@ class TrainingItem {
 
   /// Reps to perform when this is a rep-based item, null otherwise.
   /// An item is never both rep-based and time-based.
-  int? get effectiveReps => (reps ?? 0) > 0 ? reps : null;
+  int? effectiveReps([AssessmentResults results = AssessmentResults.none]) {
+    final target = variableTargets['reps'];
+    if (target != null) {
+      final resolved = target
+          .resolve(results, expects: AssessmentUnit.repetitions)
+          .round();
+      return resolved > 0 ? resolved : null;
+    }
+    return (reps ?? 0) > 0 ? reps : null;
+  }
 
   /// Duration in seconds when this is a time-based item, null otherwise.
-  int? get effectiveDuration => (duration ?? 0) > 0 ? duration : null;
+  int? effectiveDuration([AssessmentResults results = AssessmentResults.none]) {
+    final target = variableTargets['duration'];
+    if (target != null) {
+      final resolved = target
+          .resolve(results, expects: AssessmentUnit.seconds)
+          .round();
+      return resolved > 0 ? resolved : null;
+    }
+    return (duration ?? 0) > 0 ? duration : null;
+  }
 
   /// Whether [load] is an exercise carrying the whole bodyweight and nothing
   /// more, which is just the athlete doing the movement. That is how the coach
@@ -248,12 +395,15 @@ class TrainingItem {
       load.value == 100;
 
   /// First-rep load shown to the user, or null when bodyweight / unset.
-  String? loadLabel({double? bodyweightKg}) {
+  String? loadLabel({
+    double? bodyweightKg,
+    AssessmentResults results = AssessmentResults.none,
+  }) {
     final first = loads?.firstOrNull;
     if (loadIsMax || (first?.isMax ?? false)) return 'MAX';
     if (first == null || first.isBodyweight) return null;
     if (_isPlainBodyweightExercise(first)) return null;
-    return first.label(bodyweightKg: bodyweightKg);
+    return first.label(bodyweightKg: bodyweightKg, results: results);
   }
 
   /// Whether any rep of this item is loaded relative to the bodyweight, and so
@@ -266,6 +416,15 @@ class TrainingItem {
     );
     return needs(loads) || needs(leftLoads);
   }
+
+  /// Every assessment this item resolves a load, duration or rep count
+  /// against, so a screen can tell the athlete which ones it is missing.
+  Set<AssessmentType> get referencedAssessments => {
+    for (final target in variableTargets.values) target.assessmentType,
+    for (final load in [...?loads, ...?leftLoads])
+      if (load.isAssessmentRelative) load.assessmentType!,
+    for (final child in items) ...child.referencedAssessments,
+  };
 
   /// Whether this item can be performed with the crimpy force sensor: a
   /// single-hand hangboard/repeater item with a non-bodyweight target load.
@@ -296,6 +455,7 @@ class TrainingItem {
     }
 
     final nestedRaw = json['items'] as List<dynamic>?;
+    final targets = parseVariableTargets(json['variable_targets']);
     final nestedItems =
         nestedRaw
             ?.map((e) => TrainingItem.fromJson(e as Map<String, dynamic>))
@@ -320,6 +480,7 @@ class TrainingItem {
       edgeSizesMm: parseIntList(json['edge_sizes_mm']),
       handPositions: parseHandPositions(json['hand_positions']),
       loadIsMax: json['load_is_max'] as bool? ?? false,
+      variableTargets: targets,
       freeText: json['free_text'] as String?,
       comment: json['comment'] as String?,
       exerciseId: json['exercise_id'] as String?,
@@ -346,6 +507,11 @@ class TrainingItem {
     if (handPositions != null) map['hand_positions'] = handPositions;
     if (edgeSizesMm != null) map['edge_sizes_mm'] = edgeSizesMm;
     map['load_is_max'] = loadIsMax;
+    if (variableTargets.isNotEmpty) {
+      map['variable_targets'] = variableTargets.map(
+        (field, target) => MapEntry(field, target.toJson()),
+      );
+    }
     if (freeText != null) map['free_text'] = freeText;
     if (comment != null) map['comment'] = comment;
     if (exerciseId != null) map['exercise_id'] = exerciseId;
@@ -371,6 +537,7 @@ class TrainingItem {
     List<int>? edgeSizesMm,
     List<List<String>>? handPositions,
     bool? loadIsMax,
+    Map<String, VariableTarget>? variableTargets,
     List<TrainingItem>? items,
   }) {
     return TrainingItem(
@@ -391,6 +558,7 @@ class TrainingItem {
       edgeSizesMm: edgeSizesMm ?? this.edgeSizesMm,
       handPositions: handPositions ?? this.handPositions,
       loadIsMax: loadIsMax ?? this.loadIsMax,
+      variableTargets: variableTargets ?? this.variableTargets,
       freeText: freeText,
       comment: comment,
       exerciseId: exerciseId,
@@ -429,6 +597,9 @@ class TrainingItem {
                   .map((e) => e.toInt())
                   .toList(),
             ),
+      variableTargets: override.containsKey('variable_targets')
+          ? parseVariableTargets(override['variable_targets'])
+          : null,
       reps: (override['reps'] as num?)?.toInt(),
       cycles: (override['cycles'] as num?)?.toInt(),
       cycleRestSeconds: (override['cycle_rest_seconds'] as num?)?.toInt(),

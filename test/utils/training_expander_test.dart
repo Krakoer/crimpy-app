@@ -1,3 +1,4 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
@@ -780,6 +781,102 @@ void main() {
       expect(out.single.targetLoad, 25.0);
       expect(out.single.edgeSizeMm, 12);
       expect(out.single.gripPosition, GripPosition.threeFinger);
+    });
+  });
+
+  group('assessment-relative loads', () {
+    final results = AssessmentResults.fromHistory([
+      AssessmentModel(
+        type: AssessmentType.mvc,
+        id: 'a1',
+        date: DateTime(2026, 1, 1),
+        rightValue: 50,
+        leftValue: 40,
+      ),
+      AssessmentModel(
+        type: AssessmentType.endurance60,
+        id: 'a2',
+        date: DateTime(2026, 1, 1),
+        rightValue: 120,
+        leftValue: 120,
+      ),
+    ]);
+
+    const relativeLoad = Load(
+      value: 80,
+      unit: percentAssessmentUnit,
+      assessmentType: AssessmentType.mvc,
+      fallback: 25,
+    );
+
+    test('a repeater targets each hand against its own result', () {
+      final repeater = TrainingItem(
+        id: 'r',
+        type: TrainingItemType.repeater,
+        position: 0,
+        cycles: 1,
+        reps: 1,
+        worktimeSeconds: 7,
+        restSeconds: 0,
+        hand: HangboardHand.alternate,
+        loads: const [relativeLoad],
+      );
+
+      final out = expandTrainingItems(
+        _training([repeater]),
+        useSensor: false,
+        results: results,
+      );
+      final hangs = out.whereType<TimedItem>().toList();
+
+      expect(
+        hangs.firstWhere((h) => h.handSide == HandSide.right).targetLoad,
+        40,
+      );
+      expect(
+        hangs.firstWhere((h) => h.handSide == HandSide.left).targetLoad,
+        32,
+      );
+    });
+
+    test('a hangboard rep falls back without the assessment', () {
+      final hangboard = TrainingItem(
+        id: 'h',
+        type: TrainingItemType.hangboardRep,
+        position: 0,
+        hand: 'right',
+        worktimeSeconds: 7,
+        restSeconds: 0,
+        loads: const [relativeLoad],
+      );
+
+      final out = expandTrainingItems(_training([hangboard]), useSensor: false);
+
+      expect((out.first as TimedItem).targetLoad, 25);
+    });
+
+    test('an exercise duration follows the assessment', () {
+      final exercise = TrainingItem(
+        id: 'e',
+        type: TrainingItemType.exercise,
+        position: 0,
+        duration: 60,
+        variableTargets: const {
+          'duration': VariableTarget(
+            assessmentType: AssessmentType.endurance60,
+            percent: 75,
+            fallback: 60,
+          ),
+        },
+      );
+
+      final out = expandTrainingItems(
+        _training([exercise]),
+        useSensor: false,
+        results: results,
+      );
+
+      expect((out.first as TimedItem).durationSeconds, 90);
     });
   });
 }

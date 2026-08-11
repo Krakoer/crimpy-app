@@ -165,6 +165,55 @@ final class AssessmentTrainingFamily extends $Family
   String toString() => r'assessmentTrainingProvider';
 }
 
+/// The athlete latest result per assessment, used to turn the loads, durations
+/// and reps a coach set as a percentage of an assessment into numbers.
+
+@ProviderFor(assessmentResults)
+const assessmentResultsProvider = AssessmentResultsProvider._();
+
+/// The athlete latest result per assessment, used to turn the loads, durations
+/// and reps a coach set as a percentage of an assessment into numbers.
+
+final class AssessmentResultsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<AssessmentResults>,
+          AssessmentResults,
+          FutureOr<AssessmentResults>
+        >
+    with
+        $FutureModifier<AssessmentResults>,
+        $FutureProvider<AssessmentResults> {
+  /// The athlete latest result per assessment, used to turn the loads, durations
+  /// and reps a coach set as a percentage of an assessment into numbers.
+  const AssessmentResultsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'assessmentResultsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$assessmentResultsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<AssessmentResults> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<AssessmentResults> create(Ref ref) {
+    return assessmentResults(ref);
+  }
+}
+
+String _$assessmentResultsHash() => r'6681cac8116f0048ceb920d01ae4f770595ee287';
+
 /// Returns the list of assessments.
 /// Allow to filter on `type`.
 

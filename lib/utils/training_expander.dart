@@ -1,3 +1,4 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
@@ -10,14 +11,17 @@ import 'package:crimpy/utils/hangboard_layout.dart';
 /// a sensor.
 /// [bodyweightKg] resolves loads the coach expressed as a percentage of the
 /// bodyweight; those loads fall back to no target when it is unknown.
+/// [results] resolves the loads, durations and reps the coach expressed as a
+/// percentage of an assessment; without it they all take their fallback.
 List<TrainingExecutionItem> expandTrainingItems(
   Training training, {
   bool useSensor = true,
   double? bodyweightKg,
+  AssessmentResults results = AssessmentResults.none,
 }) {
   final out = <TrainingExecutionItem>[];
   for (final item in training.items) {
-    _expandItem(item, out, useSensor, bodyweightKg);
+    _expandItem(item, out, useSensor, bodyweightKg, results);
   }
   return out;
 }
@@ -33,7 +37,8 @@ void _expandItem(
   TrainingItem item,
   List<TrainingExecutionItem> out,
   bool useSensor,
-  double? bodyweightKg, {
+  double? bodyweightKg,
+  AssessmentResults results, {
   String? context,
   String? inheritedComment,
 }) {
@@ -42,17 +47,39 @@ void _expandItem(
   final comment = _cleanComment(item.comment) ?? inheritedComment;
   switch (item.type) {
     case TrainingItemType.repeater:
-      _expandRepeater(item, out, useSensor, bodyweightKg, comment: comment);
+      _expandRepeater(
+        item,
+        out,
+        useSensor,
+        bodyweightKg,
+        results,
+        comment: comment,
+      );
     case TrainingItemType.hangboardRep:
-      _expandHangboardRep(item, out, useSensor, bodyweightKg, comment: comment);
+      _expandHangboardRep(
+        item,
+        out,
+        useSensor,
+        bodyweightKg,
+        results,
+        comment: comment,
+      );
     case TrainingItemType.circuit:
-      _expandCircuit(item, out, useSensor, bodyweightKg, comment: comment);
+      _expandCircuit(
+        item,
+        out,
+        useSensor,
+        bodyweightKg,
+        results,
+        comment: comment,
+      );
     case TrainingItemType.group:
       _expandGroup(
         item,
         out,
         useSensor,
         bodyweightKg,
+        results,
         context: context,
         comment: comment,
       );
@@ -61,11 +88,12 @@ void _expandItem(
         item,
         out,
         bodyweightKg,
+        results,
         context: context,
         comment: comment,
       );
     case TrainingItemType.free:
-      _expandFree(item, out, context: context, comment: comment);
+      _expandFree(item, out, results, context: context, comment: comment);
   }
 }
 
@@ -78,7 +106,8 @@ void _expandGroup(
   TrainingItem item,
   List<TrainingExecutionItem> out,
   bool useSensor,
-  double? bodyweightKg, {
+  double? bodyweightKg,
+  AssessmentResults results, {
   String? context,
   String? comment,
 }) {
@@ -88,6 +117,7 @@ void _expandGroup(
       out,
       useSensor,
       bodyweightKg,
+      results,
       context: context,
       inheritedComment: comment,
     );
@@ -98,7 +128,8 @@ void _expandCircuit(
   TrainingItem item,
   List<TrainingExecutionItem> out,
   bool useSensor,
-  double? bodyweightKg, {
+  double? bodyweightKg,
+  AssessmentResults results, {
   String? comment,
 }) {
   final cycles = item.cycles ?? 1;
@@ -111,6 +142,7 @@ void _expandCircuit(
         out,
         useSensor,
         bodyweightKg,
+        results,
         context: context,
         inheritedComment: comment,
       );
@@ -124,11 +156,12 @@ void _expandCircuit(
 void _expandExercise(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  double? bodyweightKg, {
+  double? bodyweightKg,
+  AssessmentResults results, {
   String? context,
   String? comment,
 }) {
-  final duration = item.effectiveDuration;
+  final duration = item.effectiveDuration(results);
   final name = item.exerciseName ?? 'Exercise';
   if (duration != null) {
     out.add(
@@ -147,8 +180,8 @@ void _expandExercise(
     out.add(
       ConfirmItem(
         label: name,
-        reps: item.effectiveReps,
-        load: item.loadLabel(bodyweightKg: bodyweightKg),
+        reps: item.effectiveReps(results),
+        load: item.loadLabel(bodyweightKg: bodyweightKg, results: results),
         subtitle: context,
         comment: comment,
       ),
@@ -160,11 +193,12 @@ void _expandExercise(
 
 void _expandFree(
   TrainingItem item,
-  List<TrainingExecutionItem> out, {
+  List<TrainingExecutionItem> out,
+  AssessmentResults results, {
   String? context,
   String? comment,
 }) {
-  final duration = item.effectiveDuration;
+  final duration = item.effectiveDuration(results);
   if (duration != null) {
     out.add(
       TimedItem(
@@ -193,7 +227,8 @@ void _expandHangboardRep(
   TrainingItem item,
   List<TrainingExecutionItem> out,
   bool useSensor,
-  double? bodyweightKg, {
+  double? bodyweightKg,
+  AssessmentResults results, {
   String? comment,
 }) {
   final worktime = item.worktimeSeconds ?? 7;
@@ -202,13 +237,20 @@ void _expandHangboardRep(
   final layout = HangboardLayout.of(item);
   final leftHand = hand == HangboardHand.left;
   final grip = _parseGrip(layout.grip(0, 0, leftHand: leftHand));
-  final w =
-      layout.load(0, 0, leftHand: leftHand)?.kilograms(bodyweightKg) ?? 0.0;
   final handSide = switch (hand) {
     HangboardHand.left => HandSide.left,
     HangboardHand.right => HandSide.right,
     _ => HandSide.both,
   };
+  final w =
+      layout
+          .load(0, 0, leftHand: leftHand)
+          ?.kilograms(
+            bodyweightKg: bodyweightKg,
+            results: results,
+            handSide: handSide,
+          ) ??
+      0.0;
 
   out.add(
     TimedItem(
@@ -233,7 +275,8 @@ void _expandRepeater(
   TrainingItem item,
   List<TrainingExecutionItem> out,
   bool useSensor,
-  double? bodyweightKg, {
+  double? bodyweightKg,
+  AssessmentResults results, {
   String? comment,
 }) {
   final cycles = item.cycles ?? 1;
@@ -259,7 +302,11 @@ void _expandRepeater(
       targetLoad:
           layout
               .load(cycle, rep, leftHand: leftHand)
-              ?.kilograms(bodyweightKg) ??
+              ?.kilograms(
+                bodyweightKg: bodyweightKg,
+                results: results,
+                handSide: side,
+              ) ??
           0.0,
       handSide: side,
       gripPosition: _parseGrip(layout.grip(cycle, rep, leftHand: leftHand)),

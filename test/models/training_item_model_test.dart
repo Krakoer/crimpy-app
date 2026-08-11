@@ -162,13 +162,16 @@ void main() {
     test('percent of bodyweight needs a bodyweight to resolve', () {
       const load = Load(value: 80, unit: 'percent_bw');
       expect(load.needsBodyweight, isTrue);
-      expect(load.kilograms(70), closeTo(56, 0.001));
-      expect(load.kilograms(null), isNull);
+      expect(load.kilograms(bodyweightKg: 70), closeTo(56, 0.001));
+      expect(load.kilograms(bodyweightKg: null), isNull);
     });
 
     test('kilograms do not depend on the bodyweight', () {
       expect(const Load(value: 35, unit: 'kg').needsBodyweight, isFalse);
-      expect(const Load(value: 35, unit: 'kg').kilograms(null), 35);
+      expect(
+        const Load(value: 35, unit: 'kg').kilograms(bodyweightKg: null),
+        35,
+      );
     });
 
     test('a unit the app does not read gives no target', () {
@@ -176,7 +179,11 @@ void main() {
       // would put "20" on the gauge for a load that does not mean 20 kg.
       for (final unit in const ['lbs', 'stone', '']) {
         final load = Load(value: 20, unit: unit);
-        expect(load.kilograms(70), isNull, reason: '$unit resolved a target');
+        expect(
+          load.kilograms(bodyweightKg: 70),
+          isNull,
+          reason: '$unit resolved a target',
+        );
         expect(
           load.needsBodyweight,
           isFalse,
@@ -186,7 +193,10 @@ void main() {
     });
 
     test('a max effort rep has no load', () {
-      expect(const Load(value: 0, unit: 'max').kilograms(70), isNull);
+      expect(
+        const Load(value: 0, unit: 'max').kilograms(bodyweightKg: 70),
+        isNull,
+      );
       expect(const Load(value: 0, unit: 'max').label(bodyweightKg: 70), 'MAX');
     });
 
@@ -216,7 +226,11 @@ void main() {
         Load(value: 0, unit: 'percent_bw'),
         Load(value: 0, unit: 'kg'),
       ]) {
-        expect(load.kilograms(70), isNull, reason: '$load resolved a target');
+        expect(
+          load.kilograms(bodyweightKg: 70),
+          isNull,
+          reason: '$load resolved a target',
+        );
         expect(load.label(bodyweightKg: 70), 'BW');
       }
     });
@@ -228,7 +242,8 @@ void main() {
         for (final value in const [0.0, 80.0]) {
           final load = Load(value: value, unit: unit);
           final resolvesAgainstBodyweight =
-              load.kilograms(null) == null && load.kilograms(70) != null;
+              load.kilograms(bodyweightKg: null) == null &&
+              load.kilograms(bodyweightKg: 70) != null;
           expect(
             load.needsBodyweight,
             resolvesAgainstBodyweight,

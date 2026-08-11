@@ -1,3 +1,4 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
@@ -12,13 +13,19 @@ String trainingItemTitle(TrainingItem item) => switch (item.type) {
   TrainingItemType.free => item.freeText ?? 'Note',
 };
 
-String trainingItemDetail(TrainingItem item, {double? bodyweightKg}) {
-  final load = item.loadLabel(bodyweightKg: bodyweightKg);
+String trainingItemDetail(
+  TrainingItem item, {
+  double? bodyweightKg,
+  AssessmentResults results = AssessmentResults.none,
+}) {
+  final load = item.loadLabel(bodyweightKg: bodyweightKg, results: results);
+  final reps = item.effectiveReps(results);
+  final duration = item.effectiveDuration(results);
   // An item is either rep-based or time-based, never both.
-  final amount = item.effectiveReps != null
-      ? '${item.effectiveReps} reps'
-      : item.effectiveDuration != null
-      ? '${item.effectiveDuration}s'
+  final amount = reps != null
+      ? '$reps reps'
+      : duration != null
+      ? '${duration}s'
       : null;
 
   switch (item.type) {
@@ -26,7 +33,7 @@ String trainingItemDetail(TrainingItem item, {double? bodyweightKg}) {
       return '${item.cycles ?? 1}x${item.reps ?? 1} - ${item.worktimeSeconds ?? 7}s on / ${item.restSeconds ?? 3}s off';
     case TrainingItemType.hangboardRep:
       return [
-        if (item.effectiveReps != null) '${item.effectiveReps} reps',
+        if (reps != null) '$reps reps',
         '${item.worktimeSeconds ?? 7}s on / ${item.restSeconds ?? 3}s off',
         if (load != null) load,
       ].join(' - ');
@@ -37,7 +44,7 @@ String trainingItemDetail(TrainingItem item, {double? bodyweightKg}) {
     case TrainingItemType.group:
       return '';
     case TrainingItemType.free:
-      return item.effectiveDuration != null ? '${item.effectiveDuration}s' : '';
+      return duration != null ? '${duration}s' : '';
   }
 }
 
@@ -97,18 +104,27 @@ class TrainingItemTile extends StatelessWidget {
   /// shows them as a bare percentage when it is unknown.
   final double? bodyweightKg;
 
+  /// Resolves the loads, durations and reps the coach set in percent of an
+  /// assessment; the tile shows their fallback until it is done.
+  final AssessmentResults results;
+
   const TrainingItemTile({
     required this.item,
     required this.number,
     this.accentColor,
     this.extra = const [],
     this.bodyweightKg,
+    this.results = AssessmentResults.none,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    final detail = trainingItemDetail(item, bodyweightKg: bodyweightKg);
+    final detail = trainingItemDetail(
+      item,
+      bodyweightKg: bodyweightKg,
+      results: results,
+    );
     final comment = item.comment?.trim() ?? '';
     final child = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,6 +194,7 @@ List<Widget> buildTrainingItemTiles(
   List<TrainingItem> items, {
   int depth = 0,
   double? bodyweightKg,
+  AssessmentResults results = AssessmentResults.none,
   Color? Function(TrainingItem item)? accentColorOf,
   List<Widget> Function(TrainingItem item)? extraOf,
 }) {
@@ -193,6 +210,7 @@ List<Widget> buildTrainingItemTiles(
           accentColor: accentColorOf?.call(item),
           extra: extraOf?.call(item) ?? const [],
           bodyweightKg: bodyweightKg,
+          results: results,
         ),
       ),
     );
@@ -202,6 +220,7 @@ List<Widget> buildTrainingItemTiles(
           item.items,
           depth: depth + 1,
           bodyweightKg: bodyweightKg,
+          results: results,
           accentColorOf: accentColorOf,
           extraOf: extraOf,
         ),
