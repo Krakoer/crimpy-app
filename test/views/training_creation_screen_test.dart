@@ -116,4 +116,107 @@ void main() {
       expect(textOf(tester, edgeFields().at(5)), '25');
     });
   });
+
+  group('manual editor tree', () {
+    Future<void> pumpManualEditor(WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1200, 12000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: UnifiedTrainingCreationScreen(
+              mode: TrainingCreationMode.manual,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    /// Adds an item of the named type through the add sheet and accepts its
+    /// editor with the defaults.
+    Future<void> addItem(WidgetTester tester, String type, Finder add) async {
+      await tester.tap(add);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(type));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('adds a titled cycle holding a hang rep', (tester) async {
+      await pumpManualEditor(tester);
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cycle'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(fieldWithLabel('Title (optional)'), 'Pull block');
+      await tester.enterText(fieldWithLabel('Rest between items (s)'), '15');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pull block'), findsOneWidget);
+      expect(
+        find.text('3 cycles - 15s between items - 120s between cycles'),
+        findsOneWidget,
+      );
+
+      // A cycle only takes hang reps, so its add button skips the sheet choice.
+      await addItem(tester, 'Hang rep', find.text('Add item'));
+      expect(find.text('Hangboard'), findsOneWidget);
+    });
+
+    testWidgets('duplicates an item next to the one it was copied from', (
+      tester,
+    ) async {
+      await pumpManualEditor(tester);
+      await addItem(tester, 'Hang rep', find.byType(FloatingActionButton));
+      expect(find.text('Hangboard'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Duplicate'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hangboard'), findsNWidgets(2));
+    });
+
+    testWidgets('a group takes cycles and reps, a cycle only reps', (
+      tester,
+    ) async {
+      // The option subtitles name what is on offer without colliding with the
+      // titles of the cards already on screen.
+      const rep = 'A single hang';
+      const cycle = 'Repeat a set of items several times';
+      const group = 'Gather items under a title';
+
+      await pumpManualEditor(tester);
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(group));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Add item'));
+      await tester.pumpAndSettle();
+      expect(find.text(rep), findsOneWidget);
+      expect(find.text(cycle), findsOneWidget);
+      expect(find.text(group), findsNothing);
+
+      await tester.tap(find.text(cycle));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      // A container renders its children above its own add button, so the
+      // nested cycle's button comes first.
+      await tester.tap(find.text('Add item').first);
+      await tester.pumpAndSettle();
+      expect(find.text(rep), findsOneWidget);
+      expect(find.text(cycle), findsNothing);
+    });
+  });
 }

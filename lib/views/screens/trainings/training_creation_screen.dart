@@ -2,6 +2,7 @@ import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/utils/hangboard_config.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
+import 'package:crimpy/views/widgets/training_item_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -39,8 +40,8 @@ class _UnifiedTrainingCreationScreenState
   /// those rows are rebuilt instead of keeping the text they were seeded with.
   int _configGeneration = 0;
 
-  // Manual mode state
-  final List<TrainingItem> _items = [];
+  // Manual mode state: the item tree, groups and cycles holding their children.
+  List<TrainingItem> _items = [];
 
   bool get _isEdit => widget.originalTraining != null;
 
@@ -109,14 +110,12 @@ class _UnifiedTrainingCreationScreenState
       items = [_buildRepeaterItem()];
     } else {
       if (_items.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Add at least one hang rep')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Add at least one item')));
         return;
       }
-      // copyWith keeps every field this editor does not expose (nested items,
-      // coach comments, exercise names) instead of dropping them on save.
-      items = _items.indexed.map((e) => e.$2.copyWith(position: e.$1)).toList();
+      items = _positioned(_items);
     }
 
     final training = Training(
@@ -135,41 +134,170 @@ class _UnifiedTrainingCreationScreenState
     if (mounted) Navigator.of(context).pop();
   }
 
-  void _addHangboardRep() {
-    final defaults = TrainingItem(
-      id: '',
-      type: TrainingItemType.hangboardRep,
-      position: _items.length,
-      worktimeSeconds: 7,
-      restSeconds: 3,
-      hand: HangboardHand.both,
-      granularity: HangboardGranularity.uniform,
-      loads: [const Load(value: 0, unit: 'kg')],
-      handPositions: const [
-        ['halfCrimp'],
-      ],
-    );
-    showDialog<TrainingItem>(
-      context: context,
-      builder: (ctx) => _ItemEditorDialog(item: defaults),
-    ).then((edited) {
-      if (edited != null) setState(() => _items.add(edited));
-    });
-  }
+  /// Numbers the whole tree, so a nested item carries its rank among its
+  /// siblings rather than the one it had before the last move.
+  List<TrainingItem> _positioned(List<TrainingItem> items) => items.indexed
+      // copyWith keeps every field this editor does not expose (coach comments,
+      // exercise names) instead of dropping them on save.
+      .map((e) => e.$2.copyWith(position: e.$1, items: _positioned(e.$2.items)))
+      .toList();
 
   /// Stable list identity: saved items have an id, new ones fall back to the
   /// object identity assigned when they were added.
   Object _keyFor(TrainingItem item) =>
       item.id.isEmpty ? identityHashCode(item) : item.id;
 
-  void _editItem(int index) {
-    showDialog<TrainingItem>(
-      context: context,
-      builder: (ctx) => _ItemEditorDialog(item: _items[index]),
-    ).then((edited) {
-      if (edited != null) setState(() => _items[index] = edited);
-    });
+  /// Rewrites the children of the container at [path], the empty path standing
+  /// for the top level. Items are immutable, so every container on the way down
+  /// is rebuilt around its new list.
+  List<TrainingItem> _rewrite(
+    List<TrainingItem> items,
+    List<int> path,
+    List<TrainingItem> Function(List<TrainingItem>) transform,
+  ) {
+    if (path.isEmpty) return transform(items);
+    final container = items[path.first];
+    return [...items]
+      ..[path.first] = container.copyWith(
+        items: _rewrite(container.items, path.sublist(1), transform),
+      );
   }
+
+  void _mutate(
+    List<int> path,
+    List<TrainingItem> Function(List<TrainingItem>) transform,
+  ) => setState(() => _items = _rewrite(_items, path, transform));
+
+  void _addItem(List<int> path, TrainingItem item) =>
+      _mutate(path, (children) => [...children, item]);
+
+  void _removeItem(List<int> path, int index) =>
+      _mutate(path, (children) => [...children]..removeAt(index));
+
+  void _duplicateItem(List<int> path, int index) => _mutate(
+    path,
+    (children) => [...children]..insert(index + 1, children[index].duplicate()),
+  );
+
+  void _reorderItems(List<int> path, int oldIndex, int newIndex) =>
+      _mutate(path, (children) {
+        final reordered = [...children];
+        if (oldIndex < newIndex) newIndex--;
+        reordered.insert(newIndex, reordered.removeAt(oldIndex));
+        return reordered;
+      });
+
+  static TrainingItem _newHangboardRep() => const TrainingItem(
+    id: '',
+    type: TrainingItemType.hangboardRep,
+    position: 0,
+    worktimeSeconds: 7,
+    restSeconds: 3,
+    hand: HangboardHand.both,
+    granularity: HangboardGranularity.uniform,
+    loads: [Load(value: 0, unit: 'kg')],
+    handPositions: [
+      ['halfCrimp'],
+    ],
+  );
+
+  /// A new container. Cycles start on the same numbers the coach portal uses, so
+  /// a cycle built here and one built there run the same way out of the box.
+  static TrainingItem _newContainer(TrainingItemType type) => TrainingItem(
+    id: '',
+    type: type,
+    position: 0,
+    cycles: type == TrainingItemType.circuit ? 3 : null,
+    cycleRestSeconds: type == TrainingItemType.circuit ? 120 : null,
+    restSeconds: type == TrainingItemType.circuit ? 0 : null,
+  );
+
+  /// What can be added inside the container at [path]: a group holds cycles and
+  /// reps, a cycle holds reps. Nesting a cycle in a cycle has nothing to say
+  /// that a longer cycle does not, so it is left out.
+  static List<TrainingItemType> _addableIn(TrainingItemType? container) =>
+      switch (container) {
+        TrainingItemType.circuit => const [TrainingItemType.hangboardRep],
+        TrainingItemType.group => const [
+          TrainingItemType.hangboardRep,
+          TrainingItemType.circuit,
+        ],
+        _ => const [
+          TrainingItemType.hangboardRep,
+          TrainingItemType.circuit,
+          TrainingItemType.group,
+        ],
+      };
+
+  static bool _isContainer(TrainingItemType type) =>
+      type == TrainingItemType.circuit || type == TrainingItemType.group;
+
+  /// Only the types this editor can fully represent are editable here: a
+  /// repeater, an exercise or a coach note carries fields it has no form for.
+  static bool _isEditable(TrainingItemType type) =>
+      _isContainer(type) || type == TrainingItemType.hangboardRep;
+
+  static String _typeLabel(TrainingItemType type) => switch (type) {
+    TrainingItemType.hangboardRep => 'Hang rep',
+    TrainingItemType.circuit => 'Cycle',
+    TrainingItemType.group => 'Group',
+    _ => 'Item',
+  };
+
+  Future<void> _showAddSheet(
+    List<int> path,
+    TrainingItemType? container,
+  ) async {
+    final type = await showModalBottomSheet<TrainingItemType>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final option in _addableIn(container))
+              ListTile(
+                leading: Icon(switch (option) {
+                  TrainingItemType.circuit => Icons.repeat,
+                  TrainingItemType.group => Icons.folder_outlined,
+                  _ => Icons.pan_tool,
+                }),
+                title: Text(_typeLabel(option)),
+                subtitle: Text(switch (option) {
+                  TrainingItemType.circuit =>
+                    'Repeat a set of items several times',
+                  TrainingItemType.group => 'Gather items under a title',
+                  _ => 'A single hang',
+                }),
+                onTap: () => Navigator.pop(ctx, option),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (type == null || !mounted) return;
+
+    final created = await _showEditor(
+      type == TrainingItemType.hangboardRep
+          ? _newHangboardRep()
+          : _newContainer(type),
+    );
+    if (created != null) _addItem(path, created);
+  }
+
+  Future<void> _editItem(List<int> path, int index, TrainingItem item) async {
+    final edited = await _showEditor(item);
+    if (edited != null) {
+      _mutate(path, (children) => [...children]..[index] = edited);
+    }
+  }
+
+  Future<TrainingItem?> _showEditor(TrainingItem item) =>
+      showDialog<TrainingItem>(
+        context: context,
+        builder: (ctx) => _isContainer(item.type)
+            ? _ContainerEditorDialog(item: item)
+            : _ItemEditorDialog(item: item),
+      );
 
   String get _appBarTitle {
     if (_isEdit) return 'Edit Training';
@@ -213,7 +341,7 @@ class _UnifiedTrainingCreationScreenState
       ),
       floatingActionButton: _mode == TrainingCreationMode.manual
           ? FloatingActionButton(
-              onPressed: _addHangboardRep,
+              onPressed: () => _showAddSheet(const [], null),
               child: const Icon(Icons.add),
             )
           : null,
@@ -422,30 +550,54 @@ class _UnifiedTrainingCreationScreenState
 
   Widget _buildManualBody() {
     if (_items.isEmpty) {
-      return const Center(child: Text('Tap + to add hangboard reps'));
+      return const Center(child: Text('Tap + to add reps, cycles and groups'));
     }
+    return _buildItemList(_items, const []);
+  }
+
+  /// The children of one container, or the top level for an empty path. Each
+  /// level reorders on its own, so a rep is dragged among its siblings and a
+  /// cycle among the items around it.
+  Widget _buildItemList(List<TrainingItem> items, List<int> path) {
+    final isNested = path.isNotEmpty;
     return ReorderableListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: _items.length,
-      onReorder: (oldIdx, newIdx) {
-        setState(() {
-          if (oldIdx < newIdx) newIdx--;
-          final item = _items.removeAt(oldIdx);
-          _items.insert(newIdx, item);
-        });
-      },
+      shrinkWrap: isNested,
+      physics: isNested ? const NeverScrollableScrollPhysics() : null,
+      // Dragging starts from the handle only, so the inner lists stay usable
+      // and a tap on a card reaches its buttons.
+      buildDefaultDragHandles: false,
+      padding: isNested
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: items.length,
+      onReorder: (oldIdx, newIdx) => _reorderItems(path, oldIdx, newIdx),
       itemBuilder: (ctx, i) {
-        final item = _items[i];
+        final item = items[i];
+        final childPath = [...path, i];
         return _TrainingItemCard(
           // Identity must survive a reorder, so key by the item, not its index.
           key: ValueKey(_keyFor(item)),
+          index: i,
           item: item,
-          // Only hangboard reps are editable here; other item types carry
-          // fields this editor cannot represent.
-          onEdit: item.type == TrainingItemType.hangboardRep
-              ? () => _editItem(i)
+          onEdit: _isEditable(item.type)
+              ? () => _editItem(path, i, item)
               : null,
-          onDelete: () => setState(() => _items.removeAt(i)),
+          onDuplicate: () => _duplicateItem(path, i),
+          onDelete: () => _removeItem(path, i),
+          nested: _isContainer(item.type)
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (item.items.isNotEmpty)
+                      _buildItemList(item.items, childPath),
+                    TextButton.icon(
+                      onPressed: () => _showAddSheet(childPath, item.type),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Add item'),
+                    ),
+                  ],
+                )
+              : null,
         );
       },
     );
@@ -501,16 +653,24 @@ class _UnifiedTrainingCreationScreenState
   }
 }
 
+/// One item of the manual editor. A group or a cycle also renders its own
+/// children in [nested], so the tree is read at a glance.
 class _TrainingItemCard extends StatelessWidget {
   final TrainingItem item;
+  final int index;
   final VoidCallback? onEdit;
+  final VoidCallback onDuplicate;
   final VoidCallback onDelete;
+  final Widget? nested;
 
   const _TrainingItemCard({
     required super.key,
     required this.item,
+    required this.index,
     required this.onEdit,
+    required this.onDuplicate,
     required this.onDelete,
+    this.nested,
   });
 
   /// The stored hand value is a wire code, so the card shows the label the
@@ -524,20 +684,11 @@ class _TrainingItemCard extends StatelessWidget {
         _ => 'both hands',
       };
 
-  String get _title => switch (item.type) {
-    TrainingItemType.hangboardRep => 'Hang Rep',
-    TrainingItemType.repeater => 'Repeater',
-    TrainingItemType.circuit => 'Circuit',
-    TrainingItemType.group => item.groupTitle ?? 'Group',
-    TrainingItemType.exercise => item.exerciseName ?? 'Exercise',
-    TrainingItemType.free => item.freeText ?? 'Note',
-  };
-
   String get _subtitle => switch (item.type) {
     TrainingItemType.hangboardRep || TrainingItemType.repeater =>
       '${item.worktimeSeconds ?? 7}s hang / ${item.restSeconds ?? 3}s rest  '
           '${_handLabel(item.hand)}',
-    TrainingItemType.circuit ||
+    TrainingItemType.circuit => trainingItemDetail(item),
     TrainingItemType.group => '${item.items.length} item(s)',
     TrainingItemType.exercise =>
       item.effectiveReps() != null
@@ -550,24 +701,155 @@ class _TrainingItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
-      child: ListTile(
-        title: Text(_title),
-        subtitle: Text(_subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
-        trailing: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ListTile(
+            title: Text(trainingItemTitle(item)),
+            subtitle: Text(
+              _subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 20),
+                  tooltip: 'Edit',
+                  onPressed: onEdit,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.copy, size: 20),
+                  tooltip: 'Duplicate',
+                  onPressed: onDuplicate,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, size: 20),
+                  tooltip: 'Delete',
+                  onPressed: onDelete,
+                ),
+                ReorderableDragStartListener(
+                  index: index,
+                  child: const Icon(Icons.drag_handle),
+                ),
+              ],
+            ),
+          ),
+          if (nested != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+              child: nested,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A whole-number field of an editor dialog. [min] is 0 for the rests, which a
+/// user is allowed to switch off entirely.
+Widget _intField(
+  String label,
+  int value,
+  void Function(int) onChanged, {
+  int min = 1,
+}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: TextFormField(
+      initialValue: value.toString(),
+      decoration: InputDecoration(labelText: label),
+      keyboardType: TextInputType.number,
+      onChanged: (v) {
+        final n = int.tryParse(v);
+        if (n != null && n >= min) onChanged(n);
+      },
+    ),
+  );
+}
+
+/// Editor of a group or a cycle. Both carry an optional title; a cycle also
+/// carries how many times it runs and the rests it inserts.
+class _ContainerEditorDialog extends StatefulWidget {
+  final TrainingItem item;
+  const _ContainerEditorDialog({required this.item});
+
+  @override
+  State<_ContainerEditorDialog> createState() => _ContainerEditorDialogState();
+}
+
+class _ContainerEditorDialogState extends State<_ContainerEditorDialog> {
+  late final TextEditingController _titleController;
+  late int _cycles;
+  late int _cycleRest;
+  late int _itemRest;
+
+  bool get _isCycle => widget.item.type == TrainingItemType.circuit;
+
+  @override
+  void initState() {
+    super.initState();
+    final item = widget.item;
+    _titleController = TextEditingController(text: item.groupTitle ?? '');
+    _cycles = item.cycles ?? 3;
+    _cycleRest = item.cycleRestSeconds ?? 120;
+    _itemRest = item.restSeconds ?? 0;
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
+  }
+
+  TrainingItem _buildItem() => widget.item.copyWith(
+    groupTitle: _titleController.text,
+    cycles: _isCycle ? _cycles : null,
+    cycleRestSeconds: _isCycle ? _cycleRest : null,
+    restSeconds: _isCycle ? _itemRest : null,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(_isCycle ? 'Cycle' : 'Group'),
+      content: SingleChildScrollView(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              icon: const Icon(Icons.edit, size: 20),
-              onPressed: onEdit,
+            TextFormField(
+              controller: _titleController,
+              decoration: const InputDecoration(labelText: 'Title (optional)'),
             ),
-            IconButton(
-              icon: const Icon(Icons.delete, size: 20),
-              onPressed: onDelete,
-            ),
-            const Icon(Icons.drag_handle),
+            if (_isCycle) ...[
+              _intField('Cycles', _cycles, (v) => setState(() => _cycles = v)),
+              _intField(
+                'Rest between items (s)',
+                _itemRest,
+                (v) => setState(() => _itemRest = v),
+                min: 0,
+              ),
+              _intField(
+                'Rest between cycles (s)',
+                _cycleRest,
+                (v) => setState(() => _cycleRest = v),
+                min: 0,
+              ),
+            ],
           ],
         ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, _buildItem()),
+          child: const Text('OK'),
+        ),
+      ],
     );
   }
 }
@@ -663,21 +945,6 @@ class _ItemEditorDialogState extends State<_ItemEditorDialog> {
             (v) => setState(() => _loadRight = v),
           ),
       ],
-    );
-  }
-
-  Widget _intField(String label, int value, void Function(int) onChanged) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: TextFormField(
-        initialValue: value.toString(),
-        decoration: InputDecoration(labelText: label),
-        keyboardType: TextInputType.number,
-        onChanged: (v) {
-          final n = int.tryParse(v);
-          if (n != null && n > 0) onChanged(n);
-        },
-      ),
     );
   }
 

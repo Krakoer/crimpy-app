@@ -28,7 +28,9 @@ class CreateTrainingFab extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.pan_tool),
               title: const Text('Manual Hangboard'),
-              subtitle: const Text('Build a sequence of hangboard reps'),
+              subtitle: const Text(
+                'Build a training from reps, cycles and groups',
+              ),
               onTap: () => Navigator.pop(ctx, TrainingCreationMode.manual),
             ),
           ],
