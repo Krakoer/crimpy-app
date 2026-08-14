@@ -136,15 +136,14 @@ void main() {
     expect(find.text('Left leg'), findsOneWidget);
     expect(find.text('Right leg'), findsNothing);
 
-    // Second exercise, then its rest. That rest leads into the cycle rest, not
-    // into an exercise, so no comment is borrowed from the next cycle.
+    // Second exercise, then the single rest closing the cycle: the rest the
+    // circuit sets stands in for the one the last exercise carries rather than
+    // running after it. It leads into the first exercise of cycle two.
     await _skip(tester);
     await _skip(tester);
-    expect(find.textContaining('Next: Rest'), findsOneWidget);
-    expect(find.text('Right leg'), findsNothing);
+    expect(find.text('Right leg'), findsOneWidget);
     expect(find.text('Left leg'), findsNothing);
 
-    // The cycle rest itself does lead into the first exercise of cycle two.
     await _skip(tester);
     expect(find.text('Right leg'), findsOneWidget);
   });

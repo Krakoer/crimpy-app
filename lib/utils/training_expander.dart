@@ -62,6 +62,7 @@ void _expandItem(
         useSensor,
         bodyweightKg,
         results,
+        context: context,
         comment: comment,
       );
     case TrainingItemType.circuit:
@@ -134,12 +135,11 @@ void _expandCircuit(
 }) {
   final cycles = item.cycles ?? 1;
   final cycleRest = item.cycleRestSeconds ?? 0;
-  // Rest the circuit puts between its children, on top of whatever rest a child
-  // carries of its own. The last child is followed by the cycle rest instead.
   final childRest = item.restSeconds ?? 0;
   for (int cycle = 0; cycle < cycles; cycle++) {
     final context = cycles > 1 ? 'ROUND ${cycle + 1}/$cycles' : null;
     for (final (index, child) in item.items.indexed) {
+      final lengthBeforeChild = out.length;
       _expandItem(
         child,
         out,
@@ -149,12 +149,19 @@ void _expandCircuit(
         context: context,
         inheritedComment: comment,
       );
-      if (index < item.items.length - 1 && childRest > 0) {
-        out.add(RestItem(durationSeconds: childRest));
+      final isLastChild = index == item.items.length - 1;
+      final rest = isLastChild
+          ? (cycle < cycles - 1 ? cycleRest : 0)
+          : childRest;
+      // A rest the circuit sets stands for the whole gap it names, so the rest
+      // the child ends on gives way to it rather than the two adding up and
+      // running as two countdowns. Without one, the child keeps its own.
+      if (rest > 0) {
+        final childEndsOnRest =
+            out.length > lengthBeforeChild && out.last is RestItem;
+        if (childEndsOnRest) out.removeLast();
+        out.add(RestItem(durationSeconds: rest));
       }
-    }
-    if (cycle < cycles - 1 && cycleRest > 0) {
-      out.add(RestItem(durationSeconds: cycleRest));
     }
   }
 }
@@ -235,6 +242,7 @@ void _expandHangboardRep(
   bool useSensor,
   double? bodyweightKg,
   AssessmentResults results, {
+  String? context,
   String? comment,
 }) {
   final worktime = item.worktimeSeconds ?? 7;
@@ -269,6 +277,7 @@ void _expandHangboardRep(
       isHang: true,
       // Only a hang on a single hand passes through the sensor.
       collectSensorData: useSensor && handSide != HandSide.both,
+      subtitle: context,
       comment: comment,
     ),
   );
