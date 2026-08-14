@@ -263,7 +263,12 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                 ),
               ),
               if (sensor)
-                Gauge(rep!.targetLoad, size: gaugeSize)
+                // The ring owns the outer edge of the box, so the gauge is
+                // inset past its stroke instead of painting over it.
+                Gauge(
+                  rep!.targetLoad,
+                  size: gaugeSize - 2 * WorkoutCircle.strokeWidth - 4,
+                )
               else
                 timerDisplay,
             ],
