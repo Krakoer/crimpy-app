@@ -1,6 +1,7 @@
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/utils/hangboard_config.dart';
+import 'package:crimpy/utils/training_expander.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/widgets/training_item_tile.dart';
 import 'package:flutter/material.dart';
@@ -109,12 +110,6 @@ class _UnifiedTrainingCreationScreenState
     if (_mode == TrainingCreationMode.repeater) {
       items = [_buildRepeaterItem()];
     } else {
-      if (_items.isEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Add at least one item')));
-        return;
-      }
       items = _positioned(_items);
     }
 
@@ -124,6 +119,16 @@ class _UnifiedTrainingCreationScreenState
       isFavorite: widget.originalTraining?.isFavorite ?? false,
       items: items,
     );
+
+    // Empty containers hold no step, so a tree can be non empty and still have
+    // nothing to run. Judging the training on what it expands to catches both.
+    if (_mode == TrainingCreationMode.manual &&
+        expandTrainingItems(training, useSensor: false).isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Add at least one item to perform')),
+      );
+      return;
+    }
 
     if (_isEdit) {
       await ref.read(trainingsProvider.notifier).updateTraining(training);
@@ -174,6 +179,43 @@ class _UnifiedTrainingCreationScreenState
   void _removeItem(List<int> path, int index) =>
       _mutate(path, (children) => [...children]..removeAt(index));
 
+  /// Everything a container holds, at any depth.
+  static int _subtreeSize(TrainingItem item) => item.items.fold(
+    item.items.length,
+    (total, child) => total + _subtreeSize(child),
+  );
+
+  /// Deleting a container takes everything inside it with it, which is a lot to
+  /// lose to one tap, so only an empty item goes without asking.
+  Future<void> _confirmRemoveItem(
+    List<int> path,
+    int index,
+    TrainingItem item,
+  ) async {
+    final size = _subtreeSize(item);
+    if (size > 0) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Delete ${trainingItemTitle(item)}?'),
+          content: Text('The $size item(s) it holds are deleted with it.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Delete'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+    _removeItem(path, index);
+  }
+
   void _duplicateItem(List<int> path, int index) => _mutate(
     path,
     (children) => [...children]..insert(index + 1, children[index].duplicate()),
@@ -201,8 +243,8 @@ class _UnifiedTrainingCreationScreenState
     ],
   );
 
-  /// A new container. Cycles start on the same numbers the coach portal uses, so
-  /// a cycle built here and one built there run the same way out of the box.
+  /// A new container. Circuits start on the same numbers the coach portal uses,
+  /// so one built here and one built there run the same way out of the box.
   static TrainingItem _newContainer(TrainingItemType type) => TrainingItem(
     id: '',
     type: type,
@@ -212,9 +254,9 @@ class _UnifiedTrainingCreationScreenState
     restSeconds: type == TrainingItemType.circuit ? 0 : null,
   );
 
-  /// What can be added inside the container at [path]: a group holds cycles and
-  /// reps, a cycle holds reps. Nesting a cycle in a cycle has nothing to say
-  /// that a longer cycle does not, so it is left out.
+  /// What can be added inside the container at [path]: a group holds circuits
+  /// and reps, a circuit holds reps. Nesting a circuit in a circuit has nothing
+  /// to say that a longer one does not, so it is left out.
   static List<TrainingItemType> _addableIn(TrainingItemType? container) =>
       switch (container) {
         TrainingItemType.circuit => const [TrainingItemType.hangboardRep],
@@ -237,9 +279,11 @@ class _UnifiedTrainingCreationScreenState
   static bool _isEditable(TrainingItemType type) =>
       _isContainer(type) || type == TrainingItemType.hangboardRep;
 
+  /// The add sheet names a type exactly as the card it produces will, so the
+  /// option and the item that appears read the same.
   static String _typeLabel(TrainingItemType type) => switch (type) {
     TrainingItemType.hangboardRep => 'Hang rep',
-    TrainingItemType.circuit => 'Cycle',
+    TrainingItemType.circuit => 'Circuit',
     TrainingItemType.group => 'Group',
     _ => 'Item',
   };
@@ -550,7 +594,9 @@ class _UnifiedTrainingCreationScreenState
 
   Widget _buildManualBody() {
     if (_items.isEmpty) {
-      return const Center(child: Text('Tap + to add reps, cycles and groups'));
+      return const Center(
+        child: Text('Tap + to add reps, circuits and groups'),
+      );
     }
     return _buildItemList(_items, const []);
   }
@@ -583,7 +629,13 @@ class _UnifiedTrainingCreationScreenState
               ? () => _editItem(path, i, item)
               : null,
           onDuplicate: () => _duplicateItem(path, i),
-          onDelete: () => _removeItem(path, i),
+          onDelete: () => _confirmRemoveItem(path, i, item),
+          // A drag cannot scroll the list it is nested in, so a long container
+          // stays reorderable through the menu.
+          onMoveUp: i > 0 ? () => _reorderItems(path, i, i - 1) : null,
+          onMoveDown: i < items.length - 1
+              ? () => _reorderItems(path, i, i + 2)
+              : null,
           nested: _isContainer(item.type)
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -653,7 +705,9 @@ class _UnifiedTrainingCreationScreenState
   }
 }
 
-/// One item of the manual editor. A group or a cycle also renders its own
+enum _ItemAction { edit, duplicate, moveUp, moveDown, delete }
+
+/// One item of the manual editor. A group or a circuit also renders its own
 /// children in [nested], so the tree is read at a glance.
 class _TrainingItemCard extends StatelessWidget {
   final TrainingItem item;
@@ -661,6 +715,8 @@ class _TrainingItemCard extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback onDuplicate;
   final VoidCallback onDelete;
+  final VoidCallback? onMoveUp;
+  final VoidCallback? onMoveDown;
   final Widget? nested;
 
   const _TrainingItemCard({
@@ -670,6 +726,8 @@ class _TrainingItemCard extends StatelessWidget {
     required this.onEdit,
     required this.onDuplicate,
     required this.onDelete,
+    required this.onMoveUp,
+    required this.onMoveDown,
     this.nested,
   });
 
@@ -706,28 +764,74 @@ class _TrainingItemCard extends StatelessWidget {
         children: [
           ListTile(
             title: Text(trainingItemTitle(item)),
+            // The numbers a circuit carries take more than one line on a phone,
+            // and they are the point of the card, so they are not cut short.
             subtitle: Text(
               _subtitle,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
+            // The actions live in a menu rather than in a row of buttons, which
+            // at phone width left the title and its numbers no room.
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, size: 20),
-                  tooltip: 'Edit',
-                  onPressed: onEdit,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.copy, size: 20),
-                  tooltip: 'Duplicate',
-                  onPressed: onDuplicate,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete, size: 20),
-                  tooltip: 'Delete',
-                  onPressed: onDelete,
+                PopupMenuButton<_ItemAction>(
+                  tooltip: 'Actions',
+                  onSelected: (action) {
+                    switch (action) {
+                      case _ItemAction.edit:
+                        onEdit?.call();
+                      case _ItemAction.duplicate:
+                        onDuplicate();
+                      case _ItemAction.moveUp:
+                        onMoveUp?.call();
+                      case _ItemAction.moveDown:
+                        onMoveDown?.call();
+                      case _ItemAction.delete:
+                        onDelete();
+                    }
+                  },
+                  itemBuilder: (ctx) => [
+                    if (onEdit != null)
+                      const PopupMenuItem(
+                        value: _ItemAction.edit,
+                        child: ListTile(
+                          leading: Icon(Icons.edit),
+                          title: Text('Edit'),
+                        ),
+                      ),
+                    const PopupMenuItem(
+                      value: _ItemAction.duplicate,
+                      child: ListTile(
+                        leading: Icon(Icons.copy),
+                        title: Text('Duplicate'),
+                      ),
+                    ),
+                    if (onMoveUp != null)
+                      const PopupMenuItem(
+                        value: _ItemAction.moveUp,
+                        child: ListTile(
+                          leading: Icon(Icons.arrow_upward),
+                          title: Text('Move up'),
+                        ),
+                      ),
+                    if (onMoveDown != null)
+                      const PopupMenuItem(
+                        value: _ItemAction.moveDown,
+                        child: ListTile(
+                          leading: Icon(Icons.arrow_downward),
+                          title: Text('Move down'),
+                        ),
+                      ),
+                    const PopupMenuItem(
+                      value: _ItemAction.delete,
+                      child: ListTile(
+                        leading: Icon(Icons.delete),
+                        title: Text('Delete'),
+                      ),
+                    ),
+                  ],
                 ),
                 ReorderableDragStartListener(
                   index: index,
@@ -747,29 +851,50 @@ class _TrainingItemCard extends StatelessWidget {
   }
 }
 
-/// A whole-number field of an editor dialog. [min] is 0 for the rests, which a
-/// user is allowed to switch off entirely.
+/// A whole-number field of an editor dialog. It keeps its text rather than
+/// reporting each keystroke, so a value cleared to be retyped is never lost and
+/// what the field shows is what the dialog saves. [min] is 0 for the rests,
+/// which a user is allowed to switch off entirely.
 Widget _intField(
   String label,
-  int value,
-  void Function(int) onChanged, {
+  TextEditingController controller, {
   int min = 1,
 }) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
     child: TextFormField(
-      initialValue: value.toString(),
+      controller: controller,
       decoration: InputDecoration(labelText: label),
       keyboardType: TextInputType.number,
-      onChanged: (v) {
-        final n = int.tryParse(v);
-        if (n != null && n >= min) onChanged(n);
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      validator: (v) {
+        final n = int.tryParse((v ?? '').trim());
+        if (n == null) return 'Enter a number';
+        return n < min ? 'Minimum $min' : null;
       },
     ),
   );
 }
 
-/// Editor of a group or a cycle. Both carry an optional title; a cycle also
+/// The decimal counterpart of [_intField], for the loads.
+Widget _doubleField(String label, TextEditingController controller) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: TextFormField(
+      controller: controller,
+      decoration: InputDecoration(labelText: label),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      validator: (v) {
+        final n = double.tryParse((v ?? '').trim());
+        if (n == null) return 'Enter a number';
+        return n < 0 ? 'Cannot be negative' : null;
+      },
+    ),
+  );
+}
+
+/// Editor of a group or a circuit. Both carry an optional title; a circuit also
 /// carries how many times it runs and the rests it inserts.
 class _ContainerEditorDialog extends StatefulWidget {
   final TrainingItem item;
@@ -780,64 +905,86 @@ class _ContainerEditorDialog extends StatefulWidget {
 }
 
 class _ContainerEditorDialogState extends State<_ContainerEditorDialog> {
+  final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
-  late int _cycles;
-  late int _cycleRest;
-  late int _itemRest;
+  late final TextEditingController _cyclesController;
+  late final TextEditingController _cycleRestController;
+  late final TextEditingController _itemRestController;
 
-  bool get _isCycle => widget.item.type == TrainingItemType.circuit;
+  bool get _isCircuit => widget.item.type == TrainingItemType.circuit;
 
   @override
   void initState() {
     super.initState();
     final item = widget.item;
     _titleController = TextEditingController(text: item.groupTitle ?? '');
-    _cycles = item.cycles ?? 3;
-    _cycleRest = item.cycleRestSeconds ?? 120;
-    _itemRest = item.restSeconds ?? 0;
+    _cyclesController = TextEditingController(
+      text: (item.cycles ?? 3).toString(),
+    );
+    _cycleRestController = TextEditingController(
+      text: (item.cycleRestSeconds ?? 120).toString(),
+    );
+    _itemRestController = TextEditingController(
+      text: (item.restSeconds ?? 0).toString(),
+    );
   }
 
   @override
   void dispose() {
     _titleController.dispose();
+    _cyclesController.dispose();
+    _cycleRestController.dispose();
+    _itemRestController.dispose();
     super.dispose();
   }
 
   TrainingItem _buildItem() => widget.item.copyWith(
     groupTitle: _titleController.text,
-    cycles: _isCycle ? _cycles : null,
-    cycleRestSeconds: _isCycle ? _cycleRest : null,
-    restSeconds: _isCycle ? _itemRest : null,
+    cycles: _isCircuit ? int.parse(_cyclesController.text.trim()) : null,
+    cycleRestSeconds: _isCircuit
+        ? int.parse(_cycleRestController.text.trim())
+        : null,
+    restSeconds: _isCircuit ? int.parse(_itemRestController.text.trim()) : null,
   );
+
+  /// The fields are only read once they validate, so the parses above cannot
+  /// throw and OK never saves a number the dialog is not showing.
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.pop(context, _buildItem());
+  }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(_isCycle ? 'Cycle' : 'Group'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _titleController,
-              decoration: const InputDecoration(labelText: 'Title (optional)'),
-            ),
-            if (_isCycle) ...[
-              _intField('Cycles', _cycles, (v) => setState(() => _cycles = v)),
-              _intField(
-                'Rest between items (s)',
-                _itemRest,
-                (v) => setState(() => _itemRest = v),
-                min: 0,
+      title: Text(_isCircuit ? 'Circuit' : 'Group'),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Title (optional)',
+                ),
               ),
-              _intField(
-                'Rest between cycles (s)',
-                _cycleRest,
-                (v) => setState(() => _cycleRest = v),
-                min: 0,
-              ),
+              if (_isCircuit) ...[
+                _intField('Cycles', _cyclesController),
+                _intField(
+                  'Rest between items (s)',
+                  _itemRestController,
+                  min: 0,
+                ),
+                _intField(
+                  'Rest between cycles (s)',
+                  _cycleRestController,
+                  min: 0,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
       actions: [
@@ -845,10 +992,7 @@ class _ContainerEditorDialogState extends State<_ContainerEditorDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, _buildItem()),
-          child: const Text('OK'),
-        ),
+        TextButton(onPressed: _submit, child: const Text('OK')),
       ],
     );
   }
@@ -863,47 +1007,69 @@ class _ItemEditorDialog extends StatefulWidget {
 }
 
 class _ItemEditorDialogState extends State<_ItemEditorDialog> {
-  late int _worktime;
-  late int _rest;
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _worktimeController;
+  late final TextEditingController _restController;
+  late final TextEditingController _loadController;
   late String _hand;
-  late double _loadRight;
   late bool _loadIsMax;
 
   @override
   void initState() {
     super.initState();
     final item = widget.item;
-    _worktime = item.worktimeSeconds ?? 7;
-    _rest = item.restSeconds ?? 3;
+    _worktimeController = TextEditingController(
+      text: (item.worktimeSeconds ?? 7).toString(),
+    );
+    _restController = TextEditingController(
+      text: (item.restSeconds ?? 3).toString(),
+    );
+    _loadController = TextEditingController(
+      text: (item.loads?.firstOrNull?.value ?? 0.0).toString(),
+    );
     _hand = item.hand ?? HangboardHand.both;
-    _loadRight = item.loads?.firstOrNull?.value ?? 0.0;
     _loadIsMax = item.loadIsMax;
   }
 
+  @override
+  void dispose() {
+    _worktimeController.dispose();
+    _restController.dispose();
+    _loadController.dispose();
+    super.dispose();
+  }
+
   TrainingItem _buildItem() {
+    // A max load has no number to read, so the hidden field is not parsed.
+    final load = _loadIsMax ? 0.0 : double.parse(_loadController.text.trim());
     return widget.item.copyWith(
-      worktimeSeconds: _worktime,
-      restSeconds: _rest,
+      worktimeSeconds: int.parse(_worktimeController.text.trim()),
+      restSeconds: int.parse(_restController.text.trim()),
       hand: _hand,
-      loads: [Load(value: _loadRight, unit: _loadIsMax ? 'max' : 'kg')],
+      loads: [Load(value: load, unit: _loadIsMax ? 'max' : 'kg')],
       loadIsMax: _loadIsMax,
     );
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    Navigator.pop(context, _buildItem());
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Hang Rep'),
-      content: SingleChildScrollView(child: _buildForm()),
+      title: const Text('Hang rep'),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(child: _buildForm()),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, _buildItem()),
-          child: const Text('OK'),
-        ),
+        TextButton(onPressed: _submit, child: const Text('OK')),
       ],
     );
   }
@@ -912,12 +1078,8 @@ class _ItemEditorDialogState extends State<_ItemEditorDialog> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _intField(
-          'Work time (s)',
-          _worktime,
-          (v) => setState(() => _worktime = v),
-        ),
-        _intField('Rest (s)', _rest, (v) => setState(() => _rest = v)),
+        _intField('Work time (s)', _worktimeController),
+        _intField('Rest (s)', _restController, min: 0),
         DropdownButtonFormField<String>(
           initialValue: _hand,
           decoration: const InputDecoration(labelText: 'Hand'),
@@ -938,32 +1100,8 @@ class _ItemEditorDialogState extends State<_ItemEditorDialog> {
           value: _loadIsMax,
           onChanged: (v) => setState(() => _loadIsMax = v),
         ),
-        if (!_loadIsMax)
-          _doubleField(
-            'Load (kg)',
-            _loadRight,
-            (v) => setState(() => _loadRight = v),
-          ),
+        if (!_loadIsMax) _doubleField('Load (kg)', _loadController),
       ],
-    );
-  }
-
-  Widget _doubleField(
-    String label,
-    double value,
-    void Function(double) onChanged,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: TextFormField(
-        initialValue: value.toString(),
-        decoration: InputDecoration(labelText: label),
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        onChanged: (v) {
-          final n = double.tryParse(v);
-          if (n != null && n >= 0) onChanged(n);
-        },
-      ),
     );
   }
 }

@@ -6,9 +6,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 String trainingItemTitle(TrainingItem item) => switch (item.type) {
   TrainingItemType.group => item.groupTitle ?? 'Group',
-  TrainingItemType.circuit => item.groupTitle ?? 'Cycle',
+  TrainingItemType.circuit => item.groupTitle ?? 'Circuit',
   TrainingItemType.repeater => 'Repeater',
-  TrainingItemType.hangboardRep => 'Hangboard',
+  TrainingItemType.hangboardRep => 'Hang rep',
   TrainingItemType.exercise => item.exerciseName ?? 'Exercise',
   TrainingItemType.free => item.freeText ?? 'Note',
 };

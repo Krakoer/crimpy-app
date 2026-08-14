@@ -1,5 +1,6 @@
 import 'package:crimpy/views/screens/trainings/training_creation_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -145,12 +146,20 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('adds a titled cycle holding a hang rep', (tester) async {
+    /// Picks an action out of an item card's overflow menu.
+    Future<void> itemAction(WidgetTester tester, String action) async {
+      await tester.tap(find.byTooltip('Actions').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(action));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('adds a titled circuit holding a hang rep', (tester) async {
       await pumpManualEditor(tester);
 
       await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Cycle'));
+      await tester.tap(find.text('Circuit'));
       await tester.pumpAndSettle();
 
       await tester.enterText(fieldWithLabel('Title (optional)'), 'Pull block');
@@ -164,9 +173,9 @@ void main() {
         findsOneWidget,
       );
 
-      // A cycle only takes hang reps, so its add button skips the sheet choice.
+      // A circuit only takes hang reps, so its sheet offers that one option.
       await addItem(tester, 'Hang rep', find.text('Add item'));
-      expect(find.text('Hangboard'), findsOneWidget);
+      expect(find.text('Hang rep'), findsOneWidget);
     });
 
     testWidgets('duplicates an item next to the one it was copied from', (
@@ -174,15 +183,104 @@ void main() {
     ) async {
       await pumpManualEditor(tester);
       await addItem(tester, 'Hang rep', find.byType(FloatingActionButton));
-      expect(find.text('Hangboard'), findsOneWidget);
+      expect(find.text('Hang rep'), findsOneWidget);
 
-      await tester.tap(find.byTooltip('Duplicate'));
-      await tester.pumpAndSettle();
+      await itemAction(tester, 'Duplicate');
 
-      expect(find.text('Hangboard'), findsNWidgets(2));
+      expect(find.text('Hang rep'), findsNWidgets(2));
     });
 
-    testWidgets('a group takes cycles and reps, a cycle only reps', (
+    testWidgets('deleting a container asks before taking its children', (
+      tester,
+    ) async {
+      await pumpManualEditor(tester);
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Group'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      await addItem(tester, 'Hang rep', find.text('Add item'));
+
+      await itemAction(tester, 'Delete');
+      expect(
+        find.text('The 1 item(s) it holds are deleted with it.'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.text('Group'), findsOneWidget);
+
+      await itemAction(tester, 'Delete');
+      await tester.tap(find.text('Delete').last);
+      await tester.pumpAndSettle();
+      expect(find.text('Group'), findsNothing);
+    });
+
+    testWidgets('a cleared number keeps the dialog open instead of reverting', (
+      tester,
+    ) async {
+      await pumpManualEditor(tester);
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Circuit'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(fieldWithLabel('Rest between cycles (s)'), '');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      // The dialog stays up on its error rather than saving the old 120 behind
+      // a field reading empty.
+      expect(find.text('Enter a number'), findsOneWidget);
+      expect(find.text('Circuit'), findsOneWidget);
+
+      await tester.enterText(fieldWithLabel('Rest between cycles (s)'), '60');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('3 cycles - 60s between cycles'), findsOneWidget);
+    });
+
+    // The numbers a circuit carries are the point of its card, so they have to
+    // survive the width of a real phone rather than only the wide test surface.
+    testWidgets('a circuit shows its rests in full at phone width', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(
+            home: UnifiedTrainingCreationScreen(
+              mode: TrainingCreationMode.manual,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Circuit'));
+      await tester.pumpAndSettle();
+      await tester.enterText(fieldWithLabel('Rest between items (s)'), '15');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      // The row of buttons this card used to carry left the text about 100dp
+      // of a 360dp screen. The width it gets is what the assertion guards; the
+      // line count cannot be, since the test font is far wider than a real one.
+      const detail = '3 cycles - 15s between items - 120s between cycles';
+      final paragraph = tester.renderObject<RenderParagraph>(find.text(detail));
+      expect(paragraph.size.width, greaterThan(180));
+    });
+
+    testWidgets('a group takes circuits and reps, a circuit only reps', (
       tester,
     ) async {
       // The option subtitles name what is on offer without colliding with the
@@ -212,7 +310,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // A container renders its children above its own add button, so the
-      // nested cycle's button comes first.
+      // nested circuit's button comes first.
       await tester.tap(find.text('Add item').first);
       await tester.pumpAndSettle();
       expect(find.text(rep), findsOneWidget);
