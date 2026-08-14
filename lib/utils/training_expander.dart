@@ -134,9 +134,12 @@ void _expandCircuit(
 }) {
   final cycles = item.cycles ?? 1;
   final cycleRest = item.cycleRestSeconds ?? 0;
+  // Rest the circuit puts between its children, on top of whatever rest a child
+  // carries of its own. The last child is followed by the cycle rest instead.
+  final childRest = item.restSeconds ?? 0;
   for (int cycle = 0; cycle < cycles; cycle++) {
     final context = cycles > 1 ? 'ROUND ${cycle + 1}/$cycles' : null;
-    for (final child in item.items) {
+    for (final (index, child) in item.items.indexed) {
       _expandItem(
         child,
         out,
@@ -146,6 +149,9 @@ void _expandCircuit(
         context: context,
         inheritedComment: comment,
       );
+      if (index < item.items.length - 1 && childRest > 0) {
+        out.add(RestItem(durationSeconds: childRest));
+      }
     }
     if (cycle < cycles - 1 && cycleRest > 0) {
       out.add(RestItem(durationSeconds: cycleRest));

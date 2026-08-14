@@ -6,7 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 String trainingItemTitle(TrainingItem item) => switch (item.type) {
   TrainingItemType.group => item.groupTitle ?? 'Group',
-  TrainingItemType.circuit => 'Circuit',
+  TrainingItemType.circuit => item.groupTitle ?? 'Cycle',
   TrainingItemType.repeater => 'Repeater',
   TrainingItemType.hangboardRep => 'Hangboard',
   TrainingItemType.exercise => item.exerciseName ?? 'Exercise',
@@ -40,7 +40,12 @@ String trainingItemDetail(
     case TrainingItemType.exercise:
       return [if (amount != null) amount, if (load != null) load].join(' - ');
     case TrainingItemType.circuit:
-      return '${item.cycles ?? 1} cycles';
+      return [
+        '${item.cycles ?? 1} cycles',
+        if ((item.restSeconds ?? 0) > 0) '${item.restSeconds}s between items',
+        if ((item.cycleRestSeconds ?? 0) > 0)
+          '${item.cycleRestSeconds}s between cycles',
+      ].join(' - ');
     case TrainingItemType.group:
       return '';
     case TrainingItemType.free:

@@ -39,7 +39,7 @@ void main() {
       ),
     ]);
 
-    expect(find.text('Circuit'), findsOneWidget);
+    expect(find.text('Cycle'), findsOneWidget);
     expect(find.text('3 cycles'), findsOneWidget);
     expect(find.text('Pigeon'), findsNWidgets(2));
     expect(find.text('Right leg'), findsOneWidget);

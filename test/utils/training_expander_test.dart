@@ -52,6 +52,47 @@ void main() {
     expect((out[3] as ConfirmItem).subtitle, 'ROUND 2/2');
   });
 
+  test('circuit rests between its children but not after the last one', () {
+    final training = _training([
+      TrainingItem(
+        id: 'c',
+        type: TrainingItemType.circuit,
+        position: 0,
+        cycles: 2,
+        cycleRestSeconds: 60,
+        restSeconds: 15,
+        items: [
+          TrainingItem(
+            id: 'e1',
+            type: TrainingItemType.exercise,
+            position: 0,
+            reps: 10,
+          ),
+          TrainingItem(
+            id: 'e2',
+            type: TrainingItemType.exercise,
+            position: 1,
+            reps: 10,
+          ),
+        ],
+      ),
+    ]);
+
+    final out = expandTrainingItems(training, useSensor: false);
+
+    expect(out.map((e) => e.runtimeType).toList(), [
+      ConfirmItem,
+      RestItem, // between the two children
+      ConfirmItem,
+      RestItem, // cycle rest, the last child is not followed by an item rest
+      ConfirmItem,
+      RestItem,
+      ConfirmItem,
+    ]);
+    expect((out[1] as RestItem).durationSeconds, 15);
+    expect((out[3] as RestItem).durationSeconds, 60);
+  });
+
   test('repeater hangs carry set/rep context', () {
     final training = _training([
       TrainingItem(
