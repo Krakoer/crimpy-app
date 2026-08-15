@@ -2,6 +2,7 @@ import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/calibration/start_calibration_dialog.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/create_sensor_config_dialog.dart';
+import 'package:crimpy/views/screens/settings_screen/widgets/gauge_style_selector.dart';
 import 'package:crimpy/viewmodels/app_info_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/views/screens/settings_screen/notification_settings_screen.dart';
@@ -160,6 +161,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       ),
                     ],
                   ),
+                  const GaugeStyleSelector(),
                   // Reminders only exist for coach-assigned programs, and only
                   // on the platforms that can deliver a scheduled notification.
                   if (supportsTrainingReminders &&

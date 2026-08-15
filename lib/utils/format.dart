@@ -31,6 +31,12 @@ String formatDurationHMS(int seconds) {
   }
 }
 
+/// A weight in kilograms, kept to a single decimal and only when it carries
+/// one, so a live readout does not jitter between widths for nothing.
+String formatKilograms(double kilograms) => kilograms.toStringAsFixed(
+  kilograms.truncateToDouble() == kilograms ? 0 : 1,
+);
+
 const _monthAbbreviations = [
   'JAN',
   'FEB',

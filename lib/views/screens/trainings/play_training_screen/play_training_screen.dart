@@ -1,3 +1,4 @@
+import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/full_screen_gauge.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_header.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/hand_label.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_timer_display.dart';
@@ -5,7 +6,10 @@ import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/next
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_progress_info.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_controls.dart';
 import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/gauge_style.dart';
 import 'package:crimpy/models/training_execution_model.dart';
+import 'package:crimpy/viewmodels/gauge_style_view_model.dart';
+import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/utils/training_expander.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -188,13 +192,37 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     super.dispose();
   }
 
-  Widget _buildTimedContent(double gaugeSize, double timerFontSize) {
+  Widget _buildTimedContent(
+    double gaugeSize,
+    double timerFontSize,
+    GaugeStyle gaugeStyle,
+  ) {
     final item = timer.currentItem;
     final rep = item is TimedItem ? item : null;
     final isPrep = timer.currentItemIndex == 0;
     final hasNext = timer.currentItemIndex < timer.items.length - 1;
     final nextRep = hasNext ? timer.items[timer.currentItemIndex + 1] : null;
     final sensor = rep?.collectSensorData ?? false;
+
+    // The full screen design owns the whole content area rather than sitting
+    // inside the timer ring, so it replaces the layout instead of slotting a
+    // gauge into it. Only a sensor step has a force to show.
+    if (sensor && gaugeStyle == GaugeStyle.fullScreen) {
+      return SizedBox.expand(
+        child: AnimatedBuilder(
+          animation: _serieController,
+          builder: (ctx, child) => FullScreenGauge(
+            targetWeight: rep!.targetLoad,
+            secondsRemaining: timer.currentItemRemaining,
+            repProgress: _serieController.value,
+            handSide: rep.handSide,
+            gripPosition: rep.gripPosition,
+            edgeSizeMm: rep.edgeSizeMm,
+            comment: _commentOf(item),
+          ),
+        ),
+      );
+    }
 
     final timerDisplay = TrainingTimerDisplay(
       secondsRemaining: timer.currentItemRemaining,
@@ -376,7 +404,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
           ),
         if (targetWeight > 0)
           Text(
-            'TARGET ${targetWeight.toStringAsFixed(targetWeight.truncateToDouble() == targetWeight ? 0 : 1)} kg',
+            'TARGET ${formatKilograms(targetWeight)} kg',
             style: const TextStyle(
               fontFamily: 'JetBrainsMono',
               fontSize: 12,
@@ -487,6 +515,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
   @override
   Widget build(BuildContext context) {
+    final gaugeStyle =
+        ref.watch(gaugeStyleProvider).value ?? GaugeStyle.fallback;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (res, didPop) async {
@@ -565,7 +596,11 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                     child: Center(
                       child: timer.currentItem is ConfirmItem
                           ? _buildConfirmContent(timerFontSize)
-                          : _buildTimedContent(gaugeSize, timerFontSize),
+                          : _buildTimedContent(
+                              gaugeSize,
+                              timerFontSize,
+                              gaugeStyle,
+                            ),
                     ),
                   ),
                   // Progress info
