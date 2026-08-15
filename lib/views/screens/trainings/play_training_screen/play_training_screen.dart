@@ -267,7 +267,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                 // inset past its stroke instead of painting over it.
                 Gauge(
                   rep!.targetLoad,
-                  size: gaugeSize - 2 * WorkoutCircle.strokeWidth - 4,
+                  size: gaugeSize - 2 * WorkoutCircle.strokeWidth,
                 )
               else
                 timerDisplay,
