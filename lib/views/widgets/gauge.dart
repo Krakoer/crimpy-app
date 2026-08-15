@@ -50,17 +50,10 @@ class WeightGaugePainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final centerText = Offset(size.width / 2, size.height / 3);
     final radius = min(size.width, size.height) / 2;
-    final strokeWidth = 4.0;
-    final innerRadius = radius - strokeWidth;
     final bool targetMatched = targetWeight <= currentWeight;
 
-    // Paint for circle outline
-    final outlinePaint = Paint()
-      ..color = CrimpyTheme.gray300
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
-
-    // Paint for light gray background
+    // The empty tank. It needs no outline of its own: the timer ring around it
+    // is a closed circle in every state, so it already bounds the shape.
     final lightGrayPaint = Paint()
       ..color = CrimpyTheme.gray100
       ..style = PaintingStyle.fill;
@@ -70,9 +63,7 @@ class WeightGaugePainter extends CustomPainter {
       ..color = targetMatched ? CrimpyTheme.statusSuccess : CrimpyTheme.gray600
       ..style = PaintingStyle.fill;
 
-    // Draw light gray background circle
-    canvas.drawCircle(center, innerRadius, lightGrayPaint);
-    canvas.drawCircle(center, radius - (strokeWidth / 2), outlinePaint);
+    canvas.drawCircle(center, radius, lightGrayPaint);
 
     // Save canvas state before clipping
     canvas.save();
@@ -88,7 +79,7 @@ class WeightGaugePainter extends CustomPainter {
     canvas.clipRect(clipRect);
 
     // Draw dark gray fill inside the clipped area
-    canvas.drawCircle(center, innerRadius, darkGrayPaint);
+    canvas.drawCircle(center, radius, darkGrayPaint);
 
     // Restore canvas to remove clipping
     canvas.restore();
@@ -172,7 +163,7 @@ class WeightGaugePainter extends CustomPainter {
         canvas,
         Offset(
           center.dx - onTargetPainter.width / 2,
-          size.height - onTargetPainter.height - innerRadius / 4,
+          size.height - onTargetPainter.height - radius / 4,
         ),
       );
     }

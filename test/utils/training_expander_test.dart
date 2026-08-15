@@ -52,6 +52,124 @@ void main() {
     expect((out[3] as ConfirmItem).subtitle, 'ROUND 2/2');
   });
 
+  test('circuit rests between its children but not after the last one', () {
+    final training = _training([
+      TrainingItem(
+        id: 'c',
+        type: TrainingItemType.circuit,
+        position: 0,
+        cycles: 2,
+        cycleRestSeconds: 60,
+        restSeconds: 15,
+        items: [
+          TrainingItem(
+            id: 'e1',
+            type: TrainingItemType.exercise,
+            position: 0,
+            reps: 10,
+          ),
+          TrainingItem(
+            id: 'e2',
+            type: TrainingItemType.exercise,
+            position: 1,
+            reps: 10,
+          ),
+        ],
+      ),
+    ]);
+
+    final out = expandTrainingItems(training, useSensor: false);
+
+    expect(out.map((e) => e.runtimeType).toList(), [
+      ConfirmItem,
+      RestItem, // between the two children
+      ConfirmItem,
+      RestItem, // cycle rest, the last child is not followed by an item rest
+      ConfirmItem,
+      RestItem,
+      ConfirmItem,
+    ]);
+    expect((out[1] as RestItem).durationSeconds, 15);
+    expect((out[3] as RestItem).durationSeconds, 60);
+  });
+
+  // The shape the manual editor builds: hang reps carry a rest of their own, so
+  // this is where a circuit rest could end up running twice over.
+  test('a circuit rest replaces the rest its hang reps carry', () {
+    TrainingItem rep(String id, int position) => TrainingItem(
+      id: id,
+      type: TrainingItemType.hangboardRep,
+      position: position,
+      worktimeSeconds: 7,
+      restSeconds: 3,
+      hand: HangboardHand.both,
+    );
+
+    final training = _training([
+      TrainingItem(
+        id: 'c',
+        type: TrainingItemType.circuit,
+        position: 0,
+        cycles: 2,
+        cycleRestSeconds: 120,
+        restSeconds: 15,
+        items: [rep('h1', 0), rep('h2', 1)],
+      ),
+    ]);
+
+    final out = expandTrainingItems(training, useSensor: false);
+
+    expect(out.map((e) => e.runtimeType).toList(), [
+      TimedItem,
+      RestItem,
+      TimedItem,
+      RestItem,
+      TimedItem,
+      RestItem,
+      TimedItem,
+      RestItem,
+    ]);
+    // 15s between items and 120s between cycles, not 3 + 15 and 3 + 120.
+    expect((out[1] as RestItem).durationSeconds, 15);
+    expect((out[3] as RestItem).durationSeconds, 120);
+    expect((out[5] as RestItem).durationSeconds, 15);
+    // Nothing follows the last cycle, so the last rep keeps its own rest.
+    expect((out[7] as RestItem).durationSeconds, 3);
+  });
+
+  test('hang reps in a circuit carry the round context', () {
+    final training = _training([
+      TrainingItem(
+        id: 'c',
+        type: TrainingItemType.circuit,
+        position: 0,
+        cycles: 3,
+        cycleRestSeconds: 60,
+        items: [
+          TrainingItem(
+            id: 'h1',
+            type: TrainingItemType.hangboardRep,
+            position: 0,
+            worktimeSeconds: 7,
+            restSeconds: 3,
+            hand: HangboardHand.both,
+          ),
+        ],
+      ),
+    ]);
+
+    final hangs = expandTrainingItems(
+      training,
+      useSensor: false,
+    ).whereType<TimedItem>().toList();
+
+    expect(hangs.map((h) => h.subtitle).toList(), [
+      'ROUND 1/3',
+      'ROUND 2/3',
+      'ROUND 3/3',
+    ]);
+  });
+
   test('repeater hangs carry set/rep context', () {
     final training = _training([
       TrainingItem(

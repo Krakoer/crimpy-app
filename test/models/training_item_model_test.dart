@@ -397,4 +397,61 @@ void main() {
       expect(withComment.toJson()['comment'], 'Keep elbows tucked');
     });
   });
+
+  group('TrainingItem.copyWith group title', () {
+    const group = TrainingItem(
+      id: 'g',
+      type: TrainingItemType.group,
+      position: 0,
+      groupTitle: 'Warm-up',
+    );
+
+    test('leaves the title alone when none is given', () {
+      expect(group.copyWith(position: 3).groupTitle, 'Warm-up');
+    });
+
+    test('trims a new title and clears a blank one', () {
+      expect(group.copyWith(groupTitle: '  Pull  ').groupTitle, 'Pull');
+      expect(group.copyWith(groupTitle: '   ').groupTitle, isNull);
+    });
+  });
+
+  group('TrainingItem.duplicate', () {
+    test('drops the ids of the whole subtree and keeps everything else', () {
+      const original = TrainingItem(
+        id: 'c',
+        type: TrainingItemType.circuit,
+        position: 2,
+        cycles: 3,
+        cycleRestSeconds: 120,
+        restSeconds: 15,
+        groupTitle: 'Pull block',
+        comment: 'Slow down',
+        items: [
+          TrainingItem(
+            id: 'h',
+            type: TrainingItemType.hangboardRep,
+            position: 0,
+            worktimeSeconds: 7,
+            loads: [Load(value: 20, unit: 'kg')],
+          ),
+        ],
+      );
+
+      final copy = original.duplicate();
+
+      expect(copy.id, isEmpty);
+      expect(copy.items.single.id, isEmpty);
+      expect(copy.cycles, 3);
+      expect(copy.cycleRestSeconds, 120);
+      expect(copy.restSeconds, 15);
+      expect(copy.groupTitle, 'Pull block');
+      expect(copy.comment, 'Slow down');
+      expect(copy.items.single.worktimeSeconds, 7);
+      expect(copy.items.single.loads?.single.value, 20);
+      // The original is untouched, so duplicating never moves what it copied.
+      expect(original.id, 'c');
+      expect(original.items.single.id, 'h');
+    });
+  });
 }

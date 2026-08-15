@@ -197,6 +197,13 @@ class Load {
       : value.toStringAsFixed(1);
 }
 
+/// A title the user left blank reads as no title at all, so the item falls back
+/// to the label of its type rather than showing an empty line.
+String? cleanTitle(String? title) {
+  final trimmed = title?.trim() ?? '';
+  return trimmed.isEmpty ? null : trimmed;
+}
+
 /// Reads the variable targets of an item, dropping any entry that does not name
 /// an assessment this version of the app knows.
 Map<String, VariableTarget> parseVariableTargets(dynamic raw) {
@@ -522,6 +529,9 @@ class TrainingItem {
     return map;
   }
 
+  /// A null argument leaves the field alone, except for [groupTitle]: a blank
+  /// one clears the title, since an editor always has some text to hand over
+  /// and a group is allowed to have no name.
   TrainingItem copyWith({
     int? position,
     int? worktimeSeconds,
@@ -538,6 +548,7 @@ class TrainingItem {
     List<List<String>>? handPositions,
     bool? loadIsMax,
     Map<String, VariableTarget>? variableTargets,
+    String? groupTitle,
     List<TrainingItem>? items,
   }) {
     return TrainingItem(
@@ -563,10 +574,39 @@ class TrainingItem {
       comment: comment,
       exerciseId: exerciseId,
       exerciseName: exerciseName,
-      groupTitle: groupTitle,
+      groupTitle: groupTitle == null ? this.groupTitle : cleanTitle(groupTitle),
       items: items ?? this.items,
     );
   }
+
+  /// A copy that saves as a new item. Ids are assigned by the store on save, so
+  /// a duplicate must not carry the one of the item it was copied from, or the
+  /// two would be the same item to everything that keys on it.
+  TrainingItem duplicate() => TrainingItem(
+    id: '',
+    type: type,
+    position: position,
+    worktimeSeconds: worktimeSeconds,
+    restSeconds: restSeconds,
+    cycles: cycles,
+    cycleRestSeconds: cycleRestSeconds,
+    reps: reps,
+    duration: duration,
+    hand: hand,
+    granularity: granularity,
+    loads: loads,
+    leftLoads: leftLoads,
+    edgeSizesMm: edgeSizesMm,
+    handPositions: handPositions,
+    loadIsMax: loadIsMax,
+    variableTargets: variableTargets,
+    freeText: freeText,
+    comment: comment,
+    exerciseId: exerciseId,
+    exerciseName: exerciseName,
+    groupTitle: groupTitle,
+    items: items.map((child) => child.duplicate()).toList(),
+  );
 
   /// Returns a copy with the sparse program override applied. Only keys present
   /// in [override] replace base values; missing keys are kept.
