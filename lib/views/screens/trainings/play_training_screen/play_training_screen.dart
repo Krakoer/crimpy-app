@@ -534,8 +534,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
   @override
   Widget build(BuildContext context) {
-    final style =
-        ref.watch(runScreenStyleProvider).value ?? RunScreenStyle.fallback;
+    // The stored design is read asynchronously. Committing to one before it
+    // lands would show the wrong design for the first frames of a cold start,
+    // and then swap it under the athlete as they are about to hang.
+    final style = ref.watch(runScreenStyleProvider).value;
     final isFullTank = style == RunScreenStyle.fullTank;
 
     return PopScope(
@@ -570,106 +572,120 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
           navigator.pop();
         }
       },
-      child: Scaffold(
-        backgroundColor: CrimpyTheme.bgPrimary,
-        // The full tank reaches the top of the screen. Leaving the workout
-        // still runs through the confirmation on the system back gesture.
-        appBar: isFullTank
-            ? null
-            : AppBar(title: Text(widget.training.title), centerTitle: true),
-        body: SafeArea(
-          child: isFullTank
-              ? _buildFullTank()
-              : LayoutBuilder(
-                  builder: (context, constraints) {
-                    // Calculate available height
-                    final availableHeight = constraints.maxHeight;
+      child: style == null
+          ? const Scaffold(backgroundColor: CrimpyTheme.bgPrimary)
+          : Scaffold(
+              backgroundColor: CrimpyTheme.bgPrimary,
+              // The full tank reaches the top of the screen. Leaving the workout
+              // still runs through the confirmation on the system back gesture.
+              appBar: isFullTank
+                  ? null
+                  : AppBar(
+                      title: Text(widget.training.title),
+                      centerTitle: true,
+                    ),
+              body: SafeArea(
+                child: isFullTank
+                    ? _buildFullTank()
+                    : LayoutBuilder(
+                        builder: (context, constraints) {
+                          // Calculate available height
+                          final availableHeight = constraints.maxHeight;
 
-                    // Space taken by the top header + context pill, the fixed
-                    // header/below slots around the circle, the progress bar and the
-                    // controls. Whatever is left is available to the gauge.
-                    const chromeHeight = 320.0;
-                    final gaugeSpace = availableHeight - chromeHeight;
+                          // Space taken by the top header + context pill, the fixed
+                          // header/below slots around the circle, the progress bar and the
+                          // controls. Whatever is left is available to the gauge.
+                          const chromeHeight = 320.0;
+                          final gaugeSpace = availableHeight - chromeHeight;
 
-                    // Calculate gauge size (max 300, but scale down if needed)
-                    final gaugeSize = (gaugeSpace * 0.6).clamp(200.0, 300.0);
+                          // Calculate gauge size (max 300, but scale down if needed)
+                          final gaugeSize = (gaugeSpace * 0.6).clamp(
+                            200.0,
+                            300.0,
+                          );
 
-                    // Scale timer text based on available space
-                    final timerFontSize = (availableHeight * 0.06).clamp(
-                      32.0,
-                      48.0,
-                    );
+                          // Scale timer text based on available space
+                          final timerFontSize = (availableHeight * 0.06).clamp(
+                            32.0,
+                            48.0,
+                          );
 
-                    return Column(
-                      children: [
-                        // Header. The total time is only meaningful when every step
-                        // is timed; self-paced (rep-based) steps make it unknown.
-                        TrainingHeader(
-                          elapsedMilliseconds: timer.elapsedMilliseconds,
-                          remainingMilliseconds:
-                              _totalTrainingSeconds * 1000 -
-                              timer.elapsedMilliseconds,
-                          showRemaining: _isFullyTimed,
-                        ),
-                        // Fixed context slot (set/rep/round), always at the same place
-                        // and shown during rests via look-ahead to the next step.
-                        _contextSlot(),
-                        // Main content area
-                        Expanded(
-                          child: Center(
-                            child: timer.currentItem is ConfirmItem
-                                ? _buildConfirmContent(timerFontSize)
-                                : _buildTimedContent(gaugeSize, timerFontSize),
-                          ),
-                        ),
-                        // Progress info
-                        // Adjust indices: preparation rep is at index 0, actual training starts at index 1
-                        // So we subtract 1 to show the correct rep number relative to the actual training
-                        TrainingProgressInfo(
-                          currentRepIndex: timer.currentItemIndex > 0
-                              ? timer.currentItemIndex - 1
-                              : 0,
-                          totalReps: _itemsWithPreparation.length - 1,
-                        ),
-                        const SizedBox(height: 8),
-                        // Controls
-                        if (timer.currentItem is ConfirmItem)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  if (!timer.isRunning) _start();
-                                  setState(() => timer.confirmRep());
-                                },
-                                icon: const Icon(Icons.check),
-                                label: const Text('DONE'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: CrimpyTheme.primaryOrange,
-                                  foregroundColor: CrimpyTheme.bgPrimary,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                  ),
+                          return Column(
+                            children: [
+                              // Header. The total time is only meaningful when every step
+                              // is timed; self-paced (rep-based) steps make it unknown.
+                              TrainingHeader(
+                                elapsedMilliseconds: timer.elapsedMilliseconds,
+                                remainingMilliseconds:
+                                    _totalTrainingSeconds * 1000 -
+                                    timer.elapsedMilliseconds,
+                                showRemaining: _isFullyTimed,
+                              ),
+                              // Fixed context slot (set/rep/round), always at the same place
+                              // and shown during rests via look-ahead to the next step.
+                              _contextSlot(),
+                              // Main content area
+                              Expanded(
+                                child: Center(
+                                  child: timer.currentItem is ConfirmItem
+                                      ? _buildConfirmContent(timerFontSize)
+                                      : _buildTimedContent(
+                                          gaugeSize,
+                                          timerFontSize,
+                                        ),
                                 ),
                               ),
-                            ),
-                          )
-                        else
-                          TrainingControls(
-                            isRunning: timer.isRunning,
-                            onPlayPause: timer.isRunning ? _stop : _start,
-                            onSkip: () {
-                              _start();
-                              timer.skipRep();
-                            },
-                          ),
-                      ],
-                    );
-                  },
-                ),
-        ),
-      ),
+                              // Progress info
+                              // Adjust indices: preparation rep is at index 0, actual training starts at index 1
+                              // So we subtract 1 to show the correct rep number relative to the actual training
+                              TrainingProgressInfo(
+                                currentRepIndex: timer.currentItemIndex > 0
+                                    ? timer.currentItemIndex - 1
+                                    : 0,
+                                totalReps: _itemsWithPreparation.length - 1,
+                              ),
+                              const SizedBox(height: 8),
+                              // Controls
+                              if (timer.currentItem is ConfirmItem)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                  ),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        if (!timer.isRunning) _start();
+                                        setState(() => timer.confirmRep());
+                                      },
+                                      icon: const Icon(Icons.check),
+                                      label: const Text('DONE'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            CrimpyTheme.primaryOrange,
+                                        foregroundColor: CrimpyTheme.bgPrimary,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              else
+                                TrainingControls(
+                                  isRunning: timer.isRunning,
+                                  onPlayPause: timer.isRunning ? _stop : _start,
+                                  onSkip: () {
+                                    _start();
+                                    timer.skipRep();
+                                  },
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+              ),
+            ),
     );
   }
 }
