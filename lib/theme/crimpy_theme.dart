@@ -85,6 +85,9 @@ class CrimpyTheme {
   /// Muted text - Light gray
   static const Color textMuted = Color(0xFF999999);
 
+  /// Secondary text drawn over a filled surface - Translucent white
+  static const Color textOnFillSecondary = Color(0xB3FFFFFF);
+
   // ==================== BORDER COLORS ====================
 
   /// Default border - Light gray

@@ -67,8 +67,6 @@ class _TankPalette {
     required this.notch,
   });
 
-  static const _onWhite = Color(0xB3FFFFFF);
-
   static const overTank = _TankPalette(
     force: CrimpyTheme.primaryBlack,
     secondary: CrimpyTheme.textSecondary,
@@ -80,10 +78,10 @@ class _TankPalette {
 
   static const overFill = _TankPalette(
     force: CrimpyTheme.primaryWhite,
-    secondary: _onWhite,
+    secondary: CrimpyTheme.textOnFillSecondary,
     accent: CrimpyTheme.primaryWhite,
-    muted: _onWhite,
-    detail: _onWhite,
+    muted: CrimpyTheme.textOnFillSecondary,
+    detail: CrimpyTheme.textOnFillSecondary,
     notch: CrimpyTheme.primaryWhite,
   );
 }
