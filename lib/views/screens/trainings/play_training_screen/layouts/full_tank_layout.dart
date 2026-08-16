@@ -5,6 +5,7 @@ import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
+import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,18 +22,25 @@ const double _referenceTankHeight = 624;
 /// target is met.
 const double targetNotchFraction = 0.67;
 
-/// Height of the force level as a fraction of the tank. Against a target it is
-/// the mapping the circular gauge already fills with, so both designs read the
-/// same. A step prescribing no load is scaled against the peak of the rep
-/// instead, so pulling still reads as a level rising rather than a blank tank.
+/// Weight the tank is full at the notch for, or 0 when there is nothing stable
+/// to scale against. A step prescribing a load uses it. A max hang prescribes
+/// none, and is scaled against the bodyweight instead: it is known before the
+/// first sample and does not move during the rep, which the peak of the rep
+/// does not manage, being the current value all the way up the pull.
+double tankScaleWeight({
+  required double targetWeight,
+  required double? bodyweight,
+}) => targetWeight > 0 ? targetWeight : (bodyweight ?? 0);
+
+/// Height of the force level as a fraction of the tank. It is the mapping the
+/// circular gauge already fills with, so both designs read the same. With
+/// nothing to scale against the tank stays empty, as the circle does.
 double tankFillFraction({
   required double currentWeight,
-  required double targetWeight,
-  required double peakWeight,
+  required double scaleWeight,
 }) {
-  final scaleMax = targetWeight > 0 ? targetWeight : peakWeight;
-  if (scaleMax <= 0) return 0;
-  return min(1.0, currentWeight / scaleMax * targetNotchFraction);
+  if (scaleWeight <= 0) return 0;
+  return min(1.0, currentWeight / scaleWeight * targetNotchFraction);
 }
 
 /// What the tank draws, which is what the running step is.
@@ -156,17 +164,25 @@ class FullTankLayout extends ConsumerWidget {
     // stream on the other steps would rebuild the screen on every sample for
     // nothing.
     final currentWeight = sensor ? ref.watch(bleLastValueProvider) ?? 0 : 0.0;
-    final peakWeight = sensor ? ref.watch(bleSessionProvider).max : 0.0;
+    // Only a step prescribing no load needs the bodyweight to scale against.
+    final bodyweight = sensor && targetWeight <= 0
+        ? ref.watch(bodyweightProvider).value
+        : null;
 
+    final scaleWeight = sensor
+        ? tankScaleWeight(targetWeight: targetWeight, bodyweight: bodyweight)
+        : 0.0;
     final onTarget =
         sensor && targetWeight > 0 && currentWeight >= targetWeight;
-    final fillFraction = sensor
-        ? tankFillFraction(
-            currentWeight: currentWeight,
-            targetWeight: targetWeight,
-            peakWeight: peakWeight,
-          )
-        : 0.0;
+    final fillFraction = tankFillFraction(
+      currentWeight: currentWeight,
+      scaleWeight: scaleWeight,
+    );
+    final notchLabel = scaleWeight <= 0
+        ? null
+        : targetWeight > 0
+        ? 'TARGET ${formatKilograms(targetWeight)} kg'
+        : 'BW ${formatKilograms(scaleWeight)} kg';
     final paused = !isRunning && !isPreparation;
 
     return LayoutBuilder(
@@ -182,7 +198,7 @@ class FullTankLayout extends ConsumerWidget {
           tankHeight: tankHeight,
           scale: scale,
           currentWeight: currentWeight,
-          showNotch: sensor && targetWeight > 0,
+          notchLabel: notchLabel,
         );
 
         final tank = Stack(
@@ -304,7 +320,10 @@ class _TankContent extends StatelessWidget {
   final double tankHeight;
   final double scale;
   final double currentWeight;
-  final bool showNotch;
+
+  /// What the notch stands for, e.g. "TARGET 42 kg", or null when there is
+  /// nothing to scale against and no notch is drawn.
+  final String? notchLabel;
 
   const _TankContent({
     required this.layout,
@@ -313,7 +332,7 @@ class _TankContent extends StatelessWidget {
     required this.tankHeight,
     required this.scale,
     required this.currentWeight,
-    required this.showNotch,
+    required this.notchLabel,
   });
 
   double _s(double size) => size * scale;
@@ -354,7 +373,7 @@ class _TankContent extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        if (showNotch)
+        if (notchLabel != null)
           Positioned(
             left: 0,
             right: 0,
@@ -511,7 +530,6 @@ class _TankContent extends StatelessWidget {
 
   /// The force, as large as the tank allows, over the level that measures it.
   List<Widget> _forceReadout() {
-    final rep = layout.item as TimedItem;
     final formatted = formatKilograms(currentWeight);
     final dot = formatted.indexOf('.');
 
@@ -542,11 +560,11 @@ class _TankContent extends StatelessWidget {
           style: _style(40, color: palette.force, weight: FontWeight.w900),
         ),
       ),
-      if (rep.targetLoad > 0)
+      if (notchLabel != null)
         line(
           0.606,
           Text(
-            'TARGET ${formatKilograms(rep.targetLoad)} kg',
+            notchLabel!,
             textAlign: TextAlign.center,
             style: _style(
               16,

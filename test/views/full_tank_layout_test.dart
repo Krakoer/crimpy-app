@@ -1,19 +1,19 @@
-import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
+import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/layouts/full_tank_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class _FakeBleSession extends BleSession {
-  _FakeBleSession(this.stats);
+class _FakeBodyweight extends BodyweightController {
+  _FakeBodyweight(this.kilograms);
 
-  final BleSessionStats stats;
+  final double? kilograms;
 
   @override
-  BleSessionStats build() => stats;
+  Future<double?> build() async => kilograms;
 }
 
 const _hang = TimedItem(
@@ -38,98 +38,125 @@ const _pullUps = TimedItem(
   subtitle: 'CIRCUIT 1/2',
 );
 
+const _maxHang = TimedItem(
+  label: 'Max hang',
+  durationSeconds: 10,
+  targetLoad: 0,
+  handSide: HandSide.both,
+  gripPosition: GripPosition.halfCrimp,
+  collectSensorData: true,
+  edgeSizeMm: 20,
+  isHang: true,
+  subtitle: 'SET 1/3',
+);
+
 Future<void> _pump(
   WidgetTester tester, {
   required TrainingExecutionItem item,
   TrainingExecutionItem? nextItem,
   double currentWeight = 0,
-  double peak = 0,
+  double? bodyweight,
   int secondsRemaining = 5,
   bool isPreparation = false,
   bool isRunning = true,
   String? repContext = 'SET 2/4 - REP 3/6',
   String? comment,
   TargetPlatform platform = TargetPlatform.android,
-}) => tester.pumpWidget(
-  ProviderScope(
-    overrides: [
-      bleLastValueProvider.overrideWithValue(currentWeight),
-      bleSessionProvider.overrideWith(
-        () => _FakeBleSession(BleSessionStats(max: peak)),
-      ),
-    ],
-    child: MaterialApp(
-      theme: ThemeData(platform: platform),
-      home: Scaffold(
-        body: FullTankLayout(
-          item: item,
-          nextItem: nextItem,
-          secondsRemaining: secondsRemaining,
-          elapsedMilliseconds: 252000,
-          remainingMilliseconds: 118000,
-          showRemaining: true,
-          isPreparation: isPreparation,
-          isRunning: isRunning,
-          repContext: repContext,
-          comment: comment,
-          nextComment: null,
-          onPlayPause: () {},
-          onSkip: () {},
-          onConfirm: () {},
+}) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        bleLastValueProvider.overrideWithValue(currentWeight),
+        bodyweightProvider.overrideWith(() => _FakeBodyweight(bodyweight)),
+      ],
+      child: MaterialApp(
+        theme: ThemeData(platform: platform),
+        home: Scaffold(
+          body: FullTankLayout(
+            item: item,
+            nextItem: nextItem,
+            secondsRemaining: secondsRemaining,
+            elapsedMilliseconds: 252000,
+            remainingMilliseconds: 118000,
+            showRemaining: true,
+            isPreparation: isPreparation,
+            isRunning: isRunning,
+            repContext: repContext,
+            comment: comment,
+            nextComment: null,
+            onPlayPause: () {},
+            onSkip: () {},
+            onConfirm: () {},
+          ),
         ),
       ),
     ),
-  ),
-);
+  );
+  // The bodyweight is loaded asynchronously, so the tank only knows what it
+  // scales a max hang against on the frame after the first.
+  await tester.pump();
+}
 
 void main() {
+  group('what the tank is scaled against', () {
+    test('is the prescribed load when there is one', () {
+      expect(tankScaleWeight(targetWeight: 42, bodyweight: 72), 42);
+    });
+
+    // A max hang prescribes no load, so the bodyweight stands in: it is known
+    // before the first sample and holds still for the whole pull.
+    test('is the bodyweight on a step prescribing no load', () {
+      expect(tankScaleWeight(targetWeight: 0, bodyweight: 72), 72);
+    });
+
+    test(
+      'is nothing when no load is prescribed and no bodyweight is known',
+      () {
+        expect(tankScaleWeight(targetWeight: 0, bodyweight: null), 0);
+      },
+    );
+  });
+
   group('the force level', () {
     test('lands on the target notch exactly when the target is met', () {
       expect(
-        tankFillFraction(currentWeight: 42, targetWeight: 42, peakWeight: 42),
+        tankFillFraction(currentWeight: 42, scaleWeight: 42),
         targetNotchFraction,
       );
     });
 
     test('rises in proportion to the pull', () {
       expect(
-        tankFillFraction(currentWeight: 21, targetWeight: 42, peakWeight: 21),
+        tankFillFraction(currentWeight: 21, scaleWeight: 42),
         targetNotchFraction / 2,
       );
     });
 
     test('has room left above the notch for an overshoot', () {
-      final overshoot = tankFillFraction(
-        currentWeight: 50,
-        targetWeight: 42,
-        peakWeight: 50,
-      );
+      final overshoot = tankFillFraction(currentWeight: 50, scaleWeight: 42);
 
       expect(overshoot, greaterThan(targetNotchFraction));
       expect(overshoot, lessThan(1));
     });
 
     test('never climbs past the top of the tank', () {
-      expect(
-        tankFillFraction(currentWeight: 400, targetWeight: 42, peakWeight: 400),
-        1,
-      );
+      expect(tankFillFraction(currentWeight: 400, scaleWeight: 42), 1);
     });
 
-    // A max hang prescribes no load, so there is nothing to scale against but
-    // what the athlete has already pulled this rep.
-    test('falls back to the peak of the rep when no target is set', () {
-      expect(
-        tankFillFraction(currentWeight: 25, targetWeight: 0, peakWeight: 50),
-        targetNotchFraction / 2,
-      );
+    test('stays empty when there is nothing to scale against', () {
+      expect(tankFillFraction(currentWeight: 25, scaleWeight: 0), 0);
     });
 
-    test('stays flat before the first sample of a rep with no target', () {
-      expect(
-        tankFillFraction(currentWeight: 0, targetWeight: 0, peakWeight: 0),
-        0,
-      );
+    // Scaling a max hang against the peak of the rep pinned the level at the
+    // notch from the first sample, the peak being the current value all the way
+    // up the pull. Against the bodyweight it climbs.
+    test('climbs through a max hang instead of pinning to the notch', () {
+      final early = tankFillFraction(currentWeight: 10, scaleWeight: 72);
+      final late = tankFillFraction(currentWeight: 30, scaleWeight: 72);
+
+      expect(early, lessThan(late));
+      expect(early, lessThan(targetNotchFraction));
+      expect(late, lessThan(targetNotchFraction));
     });
   });
 
@@ -141,7 +168,6 @@ void main() {
         tester,
         item: _hang,
         currentWeight: 34.2,
-        peak: 34.2,
         comment: 'Keep the shoulders engaged',
       );
 
@@ -163,18 +189,18 @@ void main() {
     });
 
     testWidgets('calls out reaching the target', (tester) async {
-      await _pump(tester, item: _hang, currentWeight: 41.9, peak: 42);
+      await _pump(tester, item: _hang, currentWeight: 41.9);
       expect(find.text('ON TARGET'), findsNothing);
       expect(find.text('WORK'), findsOneWidget);
 
-      await _pump(tester, item: _hang, currentWeight: 42, peak: 42);
+      await _pump(tester, item: _hang, currentWeight: 42);
       expect(find.text('ON TARGET'), findsOneWidget);
     });
 
     testWidgets('draws the readouts twice so they invert over the level', (
       tester,
     ) async {
-      await _pump(tester, item: _hang, currentWeight: 34.2, peak: 34.2);
+      await _pump(tester, item: _hang, currentWeight: 34.2);
       expect(find.text('34'), findsNWidgets(2));
 
       // Nothing to invert before the first pull, so a single copy is drawn.
@@ -206,6 +232,27 @@ void main() {
     testWidgets('keeps the set and rep on screen', (tester) async {
       await _pump(tester, item: _hang, currentWeight: 34.2);
       expect(find.text('SET 2/4 - REP 3/6'), findsOneWidget);
+    });
+
+    testWidgets('scales a step prescribing no load against the bodyweight', (
+      tester,
+    ) async {
+      await _pump(tester, item: _maxHang, currentWeight: 34.2, bodyweight: 72);
+
+      expect(find.text('BW 72 kg'), findsWidgets);
+      expect(find.textContaining('TARGET'), findsNothing);
+      // The level is up, so both copies of the readout are drawn.
+      expect(find.text('34'), findsNWidgets(2));
+    });
+
+    testWidgets('leaves the tank empty when it has nothing to scale against', (
+      tester,
+    ) async {
+      await _pump(tester, item: _maxHang, currentWeight: 34.2);
+
+      expect(find.textContaining('BW'), findsNothing);
+      expect(find.textContaining('TARGET'), findsNothing);
+      expect(find.text('34'), findsOneWidget);
     });
   });
 
