@@ -49,6 +49,7 @@ Future<void> _pump(
   bool isRunning = true,
   String? repContext = 'SET 2/4 - REP 3/6',
   String? comment,
+  TargetPlatform platform = TargetPlatform.android,
 }) => tester.pumpWidget(
   ProviderScope(
     overrides: [
@@ -58,6 +59,7 @@ Future<void> _pump(
       ),
     ],
     child: MaterialApp(
+      theme: ThemeData(platform: platform),
       home: Scaffold(
         body: FullTankLayout(
           item: item,
@@ -178,6 +180,27 @@ void main() {
       // Nothing to invert before the first pull, so a single copy is drawn.
       await _pump(tester, item: _hang, currentWeight: 0);
       expect(find.text('0'), findsOneWidget);
+    });
+
+    // Android leaves the workout with its own back gesture.
+    testWidgets('leaves the corner alone where the system has a way back', (
+      tester,
+    ) async {
+      await _pump(tester, item: _hang, currentWeight: 34.2);
+
+      expect(find.byIcon(Icons.arrow_back), findsNothing);
+    });
+
+    // iOS has nothing to leave with once the app bar is gone.
+    testWidgets('offers a way out where the system has none', (tester) async {
+      await _pump(
+        tester,
+        item: _hang,
+        currentWeight: 34.2,
+        platform: TargetPlatform.iOS,
+      );
+
+      expect(find.byIcon(Icons.arrow_back), findsWidgets);
     });
 
     testWidgets('keeps the set and rep on screen', (tester) async {

@@ -318,6 +318,11 @@ class _TankContent extends StatelessWidget {
 
   double _s(double size) => size * scale;
 
+  /// Whether the platform leaves the athlete no way back out of the workout
+  /// on its own, the app bar being gone in this design.
+  bool _needsBackButton(BuildContext context) =>
+      Theme.of(context).platform == TargetPlatform.iOS;
+
   /// A type size, scaled from the tank the phone gave. Display numbers clamp
   /// so they stay readable on a small screen without overflowing a large one.
   TextStyle _style(
@@ -357,9 +362,26 @@ class _TankContent extends StatelessWidget {
             height: 2,
             child: ColoredBox(color: palette.notch),
           ),
+        // Without an app bar, a platform with no hardware back button needs
+        // something to leave the workout with. It goes through the same
+        // confirmation the back gesture does.
+        if (_needsBackButton(context))
+          Positioned(
+            left: 0,
+            top: 0,
+            width: 44,
+            height: 44,
+            child: IconButton(
+              onPressed: () => Navigator.maybePop(context),
+              icon: const Icon(Icons.arrow_back),
+              iconSize: 18,
+              color: palette.force,
+              padding: EdgeInsets.zero,
+            ),
+          ),
         Positioned(
           left: 16,
-          top: 14,
+          top: _needsBackButton(context) ? 58 : 14,
           right: 16 + _s(140),
           child: _topLeftBlock(),
         ),
