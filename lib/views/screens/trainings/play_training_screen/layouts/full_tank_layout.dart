@@ -439,7 +439,7 @@ class _TankContent extends StatelessWidget {
         if (namesTheGrip) ...[
           SizedBox(height: _s(10)),
           Text(
-            handSideLabel(rep!.handSide),
+            rep!.handSide.displayName,
             style: _style(
               16,
               color: palette.accent,
@@ -626,7 +626,7 @@ class _TankContent extends StatelessWidget {
     if (!rep.collectSensorData) {
       return 'Get ready. First up: ${rep.label.toLowerCase()}.';
     }
-    final hands = handSideLabel(rep.handSide).toLowerCase();
+    final hands = rep.handSide.displayName.toLowerCase();
     return 'Get on the edge. '
         '${hands[0].toUpperCase()}${hands.substring(1)}, '
         '${rep.gripPosition.displayName.toLowerCase()}'
@@ -662,7 +662,7 @@ class _TankContent extends StatelessWidget {
       SizedBox(height: _s(14)),
       Text(
         sensor
-            ? handSideLabel(rep!.handSide)
+            ? rep!.handSide.displayName
             : describeExecutionItem(next).toUpperCase(),
         textAlign: TextAlign.center,
         style: _style(30, color: palette.force, weight: FontWeight.w900),
@@ -796,12 +796,6 @@ class _TankContent extends StatelessWidget {
     ]);
   }
 }
-
-String handSideLabel(HandSide handSide) => switch (handSide) {
-  HandSide.left => 'LEFT HAND',
-  HandSide.right => 'RIGHT HAND',
-  HandSide.both => 'BOTH HANDS',
-};
 
 String gripLine(GripPosition gripPosition, int? edgeSizeMm) => [
   gripPosition.shortName,
