@@ -1,8 +1,11 @@
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/services/notification_service.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/calibration/start_calibration_dialog.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/create_sensor_config_dialog.dart';
-import 'package:crimpy/views/screens/settings_screen/widgets/gauge_style_selector.dart';
+import 'package:crimpy/models/run_screen_style.dart';
+import 'package:crimpy/viewmodels/run_screen_style_view_model.dart';
+import 'package:crimpy/views/screens/settings_screen/run_screen_style_picker_screen.dart';
 import 'package:crimpy/viewmodels/app_info_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/views/screens/settings_screen/notification_settings_screen.dart';
@@ -161,7 +164,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       ),
                     ],
                   ),
-                  const GaugeStyleSelector(),
+                  ListTile(
+                    leading: const Icon(Icons.tune),
+                    title: const Text('Run screen design'),
+                    subtitle: const Text(
+                      'How the gauge and timer are laid out',
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          (ref.watch(runScreenStyleProvider).value ??
+                                  RunScreenStyle.fallback)
+                              .displayName,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: CrimpyTheme.primaryOrange,
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right),
+                      ],
+                    ),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (ctx) => const RunScreenStylePickerScreen(),
+                      ),
+                    ),
+                  ),
                   // Reminders only exist for coach-assigned programs, and only
                   // on the platforms that can deliver a scheduled notification.
                   if (supportsTrainingReminders &&

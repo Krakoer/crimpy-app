@@ -15,6 +15,15 @@ String formatMillisHHMMSS(int milli) {
   return "$hours:$minutes:$seconds";
 }
 
+/// Minutes and seconds of a duration in milliseconds, e.g. "04:12". Minutes
+/// keep counting past an hour rather than rolling over.
+String formatMillisMinutesSeconds(int milliseconds) {
+  final duration = Duration(milliseconds: milliseconds);
+  final minutes = duration.inMinutes.toString().padLeft(2, '0');
+  final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+  return '$minutes:$seconds';
+}
+
 /// Format duration in seconds to human-readable format:
 /// 34s, 1m 34s, 4m, 1h 3m, etc...
 String formatDurationHMS(int seconds) {

@@ -7,19 +7,11 @@ class HandLabel extends StatelessWidget {
   final GripPosition? gripPosition;
   final int? edgeSizeMm;
 
-  /// Colors of the hand name and of the grip details under it. They are given
-  /// by the full screen gauge, which draws the label twice to invert it where
-  /// the force level has covered it.
-  final Color color;
-  final Color detailColor;
-
   const HandLabel({
     super.key,
     required this.handSide,
     this.gripPosition,
     this.edgeSizeMm,
-    this.color = CrimpyTheme.primaryOrange,
-    this.detailColor = CrimpyTheme.gray400,
   });
 
   String _getHandLabel() {
@@ -41,7 +33,7 @@ class HandLabel extends StatelessWidget {
         Text(
           _getHandLabel(),
           style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-            color: color,
+            color: CrimpyTheme.primaryOrange,
             fontWeight: FontWeight.bold,
             letterSpacing: 2,
             fontSize: 18,
@@ -55,7 +47,7 @@ class HandLabel extends StatelessWidget {
               if (edgeSizeMm != null) '${edgeSizeMm}mm',
             ].join(' - '),
             style: Theme.of(context).textTheme.bodySmall!.copyWith(
-              color: detailColor,
+              color: CrimpyTheme.gray400,
               fontWeight: FontWeight.w500,
               fontSize: 12,
             ),

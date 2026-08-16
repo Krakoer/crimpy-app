@@ -1,5 +1,8 @@
+import 'package:crimpy/models/run_screen_style.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/services/run_screen_style_service.dart';
+import 'package:crimpy/viewmodels/run_screen_style_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -78,14 +81,35 @@ Training _oneCommentedExercise() => const Training(
   ],
 );
 
-Future<void> _pumpRun(WidgetTester tester, Training training) =>
-    tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: PlayTrainingScreen(training, useSensor: false),
+/// Serves one design without touching the device storage, so a test states
+/// which layout it is about.
+class _FixedStyleService extends RunScreenStyleService {
+  _FixedStyleService(this.style);
+
+  final RunScreenStyle style;
+
+  @override
+  Future<RunScreenStyle> load() async => style;
+
+  @override
+  Future<void> save(RunScreenStyle style) async {}
+}
+
+/// Runs a training in the ring design, whose header, timer and next-up line
+/// these tests are written against.
+Future<void> _pumpRun(WidgetTester tester, Training training) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        runScreenStyleServiceProvider.overrideWithValue(
+          _FixedStyleService(RunScreenStyle.ringAndTank),
         ),
-      ),
-    );
+      ],
+      child: MaterialApp(home: PlayTrainingScreen(training, useSensor: false)),
+    ),
+  );
+  await tester.pump();
+}
 
 /// Moves to the next step of the run, the way the skip button does.
 Future<void> _skip(WidgetTester tester) async {
