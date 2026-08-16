@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/format.dart';
 
 class NextRepPreview extends StatelessWidget {
   final TrainingExecutionItem nextRep;
@@ -18,7 +19,7 @@ class NextRepPreview extends StatelessWidget {
       item.handSide.displayName,
       item.gripPosition.shortName,
       if (item.edgeSizeMm != null) '${item.edgeSizeMm}mm',
-      if (w > 0) '${w.toStringAsFixed(w.truncateToDouble() == w ? 0 : 1)}kg',
+      if (w > 0) '${formatKilograms(w)}kg',
       '${item.durationSeconds}s',
     ].join(' - ');
   }

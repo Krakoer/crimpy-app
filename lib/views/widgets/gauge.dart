@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
+import 'package:crimpy/utils/format.dart';
 import '../../theme/crimpy_theme.dart';
 
 class Gauge extends ConsumerWidget {
@@ -104,9 +105,7 @@ class WeightGaugePainter extends CustomPainter {
     // Draw current weight text
     _drawTextWithColorTransition(
       canvas: canvas,
-      text: currentWeight.toStringAsFixed(
-        currentWeight.truncateToDouble() == currentWeight ? 0 : 1,
-      ),
+      text: formatKilograms(currentWeight),
       position: Offset(centerText.dx, centerText.dy - 24),
       textStyle: textStyle,
       fillPercentage: fillPercentage,
@@ -125,9 +124,7 @@ class WeightGaugePainter extends CustomPainter {
     // Draw target weight text
     _drawTextWithColorTransition(
       canvas: canvas,
-      text: targetWeight.toStringAsFixed(
-        targetWeight.truncateToDouble() == targetWeight ? 0 : 1,
-      ),
+      text: formatKilograms(targetWeight),
       position: Offset(centerText.dx, centerText.dy + 20),
       textStyle: targetTextStyle,
       fillPercentage: fillPercentage,
