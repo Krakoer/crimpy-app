@@ -4,10 +4,11 @@ import 'package:crimpy/models/training.dart';
 
 /// Maps a backend training_type string to the app SessionActivity.
 SessionActivity sessionActivityFromApi(String? value) => switch (value) {
-  'crimpy' => SessionActivity.hangboard,
+  'hangboard' => SessionActivity.hangboard,
   'climbing' => SessionActivity.climbing,
   'stretching' => SessionActivity.stretching,
   'workout' => SessionActivity.workout,
+  'other' => SessionActivity.other,
   _ => SessionActivity.hangboard,
 };
 
