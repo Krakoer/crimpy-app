@@ -160,12 +160,17 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
   void onReturnedToForeground() async {
     if (!_interrupted) return;
     final navigator = Navigator.of(context);
+    final runRoute = ModalRoute.of(context);
     await showAssessmentInterruptedDialog(
       context,
       reason:
           'Critical Force measures how your pulling force declines without a '
           'break, so the test has to run start to finish in one go.',
     );
+    // The tutorial and the leave confirmation sit on the same navigator as the
+    // run, so a single pop would close whichever of those was open and leave
+    // the discarded run on screen.
+    navigator.popUntil((route) => route == runRoute || route.isFirst);
     navigator.pop();
   }
 
@@ -242,8 +247,9 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                   ),
                   forceShow: true,
                 ).then((_) {
-                  // Resume timer after tutorial is closed
-                  if (mounted) {
+                  // An interruption discards the run, so closing the tutorial
+                  // it was opened over must not put the clock back on.
+                  if (mounted && !_interrupted) {
                     setState(() {
                       timer.play();
                     });
