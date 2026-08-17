@@ -84,22 +84,24 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
     _interrupted = true;
     _timer?.cancel();
     _stopwatch.stop();
-    ref.read(bleRepositoryProvider).pauseStreaming();
+    sensorRepository.pauseStreaming();
   }
 
   @override
   void onReturnedToForeground() async {
     if (!_interrupted) return;
     final navigator = Navigator.of(context);
+    final runRoute = ModalRoute.of(context);
     await showAssessmentInterruptedDialog(
       context,
       reason:
           'The 60% Endurance test measures how long you can hold the target '
           'force without letting go, so it cannot be paused and resumed.',
     );
-    // The run is over, but the sensor feed is shared: hand it back before
-    // leaving or the rest of the app sees a frozen reading.
-    ref.read(bleRepositoryProvider).resumeStreaming();
+    // The tutorial and the leave confirmation sit on the same navigator as the
+    // run, so a single pop would close whichever of those was open and leave
+    // the discarded run on screen.
+    navigator.popUntil((route) => route == runRoute || route.isFirst);
     navigator.pop();
   }
 
@@ -262,8 +264,12 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                   tutorialId: AssessmentTutorials.get60PercentTutorialId(),
                   forceShow: true,
                 ).then((_) {
-                  // Resume stopwatch after tutorial is closed
-                  if (_assessmentStarted && !_assessmentEnded && mounted) {
+                  // An interruption discards the run, so closing the tutorial
+                  // it was opened over must not put the clock back on.
+                  if (_assessmentStarted &&
+                      !_assessmentEnded &&
+                      !_interrupted &&
+                      mounted) {
                     _stopwatch.start();
                   }
                 });

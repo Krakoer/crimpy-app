@@ -97,9 +97,9 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
 
   @override
   void initState() {
+    super.initState();
     timer.init();
     timer.play();
-    super.initState();
   }
 
   @override
@@ -115,7 +115,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
   void onLeftForeground() {
     if (timer.finished) return;
     timer.stop();
-    ref.read(bleRepositoryProvider).pauseStreaming();
+    sensorRepository.pauseStreaming();
   }
 
   @override
@@ -123,7 +123,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
     if (timer.finished) return;
     await showWorkoutPausedDialog(context);
     if (!mounted) return;
-    ref.read(bleRepositoryProvider).resumeStreaming();
+    sensorRepository.resumeStreaming();
     setState(() => timer.play());
   }
 

@@ -157,9 +157,9 @@ class BleSession extends _$BleSession {
   }
 
   /// Reset the current BLE session statistics.
+  /// The streaming state is left alone: a run that paused the stream keeps it
+  /// paused across a rep boundary.
   void reset() {
-    // Clear the current session data in the repository
-    _bleRepository.resetSession();
     ref.read(bleDataStreamProvider.notifier).reset();
     _startTime = null;
     state = BleSessionStats();

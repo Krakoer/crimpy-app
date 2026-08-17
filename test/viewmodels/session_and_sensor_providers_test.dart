@@ -153,6 +153,24 @@ void main() {
       },
     );
 
+    // Rep boundaries reset the session stats, and used to raise the streaming
+    // flag with them, cancelling the pause of a suspended run from under the
+    // athlete.
+    test('starting a new rep leaves a paused stream paused', () async {
+      final repository = BleRepository();
+      final container = ProviderContainer.test(
+        overrides: [bleRepositoryProvider.overrideWithValue(repository)],
+      );
+      container.listen(bleSessionProvider, (previous, next) {});
+
+      await feed(repository, [20]);
+      repository.pauseStreaming();
+      container.read(bleSessionProvider.notifier).reset();
+
+      expect(repository.isStreaming, isFalse);
+      expect(container.read(bleSessionProvider).nbPoints, 0);
+    });
+
     test('the peak of the rep survives a pause', () async {
       final repository = BleRepository();
       final container = ProviderContainer.test(

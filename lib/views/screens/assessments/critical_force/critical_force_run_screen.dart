@@ -123,9 +123,9 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
 
   @override
   void initState() {
+    super.initState();
     timer.init();
     timer.play();
-    super.initState();
   }
 
   @override
@@ -146,22 +146,24 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
     if (timer.finished || _interrupted) return;
     _interrupted = true;
     timer.stop();
-    ref.read(bleRepositoryProvider).pauseStreaming();
+    sensorRepository.pauseStreaming();
   }
 
   @override
   void onReturnedToForeground() async {
     if (!_interrupted) return;
     final navigator = Navigator.of(context);
+    final runRoute = ModalRoute.of(context);
     await showAssessmentInterruptedDialog(
       context,
       reason:
           'Critical Force measures how your pulling force declines without a '
           'break, so the test has to run start to finish in one go.',
     );
-    // The run is over, but the sensor feed is shared: hand it back before
-    // leaving or the rest of the app sees a frozen reading.
-    ref.read(bleRepositoryProvider).resumeStreaming();
+    // The tutorial and the leave confirmation sit on the same navigator as the
+    // run, so a single pop would close whichever of those was open and leave
+    // the discarded run on screen.
+    navigator.popUntil((route) => route == runRoute || route.isFirst);
     navigator.pop();
   }
 
@@ -238,8 +240,9 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                   ),
                   forceShow: true,
                 ).then((_) {
-                  // Resume timer after tutorial is closed
-                  if (mounted) {
+                  // An interruption discards the run, so closing the tutorial
+                  // it was opened over must not put the clock back on.
+                  if (mounted && !_interrupted) {
                     setState(() {
                       timer.play();
                     });
