@@ -123,15 +123,10 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
   }
 
   @override
-  void onReturnedToForeground() async {
+  Future<void> onReturnedToForeground() async {
     if (timer.finished) return;
     _handlingInterruption = true;
-    final navigator = Navigator.of(context);
-    final runRoute = ModalRoute.of(context);
-    // The tutorial and the leave confirmation sit on the same navigator as the
-    // run, so the paused dialog would stack on top of them and the clock and
-    // the sensor would restart behind whatever is still covering the run.
-    navigator.popUntil((route) => route == runRoute || route.isFirst);
+    popDownToRun();
     await showWorkoutPausedDialog(context);
     _handlingInterruption = false;
     if (!mounted) return;

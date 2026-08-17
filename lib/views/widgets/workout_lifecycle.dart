@@ -24,11 +24,29 @@ mixin WorkoutLifecycleMixin<T extends ConsumerStatefulWidget>
   /// where the stream is handed back, is not allowed.
   late final BleRepository sensorRepository;
 
+  late NavigatorState _navigator;
+  ModalRoute<dynamic>? _runRoute;
+
+  bool _handlingReturn = false;
+
+  /// The navigator the run sits on. Held so it can still be used after an
+  /// await, where the run's own context may already be gone.
+  NavigatorState get runNavigator => _navigator;
+
   /// The app left the foreground while this screen was on top.
   void onLeftForeground();
 
   /// The app came back after a call to [onLeftForeground].
-  void onReturnedToForeground();
+  Future<void> onReturnedToForeground();
+
+  /// Brings the run back to the top of the navigator, closing the tutorial or
+  /// the leave confirmation if the user left one of them over it. Both sit on
+  /// the same navigator as the run, so a dialog shown from an interruption
+  /// would otherwise stack on top of them and be answered for a run that is
+  /// still covered.
+  void popDownToRun() {
+    _navigator.popUntil((route) => route == _runRoute || route.isFirst);
+  }
 
   @override
   void initState() {
@@ -38,11 +56,31 @@ mixin WorkoutLifecycleMixin<T extends ConsumerStatefulWidget>
       onLeft: () {
         if (mounted) onLeftForeground();
       },
-      onReturned: () {
-        if (mounted) onReturnedToForeground();
-      },
+      onReturned: _handleReturnToForeground,
     );
     WidgetsBinding.instance.addObserver(_lifecycleObserver);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _navigator = Navigator.of(context);
+    _runRoute = ModalRoute.of(context);
+  }
+
+  /// The app can leave the foreground again while a return is still being
+  /// handled, and the dialog that return put up is still the one the user has
+  /// to answer. Handling the second return would pop that dialog down with
+  /// everything else covering the run, which completes it as if it had been
+  /// answered and resumes the run with no one asking for it.
+  Future<void> _handleReturnToForeground() async {
+    if (!mounted || _handlingReturn) return;
+    _handlingReturn = true;
+    try {
+      await onReturnedToForeground();
+    } finally {
+      _handlingReturn = false;
+    }
   }
 
   @override
