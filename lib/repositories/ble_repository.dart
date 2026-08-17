@@ -121,40 +121,7 @@ class BleRepository {
               await characteristic.setNotifyValue(true);
               await _characteristicSubscription?.cancel();
               _characteristicSubscription = characteristic.lastValueStream
-                  .listen((value) {
-                    if (value.isNotEmpty) {
-                      // Convert the received bytes to a numerical value
-                      var (origValue, calibratedValue) = _parseValueFromBytes(
-                        value,
-                        tare,
-                        calibrationCoef,
-                      );
-
-                      // Save last original value for calibration
-                      lastOriginalValue = origValue;
-
-                      // Create data point and add to stream
-                      final dataPoint = BleDataPoint(
-                        calibratedValue,
-                        DateTime.now(),
-                      );
-
-                      // Store in current session data
-                      if (_streamDataOn) {
-                        // Add to stream
-                        _dataStreamController.add(dataPoint);
-                      }
-
-                      if (calibrationOn) {
-                        _calibrationMean =
-                            _calibrationMean *
-                                _calibrationMeanCount /
-                                (_calibrationMeanCount + 1) +
-                            origValue / (_calibrationMeanCount + 1);
-                        _calibrationMeanCount += 1;
-                      }
-                    }
-                  });
+                  .listen(handleRawSample);
               return true;
             }
           }
@@ -214,11 +181,39 @@ class BleRepository {
   /// Whether incoming samples currently reach [dataStream].
   bool get isStreaming => _streamDataOn;
 
-  void stopSession() {
-    _streamDataOn = false;
+  /// Decodes one raw notification from the sensor characteristic and routes it
+  /// to the data stream and to the running calibration. Kept apart from the
+  /// subscription so the pause gate can be exercised without a BLE device.
+  void handleRawSample(List<int> value) {
+    if (value.isEmpty) return;
+
+    final (origValue, calibratedValue) = _parseValueFromBytes(
+      value,
+      tare,
+      calibrationCoef,
+    );
+
+    lastOriginalValue = origValue;
+
+    if (_streamDataOn) {
+      _dataStreamController.add(BleDataPoint(calibratedValue, DateTime.now()));
+    }
+
+    if (calibrationOn) {
+      _calibrationMean =
+          _calibrationMean *
+              _calibrationMeanCount /
+              (_calibrationMeanCount + 1) +
+          origValue / (_calibrationMeanCount + 1);
+      _calibrationMeanCount += 1;
+    }
   }
 
-  /// Reset the current session data
+  /// Reset the current session data.
+  /// The streaming flag is raised here on purpose: the assessment run screens
+  /// pause the stream when they leave the foreground and can be disposed before
+  /// resuming it, and starting a new session is what un-mutes the sensor for
+  /// them. Drop this once those screens hand the stream back themselves.
   void resetSession() {
     _streamDataOn = true;
   }
