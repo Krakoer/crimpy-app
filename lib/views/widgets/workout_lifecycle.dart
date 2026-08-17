@@ -1,14 +1,28 @@
+import 'package:crimpy/repositories/ble_repository.dart';
+import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Tells a running workout screen when the app leaves and returns to the
-/// foreground.
+/// foreground, and owns the sensor stream while it is on screen.
 ///
 /// A run cannot be left unattended: the workout clock stops being pumped while
 /// the app is in the background, while the sensor keeps streaming samples, so
 /// the two drift apart by however long the user was away. Screens react to that
 /// explicitly instead of silently going out of step.
-mixin WorkoutLifecycleMixin<T extends StatefulWidget> on State<T> {
+///
+/// A run is also the only thing that ever pauses the stream, so it is the only
+/// thing that can hand it back. That happens here rather than in each screen,
+/// so a run that is left in any state, including from under a dialog, cannot
+/// leave the sensor mute for the live gauge, the bodyweight measure and the
+/// next run.
+mixin WorkoutLifecycleMixin<T extends ConsumerStatefulWidget>
+    on ConsumerState<T> {
   late final _WorkoutLifecycleObserver _lifecycleObserver;
+
+  /// Held from `initState` because reading a provider during dispose, which is
+  /// where the stream is handed back, is not allowed.
+  late final BleRepository sensorRepository;
 
   /// The app left the foreground while this screen was on top.
   void onLeftForeground();
@@ -19,6 +33,7 @@ mixin WorkoutLifecycleMixin<T extends StatefulWidget> on State<T> {
   @override
   void initState() {
     super.initState();
+    sensorRepository = ref.read(bleRepositoryProvider);
     _lifecycleObserver = _WorkoutLifecycleObserver(
       onLeft: () {
         if (mounted) onLeftForeground();
@@ -33,6 +48,7 @@ mixin WorkoutLifecycleMixin<T extends StatefulWidget> on State<T> {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(_lifecycleObserver);
+    sensorRepository.resumeStreaming();
     super.dispose();
   }
 }
