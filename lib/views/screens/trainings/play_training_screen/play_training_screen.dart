@@ -179,7 +179,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   }
 
   @override
-  void onReturnedToForeground() async {
+  Future<void> onReturnedToForeground() async {
     if (!_pausedByBackground) return;
     _pausedByBackground = false;
     await showWorkoutPausedDialog(context);

@@ -8,6 +8,7 @@ import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/critical_force_run_screen.dart';
 import 'package:crimpy/views/screens/assessments/endurance_60/endurance_60_run_screen.dart';
 import 'package:crimpy/views/screens/assessments/mvc_run_screen.dart';
+import 'package:crimpy/views/widgets/assessment_tutorial_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -97,6 +98,23 @@ Future<void> _leaveAndReturnToForeground(WidgetTester tester) async {
   tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
   await tester.pump();
   await tester.pump();
+}
+
+/// Opens the real tutorial over the run, which is what the help button does.
+/// Its own handler resumes the clock when it closes, so it is the dialog that
+/// can restart a run that an interruption is still holding.
+Future<void> _openTutorialOverRun(WidgetTester tester) async {
+  await tester.tap(find.byTooltip('Show tutorial'));
+  await _settleRoute(tester);
+}
+
+/// The run's clock. Asserting on it is what makes these tests bite: a run that
+/// restarts behind a dialog looks the same from the outside as one that stayed
+/// stopped, and the sensor is handed back either way.
+bool _clockIsRunning(WidgetTester tester) {
+  final state = tester.state(find.byType(MvcRunScreen));
+  // ignore: avoid_dynamic_calls
+  return (state as dynamic).timer.isRunning as bool;
 }
 
 /// Answers the interruption dialog, then lets the run route go.
@@ -199,6 +217,117 @@ void main() {
       await _dismissInterruptionDialog(tester);
 
       expect(find.byType(Endurance60RunScreen), findsNothing);
+      expect(bleRepository.isStreaming, isTrue);
+    });
+  });
+
+  // Max Force measures each pull on its own, so an interruption only costs
+  // extra rest and the run is kept. It still has to come back on screen before
+  // it restarts: resuming under the tutorial or the leave confirmation counted
+  // a pull down while the athlete was reading, and stored whatever the sensor
+  // saw while nobody was pulling.
+  group('an interrupted max force run resumes on the visible run', () {
+    testWidgets('the paused dialog is the only thing left over the run', (
+      tester,
+    ) async {
+      final bleRepository = BleRepository();
+      await _pumpPushedRun(
+        tester,
+        MvcRunScreen(reps: _pullThenRest(), type: AssessmentType.mvc),
+        bleRepository,
+      );
+      await _openDialogOverRun(tester, find.byType(MvcRunScreen));
+
+      await _leaveAndReturnToForeground(tester);
+      await _settleRoute(tester);
+
+      expect(find.text('over the run'), findsNothing);
+      expect(find.text('Workout paused'), findsOneWidget);
+      expect(find.byType(MvcRunScreen), findsOneWidget);
+      expect(_clockIsRunning(tester), isFalse);
+      expect(bleRepository.isStreaming, isFalse);
+    });
+
+    testWidgets('answering it keeps the run and hands the sensor back', (
+      tester,
+    ) async {
+      final bleRepository = BleRepository();
+      await _pumpPushedRun(
+        tester,
+        MvcRunScreen(reps: _pullThenRest(), type: AssessmentType.mvc),
+        bleRepository,
+      );
+      await _openDialogOverRun(tester, find.byType(MvcRunScreen));
+
+      await _leaveAndReturnToForeground(tester);
+      await _settleRoute(tester);
+      await tester.tap(find.text('Resume'));
+      await _settleRoute(tester);
+
+      expect(find.byType(MvcRunScreen), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(_clockIsRunning(tester), isTrue);
+      expect(bleRepository.isStreaming, isTrue);
+    });
+
+    // The tutorial resumes the clock itself when it is closed, so uncovering
+    // the run for the paused dialog used to restart the run behind it.
+    testWidgets('closing the tutorial to uncover the run does not restart it', (
+      tester,
+    ) async {
+      final bleRepository = BleRepository();
+      await _pumpPushedRun(
+        tester,
+        MvcRunScreen(reps: _pullThenRest(), type: AssessmentType.mvc),
+        bleRepository,
+      );
+      await _openTutorialOverRun(tester);
+
+      await _leaveAndReturnToForeground(tester);
+      await _settleRoute(tester);
+
+      expect(find.byType(AssessmentTutorialDialog), findsNothing);
+      expect(find.text('Workout paused'), findsOneWidget);
+      expect(_clockIsRunning(tester), isFalse);
+      expect(bleRepository.isStreaming, isFalse);
+
+      await tester.tap(find.text('Resume'));
+      await _settleRoute(tester);
+
+      expect(find.byType(MvcRunScreen), findsOneWidget);
+      expect(_clockIsRunning(tester), isTrue);
+      expect(bleRepository.isStreaming, isTrue);
+    });
+
+    // Backgrounding again while the paused dialog is up is how the athlete
+    // answers whatever pulled them out in the first place. Handling that second
+    // return would pop the dialog they still have to answer, which reads as an
+    // answer and restarts the run with nobody in position.
+    testWidgets('a second interruption does not resume the run by itself', (
+      tester,
+    ) async {
+      final bleRepository = BleRepository();
+      await _pumpPushedRun(
+        tester,
+        MvcRunScreen(reps: _pullThenRest(), type: AssessmentType.mvc),
+        bleRepository,
+      );
+
+      await _leaveAndReturnToForeground(tester);
+      await _settleRoute(tester);
+      await _leaveAndReturnToForeground(tester);
+      await _settleRoute(tester);
+
+      expect(find.text('Workout paused'), findsOneWidget);
+      expect(_clockIsRunning(tester), isFalse);
+      expect(bleRepository.isStreaming, isFalse);
+
+      await tester.tap(find.text('Resume'));
+      await _settleRoute(tester);
+
+      expect(find.byType(MvcRunScreen), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(_clockIsRunning(tester), isTrue);
       expect(bleRepository.isStreaming, isTrue);
     });
   });

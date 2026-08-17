@@ -88,21 +88,18 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
   }
 
   @override
-  void onReturnedToForeground() async {
+  Future<void> onReturnedToForeground() async {
     if (!_interrupted) return;
-    final navigator = Navigator.of(context);
-    final runRoute = ModalRoute.of(context);
     await showAssessmentInterruptedDialog(
       context,
       reason:
           'The 60% Endurance test measures how long you can hold the target '
           'force without letting go, so it cannot be paused and resumed.',
     );
-    // The tutorial and the leave confirmation sit on the same navigator as the
-    // run, so a single pop would close whichever of those was open and leave
-    // the discarded run on screen.
-    navigator.popUntil((route) => route == runRoute || route.isFirst);
-    navigator.pop();
+    // A single pop would close whichever dialog the user had open over the run
+    // and leave the discarded run on screen.
+    popDownToRun();
+    runNavigator.pop();
   }
 
   void _checkAssessmentState() {
