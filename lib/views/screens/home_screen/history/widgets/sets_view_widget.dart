@@ -91,6 +91,13 @@ class SetCardWidget extends StatelessWidget {
     this.isRightHand = true,
   });
 
+  /// The edge every rep of the set was pulled on, or null when the set mixes
+  /// several edges or prescribes none.
+  int? get _sharedEdgeSizeMm {
+    final edges = workReps.map((r) => r.edgeSizeMm).toSet();
+    return edges.length == 1 ? edges.first : null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool allSuccess =
@@ -154,7 +161,10 @@ class SetCardWidget extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                '${workReps.length} reps',
+                [
+                  '${workReps.length} reps',
+                  if (_sharedEdgeSizeMm != null) '${_sharedEdgeSizeMm}mm',
+                ].join(' - '),
                 style: TextStyle(fontSize: 12, color: CrimpyTheme.gray600),
               ),
               const Spacer(),
