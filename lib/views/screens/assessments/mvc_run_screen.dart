@@ -35,6 +35,10 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
   GripPosition get _gripPosition =>
       widget.reps.whereType<TimedItem>().first.gripPosition;
 
+  /// Set while an interruption is being handled, so a dialog closed to uncover
+  /// the run does not restart the clock behind the paused dialog.
+  bool _handlingInterruption = false;
+
   /// Stores the peak reached during the step that just ended, against the hand
   /// that step was for. Rests carry no result.
   void _recordMaxForFinishedStep() {
@@ -121,7 +125,15 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
   @override
   void onReturnedToForeground() async {
     if (timer.finished) return;
+    _handlingInterruption = true;
+    final navigator = Navigator.of(context);
+    final runRoute = ModalRoute.of(context);
+    // The tutorial and the leave confirmation sit on the same navigator as the
+    // run, so the paused dialog would stack on top of them and the clock and
+    // the sensor would restart behind whatever is still covering the run.
+    navigator.popUntil((route) => route == runRoute || route.isFirst);
     await showWorkoutPausedDialog(context);
+    _handlingInterruption = false;
     if (!mounted) return;
     sensorRepository.resumeStreaming();
     setState(() => timer.play());
@@ -194,7 +206,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
           actions: [
             IconButton(
               icon: Icon(Icons.help_outline),
-              onPressed: () {
+              onPressed: () async {
                 // Pause timer while showing tutorial
                 setState(() {
                   timer.stop();
@@ -203,20 +215,21 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                 final gripPosition = _gripPosition;
 
                 // Show tutorial (forced, no "don't show again")
-                showTutorialIfNeeded(
+                await showTutorialIfNeeded(
                   context: context,
                   content: AssessmentTutorials.getMvcTutorial(gripPosition),
                   tutorialId: AssessmentTutorials.getMvcTutorialId(
                     gripPosition,
                   ),
                   forceShow: true,
-                ).then((_) {
-                  // Resume timer after tutorial is closed
-                  if (mounted) {
-                    setState(() {
-                      timer.play();
-                    });
-                  }
+                );
+
+                // Resume timer after tutorial is closed, unless it was closed
+                // to uncover the run for the paused dialog, which resumes the
+                // run itself once the user is back in position.
+                if (!mounted || _handlingInterruption) return;
+                setState(() {
+                  timer.play();
                 });
               },
               tooltip: 'Show tutorial',

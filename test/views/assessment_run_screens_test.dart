@@ -202,4 +202,52 @@ void main() {
       expect(bleRepository.isStreaming, isTrue);
     });
   });
+
+  // Max Force measures each pull on its own, so an interruption only costs
+  // extra rest and the run is kept. It still has to come back on screen before
+  // it restarts: resuming under the tutorial or the leave confirmation counted
+  // a pull down while the athlete was reading, and stored whatever the sensor
+  // saw while nobody was pulling.
+  group('an interrupted max force run resumes on the visible run', () {
+    testWidgets('the paused dialog is the only thing left over the run', (
+      tester,
+    ) async {
+      final bleRepository = BleRepository();
+      await _pumpPushedRun(
+        tester,
+        MvcRunScreen(reps: _pullThenRest(), type: AssessmentType.mvc),
+        bleRepository,
+      );
+      await _openDialogOverRun(tester, find.byType(MvcRunScreen));
+
+      await _leaveAndReturnToForeground(tester);
+      await _settleRoute(tester);
+
+      expect(find.text('over the run'), findsNothing);
+      expect(find.text('Workout paused'), findsOneWidget);
+      expect(find.byType(MvcRunScreen), findsOneWidget);
+      expect(bleRepository.isStreaming, isFalse);
+    });
+
+    testWidgets('answering it keeps the run and hands the sensor back', (
+      tester,
+    ) async {
+      final bleRepository = BleRepository();
+      await _pumpPushedRun(
+        tester,
+        MvcRunScreen(reps: _pullThenRest(), type: AssessmentType.mvc),
+        bleRepository,
+      );
+      await _openDialogOverRun(tester, find.byType(MvcRunScreen));
+
+      await _leaveAndReturnToForeground(tester);
+      await _settleRoute(tester);
+      await tester.tap(find.text('Resume'));
+      await _settleRoute(tester);
+
+      expect(find.byType(MvcRunScreen), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(bleRepository.isStreaming, isTrue);
+    });
+  });
 }
