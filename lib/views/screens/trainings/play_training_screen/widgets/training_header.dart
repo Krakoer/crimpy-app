@@ -1,3 +1,4 @@
+import 'package:crimpy/utils/format.dart';
 import 'package:flutter/material.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 
@@ -15,13 +16,6 @@ class TrainingHeader extends StatelessWidget {
     required this.remainingMilliseconds,
     this.showRemaining = true,
   });
-
-  String formatTime(int milliseconds) {
-    final totalSeconds = milliseconds ~/ 1000;
-    final minutes = totalSeconds ~/ 60;
-    final seconds = totalSeconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
 
   Widget _time(BuildContext context, String label, String value) {
     return Column(
@@ -57,9 +51,17 @@ class TrainingHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _time(context, 'ELAPSED', formatTime(elapsedMilliseconds)),
+          _time(
+            context,
+            'ELAPSED',
+            formatMillisMinutesSeconds(elapsedMilliseconds),
+          ),
           if (showRemaining)
-            _time(context, 'LEFT', formatTime(remainingMilliseconds)),
+            _time(
+              context,
+              'LEFT',
+              formatMillisMinutesSeconds(remainingMilliseconds),
+            ),
         ],
       ),
     );

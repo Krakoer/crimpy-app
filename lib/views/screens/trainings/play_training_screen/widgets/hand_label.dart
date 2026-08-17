@@ -14,24 +14,13 @@ class HandLabel extends StatelessWidget {
     this.edgeSizeMm,
   });
 
-  String _getHandLabel() {
-    switch (handSide) {
-      case HandSide.left:
-        return 'LEFT HAND';
-      case HandSide.right:
-        return 'RIGHT HAND';
-      case HandSide.both:
-        return 'BOTH HANDS';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          _getHandLabel(),
+          handSide.displayName,
           style: Theme.of(context).textTheme.headlineMedium!.copyWith(
             color: CrimpyTheme.primaryOrange,
             fontWeight: FontWeight.bold,

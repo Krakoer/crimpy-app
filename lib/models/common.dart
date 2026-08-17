@@ -5,6 +5,12 @@ extension HandSideExtension on HandSide {
     HandSide.right => true,
     HandSide.left || HandSide.both => false,
   };
+
+  String get displayName => switch (this) {
+    HandSide.left => "LEFT HAND",
+    HandSide.right => "RIGHT HAND",
+    HandSide.both => "BOTH HANDS",
+  };
 }
 
 enum GripPosition {

@@ -1,5 +1,8 @@
+import 'package:crimpy/models/run_screen_style.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/services/run_screen_style_service.dart';
+import 'package:crimpy/viewmodels/run_screen_style_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -78,14 +81,39 @@ Training _oneCommentedExercise() => const Training(
   ],
 );
 
-Future<void> _pumpRun(WidgetTester tester, Training training) =>
-    tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: PlayTrainingScreen(training, useSensor: false),
+/// Serves one design without touching the device storage, so a test states
+/// which layout it is about.
+class _FixedStyleService extends RunScreenStyleService {
+  _FixedStyleService(this.style);
+
+  final RunScreenStyle style;
+
+  @override
+  Future<RunScreenStyle> load() async => style;
+
+  @override
+  Future<void> save(RunScreenStyle style) async {}
+}
+
+/// Runs a training in a given design, the ring by default, whose header, timer
+/// and next-up line most of these tests are written against.
+Future<void> _pumpRun(
+  WidgetTester tester,
+  Training training, {
+  RunScreenStyle style = RunScreenStyle.ringAndTank,
+}) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        runScreenStyleServiceProvider.overrideWithValue(
+          _FixedStyleService(style),
         ),
-      ),
-    );
+      ],
+      child: MaterialApp(home: PlayTrainingScreen(training, useSensor: false)),
+    ),
+  );
+  await tester.pump();
+}
 
 /// Moves to the next step of the run, the way the skip button does.
 Future<void> _skip(WidgetTester tester) async {
@@ -164,5 +192,39 @@ void main() {
     // Its rest leads into the commented exercise, so the comment appears.
     await _skip(tester);
     expect(find.text('Right leg'), findsOneWidget);
+  });
+
+  // The design every user gets unless they pick the other one, wired to the
+  // same timer, look-ahead and skip button as the ring.
+  testWidgets('the full tank runs a training from its own layout', (
+    tester,
+  ) async {
+    await _pumpRun(
+      tester,
+      _stretchingCircuit(),
+      style: RunScreenStyle.fullTank,
+    );
+
+    // Preparation comes first and looks ahead to name what it leads into. The
+    // tank owns the whole screen, so the training title has no app bar to sit
+    // in.
+    expect(find.text('PREPARATION'), findsOneWidget);
+    expect(find.text('READY'), findsOneWidget);
+    expect(find.text('Get ready. First up: pigeon.'), findsOneWidget);
+    expect(find.text('Stretch routine'), findsNothing);
+
+    await _skip(tester);
+
+    // Running the first exercise, which carries its own comment.
+    expect(find.text('PIGEON'), findsOneWidget);
+    expect(find.text('Right leg'), findsOneWidget);
+    expect(find.text('SEC LEFT'), findsOneWidget);
+    expect(find.text('WORK'), findsOneWidget);
+
+    await _skip(tester);
+
+    // Its rest, which previews the step after it.
+    expect(find.text('REST'), findsOneWidget);
+    expect(find.text('Left leg'), findsOneWidget);
   });
 }

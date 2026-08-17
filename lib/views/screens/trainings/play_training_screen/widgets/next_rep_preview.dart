@@ -2,22 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/format.dart';
 
 class NextRepPreview extends StatelessWidget {
   final TrainingExecutionItem nextRep;
 
   const NextRepPreview({super.key, required this.nextRep});
-
-  String _getHandLabel(HandSide handSide) {
-    switch (handSide) {
-      case HandSide.left:
-        return 'LEFT HAND';
-      case HandSide.right:
-        return 'RIGHT HAND';
-      case HandSide.both:
-        return 'BOTH HANDS';
-    }
-  }
 
   String _describeTimed(TimedItem item) {
     if (!item.collectSensorData) {
@@ -26,10 +16,10 @@ class NextRepPreview extends StatelessWidget {
     }
     final w = item.targetLoad;
     return [
-      _getHandLabel(item.handSide),
+      item.handSide.displayName,
       item.gripPosition.shortName,
       if (item.edgeSizeMm != null) '${item.edgeSizeMm}mm',
-      if (w > 0) '${w.toStringAsFixed(w.truncateToDouble() == w ? 0 : 1)}kg',
+      if (w > 0) '${formatKilograms(w)}kg',
       '${item.durationSeconds}s',
     ].join(' - ');
   }
