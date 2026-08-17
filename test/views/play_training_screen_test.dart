@@ -104,6 +104,7 @@ Future<void> _pumpRun(
   Training training, {
   RunScreenStyle style = RunScreenStyle.ringAndTank,
   BleRepository? bleRepository,
+  bool useSensor = false,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -111,12 +112,16 @@ Future<void> _pumpRun(
         runScreenStyleServiceProvider.overrideWithValue(
           _FixedStyleService(style),
         ),
-        // The real provider reaches for the stored calibration on creation,
-        // which no test binding can serve.
-        if (bleRepository != null)
-          bleRepositoryProvider.overrideWithValue(bleRepository),
+        // Always served, never built: the real provider reaches for the stored
+        // calibration on creation, which no test binding can answer, and the
+        // screen reads the repository whether or not it runs with the sensor.
+        bleRepositoryProvider.overrideWithValue(
+          bleRepository ?? BleRepository(),
+        ),
       ],
-      child: MaterialApp(home: PlayTrainingScreen(training, useSensor: false)),
+      child: MaterialApp(
+        home: PlayTrainingScreen(training, useSensor: useSensor),
+      ),
     ),
   );
   await tester.pump();
