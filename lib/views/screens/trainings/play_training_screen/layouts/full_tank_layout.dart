@@ -157,11 +157,15 @@ class FullTankLayout extends ConsumerWidget {
     final sensor = state == _TankState.sensorWork;
     final rep = item is TimedItem ? item as TimedItem : null;
     final targetWeight = rep?.targetLoad ?? 0;
+    final paused = !isRunning && !isPreparation;
 
     // The tank only follows the sensor on a step that reads it. Watching the
     // stream on the other steps would rebuild the screen on every sample for
-    // nothing.
-    final currentWeight = sensor ? ref.watch(bleLastValueProvider) ?? 0 : 0.0;
+    // nothing. A pause mutes the stream, so the last sample it carries is stale
+    // and the tank empties instead of holding the reading it stopped on.
+    final currentWeight = sensor && !paused
+        ? ref.watch(bleLastValueProvider) ?? 0
+        : 0.0;
     // Only a step prescribing no load needs the bodyweight to scale against.
     final bodyweight = sensor && targetWeight <= 0
         ? ref.watch(bodyweightProvider).value
@@ -181,7 +185,6 @@ class FullTankLayout extends ConsumerWidget {
         : targetWeight > 0
         ? 'TARGET ${formatKilograms(targetWeight)} kg'
         : 'BW ${formatKilograms(scaleWeight)} kg';
-    final paused = !isRunning && !isPreparation;
 
     return LayoutBuilder(
       builder: (context, constraints) {
