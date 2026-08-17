@@ -60,6 +60,11 @@ extension SessionTypeExtension on SessionType {
   };
 }
 
+/// Edge depth the app prescribes when nothing else says otherwise. The builtin
+/// assessments and trainings are all measured on it, so their reps are pinned
+/// to it rather than left without an edge.
+const int defaultEdgeSizeMm = 20;
+
 /// Resolves an enum from a stored or server-supplied index. Indexes outside the
 /// known range resolve to [fallback], so a value added on the backend before the
 /// app supports it degrades gracefully instead of throwing a RangeError.

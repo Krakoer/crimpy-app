@@ -9,6 +9,7 @@ import 'generated/schema.dart';
 
 import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
+import 'generated/schema_v3.dart' as v3;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -416,6 +417,52 @@ void main() {
         ['HC', 'FC'],
         ['OC', '3FD'],
       ]);
+    });
+  });
+
+  group('v3 to v4 data migration', () {
+    // Reps recorded before the edge was tracked say nothing about the edge
+    // they were pulled on, so they keep none rather than claiming the default.
+    test('a rep recorded without an edge keeps none', () async {
+      final schema = await verifier.schemaAt(3);
+      final oldDb = v3.DatabaseAtV3(schema.newConnection());
+      await oldDb
+          .into(oldDb.sessions)
+          .insert(
+            const v3.SessionsData(
+              id: 's-1',
+              name: 'Session',
+              notes: '',
+              date: 1700000000,
+              dataPath: '',
+              isAssessment: 0,
+              sessionType: 0,
+              duration: 10,
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb
+          .into(oldDb.repDatas)
+          .insert(
+            const v3.RepDatasData(
+              id: 'rd-1',
+              averageWeight: 22.0,
+              sessionId: 's-1',
+              isRest: 0,
+              rightHand: 1,
+              duration: 7,
+              targetWeight: 20.0,
+              index: 0,
+              gripPosition: 0,
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb.close();
+
+      final db = AppDatabase(schema.newConnection());
+      final rep = await db.select(db.repDatas).getSingle();
+      expect(rep.edgeSizeMm, null);
+      await db.close();
     });
   });
 }

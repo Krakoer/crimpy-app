@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/utils/hangboard_layout.dart';
 
@@ -33,7 +34,7 @@ class HangboardConfig {
     required this.leftGrips,
   });
 
-  static const defaultEdgeMm = 20;
+  static const defaultEdgeMm = defaultEdgeSizeMm;
   static const defaultGrip = 'halfCrimp';
   static const defaultLoad = Load(value: 0, unit: 'kg');
 

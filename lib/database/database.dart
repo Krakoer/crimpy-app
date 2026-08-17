@@ -167,6 +167,9 @@ class RepDatas extends Table {
   late final IntColumn gripPosition = integer().withDefault(
     const Constant(0),
   )(); // 0 = halfCrimp (default)
+  // Depth of the edge the rep was pulled on, null when the step prescribed
+  // none: a rest, or an exercise done off the hangboard.
+  late final IntColumn edgeSizeMm = integer().nullable()();
 
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
@@ -374,6 +377,7 @@ class AppDatabase extends _$AppDatabase {
             targetWeight: Value(index.$2.targetWeight),
             averageWeight: Value(index.$2.averageWeight),
             gripPosition: Value(index.$2.gripPosition.index),
+            edgeSizeMm: Value(index.$2.edgeSizeMm),
             updatedAt: Value(DateTime.now()),
           ),
         )
@@ -821,7 +825,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1068,6 +1072,9 @@ class AppDatabase extends _$AppDatabase {
           );
         });
       },
+      from3To4: (m, schema) async {
+        await m.addColumn(schema.repDatas, schema.repDatas.edgeSizeMm);
+      },
     ),
   );
 }
@@ -1112,6 +1119,7 @@ extension RepDataRowToModel on RepData {
       gripPosition,
       GripPosition.halfCrimp,
     ),
+    edgeSizeMm: edgeSizeMm,
   );
 }
 

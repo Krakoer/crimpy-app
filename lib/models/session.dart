@@ -60,6 +60,10 @@ class RepDataModel {
   final int index;
   final GripPosition gripPosition;
 
+  /// Depth of the edge the rep was pulled on, null when the step prescribed
+  /// none: a rest, or an exercise done off the hangboard.
+  final int? edgeSizeMm;
+
   RepDataModel({
     required this.averageWeight,
     required this.duration,
@@ -68,6 +72,7 @@ class RepDataModel {
     required this.handSide,
     required this.targetWeight,
     this.gripPosition = GripPosition.halfCrimp, // Default to half crimp
+    this.edgeSizeMm,
   });
 
   /// Parses a repetition as returned by the API, which uses PascalCase keys.
@@ -83,6 +88,7 @@ class RepDataModel {
       json['GripPosition'] as num?,
       GripPosition.halfCrimp,
     ),
+    edgeSizeMm: (json['EdgeSizeMm'] as num?)?.toInt(),
   );
 }
 

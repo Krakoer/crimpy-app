@@ -26,6 +26,7 @@ List<RepDataModel> buildRepsData(
             : (next < averages.length ? averages[next++] : 0),
         index: index,
         gripPosition: timed?.gripPosition ?? GripPosition.halfCrimp,
+        edgeSizeMm: timed?.edgeSizeMm,
       ),
     );
   }
