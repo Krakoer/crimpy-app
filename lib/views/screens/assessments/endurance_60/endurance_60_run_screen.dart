@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/repositories/ble_repository.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
@@ -51,9 +52,14 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
   late double _minForce;
   late double _maxForce;
 
+  /// Held from `initState` so the sensor stream can be handed back running on
+  /// dispose, when reading a provider is no longer appropriate.
+  late final BleRepository _bleRepository;
+
   @override
   void initState() {
     super.initState();
+    _bleRepository = ref.read(bleRepositoryProvider);
     _targetForce = widget.mvcValue * 0.6;
     _minForce = _targetForce - (widget.mvcValue * 0.05); // 60% - 5%
     _maxForce = _targetForce + (widget.mvcValue * 0.05); // 60% + 5%
@@ -69,6 +75,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
 
   @override
   void dispose() {
+    _bleRepository.resumeStreaming();
     _timer?.cancel();
     _stopwatch.stop();
     super.dispose();
@@ -84,7 +91,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
     _interrupted = true;
     _timer?.cancel();
     _stopwatch.stop();
-    ref.read(bleRepositoryProvider).pauseStreaming();
+    _bleRepository.pauseStreaming();
   }
 
   @override
@@ -97,9 +104,6 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
           'The 60% Endurance test measures how long you can hold the target '
           'force without letting go, so it cannot be paused and resumed.',
     );
-    // The run is over, but the sensor feed is shared: hand it back before
-    // leaving or the rest of the app sees a frozen reading.
-    ref.read(bleRepositoryProvider).resumeStreaming();
     navigator.pop();
   }
 

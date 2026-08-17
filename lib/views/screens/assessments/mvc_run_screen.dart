@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/repositories/ble_repository.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/reps.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
@@ -95,8 +96,13 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
     },
   );
 
+  /// Held from `initState` so the sensor stream can be handed back running on
+  /// dispose, when reading a provider is no longer appropriate.
+  late final BleRepository _bleRepository;
+
   @override
   void initState() {
+    _bleRepository = ref.read(bleRepositoryProvider);
     timer.init();
     timer.play();
     super.initState();
@@ -104,6 +110,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
 
   @override
   void dispose() {
+    _bleRepository.resumeStreaming();
     timer.dispose();
     super.dispose();
   }
@@ -115,7 +122,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
   void onLeftForeground() {
     if (timer.finished) return;
     timer.stop();
-    ref.read(bleRepositoryProvider).pauseStreaming();
+    _bleRepository.pauseStreaming();
   }
 
   @override
@@ -123,7 +130,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
     if (timer.finished) return;
     await showWorkoutPausedDialog(context);
     if (!mounted) return;
-    ref.read(bleRepositoryProvider).resumeStreaming();
+    _bleRepository.resumeStreaming();
     setState(() => timer.play());
   }
 

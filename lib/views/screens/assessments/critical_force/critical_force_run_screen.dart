@@ -4,6 +4,7 @@ import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/repositories/ble_repository.dart';
 import 'package:crimpy/utils/reps.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
@@ -121,8 +122,13 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
     },
   );
 
+  /// Held from `initState` so the sensor stream can be handed back running on
+  /// dispose, when reading a provider is no longer appropriate.
+  late final BleRepository _bleRepository;
+
   @override
   void initState() {
+    _bleRepository = ref.read(bleRepositoryProvider);
     timer.init();
     timer.play();
     super.initState();
@@ -130,6 +136,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
 
   @override
   void dispose() {
+    _bleRepository.resumeStreaming();
     timer.dispose();
     super.dispose();
   }
@@ -146,7 +153,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
     if (timer.finished || _interrupted) return;
     _interrupted = true;
     timer.stop();
-    ref.read(bleRepositoryProvider).pauseStreaming();
+    _bleRepository.pauseStreaming();
   }
 
   @override
@@ -159,9 +166,6 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
           'Critical Force measures how your pulling force declines without a '
           'break, so the test has to run start to finish in one go.',
     );
-    // The run is over, but the sensor feed is shared: hand it back before
-    // leaving or the rest of the app sees a frozen reading.
-    ref.read(bleRepositoryProvider).resumeStreaming();
     navigator.pop();
   }
 
