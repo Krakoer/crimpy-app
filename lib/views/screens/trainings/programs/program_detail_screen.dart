@@ -398,7 +398,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
         final isSelected = d == selected;
         final isToday = isSameDay(date, today);
         final dot = daySessions.isNotEmpty
-            ? programSessionColor(daySessions.first.sessionType)
+            ? programSessionColor(daySessions.first.activity)
             : null;
         return Expanded(
           child: GestureDetector(
@@ -624,10 +624,10 @@ class _CalendarView extends StatelessWidget {
 
   Widget _legend() {
     final items = [
-      ('HANGBOARD', programSessionColor(SessionType.crimpy)),
-      ('CLIMBING', programSessionColor(SessionType.climbing)),
-      ('MOBILITY', programSessionColor(SessionType.stretching)),
-      ('WORKOUT', programSessionColor(SessionType.workout)),
+      ('HANGBOARD', programSessionColor(SessionActivity.hangboard)),
+      ('CLIMBING', programSessionColor(SessionActivity.climbing)),
+      ('MOBILITY', programSessionColor(SessionActivity.stretching)),
+      ('WORKOUT', programSessionColor(SessionActivity.workout)),
     ];
     return Wrap(
       spacing: 12,
@@ -702,7 +702,7 @@ class _CalendarRow extends ConsumerWidget {
           final date = program.weekStart(weekNumber).add(Duration(days: d));
           final isToday = isSameDay(date, today);
           final fill = session != null
-              ? programSessionColor(session.sessionType)
+              ? programSessionColor(session.activity)
               : null;
           return Expanded(
             child: GestureDetector(

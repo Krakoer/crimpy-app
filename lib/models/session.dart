@@ -9,9 +9,20 @@ class SessionModel {
   final List<BleDataPoint>? dataPoints;
   final List<RepDataModel>? reps;
   final bool isAssessment;
-  final SessionType sessionType;
+  final SessionActivity activity;
+  final SessionOrigin origin;
+
+  /// Template the session was played from, kept so it can be shown against what
+  /// was prescribed. Both null on a logged session.
+  final String? trainingId;
+  final String? programSessionId;
   final int? durationInSeconds;
   final RepeaterConfig? repeaterConfig;
+
+  /// How many reps the session holds, as reported by a listing that did not
+  /// carry the reps themselves. Null when unknown; [repCount] prefers the reps
+  /// when they are loaded.
+  final int? reportedRepCount;
 
   SessionModel({
     this.id,
@@ -20,9 +31,13 @@ class SessionModel {
     this.reps,
     required this.name,
     required this.isAssessment,
-    this.sessionType = SessionType.crimpy,
+    this.activity = SessionActivity.hangboard,
+    this.origin = SessionOrigin.logged,
+    this.trainingId,
+    this.programSessionId,
     this.durationInSeconds,
     this.repeaterConfig,
+    this.reportedRepCount,
     date,
   }) : date = date ?? DateTime.now();
 
@@ -37,18 +52,55 @@ class SessionModel {
     date: DateTime.parse(json['Date'] as String),
     reps: reps,
     isAssessment: json['IsAssessment'] as bool? ?? false,
-    sessionType: enumFromIndex(
-      SessionType.values,
-      json['SessionType'] as num?,
-      SessionType.crimpy,
+    activity: enumFromIndex(
+      SessionActivity.values,
+      json['Activity'] as num?,
+      SessionActivity.hangboard,
     ),
+    origin: sessionOriginFromApi(json['Origin'] as String?),
+    trainingId: json['TrainingID'] as String?,
+    programSessionId: json['ProgramSessionID'] as String?,
     durationInSeconds: (json['Duration'] as num? ?? 0).toInt(),
     repeaterConfig: RepeaterConfig.fromJson(json),
+    reportedRepCount: (json['RepCount'] as num?)?.toInt(),
+  );
+
+  /// Carries the untouched fields over, so an edit cannot quietly drop the
+  /// origin or the template links the session was created with.
+  SessionModel copyWith({
+    String? name,
+    String? notes,
+    DateTime? date,
+    int? durationInSeconds,
+  }) => SessionModel(
+    id: id,
+    name: name ?? this.name,
+    notes: notes ?? this.notes,
+    date: date ?? this.date,
+    dataPoints: dataPoints,
+    reps: reps,
+    isAssessment: isAssessment,
+    activity: activity,
+    origin: origin,
+    trainingId: trainingId,
+    programSessionId: programSessionId,
+    durationInSeconds: durationInSeconds ?? this.durationInSeconds,
+    repeaterConfig: repeaterConfig,
+    reportedRepCount: reportedRepCount,
   );
 
   int get duration =>
       durationInSeconds ??
       (reps == null ? 0 : reps!.fold(0, (prev, r) => prev + r.duration));
+
+  /// Whether there is per-rep data to show. Presence of reps decides it, never
+  /// the activity: a coach hangboard block logged under any label still has
+  /// every rep the sensor recorded.
+  bool get hasReps => reps != null && reps!.isNotEmpty;
+
+  /// How many reps the session holds, from the reps themselves once loaded and
+  /// from the listing otherwise. Null only when neither is available.
+  int? get repCount => reps?.length ?? reportedRepCount;
 }
 
 class RepDataModel {

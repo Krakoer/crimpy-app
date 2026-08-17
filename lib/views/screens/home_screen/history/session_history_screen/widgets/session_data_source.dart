@@ -11,7 +11,7 @@ class SessionDataSource extends CalendarDataSource {
         startTime: session.date,
         endTime: session.date.add(Duration(seconds: session.duration)),
         subject: session.name,
-        color: Color(session.sessionType.colorValue),
+        color: Color(session.activity.colorValue),
         id: session.id,
       );
     }).toList();

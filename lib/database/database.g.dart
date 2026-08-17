@@ -72,17 +72,49 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _sessionTypeMeta = const VerificationMeta(
-    'sessionType',
+  static const VerificationMeta _activityMeta = const VerificationMeta(
+    'activity',
   );
   @override
-  late final GeneratedColumn<int> sessionType = GeneratedColumn<int>(
-    'session_type',
+  late final GeneratedColumn<int> activity = GeneratedColumn<int>(
+    'activity',
     aliasedName,
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _originMeta = const VerificationMeta('origin');
+  @override
+  late final GeneratedColumn<String> origin = GeneratedColumn<String>(
+    'origin',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('logged'),
+  );
+  static const VerificationMeta _trainingIdMeta = const VerificationMeta(
+    'trainingId',
+  );
+  @override
+  late final GeneratedColumn<String> trainingId = GeneratedColumn<String>(
+    'training_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _programSessionIdMeta = const VerificationMeta(
+    'programSessionId',
+  );
+  @override
+  late final GeneratedColumn<String> programSessionId = GeneratedColumn<String>(
+    'program_session_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _durationMeta = const VerificationMeta(
     'duration',
@@ -185,7 +217,10 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     date,
     dataPath,
     isAssessment,
-    sessionType,
+    activity,
+    origin,
+    trainingId,
+    programSessionId,
     duration,
     repeaterSets,
     repeaterReps,
@@ -249,12 +284,30 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         ),
       );
     }
-    if (data.containsKey('session_type')) {
+    if (data.containsKey('activity')) {
       context.handle(
-        _sessionTypeMeta,
-        sessionType.isAcceptableOrUnknown(
-          data['session_type']!,
-          _sessionTypeMeta,
+        _activityMeta,
+        activity.isAcceptableOrUnknown(data['activity']!, _activityMeta),
+      );
+    }
+    if (data.containsKey('origin')) {
+      context.handle(
+        _originMeta,
+        origin.isAcceptableOrUnknown(data['origin']!, _originMeta),
+      );
+    }
+    if (data.containsKey('training_id')) {
+      context.handle(
+        _trainingIdMeta,
+        trainingId.isAcceptableOrUnknown(data['training_id']!, _trainingIdMeta),
+      );
+    }
+    if (data.containsKey('program_session_id')) {
+      context.handle(
+        _programSessionIdMeta,
+        programSessionId.isAcceptableOrUnknown(
+          data['program_session_id']!,
+          _programSessionIdMeta,
         ),
       );
     }
@@ -357,10 +410,22 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_assessment'],
       )!,
-      sessionType: attachedDatabase.typeMapping.read(
+      activity: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}session_type'],
+        data['${effectivePrefix}activity'],
       )!,
+      origin: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}origin'],
+      )!,
+      trainingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}training_id'],
+      ),
+      programSessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}program_session_id'],
+      ),
       duration: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}duration'],
@@ -409,7 +474,10 @@ class Session extends DataClass implements Insertable<Session> {
   final DateTime date;
   final String dataPath;
   final bool isAssessment;
-  final int sessionType;
+  final int activity;
+  final String origin;
+  final String? trainingId;
+  final String? programSessionId;
   final int duration;
   final int? repeaterSets;
   final int? repeaterReps;
@@ -425,7 +493,10 @@ class Session extends DataClass implements Insertable<Session> {
     required this.date,
     required this.dataPath,
     required this.isAssessment,
-    required this.sessionType,
+    required this.activity,
+    required this.origin,
+    this.trainingId,
+    this.programSessionId,
     required this.duration,
     this.repeaterSets,
     this.repeaterReps,
@@ -444,7 +515,14 @@ class Session extends DataClass implements Insertable<Session> {
     map['date'] = Variable<DateTime>(date);
     map['data_path'] = Variable<String>(dataPath);
     map['is_assessment'] = Variable<bool>(isAssessment);
-    map['session_type'] = Variable<int>(sessionType);
+    map['activity'] = Variable<int>(activity);
+    map['origin'] = Variable<String>(origin);
+    if (!nullToAbsent || trainingId != null) {
+      map['training_id'] = Variable<String>(trainingId);
+    }
+    if (!nullToAbsent || programSessionId != null) {
+      map['program_session_id'] = Variable<String>(programSessionId);
+    }
     map['duration'] = Variable<int>(duration);
     if (!nullToAbsent || repeaterSets != null) {
       map['repeater_sets'] = Variable<int>(repeaterSets);
@@ -476,7 +554,14 @@ class Session extends DataClass implements Insertable<Session> {
       date: Value(date),
       dataPath: Value(dataPath),
       isAssessment: Value(isAssessment),
-      sessionType: Value(sessionType),
+      activity: Value(activity),
+      origin: Value(origin),
+      trainingId: trainingId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(trainingId),
+      programSessionId: programSessionId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(programSessionId),
       duration: Value(duration),
       repeaterSets: repeaterSets == null && nullToAbsent
           ? const Value.absent()
@@ -512,7 +597,10 @@ class Session extends DataClass implements Insertable<Session> {
       date: serializer.fromJson<DateTime>(json['date']),
       dataPath: serializer.fromJson<String>(json['dataPath']),
       isAssessment: serializer.fromJson<bool>(json['isAssessment']),
-      sessionType: serializer.fromJson<int>(json['sessionType']),
+      activity: serializer.fromJson<int>(json['activity']),
+      origin: serializer.fromJson<String>(json['origin']),
+      trainingId: serializer.fromJson<String?>(json['trainingId']),
+      programSessionId: serializer.fromJson<String?>(json['programSessionId']),
       duration: serializer.fromJson<int>(json['duration']),
       repeaterSets: serializer.fromJson<int?>(json['repeaterSets']),
       repeaterReps: serializer.fromJson<int?>(json['repeaterReps']),
@@ -533,7 +621,10 @@ class Session extends DataClass implements Insertable<Session> {
       'date': serializer.toJson<DateTime>(date),
       'dataPath': serializer.toJson<String>(dataPath),
       'isAssessment': serializer.toJson<bool>(isAssessment),
-      'sessionType': serializer.toJson<int>(sessionType),
+      'activity': serializer.toJson<int>(activity),
+      'origin': serializer.toJson<String>(origin),
+      'trainingId': serializer.toJson<String?>(trainingId),
+      'programSessionId': serializer.toJson<String?>(programSessionId),
       'duration': serializer.toJson<int>(duration),
       'repeaterSets': serializer.toJson<int?>(repeaterSets),
       'repeaterReps': serializer.toJson<int?>(repeaterReps),
@@ -552,7 +643,10 @@ class Session extends DataClass implements Insertable<Session> {
     DateTime? date,
     String? dataPath,
     bool? isAssessment,
-    int? sessionType,
+    int? activity,
+    String? origin,
+    Value<String?> trainingId = const Value.absent(),
+    Value<String?> programSessionId = const Value.absent(),
     int? duration,
     Value<int?> repeaterSets = const Value.absent(),
     Value<int?> repeaterReps = const Value.absent(),
@@ -568,7 +662,12 @@ class Session extends DataClass implements Insertable<Session> {
     date: date ?? this.date,
     dataPath: dataPath ?? this.dataPath,
     isAssessment: isAssessment ?? this.isAssessment,
-    sessionType: sessionType ?? this.sessionType,
+    activity: activity ?? this.activity,
+    origin: origin ?? this.origin,
+    trainingId: trainingId.present ? trainingId.value : this.trainingId,
+    programSessionId: programSessionId.present
+        ? programSessionId.value
+        : this.programSessionId,
     duration: duration ?? this.duration,
     repeaterSets: repeaterSets.present ? repeaterSets.value : this.repeaterSets,
     repeaterReps: repeaterReps.present ? repeaterReps.value : this.repeaterReps,
@@ -596,9 +695,14 @@ class Session extends DataClass implements Insertable<Session> {
       isAssessment: data.isAssessment.present
           ? data.isAssessment.value
           : this.isAssessment,
-      sessionType: data.sessionType.present
-          ? data.sessionType.value
-          : this.sessionType,
+      activity: data.activity.present ? data.activity.value : this.activity,
+      origin: data.origin.present ? data.origin.value : this.origin,
+      trainingId: data.trainingId.present
+          ? data.trainingId.value
+          : this.trainingId,
+      programSessionId: data.programSessionId.present
+          ? data.programSessionId.value
+          : this.programSessionId,
       duration: data.duration.present ? data.duration.value : this.duration,
       repeaterSets: data.repeaterSets.present
           ? data.repeaterSets.value
@@ -631,7 +735,10 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('date: $date, ')
           ..write('dataPath: $dataPath, ')
           ..write('isAssessment: $isAssessment, ')
-          ..write('sessionType: $sessionType, ')
+          ..write('activity: $activity, ')
+          ..write('origin: $origin, ')
+          ..write('trainingId: $trainingId, ')
+          ..write('programSessionId: $programSessionId, ')
           ..write('duration: $duration, ')
           ..write('repeaterSets: $repeaterSets, ')
           ..write('repeaterReps: $repeaterReps, ')
@@ -652,7 +759,10 @@ class Session extends DataClass implements Insertable<Session> {
     date,
     dataPath,
     isAssessment,
-    sessionType,
+    activity,
+    origin,
+    trainingId,
+    programSessionId,
     duration,
     repeaterSets,
     repeaterReps,
@@ -672,7 +782,10 @@ class Session extends DataClass implements Insertable<Session> {
           other.date == this.date &&
           other.dataPath == this.dataPath &&
           other.isAssessment == this.isAssessment &&
-          other.sessionType == this.sessionType &&
+          other.activity == this.activity &&
+          other.origin == this.origin &&
+          other.trainingId == this.trainingId &&
+          other.programSessionId == this.programSessionId &&
           other.duration == this.duration &&
           other.repeaterSets == this.repeaterSets &&
           other.repeaterReps == this.repeaterReps &&
@@ -690,7 +803,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<DateTime> date;
   final Value<String> dataPath;
   final Value<bool> isAssessment;
-  final Value<int> sessionType;
+  final Value<int> activity;
+  final Value<String> origin;
+  final Value<String?> trainingId;
+  final Value<String?> programSessionId;
   final Value<int> duration;
   final Value<int?> repeaterSets;
   final Value<int?> repeaterReps;
@@ -707,7 +823,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.date = const Value.absent(),
     this.dataPath = const Value.absent(),
     this.isAssessment = const Value.absent(),
-    this.sessionType = const Value.absent(),
+    this.activity = const Value.absent(),
+    this.origin = const Value.absent(),
+    this.trainingId = const Value.absent(),
+    this.programSessionId = const Value.absent(),
     this.duration = const Value.absent(),
     this.repeaterSets = const Value.absent(),
     this.repeaterReps = const Value.absent(),
@@ -725,7 +844,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.date = const Value.absent(),
     required String dataPath,
     this.isAssessment = const Value.absent(),
-    this.sessionType = const Value.absent(),
+    this.activity = const Value.absent(),
+    this.origin = const Value.absent(),
+    this.trainingId = const Value.absent(),
+    this.programSessionId = const Value.absent(),
     this.duration = const Value.absent(),
     this.repeaterSets = const Value.absent(),
     this.repeaterReps = const Value.absent(),
@@ -745,7 +867,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<DateTime>? date,
     Expression<String>? dataPath,
     Expression<bool>? isAssessment,
-    Expression<int>? sessionType,
+    Expression<int>? activity,
+    Expression<String>? origin,
+    Expression<String>? trainingId,
+    Expression<String>? programSessionId,
     Expression<int>? duration,
     Expression<int>? repeaterSets,
     Expression<int>? repeaterReps,
@@ -763,7 +888,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (date != null) 'date': date,
       if (dataPath != null) 'data_path': dataPath,
       if (isAssessment != null) 'is_assessment': isAssessment,
-      if (sessionType != null) 'session_type': sessionType,
+      if (activity != null) 'activity': activity,
+      if (origin != null) 'origin': origin,
+      if (trainingId != null) 'training_id': trainingId,
+      if (programSessionId != null) 'program_session_id': programSessionId,
       if (duration != null) 'duration': duration,
       if (repeaterSets != null) 'repeater_sets': repeaterSets,
       if (repeaterReps != null) 'repeater_reps': repeaterReps,
@@ -783,7 +911,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<DateTime>? date,
     Value<String>? dataPath,
     Value<bool>? isAssessment,
-    Value<int>? sessionType,
+    Value<int>? activity,
+    Value<String>? origin,
+    Value<String?>? trainingId,
+    Value<String?>? programSessionId,
     Value<int>? duration,
     Value<int?>? repeaterSets,
     Value<int?>? repeaterReps,
@@ -801,7 +932,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       date: date ?? this.date,
       dataPath: dataPath ?? this.dataPath,
       isAssessment: isAssessment ?? this.isAssessment,
-      sessionType: sessionType ?? this.sessionType,
+      activity: activity ?? this.activity,
+      origin: origin ?? this.origin,
+      trainingId: trainingId ?? this.trainingId,
+      programSessionId: programSessionId ?? this.programSessionId,
       duration: duration ?? this.duration,
       repeaterSets: repeaterSets ?? this.repeaterSets,
       repeaterReps: repeaterReps ?? this.repeaterReps,
@@ -835,8 +969,17 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (isAssessment.present) {
       map['is_assessment'] = Variable<bool>(isAssessment.value);
     }
-    if (sessionType.present) {
-      map['session_type'] = Variable<int>(sessionType.value);
+    if (activity.present) {
+      map['activity'] = Variable<int>(activity.value);
+    }
+    if (origin.present) {
+      map['origin'] = Variable<String>(origin.value);
+    }
+    if (trainingId.present) {
+      map['training_id'] = Variable<String>(trainingId.value);
+    }
+    if (programSessionId.present) {
+      map['program_session_id'] = Variable<String>(programSessionId.value);
     }
     if (duration.present) {
       map['duration'] = Variable<int>(duration.value);
@@ -877,7 +1020,10 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('date: $date, ')
           ..write('dataPath: $dataPath, ')
           ..write('isAssessment: $isAssessment, ')
-          ..write('sessionType: $sessionType, ')
+          ..write('activity: $activity, ')
+          ..write('origin: $origin, ')
+          ..write('trainingId: $trainingId, ')
+          ..write('programSessionId: $programSessionId, ')
           ..write('duration: $duration, ')
           ..write('repeaterSets: $repeaterSets, ')
           ..write('repeaterReps: $repeaterReps, ')
@@ -5265,7 +5411,10 @@ typedef $$SessionsTableCreateCompanionBuilder =
       Value<DateTime> date,
       required String dataPath,
       Value<bool> isAssessment,
-      Value<int> sessionType,
+      Value<int> activity,
+      Value<String> origin,
+      Value<String?> trainingId,
+      Value<String?> programSessionId,
       Value<int> duration,
       Value<int?> repeaterSets,
       Value<int?> repeaterReps,
@@ -5284,7 +5433,10 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<DateTime> date,
       Value<String> dataPath,
       Value<bool> isAssessment,
-      Value<int> sessionType,
+      Value<int> activity,
+      Value<String> origin,
+      Value<String?> trainingId,
+      Value<String?> programSessionId,
       Value<int> duration,
       Value<int?> repeaterSets,
       Value<int?> repeaterReps,
@@ -5335,8 +5487,23 @@ class $$SessionsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get sessionType => $composableBuilder(
-    column: $table.sessionType,
+  ColumnFilters<int> get activity => $composableBuilder(
+    column: $table.activity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get origin => $composableBuilder(
+    column: $table.origin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get trainingId => $composableBuilder(
+    column: $table.trainingId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get programSessionId => $composableBuilder(
+    column: $table.programSessionId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5420,8 +5587,23 @@ class $$SessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get sessionType => $composableBuilder(
-    column: $table.sessionType,
+  ColumnOrderings<int> get activity => $composableBuilder(
+    column: $table.activity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get origin => $composableBuilder(
+    column: $table.origin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get trainingId => $composableBuilder(
+    column: $table.trainingId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get programSessionId => $composableBuilder(
+    column: $table.programSessionId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -5495,8 +5677,19 @@ class $$SessionsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<int> get sessionType => $composableBuilder(
-    column: $table.sessionType,
+  GeneratedColumn<int> get activity =>
+      $composableBuilder(column: $table.activity, builder: (column) => column);
+
+  GeneratedColumn<String> get origin =>
+      $composableBuilder(column: $table.origin, builder: (column) => column);
+
+  GeneratedColumn<String> get trainingId => $composableBuilder(
+    column: $table.trainingId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get programSessionId => $composableBuilder(
+    column: $table.programSessionId,
     builder: (column) => column,
   );
 
@@ -5571,7 +5764,10 @@ class $$SessionsTableTableManager
                 Value<DateTime> date = const Value.absent(),
                 Value<String> dataPath = const Value.absent(),
                 Value<bool> isAssessment = const Value.absent(),
-                Value<int> sessionType = const Value.absent(),
+                Value<int> activity = const Value.absent(),
+                Value<String> origin = const Value.absent(),
+                Value<String?> trainingId = const Value.absent(),
+                Value<String?> programSessionId = const Value.absent(),
                 Value<int> duration = const Value.absent(),
                 Value<int?> repeaterSets = const Value.absent(),
                 Value<int?> repeaterReps = const Value.absent(),
@@ -5588,7 +5784,10 @@ class $$SessionsTableTableManager
                 date: date,
                 dataPath: dataPath,
                 isAssessment: isAssessment,
-                sessionType: sessionType,
+                activity: activity,
+                origin: origin,
+                trainingId: trainingId,
+                programSessionId: programSessionId,
                 duration: duration,
                 repeaterSets: repeaterSets,
                 repeaterReps: repeaterReps,
@@ -5607,7 +5806,10 @@ class $$SessionsTableTableManager
                 Value<DateTime> date = const Value.absent(),
                 required String dataPath,
                 Value<bool> isAssessment = const Value.absent(),
-                Value<int> sessionType = const Value.absent(),
+                Value<int> activity = const Value.absent(),
+                Value<String> origin = const Value.absent(),
+                Value<String?> trainingId = const Value.absent(),
+                Value<String?> programSessionId = const Value.absent(),
                 Value<int> duration = const Value.absent(),
                 Value<int?> repeaterSets = const Value.absent(),
                 Value<int?> repeaterReps = const Value.absent(),
@@ -5624,7 +5826,10 @@ class $$SessionsTableTableManager
                 date: date,
                 dataPath: dataPath,
                 isAssessment: isAssessment,
-                sessionType: sessionType,
+                activity: activity,
+                origin: origin,
+                trainingId: trainingId,
+                programSessionId: programSessionId,
                 duration: duration,
                 repeaterSets: repeaterSets,
                 repeaterReps: repeaterReps,

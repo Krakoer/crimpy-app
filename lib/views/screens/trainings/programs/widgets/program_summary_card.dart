@@ -103,7 +103,7 @@ class ProgramSummaryCard extends ConsumerWidget {
             )
           : Row(
               children: [
-                SessionTypeTile(type: today.session.sessionType, size: 34),
+                SessionActivityTile(type: today.session.activity, size: 34),
                 const SizedBox(width: 11),
                 Expanded(
                   child: Column(

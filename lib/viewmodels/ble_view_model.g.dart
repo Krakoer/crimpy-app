@@ -437,7 +437,7 @@ final class BleSessionProvider
   }
 }
 
-String _$bleSessionHash() => r'a2b4d90d3e4f8c8527668647efe8699a5cdbf084';
+String _$bleSessionHash() => r'ceb99baf654de7406a35b1c35154728755edbc56';
 
 /// Returns the current session stats.
 /// Allows the session to be reset.

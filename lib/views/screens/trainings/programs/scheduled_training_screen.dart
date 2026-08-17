@@ -1,5 +1,4 @@
 import 'package:crimpy/models/assessment_model.dart';
-import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training.dart';
@@ -124,7 +123,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   }
 
   Widget _infoCard(BuildContext context, DateTime? date) {
-    final type = session.sessionType;
+    final type = session.activity;
     final color = programSessionColor(type);
     final schedule = switch (session.schedule) {
       SessionSchedule.dayOfWeek when date != null =>
@@ -140,7 +139,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
         children: [
           Row(
             children: [
-              SessionTypeTile(type: type, size: 46),
+              SessionActivityTile(type: type, size: 46),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -393,8 +392,10 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     Training training,
     AssessmentResults results,
   ) {
-    // Every training can be run except climbing, which is only logged.
-    final logOnly = session.sessionType == SessionType.climbing;
+    // A training with nothing to step through has nothing to run, so it can only
+    // be logged. Derived from the content rather than from the label, so a coach
+    // is free to put hangboard work in a session called anything.
+    final logOnly = training.items.isEmpty;
     final sessions = ref.watch(sessionsProvider).asData?.value ?? [];
     final done = isScheduledTrainingDone(
       sessions,
@@ -532,7 +533,9 @@ class ScheduledTrainingScreen extends ConsumerWidget {
         builder: (_) => PlayTrainingScreen(
           training,
           useSensor: useSensor,
-          sessionType: session.sessionType,
+          activity: session.activity,
+          trainingId: session.trainingId,
+          programSessionId: session.id,
           bodyweightKg: bodyweight,
           results: measured,
         ),
@@ -541,7 +544,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   }
 
   Widget _logButton(BuildContext context) {
-    final color = programSessionColor(session.sessionType);
+    final color = programSessionColor(session.activity);
     final canLog = _isScheduledToday();
     final date = session.scheduledDate(program, weekNumber);
     final label = canLog
@@ -556,8 +559,10 @@ class ScheduledTrainingScreen extends ConsumerWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => LogSessionScreen(
-                    sessionType: session.sessionType,
+                    activity: session.activity,
                     name: session.trainingTitle,
+                    trainingId: session.trainingId,
+                    programSessionId: session.id,
                   ),
                 ),
               );

@@ -101,7 +101,7 @@ class SessionDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildSessionDetails(BuildContext context, SessionModel session) {
-    final sessionColor = Color(session.sessionType.colorValue);
+    final sessionColor = Color(session.activity.colorValue);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -113,13 +113,13 @@ class SessionDetailScreen extends ConsumerWidget {
           const SizedBox(height: 16),
 
           // Performance stats (if available)
-          if (session.reps != null && session.reps!.isNotEmpty) ...[
+          if (session.hasReps) ...[
             SessionPerformanceCard(reps: session.reps!),
             const SizedBox(height: 16),
           ],
 
           // Repetitions breakdown (if available)
-          if (session.reps != null && session.reps!.isNotEmpty) ...[
+          if (session.hasReps) ...[
             SessionRepsCard(session: session, sessionColor: sessionColor),
             const SizedBox(height: 16),
           ],

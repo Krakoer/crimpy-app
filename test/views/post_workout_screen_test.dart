@@ -58,15 +58,17 @@ void main() {
       const PostWorkoutScreen(
         template: _training,
         results: [],
-        sessionType: SessionType.stretching,
+        activity: SessionActivity.stretching,
       ),
       sessions,
     );
 
-    expect(saved.sessionType, SessionType.stretching);
+    expect(saved.activity, SessionActivity.stretching);
+    // Finishing a run always produces a played session, whatever was trained.
+    expect(saved.origin, SessionOrigin.played);
   });
 
-  testWidgets('defaults to a Crimpy session', (tester) async {
+  testWidgets('defaults to a hangboard session', (tester) async {
     final sessions = CapturingSessions();
 
     final saved = await _saveFrom(
@@ -75,6 +77,25 @@ void main() {
       sessions,
     );
 
-    expect(saved.sessionType, SessionType.crimpy);
+    expect(saved.activity, SessionActivity.hangboard);
+    expect(saved.origin, SessionOrigin.played);
+  });
+
+  testWidgets('carries the program links onto the session', (tester) async {
+    final sessions = CapturingSessions();
+
+    final saved = await _saveFrom(
+      tester,
+      const PostWorkoutScreen(
+        template: _training,
+        results: [],
+        trainingId: 't-1',
+        programSessionId: 'ps-1',
+      ),
+      sessions,
+    );
+
+    expect(saved.trainingId, 't-1');
+    expect(saved.programSessionId, 'ps-1');
   });
 }

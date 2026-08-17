@@ -253,7 +253,7 @@ class DummyDataGenerator {
         SessionModel(
           name: 'Climbing Session',
           isAssessment: false,
-          sessionType: SessionType.climbing,
+          activity: SessionActivity.climbing,
           durationInSeconds: duration * 60,
           date: sessionDate,
           notes: _getRandomClimbingNote(),
@@ -287,7 +287,7 @@ class DummyDataGenerator {
         SessionModel(
           name: 'Stretching Session',
           isAssessment: false,
-          sessionType: SessionType.stretching,
+          activity: SessionActivity.stretching,
           durationInSeconds: duration * 60,
           date: sessionDate,
           notes: _getRandomStretchingNote(),
@@ -370,7 +370,8 @@ class DummyDataGenerator {
         'session': SessionModel(
           name: trainingName,
           isAssessment: false,
-          sessionType: SessionType.crimpy,
+          activity: SessionActivity.hangboard,
+          origin: SessionOrigin.played,
           durationInSeconds: reps.fold<int>(0, (sum, r) => sum + r.duration),
           date: sessionDate,
           notes: _getRandomTrainingNote(),
@@ -413,7 +414,8 @@ class DummyDataGenerator {
       final session = SessionModel(
         name: 'Max Force',
         isAssessment: true,
-        sessionType: SessionType.crimpy,
+        activity: SessionActivity.hangboard,
+        origin: SessionOrigin.played,
         durationInSeconds: reps.fold<int>(0, (sum, r) => sum + r.duration),
         date: sessionDate,
         notes: 'Half crimp grip position',
@@ -451,7 +453,8 @@ class DummyDataGenerator {
       final session = SessionModel(
         name: 'Critical Force',
         isAssessment: true,
-        sessionType: SessionType.crimpy,
+        activity: SessionActivity.hangboard,
+        origin: SessionOrigin.played,
         durationInSeconds: reps.fold<int>(0, (sum, r) => sum + r.duration),
         date: sessionDate,
         notes: 'Half crimp grip position',

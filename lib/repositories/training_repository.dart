@@ -188,7 +188,11 @@ class RemoteTrainingRepository extends TrainingRepository {
       'notes': session.notes ?? '',
       'date': session.date.toUtc().toIso8601String(),
       'is_assessment': session.isAssessment,
-      'session_type': session.sessionType.index,
+      'activity': session.activity.index,
+      'origin': session.origin.apiValue,
+      if (session.trainingId != null) 'training_id': session.trainingId,
+      if (session.programSessionId != null)
+        'program_session_id': session.programSessionId,
       'duration': duration,
       if (session.repeaterConfig != null) ...{
         'repeater_sets': session.repeaterConfig!.sets,
@@ -219,6 +223,10 @@ class RemoteTrainingRepository extends TrainingRepository {
       'name': session.name,
       'notes': session.notes ?? '',
       'duration': duration,
+      // A played session keeps the date its run gave it, so only a logged one
+      // sends one. Omitted, the server leaves the stored date alone.
+      if (!session.origin.isPlayed)
+        'date': session.date.toUtc().toIso8601String(),
     });
   }
 

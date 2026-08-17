@@ -15,23 +15,31 @@ class LogSessionButtons extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: _SessionTypeButton(
-                sessionType: SessionType.climbing,
+              child: _SessionActivityButton(
+                activity: SessionActivity.climbing,
                 icon: Icons.terrain,
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: _SessionTypeButton(
-                sessionType: SessionType.stretching,
+              child: _SessionActivityButton(
+                activity: SessionActivity.stretching,
                 icon: Icons.self_improvement,
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: _SessionTypeButton(
-                sessionType: SessionType.workout,
+              child: _SessionActivityButton(
+                activity: SessionActivity.workout,
                 icon: Icons.fitness_center,
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Catches everything the other three do not, a run in particular.
+            Expanded(
+              child: _SessionActivityButton(
+                activity: SessionActivity.other,
+                icon: Icons.directions_run,
               ),
             ),
           ],
@@ -41,21 +49,21 @@ class LogSessionButtons extends StatelessWidget {
   }
 }
 
-class _SessionTypeButton extends StatelessWidget {
-  final SessionType sessionType;
+class _SessionActivityButton extends StatelessWidget {
+  final SessionActivity activity;
   final IconData icon;
 
-  const _SessionTypeButton({required this.sessionType, required this.icon});
+  const _SessionActivityButton({required this.activity, required this.icon});
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(sessionType.colorValue);
+    final color = Color(activity.colorValue);
 
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => LogSessionScreen(sessionType: sessionType),
+            builder: (context) => LogSessionScreen(activity: activity),
           ),
         );
       },
@@ -71,7 +79,7 @@ class _SessionTypeButton extends StatelessWidget {
             Icon(icon, color: color, size: 28),
             const SizedBox(height: 8),
             Text(
-              sessionType.displayName,
+              activity.displayName,
               style: TextStyle(
                 color: color,
                 fontSize: 12,

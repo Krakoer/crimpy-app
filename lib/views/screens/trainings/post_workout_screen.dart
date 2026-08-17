@@ -12,14 +12,20 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
   final List<RepDataModel> results;
 
   /// Category the session is logged under. Trainings run from the user's own
-  /// library are Crimpy sessions; program trainings carry the coach's type.
-  final SessionType sessionType;
+  /// library are hangboard sessions; program trainings carry the coach's label.
+  final SessionActivity activity;
+
+  /// What the run was started from, both null outside a program.
+  final String? trainingId;
+  final String? programSessionId;
 
   /// Show the results of the workout to the user, and allow them to add a note to the session.
   const PostWorkoutScreen({
     required this.results,
     required this.template,
-    this.sessionType = SessionType.crimpy,
+    this.activity = SessionActivity.hangboard,
+    this.trainingId,
+    this.programSessionId,
     super.key,
   });
 
@@ -190,7 +196,11 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                       date: DateTime.now(),
                       notes: _noteController.text,
                       isAssessment: false,
-                      sessionType: widget.sessionType,
+                      activity: widget.activity,
+                      // This screen is only ever reached by finishing a run.
+                      origin: SessionOrigin.played,
+                      trainingId: widget.trainingId,
+                      programSessionId: widget.programSessionId,
                     ),
                     widget.results,
                   );

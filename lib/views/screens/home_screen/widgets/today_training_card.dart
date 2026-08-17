@@ -281,7 +281,7 @@ class _TodayTrainingRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final type = session.sessionType;
+    final type = session.activity;
     final done = isScheduledTrainingDone(
       sessions,
       program,
@@ -301,7 +301,7 @@ class _TodayTrainingRow extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
           children: [
-            SessionTypeTile(type: type, size: 38),
+            SessionActivityTile(type: type, size: 38),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -399,7 +399,7 @@ class _FlexTrainingRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final type = session.sessionType;
+    final type = session.activity;
     final target = session.timesPerWeek ?? 1;
     final done = completionsInWeek(sessions, program, weekNumber, session);
 
@@ -409,7 +409,7 @@ class _FlexTrainingRow extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 5),
         child: Row(
           children: [
-            SessionTypeTile(type: type, size: 28),
+            SessionActivityTile(type: type, size: 28),
             const SizedBox(width: 10),
             Expanded(
               child: Text(

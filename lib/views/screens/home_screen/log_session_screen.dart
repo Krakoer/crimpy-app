@@ -7,13 +7,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 class LogSessionScreen extends ConsumerStatefulWidget {
-  final SessionType sessionType;
+  final SessionActivity activity;
 
   /// Optional session name, e.g. the title of a scheduled program training.
-  /// Defaults to the session type's display name.
+  /// Defaults to the activity's display name.
   final String? name;
 
-  const LogSessionScreen({super.key, required this.sessionType, this.name});
+  /// Set when logging a scheduled program session, so even a session that was
+  /// never run in the app still points at what it was meant to be.
+  final String? trainingId;
+  final String? programSessionId;
+
+  const LogSessionScreen({
+    super.key,
+    required this.activity,
+    this.name,
+    this.trainingId,
+    this.programSessionId,
+  });
 
   @override
   ConsumerState<LogSessionScreen> createState() => _LogSessionScreenState();
@@ -34,10 +45,10 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(widget.sessionType.colorValue);
+    final color = Color(widget.activity.colorValue);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Log ${widget.sessionType.displayName}')),
+      appBar: AppBar(title: Text('Log ${widget.activity.displayName}')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -222,9 +233,13 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
     );
 
     final session = SessionModel(
-      name: widget.name ?? widget.sessionType.displayName,
+      name: widget.name ?? widget.activity.displayName,
       isAssessment: false,
-      sessionType: widget.sessionType,
+      activity: widget.activity,
+      // Typed in rather than run, whatever the activity says.
+      origin: SessionOrigin.logged,
+      trainingId: widget.trainingId,
+      programSessionId: widget.programSessionId,
       durationInSeconds: _durationMinutes * 60,
       date: sessionDateTime,
       notes: _notesController.text.isEmpty ? null : _notesController.text,
@@ -237,8 +252,8 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${widget.sessionType.displayName} session logged!'),
-            backgroundColor: Color(widget.sessionType.colorValue),
+            content: Text('${widget.activity.displayName} session logged!'),
+            backgroundColor: Color(widget.activity.colorValue),
           ),
         );
         Navigator.of(context).pop();
