@@ -59,6 +59,7 @@ class BuiltinTrainingModel {
             )
           : null;
       final positionsPerRep = List.filled(r.repsBySet, r.gripPosition.name);
+      final edgesPerRep = List.filled(r.repsBySet, defaultEdgeSizeMm);
 
       return TrainingItem(
         id: '',
@@ -74,6 +75,7 @@ class BuiltinTrainingModel {
         loads: loadsPerRep,
         leftLoads: leftLoadsPerRep,
         handPositions: [positionsPerRep],
+        edgeSizesMm: edgesPerRep,
       );
     }).toList();
 

@@ -140,7 +140,10 @@ class RepItemWidget extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${rep.duration}s',
+                      [
+                        '${rep.duration}s',
+                        if (rep.edgeSizeMm != null) '${rep.edgeSizeMm}mm',
+                      ].join(' - '),
                       style: TextStyle(
                         fontSize: 12,
                         color: CrimpyTheme.gray600,

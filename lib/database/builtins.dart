@@ -44,6 +44,7 @@ List<TrainingExecutionItem> _criticalForceReps() {
         handSide: HandSide.right,
         gripPosition: GripPosition.halfCrimp,
         collectSensorData: true,
+        edgeSizeMm: defaultEdgeSizeMm,
       ),
     );
     if (pull < criticalForceRepCount - 1) {
@@ -76,6 +77,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
             handSide: HandSide.right,
             gripPosition: grip,
             collectSensorData: true,
+            edgeSizeMm: defaultEdgeSizeMm,
           ),
           const RestItem(durationSeconds: 10),
           TimedItem(
@@ -85,6 +87,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
             handSide: HandSide.left,
             gripPosition: grip,
             collectSensorData: true,
+            edgeSizeMm: defaultEdgeSizeMm,
           ),
         ],
       );

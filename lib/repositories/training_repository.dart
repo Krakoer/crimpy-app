@@ -174,6 +174,8 @@ class RemoteTrainingRepository extends TrainingRepository {
             'target_weight': indexed.$2.targetWeight,
             'index': indexed.$1,
             'grip_position': indexed.$2.gripPosition.index,
+            if (indexed.$2.edgeSizeMm != null)
+              'edge_size_mm': indexed.$2.edgeSizeMm,
           },
         )
         .toList();
