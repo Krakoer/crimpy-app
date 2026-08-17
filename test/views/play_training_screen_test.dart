@@ -1,7 +1,9 @@
 import 'package:crimpy/models/run_screen_style.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/repositories/ble_repository.dart';
 import 'package:crimpy/services/run_screen_style_service.dart';
+import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/run_screen_style_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 import 'package:flutter/material.dart';
@@ -101,6 +103,7 @@ Future<void> _pumpRun(
   WidgetTester tester,
   Training training, {
   RunScreenStyle style = RunScreenStyle.ringAndTank,
+  BleRepository? bleRepository,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -108,6 +111,10 @@ Future<void> _pumpRun(
         runScreenStyleServiceProvider.overrideWithValue(
           _FixedStyleService(style),
         ),
+        // The real provider reaches for the stored calibration on creation,
+        // which no test binding can serve.
+        if (bleRepository != null)
+          bleRepositoryProvider.overrideWithValue(bleRepository),
       ],
       child: MaterialApp(home: PlayTrainingScreen(training, useSensor: false)),
     ),
@@ -226,5 +233,43 @@ void main() {
     // Its rest, which previews the step after it.
     expect(find.text('REST'), findsOneWidget);
     expect(find.text('Left leg'), findsOneWidget);
+  });
+
+  // Samples taken while the run is suspended belong to no rep. Recording them
+  // dragged the average force of the rep the pause interrupted down towards
+  // zero, since the athlete is off the board for the whole pause.
+  testWidgets('pausing the run stops recording sensor samples', (tester) async {
+    final bleRepository = BleRepository();
+    await _pumpRun(tester, _stretchingCircuit(), bleRepository: bleRepository);
+
+    await tester.tap(find.byIcon(Icons.play_arrow));
+    await tester.pump();
+    expect(bleRepository.isStreaming, isTrue);
+
+    await tester.tap(find.byIcon(Icons.pause));
+    await tester.pump();
+    expect(bleRepository.isStreaming, isFalse);
+
+    await tester.tap(find.byIcon(Icons.play_arrow));
+    await tester.pump();
+    expect(bleRepository.isStreaming, isTrue);
+  });
+
+  // Leaving a paused run must not leave the sensor mute for the rest of the
+  // app: the live gauge outside the run reads the same stream.
+  testWidgets('leaving a paused run hands the sensor stream back', (
+    tester,
+  ) async {
+    final bleRepository = BleRepository();
+    await _pumpRun(tester, _stretchingCircuit(), bleRepository: bleRepository);
+
+    await tester.tap(find.byIcon(Icons.play_arrow));
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.pause));
+    await tester.pump();
+    expect(bleRepository.isStreaming, isFalse);
+
+    await tester.pumpWidget(const SizedBox());
+    expect(bleRepository.isStreaming, isTrue);
   });
 }

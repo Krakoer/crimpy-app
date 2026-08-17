@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/repositories/ble_repository.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/widgets/gauge.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen.dart';
@@ -137,8 +138,13 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     },
   );
 
+  /// Held from `initState` so the sensor stream can be handed back running on
+  /// dispose, when reading a provider is no longer appropriate.
+  late final BleRepository _bleRepository;
+
   @override
   void initState() {
+    _bleRepository = ref.read(bleRepositoryProvider);
     timer.init();
     _serieController = AnimationController(
       vsync: this,
@@ -149,13 +155,18 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   }
 
   void _start() {
+    _bleRepository.resumeStreaming();
     setState(() {
       timer.play();
       _serieController.forward();
     });
   }
 
+  /// Suspends the run. The sensor stream goes down with it: samples taken while
+  /// paused belong to no rep, and counting them drags down the average force of
+  /// the rep the pause interrupts.
   void _stop() {
+    _bleRepository.pauseStreaming();
     setState(() {
       timer.stop();
       _serieController.stop();
@@ -171,7 +182,6 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     if (timer.finished || !timer.isRunning) return;
     _pausedByBackground = true;
     _stop();
-    ref.read(bleRepositoryProvider).pauseStreaming();
   }
 
   @override
@@ -180,12 +190,12 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     _pausedByBackground = false;
     await showWorkoutPausedDialog(context);
     if (!mounted) return;
-    ref.read(bleRepositoryProvider).resumeStreaming();
     _start();
   }
 
   @override
   void dispose() {
+    _bleRepository.resumeStreaming();
     WakelockPlus.disable();
     timer.dispose();
     _serieController.dispose();

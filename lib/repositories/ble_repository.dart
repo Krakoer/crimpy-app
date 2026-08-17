@@ -211,6 +211,9 @@ class BleRepository {
   /// Wether the received data are streamed.
   bool _streamDataOn = true;
 
+  /// Whether incoming samples currently reach [dataStream].
+  bool get isStreaming => _streamDataOn;
+
   void stopSession() {
     _streamDataOn = false;
   }
