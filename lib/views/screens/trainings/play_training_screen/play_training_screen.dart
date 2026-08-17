@@ -282,6 +282,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                 Gauge(
                   rep!.targetLoad,
                   size: gaugeSize - 2 * WorkoutCircle.strokeWidth,
+                  paused: !timer.isRunning,
                 )
               else
                 timerDisplay,

@@ -10,12 +10,22 @@ class Gauge extends ConsumerWidget {
   final double targetWeight;
   final double size;
 
-  const Gauge(this.targetWeight, {this.size = 300, super.key});
+  /// Whether the run feeding the gauge is suspended. The sensor stream is muted
+  /// for the whole pause, so the last sample is stale: showing it would read as
+  /// a hold the athlete is not doing.
+  final bool paused;
+
+  const Gauge(
+    this.targetWeight, {
+    this.size = 300,
+    this.paused = false,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final points = ref.watch(bleDataStreamProvider).value;
-    final currentWeight = (points == null || points.isEmpty)
+    final currentWeight = (paused || points == null || points.isEmpty)
         ? 0.0
         : points.last.value;
     final double fillPercentage = targetWeight == 0

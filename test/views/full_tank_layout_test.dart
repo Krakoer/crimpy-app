@@ -333,6 +333,34 @@ void main() {
       expect(find.byIcon(Icons.play_arrow), findsOneWidget);
     });
 
+    // The sensor stream is muted for the whole pause, so the reading it stopped
+    // on is stale. Holding it on screen looks like the athlete is still on the
+    // board, when they let go to take the pause.
+    testWidgets('pausing empties the force readout instead of freezing it', (
+      tester,
+    ) async {
+      await _pump(tester, item: _hang, currentWeight: 34.2, isRunning: false);
+
+      expect(find.text('34'), findsNothing);
+      expect(find.text('.2 kg'), findsNothing);
+      expect(find.text('0'), findsWidgets);
+      expect(find.text(' kg'), findsWidgets);
+    });
+
+    // Preparation runs with the timer stopped, and it is not a pause: there is
+    // nothing to freeze yet.
+    testWidgets('preparation is not treated as a pause', (tester) async {
+      await _pump(
+        tester,
+        item: _hang,
+        currentWeight: 34.2,
+        isRunning: false,
+        isPreparation: true,
+      );
+
+      expect(find.text('PAUSED'), findsNothing);
+    });
+
     testWidgets('a self-paced step is finished from the strip', (tester) async {
       await _pump(
         tester,
