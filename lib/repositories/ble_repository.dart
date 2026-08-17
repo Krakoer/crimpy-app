@@ -209,15 +209,6 @@ class BleRepository {
     }
   }
 
-  /// Reset the current session data.
-  /// The streaming flag is raised here on purpose: the assessment run screens
-  /// pause the stream when they leave the foreground and can be disposed before
-  /// resuming it, and starting a new session is what un-mutes the sensor for
-  /// them. Drop this once those screens hand the stream back themselves.
-  void resetSession() {
-    _streamDataOn = true;
-  }
-
   /// Stops feeding incoming samples to the data stream without touching what
   /// has already been recorded, so a run can be suspended and picked up again.
   void pauseStreaming() {
