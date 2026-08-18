@@ -2,6 +2,7 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/views/screens/home_screen/log_session_screen.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/home_card.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class LogSessionButtons extends StatelessWidget {
   const LogSessionButtons({super.key});
@@ -57,7 +58,7 @@ class _SessionActivityButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(activity.colorValue);
+    final color = CrimpyTheme.activityColor(activity);
 
     return InkWell(
       onTap: () {

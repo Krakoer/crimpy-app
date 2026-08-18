@@ -45,6 +45,7 @@ void main() {
         SessionModel(
           name: 'Repeaters',
           isAssessment: false,
+          origin: SessionOrigin.logged,
           date: DateTime(2026, 3, 1),
           notes: 'felt strong',
         ),
@@ -69,6 +70,7 @@ void main() {
         SessionModel(
           name: 'S',
           isAssessment: false,
+          origin: SessionOrigin.logged,
           date: DateTime(2026, 3, 1),
         ),
         [
@@ -87,13 +89,19 @@ void main() {
 
     test('the filter narrows to assessments', () async {
       await trainings.saveSession(
-        SessionModel(name: 'A', isAssessment: true, date: DateTime(2026, 3, 1)),
+        SessionModel(
+          name: 'A',
+          isAssessment: true,
+          origin: SessionOrigin.played,
+          date: DateTime(2026, 3, 1),
+        ),
         [],
       );
       await trainings.saveSession(
         SessionModel(
           name: 'T',
           isAssessment: false,
+          origin: SessionOrigin.logged,
           date: DateTime(2026, 3, 2),
         ),
         [],
@@ -106,11 +114,66 @@ void main() {
       expect(onlyAssessments.map((s) => s.name), ['A']);
     });
 
+    test('the filter narrows to an activity', () async {
+      await trainings.saveSession(
+        SessionModel(
+          name: 'Board',
+          isAssessment: false,
+          origin: SessionOrigin.played,
+          activity: SessionActivity.hangboard,
+          date: DateTime(2026, 3, 1),
+        ),
+        [],
+      );
+      await trainings.saveSession(
+        SessionModel(
+          name: 'Run',
+          isAssessment: false,
+          origin: SessionOrigin.logged,
+          activity: SessionActivity.other,
+          date: DateTime(2026, 3, 2),
+        ),
+        [],
+      );
+
+      final onlyOther = await trainings.getAllSessionsWithReps(
+        filters: const SessionFilter(activities: {SessionActivity.other}),
+      );
+
+      expect(onlyOther.map((s) => s.name), ['Run']);
+    });
+
+    test(
+      'editing the notes of a played session keeps its run timings',
+      () async {
+        final recordedAt = DateTime(2026, 3, 1, 18, 42, 37);
+        await trainings.saveSession(
+          SessionModel(
+            name: 'Board',
+            isAssessment: false,
+            origin: SessionOrigin.played,
+            durationInSeconds: 187,
+            date: recordedAt,
+          ),
+          [],
+        );
+
+        final played = (await trainings.getAllSessionsWithReps()).single;
+        await trainings.updateSession(played.copyWith(notes: 'felt strong'));
+
+        final edited = (await trainings.getAllSessionsWithReps()).single;
+        expect(edited.notes, 'felt strong');
+        expect(edited.duration, 187);
+        expect(edited.date, recordedAt);
+      },
+    );
+
     test('a deleted session is gone', () async {
       final id = await trainings.saveSession(
         SessionModel(
           name: 'S',
           isAssessment: false,
+          origin: SessionOrigin.logged,
           date: DateTime(2026, 3, 1),
         ),
         [],
@@ -193,7 +256,12 @@ void main() {
   group('assessments', () {
     Future<void> saveOn(DateTime date, {required double right}) async {
       final sessionId = await trainings.saveSession(
-        SessionModel(name: 'MVC', isAssessment: true, date: date),
+        SessionModel(
+          name: 'MVC',
+          isAssessment: true,
+          origin: SessionOrigin.played,
+          date: date,
+        ),
         [],
       );
       await assessments.saveAssessment(

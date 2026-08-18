@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 /// Accent color for a session type (reuses SessionActivity.colorValue).
-Color programSessionColor(SessionActivity type) => Color(type.colorValue);
+Color programSessionColor(SessionActivity type) =>
+    CrimpyTheme.activityColor(type);
 
 const _weekdayInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S']; // Mon..Sun
 const _weekdayShort = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];

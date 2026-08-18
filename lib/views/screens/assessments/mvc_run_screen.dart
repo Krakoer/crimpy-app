@@ -90,6 +90,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                 name:
                     "MVC assessment (${_gripPosition.shortName}) - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}",
                 isAssessment: true,
+                origin: SessionOrigin.played,
               ),
               saveReps: buildRepsData([rightMax, leftMax], widget.reps),
             ),

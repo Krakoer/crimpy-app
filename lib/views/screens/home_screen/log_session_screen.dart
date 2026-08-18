@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class LogSessionScreen extends ConsumerStatefulWidget {
   final SessionActivity activity;
@@ -45,7 +46,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(widget.activity.colorValue);
+    final color = CrimpyTheme.activityColor(widget.activity);
 
     return Scaffold(
       appBar: AppBar(title: Text('Log ${widget.activity.displayName}')),
@@ -253,7 +254,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${widget.activity.displayName} session logged!'),
-            backgroundColor: Color(widget.activity.colorValue),
+            backgroundColor: CrimpyTheme.activityColor(widget.activity),
           ),
         );
         Navigator.of(context).pop();

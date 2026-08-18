@@ -98,8 +98,8 @@ class WeekHistogramWidget extends StatelessWidget {
           height: maxBarHeight * segmentHeightPercentage,
           width: 24,
           decoration: BoxDecoration(
-            color: Color(
-              activity.colorValue,
+            color: CrimpyTheme.activityColor(
+              activity,
             ).withValues(alpha: isToday ? 1 : 0.7),
           ),
         ),

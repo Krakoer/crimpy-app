@@ -12,7 +12,7 @@ class SessionOverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final duration = Duration(seconds: session.duration);
-    final sessionColor = Color(session.activity.colorValue);
+    final sessionColor = CrimpyTheme.activityColor(session.activity);
     final sessionIcon = _getSessionIcon(session.activity);
 
     return Card(

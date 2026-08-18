@@ -1,3 +1,4 @@
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/cached_program_schedule.dart';
 import 'package:crimpy/models/notification_preferences.dart';
 import 'package:crimpy/models/program_model.dart';
@@ -61,8 +62,12 @@ CachedProgramSchedule _schedule(
   cachedAt: DateTime(2026, 6, 1),
 );
 
-SessionModel _logged(String name, DateTime date) =>
-    SessionModel(name: name, isAssessment: false, date: date);
+SessionModel _logged(String name, DateTime date) => SessionModel(
+  name: name,
+  isAssessment: false,
+  origin: SessionOrigin.logged,
+  date: date,
+);
 
 const _enabled = NotificationPreferences(enabled: true);
 

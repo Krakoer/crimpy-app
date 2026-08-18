@@ -1,3 +1,4 @@
+import 'package:crimpy/models/common.dart';
 import 'dart:typed_data';
 
 import 'package:crimpy/models/ble_data_model.dart';
@@ -28,7 +29,12 @@ class FakeBleDataStream extends BleDataStream {
 }
 
 SessionModel sessionOn(DateTime date, {bool isAssessment = false}) =>
-    SessionModel(name: 'session', isAssessment: isAssessment, date: date);
+    SessionModel(
+      name: 'session',
+      isAssessment: isAssessment,
+      origin: SessionOrigin.logged,
+      date: date,
+    );
 
 void main() {
   group('filteredSessionsProvider', () {

@@ -1,3 +1,4 @@
+import 'package:crimpy/models/common.dart';
 import 'package:flutter/material.dart';
 
 // Export custom widgets
@@ -34,6 +35,9 @@ class CrimpyTheme {
 
   /// Flexibility training - Dusty teal
   static const Color accentTeal = Color(0xFF5A8C8C);
+
+  /// Everything that fits no other category - Slate blue
+  static const Color accentBlue = Color(0xFF5B7FA6);
 
   // ==================== STATUS COLORS ====================
 
@@ -549,6 +553,18 @@ class CrimpyTheme {
   );
 
   // ==================== CATEGORY HELPERS ====================
+
+  /// Accent color a session is drawn with, from what was trained.
+  ///
+  /// The web portal paints the same activities with the same values, so these
+  /// are a contract across the two clients rather than a local styling choice.
+  static Color activityColor(SessionActivity activity) => switch (activity) {
+    SessionActivity.hangboard => accentOrange,
+    SessionActivity.climbing => accentYellow,
+    SessionActivity.stretching => accentGreen,
+    SessionActivity.workout => accentPurple,
+    SessionActivity.other => accentBlue,
+  };
 
   /// Get category color for training types
   static Color getCategoryColor(String category) {

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class EditSessionScreen extends ConsumerStatefulWidget {
   final SessionModel session;
@@ -39,7 +40,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(widget.session.activity.colorValue);
+    final color = CrimpyTheme.activityColor(widget.session.activity);
     // A played session owns its date, duration and reps: they are what the run
     // measured, so only the notes are open for editing. What was trained has no
     // say in it, which is why this reads the origin and not the activity.
@@ -273,22 +274,27 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
 
     _formKey.currentState!.save();
 
-    // Combine selected date with selected time
-    final sessionDateTime = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      _selectedTime.hour,
-      _selectedTime.minute,
-    );
+    // Empty rather than null: null would read as "leave the notes alone" and
+    // make clearing them impossible.
+    final notes = _notesController.text;
 
-    final updatedSession = widget.session.copyWith(
-      durationInSeconds: _durationMinutes * 60,
-      date: sessionDateTime,
-      // Empty rather than null: null would read as "leave the notes alone" and
-      // make clearing them impossible.
-      notes: _notesController.text,
-    );
+    // A played session owns its date and duration, and the form only shows them
+    // read only, so the edit carries the notes and nothing else. Leaving the
+    // other fields out of copyWith keeps the values the run measured, down to
+    // the seconds the pickers would have dropped.
+    final updatedSession = widget.session.origin.isPlayed
+        ? widget.session.copyWith(notes: notes)
+        : widget.session.copyWith(
+            durationInSeconds: _durationMinutes * 60,
+            date: DateTime(
+              _selectedDate.year,
+              _selectedDate.month,
+              _selectedDate.day,
+              _selectedTime.hour,
+              _selectedTime.minute,
+            ),
+            notes: notes,
+          );
 
     try {
       // Update session in database
@@ -300,7 +306,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
             content: Text(
               '${widget.session.activity.displayName} session updated!',
             ),
-            backgroundColor: Color(widget.session.activity.colorValue),
+            backgroundColor: CrimpyTheme.activityColor(widget.session.activity),
           ),
         );
         Navigator.of(context).pop();

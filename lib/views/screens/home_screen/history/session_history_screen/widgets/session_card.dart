@@ -14,7 +14,7 @@ class SessionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final duration = Duration(seconds: session.duration);
     final formattedTime = DateFormat('HH:mm').format(session.date);
-    final sessionColor = Color(session.activity.colorValue);
+    final sessionColor = CrimpyTheme.activityColor(session.activity);
     final sessionIcon = _getSessionIcon(session.activity);
 
     return Card(

@@ -56,14 +56,6 @@ extension SessionActivityExtension on SessionActivity {
     SessionActivity.workout => "Workout",
     SessionActivity.other => "Other",
   };
-
-  int get colorValue => switch (this) {
-    SessionActivity.hangboard => 0xFFC6613F, // Orange
-    SessionActivity.climbing => 0xFFD4A644, // Yellow
-    SessionActivity.stretching => 0xFF5A8C5A, // Green
-    SessionActivity.workout => 0xFF8B6B9E, // Purple
-    SessionActivity.other => 0xFF5B7FA6, // Blue
-  };
 }
 
 /// How a session came to exist. Set by the code path that produced it, never

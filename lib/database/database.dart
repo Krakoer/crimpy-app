@@ -290,31 +290,11 @@ class AppDatabase extends _$AppDatabase {
     return session.toModel(dataPoints: dataPoints);
   }
 
-  /// Get all saved sessions, with optional filters.
-  Future<List<Session>> getAllSessions({SessionFilter? filters}) async {
-    var query = select(sessions);
-    if (filters != null) {
-      if (filters.startDate != null) {
-        query = query
-          ..where(
-            (session) => session.date.isBiggerThanValue(filters.startDate!),
-          );
-      }
-      if (filters.endDate != null) {
-        query = query
-          ..where(
-            (session) => session.date.isSmallerThanValue(filters.endDate!),
-          );
-      }
-      if (filters.isAssessment != null) {
-        query = query
-          ..where(
-            (session) => session.isAssessment.equals(filters.isAssessment!),
-          );
-      }
-    }
-    return query.get();
-  }
+  /// Get all saved sessions. Filtering is deliberately not done here:
+  /// [SessionFilter.matchesSession] is the single implementation of the
+  /// predicate, so the local and the remote repositories select the same
+  /// sessions for the same filter.
+  Future<List<Session>> getAllSessions() => select(sessions).get();
 
   /// Get the repetitions data for a given session.
   Future<List<RepDataModel>> getRepsForSession(String sessionId) async =>
@@ -401,23 +381,25 @@ class AppDatabase extends _$AppDatabase {
   /// Only updates basic fields (date, name, notes, duration). Activity and
   /// origin describe how the session came about and never change afterwards,
   /// and reps and data points are left untouched.
+  ///
+  /// A played session owns its date and its duration, since the run measured
+  /// them, so an edit leaves both columns as they are and touches the fields a
+  /// user can actually type. The remote repository holds the same line.
   Future<void> updateSession(SessionModel session) async {
     if (session.id == null) {
       throw ArgumentError('Session ID is required for update');
     }
 
-    final int sessionDuration =
-        session.durationInSeconds ??
-        (session.reps != null
-            ? session.reps!.fold(0, (prev, r) => prev + r.duration)
-            : 0);
+    final bool keepsRunTimings = session.origin.isPlayed;
 
     await (update(sessions)..where((s) => s.id.equals(session.id!))).write(
       SessionsCompanion(
-        date: Value(session.date),
+        date: keepsRunTimings ? const Value.absent() : Value(session.date),
         notes: Value(session.notes ?? ""),
         name: Value(session.name),
-        duration: Value(sessionDuration),
+        duration: keepsRunTimings
+            ? const Value.absent()
+            : Value(session.duration),
         updatedAt: Value(DateTime.now()),
       ),
     );

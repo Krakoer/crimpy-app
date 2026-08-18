@@ -1,3 +1,4 @@
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/utils/program_completion.dart';
@@ -32,8 +33,12 @@ WeekSession _flexSession() => const WeekSession(
   position: 1,
 );
 
-SessionModel _session(String name, DateTime date) =>
-    SessionModel(name: name, isAssessment: false, date: date);
+SessionModel _session(String name, DateTime date) => SessionModel(
+  name: name,
+  isAssessment: false,
+  origin: SessionOrigin.logged,
+  date: date,
+);
 
 void main() {
   test(
