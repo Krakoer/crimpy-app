@@ -113,7 +113,7 @@ class RemoteTrainingRepository extends TrainingRepository {
   @override
   Future<String> saveTraining(Training training) async {
     final result = await _apiClient.createTraining(training.toJson());
-    return result['id'] as String? ?? result['ID'] as String? ?? '';
+    return result['id'] as String? ?? '';
   }
 
   @override
@@ -210,8 +210,8 @@ class RemoteTrainingRepository extends TrainingRepository {
     };
 
     final created = await _apiClient.createSession(body);
-    return (created['session'] as Map<String, dynamic>?)?['ID'] as String? ??
-        created['ID'] as String? ??
+    return (created['session'] as Map<String, dynamic>?)?['id'] as String? ??
+        created['id'] as String? ??
         '';
   }
 

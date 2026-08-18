@@ -38,22 +38,22 @@ class RemoteAssessmentRepository extends AssessmentRepository {
 
     List<AssessmentModel> result = data.map((a) {
       return AssessmentModel(
-        id: a['ID'] as String,
+        id: a['id'] as String,
         date: DateTime.parse(
-          a['SessionDate'] as String? ??
-              a['Date'] as String? ??
+          a['session_date'] as String? ??
+              a['date'] as String? ??
               DateTime.now().toIso8601String(),
         ),
         type: enumFromIndex(
           AssessmentType.values,
-          a['Type'] as num?,
+          a['type'] as num?,
           AssessmentType.criticalForce,
         ),
-        rightValue: (a['RightValue'] as num?)?.toDouble(),
-        leftValue: (a['LeftValue'] as num?)?.toDouble(),
+        rightValue: (a['right_value'] as num?)?.toDouble(),
+        leftValue: (a['left_value'] as num?)?.toDouble(),
         gripPosition: enumFromIndex<GripPosition?>(
           GripPosition.values,
-          a['GripPosition'] as num?,
+          a['grip_position'] as num?,
           null,
         ),
       );

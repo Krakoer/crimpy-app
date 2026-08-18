@@ -41,28 +41,29 @@ class SessionModel {
     date,
   }) : date = date ?? DateTime.now();
 
-  /// Parses a session as returned by the API, which uses PascalCase keys.
+  /// Parses a session as returned by the API, which speaks snake_case in
+  /// both directions.
   factory SessionModel.fromJson(
     Map<String, dynamic> json, {
     List<RepDataModel>? reps,
   }) => SessionModel(
-    id: json['ID'] as String,
-    name: json['Name'] as String,
-    notes: json['Notes'] as String? ?? '',
-    date: DateTime.parse(json['Date'] as String),
+    id: json['id'] as String,
+    name: json['name'] as String,
+    notes: json['notes'] as String? ?? '',
+    date: DateTime.parse(json['date'] as String),
     reps: reps,
-    isAssessment: json['IsAssessment'] as bool? ?? false,
+    isAssessment: json['is_assessment'] as bool? ?? false,
     activity: enumFromIndex(
       SessionActivity.values,
-      json['Activity'] as num?,
+      json['activity'] as num?,
       SessionActivity.hangboard,
     ),
-    origin: sessionOriginFromApi(json['Origin'] as String?),
-    trainingId: json['TrainingID'] as String?,
-    programSessionId: json['ProgramSessionID'] as String?,
-    durationInSeconds: (json['Duration'] as num? ?? 0).toInt(),
+    origin: sessionOriginFromApi(json['origin'] as String?),
+    trainingId: json['training_id'] as String?,
+    programSessionId: json['program_session_id'] as String?,
+    durationInSeconds: (json['duration'] as num? ?? 0).toInt(),
     repeaterConfig: RepeaterConfig.fromJson(json),
-    reportedRepCount: (json['RepCount'] as num?)?.toInt(),
+    reportedRepCount: (json['rep_count'] as num?)?.toInt(),
   );
 
   /// Carries the untouched fields over, so an edit cannot quietly drop the
@@ -127,20 +128,20 @@ class RepDataModel {
     this.edgeSizeMm,
   });
 
-  /// Parses a repetition as returned by the API, which uses PascalCase keys.
+  /// Parses a repetition as returned by the API.
   factory RepDataModel.fromJson(Map<String, dynamic> json) => RepDataModel(
-    averageWeight: (json['AverageWeight'] as num).toDouble(),
-    duration: (json['Duration'] as num).toInt(),
-    index: (json['Index'] as num).toInt(),
-    isRest: json['IsRest'] as bool,
-    handSide: (json['RightHand'] as bool) ? HandSide.right : HandSide.left,
-    targetWeight: (json['TargetWeight'] as num).toDouble(),
+    averageWeight: (json['average_weight'] as num).toDouble(),
+    duration: (json['duration'] as num).toInt(),
+    index: (json['index'] as num).toInt(),
+    isRest: json['is_rest'] as bool,
+    handSide: (json['right_hand'] as bool) ? HandSide.right : HandSide.left,
+    targetWeight: (json['target_weight'] as num).toDouble(),
     gripPosition: enumFromIndex(
       GripPosition.values,
-      json['GripPosition'] as num?,
+      json['grip_position'] as num?,
       GripPosition.halfCrimp,
     ),
-    edgeSizeMm: (json['EdgeSizeMm'] as num?)?.toInt(),
+    edgeSizeMm: (json['edge_size_mm'] as num?)?.toInt(),
   );
 }
 
@@ -165,7 +166,7 @@ class RepeaterConfig {
   });
 
   /// Builds the config from an API session payload, or null when that session
-  /// was not a repeater. The API returns these fields in PascalCase.
+  /// was not a repeater.
   static RepeaterConfig? fromJson(Map<String, dynamic> json) {
     const keys = [
       'RepeaterSets',
@@ -177,12 +178,12 @@ class RepeaterConfig {
     ];
     if (keys.any((k) => json[k] == null)) return null;
     return RepeaterConfig(
-      sets: (json['RepeaterSets'] as num).toInt(),
-      repsPerSet: (json['RepeaterReps'] as num).toInt(),
-      workTime: (json['RepeaterWorkTime'] as num).toInt(),
-      restTime: (json['RepeaterRestTime'] as num).toInt(),
-      setRest: (json['RepeaterSetRest'] as num).toInt(),
-      splitHand: json['RepeaterSplitHand'] as bool,
+      sets: (json['repeater_sets'] as num).toInt(),
+      repsPerSet: (json['repeater_reps'] as num).toInt(),
+      workTime: (json['repeater_work_time'] as num).toInt(),
+      restTime: (json['repeater_rest_time'] as num).toInt(),
+      setRest: (json['repeater_set_rest'] as num).toInt(),
+      splitHand: json['repeater_split_hand'] as bool,
     );
   }
 }
