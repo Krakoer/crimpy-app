@@ -12,8 +12,8 @@ class SessionOverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final duration = Duration(seconds: session.duration);
-    final sessionColor = Color(session.sessionType.colorValue);
-    final sessionIcon = _getSessionIcon(session.sessionType);
+    final sessionColor = CrimpyTheme.activityColor(session.activity);
+    final sessionIcon = _getSessionIcon(session.activity);
 
     return Card(
       child: Padding(
@@ -40,7 +40,7 @@ class SessionOverviewCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        session.sessionType.displayName,
+                        session.activity.displayName,
                         style: TextStyle(
                           color: CrimpyTheme.gray600,
                           fontSize: 12,
@@ -95,7 +95,7 @@ class SessionOverviewCard extends StatelessWidget {
                   child: _buildStatItem(
                     context,
                     'Reps',
-                    session.reps?.length.toString() ?? 'N/A',
+                    session.repCount?.toString() ?? 'N/A',
                     Icons.repeat,
                   ),
                 ),
@@ -107,12 +107,13 @@ class SessionOverviewCard extends StatelessWidget {
     );
   }
 
-  IconData _getSessionIcon(SessionType sessionType) {
-    return switch (sessionType) {
-      SessionType.crimpy => Icons.fitness_center,
-      SessionType.climbing => Icons.terrain,
-      SessionType.stretching => Icons.self_improvement,
-      SessionType.workout => Icons.fitness_center,
+  IconData _getSessionIcon(SessionActivity activity) {
+    return switch (activity) {
+      SessionActivity.hangboard => Icons.fitness_center,
+      SessionActivity.climbing => Icons.terrain,
+      SessionActivity.stretching => Icons.self_improvement,
+      SessionActivity.workout => Icons.fitness_center,
+      SessionActivity.other => Icons.directions_run,
     };
   }
 

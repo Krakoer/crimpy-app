@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/edit_session_screen.dart';
@@ -101,7 +100,7 @@ class SessionDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildSessionDetails(BuildContext context, SessionModel session) {
-    final sessionColor = Color(session.sessionType.colorValue);
+    final sessionColor = CrimpyTheme.activityColor(session.activity);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -113,13 +112,13 @@ class SessionDetailScreen extends ConsumerWidget {
           const SizedBox(height: 16),
 
           // Performance stats (if available)
-          if (session.reps != null && session.reps!.isNotEmpty) ...[
+          if (session.hasReps) ...[
             SessionPerformanceCard(reps: session.reps!),
             const SizedBox(height: 16),
           ],
 
           // Repetitions breakdown (if available)
-          if (session.reps != null && session.reps!.isNotEmpty) ...[
+          if (session.hasReps) ...[
             SessionRepsCard(session: session, sessionColor: sessionColor),
             const SizedBox(height: 16),
           ],

@@ -50,6 +50,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
         name:
             "Critical Force assessment - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}",
         isAssessment: true,
+        origin: SessionOrigin.played,
       );
 
       try {

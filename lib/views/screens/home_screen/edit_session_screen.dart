@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class EditSessionScreen extends ConsumerStatefulWidget {
   final SessionModel session;
@@ -39,15 +40,18 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(widget.session.sessionType.colorValue);
-    final isCrimpySession = widget.session.sessionType == SessionType.crimpy;
+    final color = CrimpyTheme.activityColor(widget.session.activity);
+    // A played session owns its date, duration and reps: they are what the run
+    // measured, so only the notes are open for editing. What was trained has no
+    // say in it, which is why this reads the origin and not the activity.
+    final isPlayedSession = widget.session.origin.isPlayed;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          isCrimpySession
+          isPlayedSession
               ? 'Edit Notes'
-              : 'Edit ${widget.session.sessionType.displayName}',
+              : 'Edit ${widget.session.activity.displayName}',
         ),
       ),
       body: SingleChildScrollView(
@@ -57,8 +61,8 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Info message for Crimpy sessions
-              if (isCrimpySession) ...[
+              // Info message for played sessions
+              if (isPlayedSession) ...[
                 Card(
                   color: color.withValues(alpha: 0.1),
                   child: Padding(
@@ -69,7 +73,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Only notes can be edited for Crimpy training sessions',
+                            'Only notes can be edited for a session played in the app',
                             style: TextStyle(fontSize: 13, color: color),
                           ),
                         ),
@@ -80,45 +84,45 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                 const SizedBox(height: 16),
               ],
 
-              // Date picker (disabled for Crimpy sessions)
+              // Date picker (disabled for played sessions)
               Card(
                 child: ListTile(
-                  enabled: !isCrimpySession,
+                  enabled: !isPlayedSession,
                   leading: Icon(
                     Icons.calendar_today,
-                    color: isCrimpySession ? Colors.grey : color,
+                    color: isPlayedSession ? Colors.grey : color,
                   ),
                   title: const Text('Date'),
                   subtitle: Text(
                     DateFormat('EEEE, MMMM d, y').format(_selectedDate),
                   ),
-                  trailing: isCrimpySession
+                  trailing: isPlayedSession
                       ? null
                       : const Icon(Icons.chevron_right),
-                  onTap: isCrimpySession ? null : _selectDate,
+                  onTap: isPlayedSession ? null : _selectDate,
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Time picker (disabled for Crimpy sessions)
+              // Time picker (disabled for played sessions)
               Card(
                 child: ListTile(
-                  enabled: !isCrimpySession,
+                  enabled: !isPlayedSession,
                   leading: Icon(
                     Icons.access_time,
-                    color: isCrimpySession ? Colors.grey : color,
+                    color: isPlayedSession ? Colors.grey : color,
                   ),
                   title: const Text('Time'),
                   subtitle: Text(_selectedTime.format(context)),
-                  trailing: isCrimpySession
+                  trailing: isPlayedSession
                       ? null
                       : const Icon(Icons.chevron_right),
-                  onTap: isCrimpySession ? null : _selectTime,
+                  onTap: isPlayedSession ? null : _selectTime,
                 ),
               ),
               const SizedBox(height: 16),
 
-              // Duration input (disabled for Crimpy sessions)
+              // Duration input (disabled for played sessions)
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -129,7 +133,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                         children: [
                           Icon(
                             Icons.timer,
-                            color: isCrimpySession ? Colors.grey : color,
+                            color: isPlayedSession ? Colors.grey : color,
                           ),
                           const SizedBox(width: 8),
                           const Text(
@@ -143,7 +147,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
-                        enabled: !isCrimpySession,
+                        enabled: !isPlayedSession,
                         initialValue: _durationMinutes.toString(),
                         decoration: const InputDecoration(
                           labelText: 'Duration (minutes)',
@@ -153,7 +157,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                         ],
-                        validator: isCrimpySession
+                        validator: isPlayedSession
                             ? null
                             : (value) {
                                 if (value == null || value.isEmpty) {
@@ -166,7 +170,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                                 return null;
                               },
                         onSaved: (value) {
-                          if (!isCrimpySession) {
+                          if (!isPlayedSession) {
                             _durationMinutes = int.parse(value!);
                           }
                         },
@@ -221,7 +225,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Text(
-                  isCrimpySession ? 'Update Notes' : 'Update Session',
+                  isPlayedSession ? 'Update Notes' : 'Update Session',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -270,26 +274,27 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
 
     _formKey.currentState!.save();
 
-    // Combine selected date with selected time
-    final sessionDateTime = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      _selectedTime.hour,
-      _selectedTime.minute,
-    );
+    // Empty rather than null: null would read as "leave the notes alone" and
+    // make clearing them impossible.
+    final notes = _notesController.text;
 
-    final updatedSession = SessionModel(
-      id: widget.session.id,
-      name: widget.session.name,
-      isAssessment: widget.session.isAssessment,
-      sessionType: widget.session.sessionType,
-      durationInSeconds: _durationMinutes * 60,
-      date: sessionDateTime,
-      notes: _notesController.text.isEmpty ? null : _notesController.text,
-      reps: widget.session.reps,
-      dataPoints: widget.session.dataPoints,
-    );
+    // A played session owns its date and duration, and the form only shows them
+    // read only, so the edit carries the notes and nothing else. Leaving the
+    // other fields out of copyWith keeps the values the run measured, down to
+    // the seconds the pickers would have dropped.
+    final updatedSession = widget.session.origin.isPlayed
+        ? widget.session.copyWith(notes: notes)
+        : widget.session.copyWith(
+            durationInSeconds: _durationMinutes * 60,
+            date: DateTime(
+              _selectedDate.year,
+              _selectedDate.month,
+              _selectedDate.day,
+              _selectedTime.hour,
+              _selectedTime.minute,
+            ),
+            notes: notes,
+          );
 
     try {
       // Update session in database
@@ -299,9 +304,9 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${widget.session.sessionType.displayName} session updated!',
+              '${widget.session.activity.displayName} session updated!',
             ),
-            backgroundColor: Color(widget.session.sessionType.colorValue),
+            backgroundColor: CrimpyTheme.activityColor(widget.session.activity),
           ),
         );
         Navigator.of(context).pop();

@@ -2,13 +2,14 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training.dart';
 
-/// Maps a backend training_type string to the app SessionType.
-SessionType sessionTypeFromApi(String? value) => switch (value) {
-  'crimpy' => SessionType.crimpy,
-  'climbing' => SessionType.climbing,
-  'stretching' => SessionType.stretching,
-  'workout' => SessionType.workout,
-  _ => SessionType.crimpy,
+/// Maps a backend training_type string to the app SessionActivity.
+SessionActivity sessionActivityFromApi(String? value) => switch (value) {
+  'hangboard' => SessionActivity.hangboard,
+  'climbing' => SessionActivity.climbing,
+  'stretching' => SessionActivity.stretching,
+  'workout' => SessionActivity.workout,
+  'other' => SessionActivity.other,
+  _ => SessionActivity.hangboard,
 };
 
 DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
@@ -236,7 +237,7 @@ class WeekSession {
     'notes': notes,
   };
 
-  SessionType get sessionType => sessionTypeFromApi(trainingType);
+  SessionActivity get activity => sessionActivityFromApi(trainingType);
 
   SessionSchedule get schedule {
     if (dayOfWeek != null) return SessionSchedule.dayOfWeek;

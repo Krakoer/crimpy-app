@@ -14,8 +14,8 @@ class SessionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final duration = Duration(seconds: session.duration);
     final formattedTime = DateFormat('HH:mm').format(session.date);
-    final sessionColor = Color(session.sessionType.colorValue);
-    final sessionIcon = _getSessionIcon(session.sessionType);
+    final sessionColor = CrimpyTheme.activityColor(session.activity);
+    final sessionIcon = _getSessionIcon(session.activity);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -104,12 +104,13 @@ class SessionCard extends StatelessWidget {
     );
   }
 
-  IconData _getSessionIcon(SessionType sessionType) {
-    return switch (sessionType) {
-      SessionType.crimpy => Icons.fitness_center,
-      SessionType.climbing => Icons.terrain,
-      SessionType.stretching => Icons.self_improvement,
-      SessionType.workout => Icons.fitness_center,
+  IconData _getSessionIcon(SessionActivity activity) {
+    return switch (activity) {
+      SessionActivity.hangboard => Icons.fitness_center,
+      SessionActivity.climbing => Icons.terrain,
+      SessionActivity.stretching => Icons.self_improvement,
+      SessionActivity.workout => Icons.fitness_center,
+      SessionActivity.other => Icons.directions_run,
     };
   }
 

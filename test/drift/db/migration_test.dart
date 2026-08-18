@@ -4,12 +4,14 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:crimpy/database/database.dart';
+import 'package:crimpy/models/common.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'generated/schema.dart';
 
 import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v3.dart' as v3;
+import 'generated/schema_v4.dart' as v4;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -462,6 +464,103 @@ void main() {
       final db = AppDatabase(schema.newConnection());
       final rep = await db.select(db.repDatas).getSingle();
       expect(rep.edgeSizeMm, null);
+      await db.close();
+    });
+  });
+
+  group('v4 to v5 data migration', () {
+    // session_type used to stand in for three things at once. Its values become
+    // the activity label untouched, and the origin it was implying is recovered
+    // from what the session actually holds.
+    Future<v4.DatabaseAtV4> seedV4(dynamic schema) async {
+      final oldDb = v4.DatabaseAtV4(schema.newConnection());
+      Future<void> session(String id, int type, int isAssessment) => oldDb
+          .into(oldDb.sessions)
+          .insert(
+            v4.SessionsData(
+              id: id,
+              name: 'Session $id',
+              notes: '',
+              date: 1700000000,
+              dataPath: '',
+              isAssessment: isAssessment,
+              sessionType: type,
+              duration: 10,
+              updatedAt: 1700000000,
+            ),
+          );
+
+      // A coach hangboard block mislabelled as a workout, with its reps.
+      await session('s-played', 3, 0);
+      // A climbing session typed in by hand, with none.
+      await session('s-logged', 1, 0);
+      // An assessment, played even though it recorded no usable rep.
+      await session('s-assessment', 0, 1);
+
+      await oldDb
+          .into(oldDb.repDatas)
+          .insert(
+            const v4.RepDatasData(
+              id: 'rd-1',
+              averageWeight: 22.0,
+              sessionId: 's-played',
+              isRest: 0,
+              rightHand: 1,
+              duration: 7,
+              targetWeight: 20.0,
+              index: 0,
+              gripPosition: 0,
+              updatedAt: 1700000000,
+            ),
+          );
+      return oldDb;
+    }
+
+    test(
+      'a session holding reps becomes played whatever it was labelled',
+      () async {
+        final schema = await verifier.schemaAt(4);
+        final oldDb = await seedV4(schema);
+        await oldDb.close();
+
+        final db = AppDatabase(schema.newConnection());
+        final played = await (db.select(
+          db.sessions,
+        )..where((s) => s.id.equals('s-played'))).getSingle();
+
+        expect(played.origin, 'played');
+        // The label carries over untouched: workout stays workout.
+        expect(played.activity, SessionActivity.workout.index);
+        await db.close();
+      },
+    );
+
+    test('a session with no reps stays logged', () async {
+      final schema = await verifier.schemaAt(4);
+      final oldDb = await seedV4(schema);
+      await oldDb.close();
+
+      final db = AppDatabase(schema.newConnection());
+      final logged = await (db.select(
+        db.sessions,
+      )..where((s) => s.id.equals('s-logged'))).getSingle();
+
+      expect(logged.origin, 'logged');
+      expect(logged.activity, SessionActivity.climbing.index);
+      await db.close();
+    });
+
+    test('an assessment is played even without reps', () async {
+      final schema = await verifier.schemaAt(4);
+      final oldDb = await seedV4(schema);
+      await oldDb.close();
+
+      final db = AppDatabase(schema.newConnection());
+      final assessment = await (db.select(
+        db.sessions,
+      )..where((s) => s.id.equals('s-assessment'))).getSingle();
+
+      expect(assessment.origin, 'played');
       await db.close();
     });
   });

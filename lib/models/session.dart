@@ -9,9 +9,20 @@ class SessionModel {
   final List<BleDataPoint>? dataPoints;
   final List<RepDataModel>? reps;
   final bool isAssessment;
-  final SessionType sessionType;
+  final SessionActivity activity;
+  final SessionOrigin origin;
+
+  /// Template the session was played from, kept so it can be shown against what
+  /// was prescribed. Both null on a logged session.
+  final String? trainingId;
+  final String? programSessionId;
   final int? durationInSeconds;
   final RepeaterConfig? repeaterConfig;
+
+  /// How many reps the session holds, as reported by a listing that did not
+  /// carry the reps themselves. Null when unknown; [repCount] prefers the reps
+  /// when they are loaded.
+  final int? reportedRepCount;
 
   SessionModel({
     this.id,
@@ -20,35 +31,77 @@ class SessionModel {
     this.reps,
     required this.name,
     required this.isAssessment,
-    this.sessionType = SessionType.crimpy,
+    required this.origin,
+    this.activity = SessionActivity.hangboard,
+    this.trainingId,
+    this.programSessionId,
     this.durationInSeconds,
     this.repeaterConfig,
+    this.reportedRepCount,
     date,
   }) : date = date ?? DateTime.now();
 
-  /// Parses a session as returned by the API, which uses PascalCase keys.
+  /// Parses a session as returned by the API, which speaks snake_case in
+  /// both directions.
   factory SessionModel.fromJson(
     Map<String, dynamic> json, {
     List<RepDataModel>? reps,
   }) => SessionModel(
-    id: json['ID'] as String,
-    name: json['Name'] as String,
-    notes: json['Notes'] as String? ?? '',
-    date: DateTime.parse(json['Date'] as String),
+    id: json['id'] as String,
+    name: json['name'] as String,
+    notes: json['notes'] as String? ?? '',
+    date: DateTime.parse(json['date'] as String),
     reps: reps,
-    isAssessment: json['IsAssessment'] as bool? ?? false,
-    sessionType: enumFromIndex(
-      SessionType.values,
-      json['SessionType'] as num?,
-      SessionType.crimpy,
+    isAssessment: json['is_assessment'] as bool? ?? false,
+    activity: enumFromIndex(
+      SessionActivity.values,
+      json['activity'] as num?,
+      SessionActivity.hangboard,
     ),
-    durationInSeconds: (json['Duration'] as num? ?? 0).toInt(),
+    origin: sessionOriginFromApi(json['origin'] as String?),
+    trainingId: json['training_id'] as String?,
+    programSessionId: json['program_session_id'] as String?,
+    durationInSeconds: (json['duration'] as num? ?? 0).toInt(),
     repeaterConfig: RepeaterConfig.fromJson(json),
+    reportedRepCount: (json['rep_count'] as num?)?.toInt(),
+  );
+
+  /// Carries the untouched fields over, so an edit cannot quietly drop the
+  /// origin or the template links the session was created with.
+  SessionModel copyWith({
+    String? name,
+    String? notes,
+    DateTime? date,
+    int? durationInSeconds,
+  }) => SessionModel(
+    id: id,
+    name: name ?? this.name,
+    notes: notes ?? this.notes,
+    date: date ?? this.date,
+    dataPoints: dataPoints,
+    reps: reps,
+    isAssessment: isAssessment,
+    activity: activity,
+    origin: origin,
+    trainingId: trainingId,
+    programSessionId: programSessionId,
+    durationInSeconds: durationInSeconds ?? this.durationInSeconds,
+    repeaterConfig: repeaterConfig,
+    reportedRepCount: reportedRepCount,
   );
 
   int get duration =>
       durationInSeconds ??
       (reps == null ? 0 : reps!.fold(0, (prev, r) => prev + r.duration));
+
+  /// Whether there is per-rep data to show. Presence of reps decides it, never
+  /// the activity: a coach hangboard block logged under any label still has
+  /// every rep the sensor recorded.
+  bool get hasReps => reps != null && reps!.isNotEmpty;
+
+  /// How many reps the session holds, from the reps themselves once loaded and
+  /// from the listing otherwise. Null only when neither is available.
+  int? get repCount => reps?.length ?? reportedRepCount;
 }
 
 class RepDataModel {
@@ -75,20 +128,20 @@ class RepDataModel {
     this.edgeSizeMm,
   });
 
-  /// Parses a repetition as returned by the API, which uses PascalCase keys.
+  /// Parses a repetition as returned by the API.
   factory RepDataModel.fromJson(Map<String, dynamic> json) => RepDataModel(
-    averageWeight: (json['AverageWeight'] as num).toDouble(),
-    duration: (json['Duration'] as num).toInt(),
-    index: (json['Index'] as num).toInt(),
-    isRest: json['IsRest'] as bool,
-    handSide: (json['RightHand'] as bool) ? HandSide.right : HandSide.left,
-    targetWeight: (json['TargetWeight'] as num).toDouble(),
+    averageWeight: (json['average_weight'] as num).toDouble(),
+    duration: (json['duration'] as num).toInt(),
+    index: (json['index'] as num).toInt(),
+    isRest: json['is_rest'] as bool,
+    handSide: (json['right_hand'] as bool) ? HandSide.right : HandSide.left,
+    targetWeight: (json['target_weight'] as num).toDouble(),
     gripPosition: enumFromIndex(
       GripPosition.values,
-      json['GripPosition'] as num?,
+      json['grip_position'] as num?,
       GripPosition.halfCrimp,
     ),
-    edgeSizeMm: (json['EdgeSizeMm'] as num?)?.toInt(),
+    edgeSizeMm: (json['edge_size_mm'] as num?)?.toInt(),
   );
 }
 
@@ -113,7 +166,7 @@ class RepeaterConfig {
   });
 
   /// Builds the config from an API session payload, or null when that session
-  /// was not a repeater. The API returns these fields in PascalCase.
+  /// was not a repeater.
   static RepeaterConfig? fromJson(Map<String, dynamic> json) {
     const keys = [
       'RepeaterSets',
@@ -125,12 +178,12 @@ class RepeaterConfig {
     ];
     if (keys.any((k) => json[k] == null)) return null;
     return RepeaterConfig(
-      sets: (json['RepeaterSets'] as num).toInt(),
-      repsPerSet: (json['RepeaterReps'] as num).toInt(),
-      workTime: (json['RepeaterWorkTime'] as num).toInt(),
-      restTime: (json['RepeaterRestTime'] as num).toInt(),
-      setRest: (json['RepeaterSetRest'] as num).toInt(),
-      splitHand: json['RepeaterSplitHand'] as bool,
+      sets: (json['repeater_sets'] as num).toInt(),
+      repsPerSet: (json['repeater_reps'] as num).toInt(),
+      workTime: (json['repeater_work_time'] as num).toInt(),
+      restTime: (json['repeater_rest_time'] as num).toInt(),
+      setRest: (json['repeater_set_rest'] as num).toInt(),
+      splitHand: json['repeater_split_hand'] as bool,
     );
   }
 }

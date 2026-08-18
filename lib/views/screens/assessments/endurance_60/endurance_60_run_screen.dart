@@ -173,6 +173,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
       name:
           "60% Endurance assessment - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}",
       isAssessment: true,
+      origin: SessionOrigin.played,
     );
 
     if (mounted) {

@@ -31,9 +31,13 @@ class Sessions extends Table {
   late final BoolColumn isAssessment = boolean().withDefault(
     const Constant(false),
   )();
-  late final IntColumn sessionType = integer().withDefault(
-    const Constant(0),
-  )(); // 0 = crimpy (default)
+  // What was done, as a label only. Indexes match SessionActivity.
+  late final IntColumn activity = integer().withDefault(const Constant(0))();
+  // How the session came to exist, as a SessionOrigin name.
+  late final TextColumn origin = text().withDefault(const Constant('logged'))();
+  // What the session was played from, both null when it was logged by hand.
+  late final TextColumn trainingId = text().nullable()();
+  late final TextColumn programSessionId = text().nullable()();
   late final IntColumn duration = integer().withDefault(const Constant(0))();
 
   // Repeater configuration (if session was a repeater workout)
@@ -286,31 +290,11 @@ class AppDatabase extends _$AppDatabase {
     return session.toModel(dataPoints: dataPoints);
   }
 
-  /// Get all saved sessions, with optional filters.
-  Future<List<Session>> getAllSessions({SessionFilter? filters}) async {
-    var query = select(sessions);
-    if (filters != null) {
-      if (filters.startDate != null) {
-        query = query
-          ..where(
-            (session) => session.date.isBiggerThanValue(filters.startDate!),
-          );
-      }
-      if (filters.endDate != null) {
-        query = query
-          ..where(
-            (session) => session.date.isSmallerThanValue(filters.endDate!),
-          );
-      }
-      if (filters.isAssessment != null) {
-        query = query
-          ..where(
-            (session) => session.isAssessment.equals(filters.isAssessment!),
-          );
-      }
-    }
-    return query.get();
-  }
+  /// Get all saved sessions. Filtering is deliberately not done here:
+  /// [SessionFilter.matchesSession] is the single implementation of the
+  /// predicate, so the local and the remote repositories select the same
+  /// sessions for the same filter.
+  Future<List<Session>> getAllSessions() => select(sessions).get();
 
   /// Get the repetitions data for a given session.
   Future<List<RepDataModel>> getRepsForSession(String sessionId) async =>
@@ -351,7 +335,10 @@ class AppDatabase extends _$AppDatabase {
         notes: Value(session.notes ?? ""),
         name: Value(session.name),
         isAssessment: Value(session.isAssessment),
-        sessionType: Value(session.sessionType.index),
+        activity: Value(session.activity.index),
+        origin: Value(session.origin.apiValue),
+        trainingId: Value(session.trainingId),
+        programSessionId: Value(session.programSessionId),
         duration: Value(sessionDuration),
         repeaterSets: Value(session.repeaterConfig?.sets),
         repeaterReps: Value(session.repeaterConfig?.repsPerSet),
@@ -391,26 +378,28 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Update an existing session.
-  /// Only updates basic fields (date, notes, duration, sessionType).
-  /// Does not modify reps or data points.
+  /// Only updates basic fields (date, name, notes, duration). Activity and
+  /// origin describe how the session came about and never change afterwards,
+  /// and reps and data points are left untouched.
+  ///
+  /// A played session owns its date and its duration, since the run measured
+  /// them, so an edit leaves both columns as they are and touches the fields a
+  /// user can actually type. The remote repository holds the same line.
   Future<void> updateSession(SessionModel session) async {
     if (session.id == null) {
       throw ArgumentError('Session ID is required for update');
     }
 
-    final int sessionDuration =
-        session.durationInSeconds ??
-        (session.reps != null
-            ? session.reps!.fold(0, (prev, r) => prev + r.duration)
-            : 0);
+    final bool keepsRunTimings = session.origin.isPlayed;
 
     await (update(sessions)..where((s) => s.id.equals(session.id!))).write(
       SessionsCompanion(
-        date: Value(session.date),
+        date: keepsRunTimings ? const Value.absent() : Value(session.date),
         notes: Value(session.notes ?? ""),
         name: Value(session.name),
-        sessionType: Value(session.sessionType.index),
-        duration: Value(sessionDuration),
+        duration: keepsRunTimings
+            ? const Value.absent()
+            : Value(session.duration),
         updatedAt: Value(DateTime.now()),
       ),
     );
@@ -825,7 +814,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1075,6 +1064,27 @@ class AppDatabase extends _$AppDatabase {
       from3To4: (m, schema) async {
         await m.addColumn(schema.repDatas, schema.repDatas.edgeSizeMm);
       },
+      from4To5: (m, schema) async {
+        // session_type carried three meanings at once. Its values become the
+        // activity label unchanged, and the two facts it was standing in for
+        // get their own columns.
+        await m.renameColumn(
+          schema.sessions,
+          'session_type',
+          schema.sessions.activity,
+        );
+        await m.addColumn(schema.sessions, schema.sessions.origin);
+        await m.addColumn(schema.sessions, schema.sessions.trainingId);
+        await m.addColumn(schema.sessions, schema.sessions.programSessionId);
+
+        // Reps only ever came from a run played in the app, so their presence
+        // is what separates the two origins in the existing rows. Assessments
+        // are played too, even when the protocol recorded no usable rep.
+        await m.database.customStatement(
+          "UPDATE sessions SET origin = 'played' WHERE is_assessment = 1 "
+          'OR id IN (SELECT DISTINCT session_id FROM rep_datas)',
+        );
+      },
     ),
   );
 }
@@ -1156,11 +1166,14 @@ extension SessionRowToModel on Session {
     reps: reps,
     dataPoints: dataPoints,
     isAssessment: isAssessment,
-    sessionType: enumFromIndex(
-      SessionType.values,
-      sessionType,
-      SessionType.crimpy,
+    activity: enumFromIndex(
+      SessionActivity.values,
+      activity,
+      SessionActivity.hangboard,
     ),
+    origin: sessionOriginFromApi(origin),
+    trainingId: trainingId,
+    programSessionId: programSessionId,
     durationInSeconds: duration,
     repeaterConfig: repeaterConfigOrNull,
   );

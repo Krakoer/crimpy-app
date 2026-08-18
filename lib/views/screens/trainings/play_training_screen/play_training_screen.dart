@@ -32,7 +32,12 @@ class PlayTrainingScreen extends ConsumerStatefulWidget {
   final bool useSensor;
 
   /// Category the resulting session is logged under.
-  final SessionType sessionType;
+  final SessionActivity activity;
+
+  /// What the run was started from, carried onto the session so it can later be
+  /// shown against what was prescribed. Both null outside a program.
+  final String? trainingId;
+  final String? programSessionId;
 
   /// Body weight the loads set in percent of it are computed from. Those loads
   /// have no target when it is unknown.
@@ -46,7 +51,9 @@ class PlayTrainingScreen extends ConsumerStatefulWidget {
   const PlayTrainingScreen(
     this.training, {
     this.useSensor = true,
-    this.sessionType = SessionType.crimpy,
+    this.activity = SessionActivity.hangboard,
+    this.trainingId,
+    this.programSessionId,
     this.bodyweightKg,
     this.results = AssessmentResults.none,
     super.key,
@@ -131,7 +138,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
           builder: (context) => PostWorkoutScreen(
             template: widget.training,
             results: repResults,
-            sessionType: widget.sessionType,
+            activity: widget.activity,
+            trainingId: widget.trainingId,
+            programSessionId: widget.programSessionId,
           ),
         ),
       );

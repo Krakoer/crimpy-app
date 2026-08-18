@@ -52,10 +52,14 @@ class LocalTrainingRepository extends TrainingRepository {
   Future<List<SessionModel>> getAllSessionsWithReps({
     SessionFilter? filters,
   }) async {
-    final sessions = await _database.getAllSessions(filters: filters);
+    final rows = (await _database.getAllSessions())
+        .where(
+          (row) => filters == null || filters.matchesSession(row.toModel()),
+        )
+        .toList();
     final result = <SessionModel>[];
-    for (final s in sessions) {
-      result.add(s.toModel(reps: await _database.getRepsForSession(s.id)));
+    for (final row in rows) {
+      result.add(row.toModel(reps: await _database.getRepsForSession(row.id)));
     }
     return result;
   }
@@ -109,7 +113,7 @@ class RemoteTrainingRepository extends TrainingRepository {
   @override
   Future<String> saveTraining(Training training) async {
     final result = await _apiClient.createTraining(training.toJson());
-    return result['id'] as String? ?? result['ID'] as String? ?? '';
+    return result['id'] as String? ?? '';
   }
 
   @override
@@ -188,7 +192,11 @@ class RemoteTrainingRepository extends TrainingRepository {
       'notes': session.notes ?? '',
       'date': session.date.toUtc().toIso8601String(),
       'is_assessment': session.isAssessment,
-      'session_type': session.sessionType.index,
+      'activity': session.activity.index,
+      'origin': session.origin.apiValue,
+      if (session.trainingId != null) 'training_id': session.trainingId,
+      if (session.programSessionId != null)
+        'program_session_id': session.programSessionId,
       'duration': duration,
       if (session.repeaterConfig != null) ...{
         'repeater_sets': session.repeaterConfig!.sets,
@@ -202,23 +210,25 @@ class RemoteTrainingRepository extends TrainingRepository {
     };
 
     final created = await _apiClient.createSession(body);
-    return (created['session'] as Map<String, dynamic>?)?['ID'] as String? ??
-        created['ID'] as String? ??
+    return (created['session'] as Map<String, dynamic>?)?['id'] as String? ??
+        created['id'] as String? ??
         '';
   }
 
   @override
   Future<void> updateSession(SessionModel session) async {
     if (session.id == null) return;
-    final int duration =
-        session.durationInSeconds ??
-        (session.reps != null
-            ? session.reps!.fold(0, (p, r) => p + r.duration)
-            : 0);
     await _apiClient.updateSessionApi(session.id!, {
       'name': session.name,
       'notes': session.notes ?? '',
-      'duration': duration,
+      // The duration is always sent because the server overwrites it either
+      // way, so it carries the session's own value rather than a recomputed
+      // one: a played session posts back exactly what its run measured.
+      'duration': session.duration,
+      // A played session keeps the date its run gave it, so only a logged one
+      // sends one. Omitted, the server leaves the stored date alone.
+      if (!session.origin.isPlayed)
+        'date': session.date.toUtc().toIso8601String(),
     });
   }
 

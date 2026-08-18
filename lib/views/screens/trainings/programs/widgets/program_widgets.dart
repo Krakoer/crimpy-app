@@ -5,8 +5,9 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-/// Accent color for a session type (reuses SessionType.colorValue).
-Color programSessionColor(SessionType type) => Color(type.colorValue);
+/// Accent color for a session type (reuses SessionActivity.colorValue).
+Color programSessionColor(SessionActivity type) =>
+    CrimpyTheme.activityColor(type);
 
 const _weekdayInitials = ['M', 'T', 'W', 'T', 'F', 'S', 'S']; // Mon..Sun
 const _weekdayShort = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
@@ -18,18 +19,20 @@ String weekdayInitial(DateTime date) => _weekdayInitials[date.weekday - 1];
 String weekdayShort(DateTime date) => _weekdayShort[date.weekday - 1];
 
 /// Short uppercase label for a session type, matching the program design.
-String programSessionLabel(SessionType type) => switch (type) {
-  SessionType.crimpy => 'HANGBOARD',
-  SessionType.climbing => 'CLIMBING',
-  SessionType.stretching => 'MOBILITY',
-  SessionType.workout => 'WORKOUT',
+String programSessionLabel(SessionActivity type) => switch (type) {
+  SessionActivity.hangboard => 'HANGBOARD',
+  SessionActivity.climbing => 'CLIMBING',
+  SessionActivity.stretching => 'MOBILITY',
+  SessionActivity.workout => 'WORKOUT',
+  SessionActivity.other => 'OTHER',
 };
 
-IconData programSessionIcon(SessionType type) => switch (type) {
-  SessionType.crimpy => FontAwesomeIcons.fire,
-  SessionType.climbing => FontAwesomeIcons.mountain,
-  SessionType.stretching => FontAwesomeIcons.personWalking,
-  SessionType.workout => FontAwesomeIcons.dumbbell,
+IconData programSessionIcon(SessionActivity type) => switch (type) {
+  SessionActivity.hangboard => FontAwesomeIcons.fire,
+  SessionActivity.climbing => FontAwesomeIcons.mountain,
+  SessionActivity.stretching => FontAwesomeIcons.personWalking,
+  SessionActivity.workout => FontAwesomeIcons.dumbbell,
+  SessionActivity.other => FontAwesomeIcons.personRunning,
 };
 
 /// Date-based status of a scheduled session. The coachee API exposes no
@@ -45,11 +48,11 @@ ScheduleStatus scheduleStatusFor(DateTime? date, DateTime today) {
 }
 
 /// Square bordered icon tile tinted by the session type.
-class SessionTypeTile extends StatelessWidget {
-  final SessionType type;
+class SessionActivityTile extends StatelessWidget {
+  final SessionActivity type;
   final double size;
 
-  const SessionTypeTile({required this.type, this.size = 40, super.key});
+  const SessionActivityTile({required this.type, this.size = 40, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +167,7 @@ class ScheduledTrainingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final type = session.sessionType;
+    final type = session.activity;
     final color = programSessionColor(type);
     final status = scheduleStatusFor(date, DateTime.now());
     final due = status == ScheduleStatus.due && !done;
@@ -188,7 +191,7 @@ class ScheduledTrainingRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              SessionTypeTile(type: type, size: 38),
+              SessionActivityTile(type: type, size: 38),
               const SizedBox(width: 11),
               Expanded(
                 child: Column(
@@ -254,7 +257,7 @@ class FlexTrainingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final type = session.sessionType;
+    final type = session.activity;
     final color = programSessionColor(type);
     // An unset target still means "do it once", never "already done".
     final times = session.timesPerWeek ?? 1;
@@ -274,7 +277,7 @@ class FlexTrainingRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
-              SessionTypeTile(type: type, size: 34),
+              SessionActivityTile(type: type, size: 34),
               const SizedBox(width: 11),
               Expanded(
                 child: Column(

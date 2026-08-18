@@ -27,7 +27,7 @@ class WeekHistogramWidget extends StatelessWidget {
     final DateTime monday = startOfWeek ?? getStartOfWeek(DateTime.now());
 
     // Compute duration for each day of the week, grouped by session type
-    final List<Map<SessionType, Duration>> durationsPerDay =
+    final List<Map<SessionActivity, Duration>> durationsPerDay =
         _calculateDurationsPerDayByType(monday);
 
     // Find maximum total duration for scaling
@@ -50,7 +50,7 @@ class WeekHistogramWidget extends StatelessWidget {
             // Draw the bars
             children: List.generate(7, (dayIndex) {
               final DateTime currentDay = monday.add(Duration(days: dayIndex));
-              final Map<SessionType, Duration> dayDurations =
+              final Map<SessionActivity, Duration> dayDurations =
                   durationsPerDay[dayIndex];
               final Duration totalDuration = dayDurations.values.fold(
                 Duration.zero,
@@ -75,7 +75,7 @@ class WeekHistogramWidget extends StatelessWidget {
   Widget _buildDayBar(
     BuildContext context,
     DateTime day,
-    Map<SessionType, Duration> dayDurations,
+    Map<SessionActivity, Duration> dayDurations,
     Duration totalDuration,
     Duration maxDuration,
   ) {
@@ -87,7 +87,7 @@ class WeekHistogramWidget extends StatelessWidget {
     // Build stacked bar segments
     List<Widget> barSegments = [];
     for (final entry in dayDurations.entries) {
-      final sessionType = entry.key;
+      final activity = entry.key;
       final duration = entry.value;
       final segmentHeightPercentage = maxDuration.inSeconds > 0
           ? duration.inSeconds / maxDuration.inSeconds
@@ -98,8 +98,8 @@ class WeekHistogramWidget extends StatelessWidget {
           height: maxBarHeight * segmentHeightPercentage,
           width: 24,
           decoration: BoxDecoration(
-            color: Color(
-              sessionType.colorValue,
+            color: CrimpyTheme.activityColor(
+              activity,
             ).withValues(alpha: isToday ? 1 : 0.7),
           ),
         ),
@@ -172,24 +172,24 @@ class WeekHistogramWidget extends StatelessWidget {
   }
 
   /// Returns a list of maps representing the sum of session durations grouped by type for each day of the week.
-  List<Map<SessionType, Duration>> _calculateDurationsPerDayByType(
+  List<Map<SessionActivity, Duration>> _calculateDurationsPerDayByType(
     DateTime startOfWeek,
   ) {
-    List<Map<SessionType, Duration>> durationsPerDay = List.generate(
+    List<Map<SessionActivity, Duration>> durationsPerDay = List.generate(
       7,
-      (_) => <SessionType, Duration>{},
+      (_) => <SessionActivity, Duration>{},
     );
 
     for (final entry in sessions) {
       final DateTime entryDate = entry.date;
       final Duration entryDuration = Duration(seconds: entry.duration);
-      final SessionType sessionType = entry.sessionType;
+      final SessionActivity activity = entry.activity;
 
       // Check if entry is within current week
       final int dayDifference = _daysBetween(startOfWeek, entryDate);
       if (dayDifference >= 0 && dayDifference < 7) {
-        durationsPerDay[dayDifference][sessionType] =
-            (durationsPerDay[dayDifference][sessionType] ?? Duration.zero) +
+        durationsPerDay[dayDifference][activity] =
+            (durationsPerDay[dayDifference][activity] ?? Duration.zero) +
             entryDuration;
       }
     }
