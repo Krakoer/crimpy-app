@@ -1,7 +1,13 @@
 import 'package:crimpy/models/common.dart';
 
 sealed class TrainingExecutionItem {
-  const TrainingExecutionItem();
+  /// Id of the training item this step was expanded from, carried onto the rep
+  /// it records so a played session can be read block by block instead of as
+  /// one pooled list. Null for a step built outside a training.
+  final String? trainingItemId;
+
+  const TrainingExecutionItem({this.trainingItemId});
+
   int get durationSeconds;
 }
 
@@ -39,6 +45,7 @@ final class TimedItem extends TrainingExecutionItem {
     this.isHang = false,
     this.subtitle,
     this.comment,
+    super.trainingItemId,
   });
 }
 
@@ -46,7 +53,7 @@ final class RestItem extends TrainingExecutionItem {
   @override
   final int durationSeconds;
 
-  const RestItem({required this.durationSeconds});
+  const RestItem({required this.durationSeconds, super.trainingItemId});
 }
 
 /// A self-paced step the user completes manually (e.g. a rep-based exercise or
@@ -70,6 +77,7 @@ final class ConfirmItem extends TrainingExecutionItem {
     this.load,
     this.subtitle,
     this.comment,
+    super.trainingItemId,
   });
 
   @override

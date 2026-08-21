@@ -180,6 +180,11 @@ class RemoteTrainingRepository extends TrainingRepository {
             'grip_position': indexed.$2.gripPosition.index,
             if (indexed.$2.edgeSizeMm != null)
               'edge_size_mm': indexed.$2.edgeSizeMm,
+            // The server reads the link against the prescription it froze from
+            // training_id, so a run outside one has nothing to key into and
+            // sends none.
+            if (session.trainingId != null && indexed.$2.trainingItemId != null)
+              'training_item_id': indexed.$2.trainingItemId,
           },
         )
         .toList();

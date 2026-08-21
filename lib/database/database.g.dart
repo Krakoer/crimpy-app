@@ -3227,6 +3227,17 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _trainingItemIdMeta = const VerificationMeta(
+    'trainingItemId',
+  );
+  @override
+  late final GeneratedColumn<String> trainingItemId = GeneratedColumn<String>(
+    'training_item_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -3251,6 +3262,7 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     index,
     gripPosition,
     edgeSizeMm,
+    trainingItemId,
     updatedAt,
   ];
   @override
@@ -3348,6 +3360,15 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
         ),
       );
     }
+    if (data.containsKey('training_item_id')) {
+      context.handle(
+        _trainingItemIdMeta,
+        trainingItemId.isAcceptableOrUnknown(
+          data['training_item_id']!,
+          _trainingItemIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -3403,6 +3424,10 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
         DriftSqlType.int,
         data['${effectivePrefix}edge_size_mm'],
       ),
+      trainingItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}training_item_id'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -3427,6 +3452,7 @@ class RepData extends DataClass implements Insertable<RepData> {
   final int index;
   final int gripPosition;
   final int? edgeSizeMm;
+  final String? trainingItemId;
   final DateTime updatedAt;
   const RepData({
     required this.id,
@@ -3439,6 +3465,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     required this.index,
     required this.gripPosition,
     this.edgeSizeMm,
+    this.trainingItemId,
     required this.updatedAt,
   });
   @override
@@ -3455,6 +3482,9 @@ class RepData extends DataClass implements Insertable<RepData> {
     map['grip_position'] = Variable<int>(gripPosition);
     if (!nullToAbsent || edgeSizeMm != null) {
       map['edge_size_mm'] = Variable<int>(edgeSizeMm);
+    }
+    if (!nullToAbsent || trainingItemId != null) {
+      map['training_item_id'] = Variable<String>(trainingItemId);
     }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -3474,6 +3504,9 @@ class RepData extends DataClass implements Insertable<RepData> {
       edgeSizeMm: edgeSizeMm == null && nullToAbsent
           ? const Value.absent()
           : Value(edgeSizeMm),
+      trainingItemId: trainingItemId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(trainingItemId),
       updatedAt: Value(updatedAt),
     );
   }
@@ -3494,6 +3527,7 @@ class RepData extends DataClass implements Insertable<RepData> {
       index: serializer.fromJson<int>(json['index']),
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
       edgeSizeMm: serializer.fromJson<int?>(json['edgeSizeMm']),
+      trainingItemId: serializer.fromJson<String?>(json['trainingItemId']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -3511,6 +3545,7 @@ class RepData extends DataClass implements Insertable<RepData> {
       'index': serializer.toJson<int>(index),
       'gripPosition': serializer.toJson<int>(gripPosition),
       'edgeSizeMm': serializer.toJson<int?>(edgeSizeMm),
+      'trainingItemId': serializer.toJson<String?>(trainingItemId),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -3526,6 +3561,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     int? index,
     int? gripPosition,
     Value<int?> edgeSizeMm = const Value.absent(),
+    Value<String?> trainingItemId = const Value.absent(),
     DateTime? updatedAt,
   }) => RepData(
     id: id ?? this.id,
@@ -3538,6 +3574,9 @@ class RepData extends DataClass implements Insertable<RepData> {
     index: index ?? this.index,
     gripPosition: gripPosition ?? this.gripPosition,
     edgeSizeMm: edgeSizeMm.present ? edgeSizeMm.value : this.edgeSizeMm,
+    trainingItemId: trainingItemId.present
+        ? trainingItemId.value
+        : this.trainingItemId,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   RepData copyWithCompanion(RepDatasCompanion data) {
@@ -3560,6 +3599,9 @@ class RepData extends DataClass implements Insertable<RepData> {
       edgeSizeMm: data.edgeSizeMm.present
           ? data.edgeSizeMm.value
           : this.edgeSizeMm,
+      trainingItemId: data.trainingItemId.present
+          ? data.trainingItemId.value
+          : this.trainingItemId,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -3577,6 +3619,7 @@ class RepData extends DataClass implements Insertable<RepData> {
           ..write('index: $index, ')
           ..write('gripPosition: $gripPosition, ')
           ..write('edgeSizeMm: $edgeSizeMm, ')
+          ..write('trainingItemId: $trainingItemId, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -3594,6 +3637,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     index,
     gripPosition,
     edgeSizeMm,
+    trainingItemId,
     updatedAt,
   );
   @override
@@ -3610,6 +3654,7 @@ class RepData extends DataClass implements Insertable<RepData> {
           other.index == this.index &&
           other.gripPosition == this.gripPosition &&
           other.edgeSizeMm == this.edgeSizeMm &&
+          other.trainingItemId == this.trainingItemId &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -3624,6 +3669,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
   final Value<int> index;
   final Value<int> gripPosition;
   final Value<int?> edgeSizeMm;
+  final Value<String?> trainingItemId;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const RepDatasCompanion({
@@ -3637,6 +3683,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     this.index = const Value.absent(),
     this.gripPosition = const Value.absent(),
     this.edgeSizeMm = const Value.absent(),
+    this.trainingItemId = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -3651,6 +3698,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     required int index,
     this.gripPosition = const Value.absent(),
     this.edgeSizeMm = const Value.absent(),
+    this.trainingItemId = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : averageWeight = Value(averageWeight),
@@ -3671,6 +3719,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     Expression<int>? index,
     Expression<int>? gripPosition,
     Expression<int>? edgeSizeMm,
+    Expression<String>? trainingItemId,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -3685,6 +3734,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       if (index != null) 'index': index,
       if (gripPosition != null) 'grip_position': gripPosition,
       if (edgeSizeMm != null) 'edge_size_mm': edgeSizeMm,
+      if (trainingItemId != null) 'training_item_id': trainingItemId,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -3701,6 +3751,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     Value<int>? index,
     Value<int>? gripPosition,
     Value<int?>? edgeSizeMm,
+    Value<String?>? trainingItemId,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -3715,6 +3766,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       index: index ?? this.index,
       gripPosition: gripPosition ?? this.gripPosition,
       edgeSizeMm: edgeSizeMm ?? this.edgeSizeMm,
+      trainingItemId: trainingItemId ?? this.trainingItemId,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -3753,6 +3805,9 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     if (edgeSizeMm.present) {
       map['edge_size_mm'] = Variable<int>(edgeSizeMm.value);
     }
+    if (trainingItemId.present) {
+      map['training_item_id'] = Variable<String>(trainingItemId.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -3775,6 +3830,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
           ..write('index: $index, ')
           ..write('gripPosition: $gripPosition, ')
           ..write('edgeSizeMm: $edgeSizeMm, ')
+          ..write('trainingItemId: $trainingItemId, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -6863,6 +6919,7 @@ typedef $$RepDatasTableCreateCompanionBuilder =
       required int index,
       Value<int> gripPosition,
       Value<int?> edgeSizeMm,
+      Value<String?> trainingItemId,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -6878,6 +6935,7 @@ typedef $$RepDatasTableUpdateCompanionBuilder =
       Value<int> index,
       Value<int> gripPosition,
       Value<int?> edgeSizeMm,
+      Value<String?> trainingItemId,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -6938,6 +6996,11 @@ class $$RepDatasTableFilterComposer
 
   ColumnFilters<int> get edgeSizeMm => $composableBuilder(
     column: $table.edgeSizeMm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get trainingItemId => $composableBuilder(
+    column: $table.trainingItemId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7006,6 +7069,11 @@ class $$RepDatasTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get trainingItemId => $composableBuilder(
+    column: $table.trainingItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -7059,6 +7127,11 @@ class $$RepDatasTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get trainingItemId => $composableBuilder(
+    column: $table.trainingItemId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -7101,6 +7174,7 @@ class $$RepDatasTableTableManager
                 Value<int> index = const Value.absent(),
                 Value<int> gripPosition = const Value.absent(),
                 Value<int?> edgeSizeMm = const Value.absent(),
+                Value<String?> trainingItemId = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RepDatasCompanion(
@@ -7114,6 +7188,7 @@ class $$RepDatasTableTableManager
                 index: index,
                 gripPosition: gripPosition,
                 edgeSizeMm: edgeSizeMm,
+                trainingItemId: trainingItemId,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -7129,6 +7204,7 @@ class $$RepDatasTableTableManager
                 required int index,
                 Value<int> gripPosition = const Value.absent(),
                 Value<int?> edgeSizeMm = const Value.absent(),
+                Value<String?> trainingItemId = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RepDatasCompanion.insert(
@@ -7142,6 +7218,7 @@ class $$RepDatasTableTableManager
                 index: index,
                 gripPosition: gripPosition,
                 edgeSizeMm: edgeSizeMm,
+                trainingItemId: trainingItemId,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),

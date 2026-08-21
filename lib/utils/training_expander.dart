@@ -160,7 +160,7 @@ void _expandCircuit(
         final childEndsOnRest =
             out.length > lengthBeforeChild && out.last is RestItem;
         if (childEndsOnRest) out.removeLast();
-        out.add(RestItem(durationSeconds: rest));
+        out.add(RestItem(durationSeconds: rest, trainingItemId: item.id));
       }
     }
   }
@@ -187,6 +187,7 @@ void _expandExercise(
         collectSensorData: false,
         subtitle: context,
         comment: comment,
+        trainingItemId: item.id,
       ),
     );
   } else {
@@ -197,11 +198,14 @@ void _expandExercise(
         load: item.loadLabel(bodyweightKg: bodyweightKg, results: results),
         subtitle: context,
         comment: comment,
+        trainingItemId: item.id,
       ),
     );
   }
   final rest = item.restSeconds ?? 0;
-  if (rest > 0) out.add(RestItem(durationSeconds: rest));
+  if (rest > 0) {
+    out.add(RestItem(durationSeconds: rest, trainingItemId: item.id));
+  }
 }
 
 void _expandFree(
@@ -223,6 +227,7 @@ void _expandFree(
         collectSensorData: false,
         subtitle: context,
         comment: comment,
+        trainingItemId: item.id,
       ),
     );
   } else {
@@ -231,6 +236,7 @@ void _expandFree(
         label: item.freeText ?? 'Free',
         subtitle: context,
         comment: comment,
+        trainingItemId: item.id,
       ),
     );
   }
@@ -279,10 +285,11 @@ void _expandHangboardRep(
       collectSensorData: useSensor && handSide != HandSide.both,
       subtitle: context,
       comment: comment,
+      trainingItemId: item.id,
     ),
   );
   if (resttime > 0) {
-    out.add(RestItem(durationSeconds: resttime));
+    out.add(RestItem(durationSeconds: resttime, trainingItemId: item.id));
   }
 }
 
@@ -331,14 +338,19 @@ void _expandRepeater(
       collectSensorData: useSensor && side != HandSide.both,
       subtitle: setRep(cycle, rep),
       comment: comment,
+      trainingItemId: item.id,
     );
   }
+
+  RestItem rest(int seconds) =>
+      RestItem(durationSeconds: seconds, trainingItemId: item.id);
 
   switch (hand) {
     case HangboardHand.split:
       _expandSplitRepeater(
         out,
         hang,
+        rest,
         cycles: cycles,
         repsPerCycle: repsPerCycle,
         worktime: worktime,
@@ -347,16 +359,16 @@ void _expandRepeater(
       );
     case HangboardHand.alternate:
       for (int cycle = 0; cycle < cycles; cycle++) {
-        for (int rep = 0; rep < repsPerCycle; rep++) {
-          out.add(hang(cycle, rep, HandSide.right));
-          if (resttime > 0) out.add(RestItem(durationSeconds: resttime));
-          out.add(hang(cycle, rep, HandSide.left));
-          if (rep < repsPerCycle - 1 && resttime > 0) {
-            out.add(RestItem(durationSeconds: resttime));
+        for (int repIndex = 0; repIndex < repsPerCycle; repIndex++) {
+          out.add(hang(cycle, repIndex, HandSide.right));
+          if (resttime > 0) out.add(rest(resttime));
+          out.add(hang(cycle, repIndex, HandSide.left));
+          if (repIndex < repsPerCycle - 1 && resttime > 0) {
+            out.add(rest(resttime));
           }
         }
         if (cycle < cycles - 1 && cycleRest > 0) {
-          out.add(RestItem(durationSeconds: cycleRest));
+          out.add(rest(cycleRest));
         }
       }
     default:
@@ -367,14 +379,14 @@ void _expandRepeater(
         _ => HandSide.both,
       };
       for (int cycle = 0; cycle < cycles; cycle++) {
-        for (int rep = 0; rep < repsPerCycle; rep++) {
-          out.add(hang(cycle, rep, side));
-          if (rep < repsPerCycle - 1 && resttime > 0) {
-            out.add(RestItem(durationSeconds: resttime));
+        for (int repIndex = 0; repIndex < repsPerCycle; repIndex++) {
+          out.add(hang(cycle, repIndex, side));
+          if (repIndex < repsPerCycle - 1 && resttime > 0) {
+            out.add(rest(resttime));
           }
         }
         if (cycle < cycles - 1 && cycleRest > 0) {
-          out.add(RestItem(durationSeconds: cycleRest));
+          out.add(rest(cycleRest));
         }
       }
   }
@@ -384,7 +396,8 @@ void _expandRepeater(
 /// replays the same set on the left.
 void _expandSplitRepeater(
   List<TrainingExecutionItem> out,
-  TimedItem Function(int cycle, int rep, HandSide side) hang, {
+  TimedItem Function(int cycle, int rep, HandSide side) hang,
+  RestItem Function(int seconds) rest, {
   required int cycles,
   required int repsPerCycle,
   required int worktime,
@@ -398,15 +411,15 @@ void _expandSplitRepeater(
 
   for (int cycle = 0; cycle < cycles; cycle++) {
     for (final side in [HandSide.right, HandSide.left]) {
-      for (int rep = 0; rep < repsPerCycle; rep++) {
-        out.add(hang(cycle, rep, side));
-        if (rep < repsPerCycle - 1 && resttime > 0) {
-          out.add(RestItem(durationSeconds: resttime));
+      for (int repIndex = 0; repIndex < repsPerCycle; repIndex++) {
+        out.add(hang(cycle, repIndex, side));
+        if (repIndex < repsPerCycle - 1 && resttime > 0) {
+          out.add(rest(resttime));
         }
       }
       final lastHandOfLastCycle = side == HandSide.left && cycle == cycles - 1;
       if (!lastHandOfLastCycle && restBetweenHands > 0) {
-        out.add(RestItem(durationSeconds: restBetweenHands));
+        out.add(rest(restBetweenHands));
       }
     }
   }

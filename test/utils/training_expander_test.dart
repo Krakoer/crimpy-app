@@ -997,4 +997,69 @@ void main() {
       expect((out.first as TimedItem).durationSeconds, 90);
     });
   });
+
+  test('every step names the training item it came from', () {
+    final training = _training([
+      TrainingItem(
+        id: 'block-20mm',
+        type: TrainingItemType.hangboardRep,
+        position: 0,
+        reps: 1,
+        worktimeSeconds: 7,
+        restSeconds: 3,
+        hand: HangboardHand.right,
+        granularity: HangboardGranularity.uniform,
+        edgeSizesMm: const [20],
+      ),
+      TrainingItem(
+        id: 'block-14mm',
+        type: TrainingItemType.hangboardRep,
+        position: 1,
+        reps: 1,
+        worktimeSeconds: 7,
+        restSeconds: 3,
+        hand: HangboardHand.right,
+        granularity: HangboardGranularity.uniform,
+        edgeSizesMm: const [14],
+      ),
+    ]);
+
+    final out = expandTrainingItems(training, useSensor: false);
+
+    // Hang and the rest that follows it both belong to the block that set them.
+    expect(out.map((e) => e.trainingItemId).toList(), [
+      'block-20mm',
+      'block-20mm',
+      'block-14mm',
+      'block-14mm',
+    ]);
+  });
+
+  test('a circuit rest belongs to the circuit that set it', () {
+    final training = _training([
+      TrainingItem(
+        id: 'circuit',
+        type: TrainingItemType.circuit,
+        position: 0,
+        cycles: 2,
+        cycleRestSeconds: 60,
+        items: [
+          TrainingItem(
+            id: 'pullups',
+            type: TrainingItemType.exercise,
+            position: 0,
+            reps: 10,
+          ),
+        ],
+      ),
+    ]);
+
+    final out = expandTrainingItems(training, useSensor: false);
+
+    expect(out.map((e) => e.trainingItemId).toList(), [
+      'pullups',
+      'circuit',
+      'pullups',
+    ]);
+  });
 }

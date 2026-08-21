@@ -174,6 +174,10 @@ class RepDatas extends Table {
   // Depth of the edge the rep was pulled on, null when the step prescribed
   // none: a rest, or an exercise done off the hangboard.
   late final IntColumn edgeSizeMm = integer().nullable()();
+  // Item of the training the rep was played from, null for a rep recorded
+  // outside a training. Not a reference: the training stays editable while the
+  // played session keeps the prescription it was run from.
+  late final TextColumn trainingItemId = text().nullable()();
 
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
@@ -365,6 +369,7 @@ class AppDatabase extends _$AppDatabase {
             averageWeight: Value(index.$2.averageWeight),
             gripPosition: Value(index.$2.gripPosition.index),
             edgeSizeMm: Value(index.$2.edgeSizeMm),
+            trainingItemId: Value(index.$2.trainingItemId),
             updatedAt: Value(DateTime.now()),
           ),
         )
@@ -814,7 +819,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1085,6 +1090,9 @@ class AppDatabase extends _$AppDatabase {
           'OR id IN (SELECT DISTINCT session_id FROM rep_datas)',
         );
       },
+      from5To6: (m, schema) async {
+        await m.addColumn(schema.repDatas, schema.repDatas.trainingItemId);
+      },
     ),
   );
 }
@@ -1130,6 +1138,7 @@ extension RepDataRowToModel on RepData {
       GripPosition.halfCrimp,
     ),
     edgeSizeMm: edgeSizeMm,
+    trainingItemId: trainingItemId,
   );
 }
 
