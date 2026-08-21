@@ -117,6 +117,10 @@ class RepDataModel {
   /// none: a rest, or an exercise done off the hangboard.
   final int? edgeSizeMm;
 
+  /// Item of the training the rep was played from, so the reps of a session can
+  /// be read block by block. Null for a rep recorded outside a training.
+  final String? trainingItemId;
+
   RepDataModel({
     required this.averageWeight,
     required this.duration,
@@ -126,6 +130,7 @@ class RepDataModel {
     required this.targetWeight,
     this.gripPosition = GripPosition.halfCrimp, // Default to half crimp
     this.edgeSizeMm,
+    this.trainingItemId,
   });
 
   /// Parses a repetition as returned by the API.
@@ -142,6 +147,7 @@ class RepDataModel {
       GripPosition.halfCrimp,
     ),
     edgeSizeMm: (json['edge_size_mm'] as num?)?.toInt(),
+    trainingItemId: json['training_item_id'] as String?,
   );
 }
 

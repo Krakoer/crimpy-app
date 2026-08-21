@@ -5,6 +5,11 @@ import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/utils/hangboard_layout.dart';
 
+/// The link a step carries back to the item it came from. Items that were never
+/// saved carry a blank id - builtin trainings and freshly duplicated items -
+/// and "no item" has one representation here, the null the column documents.
+String? _linkId(TrainingItem item) => item.id.isEmpty ? null : item.id;
+
 /// Expands a training tree into a flat, runnable sequence of execution items.
 /// [useSensor] controls whether hangboard/repeater hangs collect live force
 /// data (and thus show the gauge); when false the whole training runs without
@@ -160,7 +165,7 @@ void _expandCircuit(
         final childEndsOnRest =
             out.length > lengthBeforeChild && out.last is RestItem;
         if (childEndsOnRest) out.removeLast();
-        out.add(RestItem(durationSeconds: rest));
+        out.add(RestItem(durationSeconds: rest, trainingItemId: _linkId(item)));
       }
     }
   }
@@ -187,6 +192,7 @@ void _expandExercise(
         collectSensorData: false,
         subtitle: context,
         comment: comment,
+        trainingItemId: _linkId(item),
       ),
     );
   } else {
@@ -197,11 +203,14 @@ void _expandExercise(
         load: item.loadLabel(bodyweightKg: bodyweightKg, results: results),
         subtitle: context,
         comment: comment,
+        trainingItemId: _linkId(item),
       ),
     );
   }
   final rest = item.restSeconds ?? 0;
-  if (rest > 0) out.add(RestItem(durationSeconds: rest));
+  if (rest > 0) {
+    out.add(RestItem(durationSeconds: rest, trainingItemId: _linkId(item)));
+  }
 }
 
 void _expandFree(
@@ -223,6 +232,7 @@ void _expandFree(
         collectSensorData: false,
         subtitle: context,
         comment: comment,
+        trainingItemId: _linkId(item),
       ),
     );
   } else {
@@ -231,6 +241,7 @@ void _expandFree(
         label: item.freeText ?? 'Free',
         subtitle: context,
         comment: comment,
+        trainingItemId: _linkId(item),
       ),
     );
   }
@@ -279,10 +290,11 @@ void _expandHangboardRep(
       collectSensorData: useSensor && handSide != HandSide.both,
       subtitle: context,
       comment: comment,
+      trainingItemId: _linkId(item),
     ),
   );
   if (resttime > 0) {
-    out.add(RestItem(durationSeconds: resttime));
+    out.add(RestItem(durationSeconds: resttime, trainingItemId: _linkId(item)));
   }
 }
 
@@ -331,14 +343,19 @@ void _expandRepeater(
       collectSensorData: useSensor && side != HandSide.both,
       subtitle: setRep(cycle, rep),
       comment: comment,
+      trainingItemId: _linkId(item),
     );
   }
+
+  RestItem rest(int seconds) =>
+      RestItem(durationSeconds: seconds, trainingItemId: _linkId(item));
 
   switch (hand) {
     case HangboardHand.split:
       _expandSplitRepeater(
         out,
         hang,
+        rest,
         cycles: cycles,
         repsPerCycle: repsPerCycle,
         worktime: worktime,
@@ -349,14 +366,14 @@ void _expandRepeater(
       for (int cycle = 0; cycle < cycles; cycle++) {
         for (int rep = 0; rep < repsPerCycle; rep++) {
           out.add(hang(cycle, rep, HandSide.right));
-          if (resttime > 0) out.add(RestItem(durationSeconds: resttime));
+          if (resttime > 0) out.add(rest(resttime));
           out.add(hang(cycle, rep, HandSide.left));
           if (rep < repsPerCycle - 1 && resttime > 0) {
-            out.add(RestItem(durationSeconds: resttime));
+            out.add(rest(resttime));
           }
         }
         if (cycle < cycles - 1 && cycleRest > 0) {
-          out.add(RestItem(durationSeconds: cycleRest));
+          out.add(rest(cycleRest));
         }
       }
     default:
@@ -370,11 +387,11 @@ void _expandRepeater(
         for (int rep = 0; rep < repsPerCycle; rep++) {
           out.add(hang(cycle, rep, side));
           if (rep < repsPerCycle - 1 && resttime > 0) {
-            out.add(RestItem(durationSeconds: resttime));
+            out.add(rest(resttime));
           }
         }
         if (cycle < cycles - 1 && cycleRest > 0) {
-          out.add(RestItem(durationSeconds: cycleRest));
+          out.add(rest(cycleRest));
         }
       }
   }
@@ -384,7 +401,8 @@ void _expandRepeater(
 /// replays the same set on the left.
 void _expandSplitRepeater(
   List<TrainingExecutionItem> out,
-  TimedItem Function(int cycle, int rep, HandSide side) hang, {
+  TimedItem Function(int cycle, int rep, HandSide side) hang,
+  RestItem Function(int seconds) rest, {
   required int cycles,
   required int repsPerCycle,
   required int worktime,
@@ -401,12 +419,12 @@ void _expandSplitRepeater(
       for (int rep = 0; rep < repsPerCycle; rep++) {
         out.add(hang(cycle, rep, side));
         if (rep < repsPerCycle - 1 && resttime > 0) {
-          out.add(RestItem(durationSeconds: resttime));
+          out.add(rest(resttime));
         }
       }
       final lastHandOfLastCycle = side == HandSide.left && cycle == cycles - 1;
       if (!lastHandOfLastCycle && restBetweenHands > 0) {
-        out.add(RestItem(durationSeconds: restBetweenHands));
+        out.add(rest(restBetweenHands));
       }
     }
   }

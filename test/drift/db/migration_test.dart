@@ -12,6 +12,7 @@ import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v3.dart' as v3;
 import 'generated/schema_v4.dart' as v4;
+import 'generated/schema_v5.dart' as v5;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -561,6 +562,53 @@ void main() {
       )..where((s) => s.id.equals('s-assessment'))).getSingle();
 
       expect(assessment.origin, 'played');
+      await db.close();
+    });
+  });
+
+  group('v5 to v6 data migration', () {
+    // Reps recorded before the link existed say nothing about the block they
+    // came from, so they keep none rather than claiming the first item.
+    test('a rep recorded without a training item keeps none', () async {
+      final schema = await verifier.schemaAt(5);
+      final oldDb = v5.DatabaseAtV5(schema.newConnection());
+      await oldDb
+          .into(oldDb.sessions)
+          .insert(
+            const v5.SessionsData(
+              id: 's-1',
+              name: 'Session',
+              notes: '',
+              date: 1700000000,
+              dataPath: '',
+              isAssessment: 0,
+              activity: 0,
+              origin: 'played',
+              duration: 10,
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb
+          .into(oldDb.repDatas)
+          .insert(
+            const v5.RepDatasData(
+              id: 'rd-1',
+              averageWeight: 22.0,
+              sessionId: 's-1',
+              isRest: 0,
+              rightHand: 1,
+              duration: 7,
+              targetWeight: 20.0,
+              index: 0,
+              gripPosition: 0,
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb.close();
+
+      final db = AppDatabase(schema.newConnection());
+      final rep = await db.select(db.repDatas).getSingle();
+      expect(rep.trainingItemId, null);
       await db.close();
     });
   });

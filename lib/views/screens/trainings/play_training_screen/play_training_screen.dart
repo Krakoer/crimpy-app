@@ -104,6 +104,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         isRest: item is RestItem,
         gripPosition: timed?.gripPosition ?? GripPosition.halfCrimp,
         edgeSizeMm: timed?.edgeSizeMm,
+        trainingItemId: item.trainingItemId,
       ),
     );
   }

@@ -27,6 +27,7 @@ List<RepDataModel> buildRepsData(
         index: index,
         gripPosition: timed?.gripPosition ?? GripPosition.halfCrimp,
         edgeSizeMm: timed?.edgeSizeMm,
+        trainingItemId: item.trainingItemId,
       ),
     );
   }
