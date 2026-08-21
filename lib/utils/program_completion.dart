@@ -2,20 +2,20 @@ import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/models/session.dart';
 
-/// Completion of program trainings is derived from the user's logged/ran
-/// sessions rather than stored on the program: a scheduled training counts as
-/// done when a session with a matching name exists on the relevant day(s).
+/// Completion of program trainings is derived from the user's sessions rather
+/// than stored on the program: a scheduled training counts as done when a
+/// session carrying its id exists on the relevant day(s).
+///
+/// The link is written by both paths that can complete a slot, the run flow and
+/// the "log as done" button on the scheduled training screen, so names never
+/// enter into it. Renaming a training, two slots sharing a title, or a session
+/// played from the user's own library can no longer move the count.
 
-/// A session matches a scheduled training when its name equals the training
-/// title or starts with it (the run flow appends a date suffix).
-bool _matchesTraining(String sessionName, String trainingTitle) {
-  if (trainingTitle.isEmpty) return false;
-  return sessionName == trainingTitle ||
-      sessionName.startsWith('$trainingTitle -') ||
-      sessionName.startsWith('$trainingTitle-');
-}
+/// Whether [session] was played from the scheduled slot [scheduledId].
+bool _playedFrom(SessionModel session, String scheduledId) =>
+    scheduledId.isNotEmpty && session.programSessionId == scheduledId;
 
-/// How many matching sessions were completed during [weekNumber].
+/// How many sessions played from [scheduled] fall in [weekNumber].
 int completionsInWeek(
   List<SessionModel> sessions,
   Program program,
@@ -27,26 +27,22 @@ int completionsInWeek(
   return sessions
       .where(
         (s) =>
-            _matchesTraining(s.name, scheduled.trainingTitle) &&
+            _playedFrom(s, scheduled.id) &&
             !s.date.isBefore(start) &&
             s.date.isBefore(end),
       )
       .length;
 }
 
-/// Whether a matching session was completed on [date].
-bool isDoneOn(
-  List<SessionModel> sessions,
-  String trainingTitle,
-  DateTime date,
-) {
+/// Whether a session played from [scheduledId] exists on [date].
+bool isDoneOn(List<SessionModel> sessions, String scheduledId, DateTime date) {
   return sessions.any(
-    (s) => isSameDay(s.date, date) && _matchesTraining(s.name, trainingTitle),
+    (s) => _playedFrom(s, scheduledId) && isSameDay(s.date, date),
   );
 }
 
 /// Whether a scheduled training is considered complete:
-/// - day-of-week / everyday: a matching session exists on [date];
+/// - day-of-week / everyday: a session played from it exists on [date];
 /// - times-per-week: the weekly target has been reached.
 bool isScheduledTrainingDone(
   List<SessionModel> sessions,
@@ -60,5 +56,5 @@ bool isScheduledTrainingDone(
     return completionsInWeek(sessions, program, weekNumber, scheduled) >=
         target;
   }
-  return isDoneOn(sessions, scheduled.trainingTitle, date);
+  return isDoneOn(sessions, scheduled.id, date);
 }
