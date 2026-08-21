@@ -1062,4 +1062,27 @@ void main() {
       'pullups',
     ]);
   });
+
+  test('an item that was never saved carries no link', () {
+    // Builtin trainings and freshly duplicated items hold a blank id, which is
+    // not an item anything can be grouped under.
+    final training = _training([
+      TrainingItem(
+        id: '',
+        type: TrainingItemType.hangboardRep,
+        position: 0,
+        reps: 1,
+        worktimeSeconds: 7,
+        restSeconds: 3,
+        hand: HangboardHand.right,
+        granularity: HangboardGranularity.uniform,
+        edgeSizesMm: const [20],
+      ),
+    ]);
+
+    final out = expandTrainingItems(training, useSensor: false);
+
+    expect(out, isNotEmpty);
+    expect(out.every((e) => e.trainingItemId == null), isTrue);
+  });
 }

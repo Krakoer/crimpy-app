@@ -26,22 +26,25 @@ RepDataModel _rep({String? trainingItemId}) => RepDataModel(
   trainingItemId: trainingItemId,
 );
 
-SessionModel _session({String? trainingId}) => SessionModel(
-  name: 'Session',
-  date: DateTime.utc(2026, 8, 21),
-  isAssessment: false,
-  activity: SessionActivity.hangboard,
-  origin: SessionOrigin.played,
-  trainingId: trainingId,
-);
+SessionModel _session({String? trainingId, String? programSessionId}) =>
+    SessionModel(
+      name: 'Session',
+      date: DateTime.utc(2026, 8, 21),
+      isAssessment: false,
+      activity: SessionActivity.hangboard,
+      origin: SessionOrigin.played,
+      trainingId: trainingId,
+      programSessionId: programSessionId,
+    );
 
 Future<Map<String, dynamic>> _postedRep({
   String? trainingId,
+  String? programSessionId,
   String? trainingItemId,
 }) async {
   final client = _CapturingApiClient();
   await RemoteTrainingRepository(client).saveSession(
-    _session(trainingId: trainingId),
+    _session(trainingId: trainingId, programSessionId: programSessionId),
     [_rep(trainingItemId: trainingItemId)],
   );
   return (client.body!['rep_datas'] as List).single as Map<String, dynamic>;
@@ -61,6 +64,17 @@ void main() {
       final rep = await _postedRep(trainingItemId: 'item-1');
 
       expect(rep.containsKey('training_item_id'), isFalse);
+    });
+
+    // The server resolves the prescription from the program session when one is
+    // sent, so the link keys into something even with no training_id alongside.
+    test('names the item when only a program session was sent', () async {
+      final rep = await _postedRep(
+        programSessionId: 'ps-1',
+        trainingItemId: 'item-1',
+      );
+
+      expect(rep['training_item_id'], 'item-1');
     });
 
     test('carries no item when the step named none', () async {
