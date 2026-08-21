@@ -10,12 +10,17 @@ import 'package:crimpy/models/session.dart';
 /// the "log as done" button on the scheduled training screen, so names never
 /// enter into it. Renaming a training, two slots sharing a title, or a session
 /// played from the user's own library can no longer move the count.
+///
+/// Origin deliberately does not enter into it either. A slot whose training has
+/// nothing to step through is completed by hand, so a logged session answers a
+/// prescription just as a played one does. The server draws the line elsewhere:
+/// only a played session freezes the coach's week.
 
-/// Whether [session] was played from the scheduled slot [scheduledId].
-bool _playedFrom(SessionModel session, String scheduledId) =>
-    scheduledId.isNotEmpty && session.programSessionId == scheduledId;
+/// Whether [session] answers the scheduled slot [scheduledId].
+bool _answers(SessionModel session, String scheduledId) =>
+    session.programSessionId == scheduledId;
 
-/// How many sessions played from [scheduled] fall in [weekNumber].
+/// How many sessions answering [scheduled] fall in [weekNumber].
 int completionsInWeek(
   List<SessionModel> sessions,
   Program program,
@@ -27,22 +32,24 @@ int completionsInWeek(
   return sessions
       .where(
         (s) =>
-            _playedFrom(s, scheduled.id) &&
+            _answers(s, scheduled.id) &&
             !s.date.isBefore(start) &&
             s.date.isBefore(end),
       )
       .length;
 }
 
-/// Whether a session played from [scheduledId] exists on [date].
-bool isDoneOn(List<SessionModel> sessions, String scheduledId, DateTime date) {
+/// Whether a session answering the slot [scheduledId] exists on [date]. Private
+/// because a caller passing a training title instead would compile and silently
+/// report that nothing is ever done.
+bool _isDoneOn(List<SessionModel> sessions, String scheduledId, DateTime date) {
   return sessions.any(
-    (s) => _playedFrom(s, scheduledId) && isSameDay(s.date, date),
+    (s) => _answers(s, scheduledId) && isSameDay(s.date, date),
   );
 }
 
 /// Whether a scheduled training is considered complete:
-/// - day-of-week / everyday: a session played from it exists on [date];
+/// - day-of-week / everyday: a session answering it exists on [date];
 /// - times-per-week: the weekly target has been reached.
 bool isScheduledTrainingDone(
   List<SessionModel> sessions,
@@ -56,5 +63,5 @@ bool isScheduledTrainingDone(
     return completionsInWeek(sessions, program, weekNumber, scheduled) >=
         target;
   }
-  return isDoneOn(sessions, scheduled.id, date);
+  return _isDoneOn(sessions, scheduled.id, date);
 }
