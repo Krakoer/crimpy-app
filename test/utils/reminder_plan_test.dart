@@ -62,13 +62,17 @@ CachedProgramSchedule _schedule(
   cachedAt: DateTime(2026, 6, 1),
 );
 
-/// A session played from the scheduled slot [scheduledId]. The name is
+/// A session answering the scheduled slot [scheduledId]. The name is
 /// deliberately unrelated to the training title: completion follows the link,
 /// not the label.
-SessionModel _playedFrom(String scheduledId, DateTime date) => SessionModel(
+SessionModel _answering(
+  String scheduledId,
+  DateTime date, {
+  SessionOrigin origin = SessionOrigin.played,
+}) => SessionModel(
   name: 'whatever the athlete called it',
   isAssessment: false,
-  origin: SessionOrigin.logged,
+  origin: origin,
   programSessionId: scheduledId,
   date: date,
 );
@@ -154,7 +158,7 @@ void main() {
       final plan = planReminders(
         preferences: _enabled,
         schedule: _schedule([_everydaySession]),
-        sessions: [_playedFrom('s2', DateTime(2026, 6, 1, 7))],
+        sessions: [_answering('s2', DateTime(2026, 6, 1, 7))],
         from: _mondayMorning,
       );
 
@@ -166,9 +170,9 @@ void main() {
       'stops reminding a flexible session once its weekly target is met',
       () {
         final done = [
-          _playedFrom('s3', DateTime(2026, 6, 1)),
-          _playedFrom('s3', DateTime(2026, 6, 2)),
-          _playedFrom('s3', DateTime(2026, 6, 3)),
+          _answering('s3', DateTime(2026, 6, 1)),
+          _answering('s3', DateTime(2026, 6, 2)),
+          _answering('s3', DateTime(2026, 6, 3)),
         ];
 
         final plan = planReminders(
@@ -432,7 +436,7 @@ void main() {
           snoozedUntil: DateTime(2026, 6, 1, 19, 30),
         ),
         schedule: _schedule([_everydaySession]),
-        sessions: [_playedFrom('s2', DateTime(2026, 6, 1, 12))],
+        sessions: [_answering('s2', DateTime(2026, 6, 1, 12))],
         from: _mondayMorning,
       );
 

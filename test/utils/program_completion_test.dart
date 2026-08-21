@@ -33,15 +33,23 @@ WeekSession _flexSession() => const WeekSession(
   position: 1,
 );
 
-/// A session played from the scheduled slot [scheduledId].
-SessionModel _playedFrom(String scheduledId, DateTime date, {String? name}) =>
-    SessionModel(
-      name: name ?? 'whatever the athlete called it',
-      isAssessment: false,
-      origin: SessionOrigin.logged,
-      programSessionId: scheduledId,
-      date: date,
-    );
+/// A session answering the scheduled slot [scheduledId].
+///
+/// Defaults to a run, the path most slots are completed by. A slot whose
+/// training has nothing to step through is completed by hand instead, so
+/// [origin] covers that case: the server accepts the link on either.
+SessionModel _answering(
+  String scheduledId,
+  DateTime date, {
+  String? name,
+  SessionOrigin origin = SessionOrigin.played,
+}) => SessionModel(
+  name: name ?? 'whatever the athlete called it',
+  isAssessment: false,
+  origin: origin,
+  programSessionId: scheduledId,
+  date: date,
+);
 
 /// A session with no link to the program: played from the user's own library,
 /// or logged by hand.
@@ -60,11 +68,31 @@ void main() {
 
     expect(isScheduledTrainingDone([], program, 1, s, date: date), isFalse);
 
-    final sessions = [_playedFrom(s.id, date)];
+    final sessions = [_answering(s.id, date)];
     expect(
       isScheduledTrainingDone(sessions, program, 1, s, date: date),
       isTrue,
     );
+  });
+
+  test('a slot is completed by a run or by a hand logged session alike', () {
+    final program = _program();
+    final s = _daySession();
+    final date = s.scheduledDate(program, 1)!;
+
+    for (final origin in SessionOrigin.values) {
+      expect(
+        isScheduledTrainingDone(
+          [_answering(s.id, date, origin: origin)],
+          program,
+          1,
+          s,
+          date: date,
+        ),
+        isTrue,
+        reason: 'a ${origin.name} session carrying the link should complete it',
+      );
+    }
   });
 
   test('the session name has no say in completion', () {
@@ -75,7 +103,7 @@ void main() {
     // Renaming the training cannot un-complete a run already played from it.
     expect(
       isScheduledTrainingDone(
-        [_playedFrom(s.id, date, name: 'Renamed to something else')],
+        [_answering(s.id, date, name: 'Renamed to something else')],
         program,
         1,
         s,
@@ -116,7 +144,7 @@ void main() {
     final evening = _daySession(id: 'slot-evening');
     final date = morning.scheduledDate(program, 1)!;
 
-    final sessions = [_playedFrom(morning.id, date)];
+    final sessions = [_answering(morning.id, date)];
 
     expect(
       isScheduledTrainingDone(sessions, program, 1, morning, date: date),
@@ -133,8 +161,8 @@ void main() {
     final s = _flexSession();
 
     final two = [
-      _playedFrom(s.id, DateTime(2026, 6, 2)),
-      _playedFrom(s.id, DateTime(2026, 6, 4)),
+      _answering(s.id, DateTime(2026, 6, 2)),
+      _answering(s.id, DateTime(2026, 6, 4)),
     ];
     expect(completionsInWeek(two, program, 1, s), 2);
     expect(
@@ -142,7 +170,7 @@ void main() {
       isFalse,
     );
 
-    final three = [...two, _playedFrom(s.id, DateTime(2026, 6, 6))];
+    final three = [...two, _answering(s.id, DateTime(2026, 6, 6))];
     expect(
       isScheduledTrainingDone(three, program, 1, s, date: DateTime(2026, 6, 6)),
       isTrue,
@@ -187,7 +215,7 @@ void main() {
     final program = _program();
     final s = _flexSession();
     // Week 1 is 1-7 Jun; this is week 2.
-    final sessions = [_playedFrom(s.id, DateTime(2026, 6, 9))];
+    final sessions = [_answering(s.id, DateTime(2026, 6, 9))];
     expect(completionsInWeek(sessions, program, 1, s), 0);
   });
 }
