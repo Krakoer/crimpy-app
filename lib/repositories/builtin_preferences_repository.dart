@@ -107,9 +107,9 @@ class RemoteBuiltinPreferencesRepository extends BuiltinPreferencesRepository {
     final weights = await _apiClient.getBuiltinTrainingWeights();
     return Map.fromEntries(
       weights.map(
-        (w) => MapEntry(w['BuiltinTraningID'] as String, (
-          weightRight: (w['CustomWeightRight'] as num?)?.toDouble(),
-          weightLeft: (w['CustomWeightLeft'] as num?)?.toDouble(),
+        (w) => MapEntry(w['builtin_training_id'] as String, (
+          weightRight: (w['custom_weight_right'] as num?)?.toDouble(),
+          weightLeft: (w['custom_weight_left'] as num?)?.toDouble(),
         )),
       ),
     );
@@ -123,11 +123,11 @@ class RemoteBuiltinPreferencesRepository extends BuiltinPreferencesRepository {
   }) async {
     final weights = await _apiClient.getBuiltinTrainingWeights();
     final existing = weights
-        .where((w) => w['BuiltinTraningID'] == builtinTrainingId)
+        .where((w) => w['builtin_training_id'] == builtinTrainingId)
         .firstOrNull;
     if (existing != null) {
       await _apiClient.updateBuiltinTrainingWeightApi(
-        existing['ID'] as String,
+        existing['id'] as String,
         {'custom_weight_right': weightRight, 'custom_weight_left': weightLeft},
       );
     } else {
