@@ -71,6 +71,22 @@ void main() {
       expect(weights['bt-1']?.weightRight, 14.5);
     });
 
+    test('skips a row it cannot key, rather than throwing', () async {
+      final client = _FakeApiClient(
+        stored: [
+          {'BuiltinTrainingID': 'bt-1', 'CustomWeightLeft': 12.5},
+          _weightRow(id: 'w-2', builtinTrainingId: 'bt-2', left: 10, right: 11),
+        ],
+      );
+
+      final weights = await RemoteBuiltinPreferencesRepository(
+        client,
+      ).getAllCustomWeights();
+
+      expect(weights.containsKey('bt-1'), isFalse);
+      expect(weights['bt-2']?.weightLeft, 10);
+    });
+
     test('answers a training with no override with nulls', () async {
       final weights = await RemoteBuiltinPreferencesRepository(
         _FakeApiClient(),
@@ -124,6 +140,7 @@ void main() {
         weightLeft: 18,
       );
 
+      expect(client.created?['id'], isNotNull);
       expect(client.created?['builtin_training_id'], 'bt-1');
       expect(client.created?['custom_weight_left'], 18);
       expect(client.created?['custom_weight_right'], 20);
