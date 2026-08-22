@@ -89,8 +89,13 @@ class RemoteBuiltinPreferencesRepository extends BuiltinPreferencesRepository {
 
   @override
   Future<List<String>> getPinnedBuiltinTrainingIds() async {
+    // The pinned endpoint still serializes the database row, so its keys are Go
+    // field names. It is deliberately PascalCase, unlike the weights below.
     final pinned = await _apiClient.getPinnedBuiltinTrainings();
-    return pinned.map((p) => p['BuiltinTrainingID'] as String).toList();
+    return pinned
+        .map((p) => p['BuiltinTrainingID'])
+        .whereType<String>()
+        .toList();
   }
 
   @override
@@ -105,13 +110,17 @@ class RemoteBuiltinPreferencesRepository extends BuiltinPreferencesRepository {
   Future<Map<String, ({double? weightRight, double? weightLeft})>>
   getAllCustomWeights() async {
     final weights = await _apiClient.getBuiltinTrainingWeights();
+    // A row we cannot key on becomes a missing override rather than a TypeError
+    // that takes the whole trainings screen down with it.
     return Map.fromEntries(
-      weights.map(
-        (w) => MapEntry(w['BuiltinTraningID'] as String, (
-          weightRight: (w['CustomWeightRight'] as num?)?.toDouble(),
-          weightLeft: (w['CustomWeightLeft'] as num?)?.toDouble(),
-        )),
-      ),
+      weights
+          .where((w) => w['builtin_training_id'] is String)
+          .map(
+            (w) => MapEntry(w['builtin_training_id'] as String, (
+              weightRight: (w['custom_weight_right'] as num?)?.toDouble(),
+              weightLeft: (w['custom_weight_left'] as num?)?.toDouble(),
+            )),
+          ),
     );
   }
 
@@ -123,11 +132,11 @@ class RemoteBuiltinPreferencesRepository extends BuiltinPreferencesRepository {
   }) async {
     final weights = await _apiClient.getBuiltinTrainingWeights();
     final existing = weights
-        .where((w) => w['BuiltinTraningID'] == builtinTrainingId)
+        .where((w) => w['builtin_training_id'] == builtinTrainingId)
         .firstOrNull;
     if (existing != null) {
       await _apiClient.updateBuiltinTrainingWeightApi(
-        existing['ID'] as String,
+        existing['id'] as String,
         {'custom_weight_right': weightRight, 'custom_weight_left': weightLeft},
       );
     } else {
