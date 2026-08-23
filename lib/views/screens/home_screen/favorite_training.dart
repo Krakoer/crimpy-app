@@ -44,8 +44,12 @@ class FavoriteTrainingList extends ConsumerWidget {
                           if (item.training != null) {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (ctx) =>
-                                    TrainingDetailScreen(item.training!),
+                                builder: (ctx) => TrainingDetailScreen(
+                                  item.training!,
+                                  trainingId: item.isBuiltin
+                                      ? null
+                                      : item.training!.id,
+                                ),
                               ),
                             );
                           }

@@ -6,11 +6,14 @@ import 'package:crimpy/models/training_item_model.dart';
 class RepeaterConfig {
   final int sets;
   final int repsPerSet;
-  final int setRest;
 
   /// Every rep of a set on one hand, then the same set on the other, so each
   /// hand reads as its own set.
   final bool splitHand;
+
+  /// A rep hung with two hands is one rep on one board, so its set is not cut
+  /// into a right and a left half the way the other modes are.
+  final bool bothHands;
 
   /// How many hands a set works before the next one starts. Two when the hands
   /// alternate inside the set, one when the block hangs a single hand, so a set
@@ -20,8 +23,8 @@ class RepeaterConfig {
   const RepeaterConfig({
     required this.sets,
     required this.repsPerSet,
-    required this.setRest,
     required this.splitHand,
+    required this.bothHands,
     required this.handsPerSet,
   });
 }
@@ -37,8 +40,8 @@ RepeaterConfig? repeaterConfigOfItem(TrainingItem item) {
   return RepeaterConfig(
     sets: sets,
     repsPerSet: repsPerSet,
-    setRest: item.cycleRestSeconds ?? 0,
     splitHand: item.hand == HangboardHand.split,
+    bothHands: item.hand == HangboardHand.both,
     handsPerSet: item.hand == HangboardHand.alternate ? 2 : 1,
   );
 }
@@ -64,38 +67,22 @@ class RepBlock {
 
 /// Rebuilds the sets of a repeater from the flat rep list, the way the portal
 /// does it, so both clients show the same breakdown. Reps arrive in the order
-/// they were performed, and a rest at least as long as the configured set rest
-/// marks the boundary between two sets.
+/// they were performed and the caller has already dropped the rests, so a set
+/// is measured out by its rep count alone.
 List<RepSet> groupRepsIntoSets(List<RepDataModel> reps, RepeaterConfig config) {
   final sets = <RepSet>[];
   var index = 0;
 
-  bool isSetBoundary() =>
-      index < reps.length &&
-      reps[index].isRest &&
-      reps[index].duration >= config.setRest;
-
-  void takeInterHandRest(List<RepDataModel> into) {
-    if (index < reps.length &&
-        reps[index].isRest &&
-        reps[index].duration < config.setRest) {
-      into.add(reps[index]);
-      index++;
-    }
+  List<RepDataModel> take(int count) {
+    final taken = reps.sublist(index, (index + count).clamp(0, reps.length));
+    index += taken.length;
+    return taken;
   }
 
   for (var set = 0; set < config.sets && index < reps.length; set++) {
     if (config.splitHand) {
       for (final rightHand in [true, false]) {
-        final handReps = <RepDataModel>[];
-        var workReps = 0;
-        while (index < reps.length && workReps < config.repsPerSet) {
-          final rep = reps[index];
-          handReps.add(rep);
-          if (!rep.isRest) workReps++;
-          index++;
-        }
-        takeInterHandRest(handReps);
+        final handReps = take(config.repsPerSet);
         if (handReps.isNotEmpty) {
           sets.add(
             RepSet(
@@ -105,19 +92,19 @@ List<RepSet> groupRepsIntoSets(List<RepDataModel> reps, RepeaterConfig config) {
           );
         }
       }
+    } else if (config.bothHands) {
+      // Two hands on the board for a single rep, so there is no hand to name
+      // and nothing to split the set into.
+      final setReps = take(config.repsPerSet);
+      if (setReps.isNotEmpty) {
+        sets.add(RepSet(label: 'Set ${set + 1}', reps: setReps));
+      }
     } else {
       // Both hands alternate within the set, but they are shown grouped.
       final rightHand = <RepDataModel>[];
       final leftHand = <RepDataModel>[];
-      var workReps = 0;
-      final expectedWorkReps = config.repsPerSet * config.handsPerSet;
-      while (index < reps.length &&
-          workReps < expectedWorkReps &&
-          !isSetBoundary()) {
-        final rep = reps[index];
+      for (final rep in take(config.repsPerSet * config.handsPerSet)) {
         (rep.handSide == HandSide.right ? rightHand : leftHand).add(rep);
-        if (!rep.isRest) workReps++;
-        index++;
       }
       if (rightHand.isNotEmpty) {
         sets.add(RepSet(label: 'Set ${set + 1} - Right', reps: rightHand));
@@ -126,7 +113,6 @@ List<RepSet> groupRepsIntoSets(List<RepDataModel> reps, RepeaterConfig config) {
         sets.add(RepSet(label: 'Set ${set + 1} - Left', reps: leftHand));
       }
     }
-    if (isSetBoundary()) index++;
   }
 
   // Anything the configuration did not account for, for instance a session cut
@@ -135,6 +121,34 @@ List<RepSet> groupRepsIntoSets(List<RepDataModel> reps, RepeaterConfig config) {
     sets.add(RepSet(label: 'Remaining', reps: reps.sublist(index)));
   }
   return sets;
+}
+
+/// Names one training item the way a played session heads the block it ran,
+/// matching the portal so a coach and an athlete reading the same run see the
+/// same name. The training editor keeps its own vocabulary through
+/// [trainingItemTitle]: a block listed among the blocks of a training is named
+/// for what it is, one listed under a run is named for what was hung.
+String sessionBlockLabel(TrainingItem item) {
+  final named =
+      (item.type == TrainingItemType.exercise
+              ? item.exerciseName
+              : item.freeText)
+          ?.trim();
+  if (named != null && named.isNotEmpty) return named;
+  final title = item.groupTitle?.trim();
+  if (title != null && title.isNotEmpty) return title;
+  final label = switch (item.type) {
+    TrainingItemType.group => 'Group',
+    TrainingItemType.circuit => 'Circuit',
+    TrainingItemType.repeater => 'Hangboard',
+    TrainingItemType.hangboardRep => 'Hang rep',
+    TrainingItemType.exercise => 'Exercise',
+    TrainingItemType.free => 'Note',
+  };
+  // One edge names the block; several would name only its first hang, so the
+  // block is left on its type alone.
+  final edges = <int>{...?item.edgeSizesMm};
+  return edges.length == 1 ? '$label ${edges.first}mm' : label;
 }
 
 /// Every item of a training by id, nested ones included, so a rep naming one
@@ -179,7 +193,7 @@ List<RepBlock>? groupRepsByTrainingItem(
         // A link the training can no longer name is a block the athlete
         // deleted from it after the run, so the reps are still shown as their
         // own block rather than folded into the one before them.
-        label: item == null ? 'Unnamed block' : trainingItemTitle(item),
+        label: item == null ? 'Unnamed block' : sessionBlockLabel(item),
         reps: <RepDataModel>[],
         item: item,
       ));
@@ -187,6 +201,12 @@ List<RepBlock>? groupRepsByTrainingItem(
     }
     blocks.last.reps.add(rep);
   }
+
+  // Reps can name items that no longer exist - a training edited after the run,
+  // or a guest-mode session whose training was never resolved at all. Heading
+  // every one of them 'Unnamed block' would read as a breakdown while saying
+  // less than the flat list does, so the card is left to fall back.
+  if (blocks.every((block) => block.item == null)) return null;
 
   // An item played more than once, a circuit child on its second cycle, would
   // otherwise show the same heading twice with nothing to tell the passes

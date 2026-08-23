@@ -42,11 +42,16 @@ class _SessionRepsCardState extends ConsumerState<SessionRepsCard> {
     }
 
     // A rep names the training item it was played from, so the card reads the
-    // run block by block. The items resolve to nothing for a session played
-    // outside a training, which falls back to the flat list.
-    final items = ref
-        .watch(sessionTrainingItemsProvider(widget.session.trainingId))
-        .value;
+    // run block by block. The prescription frozen on the session is the copy
+    // that cannot have drifted since, and the only one readable for a coach's
+    // training, so it is preferred; a guest-mode run has none and resolves its
+    // own local training instead. Neither resolving falls back to the flat
+    // list, as does a run that named no item the training still holds.
+    final items =
+        widget.session.prescriptionItems ??
+        ref
+            .watch(sessionTrainingItemsProvider(widget.session.trainingId))
+            .value;
     final blocks = items == null
         ? null
         : groupRepsByTrainingItem(workReps, items);

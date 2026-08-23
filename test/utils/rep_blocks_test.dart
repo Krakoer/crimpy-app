@@ -32,6 +32,7 @@ TrainingItem _item({
   String? hand,
   String? exerciseName,
   String? groupTitle,
+  List<int>? edgeSizesMm,
   List<TrainingItem> items = const [],
 }) => TrainingItem(
   id: id,
@@ -43,6 +44,7 @@ TrainingItem _item({
   hand: hand,
   exerciseName: exerciseName,
   groupTitle: groupTitle,
+  edgeSizesMm: edgeSizesMm,
   items: items,
 );
 
@@ -153,6 +155,29 @@ void main() {
       expect(blocks.single.label, 'Front lever');
     });
 
+    test('returns null when no rep names an item the training still holds', () {
+      // A guest-mode run resolves no training at all, and the local reps carry
+      // their item links regardless. Heading every block 'Unnamed block' would
+      // read as a breakdown while saying less than the flat list does.
+      final reps = [_rep(index: 0, itemId: 'a'), _rep(index: 1, itemId: 'a')];
+
+      expect(groupRepsByTrainingItem(reps, const []), null);
+      expect(groupRepsByTrainingItem(reps, [_item(id: 'other')]), null);
+    });
+
+    test('keeps an unnamed block when another rep does name its item', () {
+      final reps = [
+        _rep(index: 0, itemId: 'a'),
+        _rep(index: 1, itemId: 'gone'),
+      ];
+
+      final blocks = groupRepsByTrainingItem(reps, [
+        _item(id: 'a', type: TrainingItemType.hangboardRep, reps: 1),
+      ])!;
+
+      expect(blocks.map((b) => b.label), ['Hang rep', 'Unnamed block']);
+    });
+
     test('a block that is not a repeater carries no sets', () {
       final reps = [_rep(index: 0, itemId: 'a')];
       final items = [
@@ -172,16 +197,17 @@ void main() {
         cycleRestSeconds: 120,
         hand: HangboardHand.alternate,
       );
+      // Both callers filter the rests out before grouping, so a set is cut by
+      // its rep count alone.
       final reps = [
         _rep(index: 0, itemId: 'a'),
         _rep(index: 1, itemId: 'a', hand: HandSide.left),
         _rep(index: 2, itemId: 'a'),
         _rep(index: 3, itemId: 'a', hand: HandSide.left),
-        _rep(index: 4, itemId: 'a', isRest: true, duration: 120),
-        _rep(index: 5, itemId: 'a'),
-        _rep(index: 6, itemId: 'a', hand: HandSide.left),
-        _rep(index: 7, itemId: 'a'),
-        _rep(index: 8, itemId: 'a', hand: HandSide.left),
+        _rep(index: 4, itemId: 'a'),
+        _rep(index: 5, itemId: 'a', hand: HandSide.left),
+        _rep(index: 6, itemId: 'a'),
+        _rep(index: 7, itemId: 'a', hand: HandSide.left),
       ];
 
       final sets = groupRepsIntoSets(reps, repeaterConfigOfItem(item)!);
@@ -215,6 +241,23 @@ void main() {
       expect(sets.map((s) => s.label), ['Set 1 - Right', 'Set 1 - Left']);
     });
 
+    test('names a two handed set after no hand at all', () {
+      // 'both' puts two hands on the board for a single rep, so there is no
+      // right or left half to cut the set into. The app records such a rep on
+      // the left, which would otherwise head every set of a two-handed hang
+      // 'Left'.
+      final item = _item(id: 'a', cycles: 2, reps: 2, hand: HangboardHand.both);
+      final reps = [
+        for (var i = 0; i < 4; i++)
+          _rep(index: i, itemId: 'a', hand: HandSide.left),
+      ];
+
+      final sets = groupRepsIntoSets(reps, repeaterConfigOfItem(item)!);
+
+      expect(sets.map((s) => s.label), ['Set 1', 'Set 2']);
+      expect(sets.every((s) => s.reps.length == 2), true);
+    });
+
     test('shows reps the configuration did not account for', () {
       final item = _item(
         id: 'a',
@@ -233,6 +276,54 @@ void main() {
 
       expect(sets.last.label, 'Remaining');
       expect(sets.last.reps.length, 2);
+    });
+  });
+
+  group('sessionBlockLabel', () {
+    test('names a repeater the way the portal does, edge included', () {
+      expect(
+        sessionBlockLabel(
+          _item(id: 'a', cycles: 1, reps: 1, edgeSizesMm: const [20]),
+        ),
+        'Hangboard 20mm',
+      );
+    });
+
+    test('leaves a block spanning several edges on its type', () {
+      expect(
+        sessionBlockLabel(
+          _item(id: 'a', cycles: 1, reps: 1, edgeSizesMm: const [20, 14]),
+        ),
+        'Hangboard',
+      );
+    });
+
+    test('prefers the title the athlete gave the block', () {
+      expect(
+        sessionBlockLabel(
+          _item(
+            id: 'a',
+            cycles: 1,
+            reps: 1,
+            groupTitle: 'Max hangs',
+            edgeSizesMm: const [20],
+          ),
+        ),
+        'Max hangs',
+      );
+    });
+
+    test('names an exercise after itself', () {
+      expect(
+        sessionBlockLabel(
+          _item(
+            id: 'a',
+            type: TrainingItemType.exercise,
+            exerciseName: 'Front lever',
+          ),
+        ),
+        'Front lever',
+      );
     });
   });
 

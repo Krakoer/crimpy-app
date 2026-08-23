@@ -1,5 +1,6 @@
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/models/training_item_model.dart';
 
 class SessionModel {
   final String? id;
@@ -13,7 +14,10 @@ class SessionModel {
   final SessionOrigin origin;
 
   /// Template the session was played from, kept so it can be shown against what
-  /// was prescribed. Both null on a logged session.
+  /// was prescribed and so its reps can name the blocks they came from. The
+  /// training is set for any run started from one, the athlete's own included;
+  /// the program session only for a run stepped through a coach's week. Both
+  /// null on a logged session and on a builtin, which has no row to link to.
   final String? trainingId;
   final String? programSessionId;
   final int? durationInSeconds;
@@ -22,6 +26,13 @@ class SessionModel {
   /// carry the reps themselves. Null when unknown; [repCount] prefers the reps
   /// when they are loaded.
   final int? reportedRepCount;
+
+  /// What the athlete was asked to do, frozen onto the session by the server
+  /// when it was created. It is the only copy that cannot drift as the training
+  /// is edited afterwards, and the only one an athlete can read for a training
+  /// their coach owns, so it is what the reps are read block by block against.
+  /// Null on a session the server never saw, a guest-mode run among them.
+  final List<TrainingItem>? prescriptionItems;
 
   SessionModel({
     this.id,
@@ -36,6 +47,7 @@ class SessionModel {
     this.programSessionId,
     this.durationInSeconds,
     this.reportedRepCount,
+    this.prescriptionItems,
     date,
   }) : date = date ?? DateTime.now();
 
@@ -61,7 +73,21 @@ class SessionModel {
     programSessionId: json['program_session_id'] as String?,
     durationInSeconds: (json['duration'] as num? ?? 0).toInt(),
     reportedRepCount: (json['rep_count'] as num?)?.toInt(),
+    prescriptionItems: _prescriptionItems(json['prescription']),
   );
+
+  /// The items of the frozen prescription, or null when the session carries
+  /// none. The listing endpoint leaves the prescription out, so a session read
+  /// from it has no items until its detail is loaded.
+  static List<TrainingItem>? _prescriptionItems(Object? prescription) {
+    if (prescription is! Map<String, dynamic>) return null;
+    final raw = prescription['items'];
+    if (raw is! List) return null;
+    return raw
+        .whereType<Map<String, dynamic>>()
+        .map(TrainingItem.fromJson)
+        .toList();
+  }
 
   /// Carries the untouched fields over, so an edit cannot quietly drop the
   /// origin or the template links the session was created with.
@@ -84,6 +110,7 @@ class SessionModel {
     programSessionId: programSessionId,
     durationInSeconds: durationInSeconds ?? this.durationInSeconds,
     reportedRepCount: reportedRepCount,
+    prescriptionItems: prescriptionItems,
   );
 
   int get duration =>

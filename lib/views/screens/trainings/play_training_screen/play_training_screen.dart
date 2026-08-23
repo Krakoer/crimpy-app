@@ -35,7 +35,10 @@ class PlayTrainingScreen extends ConsumerStatefulWidget {
   final SessionActivity activity;
 
   /// What the run was started from, carried onto the session so it can later be
-  /// shown against what was prescribed. Both null outside a program.
+  /// shown against what was prescribed and read block by block. The training is
+  /// set for any run started from one, the athlete's own included; the program
+  /// session only inside a program. Both null for a builtin, which is generated
+  /// on the fly and has no row to link to.
   final String? trainingId;
   final String? programSessionId;
 

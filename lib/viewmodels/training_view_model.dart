@@ -210,6 +210,10 @@ Future<List<TrainingItem>> sessionTrainingItems(
 ) async {
   if (trainingId == null) return const [];
   final trainingRepository = ref.watch(trainingRepositoryProvider);
+  // A training the athlete does not own - a coach's, prescribed through a
+  // program - is not readable here. The session carries the prescription frozen
+  // from it, which is what the card reads first, so this only ever has to
+  // resolve a training the athlete owns.
   final training = await trainingRepository.getTraining(trainingId);
   return training?.items ?? const [];
 }

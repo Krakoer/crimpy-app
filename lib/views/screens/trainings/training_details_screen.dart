@@ -13,7 +13,13 @@ import 'package:crimpy/views/widgets/section_widgets.dart';
 
 class TrainingDetailScreen extends ConsumerWidget {
   final Training template;
-  const TrainingDetailScreen(this.template, {super.key});
+
+  /// Id of the training row the run is played from, carried onto the session so
+  /// its reps can name the blocks they came from. Null for a builtin, which is
+  /// generated on the fly and has no row of its own to link to.
+  final String? trainingId;
+
+  const TrainingDetailScreen(this.template, {this.trainingId, super.key});
 
   /// Starts the run, asking for the body weight first when the training is
   /// loaded in percent of it and none is known yet.
@@ -29,6 +35,7 @@ class TrainingDetailScreen extends ConsumerWidget {
       MaterialPageRoute(
         builder: (ctx) => PlayTrainingScreen(
           template,
+          trainingId: trainingId,
           bodyweightKg: bodyweight,
           results: results,
         ),
