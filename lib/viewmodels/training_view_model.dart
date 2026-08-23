@@ -7,6 +7,7 @@ import 'package:crimpy/repositories/remote_assessment_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
+import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training_list_item.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
@@ -193,6 +194,24 @@ class Sessions extends _$Sessions {
 Future<SessionModel?> sessionWithData(Ref ref, String sessionId) {
   final trainingRepository = ref.watch(trainingRepositoryProvider);
   return trainingRepository.getSessionWithData(sessionId);
+}
+
+/// The items a played session was run from, so its reps can be read block by
+/// block. Empty when the session was not played from a training, or when the
+/// training has been deleted since.
+///
+/// The live training is what names the blocks, not a snapshot: editing a
+/// training relabels the blocks of the sessions already played from it, which
+/// costs a heading rather than the grouping itself.
+@riverpod
+Future<List<TrainingItem>> sessionTrainingItems(
+  Ref ref,
+  String? trainingId,
+) async {
+  if (trainingId == null) return const [];
+  final trainingRepository = ref.watch(trainingRepositoryProvider);
+  final training = await trainingRepository.getTraining(trainingId);
+  return training?.items ?? const [];
 }
 
 /// Provider that returns filtered sessions based on a given filter.

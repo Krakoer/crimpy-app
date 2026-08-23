@@ -40,14 +40,6 @@ class Sessions extends Table {
   late final TextColumn programSessionId = text().nullable()();
   late final IntColumn duration = integer().withDefault(const Constant(0))();
 
-  // Repeater configuration (if session was a repeater workout)
-  late final IntColumn repeaterSets = integer().nullable()();
-  late final IntColumn repeaterReps = integer().nullable()();
-  late final IntColumn repeaterWorkTime = integer().nullable()();
-  late final IntColumn repeaterRestTime = integer().nullable()();
-  late final IntColumn repeaterSetRest = integer().nullable()();
-  late final BoolColumn repeaterSplitHand = boolean().nullable()();
-
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
@@ -344,12 +336,6 @@ class AppDatabase extends _$AppDatabase {
         trainingId: Value(session.trainingId),
         programSessionId: Value(session.programSessionId),
         duration: Value(sessionDuration),
-        repeaterSets: Value(session.repeaterConfig?.sets),
-        repeaterReps: Value(session.repeaterConfig?.repsPerSet),
-        repeaterWorkTime: Value(session.repeaterConfig?.workTime),
-        repeaterRestTime: Value(session.repeaterConfig?.restTime),
-        repeaterSetRest: Value(session.repeaterConfig?.setRest),
-        repeaterSplitHand: Value(session.repeaterConfig?.splitHand),
         updatedAt: Value(DateTime.now()),
       ),
     );
@@ -501,6 +487,20 @@ class AppDatabase extends _$AppDatabase {
       result.add(_buildTraining(row, itemRows));
     }
     return result;
+  }
+
+  /// One training by id, or null when it no longer exists.
+  Future<Training?> getTraining(String trainingId) async {
+    final row = await (select(
+      trainings,
+    )..where((t) => t.id.equals(trainingId))).getSingleOrNull();
+    if (row == null) return null;
+    final itemRows =
+        await (select(trainingItems)
+              ..where((i) => i.trainingId.equals(trainingId))
+              ..orderBy([(i) => OrderingTerm(expression: i.position)]))
+            .get();
+    return _buildTraining(row, itemRows);
   }
 
   /// Save a new training (inserts training row and all items recursively).
@@ -819,7 +819,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1093,6 +1093,24 @@ class AppDatabase extends _$AppDatabase {
       from5To6: (m, schema) async {
         await m.addColumn(schema.repDatas, schema.repDatas.trainingItemId);
       },
+      // The repeater configuration described the set shape of a session, but
+      // only the dummy data generator ever wrote it: a finished run saved none.
+      // The reps name the training item they were played from instead, which
+      // describes the same shape and holds for a training of several blocks.
+      from6To7: (m, schema) async {
+        for (final column in [
+          'repeater_sets',
+          'repeater_reps',
+          'repeater_work_time',
+          'repeater_rest_time',
+          'repeater_set_rest',
+          'repeater_split_hand',
+        ]) {
+          await m.database.customStatement(
+            'ALTER TABLE sessions DROP COLUMN $column',
+          );
+        }
+      },
     ),
   );
 }
@@ -1145,25 +1163,6 @@ extension RepDataRowToModel on RepData {
 /// Maps a stored session row onto the domain model, optionally with the
 /// repetitions and sensor samples that were loaded alongside it.
 extension SessionRowToModel on Session {
-  RepeaterConfig? get repeaterConfigOrNull {
-    if (repeaterSets == null ||
-        repeaterReps == null ||
-        repeaterWorkTime == null ||
-        repeaterRestTime == null ||
-        repeaterSetRest == null ||
-        repeaterSplitHand == null) {
-      return null;
-    }
-    return RepeaterConfig(
-      sets: repeaterSets!,
-      repsPerSet: repeaterReps!,
-      workTime: repeaterWorkTime!,
-      restTime: repeaterRestTime!,
-      setRest: repeaterSetRest!,
-      splitHand: repeaterSplitHand!,
-    );
-  }
-
   SessionModel toModel({
     List<RepDataModel>? reps,
     List<BleDataPoint>? dataPoints,
@@ -1184,7 +1183,6 @@ extension SessionRowToModel on Session {
     trainingId: trainingId,
     programSessionId: programSessionId,
     durationInSeconds: duration,
-    repeaterConfig: repeaterConfigOrNull,
   );
 }
 

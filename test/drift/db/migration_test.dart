@@ -13,6 +13,7 @@ import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v3.dart' as v3;
 import 'generated/schema_v4.dart' as v4;
 import 'generated/schema_v5.dart' as v5;
+import 'generated/schema_v6.dart' as v6;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -609,6 +610,63 @@ void main() {
       final db = AppDatabase(schema.newConnection());
       final rep = await db.select(db.repDatas).getSingle();
       expect(rep.trainingItemId, null);
+      await db.close();
+    });
+  });
+
+  group('v6 to v7 data migration', () {
+    // Only the dummy data generator ever wrote a repeater configuration, so
+    // dropping the columns costs no session. The rows themselves must survive
+    // it: the reps of a played session are read against them.
+    test('a session holding a repeater config survives the drop', () async {
+      final schema = await verifier.schemaAt(6);
+      final oldDb = v6.DatabaseAtV6(schema.newConnection());
+      await oldDb
+          .into(oldDb.sessions)
+          .insert(
+            const v6.SessionsData(
+              id: 's-1',
+              name: 'Beginner Repeaters',
+              notes: '',
+              date: 1700000000,
+              dataPath: '',
+              isAssessment: 0,
+              activity: 0,
+              origin: 'played',
+              duration: 10,
+              repeaterSets: 3,
+              repeaterReps: 5,
+              repeaterWorkTime: 7,
+              repeaterRestTime: 3,
+              repeaterSetRest: 120,
+              repeaterSplitHand: 0,
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb
+          .into(oldDb.repDatas)
+          .insert(
+            const v6.RepDatasData(
+              id: 'rd-1',
+              averageWeight: 22.0,
+              sessionId: 's-1',
+              isRest: 0,
+              rightHand: 1,
+              duration: 7,
+              targetWeight: 20.0,
+              index: 0,
+              gripPosition: 0,
+              trainingItemId: 'item-1',
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb.close();
+
+      final db = AppDatabase(schema.newConnection());
+      final session = await db.select(db.sessions).getSingle();
+      expect(session.name, 'Beginner Repeaters');
+      final rep = await db.select(db.repDatas).getSingle();
+      expect(rep.trainingItemId, 'item-1');
       await db.close();
     });
   });

@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:crimpy/models/common.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/rep_blocks.dart';
+import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/sets_view_widget.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/rep_item_widget.dart';
 
-class SessionRepsCard extends StatefulWidget {
+/// How many reps a block shows before it has to be expanded. A block broken
+/// into sets keeps all of them: the sets are the structure the athlete saw.
+const int _repsPreview = 5;
+const int _repsPreviewThreshold = 10;
+
+class SessionRepsCard extends ConsumerStatefulWidget {
   final SessionModel session;
   final Color sessionColor;
 
@@ -16,10 +23,10 @@ class SessionRepsCard extends StatefulWidget {
   });
 
   @override
-  State<SessionRepsCard> createState() => _SessionRepsCardState();
+  ConsumerState<SessionRepsCard> createState() => _SessionRepsCardState();
 }
 
-class _SessionRepsCardState extends State<SessionRepsCard> {
+class _SessionRepsCardState extends ConsumerState<SessionRepsCard> {
   bool _repsExpanded = false;
 
   @override
@@ -27,19 +34,22 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
     final reps = widget.session.reps!;
     final workReps = reps.where((r) => !r.isRest).toList();
 
-    // Calculate success rate
     int successCount = 0;
     for (final rep in workReps) {
-      if (rep.targetWeight > 0) {
-        final successRate = rep.averageWeight / rep.targetWeight;
-        if (successRate >= 0.9) {
-          successCount++;
-        }
+      if (rep.targetWeight > 0 && rep.averageWeight / rep.targetWeight >= 0.9) {
+        successCount++;
       }
     }
 
-    // Use set-based view only if this is a repeater workout
-    final bool isRepeater = widget.session.repeaterConfig != null;
+    // A rep names the training item it was played from, so the card reads the
+    // run block by block. The items resolve to nothing for a session played
+    // outside a training, which falls back to the flat list.
+    final items = ref
+        .watch(sessionTrainingItemsProvider(widget.session.trainingId))
+        .value;
+    final blocks = items == null
+        ? null
+        : groupRepsByTrainingItem(workReps, items);
 
     return CrimpyCard.simple(
       child: Column(
@@ -49,7 +59,7 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                isRepeater ? 'Sets Overview' : 'Repetitions Breakdown',
+                blocks != null ? 'Blocks' : 'Repetitions Breakdown',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -86,13 +96,8 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
             ],
           ),
           const SizedBox(height: 16),
-          // Display sets view for repeaters, individual reps for everything else
-          if (isRepeater)
-            SetsViewWidget(
-              sets: _groupRepsIntoSets(reps),
-              sessionColor: widget.sessionColor,
-              isSplitHand: widget.session.repeaterConfig!.splitHand,
-            )
+          if (blocks != null)
+            _buildBlocksView(blocks)
           else
             _buildIndividualRepsView(reps),
         ],
@@ -100,167 +105,161 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
     );
   }
 
-  Widget _buildIndividualRepsView(List<RepDataModel> reps) {
-    // Determine if we should show collapse/expand functionality
-    final bool hasMany = reps.length > 10;
-    final int displayCount = hasMany && !_repsExpanded ? 5 : reps.length;
-
+  Widget _buildBlocksView(List<RepBlock> blocks) {
     return Column(
       children: [
-        Column(
-          children: List.generate(displayCount, (index) {
-            final rep = reps[index];
-            return RepItemWidget(
-              rep: rep,
-              index: index,
-              sessionColor: widget.sessionColor,
-            );
-          }),
-        ),
-        // Show expand/collapse button if there are many reps
-        if (hasMany) ...[
-          const SizedBox(height: 8),
-          Center(
-            child: TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  _repsExpanded = !_repsExpanded;
-                });
-              },
-              icon: Icon(
-                _repsExpanded ? Icons.expand_less : Icons.expand_more,
-                size: 20,
-              ),
-              label: Text(
-                _repsExpanded ? 'Show less' : 'Show all ${reps.length} reps',
-                style: const TextStyle(fontSize: 14),
-              ),
-              style: TextButton.styleFrom(foregroundColor: widget.sessionColor),
-            ),
+        for (final (index, block) in blocks.indexed) ...[
+          _BlockCard(
+            block: block,
+            sessionColor: widget.sessionColor,
+            expanded: _repsExpanded,
           ),
+          if (index < blocks.length - 1) const SizedBox(height: 12),
+        ],
+        if (blocks.any(_blockIsCapped)) ...[
+          const SizedBox(height: 8),
+          Center(child: _buildExpandButton(_countedReps(blocks))),
         ],
       ],
     );
   }
 
-  /// Group reps into sets using the stored repeater configuration.
-  /// For split-hand repeaters, each hand portion is shown as a separate sub-set.
-  List<List<RepDataModel>> _groupRepsIntoSets(List<RepDataModel> reps) {
-    final repeaterConfig = widget.session.repeaterConfig!;
-    final List<List<RepDataModel>> sets = [];
-    int repIndex = 0;
+  /// A block holding a whole repeater is as long as the flat list ever was, so
+  /// it earns the same cap. Blocks broken into sets keep all of them.
+  static bool _blockIsCapped(RepBlock block) =>
+      block.sets == null && block.reps.length > _repsPreviewThreshold;
 
-    if (repeaterConfig.splitHand) {
-      // For split hand, group each hand separately
-      for (int set = 0; set < repeaterConfig.sets; set++) {
-        // Right hand portion
-        final List<RepDataModel> rightHandSet = [];
-        int rightWorkReps = 0;
+  int _countedReps(List<RepBlock> blocks) =>
+      blocks.fold(0, (sum, block) => sum + block.reps.length);
 
-        while (repIndex < reps.length &&
-            rightWorkReps < repeaterConfig.repsPerSet) {
-          final rep = reps[repIndex];
-          rightHandSet.add(rep);
-          if (!rep.isRest) rightWorkReps++;
-          repIndex++;
-        }
+  Widget _buildIndividualRepsView(List<RepDataModel> reps) {
+    final bool hasMany = reps.length > _repsPreviewThreshold;
+    final int displayCount = hasMany && !_repsExpanded
+        ? _repsPreview
+        : reps.length;
 
-        // Add rest between hands if present
-        if (repIndex < reps.length &&
-            reps[repIndex].isRest &&
-            reps[repIndex].duration < repeaterConfig.setRest) {
-          rightHandSet.add(reps[repIndex]);
-          repIndex++;
-        }
+    return Column(
+      children: [
+        Column(
+          children: List.generate(displayCount, (index) {
+            return RepItemWidget(
+              rep: reps[index],
+              index: index,
+              sessionColor: widget.sessionColor,
+            );
+          }),
+        ),
+        if (hasMany) ...[
+          const SizedBox(height: 8),
+          Center(child: _buildExpandButton(reps.length)),
+        ],
+      ],
+    );
+  }
 
-        if (rightHandSet.isNotEmpty) {
-          sets.add(rightHandSet);
-        }
+  Widget _buildExpandButton(int total) {
+    return TextButton.icon(
+      onPressed: () => setState(() => _repsExpanded = !_repsExpanded),
+      icon: Icon(
+        _repsExpanded ? Icons.expand_less : Icons.expand_more,
+        size: 20,
+      ),
+      label: Text(
+        _repsExpanded ? 'Show less' : 'Show all $total reps',
+        style: const TextStyle(fontSize: 14),
+      ),
+      style: TextButton.styleFrom(foregroundColor: widget.sessionColor),
+    );
+  }
+}
 
-        // Left hand portion
-        final List<RepDataModel> leftHandSet = [];
-        int leftWorkReps = 0;
+/// One run of reps played from a single training item, headed with the item and
+/// broken into its sets when it played a repeater.
+class _BlockCard extends StatelessWidget {
+  final RepBlock block;
+  final Color sessionColor;
+  final bool expanded;
 
-        while (repIndex < reps.length &&
-            leftWorkReps < repeaterConfig.repsPerSet) {
-          final rep = reps[repIndex];
-          leftHandSet.add(rep);
-          if (!rep.isRest) leftWorkReps++;
-          repIndex++;
-        }
+  const _BlockCard({
+    required this.block,
+    required this.sessionColor,
+    required this.expanded,
+  });
 
-        // Add rest between hands if present (only for transitions between sets)
-        if (repIndex < reps.length &&
-            reps[repIndex].isRest &&
-            reps[repIndex].duration < repeaterConfig.setRest) {
-          leftHandSet.add(reps[repIndex]);
-          repIndex++;
-        }
+  /// Each block is graded on its own reps, so two blocks of different intensity
+  /// are not read through one pooled ratio.
+  String? get _onTarget {
+    final targeted = block.reps.where((r) => r.targetWeight > 0);
+    if (targeted.isEmpty) return null;
+    final onTarget = block.reps
+        .where(
+          (r) => r.targetWeight > 0 && r.averageWeight / r.targetWeight >= 0.9,
+        )
+        .length;
+    return '$onTarget/${block.reps.length} on target';
+  }
 
-        if (leftHandSet.isNotEmpty) {
-          sets.add(leftHandSet);
-        }
-
-        // Skip the long set rest
-        if (repIndex < reps.length &&
-            reps[repIndex].isRest &&
-            reps[repIndex].duration >= repeaterConfig.setRest) {
-          repIndex++;
-        }
-      }
-    } else {
-      // Non-split hand: separate right and left hand reps within each set
-      // In the actual workout, they alternate (R, L, R, L...), but we display them grouped
-      for (int set = 0; set < repeaterConfig.sets; set++) {
-        final List<RepDataModel> rightHandReps = [];
-        final List<RepDataModel> leftHandReps = [];
-        int workRepsCollected = 0;
-        final int expectedTotalWorkReps =
-            repeaterConfig.repsPerSet * 2; // Both hands
-
-        // Collect all reps for this set
-        while (repIndex < reps.length &&
-            workRepsCollected < expectedTotalWorkReps) {
-          final rep = reps[repIndex];
-
-          // Stop if we hit the long set rest
-          if (rep.isRest && rep.duration >= repeaterConfig.setRest) {
-            break;
-          }
-
-          // Separate by hand
-          if (rep.handSide.isRightHand) {
-            rightHandReps.add(rep);
-          } else {
-            leftHandReps.add(rep);
-          }
-
-          if (!rep.isRest) {
-            workRepsCollected++;
-          }
-
-          repIndex++;
-        }
-
-        // Add right hand reps as first sub-set
-        if (rightHandReps.isNotEmpty) {
-          sets.add(rightHandReps);
-        }
-
-        // Add left hand reps as second sub-set
-        if (leftHandReps.isNotEmpty) {
-          sets.add(leftHandReps);
-        }
-
-        // Skip the long set rest
-        if (repIndex < reps.length &&
-            reps[repIndex].isRest &&
-            reps[repIndex].duration >= repeaterConfig.setRest) {
-          repIndex++;
-        }
-      }
+  List<RepDataModel> get _shownReps {
+    if (expanded || block.reps.length <= _repsPreviewThreshold) {
+      return block.reps;
     }
+    return block.reps.sublist(0, _repsPreview);
+  }
 
-    return sets;
+  @override
+  Widget build(BuildContext context) {
+    final sets = block.sets;
+    final onTarget = _onTarget;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: CrimpyTheme.bgSecondary,
+        border: Border.all(color: CrimpyTheme.borderDefault),
+        borderRadius: BorderRadius.circular(CrimpyTheme.radiusSmall),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Expanded(
+                child: Text(
+                  block.label,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              if (onTarget != null)
+                Text(
+                  onTarget,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: CrimpyTheme.textSecondary,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (sets != null)
+            SetsViewWidget(sets: sets, sessionColor: sessionColor)
+          else
+            Column(
+              children: [
+                for (final (index, rep) in _shownReps.indexed)
+                  RepItemWidget(
+                    rep: rep,
+                    index: index,
+                    sessionColor: sessionColor,
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
   }
 }

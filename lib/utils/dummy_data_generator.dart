@@ -306,44 +306,6 @@ class DummyDataGenerator {
     final now = DateTime.now();
     final sessions = <Map<String, dynamic>>[];
 
-    // Define repeater configurations for each training type
-    // These must match the RepeaterModel configurations from _generateCustomTrainings
-    final repeaterConfigs = {
-      'Beginner Repeaters': RepeaterConfig(
-        sets: 3,
-        repsPerSet: 5,
-        workTime: 7,
-        restTime: 3,
-        setRest: 120,
-        splitHand: false,
-      ),
-      'Advanced Hangs': RepeaterConfig(
-        sets: 5,
-        repsPerSet: 20,
-        workTime: 10,
-        restTime: 5,
-        setRest: 180,
-        splitHand: false,
-      ),
-      'Max Hangs': RepeaterConfig(
-        sets: 4,
-        repsPerSet: 3,
-        workTime: 10,
-        restTime: 10,
-        setRest: 240,
-        splitHand: false,
-      ),
-      'Resi': RepeaterConfig(
-        sets: 3,
-        repsPerSet: 12,
-        workTime: 7,
-        restTime: 3,
-        setRest: 480,
-        splitHand: true,
-      ),
-      'Endurance Workout': null, // Not a repeater - uses custom reps
-    };
-
     // Generate 15 Crimpy training sessions with various performance levels
     for (int i = 0; i < 15; i++) {
       final daysAgo = _random.nextInt(60);
@@ -377,7 +339,6 @@ class DummyDataGenerator {
           durationInSeconds: reps.fold<int>(0, (sum, r) => sum + r.duration),
           date: sessionDate,
           notes: _getRandomTrainingNote(),
-          repeaterConfig: repeaterConfigs[trainingName],
         ),
         'reps': reps,
       });

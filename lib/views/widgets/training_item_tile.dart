@@ -4,15 +4,6 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-String trainingItemTitle(TrainingItem item) => switch (item.type) {
-  TrainingItemType.group => item.groupTitle ?? 'Group',
-  TrainingItemType.circuit => item.groupTitle ?? 'Circuit',
-  TrainingItemType.repeater => 'Repeater',
-  TrainingItemType.hangboardRep => 'Hang rep',
-  TrainingItemType.exercise => item.exerciseName ?? 'Exercise',
-  TrainingItemType.free => item.freeText ?? 'Note',
-};
-
 String trainingItemDetail(
   TrainingItem item, {
   double? bodyweightKg,

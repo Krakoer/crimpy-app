@@ -17,7 +17,6 @@ class SessionModel {
   final String? trainingId;
   final String? programSessionId;
   final int? durationInSeconds;
-  final RepeaterConfig? repeaterConfig;
 
   /// How many reps the session holds, as reported by a listing that did not
   /// carry the reps themselves. Null when unknown; [repCount] prefers the reps
@@ -36,7 +35,6 @@ class SessionModel {
     this.trainingId,
     this.programSessionId,
     this.durationInSeconds,
-    this.repeaterConfig,
     this.reportedRepCount,
     date,
   }) : date = date ?? DateTime.now();
@@ -62,7 +60,6 @@ class SessionModel {
     trainingId: json['training_id'] as String?,
     programSessionId: json['program_session_id'] as String?,
     durationInSeconds: (json['duration'] as num? ?? 0).toInt(),
-    repeaterConfig: RepeaterConfig.fromJson(json),
     reportedRepCount: (json['rep_count'] as num?)?.toInt(),
   );
 
@@ -86,7 +83,6 @@ class SessionModel {
     trainingId: trainingId,
     programSessionId: programSessionId,
     durationInSeconds: durationInSeconds ?? this.durationInSeconds,
-    repeaterConfig: repeaterConfig,
     reportedRepCount: reportedRepCount,
   );
 
@@ -149,47 +145,4 @@ class RepDataModel {
     edgeSizeMm: (json['edge_size_mm'] as num?)?.toInt(),
     trainingItemId: json['training_item_id'] as String?,
   );
-}
-
-/// Stores repeater configuration for a session.
-/// This is saved with the session so we can properly display sets later,
-/// even if the original training template is modified or deleted.
-class RepeaterConfig {
-  final int sets;
-  final int repsPerSet;
-  final int workTime;
-  final int restTime;
-  final int setRest;
-  final bool splitHand;
-
-  const RepeaterConfig({
-    required this.sets,
-    required this.repsPerSet,
-    required this.workTime,
-    required this.restTime,
-    required this.setRest,
-    required this.splitHand,
-  });
-
-  /// Builds the config from an API session payload, or null when that session
-  /// was not a repeater.
-  static RepeaterConfig? fromJson(Map<String, dynamic> json) {
-    const keys = [
-      'RepeaterSets',
-      'RepeaterReps',
-      'RepeaterWorkTime',
-      'RepeaterRestTime',
-      'RepeaterSetRest',
-      'RepeaterSplitHand',
-    ];
-    if (keys.any((k) => json[k] == null)) return null;
-    return RepeaterConfig(
-      sets: (json['repeater_sets'] as num).toInt(),
-      repsPerSet: (json['repeater_reps'] as num).toInt(),
-      workTime: (json['repeater_work_time'] as num).toInt(),
-      restTime: (json['repeater_rest_time'] as num).toInt(),
-      setRest: (json['repeater_set_rest'] as num).toInt(),
-      splitHand: json['repeater_split_hand'] as bool,
-    );
-  }
 }
