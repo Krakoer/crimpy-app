@@ -27,7 +27,10 @@ class TrainingListItemWidget extends ConsumerWidget {
               if (item.training != null) {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => TrainingDetailScreen(item.training!),
+                    builder: (context) => TrainingDetailScreen(
+                      item.training!,
+                      trainingId: item.isBuiltin ? null : item.training!.id,
+                    ),
                   ),
                 );
               }

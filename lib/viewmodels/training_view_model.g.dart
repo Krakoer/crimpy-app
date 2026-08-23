@@ -469,6 +469,123 @@ final class SessionWithDataFamily extends $Family
   String toString() => r'sessionWithDataProvider';
 }
 
+/// The items a played session was run from, so its reps can be read block by
+/// block. Empty when the session was not played from a training, or when the
+/// training has been deleted since.
+///
+/// The live training is what names the blocks, not a snapshot: editing a
+/// training relabels the blocks of the sessions already played from it, which
+/// costs a heading rather than the grouping itself.
+
+@ProviderFor(sessionTrainingItems)
+const sessionTrainingItemsProvider = SessionTrainingItemsFamily._();
+
+/// The items a played session was run from, so its reps can be read block by
+/// block. Empty when the session was not played from a training, or when the
+/// training has been deleted since.
+///
+/// The live training is what names the blocks, not a snapshot: editing a
+/// training relabels the blocks of the sessions already played from it, which
+/// costs a heading rather than the grouping itself.
+
+final class SessionTrainingItemsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<TrainingItem>>,
+          List<TrainingItem>,
+          FutureOr<List<TrainingItem>>
+        >
+    with
+        $FutureModifier<List<TrainingItem>>,
+        $FutureProvider<List<TrainingItem>> {
+  /// The items a played session was run from, so its reps can be read block by
+  /// block. Empty when the session was not played from a training, or when the
+  /// training has been deleted since.
+  ///
+  /// The live training is what names the blocks, not a snapshot: editing a
+  /// training relabels the blocks of the sessions already played from it, which
+  /// costs a heading rather than the grouping itself.
+  const SessionTrainingItemsProvider._({
+    required SessionTrainingItemsFamily super.from,
+    required String? super.argument,
+  }) : super(
+         retry: null,
+         name: r'sessionTrainingItemsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$sessionTrainingItemsHash();
+
+  @override
+  String toString() {
+    return r'sessionTrainingItemsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<TrainingItem>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<TrainingItem>> create(Ref ref) {
+    final argument = this.argument as String?;
+    return sessionTrainingItems(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SessionTrainingItemsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$sessionTrainingItemsHash() =>
+    r'0c20137944069418a1214b82bd2e5f58a8c4dd72';
+
+/// The items a played session was run from, so its reps can be read block by
+/// block. Empty when the session was not played from a training, or when the
+/// training has been deleted since.
+///
+/// The live training is what names the blocks, not a snapshot: editing a
+/// training relabels the blocks of the sessions already played from it, which
+/// costs a heading rather than the grouping itself.
+
+final class SessionTrainingItemsFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<TrainingItem>>, String?> {
+  const SessionTrainingItemsFamily._()
+    : super(
+        retry: null,
+        name: r'sessionTrainingItemsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// The items a played session was run from, so its reps can be read block by
+  /// block. Empty when the session was not played from a training, or when the
+  /// training has been deleted since.
+  ///
+  /// The live training is what names the blocks, not a snapshot: editing a
+  /// training relabels the blocks of the sessions already played from it, which
+  /// costs a heading rather than the grouping itself.
+
+  SessionTrainingItemsProvider call(String? trainingId) =>
+      SessionTrainingItemsProvider._(argument: trainingId, from: this);
+
+  @override
+  String toString() => r'sessionTrainingItemsProvider';
+}
+
 /// Provider that returns filtered sessions based on a given filter.
 /// Auto-disposed: the filtered list is derived from the cached sessions, so
 /// recomputing it is cheap compared to holding one list per filter used.

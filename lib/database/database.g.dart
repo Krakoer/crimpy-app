@@ -128,75 +128,6 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _repeaterSetsMeta = const VerificationMeta(
-    'repeaterSets',
-  );
-  @override
-  late final GeneratedColumn<int> repeaterSets = GeneratedColumn<int>(
-    'repeater_sets',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _repeaterRepsMeta = const VerificationMeta(
-    'repeaterReps',
-  );
-  @override
-  late final GeneratedColumn<int> repeaterReps = GeneratedColumn<int>(
-    'repeater_reps',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _repeaterWorkTimeMeta = const VerificationMeta(
-    'repeaterWorkTime',
-  );
-  @override
-  late final GeneratedColumn<int> repeaterWorkTime = GeneratedColumn<int>(
-    'repeater_work_time',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _repeaterRestTimeMeta = const VerificationMeta(
-    'repeaterRestTime',
-  );
-  @override
-  late final GeneratedColumn<int> repeaterRestTime = GeneratedColumn<int>(
-    'repeater_rest_time',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _repeaterSetRestMeta = const VerificationMeta(
-    'repeaterSetRest',
-  );
-  @override
-  late final GeneratedColumn<int> repeaterSetRest = GeneratedColumn<int>(
-    'repeater_set_rest',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _repeaterSplitHandMeta = const VerificationMeta(
-    'repeaterSplitHand',
-  );
-  @override
-  late final GeneratedColumn<bool> repeaterSplitHand = GeneratedColumn<bool>(
-    'repeater_split_hand',
-    aliasedName,
-    true,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("repeater_split_hand" IN (0, 1))',
-    ),
-  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -222,12 +153,6 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     trainingId,
     programSessionId,
     duration,
-    repeaterSets,
-    repeaterReps,
-    repeaterWorkTime,
-    repeaterRestTime,
-    repeaterSetRest,
-    repeaterSplitHand,
     updatedAt,
   ];
   @override
@@ -317,60 +242,6 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         duration.isAcceptableOrUnknown(data['duration']!, _durationMeta),
       );
     }
-    if (data.containsKey('repeater_sets')) {
-      context.handle(
-        _repeaterSetsMeta,
-        repeaterSets.isAcceptableOrUnknown(
-          data['repeater_sets']!,
-          _repeaterSetsMeta,
-        ),
-      );
-    }
-    if (data.containsKey('repeater_reps')) {
-      context.handle(
-        _repeaterRepsMeta,
-        repeaterReps.isAcceptableOrUnknown(
-          data['repeater_reps']!,
-          _repeaterRepsMeta,
-        ),
-      );
-    }
-    if (data.containsKey('repeater_work_time')) {
-      context.handle(
-        _repeaterWorkTimeMeta,
-        repeaterWorkTime.isAcceptableOrUnknown(
-          data['repeater_work_time']!,
-          _repeaterWorkTimeMeta,
-        ),
-      );
-    }
-    if (data.containsKey('repeater_rest_time')) {
-      context.handle(
-        _repeaterRestTimeMeta,
-        repeaterRestTime.isAcceptableOrUnknown(
-          data['repeater_rest_time']!,
-          _repeaterRestTimeMeta,
-        ),
-      );
-    }
-    if (data.containsKey('repeater_set_rest')) {
-      context.handle(
-        _repeaterSetRestMeta,
-        repeaterSetRest.isAcceptableOrUnknown(
-          data['repeater_set_rest']!,
-          _repeaterSetRestMeta,
-        ),
-      );
-    }
-    if (data.containsKey('repeater_split_hand')) {
-      context.handle(
-        _repeaterSplitHandMeta,
-        repeaterSplitHand.isAcceptableOrUnknown(
-          data['repeater_split_hand']!,
-          _repeaterSplitHandMeta,
-        ),
-      );
-    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -430,30 +301,6 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.int,
         data['${effectivePrefix}duration'],
       )!,
-      repeaterSets: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}repeater_sets'],
-      ),
-      repeaterReps: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}repeater_reps'],
-      ),
-      repeaterWorkTime: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}repeater_work_time'],
-      ),
-      repeaterRestTime: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}repeater_rest_time'],
-      ),
-      repeaterSetRest: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}repeater_set_rest'],
-      ),
-      repeaterSplitHand: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}repeater_split_hand'],
-      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -479,12 +326,6 @@ class Session extends DataClass implements Insertable<Session> {
   final String? trainingId;
   final String? programSessionId;
   final int duration;
-  final int? repeaterSets;
-  final int? repeaterReps;
-  final int? repeaterWorkTime;
-  final int? repeaterRestTime;
-  final int? repeaterSetRest;
-  final bool? repeaterSplitHand;
   final DateTime updatedAt;
   const Session({
     required this.id,
@@ -498,12 +339,6 @@ class Session extends DataClass implements Insertable<Session> {
     this.trainingId,
     this.programSessionId,
     required this.duration,
-    this.repeaterSets,
-    this.repeaterReps,
-    this.repeaterWorkTime,
-    this.repeaterRestTime,
-    this.repeaterSetRest,
-    this.repeaterSplitHand,
     required this.updatedAt,
   });
   @override
@@ -524,24 +359,6 @@ class Session extends DataClass implements Insertable<Session> {
       map['program_session_id'] = Variable<String>(programSessionId);
     }
     map['duration'] = Variable<int>(duration);
-    if (!nullToAbsent || repeaterSets != null) {
-      map['repeater_sets'] = Variable<int>(repeaterSets);
-    }
-    if (!nullToAbsent || repeaterReps != null) {
-      map['repeater_reps'] = Variable<int>(repeaterReps);
-    }
-    if (!nullToAbsent || repeaterWorkTime != null) {
-      map['repeater_work_time'] = Variable<int>(repeaterWorkTime);
-    }
-    if (!nullToAbsent || repeaterRestTime != null) {
-      map['repeater_rest_time'] = Variable<int>(repeaterRestTime);
-    }
-    if (!nullToAbsent || repeaterSetRest != null) {
-      map['repeater_set_rest'] = Variable<int>(repeaterSetRest);
-    }
-    if (!nullToAbsent || repeaterSplitHand != null) {
-      map['repeater_split_hand'] = Variable<bool>(repeaterSplitHand);
-    }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -563,24 +380,6 @@ class Session extends DataClass implements Insertable<Session> {
           ? const Value.absent()
           : Value(programSessionId),
       duration: Value(duration),
-      repeaterSets: repeaterSets == null && nullToAbsent
-          ? const Value.absent()
-          : Value(repeaterSets),
-      repeaterReps: repeaterReps == null && nullToAbsent
-          ? const Value.absent()
-          : Value(repeaterReps),
-      repeaterWorkTime: repeaterWorkTime == null && nullToAbsent
-          ? const Value.absent()
-          : Value(repeaterWorkTime),
-      repeaterRestTime: repeaterRestTime == null && nullToAbsent
-          ? const Value.absent()
-          : Value(repeaterRestTime),
-      repeaterSetRest: repeaterSetRest == null && nullToAbsent
-          ? const Value.absent()
-          : Value(repeaterSetRest),
-      repeaterSplitHand: repeaterSplitHand == null && nullToAbsent
-          ? const Value.absent()
-          : Value(repeaterSplitHand),
       updatedAt: Value(updatedAt),
     );
   }
@@ -602,12 +401,6 @@ class Session extends DataClass implements Insertable<Session> {
       trainingId: serializer.fromJson<String?>(json['trainingId']),
       programSessionId: serializer.fromJson<String?>(json['programSessionId']),
       duration: serializer.fromJson<int>(json['duration']),
-      repeaterSets: serializer.fromJson<int?>(json['repeaterSets']),
-      repeaterReps: serializer.fromJson<int?>(json['repeaterReps']),
-      repeaterWorkTime: serializer.fromJson<int?>(json['repeaterWorkTime']),
-      repeaterRestTime: serializer.fromJson<int?>(json['repeaterRestTime']),
-      repeaterSetRest: serializer.fromJson<int?>(json['repeaterSetRest']),
-      repeaterSplitHand: serializer.fromJson<bool?>(json['repeaterSplitHand']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -626,12 +419,6 @@ class Session extends DataClass implements Insertable<Session> {
       'trainingId': serializer.toJson<String?>(trainingId),
       'programSessionId': serializer.toJson<String?>(programSessionId),
       'duration': serializer.toJson<int>(duration),
-      'repeaterSets': serializer.toJson<int?>(repeaterSets),
-      'repeaterReps': serializer.toJson<int?>(repeaterReps),
-      'repeaterWorkTime': serializer.toJson<int?>(repeaterWorkTime),
-      'repeaterRestTime': serializer.toJson<int?>(repeaterRestTime),
-      'repeaterSetRest': serializer.toJson<int?>(repeaterSetRest),
-      'repeaterSplitHand': serializer.toJson<bool?>(repeaterSplitHand),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -648,12 +435,6 @@ class Session extends DataClass implements Insertable<Session> {
     Value<String?> trainingId = const Value.absent(),
     Value<String?> programSessionId = const Value.absent(),
     int? duration,
-    Value<int?> repeaterSets = const Value.absent(),
-    Value<int?> repeaterReps = const Value.absent(),
-    Value<int?> repeaterWorkTime = const Value.absent(),
-    Value<int?> repeaterRestTime = const Value.absent(),
-    Value<int?> repeaterSetRest = const Value.absent(),
-    Value<bool?> repeaterSplitHand = const Value.absent(),
     DateTime? updatedAt,
   }) => Session(
     id: id ?? this.id,
@@ -669,20 +450,6 @@ class Session extends DataClass implements Insertable<Session> {
         ? programSessionId.value
         : this.programSessionId,
     duration: duration ?? this.duration,
-    repeaterSets: repeaterSets.present ? repeaterSets.value : this.repeaterSets,
-    repeaterReps: repeaterReps.present ? repeaterReps.value : this.repeaterReps,
-    repeaterWorkTime: repeaterWorkTime.present
-        ? repeaterWorkTime.value
-        : this.repeaterWorkTime,
-    repeaterRestTime: repeaterRestTime.present
-        ? repeaterRestTime.value
-        : this.repeaterRestTime,
-    repeaterSetRest: repeaterSetRest.present
-        ? repeaterSetRest.value
-        : this.repeaterSetRest,
-    repeaterSplitHand: repeaterSplitHand.present
-        ? repeaterSplitHand.value
-        : this.repeaterSplitHand,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   Session copyWithCompanion(SessionsCompanion data) {
@@ -704,24 +471,6 @@ class Session extends DataClass implements Insertable<Session> {
           ? data.programSessionId.value
           : this.programSessionId,
       duration: data.duration.present ? data.duration.value : this.duration,
-      repeaterSets: data.repeaterSets.present
-          ? data.repeaterSets.value
-          : this.repeaterSets,
-      repeaterReps: data.repeaterReps.present
-          ? data.repeaterReps.value
-          : this.repeaterReps,
-      repeaterWorkTime: data.repeaterWorkTime.present
-          ? data.repeaterWorkTime.value
-          : this.repeaterWorkTime,
-      repeaterRestTime: data.repeaterRestTime.present
-          ? data.repeaterRestTime.value
-          : this.repeaterRestTime,
-      repeaterSetRest: data.repeaterSetRest.present
-          ? data.repeaterSetRest.value
-          : this.repeaterSetRest,
-      repeaterSplitHand: data.repeaterSplitHand.present
-          ? data.repeaterSplitHand.value
-          : this.repeaterSplitHand,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -740,12 +489,6 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('trainingId: $trainingId, ')
           ..write('programSessionId: $programSessionId, ')
           ..write('duration: $duration, ')
-          ..write('repeaterSets: $repeaterSets, ')
-          ..write('repeaterReps: $repeaterReps, ')
-          ..write('repeaterWorkTime: $repeaterWorkTime, ')
-          ..write('repeaterRestTime: $repeaterRestTime, ')
-          ..write('repeaterSetRest: $repeaterSetRest, ')
-          ..write('repeaterSplitHand: $repeaterSplitHand, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -764,12 +507,6 @@ class Session extends DataClass implements Insertable<Session> {
     trainingId,
     programSessionId,
     duration,
-    repeaterSets,
-    repeaterReps,
-    repeaterWorkTime,
-    repeaterRestTime,
-    repeaterSetRest,
-    repeaterSplitHand,
     updatedAt,
   );
   @override
@@ -787,12 +524,6 @@ class Session extends DataClass implements Insertable<Session> {
           other.trainingId == this.trainingId &&
           other.programSessionId == this.programSessionId &&
           other.duration == this.duration &&
-          other.repeaterSets == this.repeaterSets &&
-          other.repeaterReps == this.repeaterReps &&
-          other.repeaterWorkTime == this.repeaterWorkTime &&
-          other.repeaterRestTime == this.repeaterRestTime &&
-          other.repeaterSetRest == this.repeaterSetRest &&
-          other.repeaterSplitHand == this.repeaterSplitHand &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -808,12 +539,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<String?> trainingId;
   final Value<String?> programSessionId;
   final Value<int> duration;
-  final Value<int?> repeaterSets;
-  final Value<int?> repeaterReps;
-  final Value<int?> repeaterWorkTime;
-  final Value<int?> repeaterRestTime;
-  final Value<int?> repeaterSetRest;
-  final Value<bool?> repeaterSplitHand;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const SessionsCompanion({
@@ -828,12 +553,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.trainingId = const Value.absent(),
     this.programSessionId = const Value.absent(),
     this.duration = const Value.absent(),
-    this.repeaterSets = const Value.absent(),
-    this.repeaterReps = const Value.absent(),
-    this.repeaterWorkTime = const Value.absent(),
-    this.repeaterRestTime = const Value.absent(),
-    this.repeaterSetRest = const Value.absent(),
-    this.repeaterSplitHand = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -849,12 +568,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.trainingId = const Value.absent(),
     this.programSessionId = const Value.absent(),
     this.duration = const Value.absent(),
-    this.repeaterSets = const Value.absent(),
-    this.repeaterReps = const Value.absent(),
-    this.repeaterWorkTime = const Value.absent(),
-    this.repeaterRestTime = const Value.absent(),
-    this.repeaterSetRest = const Value.absent(),
-    this.repeaterSplitHand = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : name = Value(name),
@@ -872,12 +585,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<String>? trainingId,
     Expression<String>? programSessionId,
     Expression<int>? duration,
-    Expression<int>? repeaterSets,
-    Expression<int>? repeaterReps,
-    Expression<int>? repeaterWorkTime,
-    Expression<int>? repeaterRestTime,
-    Expression<int>? repeaterSetRest,
-    Expression<bool>? repeaterSplitHand,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -893,12 +600,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (trainingId != null) 'training_id': trainingId,
       if (programSessionId != null) 'program_session_id': programSessionId,
       if (duration != null) 'duration': duration,
-      if (repeaterSets != null) 'repeater_sets': repeaterSets,
-      if (repeaterReps != null) 'repeater_reps': repeaterReps,
-      if (repeaterWorkTime != null) 'repeater_work_time': repeaterWorkTime,
-      if (repeaterRestTime != null) 'repeater_rest_time': repeaterRestTime,
-      if (repeaterSetRest != null) 'repeater_set_rest': repeaterSetRest,
-      if (repeaterSplitHand != null) 'repeater_split_hand': repeaterSplitHand,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -916,12 +617,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<String?>? trainingId,
     Value<String?>? programSessionId,
     Value<int>? duration,
-    Value<int?>? repeaterSets,
-    Value<int?>? repeaterReps,
-    Value<int?>? repeaterWorkTime,
-    Value<int?>? repeaterRestTime,
-    Value<int?>? repeaterSetRest,
-    Value<bool?>? repeaterSplitHand,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -937,12 +632,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       trainingId: trainingId ?? this.trainingId,
       programSessionId: programSessionId ?? this.programSessionId,
       duration: duration ?? this.duration,
-      repeaterSets: repeaterSets ?? this.repeaterSets,
-      repeaterReps: repeaterReps ?? this.repeaterReps,
-      repeaterWorkTime: repeaterWorkTime ?? this.repeaterWorkTime,
-      repeaterRestTime: repeaterRestTime ?? this.repeaterRestTime,
-      repeaterSetRest: repeaterSetRest ?? this.repeaterSetRest,
-      repeaterSplitHand: repeaterSplitHand ?? this.repeaterSplitHand,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -984,24 +673,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (duration.present) {
       map['duration'] = Variable<int>(duration.value);
     }
-    if (repeaterSets.present) {
-      map['repeater_sets'] = Variable<int>(repeaterSets.value);
-    }
-    if (repeaterReps.present) {
-      map['repeater_reps'] = Variable<int>(repeaterReps.value);
-    }
-    if (repeaterWorkTime.present) {
-      map['repeater_work_time'] = Variable<int>(repeaterWorkTime.value);
-    }
-    if (repeaterRestTime.present) {
-      map['repeater_rest_time'] = Variable<int>(repeaterRestTime.value);
-    }
-    if (repeaterSetRest.present) {
-      map['repeater_set_rest'] = Variable<int>(repeaterSetRest.value);
-    }
-    if (repeaterSplitHand.present) {
-      map['repeater_split_hand'] = Variable<bool>(repeaterSplitHand.value);
-    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -1025,12 +696,6 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('trainingId: $trainingId, ')
           ..write('programSessionId: $programSessionId, ')
           ..write('duration: $duration, ')
-          ..write('repeaterSets: $repeaterSets, ')
-          ..write('repeaterReps: $repeaterReps, ')
-          ..write('repeaterWorkTime: $repeaterWorkTime, ')
-          ..write('repeaterRestTime: $repeaterRestTime, ')
-          ..write('repeaterSetRest: $repeaterSetRest, ')
-          ..write('repeaterSplitHand: $repeaterSplitHand, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -5472,12 +5137,6 @@ typedef $$SessionsTableCreateCompanionBuilder =
       Value<String?> trainingId,
       Value<String?> programSessionId,
       Value<int> duration,
-      Value<int?> repeaterSets,
-      Value<int?> repeaterReps,
-      Value<int?> repeaterWorkTime,
-      Value<int?> repeaterRestTime,
-      Value<int?> repeaterSetRest,
-      Value<bool?> repeaterSplitHand,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -5494,12 +5153,6 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<String?> trainingId,
       Value<String?> programSessionId,
       Value<int> duration,
-      Value<int?> repeaterSets,
-      Value<int?> repeaterReps,
-      Value<int?> repeaterWorkTime,
-      Value<int?> repeaterRestTime,
-      Value<int?> repeaterSetRest,
-      Value<bool?> repeaterSplitHand,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -5565,36 +5218,6 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<int> get duration => $composableBuilder(
     column: $table.duration,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get repeaterSets => $composableBuilder(
-    column: $table.repeaterSets,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get repeaterReps => $composableBuilder(
-    column: $table.repeaterReps,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get repeaterWorkTime => $composableBuilder(
-    column: $table.repeaterWorkTime,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get repeaterRestTime => $composableBuilder(
-    column: $table.repeaterRestTime,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get repeaterSetRest => $composableBuilder(
-    column: $table.repeaterSetRest,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get repeaterSplitHand => $composableBuilder(
-    column: $table.repeaterSplitHand,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5668,36 +5291,6 @@ class $$SessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get repeaterSets => $composableBuilder(
-    column: $table.repeaterSets,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get repeaterReps => $composableBuilder(
-    column: $table.repeaterReps,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get repeaterWorkTime => $composableBuilder(
-    column: $table.repeaterWorkTime,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get repeaterRestTime => $composableBuilder(
-    column: $table.repeaterRestTime,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get repeaterSetRest => $composableBuilder(
-    column: $table.repeaterSetRest,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get repeaterSplitHand => $composableBuilder(
-    column: $table.repeaterSplitHand,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -5752,36 +5345,6 @@ class $$SessionsTableAnnotationComposer
   GeneratedColumn<int> get duration =>
       $composableBuilder(column: $table.duration, builder: (column) => column);
 
-  GeneratedColumn<int> get repeaterSets => $composableBuilder(
-    column: $table.repeaterSets,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get repeaterReps => $composableBuilder(
-    column: $table.repeaterReps,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get repeaterWorkTime => $composableBuilder(
-    column: $table.repeaterWorkTime,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get repeaterRestTime => $composableBuilder(
-    column: $table.repeaterRestTime,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get repeaterSetRest => $composableBuilder(
-    column: $table.repeaterSetRest,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<bool> get repeaterSplitHand => $composableBuilder(
-    column: $table.repeaterSplitHand,
-    builder: (column) => column,
-  );
-
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -5825,12 +5388,6 @@ class $$SessionsTableTableManager
                 Value<String?> trainingId = const Value.absent(),
                 Value<String?> programSessionId = const Value.absent(),
                 Value<int> duration = const Value.absent(),
-                Value<int?> repeaterSets = const Value.absent(),
-                Value<int?> repeaterReps = const Value.absent(),
-                Value<int?> repeaterWorkTime = const Value.absent(),
-                Value<int?> repeaterRestTime = const Value.absent(),
-                Value<int?> repeaterSetRest = const Value.absent(),
-                Value<bool?> repeaterSplitHand = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion(
@@ -5845,12 +5402,6 @@ class $$SessionsTableTableManager
                 trainingId: trainingId,
                 programSessionId: programSessionId,
                 duration: duration,
-                repeaterSets: repeaterSets,
-                repeaterReps: repeaterReps,
-                repeaterWorkTime: repeaterWorkTime,
-                repeaterRestTime: repeaterRestTime,
-                repeaterSetRest: repeaterSetRest,
-                repeaterSplitHand: repeaterSplitHand,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -5867,12 +5418,6 @@ class $$SessionsTableTableManager
                 Value<String?> trainingId = const Value.absent(),
                 Value<String?> programSessionId = const Value.absent(),
                 Value<int> duration = const Value.absent(),
-                Value<int?> repeaterSets = const Value.absent(),
-                Value<int?> repeaterReps = const Value.absent(),
-                Value<int?> repeaterWorkTime = const Value.absent(),
-                Value<int?> repeaterRestTime = const Value.absent(),
-                Value<int?> repeaterSetRest = const Value.absent(),
-                Value<bool?> repeaterSplitHand = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion.insert(
@@ -5887,12 +5432,6 @@ class $$SessionsTableTableManager
                 trainingId: trainingId,
                 programSessionId: programSessionId,
                 duration: duration,
-                repeaterSets: repeaterSets,
-                repeaterReps: repeaterReps,
-                repeaterWorkTime: repeaterWorkTime,
-                repeaterRestTime: repeaterRestTime,
-                repeaterSetRest: repeaterSetRest,
-                repeaterSplitHand: repeaterSplitHand,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),

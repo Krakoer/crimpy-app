@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/rep_blocks.dart';
 
 class SetsViewWidget extends StatelessWidget {
-  final List<List<RepDataModel>> sets;
-  final bool isSplitHand;
+  final List<RepSet> sets;
   final Color sessionColor;
 
   const SetsViewWidget({
     super.key,
     required this.sets,
     required this.sessionColor,
-    required this.isSplitHand,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: List.generate(sets.length, (setIndex) {
-        final setReps = sets[setIndex];
-        final workReps = setReps.where((r) => !r.isRest).toList();
+        final set = sets[setIndex];
+        final workReps = set.reps.where((r) => !r.isRest).toList();
 
-        // Calculate set statistics
         int setSuccessCount = 0;
         double setAvgWeight = 0;
         double setAvgTarget = 0;
@@ -29,11 +27,9 @@ class SetsViewWidget extends StatelessWidget {
         for (final rep in workReps) {
           setAvgWeight += rep.averageWeight;
           setAvgTarget += rep.targetWeight;
-          if (rep.targetWeight > 0) {
-            final successRate = rep.averageWeight / rep.targetWeight;
-            if (successRate >= 0.9) {
-              setSuccessCount++;
-            }
+          if (rep.targetWeight > 0 &&
+              rep.averageWeight / rep.targetWeight >= 0.9) {
+            setSuccessCount++;
           }
         }
 
@@ -42,24 +38,15 @@ class SetsViewWidget extends StatelessWidget {
           setAvgTarget /= workReps.length;
         }
 
-        // For repeaters with hand separation, determine which hand this sub-set belongs to
-        // Even indices (0, 2, 4...) = right hand, odd indices (1, 3, 5...) = left hand
-        // Both split and non-split modes now separate hands in visualization
-        final bool isRightHand = setIndex % 2 == 0;
-        final int actualSetNumber = (setIndex ~/ 2) + 1;
-
         return Column(
           children: [
             SetCardWidget(
-              setNumber: actualSetNumber,
+              label: set.label,
               workReps: workReps,
               successCount: setSuccessCount,
               avgWeight: setAvgWeight,
               avgTarget: setAvgTarget,
               sessionColor: sessionColor,
-              isSplitHand:
-                  true, // Always show hand indicator since we separate hands
-              isRightHand: isRightHand,
             ),
             if (setIndex < sets.length - 1) const SizedBox(height: 12),
           ],
@@ -70,25 +57,23 @@ class SetsViewWidget extends StatelessWidget {
 }
 
 class SetCardWidget extends StatelessWidget {
-  final int setNumber;
+  /// Names the set the way it was played, hand included where the block works
+  /// the hands separately.
+  final String label;
   final List<RepDataModel> workReps;
   final int successCount;
   final double avgWeight;
   final double avgTarget;
   final Color sessionColor;
-  final bool isSplitHand;
-  final bool isRightHand;
 
   const SetCardWidget({
     super.key,
-    required this.setNumber,
+    required this.label,
     required this.workReps,
     required this.successCount,
     required this.avgWeight,
     required this.avgTarget,
     required this.sessionColor,
-    this.isSplitHand = false,
-    this.isRightHand = true,
   });
 
   /// The edge every rep of the set was pulled on, or null when the set mixes
@@ -128,35 +113,13 @@ class SetCardWidget extends StatelessWidget {
                   color: sessionColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Set $setNumber',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: sessionColor,
-                      ),
-                    ),
-                    if (isSplitHand) ...[
-                      const SizedBox(width: 6),
-                      Icon(
-                        isRightHand ? Icons.front_hand : Icons.back_hand,
-                        size: 14,
-                        color: sessionColor,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        isRightHand ? 'Right Hand' : 'Left Hand',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: sessionColor,
-                        ),
-                      ),
-                    ],
-                  ],
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: sessionColor,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),

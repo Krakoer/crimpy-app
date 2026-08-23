@@ -1,5 +1,6 @@
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/models/training_item_model.dart';
 
 class SessionModel {
   final String? id;
@@ -13,16 +14,25 @@ class SessionModel {
   final SessionOrigin origin;
 
   /// Template the session was played from, kept so it can be shown against what
-  /// was prescribed. Both null on a logged session.
+  /// was prescribed and so its reps can name the blocks they came from. The
+  /// training is set for any run started from one, the athlete's own included;
+  /// the program session only for a run stepped through a coach's week. Both
+  /// null on a logged session and on a builtin, which has no row to link to.
   final String? trainingId;
   final String? programSessionId;
   final int? durationInSeconds;
-  final RepeaterConfig? repeaterConfig;
 
   /// How many reps the session holds, as reported by a listing that did not
   /// carry the reps themselves. Null when unknown; [repCount] prefers the reps
   /// when they are loaded.
   final int? reportedRepCount;
+
+  /// What the athlete was asked to do, frozen onto the session by the server
+  /// when it was created. It is the only copy that cannot drift as the training
+  /// is edited afterwards, and the only one an athlete can read for a training
+  /// their coach owns, so it is what the reps are read block by block against.
+  /// Null on a session the server never saw, a guest-mode run among them.
+  final List<TrainingItem>? prescriptionItems;
 
   SessionModel({
     this.id,
@@ -36,8 +46,8 @@ class SessionModel {
     this.trainingId,
     this.programSessionId,
     this.durationInSeconds,
-    this.repeaterConfig,
     this.reportedRepCount,
+    this.prescriptionItems,
     date,
   }) : date = date ?? DateTime.now();
 
@@ -62,9 +72,22 @@ class SessionModel {
     trainingId: json['training_id'] as String?,
     programSessionId: json['program_session_id'] as String?,
     durationInSeconds: (json['duration'] as num? ?? 0).toInt(),
-    repeaterConfig: RepeaterConfig.fromJson(json),
     reportedRepCount: (json['rep_count'] as num?)?.toInt(),
+    prescriptionItems: _prescriptionItems(json['prescription']),
   );
+
+  /// The items of the frozen prescription, or null when the session carries
+  /// none. The listing endpoint leaves the prescription out, so a session read
+  /// from it has no items until its detail is loaded.
+  static List<TrainingItem>? _prescriptionItems(Object? prescription) {
+    if (prescription is! Map<String, dynamic>) return null;
+    final raw = prescription['items'];
+    if (raw is! List) return null;
+    return raw
+        .whereType<Map<String, dynamic>>()
+        .map(TrainingItem.fromJson)
+        .toList();
+  }
 
   /// Carries the untouched fields over, so an edit cannot quietly drop the
   /// origin or the template links the session was created with.
@@ -86,8 +109,8 @@ class SessionModel {
     trainingId: trainingId,
     programSessionId: programSessionId,
     durationInSeconds: durationInSeconds ?? this.durationInSeconds,
-    repeaterConfig: repeaterConfig,
     reportedRepCount: reportedRepCount,
+    prescriptionItems: prescriptionItems,
   );
 
   int get duration =>
@@ -149,47 +172,4 @@ class RepDataModel {
     edgeSizeMm: (json['edge_size_mm'] as num?)?.toInt(),
     trainingItemId: json['training_item_id'] as String?,
   );
-}
-
-/// Stores repeater configuration for a session.
-/// This is saved with the session so we can properly display sets later,
-/// even if the original training template is modified or deleted.
-class RepeaterConfig {
-  final int sets;
-  final int repsPerSet;
-  final int workTime;
-  final int restTime;
-  final int setRest;
-  final bool splitHand;
-
-  const RepeaterConfig({
-    required this.sets,
-    required this.repsPerSet,
-    required this.workTime,
-    required this.restTime,
-    required this.setRest,
-    required this.splitHand,
-  });
-
-  /// Builds the config from an API session payload, or null when that session
-  /// was not a repeater.
-  static RepeaterConfig? fromJson(Map<String, dynamic> json) {
-    const keys = [
-      'RepeaterSets',
-      'RepeaterReps',
-      'RepeaterWorkTime',
-      'RepeaterRestTime',
-      'RepeaterSetRest',
-      'RepeaterSplitHand',
-    ];
-    if (keys.any((k) => json[k] == null)) return null;
-    return RepeaterConfig(
-      sets: (json['repeater_sets'] as num).toInt(),
-      repsPerSet: (json['repeater_reps'] as num).toInt(),
-      workTime: (json['repeater_work_time'] as num).toInt(),
-      restTime: (json['repeater_rest_time'] as num).toInt(),
-      setRest: (json['repeater_set_rest'] as num).toInt(),
-      splitHand: json['repeater_split_hand'] as bool,
-    );
-  }
 }

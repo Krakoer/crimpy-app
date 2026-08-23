@@ -8,6 +8,10 @@ import 'package:crimpy/models/session_filter.dart';
 
 abstract class TrainingRepository {
   Future<List<Training>> getAllTrainings({bool onlyFavs = false});
+
+  /// One training by id, or null when it no longer exists. Used to read a
+  /// played session against the items it was run from.
+  Future<Training?> getTraining(String trainingId);
   Future<String> saveTraining(Training training);
   Future<void> updateTraining(Training training);
   Future<void> toggleFav(String trainingId);
@@ -32,6 +36,10 @@ class LocalTrainingRepository extends TrainingRepository {
   @override
   Future<List<Training>> getAllTrainings({bool onlyFavs = false}) =>
       _database.getAllTrainings(onlyFavs: onlyFavs);
+
+  @override
+  Future<Training?> getTraining(String trainingId) =>
+      _database.getTraining(trainingId);
 
   @override
   Future<String> saveTraining(Training training) =>
@@ -103,6 +111,10 @@ class RemoteTrainingRepository extends TrainingRepository {
     );
     return results.whereType<Training>().toList();
   }
+
+  @override
+  Future<Training?> getTraining(String trainingId) =>
+      _fetchTraining(trainingId);
 
   Future<Training?> _fetchTraining(String id) async {
     final data = await _apiClient.getTraining(id);
@@ -205,14 +217,6 @@ class RemoteTrainingRepository extends TrainingRepository {
       if (session.programSessionId != null)
         'program_session_id': session.programSessionId,
       'duration': duration,
-      if (session.repeaterConfig != null) ...{
-        'repeater_sets': session.repeaterConfig!.sets,
-        'repeater_reps': session.repeaterConfig!.repsPerSet,
-        'repeater_work_time': session.repeaterConfig!.workTime,
-        'repeater_rest_time': session.repeaterConfig!.restTime,
-        'repeater_set_rest': session.repeaterConfig!.setRest,
-        'repeater_split_hand': session.repeaterConfig!.splitHand,
-      },
       'rep_datas': repDatas,
     };
 
