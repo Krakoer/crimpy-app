@@ -97,7 +97,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     repResults.add(
       RepDataModel(
         handSide: timed?.handSide ?? HandSide.both,
-        targetWeight: timed?.targetLoad ?? 0,
+        targetWeight: timed?.recordedTargetLoad ?? 0,
         // Only collect a sensor average for gauge (sensor) steps.
         averageWeight: (timed?.collectSensorData ?? false)
             ? ref.read(bleSessionProvider).avg

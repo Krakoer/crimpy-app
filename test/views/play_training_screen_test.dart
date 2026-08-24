@@ -6,6 +6,7 @@ import 'package:crimpy/services/run_screen_style_service.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/run_screen_style_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
+import 'package:crimpy/views/screens/trainings/post_workout_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,6 +56,24 @@ Training _stretchingCircuit() => const Training(
           comment: 'Left leg',
         ),
       ],
+    ),
+  ],
+);
+
+/// A single hangboard hang with a load the coach prescribed, so a run of it
+/// records a rep that carries a target when the sensor measured it.
+Training _oneHang() => const Training(
+  id: 't3',
+  title: 'One hang',
+  items: [
+    TrainingItem(
+      id: 'h1',
+      type: TrainingItemType.hangboardRep,
+      position: 0,
+      hand: 'right',
+      worktimeSeconds: 7,
+      restSeconds: 0,
+      loads: [Load(value: 30, unit: 'kg')],
     ),
   ],
 );
@@ -276,5 +295,23 @@ void main() {
 
     await tester.pumpWidget(const SizedBox());
     expect(bleRepository.isStreaming, isTrue);
+  });
+
+  // A run started with "Run without" measures nothing, so the reps it records
+  // carry no target: graded against the load they were prescribed, every one of
+  // them would read as a miss.
+  testWidgets('a run without the sensor records reps with no target', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _oneHang(), useSensor: false);
+
+    // Preparation rest, then the hang itself.
+    await _skip(tester);
+    await _skip(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PostWorkoutScreen), findsOneWidget);
+    expect(find.textContaining('you hit your target on'), findsNothing);
+    expect(find.textContaining('on target'), findsNothing);
   });
 }
