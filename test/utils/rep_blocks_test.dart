@@ -488,6 +488,63 @@ void main() {
     });
   });
 
+  group('measuredMaxWeight', () {
+    test('takes the heaviest of the reps the sensor weighed', () {
+      final max = measuredMaxWeight([
+        _rep(index: 0, averageWeight: 30, targetWeight: 30),
+        _rep(index: 1, averageWeight: 34, targetWeight: 30),
+        for (var index = 2; index < 4; index++)
+          _rep(
+            index: index,
+            averageWeight: 0,
+            targetWeight: 0,
+            targetUnmeasured: true,
+          ),
+      ]);
+      expect(max, 34);
+    });
+
+    test('leaves the rests out', () {
+      final max = measuredMaxWeight([
+        _rep(index: 0, averageWeight: 30, targetWeight: 30),
+        _rep(index: 1, isRest: true, averageWeight: 0, targetWeight: 0),
+      ]);
+      expect(max, 30);
+    });
+
+    test('a run the sensor never measured at all states no load', () {
+      // Every rep is stored at zero, so a max over them reads 0.0 kg, a load
+      // the athlete never pulled beside a mean that is correctly absent.
+      final max = measuredMaxWeight([
+        for (var index = 0; index < 3; index++)
+          _rep(
+            index: index,
+            averageWeight: 0,
+            targetWeight: 0,
+            targetUnmeasured: true,
+          ),
+      ]);
+      expect(max, null);
+    });
+
+    test('a run nothing was ever meant to weigh states no load', () {
+      final max = measuredMaxWeight([
+        for (var index = 0; index < 3; index++)
+          _rep(index: index, averageWeight: 0, targetWeight: 0),
+      ]);
+      expect(max, null);
+    });
+
+    test('keeps the zero a working sensor read against a target', () {
+      final max = measuredMaxWeight([
+        for (var index = 0; index < 2; index++)
+          _rep(index: index, averageWeight: 0, targetWeight: 30),
+      ]);
+      // The athlete came off the board on every rep, which the sensor did read.
+      expect(max, 0);
+    });
+  });
+
   group('unmeasuredNote', () {
     test('a fully measured run says nothing', () {
       expect(unmeasuredNote((onTarget: 2, total: 2, unmeasured: 0)), null);

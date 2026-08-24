@@ -203,6 +203,39 @@ void main() {
     expect(find.text('30.0 kg'), findsWidgets);
   });
 
+  testWidgets('states no peak load for a run the sensor never measured', (
+    tester,
+  ) async {
+    // The sensor never answered, so every rep is stored at zero. A max over
+    // them reads 0.0 kg, the one stat left able to state a load the athlete
+    // never pulled, beside an average that is correctly absent.
+    await _pump(
+      tester,
+      _session(
+        trainingId: 'coach-training',
+        prescriptionItems: [_hangRep('a')],
+        reps: [
+          for (var index = 0; index < 2; index++)
+            _rep(
+              index,
+              itemId: 'a',
+              averageWeight: 0,
+              targetWeight: 0,
+              targetUnmeasured: true,
+            ),
+        ],
+      ),
+    );
+
+    expect(find.text('Max Weight'), findsNothing);
+    expect(find.text('0.0 kg'), findsNothing);
+    expect(find.text('Avg Weight'), findsNothing);
+    // The run was still two reps long, so what the sensor cannot take away
+    // stays.
+    expect(find.text('Work Reps'), findsOneWidget);
+    expect(find.text('Work Time'), findsOneWidget);
+  });
+
   testWidgets('keeps the session wide stats when one block was played', (
     tester,
   ) async {

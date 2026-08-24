@@ -236,16 +236,35 @@ List<RepDataModel> measuredReps(List<RepDataModel> reps) =>
 /// crimpy-frontend/src/lib/sessions.ts.
 double? measuredAvgWeight(List<RepDataModel> reps) {
   final measured = measuredReps(reps);
-  // A run nothing ever weighed states no mean: its zeros are the absence of a
-  // reading rather than a load. A zero a working sensor read against a target
-  // stays in, since it is what the athlete pulled.
-  final weighed = measured.any(
-    (rep) => rep.averageWeight > 0 || rep.targetWeight > 0,
-  );
-  if (!weighed) return null;
+  if (!_weighedAny(measured)) return null;
   return measured.map((rep) => rep.averageWeight).reduce((a, b) => a + b) /
       measured.length;
 }
+
+/// Heaviest load over the reps a run measured, or null when it measured none.
+///
+/// A max is not pooled by the blocks a session played, since the heaviest rep of
+/// a run is one rep whichever block it was hung in, so the only run that states
+/// none is the one nothing ever weighed. There a zero does not lose the max the
+/// way it loses an average: it is the only value left, and reads as a load the
+/// athlete never pulled beside a mean that is correctly absent. The two stats
+/// count the same reps and appear together. Kept equal to measuredMaxWeight in
+/// crimpy-frontend/src/lib/sessions.ts.
+double? measuredMaxWeight(List<RepDataModel> reps) {
+  final measured = measuredReps(reps);
+  if (!_weighedAny(measured)) return null;
+  return measured
+      .map((rep) => rep.averageWeight)
+      .reduce((a, b) => a > b ? a : b);
+}
+
+/// Whether a run got a reading for any of the reps it measured. False for a run
+/// whose sensor never answered: its reps are stored at zero against no target,
+/// which is the absence of a reading rather than a load. A zero a working sensor
+/// read against a target counts as weighed, since it is what the athlete pulled.
+/// Kept equal to weighedAny in crimpy-frontend/src/lib/sessions.ts.
+bool _weighedAny(List<RepDataModel> measured) =>
+    measured.any((rep) => rep.averageWeight > 0 || rep.targetWeight > 0);
 
 /// Names how much of a run went unmeasured, or null when the run measured all
 /// of it. Stated next to a ratio so a denominator shrunk by a dropped sensor is
