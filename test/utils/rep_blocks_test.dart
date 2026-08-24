@@ -356,4 +356,21 @@ void main() {
       );
     });
   });
+
+  group('spansMultipleBlocks', () {
+    RepBlock block(String label) =>
+        RepBlock(label: label, reps: [_rep(index: 0)]);
+
+    test('a session that named no block pools nothing', () {
+      expect(spansMultipleBlocks(null), false);
+    });
+
+    test('one block is its own session, so nothing is pooled across it', () {
+      expect(spansMultipleBlocks([block('a')]), false);
+    });
+
+    test('two blocks cannot be stated as one number', () {
+      expect(spansMultipleBlocks([block('a'), block('b')]), true);
+    });
+  });
 }
