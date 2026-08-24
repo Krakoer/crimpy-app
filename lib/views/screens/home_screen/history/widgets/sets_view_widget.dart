@@ -139,11 +139,6 @@ class SetCardWidget extends StatelessWidget {
                 [
                   '${workReps.length} reps',
                   if (_sharedEdgeSizeMm != null) '${_sharedEdgeSizeMm}mm',
-                  // The badge beside grades only the reps the set measured, so
-                  // the ones it could not are named rather than left as the gap
-                  // between the two numbers.
-                  if (count != null)
-                    if (unmeasuredNote(count) case final note?) note,
                 ].join(' - '),
                 style: TextStyle(fontSize: 12, color: CrimpyTheme.gray600),
               ),
@@ -169,6 +164,19 @@ class SetCardWidget extends StatelessWidget {
                 ),
             ],
           ),
+          // The badge above grades only the reps the set measured, so the ones
+          // it could not are named rather than left as the gap between the two
+          // numbers. On its own line: the header already fills a phone width
+          // with the set name, its reps and the badge.
+          if (count != null)
+            if (unmeasuredNote(count) case final note?)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  note,
+                  style: TextStyle(fontSize: 12, color: CrimpyTheme.gray600),
+                ),
+              ),
           const SizedBox(height: 12),
           // Performance visualization
           SetPerformanceBar(workReps: workReps, sessionColor: sessionColor),

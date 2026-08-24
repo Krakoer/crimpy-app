@@ -35,6 +35,14 @@ class SessionRepsCard extends StatefulWidget {
   State<SessionRepsCard> createState() => _SessionRepsCardState();
 }
 
+/// What a ratio adds when the run failed to measure some of the reps it
+/// prescribed, so a shrunken denominator is not read as a shorter run than the
+/// athlete performed. Empty when everything was measured.
+String _unmeasuredSuffix(OnTargetCount count) {
+  final note = unmeasuredNote(count);
+  return note == null ? '' : ' ($note)';
+}
+
 class _SessionRepsCardState extends State<SessionRepsCard> {
   bool _repsExpanded = false;
 
@@ -81,7 +89,8 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
                     ),
                   ),
                   child: Text(
-                    '${overall.onTarget}/${overall.total}',
+                    '${overall.onTarget}/${overall.total}'
+                    '${_unmeasuredSuffix(overall)}',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -189,9 +198,8 @@ class _BlockCard extends StatelessWidget {
   String? get _onTarget {
     final count = onTargetCount(block.reps);
     if (count == null) return null;
-    final unmeasured = unmeasuredNote(count);
     return '${count.onTarget}/${count.total} on target'
-        '${unmeasured == null ? '' : ' ($unmeasured)'}';
+        '${_unmeasuredSuffix(count)}';
   }
 
   List<RepDataModel> get _shownReps {

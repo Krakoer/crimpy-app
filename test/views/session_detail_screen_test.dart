@@ -15,6 +15,7 @@ RepDataModel _rep(
   HandSide hand = HandSide.right,
   double averageWeight = 30,
   double targetWeight = 30,
+  bool targetUnmeasured = false,
 }) => RepDataModel(
   averageWeight: averageWeight,
   duration: 7,
@@ -23,6 +24,7 @@ RepDataModel _rep(
   handSide: hand,
   targetWeight: targetWeight,
   trainingItemId: itemId,
+  targetUnmeasured: targetUnmeasured,
 );
 
 TrainingItem _hangRep(String id, {int edgeSizeMm = 20}) => TrainingItem(
@@ -157,6 +159,43 @@ void main() {
     // What aggregates over the whole session regardless of the blocks stays.
     expect(find.text('Max Weight'), findsOneWidget);
     expect(find.text('Work Reps'), findsOneWidget);
+  });
+
+  testWidgets('names the reps a dropped sensor left out of the ratio', (
+    tester,
+  ) async {
+    // Four hangs against a 30 kg target, the sensor gone after the second. The
+    // two it measured were held, and the two it did not are neither hits nor
+    // misses: counted in, they would read as a 2/4 the athlete never ran.
+    await _pump(
+      tester,
+      _session(
+        trainingId: 'coach-training',
+        prescriptionItems: [_hangRep('a')],
+        reps: [
+          _rep(0, itemId: 'a'),
+          _rep(1, itemId: 'a'),
+          _rep(
+            2,
+            itemId: 'a',
+            averageWeight: 0,
+            targetWeight: 0,
+            targetUnmeasured: true,
+          ),
+          _rep(
+            3,
+            itemId: 'a',
+            averageWeight: 0,
+            targetWeight: 0,
+            targetUnmeasured: true,
+          ),
+        ],
+      ),
+    );
+
+    expect(find.text('2/4'), findsNothing);
+    expect(find.text('2/2 (2 unmeasured)'), findsOneWidget);
+    expect(find.text('2/2 on target (2 unmeasured)'), findsOneWidget);
   });
 
   testWidgets('keeps the session wide stats when one block was played', (

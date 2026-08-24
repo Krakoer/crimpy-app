@@ -403,6 +403,21 @@ void main() {
       expect(count, (onTarget: 2, total: 2, unmeasured: 4));
     });
 
+    test('a group whose only target went unmeasured grades nothing', () {
+      // Nothing enforces an empty target on a flagged rep outside the app, and
+      // a 0/0 ratio would read as a run that met none of its targets.
+      final count = onTargetCount([
+        _rep(index: 0, averageWeight: 20, targetWeight: 0),
+        _rep(
+          index: 1,
+          averageWeight: 0,
+          targetWeight: 20,
+          targetUnmeasured: true,
+        ),
+      ]);
+      expect(count, null);
+    });
+
     test('a run the sensor never measured at all grades nothing', () {
       final count = onTargetCount([
         for (var index = 0; index < 3; index++)

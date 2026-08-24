@@ -207,8 +207,11 @@ typedef OnTargetCount = ({int onTarget, int total, int unmeasured});
 /// the run went unmeasured.
 OnTargetCount? onTargetCount(List<RepDataModel> reps) {
   final workReps = reps.where((rep) => !rep.isRest).toList();
-  if (!workReps.any((rep) => rep.targetWeight > 0)) return null;
   final graded = workReps.where((rep) => !rep.targetUnmeasured).toList();
+  // Asked of the reps the run could grade, not of every rep: a group whose only
+  // targets went unmeasured has nothing to state a ratio over, and 0/0 reads as
+  // a run that met nothing.
+  if (!graded.any((rep) => rep.targetWeight > 0)) return null;
   return (
     onTarget: graded.where(isOnTarget).length,
     total: graded.length,
@@ -216,10 +219,10 @@ OnTargetCount? onTargetCount(List<RepDataModel> reps) {
   );
 }
 
-/// Names how much of a run went unmeasured, or null when all of it was. Stated
-/// next to a ratio so a denominator shrunk by a dropped sensor is not read as a
-/// shorter run than the athlete performed, and kept equal to unmeasuredNote in
-/// crimpy-frontend/src/lib/sessions.ts.
+/// Names how much of a run went unmeasured, or null when the run measured all
+/// of it. Stated next to a ratio so a denominator shrunk by a dropped sensor is
+/// not read as a shorter run than the athlete performed, and kept equal to
+/// unmeasuredNote in crimpy-frontend/src/lib/sessions.ts.
 String? unmeasuredNote(OnTargetCount count) =>
     count.unmeasured == 0 ? null : '${count.unmeasured} unmeasured';
 
