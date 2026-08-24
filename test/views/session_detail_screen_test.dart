@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training_item_model.dart';
@@ -176,6 +178,81 @@ void main() {
 
     expect(find.text('Avg Weight'), findsOneWidget);
     expect(find.text('30.0 kg'), findsWidgets);
+    expect(find.text('2/2'), findsOneWidget);
+  });
+
+  testWidgets('states nothing session wide until the blocks have resolved', (
+    tester,
+  ) async {
+    // A locally played session freezes no prescription, so its blocks are only
+    // known once the training loads. Reading the pooled average on the way
+    // there would flash the very number this card exists to stop showing.
+    final items = Completer<List<TrainingItem>>();
+    final session = _session(
+      trainingId: 't1',
+      reps: [
+        _rep(0, itemId: 'a'),
+        _rep(1, itemId: 'a'),
+        _rep(2, itemId: 'b', averageWeight: 20, targetWeight: 24),
+        _rep(3, itemId: 'b', averageWeight: 20, targetWeight: 24),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sessionTrainingItemsProvider(
+            session.trainingId,
+          ).overrideWith((ref) => items.future),
+        ],
+        child: MaterialApp(home: SessionDetailScreen(session: session)),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Avg Weight'), findsNothing);
+    expect(find.text('25.0 kg'), findsNothing);
+    expect(find.text('2/4'), findsNothing);
+
+    items.complete([_hangRep('a'), _hangRep('b', edgeSizeMm: 14)]);
+    await tester.pumpAndSettle();
+
+    // The blocks it was waiting on do pool, so nothing session wide comes back.
+    expect(find.text('Avg Weight'), findsNothing);
+    expect(find.text('2/2 on target'), findsOneWidget);
+    expect(find.text('0/2 on target'), findsOneWidget);
+  });
+
+  testWidgets('states the session wide stats once one block has resolved', (
+    tester,
+  ) async {
+    // The same wait, on a session that turns out to pool nothing: the average
+    // is held back rather than dropped, and arrives with the blocks.
+    final items = Completer<List<TrainingItem>>();
+    final session = _session(
+      trainingId: 't1',
+      reps: [
+        _rep(0, itemId: 'a'),
+        _rep(1, itemId: 'a'),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sessionTrainingItemsProvider(
+            session.trainingId,
+          ).overrideWith((ref) => items.future),
+        ],
+        child: MaterialApp(home: SessionDetailScreen(session: session)),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Avg Weight'), findsNothing);
+
+    items.complete([_hangRep('a')]);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Avg Weight'), findsOneWidget);
     expect(find.text('2/2'), findsOneWidget);
   });
 

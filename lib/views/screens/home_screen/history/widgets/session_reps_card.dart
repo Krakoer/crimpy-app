@@ -19,11 +19,16 @@ class SessionRepsCard extends StatefulWidget {
   /// the performance stats above it read the same run.
   final List<RepBlock>? blocks;
 
+  /// Whether one ratio stated for this whole session would pool across those
+  /// blocks. Each block carries its own ratio regardless.
+  final bool poolsBlocks;
+
   const SessionRepsCard({
     super.key,
     required this.session,
     required this.sessionColor,
-    this.blocks,
+    required this.blocks,
+    required this.poolsBlocks,
   });
 
   @override
@@ -52,7 +57,7 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
     // training never gave a target grades every one of them as missed, which is
     // an athlete's own logged run rather than a failed one.
     final showsOverallRatio =
-        !poolsUnlikeBlocks(blocks) && workReps.any((r) => r.targetWeight > 0);
+        !widget.poolsBlocks && workReps.any((r) => r.targetWeight > 0);
 
     return CrimpyCard.simple(
       child: Column(

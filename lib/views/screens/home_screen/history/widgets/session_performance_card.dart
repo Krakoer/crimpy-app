@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
-import 'package:crimpy/utils/rep_blocks.dart';
 
 class SessionPerformanceCard extends StatelessWidget {
   final List<RepDataModel> reps;
 
-  /// The blocks the reps were played from, null for a session that names none.
-  /// A session that played more than one drops its average weight rather than
-  /// pooling them, and reads it per block instead. Max weight, work time and
-  /// work reps still aggregate over the whole session.
-  final List<RepBlock>? blocks;
+  /// Whether one number stated for this whole session would pool across the
+  /// blocks it played. The average weight is dropped when it would, and read
+  /// per block instead. Max weight, work time and work reps still aggregate
+  /// over the whole session either way.
+  final bool poolsBlocks;
 
-  const SessionPerformanceCard({super.key, required this.reps, this.blocks});
+  const SessionPerformanceCard({
+    super.key,
+    required this.reps,
+    required this.poolsBlocks,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,8 +35,7 @@ class SessionPerformanceCard extends StatelessWidget {
     final totalWorkTime = workReps.fold(0, (sum, r) => sum + r.duration);
 
     final stats = <(String, String)>[
-      if (!poolsUnlikeBlocks(blocks))
-        ('Avg Weight', '${avgWeight.toStringAsFixed(1)} kg'),
+      if (!poolsBlocks) ('Avg Weight', '${avgWeight.toStringAsFixed(1)} kg'),
       ('Max Weight', '${maxWeight.toStringAsFixed(1)} kg'),
       ('Work Time', '${totalWorkTime}s'),
       ('Work Reps', '${workReps.length}'),

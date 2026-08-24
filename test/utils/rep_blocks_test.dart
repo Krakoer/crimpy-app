@@ -357,20 +357,20 @@ void main() {
     });
   });
 
-  group('poolsUnlikeBlocks', () {
+  group('spansMultipleBlocks', () {
     RepBlock block(String label) =>
         RepBlock(label: label, reps: [_rep(index: 0)]);
 
     test('a session that named no block pools nothing', () {
-      expect(poolsUnlikeBlocks(null), false);
+      expect(spansMultipleBlocks(null), false);
     });
 
     test('one block is its own session, so nothing is pooled across it', () {
-      expect(poolsUnlikeBlocks([block('a')]), false);
+      expect(spansMultipleBlocks([block('a')]), false);
     });
 
     test('two blocks cannot be stated as one number', () {
-      expect(poolsUnlikeBlocks([block('a'), block('b')]), true);
+      expect(spansMultipleBlocks([block('a'), block('b')]), true);
     });
   });
 }

@@ -106,7 +106,11 @@ class SessionDetailScreen extends ConsumerWidget {
     SessionModel session,
   ) {
     final sessionColor = CrimpyTheme.activityColor(session.activity);
-    final blocks = _resolveBlocks(ref, session);
+    final resolvedBlocks = _resolveBlocks(ref, session);
+    final blocks = resolvedBlocks.value;
+    // A session whose blocks are still resolving has no answer to give yet, and
+    // the pooled numbers are the wrong ones to show while it waits for one.
+    final poolsBlocks = resolvedBlocks.isLoading || spansMultipleBlocks(blocks);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -119,7 +123,10 @@ class SessionDetailScreen extends ConsumerWidget {
 
           // Performance stats (if available)
           if (session.hasReps) ...[
-            SessionPerformanceCard(reps: session.reps!, blocks: blocks),
+            SessionPerformanceCard(
+              reps: session.reps!,
+              poolsBlocks: poolsBlocks,
+            ),
             const SizedBox(height: 16),
           ],
 
@@ -129,6 +136,7 @@ class SessionDetailScreen extends ConsumerWidget {
               session: session,
               sessionColor: sessionColor,
               blocks: blocks,
+              poolsBlocks: poolsBlocks,
             ),
             const SizedBox(height: 16),
           ],
@@ -157,17 +165,25 @@ class SessionDetailScreen extends ConsumerWidget {
   ///
   /// Resolved once here rather than in each card, so the stats and the
   /// breakdown below them never disagree about how many blocks were played.
-  List<RepBlock>? _resolveBlocks(WidgetRef ref, SessionModel session) {
+  ///
+  /// Kept as an [AsyncValue] rather than flattened to null, so a training that
+  /// has not loaded yet is told apart from one that resolved to no blocks. Both
+  /// fall back to the flat list, but only the second may state a session-wide
+  /// number: the first does not know yet whether that number would pool.
+  AsyncValue<List<RepBlock>?> _resolveBlocks(
+    WidgetRef ref,
+    SessionModel session,
+  ) {
     final reps = session.reps;
-    if (reps == null) return null;
-    final items =
-        session.prescriptionItems ??
-        ref.watch(sessionTrainingItemsProvider(session.trainingId)).value;
-    if (items == null) return null;
-    return groupRepsByTrainingItem(
-      reps.where((r) => !r.isRest).toList(),
-      items,
-    );
+    if (reps == null) return const AsyncValue.data(null);
+    final workReps = reps.where((r) => !r.isRest).toList();
+    final frozen = session.prescriptionItems;
+    if (frozen != null) {
+      return AsyncValue.data(groupRepsByTrainingItem(workReps, frozen));
+    }
+    return ref
+        .watch(sessionTrainingItemsProvider(session.trainingId))
+        .whenData((items) => groupRepsByTrainingItem(workReps, items));
   }
 
   Widget _buildNotFoundError(BuildContext context) {
