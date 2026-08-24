@@ -66,7 +66,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
         ? null
         : onTargetCount(workReps);
     final blockCounts = blocks == null
-        ? const <({String label, int onTarget, int total})>[]
+        ? const <_BlockOnTarget>[]
         : [
             for (final block in blocks)
               if (onTargetCount(block.reps) case final count?)
@@ -212,16 +212,21 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
   }
 }
 
+/// One block of a run and how it was graded, named the way the athlete saw it
+/// played.
+typedef _BlockOnTarget = ({String label, int onTarget, int total});
+
 /// How the whole run went, for a session that played a single block: one ratio
-/// over one target grades exactly what it says it does.
+/// over one target grades exactly what it says it does. Counted rather than
+/// stated as a percentage, so the athlete reads the same figure here and in the
+/// history card of the session they just saved.
 class _OverallOnTarget extends StatelessWidget {
-  final ({int onTarget, int total}) count;
+  final OnTargetCount count;
 
   const _OverallOnTarget({required this.count});
 
   @override
   Widget build(BuildContext context) {
-    final percentage = (count.onTarget / count.total * 100).round();
     final muted = Theme.of(
       context,
     ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.gray500);
@@ -231,12 +236,12 @@ class _OverallOnTarget extends StatelessWidget {
         children: [
           TextSpan(text: "you hit your target on ", style: muted),
           TextSpan(
-            text: "$percentage%",
+            text: "${count.onTarget} of ${count.total}",
             style: Theme.of(
               context,
             ).textTheme.labelLarge?.copyWith(fontSize: 12),
           ),
-          TextSpan(text: " of the reps", style: muted),
+          TextSpan(text: " reps", style: muted),
         ],
       ),
     );
@@ -247,7 +252,7 @@ class _OverallOnTarget extends StatelessWidget {
 /// hung at 34 kg and one hung at 24 kg are graded against what each of them
 /// prescribed, so a missed block is not averaged away by a met one.
 class _BlocksOnTarget extends StatelessWidget {
-  final List<({String label, int onTarget, int total})> counts;
+  final List<_BlockOnTarget> counts;
 
   const _BlocksOnTarget({required this.counts});
 

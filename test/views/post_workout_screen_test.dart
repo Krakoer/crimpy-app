@@ -125,7 +125,7 @@ void main() {
       ),
     );
 
-    expect(find.textContaining('67%'), findsOneWidget);
+    expect(find.textContaining('2 of 3'), findsOneWidget);
   });
 
   testWidgets('states one ratio per block rather than pooling them', (
@@ -147,10 +147,33 @@ void main() {
       ),
     );
 
-    // Pooled, the run would read 67% and say nothing about the missed block.
+    // Pooled, the run would read 2 of 3 and say nothing about the missed block.
     expect(find.text('2/2 on target'), findsOneWidget);
     expect(find.text('0/1 on target'), findsOneWidget);
-    expect(find.textContaining('%'), findsNothing);
+    expect(find.textContaining('of the reps'), findsNothing);
+  });
+
+  testWidgets('leaves out the blocks the training gave no target', (
+    tester,
+  ) async {
+    await _show(
+      tester,
+      PostWorkoutScreen(
+        template: Training(
+          id: 't1',
+          title: 'Hangs and mobility',
+          items: [_item('a'), _item('b')],
+        ),
+        results: [
+          _rep(index: 0, itemId: 'a', averageWeight: 34, targetWeight: 34),
+          _rep(index: 1, itemId: 'b', targetWeight: 0),
+        ],
+      ),
+    );
+
+    // A block hung against nothing is not a block that was missed.
+    expect(find.text('1/1 on target'), findsOneWidget);
+    expect(find.textContaining('0/1'), findsNothing);
   });
 
   testWidgets('says nothing about targets a run was never given', (
@@ -165,7 +188,7 @@ void main() {
     );
 
     expect(find.textContaining('on target'), findsNothing);
-    expect(find.textContaining('%'), findsNothing);
+    expect(find.textContaining('of the reps'), findsNothing);
   });
 
   testWidgets('carries the program links onto the session', (tester) async {
