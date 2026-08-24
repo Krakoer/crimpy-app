@@ -55,5 +55,16 @@ void main() {
       expect(find.text('Avg Performed'), findsNothing);
       expect(find.text('2 reps'), findsOneWidget);
     });
+
+    testWidgets('states the zero a graded set really pulled', (tester) async {
+      await _pumpSet(tester, [
+        _rep(index: 0, averageWeight: 0),
+        _rep(index: 1, averageWeight: 0),
+      ]);
+
+      expect(find.text('0/2'), findsOneWidget);
+      expect(find.text('Avg Performed'), findsOneWidget);
+      expect(find.text('0.0 kg'), findsOneWidget);
+    });
   });
 }

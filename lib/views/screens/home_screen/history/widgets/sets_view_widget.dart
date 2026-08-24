@@ -19,15 +19,20 @@ class SetsViewWidget extends StatelessWidget {
       children: List.generate(sets.length, (setIndex) {
         final set = sets[setIndex];
         final workReps = set.reps.where((r) => !r.isRest).toList();
-        final measured = workReps.any((rep) => rep.averageWeight > 0);
+        final graded = onTargetCount(set.reps);
+        // A graded set states what it pulled even when that is a zero, since
+        // the zero is then a real reading. A set nothing measured states
+        // nothing, rather than a zero the athlete never pulled.
+        final performed =
+            graded != null || workReps.any((rep) => rep.averageWeight > 0);
 
         return Column(
           children: [
             SetCardWidget(
               label: set.label,
               workReps: workReps,
-              onTarget: onTargetCount(set.reps),
-              avgWeight: measured
+              onTarget: graded,
+              avgWeight: performed
                   ? _average(workReps.map((rep) => rep.averageWeight))
                   : null,
               avgTarget: _average(
@@ -90,7 +95,11 @@ class SetCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final count = onTarget;
-    final Color statusColor = count != null && count.onTarget == count.total
+    // A set graded by nothing is not a failed one, so its stats stay neutral
+    // instead of taking the color a missed set is drawn in.
+    final Color statusColor = count == null
+        ? CrimpyTheme.gray700
+        : count.onTarget == count.total
         ? Colors.green.shade600
         : Colors.orange.shade600;
 
