@@ -543,6 +543,17 @@ void main() {
       // The athlete came off the board on every rep, which the sensor did read.
       expect(max, 0);
     });
+
+    test('states a run read below zero as it was read', () {
+      // A sensor tared under load reads a whole run below zero. Flooring the
+      // max at 0 states the same load no rep pulled that this function exists
+      // to stop stating, and the portal carries no floor either.
+      final max = measuredMaxWeight([
+        for (var index = 0; index < 2; index++)
+          _rep(index: index, averageWeight: -0.4, targetWeight: 20),
+      ]);
+      expect(max, -0.4);
+    });
   });
 
   group('unmeasuredNote', () {
