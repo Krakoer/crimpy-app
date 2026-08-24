@@ -219,6 +219,30 @@ OnTargetCount? onTargetCount(List<RepDataModel> reps) {
   );
 }
 
+/// Mean load over the reps a run measured, or null when it measured none.
+///
+/// A rep whose target was lost to a sensor that dropped mid run was performed
+/// and weighed nothing, and carries an average of 0 it never pulled. Averaged
+/// in, it states a load lighter than anything the athlete held, on the same
+/// line as a ratio that already leaves that rep out. The two numbers count the
+/// same reps instead. Kept equal to measuredAvgWeight in
+/// crimpy-frontend/src/lib/sessions.ts.
+double? measuredAvgWeight(List<RepDataModel> reps) {
+  final measured = reps
+      .where((rep) => !rep.isRest && !rep.targetUnmeasured)
+      .toList();
+  // A run nothing ever weighed states no mean: its zeros are the absence of a
+  // reading rather than a load. A zero a working sensor read stays in, since it
+  // is what the athlete pulled, which is why the target and not the average
+  // decides here: only a measured rep is stored with the one it was given.
+  final weighed = measured.any(
+    (rep) => rep.averageWeight > 0 || rep.targetWeight > 0,
+  );
+  if (!weighed) return null;
+  return measured.map((rep) => rep.averageWeight).reduce((a, b) => a + b) /
+      measured.length;
+}
+
 /// Names how much of a run went unmeasured, or null when the run measured all
 /// of it. Stated next to a ratio so a denominator shrunk by a dropped sensor is
 /// not read as a shorter run than the athlete performed, and kept equal to

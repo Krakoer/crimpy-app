@@ -432,6 +432,62 @@ void main() {
     });
   });
 
+  group('measuredAvgWeight', () {
+    test('averages the reps the sensor weighed', () {
+      final average = measuredAvgWeight([
+        _rep(index: 0, averageWeight: 30, targetWeight: 30),
+        _rep(index: 1, averageWeight: 30, targetWeight: 30),
+        for (var index = 2; index < 4; index++)
+          _rep(
+            index: index,
+            averageWeight: 0,
+            targetWeight: 0,
+            targetUnmeasured: true,
+          ),
+      ]);
+      // Counting the two the sensor missed would read 15.0 kg, a load the
+      // athlete never pulled, beside a ratio that already leaves them out.
+      expect(average, 30);
+    });
+
+    test('leaves the rests out', () {
+      final average = measuredAvgWeight([
+        _rep(index: 0, averageWeight: 30, targetWeight: 30),
+        _rep(index: 1, isRest: true, averageWeight: 0, targetWeight: 0),
+      ]);
+      expect(average, 30);
+    });
+
+    test('keeps the zero a working sensor read', () {
+      final average = measuredAvgWeight([
+        _rep(index: 0, averageWeight: 30, targetWeight: 30),
+        _rep(index: 1, averageWeight: 0, targetWeight: 30),
+      ]);
+      expect(average, 15);
+    });
+
+    test('a run the sensor never measured at all states no load', () {
+      final average = measuredAvgWeight([
+        for (var index = 0; index < 3; index++)
+          _rep(
+            index: index,
+            averageWeight: 0,
+            targetWeight: 0,
+            targetUnmeasured: true,
+          ),
+      ]);
+      expect(average, null);
+    });
+
+    test('a run nothing was ever meant to weigh states no load', () {
+      final average = measuredAvgWeight([
+        for (var index = 0; index < 3; index++)
+          _rep(index: index, averageWeight: 0, targetWeight: 0),
+      ]);
+      expect(average, null);
+    });
+  });
+
   group('unmeasuredNote', () {
     test('a fully measured run says nothing', () {
       expect(unmeasuredNote((onTarget: 2, total: 2, unmeasured: 0)), null);

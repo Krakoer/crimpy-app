@@ -196,6 +196,11 @@ void main() {
     expect(find.text('2/4'), findsNothing);
     expect(find.text('2/2 (2 unmeasured)'), findsOneWidget);
     expect(find.text('2/2 on target (2 unmeasured)'), findsOneWidget);
+    // The average load counts the same reps the ratio does. Counting the two
+    // the sensor missed would read 15.0 kg, a load the athlete never pulled.
+    expect(find.text('Avg Weight'), findsOneWidget);
+    expect(find.text('15.0 kg'), findsNothing);
+    expect(find.text('30.0 kg'), findsWidgets);
   });
 
   testWidgets('keeps the session wide stats when one block was played', (

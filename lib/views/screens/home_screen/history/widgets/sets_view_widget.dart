@@ -19,22 +19,14 @@ class SetsViewWidget extends StatelessWidget {
       children: List.generate(sets.length, (setIndex) {
         final set = sets[setIndex];
         final workReps = set.reps.where((r) => !r.isRest).toList();
-        final graded = onTargetCount(set.reps);
-        // A graded set states what it pulled even when that is a zero, since
-        // the zero is then a real reading. A set nothing measured states
-        // nothing, rather than a zero the athlete never pulled.
-        final performed =
-            graded != null || workReps.any((rep) => rep.averageWeight > 0);
 
         return Column(
           children: [
             SetCardWidget(
               label: set.label,
               workReps: workReps,
-              onTarget: graded,
-              avgWeight: performed
-                  ? _average(workReps.map((rep) => rep.averageWeight))
-                  : null,
+              onTarget: onTargetCount(set.reps),
+              avgWeight: measuredAvgWeight(set.reps),
               avgTarget: _average(
                 workReps
                     .where((rep) => rep.targetWeight > 0)
@@ -68,7 +60,9 @@ class SetCardWidget extends StatelessWidget {
   /// missed one.
   final OnTargetCount? onTarget;
 
-  /// Mean load pulled, null when no rep of the set was measured.
+  /// Mean load pulled over the reps the sensor weighed, null when it weighed
+  /// none of them. Counts the same reps as [onTarget], so the two numbers of
+  /// the card cannot state different things about the same run.
   final double? avgWeight;
 
   /// Mean load prescribed, null when no rep of the set carries a target.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/rep_blocks.dart';
 
 class SessionPerformanceCard extends StatelessWidget {
   final List<RepDataModel> reps;
@@ -25,9 +26,10 @@ class SessionPerformanceCard extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final avgWeight =
-        workReps.fold<double>(0, (sum, r) => sum + r.averageWeight) /
-        workReps.length;
+    // Over the reps the sensor weighed, so a run it dropped out of is not
+    // averaged down by the zeros it recorded for the rest of it. Null when it
+    // weighed none of them, which drops the stat rather than stating a zero.
+    final avgWeight = measuredAvgWeight(workReps);
     final maxWeight = workReps.fold<double>(
       0,
       (max, r) => r.averageWeight > max ? r.averageWeight : max,
@@ -35,7 +37,8 @@ class SessionPerformanceCard extends StatelessWidget {
     final totalWorkTime = workReps.fold(0, (sum, r) => sum + r.duration);
 
     final stats = <(String, String)>[
-      if (!poolsBlocks) ('Avg Weight', '${avgWeight.toStringAsFixed(1)} kg'),
+      if (!poolsBlocks && avgWeight != null)
+        ('Avg Weight', '${avgWeight.toStringAsFixed(1)} kg'),
       ('Max Weight', '${maxWeight.toStringAsFixed(1)} kg'),
       ('Work Time', '${totalWorkTime}s'),
       ('Work Reps', '${workReps.length}'),
