@@ -357,6 +357,36 @@ void main() {
     });
   });
 
+  group('onTargetCount', () {
+    test('a run given no target is not a failed one', () {
+      expect(onTargetCount([_rep(index: 0, targetWeight: 0)]), null);
+    });
+
+    test('rests are not reps to grade', () {
+      final count = onTargetCount([
+        _rep(index: 0, averageWeight: 20, targetWeight: 20),
+        _rep(index: 1, isRest: true, targetWeight: 0),
+      ]);
+      expect(count, (onTarget: 1, total: 1));
+    });
+
+    test('a rep at 90% of its target counts, one below it does not', () {
+      final count = onTargetCount([
+        _rep(index: 0, averageWeight: 18, targetWeight: 20),
+        _rep(index: 1, averageWeight: 17.9, targetWeight: 20),
+      ]);
+      expect(count, (onTarget: 1, total: 2));
+    });
+
+    test('a rep the training gave no target misses, once a target was set', () {
+      final count = onTargetCount([
+        _rep(index: 0, averageWeight: 20, targetWeight: 20),
+        _rep(index: 1, averageWeight: 20, targetWeight: 0),
+      ]);
+      expect(count, (onTarget: 1, total: 2));
+    });
+  });
+
   group('spansMultipleBlocks', () {
     RepBlock block(String label) =>
         RepBlock(label: label, reps: [_rep(index: 0)]);

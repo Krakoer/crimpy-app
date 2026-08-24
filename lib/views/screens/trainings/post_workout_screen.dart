@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
+import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:intl/intl.dart';
 import 'package:crimpy/theme.dart';
 
@@ -55,19 +56,26 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Success percentage, computed only from sensor reps that have a target.
-    final sensorReps = widget.results
-        .where((r) => !r.isRest && r.targetWeight > 0)
-        .toList();
-    final bool hasSensorData = sensorReps.isNotEmpty;
-    final int percentageSuccess = hasSensorData
-        ? (sensorReps
-                      .where((rep) => rep.averageWeight >= rep.targetWeight)
-                      .length /
-                  sensorReps.length *
-                  100)
-              .round()
-        : 0;
+    // How the run went, read the way the history card reads it once the session
+    // is saved: block by block, and against the same on-target threshold. One
+    // ratio over blocks hung at different targets grades them all through a
+    // single number and hides which of them was missed.
+    final workReps = widget.results.where((rep) => !rep.isRest).toList();
+    final blocks = groupRepsByTrainingItem(workReps, widget.template.items);
+    final overall = spansMultipleBlocks(blocks)
+        ? null
+        : onTargetCount(workReps);
+    final blockCounts = blocks == null
+        ? const <({String label, int onTarget, int total})>[]
+        : [
+            for (final block in blocks)
+              if (onTargetCount(block.reps) case final count?)
+                (
+                  label: block.label,
+                  onTarget: count.onTarget,
+                  total: count.total,
+                ),
+          ];
 
     return PopScope(
       canPop: false,
@@ -103,81 +111,62 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
       child: Scaffold(
         appBar: AppBar(title: Text(widget.template.title)),
         body: SafeArea(
-          child: Column(
-            children: [
-              SizedBox(height: 100),
-              Text(
-                "Well done! 💪",
-                style: Theme.of(context).textTheme.displaySmall,
-              ),
-              // Show the success percentage only when sensor data was captured.
-              if (hasSensorData)
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: "you managed to do ",
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: CrimpyTheme.gray500,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                SizedBox(height: 100),
+                Text(
+                  "Well done! 💪",
+                  style: Theme.of(context).textTheme.displaySmall,
+                ),
+                // Stated only for a run the training gave loads to grade against.
+                if (overall != null)
+                  _OverallOnTarget(count: overall)
+                else if (blockCounts.isNotEmpty)
+                  _BlocksOnTarget(counts: blockCounts),
+                SizedBox(height: 25),
+                // Form for session name and notes.
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32.0,
+                    vertical: 16.0,
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          controller: _trainingNameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Training Name',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a training name';
+                            }
+                            return null;
+                          },
                         ),
-                      ),
-                      TextSpan(
-                        text: "$percentageSuccess%",
-                        style: Theme.of(
-                          context,
-                        ).textTheme.labelLarge?.copyWith(fontSize: 12),
-                      ),
-                      TextSpan(
-                        text: " of the reps",
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: CrimpyTheme.gray500,
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _noteController,
+                          decoration: const InputDecoration(
+                            labelText: 'Notes',
+                            hintText: "How did you feel?",
+                            border: OutlineInputBorder(),
+                            alignLabelWithHint: true,
+                          ),
+                          keyboardType: TextInputType.multiline,
+                          maxLines: 20,
+                          minLines: 4,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              SizedBox(height: 25),
-              // Form for session name and notes.
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32.0,
-                  vertical: 16.0,
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      TextFormField(
-                        controller: _trainingNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Training Name',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a training name';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _noteController,
-                        decoration: const InputDecoration(
-                          labelText: 'Notes',
-                          hintText: "How did you feel?",
-                          border: OutlineInputBorder(),
-                          alignLabelWithHint: true,
-                        ),
-                        keyboardType: TextInputType.multiline,
-                        maxLines: 20,
-                        minLines: 4,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -218,6 +207,76 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
           },
           child: Text("Save training"),
         ),
+      ),
+    );
+  }
+}
+
+/// How the whole run went, for a session that played a single block: one ratio
+/// over one target grades exactly what it says it does.
+class _OverallOnTarget extends StatelessWidget {
+  final ({int onTarget, int total}) count;
+
+  const _OverallOnTarget({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final percentage = (count.onTarget / count.total * 100).round();
+    final muted = Theme.of(
+      context,
+    ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.gray500);
+
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: "you hit your target on ", style: muted),
+          TextSpan(
+            text: "$percentage%",
+            style: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(fontSize: 12),
+          ),
+          TextSpan(text: " of the reps", style: muted),
+        ],
+      ),
+    );
+  }
+}
+
+/// One ratio per block, the way the history card reads the same run. A block
+/// hung at 34 kg and one hung at 24 kg are graded against what each of them
+/// prescribed, so a missed block is not averaged away by a met one.
+class _BlocksOnTarget extends StatelessWidget {
+  final List<({String label, int onTarget, int total})> counts;
+
+  const _BlocksOnTarget({required this.counts});
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = Theme.of(
+      context,
+    ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.gray500);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, left: 32, right: 32),
+      child: Column(
+        children: [
+          for (final count in counts)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                children: [
+                  Expanded(child: Text(count.label, style: muted)),
+                  Text(
+                    "${count.onTarget}/${count.total} on target",
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelLarge?.copyWith(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -41,23 +41,13 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
   @override
   Widget build(BuildContext context) {
     final reps = widget.session.reps!;
-    final workReps = reps.where((r) => !r.isRest).toList();
     final blocks = widget.blocks;
-
-    int successCount = 0;
-    for (final rep in workReps) {
-      if (rep.targetWeight > 0 && rep.averageWeight / rep.targetWeight >= 0.9) {
-        successCount++;
-      }
-    }
 
     // One ratio over blocks graded against different targets says nothing about
     // which of them was missed, so a session that played more than one is read
-    // through the ratio each block carries instead. A ratio over reps the
-    // training never gave a target grades every one of them as missed, which is
-    // an athlete's own logged run rather than a failed one.
-    final showsOverallRatio =
-        !widget.poolsBlocks && workReps.any((r) => r.targetWeight > 0);
+    // through the ratio each block carries instead. A run the training never
+    // gave a target counts none, which is why the ratio is left out there.
+    final overall = widget.poolsBlocks ? null : onTargetCount(reps);
 
     return CrimpyCard.simple(
       child: Column(
@@ -72,30 +62,30 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
-              if (showsOverallRatio)
+              if (overall != null)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: successCount == workReps.length
+                    color: overall.onTarget == overall.total
                         ? Colors.green.withValues(alpha: 0.15)
                         : Colors.orange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: successCount == workReps.length
+                      color: overall.onTarget == overall.total
                           ? Colors.green.shade700
                           : Colors.orange.shade700,
                       width: 1,
                     ),
                   ),
                   child: Text(
-                    '$successCount/${workReps.length}',
+                    '${overall.onTarget}/${overall.total}',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: successCount == workReps.length
+                      color: overall.onTarget == overall.total
                           ? Colors.green.shade700
                           : Colors.orange.shade700,
                     ),
@@ -197,14 +187,9 @@ class _BlockCard extends StatelessWidget {
   /// Each block is graded on its own reps, so two blocks of different intensity
   /// are not read through one pooled ratio.
   String? get _onTarget {
-    final targeted = block.reps.where((r) => r.targetWeight > 0);
-    if (targeted.isEmpty) return null;
-    final onTarget = block.reps
-        .where(
-          (r) => r.targetWeight > 0 && r.averageWeight / r.targetWeight >= 0.9,
-        )
-        .length;
-    return '$onTarget/${block.reps.length} on target';
+    final count = onTargetCount(block.reps);
+    if (count == null) return null;
+    return '${count.onTarget}/${count.total} on target';
   }
 
   List<RepDataModel> get _shownReps {
