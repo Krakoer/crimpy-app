@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/run_screen_style.dart';
+import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/repositories/ble_repository.dart';
@@ -79,6 +82,42 @@ Training _oneHang() => const Training(
   ],
 );
 
+/// Two prescribed hangs back to back, so a run can lose the sensor between them
+/// and the reps on either side of the drop are read apart.
+Training _twoHangs() => const Training(
+  id: 't4',
+  title: 'Two hangs',
+  items: [
+    TrainingItem(
+      id: 'h1',
+      type: TrainingItemType.hangboardRep,
+      position: 0,
+      hand: 'right',
+      worktimeSeconds: 7,
+      restSeconds: 0,
+      loads: [Load(value: 30, unit: 'kg')],
+    ),
+    TrainingItem(
+      id: 'h2',
+      type: TrainingItemType.hangboardRep,
+      position: 1,
+      hand: 'right',
+      worktimeSeconds: 7,
+      restSeconds: 0,
+      loads: [Load(value: 30, unit: 'kg')],
+    ),
+  ],
+);
+
+/// One sensor notification carrying [kilograms], in the frame layout the
+/// firmware sends: two header bytes then the reading as a little endian float.
+/// The repository is left at its default tare and coefficient, so the value
+/// arrives calibrated as it was written.
+List<int> _sample(double kilograms) {
+  final frame = ByteData(6)..setFloat32(2, kilograms, Endian.little);
+  return frame.buffer.asUint8List();
+}
+
 /// An uncommented exercise ahead of a commented one, both at the top level.
 Training _oneCommentedExercise() => const Training(
   id: 't2',
@@ -142,7 +181,11 @@ Future<void> _pumpRun(
   BleRepository? bleRepository,
   bool useSensor = false,
   BleSessionStats? sensorStats,
+  bool liveSensorStats = false,
 }) async {
+  final screen = MaterialApp(
+    home: PlayTrainingScreen(training, useSensor: useSensor),
+  );
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -158,13 +201,27 @@ Future<void> _pumpRun(
         if (sensorStats != null)
           bleSessionProvider.overrideWith(() => _FixedBleSession(sensorStats)),
       ],
-      child: MaterialApp(
-        home: PlayTrainingScreen(training, useSensor: useSensor),
-      ),
+      // The run only reads the stats once a step ends, so a test pushing real
+      // samples has to hold the session open from the first frame: built on
+      // that first read instead, it would have missed everything before it.
+      child: liveSensorStats
+          ? Consumer(
+              builder: (context, ref, child) {
+                ref.watch(bleSessionProvider);
+                return child!;
+              },
+              child: screen,
+            )
+          : screen,
     ),
   );
   await tester.pump();
 }
+
+/// The reps a finished run handed to the screen that shows them, which is what
+/// gets saved as the session.
+List<RepDataModel> _recordedReps(WidgetTester tester) =>
+    tester.widget<PostWorkoutScreen>(find.byType(PostWorkoutScreen)).results;
 
 /// Moves to the next step of the run, the way the skip button does.
 Future<void> _skip(WidgetTester tester) async {
@@ -374,5 +431,46 @@ void main() {
 
     expect(find.byType(PostWorkoutScreen), findsOneWidget);
     expect(find.textContaining('you hit your target on'), findsOneWidget);
+  });
+
+  // The run the ticket is about: the sensor answers for the first hang and goes
+  // quiet before the second, the way a disconnect mid-session leaves it. The
+  // expansion cannot tell the two hangs apart, since both were prescribed with
+  // the sensor connected, so only the samples that actually arrived can.
+  testWidgets('a sensor that drops mid-run only targets the reps it measured', (
+    tester,
+  ) async {
+    final bleRepository = BleRepository();
+    await _pumpRun(
+      tester,
+      _twoHangs(),
+      useSensor: true,
+      bleRepository: bleRepository,
+      liveSensorStats: true,
+    );
+
+    // Preparation rest, then the first hang, which the sensor measures.
+    await _skip(tester);
+    for (final kilograms in const [28.0, 31.0, 32.0]) {
+      bleRepository.handleRawSample(_sample(kilograms));
+    }
+    await tester.pump();
+
+    // Second hang: the sensor is gone, so nothing reaches the stream while it
+    // runs, even though the run still believes it collects sensor data.
+    await _skip(tester);
+    await tester.pump();
+
+    await _skip(tester);
+    await tester.pumpAndSettle();
+
+    final hangs = _recordedReps(tester).where((rep) => !rep.isRest).toList();
+    expect(hangs, hasLength(2));
+
+    expect(hangs.first.targetWeight, 30);
+    expect(hangs.first.averageWeight, closeTo(30.33, 0.01));
+
+    expect(hangs.last.targetWeight, 0);
+    expect(hangs.last.averageWeight, 0);
   });
 }

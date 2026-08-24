@@ -97,6 +97,12 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     // Stats of the step that just ran: the session is reset at every step
     // boundary, so no sample means the sensor answered nothing while this one
     // was running, whatever the run started with.
+    //
+    // A single sample is enough to count as measured, deliberately. Partial
+    // coverage cannot be read as a lost sensor: a hang the athlete let go of
+    // halfway leaves exactly the same short run of samples, and that one is a
+    // real miss the coach has to see. Dropping it would hide a failed rep,
+    // which is worse than grading a half measured one.
     final sensorStats = ref.read(bleSessionProvider);
     final sensorDelivered = sensorStats.nbPoints > 0;
     repResults.add(
