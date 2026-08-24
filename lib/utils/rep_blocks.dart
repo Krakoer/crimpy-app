@@ -176,6 +176,34 @@ Map<String, TrainingItem> trainingItemsById(List<TrainingItem> items) {
 /// pool nothing, but they still read honestly one block at a time.
 bool spansMultipleBlocks(List<RepBlock>? blocks) => (blocks?.length ?? 0) > 1;
 
+/// The share of its target a rep has to reach to count as on target. Stated
+/// once here so every screen grades a run the same way, and kept equal to
+/// ON_TARGET_RATIO in crimpy-frontend/src/lib/sessions.ts so an athlete and
+/// their coach read the same session the same way.
+const double onTargetRatio = 0.9;
+
+/// Whether a rep reached the load it was given. A rep the training gave no
+/// target is graded by nothing, so it is not on target either.
+bool isOnTarget(RepDataModel rep) =>
+    rep.targetWeight > 0 &&
+    rep.averageWeight / rep.targetWeight >= onTargetRatio;
+
+/// How many of a run's reps reached the load they were given, out of how many it
+/// played.
+typedef OnTargetCount = ({int onTarget, int total});
+
+/// How many of a run's reps reached the load they were given, rests left out.
+///
+/// Null when no rep carries a target: a ratio over reps the training never gave
+/// one grades every single one as missed, which is an athlete's own logged run
+/// rather than a failed one. Reps without a target still count in the total once
+/// any of its neighbours has one, so a block reads as the whole run it was.
+OnTargetCount? onTargetCount(List<RepDataModel> reps) {
+  final workReps = reps.where((rep) => !rep.isRest).toList();
+  if (!workReps.any((rep) => rep.targetWeight > 0)) return null;
+  return (onTarget: workReps.where(isOnTarget).length, total: workReps.length);
+}
+
 /// Cuts the reps into the blocks they were played from, in the order they were
 /// performed: a new block starts wherever the item changes. Grouping by item id
 /// instead would merge a block the athlete came back to with its first pass and

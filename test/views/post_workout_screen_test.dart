@@ -2,6 +2,7 @@ import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
+import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,32 @@ class CapturingSessions extends Sessions {
 }
 
 const _training = Training(id: 't1', title: 'Mobility');
+
+TrainingItem _item(String id) =>
+    TrainingItem(id: id, type: TrainingItemType.hangboardRep, position: 0);
+
+RepDataModel _rep({
+  required int index,
+  String? itemId,
+  bool isRest = false,
+  double averageWeight = 20,
+  double targetWeight = 20,
+}) => RepDataModel(
+  averageWeight: averageWeight,
+  duration: 7,
+  index: index,
+  isRest: isRest,
+  handSide: HandSide.right,
+  targetWeight: targetWeight,
+  trainingItemId: itemId,
+);
+
+Future<void> _show(WidgetTester tester, Widget screen) => tester.pumpWidget(
+  ProviderScope(
+    overrides: [sessionsProvider.overrideWith(CapturingSessions.new)],
+    child: MaterialApp(home: screen),
+  ),
+);
 
 Future<SessionModel> _saveFrom(
   WidgetTester tester,
@@ -79,6 +106,89 @@ void main() {
 
     expect(saved.activity, SessionActivity.hangboard);
     expect(saved.origin, SessionOrigin.played);
+  });
+
+  testWidgets('grades a single block run against 90% of its target', (
+    tester,
+  ) async {
+    await _show(
+      tester,
+      PostWorkoutScreen(
+        template: Training(id: 't1', title: 'Hangs', items: [_item('a')]),
+        results: [
+          // 18 kg is 90% of 20, so it is on target; 17 kg is not.
+          _rep(index: 0, itemId: 'a', averageWeight: 18),
+          _rep(index: 1, itemId: 'a', averageWeight: 17),
+          _rep(index: 2, itemId: 'a', isRest: true, targetWeight: 0),
+          _rep(index: 3, itemId: 'a', averageWeight: 20),
+        ],
+      ),
+    );
+
+    expect(find.textContaining('2 of 3'), findsOneWidget);
+  });
+
+  testWidgets('states one ratio per block rather than pooling them', (
+    tester,
+  ) async {
+    await _show(
+      tester,
+      PostWorkoutScreen(
+        template: Training(
+          id: 't1',
+          title: 'Hangs',
+          items: [_item('a'), _item('b')],
+        ),
+        results: [
+          _rep(index: 0, itemId: 'a', averageWeight: 34, targetWeight: 34),
+          _rep(index: 1, itemId: 'a', averageWeight: 34, targetWeight: 34),
+          _rep(index: 2, itemId: 'b', averageWeight: 10, targetWeight: 24),
+        ],
+      ),
+    );
+
+    // Pooled, the run would read 2 of 3 and say nothing about the missed block.
+    expect(find.text('2/2 on target'), findsOneWidget);
+    expect(find.text('0/1 on target'), findsOneWidget);
+    expect(find.textContaining('of the reps'), findsNothing);
+  });
+
+  testWidgets('leaves out the blocks the training gave no target', (
+    tester,
+  ) async {
+    await _show(
+      tester,
+      PostWorkoutScreen(
+        template: Training(
+          id: 't1',
+          title: 'Hangs and mobility',
+          items: [_item('a'), _item('b')],
+        ),
+        results: [
+          _rep(index: 0, itemId: 'a', averageWeight: 34, targetWeight: 34),
+          _rep(index: 1, itemId: 'b', targetWeight: 0),
+        ],
+      ),
+    );
+
+    // A block hung against nothing is not a block that was missed.
+    expect(find.text('1/1 on target'), findsOneWidget);
+    expect(find.textContaining('0/1'), findsNothing);
+  });
+
+  testWidgets('says nothing about targets a run was never given', (
+    tester,
+  ) async {
+    await _show(
+      tester,
+      PostWorkoutScreen(
+        template: Training(id: 't1', title: 'Mobility', items: [_item('a')]),
+        results: [_rep(index: 0, itemId: 'a', targetWeight: 0)],
+      ),
+    );
+
+    expect(find.textContaining('on target'), findsNothing);
+    expect(find.textContaining('of the reps'), findsNothing);
   });
 
   testWidgets('carries the program links onto the session', (tester) async {
