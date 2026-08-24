@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/session.dart';
+import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/edit_session_screen.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
@@ -86,7 +87,7 @@ class SessionDetailScreen extends ConsumerWidget {
             ? switch (asyncFullSession) {
                 AsyncData(:final value) =>
                   value != null
-                      ? _buildSessionDetails(context, value)
+                      ? _buildSessionDetails(context, ref, value)
                       : _buildNotFoundError(context),
                 AsyncError(:final error) => _buildErrorState(
                   context,
@@ -94,13 +95,18 @@ class SessionDetailScreen extends ConsumerWidget {
                 ),
                 _ => const Center(child: CircularProgressIndicator()),
               }
-            : _buildSessionDetails(context, session),
+            : _buildSessionDetails(context, ref, session),
       ),
     );
   }
 
-  Widget _buildSessionDetails(BuildContext context, SessionModel session) {
+  Widget _buildSessionDetails(
+    BuildContext context,
+    WidgetRef ref,
+    SessionModel session,
+  ) {
     final sessionColor = CrimpyTheme.activityColor(session.activity);
+    final blocks = _resolveBlocks(ref, session);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -113,13 +119,17 @@ class SessionDetailScreen extends ConsumerWidget {
 
           // Performance stats (if available)
           if (session.hasReps) ...[
-            SessionPerformanceCard(reps: session.reps!),
+            SessionPerformanceCard(reps: session.reps!, blocks: blocks),
             const SizedBox(height: 16),
           ],
 
           // Repetitions breakdown (if available)
           if (session.hasReps) ...[
-            SessionRepsCard(session: session, sessionColor: sessionColor),
+            SessionRepsCard(
+              session: session,
+              sessionColor: sessionColor,
+              blocks: blocks,
+            ),
             const SizedBox(height: 16),
           ],
 
@@ -135,6 +145,28 @@ class SessionDetailScreen extends ConsumerWidget {
           ],
         ],
       ),
+    );
+  }
+
+  /// A rep names the training item it was played from, so the session reads
+  /// block by block. The prescription frozen on the session is the copy that
+  /// cannot have drifted since, and the only one readable for a coach's
+  /// training, so it is preferred; a guest-mode run has none and resolves its
+  /// own local training instead. Neither resolving falls back to the flat list,
+  /// as does a run that named no item the training still holds.
+  ///
+  /// Resolved once here rather than in each card, so the stats and the
+  /// breakdown below them never disagree about how many blocks were played.
+  List<RepBlock>? _resolveBlocks(WidgetRef ref, SessionModel session) {
+    final reps = session.reps;
+    if (reps == null) return null;
+    final items =
+        session.prescriptionItems ??
+        ref.watch(sessionTrainingItemsProvider(session.trainingId)).value;
+    if (items == null) return null;
+    return groupRepsByTrainingItem(
+      reps.where((r) => !r.isRest).toList(),
+      items,
     );
   }
 

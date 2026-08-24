@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
-import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/sets_view_widget.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/rep_item_widget.dart';
 
@@ -12,27 +10,34 @@ import 'package:crimpy/views/screens/home_screen/history/widgets/rep_item_widget
 const int _repsPreview = 5;
 const int _repsPreviewThreshold = 10;
 
-class SessionRepsCard extends ConsumerStatefulWidget {
+class SessionRepsCard extends StatefulWidget {
   final SessionModel session;
   final Color sessionColor;
+
+  /// The blocks the reps were played from, null for a session that names none,
+  /// which falls back to the flat list. Resolved by the screen so this card and
+  /// the performance stats above it read the same run.
+  final List<RepBlock>? blocks;
 
   const SessionRepsCard({
     super.key,
     required this.session,
     required this.sessionColor,
+    this.blocks,
   });
 
   @override
-  ConsumerState<SessionRepsCard> createState() => _SessionRepsCardState();
+  State<SessionRepsCard> createState() => _SessionRepsCardState();
 }
 
-class _SessionRepsCardState extends ConsumerState<SessionRepsCard> {
+class _SessionRepsCardState extends State<SessionRepsCard> {
   bool _repsExpanded = false;
 
   @override
   Widget build(BuildContext context) {
     final reps = widget.session.reps!;
     final workReps = reps.where((r) => !r.isRest).toList();
+    final blocks = widget.blocks;
 
     int successCount = 0;
     for (final rep in workReps) {
@@ -41,20 +46,13 @@ class _SessionRepsCardState extends ConsumerState<SessionRepsCard> {
       }
     }
 
-    // A rep names the training item it was played from, so the card reads the
-    // run block by block. The prescription frozen on the session is the copy
-    // that cannot have drifted since, and the only one readable for a coach's
-    // training, so it is preferred; a guest-mode run has none and resolves its
-    // own local training instead. Neither resolving falls back to the flat
-    // list, as does a run that named no item the training still holds.
-    final items =
-        widget.session.prescriptionItems ??
-        ref
-            .watch(sessionTrainingItemsProvider(widget.session.trainingId))
-            .value;
-    final blocks = items == null
-        ? null
-        : groupRepsByTrainingItem(workReps, items);
+    // One ratio over blocks graded against different targets says nothing about
+    // which of them was missed, so a session that played more than one is read
+    // through the ratio each block carries instead. A ratio over reps the
+    // training never gave a target grades every one of them as missed, which is
+    // an athlete's own logged run rather than a failed one.
+    final showsOverallRatio =
+        !poolsUnlikeBlocks(blocks) && workReps.any((r) => r.targetWeight > 0);
 
     return CrimpyCard.simple(
       child: Column(
@@ -69,7 +67,7 @@ class _SessionRepsCardState extends ConsumerState<SessionRepsCard> {
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
-              if (workReps.isNotEmpty)
+              if (showsOverallRatio)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,

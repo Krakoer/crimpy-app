@@ -2,7 +2,7 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
-import 'package:crimpy/views/screens/home_screen/history/widgets/session_reps_card.dart';
+import 'package:crimpy/views/screens/home_screen/history/session_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,22 +11,24 @@ RepDataModel _rep(
   int index, {
   String? itemId,
   HandSide hand = HandSide.right,
+  double averageWeight = 30,
+  double targetWeight = 30,
 }) => RepDataModel(
-  averageWeight: 30,
+  averageWeight: averageWeight,
   duration: 7,
   index: index,
   isRest: false,
   handSide: hand,
-  targetWeight: 30,
+  targetWeight: targetWeight,
   trainingItemId: itemId,
 );
 
-TrainingItem _hangRep(String id) => TrainingItem(
+TrainingItem _hangRep(String id, {int edgeSizeMm = 20}) => TrainingItem(
   id: id,
   type: TrainingItemType.hangboardRep,
   position: 0,
   reps: 2,
-  edgeSizesMm: const [20],
+  edgeSizesMm: [edgeSizeMm],
 );
 
 SessionModel _session({
@@ -43,7 +45,7 @@ SessionModel _session({
   reps: reps,
 );
 
-/// Pumps the card with the training the session links to resolved to [items].
+/// Pumps the screen with the training the session links to resolved to [items].
 /// A guest-mode run resolves to an empty list, which is what the provider
 /// returns for a session carrying no training at all.
 Future<void> _pump(
@@ -58,13 +60,7 @@ Future<void> _pump(
           session.trainingId,
         ).overrideWith((ref) async => resolved),
       ],
-      child: MaterialApp(
-        home: Scaffold(
-          body: SingleChildScrollView(
-            child: SessionRepsCard(session: session, sessionColor: Colors.blue),
-          ),
-        ),
-      ),
+      child: MaterialApp(home: SessionDetailScreen(session: session)),
     ),
   );
   await tester.pumpAndSettle();
@@ -128,5 +124,79 @@ void main() {
 
     expect(find.text('Blocks'), findsOneWidget);
     expect(find.text('Hang rep 20mm'), findsOneWidget);
+  });
+
+  testWidgets('states nothing session wide that would pool unlike blocks', (
+    tester,
+  ) async {
+    // Two hangs at 30 kg then two at 20 kg against a 24 kg target. The pooled
+    // average is 25.0 kg, which neither block asked for and no rep pulled, and
+    // the pooled 2/4 hides that one block was met and the other missed.
+    await _pump(
+      tester,
+      _session(
+        trainingId: 'coach-training',
+        prescriptionItems: [_hangRep('a'), _hangRep('b', edgeSizeMm: 14)],
+        reps: [
+          _rep(0, itemId: 'a'),
+          _rep(1, itemId: 'a'),
+          _rep(2, itemId: 'b', averageWeight: 20, targetWeight: 24),
+          _rep(3, itemId: 'b', averageWeight: 20, targetWeight: 24),
+        ],
+      ),
+    );
+
+    expect(find.text('Avg Weight'), findsNothing);
+    expect(find.text('25.0 kg'), findsNothing);
+    expect(find.text('2/4'), findsNothing);
+    // Each block still carries the ratio it was graded on.
+    expect(find.text('2/2 on target'), findsOneWidget);
+    expect(find.text('0/2 on target'), findsOneWidget);
+    // What aggregates over the whole session regardless of the blocks stays.
+    expect(find.text('Max Weight'), findsOneWidget);
+    expect(find.text('Work Reps'), findsOneWidget);
+  });
+
+  testWidgets('keeps the session wide stats when one block was played', (
+    tester,
+  ) async {
+    // Nothing is pooled across a single block, so the session reads exactly as
+    // it did before blocks existed.
+    await _pump(
+      tester,
+      _session(
+        trainingId: 'coach-training',
+        prescriptionItems: [_hangRep('a')],
+        reps: [
+          _rep(0, itemId: 'a'),
+          _rep(1, itemId: 'a'),
+        ],
+      ),
+    );
+
+    expect(find.text('Avg Weight'), findsOneWidget);
+    expect(find.text('30.0 kg'), findsWidgets);
+    expect(find.text('2/2'), findsOneWidget);
+  });
+
+  testWidgets('grades no ratio over reps the training never targeted', (
+    tester,
+  ) async {
+    // An athlete's own logged run carries no target, so a ratio over it would
+    // read every rep as missed rather than as untargeted.
+    await _pump(
+      tester,
+      _session(
+        trainingId: 'coach-training',
+        prescriptionItems: [_hangRep('a')],
+        reps: [
+          _rep(0, itemId: 'a', targetWeight: 0),
+          _rep(1, itemId: 'a', targetWeight: 0),
+        ],
+      ),
+    );
+
+    expect(find.text('0/2'), findsNothing);
+    expect(find.text('Avg Weight'), findsOneWidget);
   });
 }

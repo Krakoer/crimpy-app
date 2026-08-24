@@ -356,4 +356,21 @@ void main() {
       );
     });
   });
+
+  group('poolsUnlikeBlocks', () {
+    RepBlock block(String label) =>
+        RepBlock(label: label, reps: [_rep(index: 0)]);
+
+    test('a session that named no block pools nothing', () {
+      expect(poolsUnlikeBlocks(null), false);
+    });
+
+    test('one block is its own session, so nothing is pooled across it', () {
+      expect(poolsUnlikeBlocks([block('a')]), false);
+    });
+
+    test('two blocks cannot be stated as one number', () {
+      expect(poolsUnlikeBlocks([block('a'), block('b')]), true);
+    });
+  });
 }

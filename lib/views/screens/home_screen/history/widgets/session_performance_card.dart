@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/rep_blocks.dart';
 
 class SessionPerformanceCard extends StatelessWidget {
   final List<RepDataModel> reps;
 
-  const SessionPerformanceCard({super.key, required this.reps});
+  /// The blocks the reps were played from, null for a session that names none.
+  /// A session that played more than one drops its average weight rather than
+  /// pooling them, and reads it per block instead. Max weight, work time and
+  /// work reps still aggregate over the whole session.
+  final List<RepBlock>? blocks;
+
+  const SessionPerformanceCard({super.key, required this.reps, this.blocks});
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +31,14 @@ class SessionPerformanceCard extends StatelessWidget {
     );
     final totalWorkTime = workReps.fold(0, (sum, r) => sum + r.duration);
 
+    final stats = <(String, String)>[
+      if (!poolsUnlikeBlocks(blocks))
+        ('Avg Weight', '${avgWeight.toStringAsFixed(1)} kg'),
+      ('Max Weight', '${maxWeight.toStringAsFixed(1)} kg'),
+      ('Work Time', '${totalWorkTime}s'),
+      ('Work Reps', '${workReps.length}'),
+    ];
+
     return CrimpyCards.stats(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -35,43 +50,23 @@ class SessionPerformanceCard extends StatelessWidget {
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildPerformanceStat(
-                  context,
-                  'Avg Weight',
-                  '${avgWeight.toStringAsFixed(1)} kg',
-                ),
-              ),
-              Expanded(
-                child: _buildPerformanceStat(
-                  context,
-                  'Max Weight',
-                  '${maxWeight.toStringAsFixed(1)} kg',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildPerformanceStat(
-                  context,
-                  'Work Time',
-                  '${totalWorkTime}s',
-                ),
-              ),
-              Expanded(
-                child: _buildPerformanceStat(
-                  context,
-                  'Work Reps',
-                  '${workReps.length}',
-                ),
-              ),
-            ],
-          ),
+          for (var row = 0; row * 2 < stats.length; row++) ...[
+            if (row > 0) const SizedBox(height: 12),
+            Row(
+              children: [
+                for (var column = 0; column < 2; column++)
+                  Expanded(
+                    child: row * 2 + column < stats.length
+                        ? _buildPerformanceStat(
+                            context,
+                            stats[row * 2 + column].$1,
+                            stats[row * 2 + column].$2,
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );

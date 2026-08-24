@@ -166,6 +166,13 @@ Map<String, TrainingItem> trainingItemsById(List<TrainingItem> items) {
   return byId;
 }
 
+/// Whether a session's own stats would have to pool blocks of different
+/// intensity to state one number. Averaging a block hung at 34 kg with one hung
+/// at 24 kg names a load neither block asked for and no rep pulled, and one
+/// on-target ratio over blocks graded against different targets hides which of
+/// them was missed. Such a session states both per block instead.
+bool poolsUnlikeBlocks(List<RepBlock>? blocks) => (blocks?.length ?? 0) > 1;
+
 /// Cuts the reps into the blocks they were played from, in the order they were
 /// performed: a new block starts wherever the item changes. Grouping by item id
 /// instead would merge a block the athlete came back to with its first pass and
