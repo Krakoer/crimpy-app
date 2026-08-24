@@ -227,21 +227,21 @@ OnTargetCount? onTargetCount(List<RepDataModel> reps) {
 List<RepDataModel> measuredReps(List<RepDataModel> reps) =>
     reps.where((rep) => !rep.isRest && !rep.targetUnmeasured).toList();
 
-/// Mean load over the reps a run measured, or null when it measured none.
+/// Mean load over the reps a run weighed, or null when it weighed none.
 ///
 /// A rep the sensor missed carries an average of 0 it never pulled. Averaged
 /// in, it states a load lighter than anything the athlete held, on the same
-/// line as a ratio that already leaves that rep out. The two numbers count the
-/// same reps instead. Kept equal to measuredAvgWeight in
-/// crimpy-frontend/src/lib/sessions.ts.
+/// line as a ratio that already leaves that rep out, and beside a row that
+/// names it unmeasured. Every load of the card counts the same reps instead.
+/// Kept equal to measuredAvgWeight in crimpy-frontend/src/lib/sessions.ts.
 double? measuredAvgWeight(List<RepDataModel> reps) {
-  final measured = measuredReps(reps);
-  if (!_weighedAny(measured)) return null;
-  return measured.map((rep) => rep.averageWeight).reduce((a, b) => a + b) /
-      measured.length;
+  final weighed = weighedReps(reps);
+  if (weighed.isEmpty) return null;
+  return weighed.map((rep) => rep.averageWeight).reduce((a, b) => a + b) /
+      weighed.length;
 }
 
-/// Heaviest load over the reps a run measured, or null when it measured none.
+/// Heaviest load over the reps a run weighed, or null when it weighed none.
 ///
 /// A max is not pooled by the blocks a session played, since the heaviest rep of
 /// a run is one rep whichever block it was hung in, so the only run that states
@@ -251,27 +251,33 @@ double? measuredAvgWeight(List<RepDataModel> reps) {
 /// count the same reps and appear together. Kept equal to measuredMaxWeight in
 /// crimpy-frontend/src/lib/sessions.ts.
 double? measuredMaxWeight(List<RepDataModel> reps) {
-  final measured = measuredReps(reps);
-  if (!_weighedAny(measured)) return null;
-  return measured
+  final weighed = weighedReps(reps);
+  if (weighed.isEmpty) return null;
+  return weighed
       .map((rep) => rep.averageWeight)
       .reduce((a, b) => a > b ? a : b);
 }
 
 /// Whether the run got a reading for one rep. False for a rep it weighed
 /// nothing for: one whose target a dropped sensor lost, and one played from a
-/// block that measures nothing at all. Both are stored at zero against no
-/// target, which is the absence of a reading rather than a load the athlete
-/// pulled, so no surface states a load for them. A zero a working sensor read
-/// against a target counts as weighed, since it is what the athlete pulled.
-/// Kept equal to repWeighed in crimpy-frontend/src/lib/sessions.ts.
+/// block that measures nothing at all, a two handed hang included. Both are
+/// stored at exactly zero against no target, which is the absence of a reading
+/// rather than a load the athlete pulled, so no surface states a load for them.
+///
+/// A reading is anything the sensor answered with, the zero it read against a
+/// target and the below zero run of a sensor tared under load included: both are
+/// what the athlete pulled, and the peak already reads the second one as it was
+/// read. Kept equal to repWeighed in crimpy-frontend/src/lib/sessions.ts.
 bool repWeighed(RepDataModel rep) =>
-    rep.averageWeight > 0 || rep.targetWeight > 0;
+    rep.averageWeight != 0 || rep.targetWeight > 0;
 
-/// Whether a run got a reading for any of the reps it measured. False for a run
-/// whose sensor never answered, and for a block that was never meant to be
-/// weighed. Kept equal to weighedAny in crimpy-frontend/src/lib/sessions.ts.
-bool _weighedAny(List<RepDataModel> measured) => measured.any(repWeighed);
+/// The reps a run put a load on: the set every load stated over it is counted
+/// on, so the session stats and the rows cannot state loads over different reps.
+/// Empty for a run whose sensor never answered, and for a block that was never
+/// meant to be weighed. Kept equal to weighedReps in
+/// crimpy-frontend/src/lib/sessions.ts.
+List<RepDataModel> weighedReps(List<RepDataModel> reps) =>
+    measuredReps(reps).where(repWeighed).toList();
 
 /// Names how much of a run went unmeasured, or null when the run measured all
 /// of it. Stated next to a ratio so a denominator shrunk by a dropped sensor is

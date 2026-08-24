@@ -264,6 +264,29 @@ class RepItemWidget extends StatelessWidget {
                 ),
               ],
             ),
+          ] else if (weighed) ...[
+            const SizedBox(height: 8),
+            // A rep the sensor read against no prescribed load still names what
+            // the athlete pulled: the card averages it in, and the portal prints
+            // it on the row. There is nothing to grade it against, so it is
+            // stated in the neutral color a target would take.
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Performed',
+                  style: TextStyle(fontSize: 11, color: CrimpyTheme.gray600),
+                ),
+                Text(
+                  '${rep.averageWeight.toStringAsFixed(1)} kg',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: CrimpyTheme.gray700,
+                  ),
+                ),
+              ],
+            ),
           ],
         ],
       ),

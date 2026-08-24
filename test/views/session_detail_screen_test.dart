@@ -280,6 +280,27 @@ void main() {
     expect(find.text('0.0 kg'), findsWidgets);
   });
 
+  testWidgets('names the load of a rep the sensor read against no target', (
+    tester,
+  ) async {
+    // The athlete logged the run themselves, so nothing prescribed a load. The
+    // sensor still read the rep, the card averages it in, and the portal prints
+    // it on the row, so the row names it here too rather than staying silent.
+    await _pump(
+      tester,
+      _session(
+        trainingId: 'coach-training',
+        prescriptionItems: [_hangRep('a')],
+        reps: [_rep(0, itemId: 'a', averageWeight: 27.3, targetWeight: 0)],
+      ),
+    );
+
+    expect(find.text('Performed'), findsOneWidget);
+    expect(find.text('27.3 kg'), findsWidgets);
+    expect(find.text('Target'), findsNothing);
+    expect(find.text('Not measured'), findsNothing);
+  });
+
   testWidgets('keeps the session wide stats when one block was played', (
     tester,
   ) async {

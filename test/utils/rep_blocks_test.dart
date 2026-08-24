@@ -488,6 +488,19 @@ void main() {
     });
   });
 
+  group('measuredAvgWeight counts the reps the run weighed', () {
+    test('leaves out a rep the sensor missed that prescribed no load', () {
+      // A rep the sensor dropped on a run with no target is not flagged
+      // unmeasured, since nothing was prescribed to lose. Averaged in, its zero
+      // states 15.0 kg beside a row that names it unmeasured.
+      final avg = measuredAvgWeight([
+        _rep(index: 0, averageWeight: 30, targetWeight: 0),
+        _rep(index: 1, averageWeight: 0, targetWeight: 0),
+      ]);
+      expect(avg, 30);
+    });
+  });
+
   group('measuredMaxWeight', () {
     test('takes the heaviest of the reps the sensor weighed', () {
       final max = measuredMaxWeight([
@@ -597,6 +610,15 @@ void main() {
     test('keeps a rep read below zero by a sensor tared under load', () {
       expect(
         repWeighed(_rep(index: 0, averageWeight: -0.4, targetWeight: 20)),
+        isTrue,
+      );
+    });
+
+    test('keeps a rep read below zero that prescribed no load', () {
+      // The sensor answered, so the run was measured. Reading it as unweighed
+      // would state that nothing measured a run that was.
+      expect(
+        repWeighed(_rep(index: 0, averageWeight: -0.4, targetWeight: 0)),
         isTrue,
       );
     });
