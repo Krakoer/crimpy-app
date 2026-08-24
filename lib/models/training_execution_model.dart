@@ -47,6 +47,13 @@ final class TimedItem extends TrainingExecutionItem {
   double recordedTargetLoad({required bool sensorDelivered}) =>
       measured(sensorDelivered: sensorDelivered) ? targetLoad : 0;
 
+  /// Whether the step prescribed a load the run failed to measure. It records
+  /// the same empty target as a step nothing was meant to measure, so the rep
+  /// carries this to say the target was lost rather than never given: a run is
+  /// graded on the reps it could measure, and this one was performed blind.
+  bool targetUnmeasured({required bool sensorDelivered}) =>
+      collectSensorData && targetLoad > 0 && !sensorDelivered;
+
   const TimedItem({
     required this.label,
     required this.durationSeconds,

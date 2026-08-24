@@ -66,4 +66,58 @@ void main() {
       expect(reps.last.averageWeight, 0);
     });
   });
+
+  group('lost target', () {
+    test('is marked on a step the sensor was meant to measure', () {
+      expect(
+        _hang(collectSensorData: true).targetUnmeasured(sensorDelivered: false),
+        true,
+      );
+    });
+
+    test('is not marked when the step measured the athlete', () {
+      expect(
+        _hang(collectSensorData: true).targetUnmeasured(sensorDelivered: true),
+        false,
+      );
+    });
+
+    test('is not marked on a step nothing was going to measure', () {
+      expect(
+        _hang(
+          collectSensorData: false,
+        ).targetUnmeasured(sensorDelivered: false),
+        false,
+      );
+    });
+
+    test('is not marked when the step prescribed no load', () {
+      const exercise = TimedItem(
+        label: 'Pull ups',
+        durationSeconds: 30,
+        targetLoad: 0,
+        handSide: HandSide.both,
+        gripPosition: GripPosition.halfCrimp,
+        collectSensorData: true,
+      );
+
+      expect(exercise.targetUnmeasured(sensorDelivered: false), false);
+    });
+
+    test('reaches the rep a step the averages ran out for records', () {
+      final reps = buildRepsData(
+        [25.0],
+        [_hang(collectSensorData: true), _hang(collectSensorData: true)],
+      );
+
+      expect(reps.first.targetUnmeasured, false);
+      expect(reps.last.targetUnmeasured, true);
+    });
+
+    test('is left off the rep a sensorless step records', () {
+      final reps = buildRepsData([0.0], [_hang(collectSensorData: false)]);
+
+      expect(reps.single.targetUnmeasured, false);
+    });
+  });
 }

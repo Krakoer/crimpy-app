@@ -144,6 +144,12 @@ class RepDataModel {
   /// be read block by block. Null for a rep recorded outside a training.
   final String? trainingItemId;
 
+  /// Whether the step prescribed a load nothing measured, which is the sensor
+  /// dropping while a hang it was meant to read was running. Such a rep carries
+  /// no target, exactly as a step nothing was ever going to measure does, so
+  /// this is what tells the two apart when a run is graded.
+  final bool targetUnmeasured;
+
   RepDataModel({
     required this.averageWeight,
     required this.duration,
@@ -154,6 +160,7 @@ class RepDataModel {
     this.gripPosition = GripPosition.halfCrimp, // Default to half crimp
     this.edgeSizeMm,
     this.trainingItemId,
+    this.targetUnmeasured = false,
   });
 
   /// Parses a repetition as returned by the API.
@@ -171,5 +178,6 @@ class RepDataModel {
     ),
     edgeSizeMm: (json['edge_size_mm'] as num?)?.toInt(),
     trainingItemId: json['training_item_id'] as String?,
+    targetUnmeasured: json['target_unmeasured'] as bool? ?? false,
   );
 }
