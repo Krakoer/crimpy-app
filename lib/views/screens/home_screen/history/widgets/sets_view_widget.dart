@@ -139,6 +139,11 @@ class SetCardWidget extends StatelessWidget {
                 [
                   '${workReps.length} reps',
                   if (_sharedEdgeSizeMm != null) '${_sharedEdgeSizeMm}mm',
+                  // The badge beside grades only the reps the set measured, so
+                  // the ones it could not are named rather than left as the gap
+                  // between the two numbers.
+                  if (count != null)
+                    if (unmeasuredNote(count) case final note?) note,
                 ].join(' - '),
                 style: TextStyle(fontSize: 12, color: CrimpyTheme.gray600),
               ),

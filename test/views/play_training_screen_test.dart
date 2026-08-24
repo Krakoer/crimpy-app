@@ -109,6 +109,26 @@ Training _twoHangs() => const Training(
   ],
 );
 
+/// One block of two prescribed hangs, so both reps of a run are graded together
+/// and the block states one ratio over them.
+Training _repeatedHangs() => const Training(
+  id: 't5',
+  title: 'Repeated hangs',
+  items: [
+    TrainingItem(
+      id: 'r1',
+      type: TrainingItemType.repeater,
+      position: 0,
+      hand: 'right',
+      cycles: 1,
+      reps: 2,
+      worktimeSeconds: 7,
+      restSeconds: 3,
+      loads: [Load(value: 30, unit: 'kg')],
+    ),
+  ],
+);
+
 /// One sensor notification carrying [kilograms], in the frame layout the
 /// firmware sends: two header bytes then the reading as a little endian float.
 /// The repository is left at its default tare and coefficient, so the value
@@ -390,6 +410,9 @@ void main() {
     expect(find.byType(PostWorkoutScreen), findsOneWidget);
     expect(find.textContaining('you hit your target on'), findsNothing);
     expect(find.textContaining('on target'), findsNothing);
+    // Nothing was ever going to measure this run, so its reps lost no target:
+    // the flag is what a dropped sensor leaves behind, not a missing target.
+    expect(_recordedReps(tester).every((rep) => !rep.targetUnmeasured), isTrue);
   });
 
   // Whether a run collects sensor data is decided when the training is
@@ -469,8 +492,48 @@ void main() {
 
     expect(hangs.first.targetWeight, 30);
     expect(hangs.first.averageWeight, closeTo(30.33, 0.01));
+    expect(hangs.first.targetUnmeasured, false);
 
+    // The hang was prescribed a load and performed, so it says the target was
+    // lost rather than never given: graded against the zero above it would read
+    // as a miss, counted as a plain untargeted rep it would still weigh down
+    // the run's ratio.
     expect(hangs.last.targetWeight, 0);
     expect(hangs.last.averageWeight, 0);
+    expect(hangs.last.targetUnmeasured, true);
+  });
+
+  // What the athlete reads after that run: the block played two hangs and the
+  // sensor measured one, so the ratio is over the one hang the run could grade
+  // and the other is named rather than counted as a miss.
+  testWidgets('the run states its ratio over the reps it measured', (
+    tester,
+  ) async {
+    final bleRepository = BleRepository();
+    await _pumpRun(
+      tester,
+      _repeatedHangs(),
+      useSensor: true,
+      bleRepository: bleRepository,
+      liveSensorStats: true,
+    );
+
+    await _skip(tester);
+    for (final kilograms in const [28.0, 31.0, 32.0]) {
+      bleRepository.handleRawSample(_sample(kilograms));
+    }
+    await tester.pump();
+
+    // The rest between the two hangs, then the second hang with the sensor gone.
+    await _skip(tester);
+    await _skip(tester);
+    await tester.pump();
+
+    await _skip(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PostWorkoutScreen), findsOneWidget);
+    expect(find.textContaining('1 of 1'), findsOneWidget);
+    expect(find.textContaining('1 unmeasured'), findsOneWidget);
   });
 }

@@ -189,7 +189,9 @@ class _BlockCard extends StatelessWidget {
   String? get _onTarget {
     final count = onTargetCount(block.reps);
     if (count == null) return null;
-    return '${count.onTarget}/${count.total} on target';
+    final unmeasured = unmeasuredNote(count);
+    return '${count.onTarget}/${count.total} on target'
+        '${unmeasured == null ? '' : ' ($unmeasured)'}';
   }
 
   List<RepDataModel> get _shownReps {

@@ -12,6 +12,7 @@ RepDataModel _rep({
   double averageWeight = 20,
   double targetWeight = 20,
   HandSide hand = HandSide.right,
+  bool targetUnmeasured = false,
 }) => RepDataModel(
   averageWeight: averageWeight,
   duration: duration,
@@ -20,6 +21,7 @@ RepDataModel _rep({
   handSide: hand,
   targetWeight: targetWeight,
   trainingItemId: itemId,
+  targetUnmeasured: targetUnmeasured,
 );
 
 TrainingItem _item({
@@ -367,7 +369,7 @@ void main() {
         _rep(index: 0, averageWeight: 20, targetWeight: 20),
         _rep(index: 1, isRest: true, targetWeight: 0),
       ]);
-      expect(count, (onTarget: 1, total: 1));
+      expect(count, (onTarget: 1, total: 1, unmeasured: 0));
     });
 
     test('a rep at 90% of its target counts, one below it does not', () {
@@ -375,7 +377,7 @@ void main() {
         _rep(index: 0, averageWeight: 18, targetWeight: 20),
         _rep(index: 1, averageWeight: 17.9, targetWeight: 20),
       ]);
-      expect(count, (onTarget: 1, total: 2));
+      expect(count, (onTarget: 1, total: 2, unmeasured: 0));
     });
 
     test('a rep the training gave no target misses, once a target was set', () {
@@ -383,7 +385,48 @@ void main() {
         _rep(index: 0, averageWeight: 20, targetWeight: 20),
         _rep(index: 1, averageWeight: 20, targetWeight: 0),
       ]);
-      expect(count, (onTarget: 1, total: 2));
+      expect(count, (onTarget: 1, total: 2, unmeasured: 0));
+    });
+
+    test('a rep whose target the sensor never measured leaves the ratio', () {
+      final count = onTargetCount([
+        _rep(index: 0, averageWeight: 20, targetWeight: 20),
+        _rep(index: 1, averageWeight: 20, targetWeight: 20),
+        for (var index = 2; index < 6; index++)
+          _rep(
+            index: index,
+            averageWeight: 0,
+            targetWeight: 0,
+            targetUnmeasured: true,
+          ),
+      ]);
+      expect(count, (onTarget: 2, total: 2, unmeasured: 4));
+    });
+
+    test('a run the sensor never measured at all grades nothing', () {
+      final count = onTargetCount([
+        for (var index = 0; index < 3; index++)
+          _rep(
+            index: index,
+            averageWeight: 0,
+            targetWeight: 0,
+            targetUnmeasured: true,
+          ),
+      ]);
+      expect(count, null);
+    });
+  });
+
+  group('unmeasuredNote', () {
+    test('a fully measured run says nothing', () {
+      expect(unmeasuredNote((onTarget: 2, total: 2, unmeasured: 0)), null);
+    });
+
+    test('names how many reps went unmeasured', () {
+      expect(
+        unmeasuredNote((onTarget: 2, total: 2, unmeasured: 4)),
+        '4 unmeasured',
+      );
     });
   });
 
