@@ -86,6 +86,9 @@ void main() {
       // The set was four reps long whatever the sensor caught of it.
       expect(find.textContaining('4 reps'), findsOneWidget);
       expect(find.textContaining('2 unmeasured'), findsOneWidget);
+      // The mean is over the two reps the sensor weighed, so it agrees with the
+      // badge beside it. Counting the two it missed would read 14.0 kg.
+      expect(find.text('28.0 kg'), findsOneWidget);
     });
 
     // The note lengthens the header line the badge shares, and a set of a split
