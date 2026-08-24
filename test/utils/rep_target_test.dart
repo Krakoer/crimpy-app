@@ -15,12 +15,31 @@ TimedItem _hang({required bool collectSensorData}) => TimedItem(
 
 void main() {
   group('recorded target', () {
-    test('is the prescribed load when the step is measured', () {
-      expect(_hang(collectSensorData: true).recordedTargetLoad, 30);
+    test('is the prescribed load when the sensor measured the step', () {
+      expect(
+        _hang(
+          collectSensorData: true,
+        ).recordedTargetLoad(sensorDelivered: true),
+        30,
+      );
     });
 
     test('is none when the step collects no sensor data', () {
-      expect(_hang(collectSensorData: false).recordedTargetLoad, 0);
+      expect(
+        _hang(
+          collectSensorData: false,
+        ).recordedTargetLoad(sensorDelivered: true),
+        0,
+      );
+    });
+
+    test('is none when the sensor delivered nothing for the step', () {
+      expect(
+        _hang(
+          collectSensorData: true,
+        ).recordedTargetLoad(sensorDelivered: false),
+        0,
+      );
     });
 
     test('reaches the rep a measured step records', () {
@@ -34,6 +53,17 @@ void main() {
 
       expect(reps.single.targetWeight, 0);
       expect(reps.single.averageWeight, 0);
+    });
+
+    test('is left off a step the averages ran out for', () {
+      final reps = buildRepsData(
+        [25.0],
+        [_hang(collectSensorData: true), _hang(collectSensorData: true)],
+      );
+
+      expect(reps.first.targetWeight, 30);
+      expect(reps.last.targetWeight, 0);
+      expect(reps.last.averageWeight, 0);
     });
   });
 }

@@ -94,13 +94,21 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     if (timer.currentItemIndex == 0) return;
     final item = timer.currentItem;
     final timed = item is TimedItem ? item : null;
+    // Stats of the step that just ran: the session is reset at every step
+    // boundary, so no sample means the sensor answered nothing while this one
+    // was running, whatever the run started with.
+    final sensorStats = ref.read(bleSessionProvider);
+    final sensorDelivered = sensorStats.nbPoints > 0;
     repResults.add(
       RepDataModel(
         handSide: timed?.handSide ?? HandSide.both,
-        targetWeight: timed?.recordedTargetLoad ?? 0,
-        // Only collect a sensor average for gauge (sensor) steps.
-        averageWeight: (timed?.collectSensorData ?? false)
-            ? ref.read(bleSessionProvider).avg
+        targetWeight:
+            timed?.recordedTargetLoad(sensorDelivered: sensorDelivered) ?? 0,
+        // Only a step the sensor measured carries an average, and it is the
+        // same condition that decides whether the target above is recorded.
+        averageWeight:
+            (timed?.measured(sensorDelivered: sensorDelivered) ?? false)
+            ? sensorStats.avg
             : 0,
         duration: item.durationSeconds,
         index: timer.currentItemIndex - 1,

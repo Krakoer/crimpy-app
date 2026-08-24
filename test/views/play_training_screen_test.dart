@@ -1,3 +1,4 @@
+import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/run_screen_style.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
@@ -102,6 +103,22 @@ Training _oneCommentedExercise() => const Training(
   ],
 );
 
+/// Reports the sensor stats a test sets rather than the ones a live sensor
+/// would build up, so a run can state what the sensor delivered while its steps
+/// ran. The run resets the session at every step boundary; the stats stand for
+/// the whole run, so the reset is a no-op here.
+class _FixedBleSession extends BleSession {
+  _FixedBleSession(this.stats);
+
+  final BleSessionStats stats;
+
+  @override
+  BleSessionStats build() => stats;
+
+  @override
+  void reset() {}
+}
+
 /// Serves one design without touching the device storage, so a test states
 /// which layout it is about.
 class _FixedStyleService extends RunScreenStyleService {
@@ -124,6 +141,7 @@ Future<void> _pumpRun(
   RunScreenStyle style = RunScreenStyle.ringAndTank,
   BleRepository? bleRepository,
   bool useSensor = false,
+  BleSessionStats? sensorStats,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -137,6 +155,8 @@ Future<void> _pumpRun(
         bleRepositoryProvider.overrideWithValue(
           bleRepository ?? BleRepository(),
         ),
+        if (sensorStats != null)
+          bleSessionProvider.overrideWith(() => _FixedBleSession(sensorStats)),
       ],
       child: MaterialApp(
         home: PlayTrainingScreen(training, useSensor: useSensor),
@@ -313,5 +333,46 @@ void main() {
     expect(find.byType(PostWorkoutScreen), findsOneWidget);
     expect(find.textContaining('you hit your target on'), findsNothing);
     expect(find.textContaining('on target'), findsNothing);
+  });
+
+  // Whether a run collects sensor data is decided when the training is
+  // expanded, from the sensor it started with. A run that loses the sensor
+  // partway measures nothing from there on, so the reps it goes on recording
+  // carry no target either: kept, they would grade as misses.
+  testWidgets('a run the sensor never answered records reps with no target', (
+    tester,
+  ) async {
+    await _pumpRun(
+      tester,
+      _oneHang(),
+      useSensor: true,
+      sensorStats: BleSessionStats(),
+    );
+
+    await _skip(tester);
+    await _skip(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PostWorkoutScreen), findsOneWidget);
+    expect(find.textContaining('you hit your target on'), findsNothing);
+    expect(find.textContaining('on target'), findsNothing);
+  });
+
+  testWidgets('a step the sensor measured records the load it was given', (
+    tester,
+  ) async {
+    await _pumpRun(
+      tester,
+      _oneHang(),
+      useSensor: true,
+      sensorStats: BleSessionStats(avg: 31, max: 34, nbPoints: 120),
+    );
+
+    await _skip(tester);
+    await _skip(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PostWorkoutScreen), findsOneWidget);
+    expect(find.textContaining('you hit your target on'), findsOneWidget);
   });
 }
