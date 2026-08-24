@@ -199,6 +199,7 @@ class RemoteTrainingRepository extends TrainingRepository {
                     session.programSessionId != null) &&
                 indexed.$2.trainingItemId != null)
               'training_item_id': indexed.$2.trainingItemId,
+            'target_unmeasured': indexed.$2.targetUnmeasured,
           },
         )
         .toList();

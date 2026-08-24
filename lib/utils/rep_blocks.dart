@@ -188,9 +188,10 @@ bool isOnTarget(RepDataModel rep) =>
     rep.targetWeight > 0 &&
     rep.averageWeight / rep.targetWeight >= onTargetRatio;
 
-/// How many of a run's reps reached the load they were given, out of how many it
-/// played.
-typedef OnTargetCount = ({int onTarget, int total});
+/// How many of a run's reps reached the load they were given, out of how many
+/// the run could grade, plus the ones it prescribed a load for and never
+/// measured.
+typedef OnTargetCount = ({int onTarget, int total, int unmeasured});
 
 /// How many of a run's reps reached the load they were given, rests left out.
 ///
@@ -198,11 +199,32 @@ typedef OnTargetCount = ({int onTarget, int total});
 /// one grades every single one as missed, which is an athlete's own logged run
 /// rather than a failed one. Reps without a target still count in the total once
 /// any of its neighbours has one, so a block reads as the whole run it was.
+///
+/// A rep whose target was lost to a sensor that dropped mid run is the one
+/// exception: it was prescribed a load and performed, but nothing measured it,
+/// so grading it either way states something the run does not know. It leaves
+/// the ratio entirely and is counted apart, for the screens to say how much of
+/// the run went unmeasured.
 OnTargetCount? onTargetCount(List<RepDataModel> reps) {
   final workReps = reps.where((rep) => !rep.isRest).toList();
-  if (!workReps.any((rep) => rep.targetWeight > 0)) return null;
-  return (onTarget: workReps.where(isOnTarget).length, total: workReps.length);
+  final graded = workReps.where((rep) => !rep.targetUnmeasured).toList();
+  // Asked of the reps the run could grade, not of every rep: a group whose only
+  // targets went unmeasured has nothing to state a ratio over, and 0/0 reads as
+  // a run that met nothing.
+  if (!graded.any((rep) => rep.targetWeight > 0)) return null;
+  return (
+    onTarget: graded.where(isOnTarget).length,
+    total: graded.length,
+    unmeasured: workReps.length - graded.length,
+  );
 }
+
+/// Names how much of a run went unmeasured, or null when the run measured all
+/// of it. Stated next to a ratio so a denominator shrunk by a dropped sensor is
+/// not read as a shorter run than the athlete performed, and kept equal to
+/// unmeasuredNote in crimpy-frontend/src/lib/sessions.ts.
+String? unmeasuredNote(OnTargetCount count) =>
+    count.unmeasured == 0 ? null : '${count.unmeasured} unmeasured';
 
 /// Cuts the reps into the blocks they were played from, in the order they were
 /// performed: a new block starts wherever the item changes. Grouping by item id

@@ -110,6 +110,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         handSide: timed?.handSide ?? HandSide.both,
         targetWeight:
             timed?.recordedTargetLoad(sensorDelivered: sensorDelivered) ?? 0,
+        // A target the step prescribed and the run never measured is not a
+        // miss, so the rep says so rather than being graded on the zero above.
+        targetUnmeasured:
+            timed?.targetUnmeasured(sensorDelivered: sensorDelivered) ?? false,
         // Only a step the sensor measured carries an average, and it is the
         // same condition that decides whether the target above is recorded.
         averageWeight:

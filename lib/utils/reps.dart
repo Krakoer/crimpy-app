@@ -26,6 +26,8 @@ List<RepDataModel> buildRepsData(
         handSide: handSide ?? timed?.handSide ?? HandSide.both,
         targetWeight:
             timed?.recordedTargetLoad(sensorDelivered: average != null) ?? 0,
+        targetUnmeasured:
+            timed?.targetUnmeasured(sensorDelivered: average != null) ?? false,
         averageWeight: average ?? 0,
         index: index,
         gripPosition: timed?.gripPosition ?? GripPosition.halfCrimp,

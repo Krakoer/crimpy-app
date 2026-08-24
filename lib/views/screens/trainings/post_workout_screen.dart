@@ -70,11 +70,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
         : [
             for (final block in blocks)
               if (onTargetCount(block.reps) case final count?)
-                (
-                  label: block.label,
-                  onTarget: count.onTarget,
-                  total: count.total,
-                ),
+                (label: block.label, count: count),
           ];
 
     return PopScope(
@@ -214,7 +210,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
 
 /// One block of a run and how it was graded, named the way the athlete saw it
 /// played.
-typedef _BlockOnTarget = ({String label, int onTarget, int total});
+typedef _BlockOnTarget = ({String label, OnTargetCount count});
 
 /// How the whole run went, for a session that played a single block: one ratio
 /// over one target grades exactly what it says it does. Counted rather than
@@ -242,6 +238,10 @@ class _OverallOnTarget extends StatelessWidget {
             ).textTheme.labelLarge?.copyWith(fontSize: 12),
           ),
           TextSpan(text: " reps", style: muted),
+          // The reps the sensor never measured are graded by nothing, so they
+          // are named apart rather than counted into the ratio above.
+          if (unmeasuredNote(count) case final note?)
+            TextSpan(text: " ($note)", style: muted),
         ],
       ),
     );
@@ -266,18 +266,20 @@ class _BlocksOnTarget extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8, left: 32, right: 32),
       child: Column(
         children: [
-          for (final count in counts)
+          for (final block in counts)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 2),
               child: Row(
                 children: [
-                  Expanded(child: Text(count.label, style: muted)),
+                  Expanded(child: Text(block.label, style: muted)),
                   Text(
-                    "${count.onTarget}/${count.total} on target",
+                    "${block.count.onTarget}/${block.count.total} on target",
                     style: Theme.of(
                       context,
                     ).textTheme.labelLarge?.copyWith(fontSize: 12),
                   ),
+                  if (unmeasuredNote(block.count) case final note?)
+                    Text(" ($note)", style: muted),
                 ],
               ),
             ),

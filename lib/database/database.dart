@@ -171,6 +171,14 @@ class RepDatas extends Table {
   // played session keeps the prescription it was run from.
   late final TextColumn trainingItemId = text().nullable()();
 
+  // Whether the step prescribed a load nothing measured, which is the sensor
+  // dropping while a hang it was meant to read was running. The rep records no
+  // target then, exactly as a step nothing was going to measure does, so this
+  // is what tells a lost target from one never given when the run is graded.
+  late final BoolColumn targetUnmeasured = boolean().withDefault(
+    const Constant(false),
+  )();
+
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
@@ -356,6 +364,7 @@ class AppDatabase extends _$AppDatabase {
             gripPosition: Value(index.$2.gripPosition.index),
             edgeSizeMm: Value(index.$2.edgeSizeMm),
             trainingItemId: Value(index.$2.trainingItemId),
+            targetUnmeasured: Value(index.$2.targetUnmeasured),
             updatedAt: Value(DateTime.now()),
           ),
         )
@@ -819,7 +828,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1111,6 +1120,9 @@ class AppDatabase extends _$AppDatabase {
           );
         }
       },
+      from7To8: (m, schema) async {
+        await m.addColumn(schema.repDatas, schema.repDatas.targetUnmeasured);
+      },
     ),
   );
 }
@@ -1157,6 +1169,7 @@ extension RepDataRowToModel on RepData {
     ),
     edgeSizeMm: edgeSizeMm,
     trainingItemId: trainingItemId,
+    targetUnmeasured: targetUnmeasured,
   );
 }
 

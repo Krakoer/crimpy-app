@@ -2903,6 +2903,21 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _targetUnmeasuredMeta = const VerificationMeta(
+    'targetUnmeasured',
+  );
+  @override
+  late final GeneratedColumn<bool> targetUnmeasured = GeneratedColumn<bool>(
+    'target_unmeasured',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("target_unmeasured" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -2928,6 +2943,7 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     gripPosition,
     edgeSizeMm,
     trainingItemId,
+    targetUnmeasured,
     updatedAt,
   ];
   @override
@@ -3034,6 +3050,15 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
         ),
       );
     }
+    if (data.containsKey('target_unmeasured')) {
+      context.handle(
+        _targetUnmeasuredMeta,
+        targetUnmeasured.isAcceptableOrUnknown(
+          data['target_unmeasured']!,
+          _targetUnmeasuredMeta,
+        ),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -3093,6 +3118,10 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
         DriftSqlType.string,
         data['${effectivePrefix}training_item_id'],
       ),
+      targetUnmeasured: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}target_unmeasured'],
+      )!,
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -3118,6 +3147,7 @@ class RepData extends DataClass implements Insertable<RepData> {
   final int gripPosition;
   final int? edgeSizeMm;
   final String? trainingItemId;
+  final bool targetUnmeasured;
   final DateTime updatedAt;
   const RepData({
     required this.id,
@@ -3131,6 +3161,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     required this.gripPosition,
     this.edgeSizeMm,
     this.trainingItemId,
+    required this.targetUnmeasured,
     required this.updatedAt,
   });
   @override
@@ -3151,6 +3182,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     if (!nullToAbsent || trainingItemId != null) {
       map['training_item_id'] = Variable<String>(trainingItemId);
     }
+    map['target_unmeasured'] = Variable<bool>(targetUnmeasured);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -3172,6 +3204,7 @@ class RepData extends DataClass implements Insertable<RepData> {
       trainingItemId: trainingItemId == null && nullToAbsent
           ? const Value.absent()
           : Value(trainingItemId),
+      targetUnmeasured: Value(targetUnmeasured),
       updatedAt: Value(updatedAt),
     );
   }
@@ -3193,6 +3226,7 @@ class RepData extends DataClass implements Insertable<RepData> {
       gripPosition: serializer.fromJson<int>(json['gripPosition']),
       edgeSizeMm: serializer.fromJson<int?>(json['edgeSizeMm']),
       trainingItemId: serializer.fromJson<String?>(json['trainingItemId']),
+      targetUnmeasured: serializer.fromJson<bool>(json['targetUnmeasured']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -3211,6 +3245,7 @@ class RepData extends DataClass implements Insertable<RepData> {
       'gripPosition': serializer.toJson<int>(gripPosition),
       'edgeSizeMm': serializer.toJson<int?>(edgeSizeMm),
       'trainingItemId': serializer.toJson<String?>(trainingItemId),
+      'targetUnmeasured': serializer.toJson<bool>(targetUnmeasured),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -3227,6 +3262,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     int? gripPosition,
     Value<int?> edgeSizeMm = const Value.absent(),
     Value<String?> trainingItemId = const Value.absent(),
+    bool? targetUnmeasured,
     DateTime? updatedAt,
   }) => RepData(
     id: id ?? this.id,
@@ -3242,6 +3278,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     trainingItemId: trainingItemId.present
         ? trainingItemId.value
         : this.trainingItemId,
+    targetUnmeasured: targetUnmeasured ?? this.targetUnmeasured,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   RepData copyWithCompanion(RepDatasCompanion data) {
@@ -3267,6 +3304,9 @@ class RepData extends DataClass implements Insertable<RepData> {
       trainingItemId: data.trainingItemId.present
           ? data.trainingItemId.value
           : this.trainingItemId,
+      targetUnmeasured: data.targetUnmeasured.present
+          ? data.targetUnmeasured.value
+          : this.targetUnmeasured,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -3285,6 +3325,7 @@ class RepData extends DataClass implements Insertable<RepData> {
           ..write('gripPosition: $gripPosition, ')
           ..write('edgeSizeMm: $edgeSizeMm, ')
           ..write('trainingItemId: $trainingItemId, ')
+          ..write('targetUnmeasured: $targetUnmeasured, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -3303,6 +3344,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     gripPosition,
     edgeSizeMm,
     trainingItemId,
+    targetUnmeasured,
     updatedAt,
   );
   @override
@@ -3320,6 +3362,7 @@ class RepData extends DataClass implements Insertable<RepData> {
           other.gripPosition == this.gripPosition &&
           other.edgeSizeMm == this.edgeSizeMm &&
           other.trainingItemId == this.trainingItemId &&
+          other.targetUnmeasured == this.targetUnmeasured &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -3335,6 +3378,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
   final Value<int> gripPosition;
   final Value<int?> edgeSizeMm;
   final Value<String?> trainingItemId;
+  final Value<bool> targetUnmeasured;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const RepDatasCompanion({
@@ -3349,6 +3393,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     this.gripPosition = const Value.absent(),
     this.edgeSizeMm = const Value.absent(),
     this.trainingItemId = const Value.absent(),
+    this.targetUnmeasured = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -3364,6 +3409,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     this.gripPosition = const Value.absent(),
     this.edgeSizeMm = const Value.absent(),
     this.trainingItemId = const Value.absent(),
+    this.targetUnmeasured = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : averageWeight = Value(averageWeight),
@@ -3385,6 +3431,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     Expression<int>? gripPosition,
     Expression<int>? edgeSizeMm,
     Expression<String>? trainingItemId,
+    Expression<bool>? targetUnmeasured,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -3400,6 +3447,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       if (gripPosition != null) 'grip_position': gripPosition,
       if (edgeSizeMm != null) 'edge_size_mm': edgeSizeMm,
       if (trainingItemId != null) 'training_item_id': trainingItemId,
+      if (targetUnmeasured != null) 'target_unmeasured': targetUnmeasured,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -3417,6 +3465,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     Value<int>? gripPosition,
     Value<int?>? edgeSizeMm,
     Value<String?>? trainingItemId,
+    Value<bool>? targetUnmeasured,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -3432,6 +3481,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       gripPosition: gripPosition ?? this.gripPosition,
       edgeSizeMm: edgeSizeMm ?? this.edgeSizeMm,
       trainingItemId: trainingItemId ?? this.trainingItemId,
+      targetUnmeasured: targetUnmeasured ?? this.targetUnmeasured,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -3473,6 +3523,9 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     if (trainingItemId.present) {
       map['training_item_id'] = Variable<String>(trainingItemId.value);
     }
+    if (targetUnmeasured.present) {
+      map['target_unmeasured'] = Variable<bool>(targetUnmeasured.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -3496,6 +3549,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
           ..write('gripPosition: $gripPosition, ')
           ..write('edgeSizeMm: $edgeSizeMm, ')
           ..write('trainingItemId: $trainingItemId, ')
+          ..write('targetUnmeasured: $targetUnmeasured, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -6459,6 +6513,7 @@ typedef $$RepDatasTableCreateCompanionBuilder =
       Value<int> gripPosition,
       Value<int?> edgeSizeMm,
       Value<String?> trainingItemId,
+      Value<bool> targetUnmeasured,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -6475,6 +6530,7 @@ typedef $$RepDatasTableUpdateCompanionBuilder =
       Value<int> gripPosition,
       Value<int?> edgeSizeMm,
       Value<String?> trainingItemId,
+      Value<bool> targetUnmeasured,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -6540,6 +6596,11 @@ class $$RepDatasTableFilterComposer
 
   ColumnFilters<String> get trainingItemId => $composableBuilder(
     column: $table.trainingItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get targetUnmeasured => $composableBuilder(
+    column: $table.targetUnmeasured,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6613,6 +6674,11 @@ class $$RepDatasTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get targetUnmeasured => $composableBuilder(
+    column: $table.targetUnmeasured,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -6671,6 +6737,11 @@ class $$RepDatasTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<bool> get targetUnmeasured => $composableBuilder(
+    column: $table.targetUnmeasured,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -6714,6 +6785,7 @@ class $$RepDatasTableTableManager
                 Value<int> gripPosition = const Value.absent(),
                 Value<int?> edgeSizeMm = const Value.absent(),
                 Value<String?> trainingItemId = const Value.absent(),
+                Value<bool> targetUnmeasured = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RepDatasCompanion(
@@ -6728,6 +6800,7 @@ class $$RepDatasTableTableManager
                 gripPosition: gripPosition,
                 edgeSizeMm: edgeSizeMm,
                 trainingItemId: trainingItemId,
+                targetUnmeasured: targetUnmeasured,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -6744,6 +6817,7 @@ class $$RepDatasTableTableManager
                 Value<int> gripPosition = const Value.absent(),
                 Value<int?> edgeSizeMm = const Value.absent(),
                 Value<String?> trainingItemId = const Value.absent(),
+                Value<bool> targetUnmeasured = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => RepDatasCompanion.insert(
@@ -6758,6 +6832,7 @@ class $$RepDatasTableTableManager
                 gripPosition: gripPosition,
                 edgeSizeMm: edgeSizeMm,
                 trainingItemId: trainingItemId,
+                targetUnmeasured: targetUnmeasured,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
