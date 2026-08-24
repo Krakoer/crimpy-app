@@ -34,11 +34,18 @@ final class TimedItem extends TrainingExecutionItem {
   /// Optional coach comment shown to the athlete during the step.
   final String? comment;
 
-  /// Target to store on the rep this step records. A step that collects no
-  /// sensor data measures nothing, so the rep it records carries no target:
-  /// stored with one, it would read as a missed target to every screen that
-  /// grades a run.
-  double get recordedTargetLoad => collectSensorData ? targetLoad : 0;
+  /// Whether the step measured the athlete. Collecting sensor data is decided
+  /// when the training is expanded, from the sensor the run started with, so a
+  /// step still measures nothing when the sensor drops before it runs and
+  /// [sensorDelivered] stays false for the rest of the session.
+  bool measured({required bool sensorDelivered}) =>
+      collectSensorData && sensorDelivered;
+
+  /// Target to store on the rep this step records. A step that measured nothing
+  /// carries no target: stored with one, it would read as a missed target to
+  /// every screen that grades a run.
+  double recordedTargetLoad({required bool sensorDelivered}) =>
+      measured(sensorDelivered: sensorDelivered) ? targetLoad : 0;
 
   const TimedItem({
     required this.label,

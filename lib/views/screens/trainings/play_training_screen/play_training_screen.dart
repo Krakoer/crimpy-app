@@ -94,13 +94,27 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     if (timer.currentItemIndex == 0) return;
     final item = timer.currentItem;
     final timed = item is TimedItem ? item : null;
+    // Stats of the step that just ran: the session is reset at every step
+    // boundary, so no sample means the sensor answered nothing while this one
+    // was running, whatever the run started with.
+    //
+    // A single sample is enough to count as measured, deliberately. Partial
+    // coverage cannot be read as a lost sensor: a hang the athlete let go of
+    // halfway leaves exactly the same short run of samples, and that one is a
+    // real miss the coach has to see. Dropping it would hide a failed rep,
+    // which is worse than grading a half measured one.
+    final sensorStats = ref.read(bleSessionProvider);
+    final sensorDelivered = sensorStats.nbPoints > 0;
     repResults.add(
       RepDataModel(
         handSide: timed?.handSide ?? HandSide.both,
-        targetWeight: timed?.recordedTargetLoad ?? 0,
-        // Only collect a sensor average for gauge (sensor) steps.
-        averageWeight: (timed?.collectSensorData ?? false)
-            ? ref.read(bleSessionProvider).avg
+        targetWeight:
+            timed?.recordedTargetLoad(sensorDelivered: sensorDelivered) ?? 0,
+        // Only a step the sensor measured carries an average, and it is the
+        // same condition that decides whether the target above is recorded.
+        averageWeight:
+            (timed?.measured(sensorDelivered: sensorDelivered) ?? false)
+            ? sensorStats.avg
             : 0,
         duration: item.durationSeconds,
         index: timer.currentItemIndex - 1,
