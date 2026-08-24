@@ -19,33 +19,22 @@ class SetsViewWidget extends StatelessWidget {
       children: List.generate(sets.length, (setIndex) {
         final set = sets[setIndex];
         final workReps = set.reps.where((r) => !r.isRest).toList();
-
-        int setSuccessCount = 0;
-        double setAvgWeight = 0;
-        double setAvgTarget = 0;
-
-        for (final rep in workReps) {
-          setAvgWeight += rep.averageWeight;
-          setAvgTarget += rep.targetWeight;
-          if (rep.targetWeight > 0 &&
-              rep.averageWeight / rep.targetWeight >= 0.9) {
-            setSuccessCount++;
-          }
-        }
-
-        if (workReps.isNotEmpty) {
-          setAvgWeight /= workReps.length;
-          setAvgTarget /= workReps.length;
-        }
+        final measured = workReps.any((rep) => rep.averageWeight > 0);
 
         return Column(
           children: [
             SetCardWidget(
               label: set.label,
               workReps: workReps,
-              successCount: setSuccessCount,
-              avgWeight: setAvgWeight,
-              avgTarget: setAvgTarget,
+              onTarget: onTargetCount(set.reps),
+              avgWeight: measured
+                  ? _average(workReps.map((rep) => rep.averageWeight))
+                  : null,
+              avgTarget: _average(
+                workReps
+                    .where((rep) => rep.targetWeight > 0)
+                    .map((rep) => rep.targetWeight),
+              ),
               sessionColor: sessionColor,
             ),
             if (setIndex < sets.length - 1) const SizedBox(height: 12),
@@ -54,6 +43,13 @@ class SetsViewWidget extends StatelessWidget {
       }),
     );
   }
+
+  /// Mean of the values, or null when there is none to average: a stat over
+  /// nothing reads as a zero the athlete never pulled.
+  static double? _average(Iterable<double> values) {
+    if (values.isEmpty) return null;
+    return values.reduce((a, b) => a + b) / values.length;
+  }
 }
 
 class SetCardWidget extends StatelessWidget {
@@ -61,16 +57,24 @@ class SetCardWidget extends StatelessWidget {
   /// the hands separately.
   final String label;
   final List<RepDataModel> workReps;
-  final int successCount;
-  final double avgWeight;
-  final double avgTarget;
+
+  /// How many reps of the set reached the load they were given, or null when
+  /// the set was graded by nothing: a hang the sensor never measured is not a
+  /// missed one.
+  final OnTargetCount? onTarget;
+
+  /// Mean load pulled, null when no rep of the set was measured.
+  final double? avgWeight;
+
+  /// Mean load prescribed, null when no rep of the set carries a target.
+  final double? avgTarget;
   final Color sessionColor;
 
   const SetCardWidget({
     super.key,
     required this.label,
     required this.workReps,
-    required this.successCount,
+    required this.onTarget,
     required this.avgWeight,
     required this.avgTarget,
     required this.sessionColor,
@@ -85,9 +89,8 @@ class SetCardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool allSuccess =
-        workReps.isNotEmpty && successCount == workReps.length;
-    final Color statusColor = allSuccess
+    final count = onTarget;
+    final Color statusColor = count != null && count.onTarget == count.total
         ? Colors.green.shade600
         : Colors.orange.shade600;
 
@@ -131,47 +134,56 @@ class SetCardWidget extends StatelessWidget {
                 style: TextStyle(fontSize: 12, color: CrimpyTheme.gray600),
               ),
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '$successCount/${workReps.length}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: statusColor,
+              if (count != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '${count.onTarget}/${count.total}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: statusColor,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 12),
           // Performance visualization
           SetPerformanceBar(workReps: workReps, sessionColor: sessionColor),
-          const SizedBox(height: 8),
-          // Set statistics
-          Row(
-            children: [
-              Expanded(
-                child: _buildSetStat(
-                  'Avg Performed',
-                  '${avgWeight.toStringAsFixed(1)} kg',
-                  statusColor,
-                ),
-              ),
-              Container(width: 1, height: 20, color: CrimpyTheme.gray300),
-              Expanded(
-                child: _buildSetStat(
-                  'Target',
-                  '${avgTarget.toStringAsFixed(1)} kg',
-                  CrimpyTheme.gray700,
-                ),
-              ),
-            ],
-          ),
+          if (avgWeight != null || avgTarget != null) ...[
+            const SizedBox(height: 8),
+            // Set statistics
+            Row(
+              children: [
+                if (avgWeight case final performed?)
+                  Expanded(
+                    child: _buildSetStat(
+                      'Avg Performed',
+                      '${performed.toStringAsFixed(1)} kg',
+                      statusColor,
+                    ),
+                  ),
+                if (avgWeight != null && avgTarget != null)
+                  Container(width: 1, height: 20, color: CrimpyTheme.gray300),
+                if (avgTarget case final target?)
+                  Expanded(
+                    child: _buildSetStat(
+                      'Target',
+                      '${target.toStringAsFixed(1)} kg',
+                      CrimpyTheme.gray700,
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );
