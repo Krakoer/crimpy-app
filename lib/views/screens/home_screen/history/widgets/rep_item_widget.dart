@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/rep_blocks.dart';
 
 class RepItemWidget extends StatelessWidget {
   final RepDataModel rep;
@@ -67,6 +68,10 @@ class RepItemWidget extends StatelessWidget {
   Widget _buildWorkItem() {
     // Calculate success/failure
     final bool hasTarget = rep.targetWeight > 0;
+    // A rep the run weighed nothing for states so rather than nothing at all:
+    // the card names every other rep with a load, and a silent row reads as one
+    // the athlete pulled a load the screen forgot to print.
+    final bool weighed = repWeighed(rep);
     final double successRate = hasTarget
         ? rep.averageWeight / rep.targetWeight
         : 0;
@@ -181,6 +186,25 @@ class RepItemWidget extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                )
+              else if (!weighed)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: CrimpyTheme.gray100,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'Not measured',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: CrimpyTheme.gray600,
+                    ),
                   ),
                 ),
             ],

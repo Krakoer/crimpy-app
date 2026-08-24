@@ -556,6 +556,52 @@ void main() {
     });
   });
 
+  group('repWeighed', () {
+    test('a rep the sensor read states the load it read', () {
+      expect(
+        repWeighed(_rep(index: 0, averageWeight: 30, targetWeight: 30)),
+        isTrue,
+      );
+    });
+
+    test('a rep whose target a dropped sensor lost was weighed by nothing', () {
+      expect(
+        repWeighed(
+          _rep(
+            index: 0,
+            averageWeight: 0,
+            targetWeight: 0,
+            targetUnmeasured: true,
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('a rep nothing was ever meant to weigh was weighed by nothing', () {
+      // An exercise block records the reps it played and no load at all, so its
+      // stored zero is the absence of a reading just as a lost target is.
+      expect(
+        repWeighed(_rep(index: 0, averageWeight: 0, targetWeight: 0)),
+        isFalse,
+      );
+    });
+
+    test('keeps the zero a working sensor read against a target', () {
+      expect(
+        repWeighed(_rep(index: 0, averageWeight: 0, targetWeight: 30)),
+        isTrue,
+      );
+    });
+
+    test('keeps a rep read below zero by a sensor tared under load', () {
+      expect(
+        repWeighed(_rep(index: 0, averageWeight: -0.4, targetWeight: 20)),
+        isTrue,
+      );
+    });
+  });
+
   group('unmeasuredNote', () {
     test('a fully measured run says nothing', () {
       expect(unmeasuredNote((onTarget: 2, total: 2, unmeasured: 0)), null);

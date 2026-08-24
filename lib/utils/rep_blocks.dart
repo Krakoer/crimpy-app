@@ -258,13 +258,20 @@ double? measuredMaxWeight(List<RepDataModel> reps) {
       .reduce((a, b) => a > b ? a : b);
 }
 
+/// Whether the run got a reading for one rep. False for a rep it weighed
+/// nothing for: one whose target a dropped sensor lost, and one played from a
+/// block that measures nothing at all. Both are stored at zero against no
+/// target, which is the absence of a reading rather than a load the athlete
+/// pulled, so no surface states a load for them. A zero a working sensor read
+/// against a target counts as weighed, since it is what the athlete pulled.
+/// Kept equal to repWeighed in crimpy-frontend/src/lib/sessions.ts.
+bool repWeighed(RepDataModel rep) =>
+    rep.averageWeight > 0 || rep.targetWeight > 0;
+
 /// Whether a run got a reading for any of the reps it measured. False for a run
-/// whose sensor never answered: its reps are stored at zero against no target,
-/// which is the absence of a reading rather than a load. A zero a working sensor
-/// read against a target counts as weighed, since it is what the athlete pulled.
-/// Kept equal to weighedAny in crimpy-frontend/src/lib/sessions.ts.
-bool _weighedAny(List<RepDataModel> measured) =>
-    measured.any((rep) => rep.averageWeight > 0 || rep.targetWeight > 0);
+/// whose sensor never answered, and for a block that was never meant to be
+/// weighed. Kept equal to weighedAny in crimpy-frontend/src/lib/sessions.ts.
+bool _weighedAny(List<RepDataModel> measured) => measured.any(repWeighed);
 
 /// Names how much of a run went unmeasured, or null when the run measured all
 /// of it. Stated next to a ratio so a denominator shrunk by a dropped sensor is
