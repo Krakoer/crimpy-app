@@ -20,7 +20,7 @@ List<RepDataModel> buildRepsData(
         duration: item.durationSeconds,
         isRest: item is RestItem,
         handSide: handSide ?? timed?.handSide ?? HandSide.both,
-        targetWeight: timed?.targetLoad ?? 0,
+        targetWeight: timed?.recordedTargetLoad ?? 0,
         averageWeight: timed == null
             ? 0
             : (next < averages.length ? averages[next++] : 0),
