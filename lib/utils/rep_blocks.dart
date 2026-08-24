@@ -207,7 +207,7 @@ typedef OnTargetCount = ({int onTarget, int total, int unmeasured});
 /// the run went unmeasured.
 OnTargetCount? onTargetCount(List<RepDataModel> reps) {
   final workReps = reps.where((rep) => !rep.isRest).toList();
-  final graded = workReps.where((rep) => !rep.targetUnmeasured).toList();
+  final graded = measuredReps(reps);
   // Asked of the reps the run could grade, not of every rep: a group whose only
   // targets went unmeasured has nothing to state a ratio over, and 0/0 reads as
   // a run that met nothing.
@@ -219,22 +219,26 @@ OnTargetCount? onTargetCount(List<RepDataModel> reps) {
   );
 }
 
+/// The work reps a run actually weighed: the set every load stated over a run is
+/// counted on, and the same one [onTargetCount] grades. A rep whose target was
+/// lost to a sensor that dropped mid run was performed and weighed nothing, so
+/// it is not one of them. Kept equal to measuredReps in
+/// crimpy-frontend/src/lib/sessions.ts.
+List<RepDataModel> measuredReps(List<RepDataModel> reps) =>
+    reps.where((rep) => !rep.isRest && !rep.targetUnmeasured).toList();
+
 /// Mean load over the reps a run measured, or null when it measured none.
 ///
-/// A rep whose target was lost to a sensor that dropped mid run was performed
-/// and weighed nothing, and carries an average of 0 it never pulled. Averaged
+/// A rep the sensor missed carries an average of 0 it never pulled. Averaged
 /// in, it states a load lighter than anything the athlete held, on the same
 /// line as a ratio that already leaves that rep out. The two numbers count the
 /// same reps instead. Kept equal to measuredAvgWeight in
 /// crimpy-frontend/src/lib/sessions.ts.
 double? measuredAvgWeight(List<RepDataModel> reps) {
-  final measured = reps
-      .where((rep) => !rep.isRest && !rep.targetUnmeasured)
-      .toList();
+  final measured = measuredReps(reps);
   // A run nothing ever weighed states no mean: its zeros are the absence of a
-  // reading rather than a load. A zero a working sensor read stays in, since it
-  // is what the athlete pulled, which is why the target and not the average
-  // decides here: only a measured rep is stored with the one it was given.
+  // reading rather than a load. A zero a working sensor read against a target
+  // stays in, since it is what the athlete pulled.
   final weighed = measured.any(
     (rep) => rep.averageWeight > 0 || rep.targetWeight > 0,
   );
