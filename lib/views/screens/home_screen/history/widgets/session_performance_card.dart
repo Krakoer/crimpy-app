@@ -9,7 +9,8 @@ class SessionPerformanceCard extends StatelessWidget {
   /// Whether one number stated for this whole session would pool across the
   /// blocks it played. The average weight is dropped when it would, and read
   /// per block instead. Max weight, work time and work reps still aggregate
-  /// over the whole session either way.
+  /// over the whole session either way: the heaviest rep of a run is one rep
+  /// whichever block it was hung in.
   final bool poolsBlocks;
 
   const SessionPerformanceCard({
@@ -26,20 +27,20 @@ class SessionPerformanceCard extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    // Over the reps the sensor weighed, so a run it dropped out of is not
+    // Both over the reps the sensor weighed, so a run it dropped out of is not
     // averaged down by the zeros it recorded for the rest of it. Null when it
-    // weighed none of them, which drops the stat rather than stating a zero.
+    // weighed none of them, which drops the stat rather than stating a zero the
+    // athlete never pulled. A run nothing weighed keeps only the work time and
+    // the rep count, which hold whatever the sensor caught.
     final avgWeight = measuredAvgWeight(workReps);
-    final maxWeight = workReps.fold<double>(
-      0,
-      (max, r) => r.averageWeight > max ? r.averageWeight : max,
-    );
+    final maxWeight = measuredMaxWeight(workReps);
     final totalWorkTime = workReps.fold(0, (sum, r) => sum + r.duration);
 
     final stats = <(String, String)>[
       if (!poolsBlocks && avgWeight != null)
         ('Avg Weight', '${avgWeight.toStringAsFixed(1)} kg'),
-      ('Max Weight', '${maxWeight.toStringAsFixed(1)} kg'),
+      if (maxWeight != null)
+        ('Max Weight', '${maxWeight.toStringAsFixed(1)} kg'),
       ('Work Time', '${totalWorkTime}s'),
       ('Work Reps', '${workReps.length}'),
     ];
