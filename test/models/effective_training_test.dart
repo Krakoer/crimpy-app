@@ -76,5 +76,29 @@ void main() {
       expect(merged.comment, 'Keep it crisp');
       expect(merged.isFavorite, isTrue);
     });
+
+    // Dropping them would leave the run unable to name the assessment a tuned
+    // load is read against, which is the one case the athlete cannot look up.
+    test('carries the referenced assessments through an override', () {
+      const base = Training(
+        id: 't1',
+        title: 'Board work',
+        referencedAssessments: [_pullUpPyramid],
+        items: [
+          TrainingItem(
+            id: 'item-1',
+            type: TrainingItemType.exercise,
+            position: 0,
+            reps: 8,
+          ),
+        ],
+      );
+
+      final merged = effectiveTraining(base, const [
+        SessionOverride(id: 'o1', itemId: 'item-1', overrides: {'reps': 10}),
+      ]);
+
+      expect(merged.referencedAssessments.single.id, _pullUpPyramid.id);
+    });
   });
 }

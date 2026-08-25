@@ -255,6 +255,26 @@ class AssessmentResults {
     return AssessmentResults(last, definitions: known);
   }
 
+  /// The same results, read against [extra] as well.
+  ///
+  /// This is how an assessment the athlete has no result for gets named: the
+  /// catalog they can fetch holds the ones Crimpy ships and their own, never
+  /// their coach's, so a training that reads a load against a coach assessment
+  /// carries its definition and hands it over here.
+  ///
+  /// [extra] wins over what is already known, since it comes from the training
+  /// being read and so is at least as current as the copy a past result froze.
+  AssessmentResults withDefinitions(Iterable<AssessmentDefinition> extra) {
+    if (extra.isEmpty) return this;
+    return AssessmentResults(
+      lastById,
+      definitions: {
+        ...definitions,
+        for (final definition in extra) definition.id: definition,
+      },
+    );
+  }
+
   AssessmentDefinition? definitionOf(String assessmentId) =>
       definitions[assessmentId];
 

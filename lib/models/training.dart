@@ -15,6 +15,13 @@ class Training {
   /// ends on the question the definition asks, whose answer is the result.
   final AssessmentDefinition? assessment;
 
+  /// The assessments the items read a load, a duration or a rep count against,
+  /// as the server knows them. An athlete cannot fetch the definition of an
+  /// assessment their coach owns, so this is the only thing that names it and
+  /// says what its result means. Empty on a training read from the local
+  /// database, which only ever holds the athlete's own.
+  final List<AssessmentDefinition> referencedAssessments;
+
   const Training({
     required this.id,
     required this.title,
@@ -24,6 +31,7 @@ class Training {
     this.isFavorite = false,
     this.items = const [],
     this.assessment,
+    this.referencedAssessments = const [],
   });
 
   /// Rebuilds the training with some fields replaced. Every caller goes through
@@ -38,6 +46,7 @@ class Training {
     bool? isFavorite,
     List<TrainingItem>? items,
     AssessmentDefinition? assessment,
+    List<AssessmentDefinition>? referencedAssessments,
   }) => Training(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -47,6 +56,7 @@ class Training {
     isFavorite: isFavorite ?? this.isFavorite,
     items: items ?? this.items,
     assessment: assessment ?? this.assessment,
+    referencedAssessments: referencedAssessments ?? this.referencedAssessments,
   );
 
   factory Training.fromJson(Map<String, dynamic> json) {
@@ -71,6 +81,12 @@ class Training {
           : AssessmentDefinition.fromJson(
               json['assessment'] as Map<String, dynamic>,
             ),
+      referencedAssessments:
+          (json['referenced_assessments'] as List<dynamic>?)
+              ?.whereType<Map<String, dynamic>>()
+              .map(AssessmentDefinition.fromJson)
+              .toList() ??
+          const [],
     );
   }
 
@@ -82,6 +98,8 @@ class Training {
     'is_favorite': isFavorite,
     'items': items.map((i) => i.toJson()).toList(),
     if (assessment != null) 'assessment': assessment!.toJson(),
+    // referencedAssessments is derived from the items by the server, so it is
+    // read back but never written: sending it would only restate the items.
   };
 
   /// Whether any exercise in the tree can be performed with the force sensor.
