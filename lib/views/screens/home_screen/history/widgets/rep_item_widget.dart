@@ -126,15 +126,19 @@ class RepItemWidget extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          rep.handSide.isRightHand
-                              ? Icons.front_hand
-                              : Icons.back_hand,
+                          switch (rep.handSide) {
+                            HandSide.right => Icons.front_hand,
+                            HandSide.left => Icons.back_hand,
+                            // Neither of the two single hand icons, since the
+                            // hang is neither of those hands.
+                            HandSide.both => Icons.pan_tool,
+                          },
                           size: 16,
                           color: CrimpyTheme.gray700,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          rep.handSide.isRightHand ? 'Right Hand' : 'Left Hand',
+                          rep.handSide.label,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,

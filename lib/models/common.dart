@@ -1,17 +1,47 @@
 enum HandSide { right, left, both }
 
 extension HandSideExtension on HandSide {
+  /// Whether the single hand worked is the right one. Only ask this where the
+  /// two single hands are the only cases, assessments in particular: a two
+  /// handed hang answers false, so a caller that can meet [HandSide.both] reads
+  /// it as the left hand.
   bool get isRightHand => switch (this) {
     HandSide.right => true,
     HandSide.left || HandSide.both => false,
   };
 
+  /// The shouted form the play screen prints while a rep runs.
   String get displayName => switch (this) {
     HandSide.left => "LEFT HAND",
     HandSide.right => "RIGHT HAND",
     HandSide.both => "BOTH HANDS",
   };
+
+  /// The form the history rows name a recorded rep with.
+  String get label => switch (this) {
+    HandSide.left => "Left Hand",
+    HandSide.right => "Right Hand",
+    HandSide.both => "Both Hands",
+  };
+
+  /// How the hand travels to the API and the local database. The three states
+  /// are stored as text rather than as an index so the vocabulary is the same
+  /// one the backend and the portal read.
+  String get apiValue => name;
 }
+
+/// Resolves a hand from its stored or server-supplied name. A name this build
+/// does not know reads as [HandSide.both], the state that names no single hand,
+/// so a rep written by a newer one is never claimed for the wrong side.
+///
+/// Takes a name rather than a nullable one on purpose: a rep carrying no hand
+/// at all is a contract the caller is not speaking, not a hand to guess at, and
+/// the caller is the one that can tell the reader so.
+HandSide handSideFromApi(String value) => switch (value) {
+  'right' => HandSide.right,
+  'left' => HandSide.left,
+  _ => HandSide.both,
+};
 
 enum GripPosition {
   halfCrimp,
