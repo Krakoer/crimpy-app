@@ -758,7 +758,7 @@ class AppDatabase extends _$AppDatabase {
         );
     }
 
-    final res = await query.join([
+    final joined = query.join([
       innerJoin(sessions, sessions.id.equalsExp(assessments.sessionId)),
       // Left, so a result whose definition has not synced yet still reads back
       // rather than vanishing from the history.
@@ -766,7 +766,18 @@ class AppDatabase extends _$AppDatabase {
         assessmentDefinitions,
         assessmentDefinitions.id.equalsExp(assessments.assessmentId),
       ),
-    ]).get();
+    ]);
+
+    // Callers take the last entry as the most recent one, so the order is part
+    // of the contract and cannot be left to whatever SQLite returns. The row id
+    // breaks ties so two results recorded on the same session date still read
+    // back in the order they were written.
+    joined.orderBy([
+      OrderingTerm.asc(sessions.date),
+      OrderingTerm.asc(assessments.rowId),
+    ]);
+
+    final res = await joined.get();
 
     return res.map((row) {
       final assessment = row.readTable(assessments);
