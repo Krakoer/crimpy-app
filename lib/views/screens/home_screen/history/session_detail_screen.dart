@@ -8,6 +8,7 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_overview_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_performance_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_reps_card.dart';
+import 'package:crimpy/views/screens/home_screen/history/widgets/session_open_results_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_notes_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_raw_data_card.dart';
 
@@ -138,6 +139,13 @@ class SessionDetailScreen extends ConsumerWidget {
               blocks: blocks,
               poolsBlocks: poolsBlocks,
             ),
+            const SizedBox(height: 16),
+          ],
+
+          // The counts the run answered the open items with. No rep carries
+          // either, so this is the only place they show up.
+          if (openItemResults(session).isNotEmpty) ...[
+            SessionOpenResultsCard(session: session),
             const SizedBox(height: 16),
           ],
 
