@@ -1231,6 +1231,13 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(schema.assessmentDefinitions);
         await seedBuiltinAssessmentDefinitions(m.database);
 
+        // A result whose discriminator named no assessment described nothing a
+        // client could read back. It goes first, since the column it would be
+        // copied into does not accept a null.
+        await m.database.customStatement(
+          'DELETE FROM assessments WHERE type NOT IN (0, 1, 2)',
+        );
+
         // The results already recorded were keyed by the old discriminator,
         // so they are re-pointed at the rows just seeded.
         await m.alterTable(
@@ -1247,11 +1254,6 @@ class AppDatabase extends _$AppDatabase {
             },
             newColumns: [schema.assessments.assessmentId],
           ),
-        );
-        // A result whose discriminator named no assessment described nothing a
-        // client could read back, so it goes rather than becoming a null row.
-        await m.database.customStatement(
-          'DELETE FROM assessments WHERE assessment_id IS NULL',
         );
 
         // Variable targets were never stored locally, so a training cached here
