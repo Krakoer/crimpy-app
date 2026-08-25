@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/run_screen_style.dart';
 import 'package:crimpy/models/session.dart';
@@ -125,6 +126,39 @@ Training _repeatedHangs() => const Training(
       worktimeSeconds: 7,
       restSeconds: 3,
       loads: [Load(value: 30, unit: 'kg')],
+    ),
+  ],
+);
+
+/// One exercise loaded as a percentage of a coach assessment, with the
+/// definition the training detail carries. The athlete cannot fetch that
+/// definition, so this is the only thing that names it during the run.
+Training _percentAssessmentExercise() => const Training(
+  id: 't6',
+  title: 'Weighted pull ups',
+  referencedAssessments: [
+    AssessmentDefinition(
+      id: 'a9b8c7d6-0000-0000-0000-000000000003',
+      label: 'Weighted hang',
+      unit: AssessmentUnit.kilograms,
+      trainingId: 't-weighted-hang',
+    ),
+  ],
+  items: [
+    TrainingItem(
+      id: 'e1',
+      type: TrainingItemType.exercise,
+      position: 0,
+      reps: 5,
+      exerciseName: 'Pull up',
+      loads: [
+        Load(
+          value: 80,
+          unit: percentAssessmentUnit,
+          assessmentId: 'a9b8c7d6-0000-0000-0000-000000000003',
+          fallback: 25,
+        ),
+      ],
     ),
   ],
 );
@@ -535,5 +569,17 @@ void main() {
     expect(find.byType(PostWorkoutScreen), findsOneWidget);
     expect(find.textContaining('1 of 1'), findsOneWidget);
     expect(find.textContaining('1 unmeasured'), findsOneWidget);
+  });
+
+  // No results are handed in, so the training's own definitions are all the run
+  // has: they name the coach assessment, which used to read "80% assessment".
+  testWidgets('a step names the coach assessment its load is read against', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _percentAssessmentExercise());
+    await _skip(tester);
+
+    expect(find.textContaining('80% Weighted hang'), findsOneWidget);
+    expect(find.textContaining('80% assessment'), findsNothing);
   });
 }

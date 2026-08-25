@@ -137,9 +137,10 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
           : diff.inDays == 1
           ? '1d ago'
           : '${diff.inDays}d ago';
-      // The unit comes from the definition: an endurance result reads in
-      // seconds, not in kilograms like the force assessments.
-      final unit = last.definition.unit;
+      // The unit comes from the assessment the card is for, not from the row:
+      // an endurance result reads in seconds, and a result whose definition has
+      // not synced carries a kilograms fallback that would say otherwise.
+      final unit = BuiltinAssessmentIds.definitionOf(type).unit;
       final parts = <String>[
         if (last.rightValue != null)
           'R: ${formatAssessmentValue(last.rightValue!, unit)}',

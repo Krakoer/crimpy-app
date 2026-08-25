@@ -1,6 +1,8 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/views/screens/trainings/training_details_screen.dart';
@@ -37,14 +39,55 @@ Training _percentBwTraining() => Training(
   ],
 );
 
-Future<void> _pump(WidgetTester tester, double? stored) async {
+/// A coach assessment: it lives on the coach's account, so the athlete cannot
+/// fetch its definition and only ever sees it through the training.
+const _weightedHang = AssessmentDefinition(
+  id: 'a9b8c7d6-0000-0000-0000-000000000003',
+  label: 'Weighted hang',
+  unit: AssessmentUnit.kilograms,
+  trainingId: 't-weighted-hang',
+);
+
+Training _percentAssessmentTraining() => Training(
+  id: 't',
+  title: 'Hangboard',
+  referencedAssessments: const [_weightedHang],
+  items: [
+    TrainingItem(
+      id: 'rep',
+      type: TrainingItemType.hangboardRep,
+      position: 0,
+      loads: const [
+        Load(
+          value: 80,
+          unit: percentAssessmentUnit,
+          assessmentId: 'a9b8c7d6-0000-0000-0000-000000000003',
+          fallback: 25,
+        ),
+      ],
+    ),
+  ],
+);
+
+Future<void> _pump(
+  WidgetTester tester,
+  double? stored, {
+  Training? training,
+}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         bodyweightProvider.overrideWith(() => _StubBodyweight(stored)),
         connectionStateProvider.overrideWith(_DisconnectedSensor.new),
+        // Nothing measured, which is the case the training has to name on its
+        // own, and it keeps the real provider off the device database.
+        assessmentResultsProvider.overrideWith(
+          (ref) async => AssessmentResults.none,
+        ),
       ],
-      child: MaterialApp(home: TrainingDetailScreen(_percentBwTraining())),
+      child: MaterialApp(
+        home: TrainingDetailScreen(training ?? _percentBwTraining()),
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -66,5 +109,17 @@ void main() {
     await _pump(tester, null);
     expect(find.textContaining('80 %BW'), findsOneWidget);
     expect(find.textContaining('kg'), findsNothing);
+  });
+
+  // The definitions the training carries are the only thing that names an
+  // assessment the athlete has never done: it is their coach's, so it is in no
+  // catalog they can fetch. Without them the tile read "80% assessment".
+  testWidgets('a load names the coach assessment the training references', (
+    tester,
+  ) async {
+    await _pump(tester, 70, training: _percentAssessmentTraining());
+
+    expect(find.textContaining('80% Weighted hang'), findsOneWidget);
+    expect(find.textContaining('80% assessment'), findsNothing);
   });
 }
