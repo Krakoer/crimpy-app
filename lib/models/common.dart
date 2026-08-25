@@ -30,10 +30,14 @@ extension HandSideExtension on HandSide {
   String get apiValue => name;
 }
 
-/// Resolves a hand from its stored or server-supplied name. An unknown value
-/// reads as [HandSide.both], the state that names no single hand, so a rep
-/// written by a newer build is never claimed for the wrong side.
-HandSide handSideFromApi(String? value) => switch (value) {
+/// Resolves a hand from its stored or server-supplied name. A name this build
+/// does not know reads as [HandSide.both], the state that names no single hand,
+/// so a rep written by a newer one is never claimed for the wrong side.
+///
+/// Takes a name rather than a nullable one on purpose: a rep carrying no hand
+/// at all is a contract the caller is not speaking, not a hand to guess at, and
+/// the caller is the one that can tell the reader so.
+HandSide handSideFromApi(String value) => switch (value) {
   'right' => HandSide.right,
   'left' => HandSide.left,
   _ => HandSide.both,

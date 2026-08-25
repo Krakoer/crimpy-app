@@ -76,6 +76,7 @@ void main() {
         [
           rep(index: 0, isRest: false, hand: HandSide.right),
           rep(index: 1, isRest: true, hand: HandSide.left),
+          rep(index: 2, isRest: false, hand: HandSide.both),
         ],
       );
 
@@ -85,6 +86,9 @@ void main() {
       expect(reps[0].isRest, isFalse);
       expect(reps[1].handSide, HandSide.left);
       expect(reps[1].isRest, isTrue);
+      // A two handed hang is a state of its own, and the boolean this column
+      // replaced stored it as the left hand.
+      expect(reps[2].handSide, HandSide.both);
     });
 
     test('the filter narrows to assessments', () async {

@@ -92,6 +92,26 @@ void main() {
     expect(find.text('Unnamed block'), findsNothing);
   });
 
+  testWidgets('names a two handed rep as such rather than a single hand', (
+    tester,
+  ) async {
+    // A hang taken two handed is neither of the single hands, and the row used
+    // to answer the left one for it.
+    await _pump(
+      tester,
+      _session(
+        reps: [
+          _rep(0, hand: HandSide.both),
+          _rep(1, hand: HandSide.right),
+        ],
+      ),
+    );
+
+    expect(find.text('Both Hands'), findsOneWidget);
+    expect(find.text('Right Hand'), findsOneWidget);
+    expect(find.text('Left Hand'), findsNothing);
+  });
+
   testWidgets('heads the blocks with the frozen prescription', (tester) async {
     // A program session names a training the athlete cannot read, so the
     // prescription frozen onto the session is the only copy it can be grouped

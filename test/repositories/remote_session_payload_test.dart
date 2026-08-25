@@ -16,15 +16,16 @@ class _CapturingApiClient extends ApiClient {
   }
 }
 
-RepDataModel _rep({String? trainingItemId}) => RepDataModel(
-  averageWeight: 25,
-  duration: 7,
-  index: 0,
-  isRest: false,
-  handSide: HandSide.right,
-  targetWeight: 30,
-  trainingItemId: trainingItemId,
-);
+RepDataModel _rep({String? trainingItemId, HandSide hand = HandSide.right}) =>
+    RepDataModel(
+      averageWeight: 25,
+      duration: 7,
+      index: 0,
+      isRest: false,
+      handSide: hand,
+      targetWeight: 30,
+      trainingItemId: trainingItemId,
+    );
 
 SessionModel _session({String? trainingId, String? programSessionId}) =>
     SessionModel(
@@ -41,11 +42,12 @@ Future<Map<String, dynamic>> _postedRep({
   String? trainingId,
   String? programSessionId,
   String? trainingItemId,
+  HandSide hand = HandSide.right,
 }) async {
   final client = _CapturingApiClient();
   await RemoteTrainingRepository(client).saveSession(
     _session(trainingId: trainingId, programSessionId: programSessionId),
-    [_rep(trainingItemId: trainingItemId)],
+    [_rep(trainingItemId: trainingItemId, hand: hand)],
   );
   return (client.body!['rep_datas'] as List).single as Map<String, dynamic>;
 }
@@ -81,6 +83,14 @@ void main() {
       final rep = await _postedRep(trainingId: 't-1');
 
       expect(rep.containsKey('training_item_id'), isFalse);
+    });
+
+    // The hand travels as text because a two handed hang is a state of its own,
+    // which the boolean this replaced answered the left hand for.
+    test('names the hand it was hung with', () async {
+      expect((await _postedRep(hand: HandSide.right))['hand'], 'right');
+      expect((await _postedRep(hand: HandSide.left))['hand'], 'left');
+      expect((await _postedRep(hand: HandSide.both))['hand'], 'both');
     });
   });
 }
