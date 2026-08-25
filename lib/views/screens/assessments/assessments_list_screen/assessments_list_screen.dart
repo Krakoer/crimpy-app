@@ -137,11 +137,14 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
           : diff.inDays == 1
           ? '1d ago'
           : '${diff.inDays}d ago';
+      // The unit comes from the definition: an endurance result reads in
+      // seconds, not in kilograms like the force assessments.
+      final unit = last.definition.unit;
       final parts = <String>[
         if (last.rightValue != null)
-          'R: ${last.rightValue!.toStringAsFixed(1)} kg',
+          'R: ${formatAssessmentValue(last.rightValue!, unit)}',
         if (last.leftValue != null)
-          'L: ${last.leftValue!.toStringAsFixed(1)} kg',
+          'L: ${formatAssessmentValue(last.leftValue!, unit)}',
       ];
       return parts.isEmpty ? timeAgo : '${parts.join('  ')}  $timeAgo';
     }
