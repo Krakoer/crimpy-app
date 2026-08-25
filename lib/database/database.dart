@@ -49,10 +49,12 @@ class Sessions extends Table {
 }
 
 // Stores the assessments the user has done, with the results.
-// What each assessment is: the ones Crimpy ships, seeded on first open, and the
-// coach ones the server sends. Cached locally so a result can be named and
-// formatted offline. The generated row class is named AssessmentDefinitionRow to
-// avoid conflict with the domain AssessmentDefinition in assessment_model.dart.
+// What each assessment is. Only the ones Crimpy ships live here, seeded on first
+// open, so a result recorded offline can still be named and formatted: a coach
+// assessment is read from the server, which sends its definition on every result
+// and on the training it is run from. The generated row class is named
+// AssessmentDefinitionRow to avoid conflict with the domain AssessmentDefinition
+// in assessment_model.dart.
 @DataClassName('AssessmentDefinitionRow')
 class AssessmentDefinitions extends Table {
   late final TextColumn id = text()();
@@ -725,29 +727,6 @@ class AppDatabase extends _$AppDatabase {
   Future<List<AssessmentDefinition>> getAssessmentDefinitions() async {
     final rows = await select(assessmentDefinitions).get();
     return rows.map((row) => row.toDomain()).toList();
-  }
-
-  /// Replaces the cached definitions with what the server holds, keeping the
-  /// ones Crimpy ships so the local path still names them when signed out.
-  Future<void> replaceAssessmentDefinitions(
-    List<AssessmentDefinition> definitions,
-  ) async {
-    await batch((b) {
-      b.insertAllOnConflictUpdate(
-        assessmentDefinitions,
-        definitions.map(
-          (d) => AssessmentDefinitionsCompanion.insert(
-            id: d.id,
-            label: d.label,
-            unit: assessmentUnitToApi(d.unit),
-            perHand: Value(d.perHand),
-            prompt: Value(d.prompt),
-            trainingId: Value(d.trainingId),
-            updatedAt: Value(DateTime.now()),
-          ),
-        ),
-      );
-    });
   }
 
   /// Get the assessments done.

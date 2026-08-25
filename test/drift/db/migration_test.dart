@@ -807,6 +807,8 @@ void main() {
         byId[BuiltinAssessmentIds.endurance60]!.unit,
         AssessmentUnit.seconds,
       );
+      // Each is measured on one hand at a time, and the profile branches on it.
+      expect(byId.values.every((d) => d.perHand), isTrue);
       await db.close();
     });
 

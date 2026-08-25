@@ -107,12 +107,17 @@ void main() {
     expect(find.text('Pull up pyramid'), findsOneWidget);
   });
 
-  testWidgets('shows no assessment section before anything is measured', (
+  // The sections Crimpy ships are what invite the athlete to do an assessment,
+  // so they stay on a profile with nothing measured yet.
+  testWidgets('keeps the builtin sections before anything is measured', (
     tester,
   ) async {
     await _show(tester, []);
 
+    expect(find.text('Critical Force'), findsOneWidget);
+    expect(find.text('60% Endurance'), findsOneWidget);
+    expect(find.text('Start Assessment'), findsWidgets);
+    // A coach assessment has nothing to show until it is first done.
     expect(find.text('Pull up pyramid'), findsNothing);
-    expect(find.text('60% Endurance'), findsNothing);
   });
 }

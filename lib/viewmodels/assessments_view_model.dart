@@ -32,12 +32,21 @@ Future<List<AssessmentDefinition>> assessmentDefinitions(Ref ref) =>
 
 /// The athlete latest result per assessment, used to turn the loads, durations
 /// and reps a coach set as a percentage of an assessment into numbers.
+///
+/// The definitions only add names for assessments that were never measured,
+/// since a result carries its own, so failing to fetch them must not cost the
+/// athlete the numbers they did measure.
 @riverpod
-Future<AssessmentResults> assessmentResults(Ref ref) async =>
-    AssessmentResults.fromHistory(
-      await ref.watch(assessmentsProvider(null).future),
-      definitions: await ref.watch(assessmentDefinitionsProvider.future),
-    );
+Future<AssessmentResults> assessmentResults(Ref ref) async {
+  final measured = await ref.watch(assessmentsProvider(null).future);
+  List<AssessmentDefinition> definitions = const [];
+  try {
+    definitions = await ref.watch(assessmentDefinitionsProvider.future);
+  } catch (e) {
+    AppLoggerHelper.warning("Could not load the assessment definitions: $e");
+  }
+  return AssessmentResults.fromHistory(measured, definitions: definitions);
+}
 
 /// Returns the list of assessments.
 /// Allow to filter on the assessment measured.

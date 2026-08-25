@@ -26,7 +26,15 @@ class ProfileContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final history = groupAssessmentHistory(assessments);
+    // The assessments Crimpy ships keep their section whether or not the athlete
+    // has done them, since that section is what invites them to.
+    final history = groupAssessmentHistory(
+      assessments,
+      alwaysShown: [
+        for (final type in AssessmentType.values)
+          BuiltinAssessmentIds.definitionOf(type),
+      ],
+    );
 
     // Max Force keeps a section of its own: it is the one assessment read one
     // grip at a time, which no generic section can show.

@@ -217,12 +217,20 @@ String _$assessmentDefinitionsHash() =>
 
 /// The athlete latest result per assessment, used to turn the loads, durations
 /// and reps a coach set as a percentage of an assessment into numbers.
+///
+/// The definitions only add names for assessments that were never measured,
+/// since a result carries its own, so failing to fetch them must not cost the
+/// athlete the numbers they did measure.
 
 @ProviderFor(assessmentResults)
 const assessmentResultsProvider = AssessmentResultsProvider._();
 
 /// The athlete latest result per assessment, used to turn the loads, durations
 /// and reps a coach set as a percentage of an assessment into numbers.
+///
+/// The definitions only add names for assessments that were never measured,
+/// since a result carries its own, so failing to fetch them must not cost the
+/// athlete the numbers they did measure.
 
 final class AssessmentResultsProvider
     extends
@@ -236,6 +244,10 @@ final class AssessmentResultsProvider
         $FutureProvider<AssessmentResults> {
   /// The athlete latest result per assessment, used to turn the loads, durations
   /// and reps a coach set as a percentage of an assessment into numbers.
+  ///
+  /// The definitions only add names for assessments that were never measured,
+  /// since a result carries its own, so failing to fetch them must not cost the
+  /// athlete the numbers they did measure.
   const AssessmentResultsProvider._()
     : super(
         from: null,
@@ -262,7 +274,7 @@ final class AssessmentResultsProvider
   }
 }
 
-String _$assessmentResultsHash() => r'33a15167eca6c806ce8c367f98c3df4d88095f4d';
+String _$assessmentResultsHash() => r'fc70903128ed0bf856973ebf3d8ff909818a922d';
 
 /// Returns the list of assessments.
 /// Allow to filter on the assessment measured.

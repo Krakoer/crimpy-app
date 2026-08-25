@@ -26,7 +26,28 @@ class Training {
     this.assessment,
   });
 
-  bool get isAssessment => assessment != null;
+  /// Rebuilds the training with some fields replaced. Every caller goes through
+  /// this rather than the constructor, so a field added later cannot be dropped
+  /// by a rebuild that forgot to carry it.
+  Training copyWith({
+    String? id,
+    String? title,
+    String? description,
+    String? goal,
+    String? comment,
+    bool? isFavorite,
+    List<TrainingItem>? items,
+    AssessmentDefinition? assessment,
+  }) => Training(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    description: description ?? this.description,
+    goal: goal ?? this.goal,
+    comment: comment ?? this.comment,
+    isFavorite: isFavorite ?? this.isFavorite,
+    items: items ?? this.items,
+    assessment: assessment ?? this.assessment,
+  );
 
   factory Training.fromJson(Map<String, dynamic> json) {
     final rawItems = json['items'] as List<dynamic>? ?? [];

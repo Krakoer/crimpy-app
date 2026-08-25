@@ -129,22 +129,6 @@ String builtinAssessmentLabel(String assessmentId) {
       : BuiltinAssessmentIds.definitionOf(protocol).label;
 }
 
-String assessmentTypeToString(AssessmentType type) {
-  return switch (type) {
-    AssessmentType.mvc => "Max Force",
-    AssessmentType.criticalForce => "Critical Force",
-    AssessmentType.endurance60 => "60% Endurance",
-  };
-}
-
-AssessmentUnit getAssessmentUnit(AssessmentType type) {
-  return switch (type) {
-    AssessmentType.mvc => AssessmentUnit.kilograms,
-    AssessmentType.criticalForce => AssessmentUnit.kilograms,
-    AssessmentType.endurance60 => AssessmentUnit.seconds,
-  };
-}
-
 String formatAssessmentValue(
   double value,
   AssessmentUnit unit, {
@@ -279,8 +263,11 @@ class AssessmentResults {
   AssessmentUnit? unitOf(String assessmentId) =>
       definitions[assessmentId]?.unit;
 
+  /// The assessment's name. Falls back to the one Crimpy ships under that id,
+  /// so a load reads "80% Max Force" rather than "80% assessment" on the first
+  /// frame, or if the definitions could not be fetched at all.
   String labelOf(String assessmentId) =>
-      definitions[assessmentId]?.label ?? 'assessment';
+      definitions[assessmentId]?.label ?? builtinAssessmentLabel(assessmentId);
 
   /// The last value measured for [assessmentId] on [handSide], or the mean of
   /// both hands when no hand is asked for. Null when that hand has never been

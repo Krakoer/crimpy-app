@@ -28,11 +28,20 @@ class AssessedHistory {
 /// Groups a flat history by the assessment each result measures, oldest first
 /// within each, and orders the assessments so the ones Crimpy ships come before
 /// a coach's own.
+///
+/// [alwaysShown] are listed even with nothing measured against them, which is
+/// how the assessments Crimpy ships keep their section, and the invitation to go
+/// and do one, on a profile that has no results yet.
 Map<String, AssessedHistory> groupAssessmentHistory(
-  List<AssessmentModel> assessments,
-) {
+  List<AssessmentModel> assessments, {
+  List<AssessmentDefinition> alwaysShown = const [],
+}) {
   final byId = <String, List<AssessmentModel>>{};
   final definitions = <String, AssessmentDefinition>{};
+  for (final definition in alwaysShown) {
+    byId[definition.id] = [];
+    definitions[definition.id] = definition;
+  }
   for (final assessment in assessments) {
     byId.putIfAbsent(assessment.assessmentId, () => []).add(assessment);
     definitions.putIfAbsent(

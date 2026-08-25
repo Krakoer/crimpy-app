@@ -206,6 +206,32 @@ void main() {
   // A coach assessment is known to the app only through its definition, which
   // rides along on the results, so a percentage of one resolves without the app
   // knowing anything about it in advance.
+  group('naming an assessment', () {
+    // The label used to fall back to the literal "assessment", so a load read
+    // "80% assessment" on the first frame and forever if the definitions could
+    // not be fetched.
+    test('names an assessment Crimpy ships with no definitions loaded', () {
+      const load = Load(
+        value: 80,
+        unit: percentAssessmentUnit,
+        assessmentId: BuiltinAssessmentIds.maxForce,
+        fallback: 25,
+      );
+
+      expect(
+        load.label(results: AssessmentResults.none),
+        startsWith('80% Max Force'),
+      );
+    });
+
+    test('falls back to a generic name for one it has never heard of', () {
+      expect(
+        AssessmentResults.none.labelOf('a9b8c7d6-0000-0000-0000-00000000dead'),
+        'assessment',
+      );
+    });
+  });
+
   group('custom assessments', () {
     const pullUpPyramid = AssessmentDefinition(
       id: 'a9b8c7d6-0000-0000-0000-000000000001',
