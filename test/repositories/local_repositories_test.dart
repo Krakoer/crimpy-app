@@ -228,6 +228,53 @@ void main() {
       },
     );
 
+    // The local table stored no variable targets at all, so a training cached
+    // here lost every percentage reference on a round trip.
+    test('an item keeps the assessment its numbers are read against', () async {
+      await trainings.saveTraining(
+        Training(
+          id: '',
+          title: 'Volume day',
+          items: [
+            TrainingItem(
+              id: '',
+              type: TrainingItemType.exercise,
+              position: 0,
+              reps: 8,
+              variableTargets: const {
+                'reps': VariableTarget(
+                  assessmentId: 'a9b8c7d6-0000-0000-0000-000000000001',
+                  percent: 60,
+                  fallback: 8,
+                ),
+              },
+              loads: const [
+                Load(
+                  value: 80,
+                  unit: percentAssessmentUnit,
+                  assessmentId: 'f7954158-63ba-4f0b-a125-6ef195fa6442',
+                  fallback: 25,
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      final item = (await trainings.getAllTrainings()).single.items.single;
+
+      expect(
+        item.variableTargets['reps']!.assessmentId,
+        'a9b8c7d6-0000-0000-0000-000000000001',
+      );
+      expect(item.variableTargets['reps']!.percent, 60);
+      expect(
+        item.loads!.single.assessmentId,
+        'f7954158-63ba-4f0b-a125-6ef195fa6442',
+      );
+      expect(item.loads!.single.fallback, 25);
+    });
+
     test('a single-hand item keeps its one grip array', () async {
       await trainings.saveTraining(
         Training(

@@ -1,3 +1,4 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 
 /// Unified training with a structured list of items.
@@ -10,6 +11,10 @@ class Training {
   final bool isFavorite;
   final List<TrainingItem> items;
 
+  /// Set when this training is a custom assessment: it is run like any other and
+  /// ends on the question the definition asks, whose answer is the result.
+  final AssessmentDefinition? assessment;
+
   const Training({
     required this.id,
     required this.title,
@@ -18,7 +23,10 @@ class Training {
     this.comment,
     this.isFavorite = false,
     this.items = const [],
+    this.assessment,
   });
+
+  bool get isAssessment => assessment != null;
 
   factory Training.fromJson(Map<String, dynamic> json) {
     final rawItems = json['items'] as List<dynamic>? ?? [];
@@ -37,6 +45,11 @@ class Training {
       items: rawItems
           .map((e) => TrainingItem.fromJson(e as Map<String, dynamic>))
           .toList(),
+      assessment: json['assessment'] == null
+          ? null
+          : AssessmentDefinition.fromJson(
+              json['assessment'] as Map<String, dynamic>,
+            ),
     );
   }
 
@@ -47,6 +60,7 @@ class Training {
     if (comment != null) 'comment': comment,
     'is_favorite': isFavorite,
     'items': items.map((i) => i.toJson()).toList(),
+    if (assessment != null) 'assessment': assessment!.toJson(),
   };
 
   /// Whether any exercise in the tree can be performed with the force sensor.

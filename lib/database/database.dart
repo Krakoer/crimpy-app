@@ -455,7 +455,11 @@ class AppDatabase extends _$AppDatabase {
   // ------------------------------------- TRAININGS -------------------------------------
 
   /// Convert a flat list of TrainingItemRow rows into a nested Training object.
-  Training _buildTraining(TrainingRow row, List<TrainingItemRow> allItems) {
+  Training _buildTraining(
+    TrainingRow row,
+    List<TrainingItemRow> allItems, {
+    AssessmentDefinition? assessment,
+  }) {
     final topLevel = allItems.where((i) => i.parentId == null).toList()
       ..sort((a, b) => a.position.compareTo(b.position));
     return Training(
@@ -464,7 +468,19 @@ class AppDatabase extends _$AppDatabase {
       description: row.description,
       isFavorite: row.isFavorite,
       items: topLevel.map((i) => _buildItem(i, allItems)).toList(),
+      assessment: assessment,
     );
+  }
+
+  /// The assessment a training is run from, when it is one. Read from the cached
+  /// definitions rather than stored twice, so the two cannot disagree.
+  Future<AssessmentDefinition?> _assessmentForTraining(
+    String trainingId,
+  ) async {
+    final row = await (select(
+      assessmentDefinitions,
+    )..where((d) => d.trainingId.equals(trainingId))).getSingleOrNull();
+    return row?.toDomain();
   }
 
   TrainingItem _buildItem(TrainingItemRow row, List<TrainingItemRow> allItems) {
@@ -505,6 +521,11 @@ class AppDatabase extends _$AppDatabase {
       leftLoads: parseLoads(row.leftLoadsJson),
       edgeSizesMm: parseInts(row.edgeSizesMmJson),
       handPositions: parseGrips(row.handPositionsJson),
+      variableTargets: parseVariableTargets(
+        row.variableTargetsJson == null
+            ? null
+            : jsonDecode(row.variableTargetsJson!),
+      ),
       loadIsMax: row.loadIsMax,
       freeText: row.freeText,
       exerciseId: row.exerciseId,
@@ -515,6 +536,13 @@ class AppDatabase extends _$AppDatabase {
 
   String? _loadsToJson(List<Load>? loads) =>
       loads == null ? null : jsonEncode(loads.map((l) => l.toJson()).toList());
+
+  String? _variableTargetsToJson(Map<String, VariableTarget> targets) =>
+      targets.isEmpty
+      ? null
+      : jsonEncode({
+          for (final entry in targets.entries) entry.key: entry.value.toJson(),
+        });
 
   String? _handPositionsToJson(TrainingItem item) =>
       item.handPositions == null ? null : jsonEncode(item.handPositions);
@@ -535,7 +563,13 @@ class AppDatabase extends _$AppDatabase {
                 ..where((i) => i.trainingId.equals(row.id))
                 ..orderBy([(i) => OrderingTerm(expression: i.position)]))
               .get();
-      result.add(_buildTraining(row, itemRows));
+      result.add(
+        _buildTraining(
+          row,
+          itemRows,
+          assessment: await _assessmentForTraining(row.id),
+        ),
+      );
     }
     return result;
   }
@@ -551,7 +585,11 @@ class AppDatabase extends _$AppDatabase {
               ..where((i) => i.trainingId.equals(trainingId))
               ..orderBy([(i) => OrderingTerm(expression: i.position)]))
             .get();
-    return _buildTraining(row, itemRows);
+    return _buildTraining(
+      row,
+      itemRows,
+      assessment: await _assessmentForTraining(trainingId),
+    );
   }
 
   /// Save a new training (inserts training row and all items recursively).
@@ -596,6 +634,9 @@ class AppDatabase extends _$AppDatabase {
           leftLoadsJson: Value(_loadsToJson(item.leftLoads)),
           handPositionsJson: Value(_handPositionsToJson(item)),
           edgeSizesMmJson: Value(_intsToJson(item.edgeSizesMm)),
+          variableTargetsJson: Value(
+            _variableTargetsToJson(item.variableTargets),
+          ),
           loadIsMax: Value(item.loadIsMax),
           freeText: Value(item.freeText),
           exerciseId: Value(item.exerciseId),

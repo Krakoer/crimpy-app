@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
+import 'package:crimpy/views/screens/trainings/post_workout_screen/widgets/assessment_answer_fields.dart';
 import 'package:intl/intl.dart';
 import 'package:crimpy/theme.dart';
 
@@ -38,7 +41,12 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
 class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
   final _trainingNameController = TextEditingController();
   final _noteController = TextEditingController();
+  final _rightAnswerController = TextEditingController();
+  final _leftAnswerController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  /// The assessment this run answers, when the training played is one.
+  AssessmentDefinition? get _assessment => widget.template.assessment;
 
   @override
   void initState() {
@@ -51,6 +59,8 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
   void dispose() {
     _trainingNameController.dispose();
     _noteController.dispose();
+    _rightAnswerController.dispose();
+    _leftAnswerController.dispose();
     super.dispose();
   }
 
@@ -145,6 +155,14 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                           },
                         ),
                         const SizedBox(height: 16),
+                        if (_assessment case final assessment?) ...[
+                          AssessmentAnswerFields(
+                            definition: assessment,
+                            rightController: _rightAnswerController,
+                            leftController: _leftAnswerController,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         TextField(
                           controller: _noteController,
                           decoration: const InputDecoration(
@@ -172,23 +190,46 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
             if (!_formKey.currentState!.validate()) {
               return;
             }
+            final assessment = _assessment;
+            final session = SessionModel(
+              name: _trainingNameController.text,
+              date: DateTime.now(),
+              notes: _noteController.text,
+              // What marks the session as measuring something, which is how the
+              // history and the coach portal label it.
+              isAssessment: assessment != null,
+              activity: widget.activity,
+              // This screen is only ever reached by finishing a run.
+              origin: SessionOrigin.played,
+              trainingId: widget.trainingId,
+              programSessionId: widget.programSessionId,
+            );
             try {
-              await ref
-                  .read(sessionsProvider.notifier)
-                  .saveSession(
-                    SessionModel(
-                      name: _trainingNameController.text,
-                      date: DateTime.now(),
-                      notes: _noteController.text,
-                      isAssessment: false,
-                      activity: widget.activity,
-                      // This screen is only ever reached by finishing a run.
-                      origin: SessionOrigin.played,
-                      trainingId: widget.trainingId,
-                      programSessionId: widget.programSessionId,
-                    ),
-                    widget.results,
-                  );
+              if (assessment == null) {
+                await ref
+                    .read(sessionsProvider.notifier)
+                    .saveSession(session, widget.results);
+              } else {
+                // Goes through the assessment notifier rather than saving the
+                // session alone: it writes the session first and the result
+                // against it, replaces an answer given earlier the same day, and
+                // refreshes what the next prescribed run resolves against.
+                final right = parseAnswer(_rightAnswerController.text);
+                final left = assessment.perHand
+                    ? parseAnswer(_leftAnswerController.text)
+                    : null;
+                await ref
+                    .read(assessmentsProvider(assessment.id).notifier)
+                    .saveAssessment(
+                      AssessmentResultModel(
+                        assessmentId: assessment.id,
+                        rightValue: right,
+                        leftValue: left,
+                      ),
+                      session,
+                      widget.results,
+                    );
+              }
             } catch (e) {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -201,7 +242,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
               Navigator.of(context).pop();
             }
           },
-          child: Text("Save training"),
+          child: Text(_assessment == null ? "Save training" : "Save result"),
         ),
       ),
     );
