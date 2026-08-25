@@ -2,6 +2,55 @@ import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_item_model.dart';
 
+/// Which open field a count answers, mirroring the field column the server
+/// stores it in.
+enum SessionItemField {
+  reps,
+  cycles;
+
+  static SessionItemField fromApi(String? value) =>
+      value == 'cycles' ? SessionItemField.cycles : SessionItemField.reps;
+
+  String get apiValue => name;
+}
+
+/// A count the run resolved for an item the prescription left open: the reps an
+/// AMRAP turned out to be, or the rounds an emom was carried through before the
+/// athlete dropped out. Neither is recorded anywhere else, since a set of pull
+/// ups passes through no sensor and so leaves no rep behind.
+class SessionItemResultModel {
+  /// The prescription item the count answers, keyed the way a rep is.
+  final String trainingItemId;
+
+  /// Which pass through that item the count belongs to, from 0.
+  final int occurrence;
+
+  final SessionItemField field;
+  final int value;
+
+  const SessionItemResultModel({
+    required this.trainingItemId,
+    required this.occurrence,
+    required this.field,
+    required this.value,
+  });
+
+  factory SessionItemResultModel.fromJson(Map<String, dynamic> json) =>
+      SessionItemResultModel(
+        trainingItemId: json['training_item_id'] as String,
+        occurrence: (json['occurrence'] as num?)?.toInt() ?? 0,
+        field: SessionItemField.fromApi(json['field'] as String?),
+        value: (json['value'] as num?)?.toInt() ?? 0,
+      );
+
+  Map<String, dynamic> toJson() => {
+    'training_item_id': trainingItemId,
+    'occurrence': occurrence,
+    'field': field.apiValue,
+    'value': value,
+  };
+}
+
 class SessionModel {
   final String? id;
   final String name;
@@ -34,6 +83,10 @@ class SessionModel {
   /// Null on a session the server never saw, a guest-mode run among them.
   final List<TrainingItem>? prescriptionItems;
 
+  /// What the run answered the open items of the prescription with, empty when
+  /// it had none. Only the detail endpoint carries them.
+  final List<SessionItemResultModel> itemResults;
+
   SessionModel({
     this.id,
     this.notes,
@@ -48,6 +101,7 @@ class SessionModel {
     this.durationInSeconds,
     this.reportedRepCount,
     this.prescriptionItems,
+    this.itemResults = const [],
     date,
   }) : date = date ?? DateTime.now();
 
@@ -56,6 +110,7 @@ class SessionModel {
   factory SessionModel.fromJson(
     Map<String, dynamic> json, {
     List<RepDataModel>? reps,
+    List<SessionItemResultModel> itemResults = const [],
   }) => SessionModel(
     id: json['id'] as String,
     name: json['name'] as String,
@@ -74,6 +129,7 @@ class SessionModel {
     durationInSeconds: (json['duration'] as num? ?? 0).toInt(),
     reportedRepCount: (json['rep_count'] as num?)?.toInt(),
     prescriptionItems: _prescriptionItems(json['prescription']),
+    itemResults: itemResults,
   );
 
   /// The items of the frozen prescription, or null when the session carries
@@ -111,6 +167,7 @@ class SessionModel {
     durationInSeconds: durationInSeconds ?? this.durationInSeconds,
     reportedRepCount: reportedRepCount,
     prescriptionItems: prescriptionItems,
+    itemResults: itemResults,
   );
 
   int get duration =>

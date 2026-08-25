@@ -140,6 +140,7 @@ String sessionBlockLabel(TrainingItem item) {
   final label = switch (item.type) {
     TrainingItemType.group => 'Group',
     TrainingItemType.circuit => 'Circuit',
+    TrainingItemType.emom => 'EMOM',
     TrainingItemType.repeater => 'Hangboard',
     TrainingItemType.hangboardRep => 'Hang rep',
     TrainingItemType.exercise => 'Exercise',

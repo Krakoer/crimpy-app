@@ -746,7 +746,8 @@ class _TrainingItemCard extends StatelessWidget {
     TrainingItemType.hangboardRep || TrainingItemType.repeater =>
       '${item.worktimeSeconds ?? 7}s hang / ${item.restSeconds ?? 3}s rest  '
           '${_handLabel(item.hand)}',
-    TrainingItemType.circuit => trainingItemDetail(item),
+    TrainingItemType.circuit ||
+    TrainingItemType.emom => trainingItemDetail(item),
     TrainingItemType.group => '${item.items.length} item(s)',
     TrainingItemType.exercise =>
       item.effectiveReps() != null

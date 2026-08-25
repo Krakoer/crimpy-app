@@ -1087,4 +1087,148 @@ void main() {
     expect(out, isNotEmpty);
     expect(out.every((e) => e.trainingItemId == null), isTrue);
   });
+
+  group('emom', () {
+    TrainingItem pullUps({bool amrap = false, int? reps = 5}) => TrainingItem(
+      id: 'pullup',
+      type: TrainingItemType.exercise,
+      position: 0,
+      exerciseName: 'Pull up',
+      reps: reps,
+      repsIsMax: amrap,
+    );
+
+    test('runs each round then rests out the interval', () {
+      final training = _training([
+        TrainingItem(
+          id: 'emom',
+          type: TrainingItemType.emom,
+          position: 0,
+          cycles: 3,
+          intervalSeconds: 60,
+          items: [pullUps()],
+        ),
+      ]);
+
+      final out = expandTrainingItems(training, useSensor: false);
+
+      expect(out.map((e) => e.runtimeType).toList(), [
+        ConfirmItem,
+        IntervalRestItem,
+        ConfirmItem,
+        IntervalRestItem,
+        ConfirmItem,
+        IntervalRestItem,
+      ]);
+      // The work is self paced, so the whole interval is what is left of it
+      // until the run measures how long the round actually took.
+      expect((out[1] as IntervalRestItem).durationSeconds, 60);
+      expect((out[1] as IntervalRestItem).intervalSeconds, 60);
+      expect((out[0] as ConfirmItem).subtitle, 'ROUND 1/3');
+      expect((out[4] as ConfirmItem).subtitle, 'ROUND 3/3');
+    });
+
+    test('takes the timed work of a round out of the rest that closes it', () {
+      final training = _training([
+        TrainingItem(
+          id: 'emom',
+          type: TrainingItemType.emom,
+          position: 0,
+          cycles: 2,
+          intervalSeconds: 90,
+          items: [
+            TrainingItem(
+              id: 'plank',
+              type: TrainingItemType.exercise,
+              position: 0,
+              exerciseName: 'Plank',
+              duration: 30,
+            ),
+          ],
+        ),
+      ]);
+
+      final out = expandTrainingItems(training, useSensor: false);
+
+      expect((out[1] as IntervalRestItem).durationSeconds, 60);
+    });
+
+    test('marks the step each round opens on and keys the whole block', () {
+      final training = _training([
+        TrainingItem(
+          id: 'emom',
+          type: TrainingItemType.emom,
+          position: 0,
+          cycles: 2,
+          intervalSeconds: 60,
+          items: [pullUps()],
+        ),
+      ]);
+
+      final out = expandTrainingItems(training, useSensor: false);
+
+      expect(out.every((step) => step.emom?.blockKey == 'emom#0'), isTrue);
+      expect(out.map((step) => step.emom!.opensRound).toList(), [
+        true,
+        false,
+        true,
+        false,
+      ]);
+      expect(out.map((step) => step.emom!.round).toList(), [0, 0, 1, 1]);
+    });
+
+    test('leaves an open rep count for the athlete to answer', () {
+      final training = _training([
+        TrainingItem(
+          id: 'emom',
+          type: TrainingItemType.emom,
+          position: 0,
+          cycles: 2,
+          intervalSeconds: 60,
+          items: [pullUps(amrap: true, reps: null)],
+        ),
+      ]);
+
+      final out = expandTrainingItems(training, useSensor: false);
+      final first = out[0] as ConfirmItem;
+
+      expect(first.repsAreOpen, isTrue);
+      expect(first.reps, isNull);
+      // Each round is its own pass through the exercise, so the counts the
+      // athlete gives can be told apart.
+      expect((out[2] as ConfirmItem).occurrence, 1);
+    });
+
+    test('numbers the passes of an item a circuit plays more than once', () {
+      final training = _training([
+        TrainingItem(
+          id: 'c',
+          type: TrainingItemType.circuit,
+          position: 0,
+          cycles: 3,
+          items: [pullUps(amrap: true, reps: null)],
+        ),
+      ]);
+
+      final out = expandTrainingItems(training, useSensor: false);
+
+      expect(out.map((step) => step.occurrence).toList(), [0, 1, 2]);
+    });
+
+    test('does not offer to record an item that was never saved', () {
+      final training = _training([
+        TrainingItem(
+          id: '',
+          type: TrainingItemType.exercise,
+          position: 0,
+          exerciseName: 'Pull up',
+          repsIsMax: true,
+        ),
+      ]);
+
+      final out = expandTrainingItems(training, useSensor: false);
+
+      expect((out[0] as ConfirmItem).repsAreOpen, isFalse);
+    });
+  });
 }

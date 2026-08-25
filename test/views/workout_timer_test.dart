@@ -138,4 +138,129 @@ void main() {
       expect(result.repCount, 1);
     });
   });
+
+  group('emom rounds', () {
+    EmomPosition at(int round, {bool opens = false}) => EmomPosition(
+      blockKey: 'emom#0',
+      itemId: 'emom',
+      occurrence: 0,
+      round: round,
+      opensRound: opens,
+    );
+
+    List<TrainingExecutionItem> block() => [
+      TimedItem(
+        label: 'Hang',
+        durationSeconds: 10,
+        targetLoad: 0,
+        handSide: HandSide.right,
+        gripPosition: GripPosition.halfCrimp,
+        collectSensorData: false,
+        emom: at(0, opens: true),
+      ),
+      IntervalRestItem(durationSeconds: 50, intervalSeconds: 60, emom: at(0)),
+      TimedItem(
+        label: 'Hang',
+        durationSeconds: 10,
+        targetLoad: 0,
+        handSide: HandSide.right,
+        gripPosition: GripPosition.halfCrimp,
+        collectSensorData: false,
+        emom: at(1, opens: true),
+      ),
+      IntervalRestItem(durationSeconds: 50, intervalSeconds: 60, emom: at(1)),
+    ];
+
+    /// Self paced work has no length until it has been done, so the rest that
+    /// closes the round is measured back to the step the round opened on. A
+    /// round the athlete got through in three seconds rests for the other
+    /// fifty seven, and the round after it still starts on the clock.
+    test('rests to the mark the next round starts on', () {
+      final items = [
+        ConfirmItem(label: 'Pull up', emom: at(0, opens: true)),
+        IntervalRestItem(durationSeconds: 60, intervalSeconds: 60, emom: at(0)),
+      ];
+      late WorkoutTimer timer;
+      var restLeft = 0;
+
+      fakeAsync((async) {
+        final watch = ManualCrimpyWatch();
+        timer = WorkoutTimer(items: items, watch: watch);
+        timer.init();
+        timer.play();
+
+        watch.advance(3000);
+        async.elapse(const Duration(milliseconds: 3000));
+        timer.confirmRep();
+        restLeft = timer.currentItemDuration;
+        timer.timer.cancel();
+      });
+
+      expect(restLeft, 57);
+    });
+
+    /// Skipping a step is not the same as getting through it quickly: it moves
+    /// the clock on by what was left, so the round still takes its interval.
+    test('a skipped step leaves the round its full length', () {
+      final items = block();
+      late WorkoutTimer timer;
+      var restLeft = 0;
+
+      fakeAsync((async) {
+        final watch = ManualCrimpyWatch();
+        timer = WorkoutTimer(items: items, watch: watch);
+        timer.init();
+        timer.play();
+
+        watch.advance(3000);
+        async.elapse(const Duration(milliseconds: 3000));
+        timer.skipRep();
+        restLeft = timer.currentItemDuration;
+        timer.timer.cancel();
+      });
+
+      expect(items[1], isA<IntervalRestItem>());
+      expect(restLeft, 50);
+    });
+
+    test('drops the rounds still queued when the block is left', () {
+      final items = block();
+      late WorkoutTimer timer;
+
+      fakeAsync((async) {
+        final watch = ManualCrimpyWatch();
+        timer = WorkoutTimer(items: items, watch: watch);
+        timer.init();
+        timer.play();
+        watch.advance(1000);
+        async.elapse(const Duration(milliseconds: 1000));
+
+        timer.dropRemainingBlock('emom#0');
+        timer.timer.cancel();
+      });
+
+      // Only the hang the run was on is left: the rest that closed its round
+      // and the whole round after it are not played.
+      expect(items, hasLength(1));
+      expect(timer.currentItemIndex, 0);
+    });
+
+    test('keeps what follows the block it leaves', () {
+      final items = [...block(), RestItem(durationSeconds: 120)];
+      late WorkoutTimer timer;
+
+      fakeAsync((async) {
+        final watch = ManualCrimpyWatch();
+        timer = WorkoutTimer(items: items, watch: watch);
+        timer.init();
+        timer.play();
+        timer.dropRemainingBlock('emom#0');
+        timer.timer.cancel();
+      });
+
+      expect(items, hasLength(2));
+      expect(items.last, isA<RestItem>());
+      expect(items.last.emom, isNull);
+    });
+  });
 }

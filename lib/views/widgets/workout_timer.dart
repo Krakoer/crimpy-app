@@ -69,6 +69,12 @@ class WorkoutTimer {
 
   var elaspedTime = 0;
   var currentItemIndex = 0;
+
+  /// When the emom round the run is inside started, in stopwatch milliseconds.
+  /// The rest that closes a round is measured back to it rather than run for a
+  /// fixed length, so the round after it starts on the clock however long the
+  /// self paced work of this one took.
+  var _roundStartedAt = 0;
   var finished = false;
   var startCurrentRep = 0;
   var isRunning = false;
@@ -109,11 +115,11 @@ class WorkoutTimer {
       var advanced = false;
       if (currentItem is! ConfirmItem &&
           _stopwatch.elapsedMilliseconds >=
-              startCurrentRep + currentItem.durationSeconds * 1000) {
+              startCurrentRep + currentItemDuration * 1000) {
         if (playSound && currentItemIndex < items.length - 1) {
           _playerBiiip?.resume();
         }
-        _advance(() => startCurrentRep + currentItem.durationSeconds * 1000);
+        _advance(() => startCurrentRep + currentItemDuration * 1000);
         advanced = true;
       }
 
@@ -145,8 +151,10 @@ class WorkoutTimer {
     }
 
     startCurrentRep = nextStart();
-    onNextRep?.call(nextItem!.durationSeconds);
+    final entering = nextItem!;
+    onNextRep?.call(_durationAt(currentItemIndex + 1, startCurrentRep));
     currentItemIndex += 1;
+    if (entering.emom?.opensRound ?? false) _roundStartedAt = startCurrentRep;
     // A transition does not always coincide with a second change: skipping or
     // confirming a rep moves the reference point mid-second. Repaint here so
     // the new rep is shown immediately instead of leaving the previous value
@@ -162,11 +170,25 @@ class WorkoutTimer {
   void skipRep() {
     if (currentItemIndex < items.length - 1) {
       _stopwatch.skip(
-        currentItem.durationSeconds * 1000 -
+        currentItemDuration * 1000 -
             (_stopwatch.elapsedMilliseconds - startCurrentRep),
       );
     }
     _advance(() => _stopwatch.elapsedMilliseconds);
+  }
+
+  /// Drops every step still queued after the current one that belongs to
+  /// [blockKey], which is how an emom the athlete dropped out of ends where
+  /// they stopped instead of playing out rounds they will not do. The steps
+  /// already played keep their indices, so nothing recorded moves.
+  void dropRemainingBlock(String blockKey) {
+    var end = currentItemIndex + 1;
+    while (end < items.length && items[end].emom?.blockKey == blockKey) {
+      end++;
+    }
+    if (end > currentItemIndex + 1) {
+      items.removeRange(currentItemIndex + 1, end);
+    }
   }
 
   int get elapsedMilliseconds => _stopwatch.elapsedMilliseconds;
@@ -183,13 +205,31 @@ class WorkoutTimer {
     }
   }
 
+  /// How long the step the run is on lasts. Every step but the rest closing an
+  /// emom round runs for the length it was expanded with.
+  int get currentItemDuration => _durationAt(currentItemIndex, startCurrentRep);
+
+  /// How long the step at [index] lasts, given that it starts at [startsAt].
+  /// The rest closing an emom round runs to the mark on the clock the next
+  /// round starts on, so it is measured back to the step its round opened on
+  /// rather than taken as the length it was laid down with.
+  int _durationAt(int index, int startsAt) {
+    final item = items[index];
+    if (item is! IntervalRestItem) return item.durationSeconds;
+    final roundStart = (item.emom?.opensRound ?? false)
+        ? startsAt
+        : _roundStartedAt;
+    final worked = (startsAt - roundStart) ~/ 1000;
+    return (item.intervalSeconds - worked).clamp(0, item.intervalSeconds);
+  }
+
   /// Whole seconds left in the current item, counting down to 1 and never to 0:
   /// reaching zero is the moment the item ends, and that frame belongs to the
   /// next one.
   int get currentItemRemaining {
     final remainingMs =
         startCurrentRep +
-        currentItem.durationSeconds * 1000 -
+        currentItemDuration * 1000 -
         _stopwatch.elapsedMilliseconds;
     if (remainingMs <= 0) return 0;
     return (remainingMs / 1000).ceil();
