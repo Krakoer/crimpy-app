@@ -136,12 +136,14 @@ class Sessions extends _$Sessions {
     SessionModel session,
     List<RepDataModel> reps, {
     List<BleDataPoint>? data,
+    List<SessionItemResultModel> itemResults = const [],
   }) async {
     try {
       final id = await _trainingRepository.saveSession(
         session,
         reps,
         data: data,
+        itemResults: itemResults,
       );
       ref.invalidateSelf();
       if (ref.mounted) await future;

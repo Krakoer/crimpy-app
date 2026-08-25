@@ -62,6 +62,7 @@ Future<void> _pump(
   String? repContext = 'SET 2/4 - REP 3/6',
   String? comment,
   TargetPlatform platform = TargetPlatform.android,
+  bool showDropOut = false,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -87,6 +88,8 @@ Future<void> _pump(
             onPlayPause: () {},
             onSkip: () {},
             onConfirm: () {},
+            showDropOut: showDropOut,
+            onDropOut: () {},
           ),
         ),
       ),

@@ -66,6 +66,7 @@ class Assessments extends _$Assessments {
     SessionModel session,
     List<RepDataModel> reps, {
     List<BleDataPoint>? data,
+    List<SessionItemResultModel> itemResults = const [],
   }) async {
     // First, delete same-day assessment if any.
     final prevAssessmentId = await getSameDayAssessment(
@@ -80,7 +81,7 @@ class Assessments extends _$Assessments {
     // to attach it to, the assessment cannot be stored either.
     final sessionId = await ref
         .read(sessionsProvider.notifier)
-        .saveSession(session, reps, data: data);
+        .saveSession(session, reps, data: data, itemResults: itemResults);
     await _assessmentRepository.saveAssessment(assessmentModel, sessionId);
 
     if (ref.mounted) {

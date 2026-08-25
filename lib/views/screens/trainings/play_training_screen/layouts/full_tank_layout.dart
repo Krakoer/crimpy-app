@@ -123,6 +123,11 @@ class FullTankLayout extends ConsumerWidget {
   final VoidCallback onSkip;
   final VoidCallback onConfirm;
 
+  /// Whether the run is inside an emom the athlete can drop out of, and what to
+  /// do when they say they cannot make the next round.
+  final bool showDropOut;
+  final VoidCallback onDropOut;
+
   const FullTankLayout({
     required this.item,
     required this.nextItem,
@@ -138,6 +143,8 @@ class FullTankLayout extends ConsumerWidget {
     required this.onPlayPause,
     required this.onSkip,
     required this.onConfirm,
+    required this.showDropOut,
+    required this.onDropOut,
     super.key,
   });
 
@@ -272,6 +279,8 @@ class FullTankLayout extends ConsumerWidget {
               onPlayPause: onPlayPause,
               onSkip: onSkip,
               onConfirm: onConfirm,
+              showDropOut: showDropOut,
+              onDropOut: onDropOut,
             ),
           ],
         );
@@ -760,7 +769,10 @@ class _TankContent extends StatelessWidget {
   Widget _confirmBlock() {
     final rep = layout.item as ConfirmItem;
     final details = [
-      if (rep.reps != null) '${rep.reps} reps',
+      if (rep.repsAreOpen)
+        'AMRAP'
+      else if (rep.reps != null)
+        '${rep.reps} reps',
       if (rep.load != null) rep.load!,
     ].join('  -  ');
 
@@ -793,7 +805,9 @@ class _TankContent extends StatelessWidget {
       ],
       SizedBox(height: _s(14)),
       Text(
-        'Tap DONE when finished',
+        rep.repsAreOpen
+            ? 'Tap DONE and say how many'
+            : 'Tap DONE when finished',
         style: _style(13, color: palette.secondary),
       ),
     ]);
@@ -908,6 +922,10 @@ class _ControlStrip extends StatelessWidget {
   final VoidCallback onSkip;
   final VoidCallback onConfirm;
 
+  /// Whether the run is inside an emom the athlete can drop out of.
+  final bool showDropOut;
+  final VoidCallback onDropOut;
+
   const _ControlStrip({
     required this.stateWord,
     required this.stateColor,
@@ -917,6 +935,8 @@ class _ControlStrip extends StatelessWidget {
     required this.onPlayPause,
     required this.onSkip,
     required this.onConfirm,
+    required this.showDropOut,
+    required this.onDropOut,
   });
 
   Widget _icon(IconData icon, Color color, VoidCallback onPressed) =>
@@ -972,6 +992,14 @@ class _ControlStrip extends StatelessWidget {
             ],
           ),
         ),
+        if (showDropOut)
+          IconButton(
+            onPressed: onDropOut,
+            icon: const Icon(Icons.flag_outlined),
+            color: CrimpyTheme.statusError,
+            iconSize: 30,
+            tooltip: 'I cannot make the next round',
+          ),
         if (showConfirm)
           ElevatedButton.icon(
             onPressed: onConfirm,

@@ -15,6 +15,11 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
   final Training template;
   final List<RepDataModel> results;
 
+  /// What the run answered the open items with: the reps an AMRAP turned out
+  /// to be, and the rounds of an emom the athlete dropped out of. Empty for a
+  /// run that had none.
+  final List<SessionItemResultModel> itemResults;
+
   /// Category the session is logged under. Trainings run from the user's own
   /// library are hangboard sessions; program trainings carry the coach's label.
   final SessionActivity activity;
@@ -27,6 +32,7 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
   const PostWorkoutScreen({
     required this.results,
     required this.template,
+    this.itemResults = const [],
     this.activity = SessionActivity.hangboard,
     this.trainingId,
     this.programSessionId,
@@ -208,7 +214,11 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
               if (assessment == null) {
                 await ref
                     .read(sessionsProvider.notifier)
-                    .saveSession(session, widget.results);
+                    .saveSession(
+                      session,
+                      widget.results,
+                      itemResults: widget.itemResults,
+                    );
               } else {
                 // Goes through the assessment notifier rather than saving the
                 // session alone: it writes the session first and the result
@@ -228,6 +238,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                       ),
                       session,
                       widget.results,
+                      itemResults: widget.itemResults,
                     );
               }
             } catch (e) {
