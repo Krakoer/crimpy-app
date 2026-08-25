@@ -236,6 +236,71 @@ void main() {
     expect(find.text('Work Time'), findsOneWidget);
   });
 
+  testWidgets('names every rep the run weighed nothing for', (tester) async {
+    // The reps below the header carry the same zero the peak load was dropped
+    // for. Printed as a load, they contradict the block line that already reads
+    // that nothing was measured, so each row says so for itself.
+    await _pump(
+      tester,
+      _session(
+        trainingId: 'coach-training',
+        prescriptionItems: [_hangRep('a')],
+        reps: [
+          for (var index = 0; index < 2; index++)
+            _rep(
+              index,
+              itemId: 'a',
+              averageWeight: 0,
+              targetWeight: 0,
+              targetUnmeasured: true,
+            ),
+        ],
+      ),
+    );
+
+    expect(find.text('Not measured'), findsNWidgets(2));
+    expect(find.text('Performed'), findsNothing);
+  });
+
+  testWidgets('states the load of a rep read at zero against a target', (
+    tester,
+  ) async {
+    // The athlete came off the board, which the sensor did read, so the row
+    // states the zero rather than claiming nothing measured it.
+    await _pump(
+      tester,
+      _session(
+        trainingId: 'coach-training',
+        prescriptionItems: [_hangRep('a')],
+        reps: [_rep(0, itemId: 'a', averageWeight: 0, targetWeight: 30)],
+      ),
+    );
+
+    expect(find.text('Not measured'), findsNothing);
+    expect(find.text('0.0 kg'), findsWidgets);
+  });
+
+  testWidgets('names the load of a rep the sensor read against no target', (
+    tester,
+  ) async {
+    // The athlete logged the run themselves, so nothing prescribed a load. The
+    // sensor still read the rep, the card averages it in, and the portal prints
+    // it on the row, so the row names it here too rather than staying silent.
+    await _pump(
+      tester,
+      _session(
+        trainingId: 'coach-training',
+        prescriptionItems: [_hangRep('a')],
+        reps: [_rep(0, itemId: 'a', averageWeight: 27.3, targetWeight: 0)],
+      ),
+    );
+
+    expect(find.text('Performed'), findsOneWidget);
+    expect(find.text('27.3 kg'), findsWidgets);
+    expect(find.text('Target'), findsNothing);
+    expect(find.text('Not measured'), findsNothing);
+  });
+
   testWidgets('keeps the session wide stats when one block was played', (
     tester,
   ) async {

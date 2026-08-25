@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/rep_blocks.dart';
 
 class RepItemWidget extends StatelessWidget {
   final RepDataModel rep;
@@ -67,6 +68,10 @@ class RepItemWidget extends StatelessWidget {
   Widget _buildWorkItem() {
     // Calculate success/failure
     final bool hasTarget = rep.targetWeight > 0;
+    // A rep the run weighed nothing for states so rather than nothing at all:
+    // the card names every other rep with a load, and a silent row reads as one
+    // the athlete pulled a load the screen forgot to print.
+    final bool weighed = repWeighed(rep);
     final double successRate = hasTarget
         ? rep.averageWeight / rep.targetWeight
         : 0;
@@ -182,6 +187,25 @@ class RepItemWidget extends StatelessWidget {
                       ),
                     ],
                   ),
+                )
+              else if (!weighed)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: CrimpyTheme.gray100,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'Not measured',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: CrimpyTheme.gray600,
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -236,6 +260,29 @@ class RepItemWidget extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
+                ),
+              ],
+            ),
+          ] else if (weighed) ...[
+            const SizedBox(height: 8),
+            // A rep the sensor read against no prescribed load still names what
+            // the athlete pulled: the card averages it in, and the portal prints
+            // it on the row. There is nothing to grade it against, so it is
+            // stated in the neutral color a target would take.
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Performed',
+                  style: TextStyle(fontSize: 11, color: CrimpyTheme.gray600),
+                ),
+                Text(
+                  '${rep.averageWeight.toStringAsFixed(1)} kg',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: CrimpyTheme.gray700,
                   ),
                 ),
               ],

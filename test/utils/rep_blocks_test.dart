@@ -488,6 +488,19 @@ void main() {
     });
   });
 
+  group('measuredAvgWeight counts the reps the run weighed', () {
+    test('leaves out a rep the sensor missed that prescribed no load', () {
+      // A rep the sensor dropped on a run with no target is not flagged
+      // unmeasured, since nothing was prescribed to lose. Averaged in, its zero
+      // states 15.0 kg beside a row that names it unmeasured.
+      final avg = measuredAvgWeight([
+        _rep(index: 0, averageWeight: 30, targetWeight: 0),
+        _rep(index: 1, averageWeight: 0, targetWeight: 0),
+      ]);
+      expect(avg, 30);
+    });
+  });
+
   group('measuredMaxWeight', () {
     test('takes the heaviest of the reps the sensor weighed', () {
       final max = measuredMaxWeight([
@@ -553,6 +566,61 @@ void main() {
           _rep(index: index, averageWeight: -0.4, targetWeight: 20),
       ]);
       expect(max, -0.4);
+    });
+  });
+
+  group('repWeighed', () {
+    test('a rep the sensor read states the load it read', () {
+      expect(
+        repWeighed(_rep(index: 0, averageWeight: 30, targetWeight: 30)),
+        isTrue,
+      );
+    });
+
+    test('a rep whose target a dropped sensor lost was weighed by nothing', () {
+      expect(
+        repWeighed(
+          _rep(
+            index: 0,
+            averageWeight: 0,
+            targetWeight: 0,
+            targetUnmeasured: true,
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('a rep nothing was ever meant to weigh was weighed by nothing', () {
+      // An exercise block records the reps it played and no load at all, so its
+      // stored zero is the absence of a reading just as a lost target is.
+      expect(
+        repWeighed(_rep(index: 0, averageWeight: 0, targetWeight: 0)),
+        isFalse,
+      );
+    });
+
+    test('keeps the zero a working sensor read against a target', () {
+      expect(
+        repWeighed(_rep(index: 0, averageWeight: 0, targetWeight: 30)),
+        isTrue,
+      );
+    });
+
+    test('keeps a rep read below zero by a sensor tared under load', () {
+      expect(
+        repWeighed(_rep(index: 0, averageWeight: -0.4, targetWeight: 20)),
+        isTrue,
+      );
+    });
+
+    test('keeps a rep read below zero that prescribed no load', () {
+      // The sensor answered, so the run was measured. Reading it as unweighed
+      // would state that nothing measured a run that was.
+      expect(
+        repWeighed(_rep(index: 0, averageWeight: -0.4, targetWeight: 0)),
+        isTrue,
+      );
     });
   });
 
