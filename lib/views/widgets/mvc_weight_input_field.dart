@@ -37,7 +37,7 @@ class _MvcWeightInputFieldState extends ConsumerState<MvcWeightInputField> {
   Widget build(BuildContext context) {
     // Watch the MVC assessments for the specific hand
     final mvcAssessmentsAsync = ref.watch(
-      assessmentsProvider(AssessmentType.mvc),
+      assessmentsProvider(BuiltinAssessmentIds.maxForce),
     );
 
     return mvcAssessmentsAsync.when(

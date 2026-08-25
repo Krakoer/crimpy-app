@@ -9,10 +9,14 @@ abstract class AssessmentRepository {
   );
   Future<void> deleteAssessment(String id);
   Future<List<AssessmentModel>> getAssessments({
-    AssessmentType? type,
+    String? assessmentId,
     HandSide? handSide,
     GripPosition? gripPosition,
   });
+
+  /// Every assessment that can be measured, so a result can be named and a
+  /// percentage of it unit checked.
+  Future<List<AssessmentDefinition>> getAssessmentDefinitions();
 
   /// The most recent result for [handSide], or null when there is none.
   ///
@@ -20,12 +24,12 @@ abstract class AssessmentRepository {
   /// means: implementations only have to return the matching assessments in
   /// chronological order.
   Future<double?> getLastValueForHand(
-    AssessmentType type,
+    String assessmentId,
     HandSide handSide, {
     GripPosition? gripPosition,
   }) async {
     final last = (await getAssessments(
-      type: type,
+      assessmentId: assessmentId,
       handSide: handSide,
       gripPosition: gripPosition,
     )).lastOrNull;
@@ -50,12 +54,16 @@ class LocalAssessmentRepository extends AssessmentRepository {
 
   @override
   Future<List<AssessmentModel>> getAssessments({
-    AssessmentType? type,
+    String? assessmentId,
     HandSide? handSide,
     GripPosition? gripPosition,
   }) => _database.getAssessments(
-    type: type,
+    assessmentId: assessmentId,
     handSide: handSide,
     gripPosition: gripPosition,
   );
+
+  @override
+  Future<List<AssessmentDefinition>> getAssessmentDefinitions() =>
+      _database.getAssessmentDefinitions();
 }

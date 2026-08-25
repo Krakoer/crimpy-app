@@ -15,7 +15,7 @@ class RemoteAssessmentRepository extends AssessmentRepository {
   ) async {
     await _apiClient.createAssessmentApi({
       'session_id': sessionId,
-      'type': assessment.type.index,
+      'assessment_id': assessment.assessmentId,
       if (assessment.rightValue != null) 'right_value': assessment.rightValue,
       if (assessment.leftValue != null) 'left_value': assessment.leftValue,
       if (assessment.gripPosition != null)
@@ -29,8 +29,14 @@ class RemoteAssessmentRepository extends AssessmentRepository {
   }
 
   @override
+  Future<List<AssessmentDefinition>> getAssessmentDefinitions() async {
+    final data = await _apiClient.getAssessmentDefinitionsApi();
+    return data.map((d) => AssessmentDefinition.fromJson(d)).toList();
+  }
+
+  @override
   Future<List<AssessmentModel>> getAssessments({
-    AssessmentType? type,
+    String? assessmentId,
     HandSide? handSide,
     GripPosition? gripPosition,
   }) async {
@@ -44,10 +50,14 @@ class RemoteAssessmentRepository extends AssessmentRepository {
               a['date'] as String? ??
               DateTime.now().toIso8601String(),
         ),
-        type: enumFromIndex(
-          AssessmentType.values,
-          a['type'] as num?,
-          AssessmentType.criticalForce,
+        // Each row carries its own definition, so the history can be named
+        // and formatted without a second request.
+        definition: AssessmentDefinition(
+          id: a['assessment_id'] as String,
+          label: (a['label'] as String?) ?? 'Assessment',
+          unit: assessmentUnitFromApi(a['unit'] as String?),
+          perHand: (a['per_hand'] as bool?) ?? false,
+          trainingId: a['training_id'] as String?,
         ),
         rightValue: (a['right_value'] as num?)?.toDouble(),
         leftValue: (a['left_value'] as num?)?.toDouble(),
@@ -59,8 +69,8 @@ class RemoteAssessmentRepository extends AssessmentRepository {
       );
     }).toList();
 
-    if (type != null) {
-      result = result.where((a) => a.type == type).toList();
+    if (assessmentId != null) {
+      result = result.where((a) => a.assessmentId == assessmentId).toList();
     }
     if (handSide != null) {
       result = result

@@ -157,12 +157,12 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
 
     // Get previous value
     final previousValue = await ref
-        .read(assessmentsProvider(AssessmentType.endurance60).notifier)
+        .read(assessmentsProvider(BuiltinAssessmentIds.endurance60).notifier)
         .getLastValueForHand(widget.hand, gripPosition: widget.gripPosition);
 
     // Create assessment result
     final saveAssessment = AssessmentResultModel(
-      type: AssessmentType.endurance60,
+      assessmentId: BuiltinAssessmentIds.endurance60,
       rightValue: widget.hand.isRightHand ? durationSeconds : null,
       leftValue: !widget.hand.isRightHand ? durationSeconds : null,
       gripPosition: widget.gripPosition,
@@ -180,7 +180,9 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (ctx) => PostAssessmentScreen(
-            type: AssessmentType.endurance60,
+            definition: BuiltinAssessmentIds.definitionOf(
+              AssessmentType.endurance60,
+            ),
             rightHandResults: widget.hand.isRightHand
                 ? (previousValue, durationSeconds)
                 : null,

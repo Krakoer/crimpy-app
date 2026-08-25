@@ -15,6 +15,11 @@ class StatContent extends StatelessWidget {
   final VoidCallback onStartAssessment;
   final AssessmentUnit unit;
 
+  /// An assessment measured on one hand at a time shows a card and a series per
+  /// hand. One measured as a single number shows one of each: calling that
+  /// number a hand would be a lie the legend then repeats.
+  final bool perHand;
+
   const StatContent({
     required this.title,
     required this.maxLeft,
@@ -25,6 +30,7 @@ class StatContent extends StatelessWidget {
     required this.rightData,
     required this.onStartAssessment,
     this.unit = AssessmentUnit.kilograms,
+    this.perHand = true,
     super.key,
   });
 
@@ -34,32 +40,40 @@ class StatContent extends StatelessWidget {
       children: [
         SectionTitle(title),
         SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: StatCard(
-                "Left Hand",
-                maxLeft == 0 ? "--" : formatAssessmentValue(maxLeft, unit),
-                accentLeft,
+        if (perHand)
+          Row(
+            children: [
+              Expanded(
+                child: StatCard(
+                  "Left Hand",
+                  maxLeft == 0 ? "--" : formatAssessmentValue(maxLeft, unit),
+                  accentLeft,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: StatCard(
-                "Right Hand",
-                maxRight == 0 ? "--" : formatAssessmentValue(maxRight, unit),
-                accentRight,
+              const SizedBox(width: 12),
+              Expanded(
+                child: StatCard(
+                  "Right Hand",
+                  maxRight == 0 ? "--" : formatAssessmentValue(maxRight, unit),
+                  accentRight,
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          )
+        else
+          StatCard(
+            "Best",
+            maxRight == 0 ? "--" : formatAssessmentValue(maxRight, unit),
+            accentRight,
+          ),
         const SizedBox(height: 16),
         ForceChart(
-          leftData: leftData,
+          leftData: perHand ? leftData : const [],
           rightData: rightData,
           accentLeft: accentLeft,
           accentRight: accentRight,
           onStartAssessment: onStartAssessment,
+          showLegend: perHand,
         ),
       ],
     );

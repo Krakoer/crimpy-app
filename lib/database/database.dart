@@ -49,10 +49,44 @@ class Sessions extends Table {
 }
 
 // Stores the assessments the user has done, with the results.
+// What each assessment is: the ones Crimpy ships, seeded on first open, and the
+// coach ones the server sends. Cached locally so a result can be named and
+// formatted offline. The generated row class is named AssessmentDefinitionRow to
+// avoid conflict with the domain AssessmentDefinition in assessment_model.dart.
+@DataClassName('AssessmentDefinitionRow')
+class AssessmentDefinitions extends Table {
+  late final TextColumn id = text()();
+
+  late final TextColumn label = text()();
+
+  /// 'kilograms', 'seconds' or 'repetitions', as the server stores it.
+  late final TextColumn unit = text()();
+
+  late final BoolColumn perHand = boolean().withDefault(
+    const Constant(false),
+  )();
+
+  /// The question a coach assessment ends on, null on the ones Crimpy ships.
+  late final TextColumn prompt = text().nullable()();
+
+  /// The training a coach assessment is run from, null on the ones Crimpy ships.
+  late final TextColumn trainingId = text().nullable()();
+
+  late final DateTimeColumn updatedAt = dateTime().withDefault(
+    currentDateAndTime,
+  )();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 class Assessments extends Table {
   late final TextColumn id = text().clientDefault(() => Uuid().v4())();
 
-  late final IntColumn type = integer()();
+  /// The assessment measured, naming a row in [AssessmentDefinitions]. The ones
+  /// Crimpy ships are rows there like a coach's own, so there is no builtin
+  /// discriminator beside this.
+  late final TextColumn assessmentId = text()();
   late final RealColumn rightValue = real().nullable()();
   late final RealColumn leftValue = real().nullable()();
   late final TextColumn sessionId = text()();
@@ -128,6 +162,10 @@ class TrainingItems extends Table {
   late final TextColumn leftLoadsJson = text().nullable()();
   late final TextColumn handPositionsJson = text().nullable()();
   late final TextColumn edgeSizesMmJson = text().nullable()();
+
+  /// Scalar fields set as a percentage of an assessment result, keyed by field
+  /// name. Stored as JSON, the same shape the server holds.
+  late final TextColumn variableTargetsJson = text().nullable()();
 
   late final BoolColumn loadIsMax = boolean().withDefault(
     const Constant(false),
@@ -269,6 +307,7 @@ class Users extends Table {
 @DriftDatabase(
   tables: [
     Sessions,
+    AssessmentDefinitions,
     Assessments,
     Trainings,
     TrainingItems,
@@ -616,7 +655,7 @@ class AppDatabase extends _$AppDatabase {
     final companion = AssessmentsCompanion(
       rightValue: Value(assessment.rightValue),
       leftValue: Value(assessment.leftValue),
-      type: Value(assessment.type.index),
+      assessmentId: Value(assessment.assessmentId),
       sessionId: Value(sessionId),
       gripPosition: Value(assessment.gripPosition?.index),
       updatedAt: Value(DateTime.now()),
@@ -640,19 +679,49 @@ class AppDatabase extends _$AppDatabase {
     )..where((a) => a.sessionId.equals(sessionId))).get();
   }
 
+  /// Every assessment known locally, the ones Crimpy ships seeded on first
+  /// open, so a result can be named offline.
+  Future<List<AssessmentDefinition>> getAssessmentDefinitions() async {
+    final rows = await select(assessmentDefinitions).get();
+    return rows.map((row) => row.toDomain()).toList();
+  }
+
+  /// Replaces the cached definitions with what the server holds, keeping the
+  /// ones Crimpy ships so the local path still names them when signed out.
+  Future<void> replaceAssessmentDefinitions(
+    List<AssessmentDefinition> definitions,
+  ) async {
+    await batch((b) {
+      b.insertAllOnConflictUpdate(
+        assessmentDefinitions,
+        definitions.map(
+          (d) => AssessmentDefinitionsCompanion.insert(
+            id: d.id,
+            label: d.label,
+            unit: assessmentUnitToApi(d.unit),
+            perHand: Value(d.perHand),
+            prompt: Value(d.prompt),
+            trainingId: Value(d.trainingId),
+            updatedAt: Value(DateTime.now()),
+          ),
+        ),
+      );
+    });
+  }
+
   /// Get the assessments done.
   /// Allow to filter on `type`.
   /// If the `rightHand` parameter is set, it will only return the results for the given hand.
   /// If the `gripPosition` parameter is set, only assessments with that grip position will be retrieved.
   Future<List<AssessmentModel>> getAssessments({
-    AssessmentType? type,
+    String? assessmentId,
     HandSide? handSide,
     GripPosition? gripPosition,
   }) async {
     var query = select(assessments);
 
-    if (type != null) {
-      query = query..where((r) => r.type.equals(type.index));
+    if (assessmentId != null) {
+      query = query..where((r) => r.assessmentId.equals(assessmentId));
     }
     if (handSide != null) {
       query = query
@@ -671,15 +740,28 @@ class AppDatabase extends _$AppDatabase {
 
     final res = await query.join([
       innerJoin(sessions, sessions.id.equalsExp(assessments.sessionId)),
+      // Left, so a result whose definition has not synced yet still reads back
+      // rather than vanishing from the history.
+      leftOuterJoin(
+        assessmentDefinitions,
+        assessmentDefinitions.id.equalsExp(assessments.assessmentId),
+      ),
     ]).get();
 
     return res.map((row) {
       final assessment = row.readTable(assessments);
       final session = row.readTable(sessions);
+      final definition = row.readTableOrNull(assessmentDefinitions);
 
       return AssessmentModel(
         date: session.date,
-        type: AssessmentType.values[assessment.type],
+        definition:
+            definition?.toDomain() ??
+            AssessmentDefinition(
+              id: assessment.assessmentId,
+              label: 'Assessment',
+              unit: AssessmentUnit.kilograms,
+            ),
         leftValue: assessment.leftValue,
         rightValue: assessment.rightValue,
         id: assessment.id,
@@ -831,12 +913,13 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
+      await seedBuiltinAssessmentDefinitions(m.database);
     },
     onUpgrade: stepByStep(
       from1To2: (m, schema) async {
@@ -1142,8 +1225,61 @@ class AppDatabase extends _$AppDatabase {
           ),
         );
       },
+      from9To10: (m, schema) async {
+        // Assessments stopped being a closed set of three: every one is a row
+        // now, the ones Crimpy ships included, and a result names it by id.
+        await m.createTable(schema.assessmentDefinitions);
+        await seedBuiltinAssessmentDefinitions(m.database);
+
+        // The results already recorded were keyed by the old discriminator,
+        // so they are re-pointed at the rows just seeded.
+        await m.alterTable(
+          TableMigration(
+            schema.assessments,
+            columnTransformer: {
+              schema.assessments.assessmentId: CustomExpression<String>(
+                "CASE type "
+                "WHEN 0 THEN '${BuiltinAssessmentIds.criticalForce}' "
+                "WHEN 1 THEN '${BuiltinAssessmentIds.maxForce}' "
+                "WHEN 2 THEN '${BuiltinAssessmentIds.endurance60}' "
+                "END",
+              ),
+            },
+            newColumns: [schema.assessments.assessmentId],
+          ),
+        );
+        // A result whose discriminator named no assessment described nothing a
+        // client could read back, so it goes rather than becoming a null row.
+        await m.database.customStatement(
+          'DELETE FROM assessments WHERE assessment_id IS NULL',
+        );
+
+        // Variable targets were never stored locally, so a training cached here
+        // lost every percentage reference on a round trip.
+        await m.addColumn(
+          schema.trainingItems,
+          schema.trainingItems.variableTargetsJson,
+        );
+      },
     ),
   );
+}
+
+/// The assessments Crimpy ships, written with the ids the server seeds so a
+/// result recorded offline names the same row once it syncs.
+Future<void> seedBuiltinAssessmentDefinitions(DatabaseConnectionUser db) async {
+  const builtins = [
+    (BuiltinAssessmentIds.criticalForce, 'Critical Force', 'kilograms'),
+    (BuiltinAssessmentIds.maxForce, 'Max Force', 'kilograms'),
+    (BuiltinAssessmentIds.endurance60, '60% Endurance', 'seconds'),
+  ];
+  for (final (id, label, unit) in builtins) {
+    await db.customStatement(
+      'INSERT OR IGNORE INTO assessment_definitions '
+      '(id, label, unit, per_hand, updated_at) VALUES (?, ?, ?, 1, ?)',
+      [id, label, unit, DateTime.now().millisecondsSinceEpoch ~/ 1000],
+    );
+  }
 }
 
 /// Helper function that given a file path, will read its content as JSON
@@ -1218,14 +1354,22 @@ extension SessionRowToModel on Session {
   );
 }
 
+/// Maps a stored definition row onto the domain model.
+extension AssessmentDefinitionRowToModel on AssessmentDefinitionRow {
+  AssessmentDefinition toDomain() => AssessmentDefinition(
+    id: id,
+    label: label,
+    unit: assessmentUnitFromApi(unit),
+    perHand: perHand,
+    prompt: prompt,
+    trainingId: trainingId,
+  );
+}
+
 /// Maps a stored assessment row onto the domain result model.
 extension AssessmentRowToModel on Assessment {
   AssessmentResultModel toResult() => AssessmentResultModel(
-    type: enumFromIndex(
-      AssessmentType.values,
-      type,
-      AssessmentType.criticalForce,
-    ),
+    assessmentId: assessmentId,
     rightValue: rightValue,
     leftValue: leftValue,
     gripPosition: gripPosition == null

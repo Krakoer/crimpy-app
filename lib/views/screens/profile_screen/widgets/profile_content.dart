@@ -1,3 +1,4 @@
+import 'package:crimpy/models/assessment_history.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
@@ -25,12 +26,12 @@ class ProfileContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Split & sort
-    final maxForce =
-        assessments.where((a) => a.type == AssessmentType.mvc).toList()
-          ..sort((a, b) => a.date.compareTo(b.date));
+    final history = groupAssessmentHistory(assessments);
 
-    // Group MVC assessments by grip position
+    // Max Force keeps a section of its own: it is the one assessment read one
+    // grip at a time, which no generic section can show.
+    final maxForce =
+        history[BuiltinAssessmentIds.maxForce]?.records ?? const [];
     final Map<GripPosition, List<AssessmentModel>> mvcByGripPosition = {};
     for (var assessment in maxForce) {
       final grip = assessment.gripPosition ?? GripPosition.halfCrimp;
@@ -38,15 +39,11 @@ class ProfileContent extends ConsumerWidget {
       mvcByGripPosition[grip]!.add(assessment);
     }
 
-    final criticalForce =
-        assessments
-            .where((a) => a.type == AssessmentType.criticalForce)
-            .toList()
-          ..sort((a, b) => a.date.compareTo(b.date));
-
-    final endurance60 =
-        assessments.where((a) => a.type == AssessmentType.endurance60).toList()
-          ..sort((a, b) => a.date.compareTo(b.date));
+    // Everything else gets the same section, whether Crimpy ships it or a coach
+    // wrote it, so a new assessment appears the moment it is first measured.
+    final otherAssessments = history.values
+        .where((h) => h.definition.id != BuiltinAssessmentIds.maxForce)
+        .toList();
 
     final authState = ref.watch(authStateProvider);
 
@@ -186,54 +183,23 @@ class ProfileContent extends ConsumerWidget {
             onStartAssessment: goToAssessments,
           ),
 
-          const SizedBox(height: 32),
-
-          // Critical Force Section
-          StatContent(
-            title: "Critical Force",
-            maxLeft: criticalForce
-                .map((a) => a.leftValue ?? 0)
-                .fold<double>(0, (prev, el) => el > prev ? el : prev),
-            maxRight: criticalForce
-                .map((a) => a.rightValue ?? 0)
-                .fold<double>(0, (prev, el) => el > prev ? el : prev),
-            accentLeft: accentLeft,
-            accentRight: accentRight,
-            leftData: criticalForce
-                .where((a) => a.leftValue != null)
-                .map((a) => (a.date, a.leftValue!))
-                .toList(),
-            rightData: criticalForce
-                .where((a) => a.rightValue != null)
-                .map((a) => (a.date, a.rightValue!))
-                .toList(),
-            onStartAssessment: goToAssessments,
-          ),
-
-          SizedBox(height: 32),
-
-          // 60% Endurance Section
-          StatContent(
-            title: "60% Endurance",
-            maxLeft: endurance60
-                .map((a) => a.leftValue ?? 0)
-                .fold<double>(0, (prev, el) => el > prev ? el : prev),
-            maxRight: endurance60
-                .map((a) => a.rightValue ?? 0)
-                .fold<double>(0, (prev, el) => el > prev ? el : prev),
-            accentLeft: accentLeft,
-            accentRight: accentRight,
-            leftData: endurance60
-                .where((a) => a.leftValue != null)
-                .map((a) => (a.date, a.leftValue!))
-                .toList(),
-            rightData: endurance60
-                .where((a) => a.rightValue != null)
-                .map((a) => (a.date, a.rightValue!))
-                .toList(),
-            unit: AssessmentUnit.seconds,
-            onStartAssessment: goToAssessments,
-          ),
+          for (final assessed in otherAssessments) ...[
+            const SizedBox(height: 32),
+            StatContent(
+              title: assessed.definition.label,
+              maxLeft: assessed.best((a) => a.leftValue),
+              // A single value assessment stores its number on the right, so
+              // the one card and the one series read it from there.
+              maxRight: assessed.best((a) => a.rightValue),
+              accentLeft: accentLeft,
+              accentRight: accentRight,
+              leftData: assessed.series((a) => a.leftValue),
+              rightData: assessed.series((a) => a.rightValue),
+              unit: assessed.definition.unit,
+              perHand: assessed.definition.perHand,
+              onStartAssessment: goToAssessments,
+            ),
+          ],
         ],
       ),
     );

@@ -7,7 +7,9 @@ import 'dart:core';
 import '../../../theme/crimpy_theme.dart';
 
 class PostAssessmentScreen extends ConsumerWidget {
-  final AssessmentType type;
+  /// The assessment measured, so the screen names it and formats its numbers in
+  /// the unit it holds rather than one derived from a discriminator.
+  final AssessmentDefinition definition;
 
   // Results in the form (prevValue, newValue). previousValue value can be null if the assessment was done for the first time.
   final (double?, double)? rightHandResults;
@@ -24,7 +26,7 @@ class PostAssessmentScreen extends ConsumerWidget {
   ///
   /// Results must be in the form `(prevValue, newValue)`. `previousValue` can be null if the assessment was done for the first time.
   const PostAssessmentScreen({
-    required this.type,
+    required this.definition,
     this.rightHandResults,
     this.leftHandResults,
     required this.saveAssessment,
@@ -70,9 +72,7 @@ class PostAssessmentScreen extends ConsumerWidget {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: Text("${assessmentTypeToString(type)} assessment results"),
-        ),
+        appBar: AppBar(title: Text("${definition.label} assessment results")),
         body: SafeArea(
           child: Column(
             children: [
@@ -93,7 +93,7 @@ class PostAssessmentScreen extends ConsumerWidget {
                       // If `leftHandResults` was provided, it's a two hands assessment.
                       // In that case, tell the card the result is right hand related to show the hand side.
                       rightHand: leftHandResults != null ? true : null,
-                      unit: getAssessmentUnit(type),
+                      unit: definition.unit,
                     ),
                   if (leftHandResults != null)
                     ResultCard(
@@ -102,7 +102,7 @@ class PostAssessmentScreen extends ConsumerWidget {
                       // If `rightHandResults` was provided, it's a two hands assessment.
                       // In that case, tell the card the result is left hand related to show the hand side.
                       rightHand: rightHandResults != null ? false : null,
-                      unit: getAssessmentUnit(type),
+                      unit: definition.unit,
                     ),
                 ],
               ),
@@ -117,7 +117,7 @@ class PostAssessmentScreen extends ConsumerWidget {
               onPressed: () async {
                 try {
                   await ref
-                      .read(assessmentsProvider(type).notifier)
+                      .read(assessmentsProvider(definition.id).notifier)
                       .saveAssessment(saveAssessment, saveTraining, saveReps);
                 } catch (e) {
                   if (context.mounted) {

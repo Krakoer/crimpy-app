@@ -9,8 +9,22 @@ AssessmentModel _assessment(
   double? left,
   DateTime? date,
 }) => AssessmentModel(
-  type: type,
+  definition: BuiltinAssessmentIds.definitionOf(type),
   id: '${type.name}-${date ?? ''}',
+  date: date ?? DateTime(2026, 1, 1),
+  rightValue: right,
+  leftValue: left,
+);
+
+/// A coach assessment, which the app only knows through its definition.
+AssessmentModel _custom(
+  AssessmentDefinition definition, {
+  double? right,
+  double? left,
+  DateTime? date,
+}) => AssessmentModel(
+  definition: definition,
+  id: '${definition.id}-${date ?? ''}',
   date: date ?? DateTime(2026, 1, 1),
   rightValue: right,
   leftValue: left,
@@ -29,8 +43,11 @@ void main() {
         ),
       ]);
 
-      expect(results.value(AssessmentType.mvc), 50);
-      expect(results.value(AssessmentType.endurance60), 90);
+      expect(results.value(BuiltinAssessmentIds.idOf(AssessmentType.mvc)), 50);
+      expect(
+        results.value(BuiltinAssessmentIds.idOf(AssessmentType.endurance60)),
+        90,
+      );
     });
 
     test('reads the value of the hand that was asked for', () {
@@ -38,8 +55,20 @@ void main() {
         _assessment(AssessmentType.mvc, right: 50, left: 40),
       ]);
 
-      expect(results.value(AssessmentType.mvc, handSide: HandSide.right), 50);
-      expect(results.value(AssessmentType.mvc, handSide: HandSide.left), 40);
+      expect(
+        results.value(
+          BuiltinAssessmentIds.idOf(AssessmentType.mvc),
+          handSide: HandSide.right,
+        ),
+        50,
+      );
+      expect(
+        results.value(
+          BuiltinAssessmentIds.idOf(AssessmentType.mvc),
+          handSide: HandSide.left,
+        ),
+        40,
+      );
     });
 
     test('averages both hands when no hand is asked for', () {
@@ -47,11 +76,16 @@ void main() {
         _assessment(AssessmentType.mvc, right: 50, left: 40),
       ]);
 
-      expect(results.value(AssessmentType.mvc), 45);
+      expect(results.value(BuiltinAssessmentIds.idOf(AssessmentType.mvc)), 45);
     });
 
     test('is null for an assessment that was never done', () {
-      expect(AssessmentResults.none.value(AssessmentType.mvc), isNull);
+      expect(
+        AssessmentResults.none.value(
+          BuiltinAssessmentIds.idOf(AssessmentType.mvc),
+        ),
+        isNull,
+      );
     });
 
     test('keeps each hand last measurement when they were run apart', () {
@@ -69,11 +103,17 @@ void main() {
       ]);
 
       expect(
-        results.value(AssessmentType.criticalForce, handSide: HandSide.left),
+        results.value(
+          BuiltinAssessmentIds.idOf(AssessmentType.criticalForce),
+          handSide: HandSide.left,
+        ),
         22,
       );
       expect(
-        results.value(AssessmentType.criticalForce, handSide: HandSide.right),
+        results.value(
+          BuiltinAssessmentIds.idOf(AssessmentType.criticalForce),
+          handSide: HandSide.right,
+        ),
         25,
       );
     });
@@ -84,7 +124,10 @@ void main() {
       ]);
 
       expect(
-        results.value(AssessmentType.mvc, handSide: HandSide.left),
+        results.value(
+          BuiltinAssessmentIds.idOf(AssessmentType.mvc),
+          handSide: HandSide.left,
+        ),
         isNull,
       );
     });
@@ -98,7 +141,7 @@ void main() {
     const load = Load(
       value: 80,
       unit: percentAssessmentUnit,
-      assessmentType: AssessmentType.mvc,
+      assessmentId: BuiltinAssessmentIds.maxForce,
       fallback: 25,
     );
 
@@ -115,7 +158,7 @@ void main() {
       const secondsBacked = Load(
         value: 80,
         unit: percentAssessmentUnit,
-        assessmentType: AssessmentType.endurance60,
+        assessmentId: BuiltinAssessmentIds.endurance60,
         fallback: 25,
       );
       final measured = AssessmentResults.fromHistory([
@@ -147,17 +190,88 @@ void main() {
       final parsed = Load.fromJson(load.toJson());
       expect(parsed.unit, percentAssessmentUnit);
       expect(parsed.value, 80);
-      expect(parsed.assessmentType, AssessmentType.mvc);
+      expect(parsed.assessmentId, BuiltinAssessmentIds.maxForce);
       expect(parsed.fallback, 25);
     });
 
-    test('an unknown assessment index is not treated as relative', () {
+    test('a load naming no assessment is not treated as relative', () {
       final parsed = Load.fromJson({
         'value': 80,
         'unit': percentAssessmentUnit,
-        'assessment_type': 99,
       });
       expect(parsed.isAssessmentRelative, isFalse);
+    });
+  });
+
+  // A coach assessment is known to the app only through its definition, which
+  // rides along on the results, so a percentage of one resolves without the app
+  // knowing anything about it in advance.
+  group('custom assessments', () {
+    const pullUpPyramid = AssessmentDefinition(
+      id: 'a9b8c7d6-0000-0000-0000-000000000001',
+      label: 'Pull up pyramid',
+      unit: AssessmentUnit.repetitions,
+    );
+    const lockOff = AssessmentDefinition(
+      id: 'a9b8c7d6-0000-0000-0000-000000000002',
+      label: 'One arm lock off',
+      unit: AssessmentUnit.seconds,
+      perHand: true,
+    );
+
+    test('resolves a reps target against a repetitions assessment', () {
+      final results = AssessmentResults.fromHistory([
+        _custom(pullUpPyramid, right: 20),
+      ]);
+      const target = VariableTarget(
+        assessmentId: 'a9b8c7d6-0000-0000-0000-000000000001',
+        percent: 60,
+        fallback: 8,
+      );
+
+      expect(target.resolve(results, expects: AssessmentUnit.repetitions), 12);
+    });
+
+    // A single number is stored on the right hand, so asking for no hand at all
+    // has to give that number back rather than averaging it with nothing.
+    test('reads a single value assessment without naming a hand', () {
+      final results = AssessmentResults.fromHistory([
+        _custom(pullUpPyramid, right: 14),
+      ]);
+
+      expect(results.value(pullUpPyramid.id), 14);
+    });
+
+    test('keeps the hands apart on a per hand assessment', () {
+      final results = AssessmentResults.fromHistory([
+        _custom(lockOff, right: 3, left: 6),
+      ]);
+
+      expect(results.value(lockOff.id, handSide: HandSide.right), 3);
+      expect(results.value(lockOff.id, handSide: HandSide.left), 6);
+      expect(results.value(lockOff.id), 4.5);
+    });
+
+    test('falls back when the assessment is measured in another unit', () {
+      final results = AssessmentResults.fromHistory([
+        _custom(pullUpPyramid, right: 20),
+      ]);
+      const target = VariableTarget(
+        assessmentId: 'a9b8c7d6-0000-0000-0000-000000000001',
+        percent: 60,
+        fallback: 30,
+      );
+
+      expect(target.resolve(results, expects: AssessmentUnit.seconds), 30);
+    });
+
+    test('names the assessment its results carry', () {
+      final results = AssessmentResults.fromHistory([
+        _custom(lockOff, right: 3, left: 6),
+      ]);
+
+      expect(results.labelOf(lockOff.id), 'One arm lock off');
+      expect(results.unitOf(lockOff.id), AssessmentUnit.seconds);
     });
   });
 
@@ -178,7 +292,7 @@ void main() {
     test('resolves the duration against the last assessment', () {
       final item = itemWith({
         'duration': {
-          'assessment_type': AssessmentType.endurance60.index,
+          'assessment_id': BuiltinAssessmentIds.endurance60,
           'percent': 75,
           'fallback': 60,
         },
@@ -190,7 +304,7 @@ void main() {
     test('falls back when the assessment was never done', () {
       final item = itemWith({
         'duration': {
-          'assessment_type': AssessmentType.endurance60.index,
+          'assessment_id': BuiltinAssessmentIds.endurance60,
           'percent': 75,
           'fallback': 60,
         },
@@ -202,7 +316,7 @@ void main() {
     test('falls back when the assessment is measured in another unit', () {
       final item = itemWith({
         'duration': {
-          'assessment_type': AssessmentType.mvc.index,
+          'assessment_id': BuiltinAssessmentIds.maxForce,
           'percent': 75,
           'fallback': 60,
         },
@@ -214,7 +328,7 @@ void main() {
     test('falls back on a reps target, nothing being measured in reps', () {
       final item = itemWith({
         'reps': {
-          'assessment_type': AssessmentType.endurance60.index,
+          'assessment_id': BuiltinAssessmentIds.endurance60,
           'percent': 50,
           'fallback': 8,
         },
@@ -223,19 +337,34 @@ void main() {
       expect(item.effectiveReps(results), 8);
     });
 
-    test('drops a target naming an assessment the app does not know', () {
+    test('drops a target naming no assessment', () {
       final item = itemWith({
-        'duration': {'assessment_type': 99, 'percent': 75, 'fallback': 60},
+        'duration': {'percent': 75, 'fallback': 60},
       });
 
       expect(item.variableTargets, isEmpty);
       expect(item.effectiveDuration(results), 60);
     });
 
+    // An assessment the athlete has no result for, and no definition of, has no
+    // unit to check the reference against, so the coach fallback stands.
+    test('falls back for an assessment the app has never heard of', () {
+      final item = itemWith({
+        'duration': {
+          'assessment_id': 'e5a9b0c1-0000-0000-0000-000000000000',
+          'percent': 75,
+          'fallback': 60,
+        },
+      });
+
+      expect(item.variableTargets, isNotEmpty);
+      expect(item.effectiveDuration(results), 60);
+    });
+
     test('round-trips through JSON', () {
       final item = itemWith({
         'reps': {
-          'assessment_type': AssessmentType.endurance60.index,
+          'assessment_id': BuiltinAssessmentIds.endurance60,
           'percent': 50,
           'fallback': 8,
         },
@@ -263,7 +392,7 @@ void main() {
             'position': 0,
             'variable_targets': {
               'duration': {
-                'assessment_type': AssessmentType.endurance60.index,
+                'assessment_id': BuiltinAssessmentIds.endurance60,
                 'percent': 75,
                 'fallback': 60,
               },
@@ -277,7 +406,7 @@ void main() {
               {
                 'value': 80,
                 'unit': percentAssessmentUnit,
-                'assessment_type': AssessmentType.mvc.index,
+                'assessment_id': BuiltinAssessmentIds.maxForce,
                 'fallback': 25,
               },
             ],
@@ -286,8 +415,8 @@ void main() {
       });
 
       expect(group.referencedAssessments, {
-        AssessmentType.endurance60,
-        AssessmentType.mvc,
+        BuiltinAssessmentIds.endurance60,
+        BuiltinAssessmentIds.maxForce,
       });
     });
   });

@@ -165,6 +165,56 @@ final class AssessmentTrainingFamily extends $Family
   String toString() => r'assessmentTrainingProvider';
 }
 
+/// Every assessment that can be measured, so a result can be named and a
+/// percentage of one unit checked. Cached locally, so it answers offline.
+
+@ProviderFor(assessmentDefinitions)
+const assessmentDefinitionsProvider = AssessmentDefinitionsProvider._();
+
+/// Every assessment that can be measured, so a result can be named and a
+/// percentage of one unit checked. Cached locally, so it answers offline.
+
+final class AssessmentDefinitionsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<AssessmentDefinition>>,
+          List<AssessmentDefinition>,
+          FutureOr<List<AssessmentDefinition>>
+        >
+    with
+        $FutureModifier<List<AssessmentDefinition>>,
+        $FutureProvider<List<AssessmentDefinition>> {
+  /// Every assessment that can be measured, so a result can be named and a
+  /// percentage of one unit checked. Cached locally, so it answers offline.
+  const AssessmentDefinitionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'assessmentDefinitionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$assessmentDefinitionsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<AssessmentDefinition>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<AssessmentDefinition>> create(Ref ref) {
+    return assessmentDefinitions(ref);
+  }
+}
+
+String _$assessmentDefinitionsHash() =>
+    r'7d4d30ef23b076c30381d1d822feda7cbe1e8336';
+
 /// The athlete latest result per assessment, used to turn the loads, durations
 /// and reps a coach set as a percentage of an assessment into numbers.
 
@@ -212,23 +262,23 @@ final class AssessmentResultsProvider
   }
 }
 
-String _$assessmentResultsHash() => r'6681cac8116f0048ceb920d01ae4f770595ee287';
+String _$assessmentResultsHash() => r'33a15167eca6c806ce8c367f98c3df4d88095f4d';
 
 /// Returns the list of assessments.
-/// Allow to filter on `type`.
+/// Allow to filter on the assessment measured.
 
 @ProviderFor(Assessments)
 const assessmentsProvider = AssessmentsFamily._();
 
 /// Returns the list of assessments.
-/// Allow to filter on `type`.
+/// Allow to filter on the assessment measured.
 final class AssessmentsProvider
     extends $AsyncNotifierProvider<Assessments, List<AssessmentModel>> {
   /// Returns the list of assessments.
-  /// Allow to filter on `type`.
+  /// Allow to filter on the assessment measured.
   const AssessmentsProvider._({
     required AssessmentsFamily super.from,
-    required AssessmentType? super.argument,
+    required String? super.argument,
   }) : super(
          retry: null,
          name: r'assessmentsProvider',
@@ -262,10 +312,10 @@ final class AssessmentsProvider
   }
 }
 
-String _$assessmentsHash() => r'68815418ccd654d1bf7a490b2cfda89ca360a86a';
+String _$assessmentsHash() => r'9a9e8d1bfa44338ff06fbd125ce5f8eea479cb8e';
 
 /// Returns the list of assessments.
-/// Allow to filter on `type`.
+/// Allow to filter on the assessment measured.
 
 final class AssessmentsFamily extends $Family
     with
@@ -274,7 +324,7 @@ final class AssessmentsFamily extends $Family
           AsyncValue<List<AssessmentModel>>,
           List<AssessmentModel>,
           FutureOr<List<AssessmentModel>>,
-          AssessmentType?
+          String?
         > {
   const AssessmentsFamily._()
     : super(
@@ -286,23 +336,23 @@ final class AssessmentsFamily extends $Family
       );
 
   /// Returns the list of assessments.
-  /// Allow to filter on `type`.
+  /// Allow to filter on the assessment measured.
 
-  AssessmentsProvider call(AssessmentType? type) =>
-      AssessmentsProvider._(argument: type, from: this);
+  AssessmentsProvider call(String? assessmentId) =>
+      AssessmentsProvider._(argument: assessmentId, from: this);
 
   @override
   String toString() => r'assessmentsProvider';
 }
 
 /// Returns the list of assessments.
-/// Allow to filter on `type`.
+/// Allow to filter on the assessment measured.
 
 abstract class _$Assessments extends $AsyncNotifier<List<AssessmentModel>> {
-  late final _$args = ref.$arg as AssessmentType?;
-  AssessmentType? get type => _$args;
+  late final _$args = ref.$arg as String?;
+  String? get assessmentId => _$args;
 
-  FutureOr<List<AssessmentModel>> build(AssessmentType? type);
+  FutureOr<List<AssessmentModel>> build(String? assessmentId);
   @$mustCallSuper
   @override
   void runBuild() {

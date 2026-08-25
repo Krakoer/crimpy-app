@@ -270,7 +270,7 @@ void main() {
       );
       await assessments.saveAssessment(
         AssessmentResultModel(
-          type: AssessmentType.mvc,
+          assessmentId: BuiltinAssessmentIds.maxForce,
           rightValue: right,
           leftValue: right - 2,
           gripPosition: GripPosition.halfCrimp,
@@ -284,11 +284,11 @@ void main() {
       await saveOn(DateTime(2026, 2, 1), right: 42);
 
       final right = await assessments.getLastValueForHand(
-        AssessmentType.mvc,
+        BuiltinAssessmentIds.maxForce,
         HandSide.right,
       );
       final left = await assessments.getLastValueForHand(
-        AssessmentType.mvc,
+        BuiltinAssessmentIds.maxForce,
         HandSide.left,
       );
 
@@ -298,7 +298,7 @@ void main() {
 
     test('getLastValueForHand is null when nothing was recorded', () async {
       final value = await assessments.getLastValueForHand(
-        AssessmentType.criticalForce,
+        BuiltinAssessmentIds.criticalForce,
         HandSide.right,
       );
 
@@ -309,9 +309,11 @@ void main() {
       await saveOn(DateTime(2026, 1, 1), right: 30);
 
       final criticalForce = await assessments.getAssessments(
-        type: AssessmentType.criticalForce,
+        assessmentId: BuiltinAssessmentIds.criticalForce,
       );
-      final mvc = await assessments.getAssessments(type: AssessmentType.mvc);
+      final mvc = await assessments.getAssessments(
+        assessmentId: BuiltinAssessmentIds.maxForce,
+      );
 
       expect(criticalForce, isEmpty);
       expect(mvc, hasLength(1));

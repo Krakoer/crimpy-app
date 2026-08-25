@@ -122,7 +122,7 @@ class CriticalForceResultScreen extends ConsumerWidget {
                 await ref
                     .read(
                       assessmentsProvider(
-                        AssessmentType.criticalForce,
+                        BuiltinAssessmentIds.criticalForce,
                       ).notifier,
                     )
                     .saveAssessment(

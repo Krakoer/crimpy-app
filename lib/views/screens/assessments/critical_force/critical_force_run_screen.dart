@@ -64,12 +64,14 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
         final criticalLoad = results.criticalLoad;
         // Get previous critical force value
         final previousCriticalForce = await ref
-            .read(assessmentsProvider(AssessmentType.criticalForce).notifier)
+            .read(
+              assessmentsProvider(BuiltinAssessmentIds.criticalForce).notifier,
+            )
             .getLastValueForHand(widget.hand);
 
         // Create assessment model
         final saveAssessment = AssessmentResultModel(
-          type: AssessmentType.criticalForce,
+          assessmentId: BuiltinAssessmentIds.criticalForce,
           rightValue: widget.hand.isRightHand ? criticalLoad : null,
           leftValue: !widget.hand.isRightHand ? criticalLoad : null,
         );

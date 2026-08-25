@@ -49,16 +49,16 @@ class BuiltinTrainingRepository {
   }) {
     final assessmentValues = builtin.requiredAssessments.map((req) {
       return AssessmentResultModel(
-        type: req.type,
+        assessmentId: req.assessmentId,
         rightValue: _latestValue(
           allAssessments,
-          req.type,
+          req.assessmentId,
           HandSide.right,
           req.gripPosition,
         ),
         leftValue: _latestValue(
           allAssessments,
-          req.type,
+          req.assessmentId,
           HandSide.left,
           req.gripPosition,
         ),
@@ -71,7 +71,9 @@ class BuiltinTrainingRepository {
     final missing = <AssessmentRequirement>[];
     for (final req in builtin.requiredAssessments) {
       final val = assessmentValues.lastWhereOrNull(
-        (a) => a.type == req.type && a.gripPosition == req.gripPosition,
+        (a) =>
+            a.assessmentId == req.assessmentId &&
+            a.gripPosition == req.gripPosition,
       );
       if (val == null || val.leftValue == null || val.rightValue == null) {
         missing.add(req);
@@ -91,12 +93,12 @@ class BuiltinTrainingRepository {
 
   static double? _latestValue(
     List<AssessmentModel> assessments,
-    AssessmentType type,
+    String assessmentId,
     HandSide hand,
     GripPosition? gripPosition,
   ) {
     final filtered = assessments.where((a) {
-      if (a.type != type) return false;
+      if (a.assessmentId != assessmentId) return false;
       if (gripPosition != null && a.gripPosition != gripPosition) return false;
       return hand.isRightHand ? a.rightValue != null : a.leftValue != null;
     }).toList();
