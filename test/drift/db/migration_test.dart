@@ -14,6 +14,7 @@ import 'generated/schema_v3.dart' as v3;
 import 'generated/schema_v4.dart' as v4;
 import 'generated/schema_v5.dart' as v5;
 import 'generated/schema_v6.dart' as v6;
+import 'generated/schema_v8.dart' as v8;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -668,6 +669,63 @@ void main() {
       final rep = await db.select(db.repDatas).getSingle();
       expect(rep.trainingItemId, 'item-1');
       await db.close();
+    });
+  });
+
+  group('v8 to v9 data migration', () {
+    // The boolean the hand used to be stored as had no room for a two handed
+    // hang, which it recorded as the left hand. The reps already written carry
+    // no trace of what was lost, so each one keeps the hand the boolean claimed.
+    Future<String> migratedHand(int rightHand) async {
+      final schema = await verifier.schemaAt(8);
+      final oldDb = v8.DatabaseAtV8(schema.newConnection());
+      await oldDb
+          .into(oldDb.sessions)
+          .insert(
+            const v8.SessionsData(
+              id: 's-1',
+              name: 'Session',
+              notes: '',
+              date: 1700000000,
+              dataPath: '',
+              isAssessment: 0,
+              activity: 0,
+              origin: 'played',
+              duration: 10,
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb
+          .into(oldDb.repDatas)
+          .insert(
+            v8.RepDatasData(
+              id: 'rd-1',
+              averageWeight: 22.0,
+              sessionId: 's-1',
+              isRest: 0,
+              rightHand: rightHand,
+              duration: 7,
+              targetWeight: 20.0,
+              index: 0,
+              gripPosition: 0,
+              targetUnmeasured: 0,
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb.close();
+
+      final db = AppDatabase(schema.newConnection());
+      final rep = await db.select(db.repDatas).getSingle();
+      await db.close();
+      return rep.hand;
+    }
+
+    test('a rep stored as the right hand keeps it', () async {
+      expect(await migratedHand(1), 'right');
+    });
+
+    test('a rep stored as not the right hand becomes the left one', () async {
+      expect(await migratedHand(0), 'left');
     });
   });
 }

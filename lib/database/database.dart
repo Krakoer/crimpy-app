@@ -156,7 +156,10 @@ class RepDatas extends Table {
   late final RealColumn averageWeight = real()();
   late final TextColumn sessionId = text()();
   late final BoolColumn isRest = boolean()();
-  late final BoolColumn rightHand = boolean()();
+  // Which hand pulled the rep: 'left', 'right', or 'both' for a hang taken two
+  // handed. Text rather than a boolean, which had no room for the third state
+  // and stored a two handed hang as the left hand.
+  late final TextColumn hand = text()();
   late final IntColumn duration = integer()();
   late final RealColumn targetWeight = real()();
   late final IntColumn index = integer()();
@@ -357,7 +360,7 @@ class AppDatabase extends _$AppDatabase {
             duration: Value(index.$2.duration),
             index: Value(index.$1),
             isRest: Value(index.$2.isRest),
-            rightHand: Value(index.$2.handSide.isRightHand),
+            hand: Value(index.$2.handSide.apiValue),
             sessionId: Value(sessionId),
             targetWeight: Value(index.$2.targetWeight),
             averageWeight: Value(index.$2.averageWeight),
@@ -828,7 +831,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1123,6 +1126,22 @@ class AppDatabase extends _$AppDatabase {
       from7To8: (m, schema) async {
         await m.addColumn(schema.repDatas, schema.repDatas.targetUnmeasured);
       },
+      from8To9: (m, schema) async {
+        // The boolean had no room for a two handed hang, which it stored as the
+        // left hand. The reps already recorded carry no trace of the state that
+        // was lost, so they keep the hand the boolean claimed.
+        await m.alterTable(
+          TableMigration(
+            schema.repDatas,
+            columnTransformer: {
+              schema.repDatas.hand: const CustomExpression<String>(
+                "CASE WHEN right_hand THEN 'right' ELSE 'left' END",
+              ),
+            },
+            newColumns: [schema.repDatas.hand],
+          ),
+        );
+      },
     ),
   );
 }
@@ -1160,7 +1179,7 @@ extension RepDataRowToModel on RepData {
     duration: duration,
     index: index,
     isRest: isRest,
-    handSide: rightHand ? HandSide.right : HandSide.left,
+    handSide: handSideFromApi(hand),
     targetWeight: targetWeight,
     gripPosition: enumFromIndex(
       GripPosition.values,

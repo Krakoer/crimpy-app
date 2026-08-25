@@ -2824,19 +2824,14 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
       'CHECK ("is_rest" IN (0, 1))',
     ),
   );
-  static const VerificationMeta _rightHandMeta = const VerificationMeta(
-    'rightHand',
-  );
+  static const VerificationMeta _handMeta = const VerificationMeta('hand');
   @override
-  late final GeneratedColumn<bool> rightHand = GeneratedColumn<bool>(
-    'right_hand',
+  late final GeneratedColumn<String> hand = GeneratedColumn<String>(
+    'hand',
     aliasedName,
     false,
-    type: DriftSqlType.bool,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("right_hand" IN (0, 1))',
-    ),
   );
   static const VerificationMeta _durationMeta = const VerificationMeta(
     'duration',
@@ -2936,7 +2931,7 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     averageWeight,
     sessionId,
     isRest,
-    rightHand,
+    hand,
     duration,
     targetWeight,
     index,
@@ -2988,13 +2983,13 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
     } else if (isInserting) {
       context.missing(_isRestMeta);
     }
-    if (data.containsKey('right_hand')) {
+    if (data.containsKey('hand')) {
       context.handle(
-        _rightHandMeta,
-        rightHand.isAcceptableOrUnknown(data['right_hand']!, _rightHandMeta),
+        _handMeta,
+        hand.isAcceptableOrUnknown(data['hand']!, _handMeta),
       );
     } else if (isInserting) {
-      context.missing(_rightHandMeta);
+      context.missing(_handMeta);
     }
     if (data.containsKey('duration')) {
       context.handle(
@@ -3090,9 +3085,9 @@ class $RepDatasTable extends RepDatas with TableInfo<$RepDatasTable, RepData> {
         DriftSqlType.bool,
         data['${effectivePrefix}is_rest'],
       )!,
-      rightHand: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}right_hand'],
+      hand: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}hand'],
       )!,
       duration: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -3140,7 +3135,7 @@ class RepData extends DataClass implements Insertable<RepData> {
   final double averageWeight;
   final String sessionId;
   final bool isRest;
-  final bool rightHand;
+  final String hand;
   final int duration;
   final double targetWeight;
   final int index;
@@ -3154,7 +3149,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     required this.averageWeight,
     required this.sessionId,
     required this.isRest,
-    required this.rightHand,
+    required this.hand,
     required this.duration,
     required this.targetWeight,
     required this.index,
@@ -3171,7 +3166,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     map['average_weight'] = Variable<double>(averageWeight);
     map['session_id'] = Variable<String>(sessionId);
     map['is_rest'] = Variable<bool>(isRest);
-    map['right_hand'] = Variable<bool>(rightHand);
+    map['hand'] = Variable<String>(hand);
     map['duration'] = Variable<int>(duration);
     map['target_weight'] = Variable<double>(targetWeight);
     map['index'] = Variable<int>(index);
@@ -3193,7 +3188,7 @@ class RepData extends DataClass implements Insertable<RepData> {
       averageWeight: Value(averageWeight),
       sessionId: Value(sessionId),
       isRest: Value(isRest),
-      rightHand: Value(rightHand),
+      hand: Value(hand),
       duration: Value(duration),
       targetWeight: Value(targetWeight),
       index: Value(index),
@@ -3219,7 +3214,7 @@ class RepData extends DataClass implements Insertable<RepData> {
       averageWeight: serializer.fromJson<double>(json['averageWeight']),
       sessionId: serializer.fromJson<String>(json['sessionId']),
       isRest: serializer.fromJson<bool>(json['isRest']),
-      rightHand: serializer.fromJson<bool>(json['rightHand']),
+      hand: serializer.fromJson<String>(json['hand']),
       duration: serializer.fromJson<int>(json['duration']),
       targetWeight: serializer.fromJson<double>(json['targetWeight']),
       index: serializer.fromJson<int>(json['index']),
@@ -3238,7 +3233,7 @@ class RepData extends DataClass implements Insertable<RepData> {
       'averageWeight': serializer.toJson<double>(averageWeight),
       'sessionId': serializer.toJson<String>(sessionId),
       'isRest': serializer.toJson<bool>(isRest),
-      'rightHand': serializer.toJson<bool>(rightHand),
+      'hand': serializer.toJson<String>(hand),
       'duration': serializer.toJson<int>(duration),
       'targetWeight': serializer.toJson<double>(targetWeight),
       'index': serializer.toJson<int>(index),
@@ -3255,7 +3250,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     double? averageWeight,
     String? sessionId,
     bool? isRest,
-    bool? rightHand,
+    String? hand,
     int? duration,
     double? targetWeight,
     int? index,
@@ -3269,7 +3264,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     averageWeight: averageWeight ?? this.averageWeight,
     sessionId: sessionId ?? this.sessionId,
     isRest: isRest ?? this.isRest,
-    rightHand: rightHand ?? this.rightHand,
+    hand: hand ?? this.hand,
     duration: duration ?? this.duration,
     targetWeight: targetWeight ?? this.targetWeight,
     index: index ?? this.index,
@@ -3289,7 +3284,7 @@ class RepData extends DataClass implements Insertable<RepData> {
           : this.averageWeight,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
       isRest: data.isRest.present ? data.isRest.value : this.isRest,
-      rightHand: data.rightHand.present ? data.rightHand.value : this.rightHand,
+      hand: data.hand.present ? data.hand.value : this.hand,
       duration: data.duration.present ? data.duration.value : this.duration,
       targetWeight: data.targetWeight.present
           ? data.targetWeight.value
@@ -3318,7 +3313,7 @@ class RepData extends DataClass implements Insertable<RepData> {
           ..write('averageWeight: $averageWeight, ')
           ..write('sessionId: $sessionId, ')
           ..write('isRest: $isRest, ')
-          ..write('rightHand: $rightHand, ')
+          ..write('hand: $hand, ')
           ..write('duration: $duration, ')
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
@@ -3337,7 +3332,7 @@ class RepData extends DataClass implements Insertable<RepData> {
     averageWeight,
     sessionId,
     isRest,
-    rightHand,
+    hand,
     duration,
     targetWeight,
     index,
@@ -3355,7 +3350,7 @@ class RepData extends DataClass implements Insertable<RepData> {
           other.averageWeight == this.averageWeight &&
           other.sessionId == this.sessionId &&
           other.isRest == this.isRest &&
-          other.rightHand == this.rightHand &&
+          other.hand == this.hand &&
           other.duration == this.duration &&
           other.targetWeight == this.targetWeight &&
           other.index == this.index &&
@@ -3371,7 +3366,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
   final Value<double> averageWeight;
   final Value<String> sessionId;
   final Value<bool> isRest;
-  final Value<bool> rightHand;
+  final Value<String> hand;
   final Value<int> duration;
   final Value<double> targetWeight;
   final Value<int> index;
@@ -3386,7 +3381,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     this.averageWeight = const Value.absent(),
     this.sessionId = const Value.absent(),
     this.isRest = const Value.absent(),
-    this.rightHand = const Value.absent(),
+    this.hand = const Value.absent(),
     this.duration = const Value.absent(),
     this.targetWeight = const Value.absent(),
     this.index = const Value.absent(),
@@ -3402,7 +3397,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     required double averageWeight,
     required String sessionId,
     required bool isRest,
-    required bool rightHand,
+    required String hand,
     required int duration,
     required double targetWeight,
     required int index,
@@ -3415,7 +3410,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
   }) : averageWeight = Value(averageWeight),
        sessionId = Value(sessionId),
        isRest = Value(isRest),
-       rightHand = Value(rightHand),
+       hand = Value(hand),
        duration = Value(duration),
        targetWeight = Value(targetWeight),
        index = Value(index);
@@ -3424,7 +3419,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     Expression<double>? averageWeight,
     Expression<String>? sessionId,
     Expression<bool>? isRest,
-    Expression<bool>? rightHand,
+    Expression<String>? hand,
     Expression<int>? duration,
     Expression<double>? targetWeight,
     Expression<int>? index,
@@ -3440,7 +3435,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       if (averageWeight != null) 'average_weight': averageWeight,
       if (sessionId != null) 'session_id': sessionId,
       if (isRest != null) 'is_rest': isRest,
-      if (rightHand != null) 'right_hand': rightHand,
+      if (hand != null) 'hand': hand,
       if (duration != null) 'duration': duration,
       if (targetWeight != null) 'target_weight': targetWeight,
       if (index != null) 'index': index,
@@ -3458,7 +3453,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     Value<double>? averageWeight,
     Value<String>? sessionId,
     Value<bool>? isRest,
-    Value<bool>? rightHand,
+    Value<String>? hand,
     Value<int>? duration,
     Value<double>? targetWeight,
     Value<int>? index,
@@ -3474,7 +3469,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
       averageWeight: averageWeight ?? this.averageWeight,
       sessionId: sessionId ?? this.sessionId,
       isRest: isRest ?? this.isRest,
-      rightHand: rightHand ?? this.rightHand,
+      hand: hand ?? this.hand,
       duration: duration ?? this.duration,
       targetWeight: targetWeight ?? this.targetWeight,
       index: index ?? this.index,
@@ -3502,8 +3497,8 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
     if (isRest.present) {
       map['is_rest'] = Variable<bool>(isRest.value);
     }
-    if (rightHand.present) {
-      map['right_hand'] = Variable<bool>(rightHand.value);
+    if (hand.present) {
+      map['hand'] = Variable<String>(hand.value);
     }
     if (duration.present) {
       map['duration'] = Variable<int>(duration.value);
@@ -3542,7 +3537,7 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
           ..write('averageWeight: $averageWeight, ')
           ..write('sessionId: $sessionId, ')
           ..write('isRest: $isRest, ')
-          ..write('rightHand: $rightHand, ')
+          ..write('hand: $hand, ')
           ..write('duration: $duration, ')
           ..write('targetWeight: $targetWeight, ')
           ..write('index: $index, ')
@@ -6506,7 +6501,7 @@ typedef $$RepDatasTableCreateCompanionBuilder =
       required double averageWeight,
       required String sessionId,
       required bool isRest,
-      required bool rightHand,
+      required String hand,
       required int duration,
       required double targetWeight,
       required int index,
@@ -6523,7 +6518,7 @@ typedef $$RepDatasTableUpdateCompanionBuilder =
       Value<double> averageWeight,
       Value<String> sessionId,
       Value<bool> isRest,
-      Value<bool> rightHand,
+      Value<String> hand,
       Value<int> duration,
       Value<double> targetWeight,
       Value<int> index,
@@ -6564,8 +6559,8 @@ class $$RepDatasTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<bool> get rightHand => $composableBuilder(
-    column: $table.rightHand,
+  ColumnFilters<String> get hand => $composableBuilder(
+    column: $table.hand,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6639,8 +6634,8 @@ class $$RepDatasTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<bool> get rightHand => $composableBuilder(
-    column: $table.rightHand,
+  ColumnOrderings<String> get hand => $composableBuilder(
+    column: $table.hand,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -6708,8 +6703,8 @@ class $$RepDatasTableAnnotationComposer
   GeneratedColumn<bool> get isRest =>
       $composableBuilder(column: $table.isRest, builder: (column) => column);
 
-  GeneratedColumn<bool> get rightHand =>
-      $composableBuilder(column: $table.rightHand, builder: (column) => column);
+  GeneratedColumn<String> get hand =>
+      $composableBuilder(column: $table.hand, builder: (column) => column);
 
   GeneratedColumn<int> get duration =>
       $composableBuilder(column: $table.duration, builder: (column) => column);
@@ -6778,7 +6773,7 @@ class $$RepDatasTableTableManager
                 Value<double> averageWeight = const Value.absent(),
                 Value<String> sessionId = const Value.absent(),
                 Value<bool> isRest = const Value.absent(),
-                Value<bool> rightHand = const Value.absent(),
+                Value<String> hand = const Value.absent(),
                 Value<int> duration = const Value.absent(),
                 Value<double> targetWeight = const Value.absent(),
                 Value<int> index = const Value.absent(),
@@ -6793,7 +6788,7 @@ class $$RepDatasTableTableManager
                 averageWeight: averageWeight,
                 sessionId: sessionId,
                 isRest: isRest,
-                rightHand: rightHand,
+                hand: hand,
                 duration: duration,
                 targetWeight: targetWeight,
                 index: index,
@@ -6810,7 +6805,7 @@ class $$RepDatasTableTableManager
                 required double averageWeight,
                 required String sessionId,
                 required bool isRest,
-                required bool rightHand,
+                required String hand,
                 required int duration,
                 required double targetWeight,
                 required int index,
@@ -6825,7 +6820,7 @@ class $$RepDatasTableTableManager
                 averageWeight: averageWeight,
                 sessionId: sessionId,
                 isRest: isRest,
-                rightHand: rightHand,
+                hand: hand,
                 duration: duration,
                 targetWeight: targetWeight,
                 index: index,

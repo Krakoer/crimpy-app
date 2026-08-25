@@ -185,7 +185,7 @@ class RemoteTrainingRepository extends TrainingRepository {
           (indexed) => {
             'average_weight': indexed.$2.averageWeight,
             'is_rest': indexed.$2.isRest,
-            'right_hand': indexed.$2.handSide.isRightHand,
+            'hand': indexed.$2.handSide.apiValue,
             'duration': indexed.$2.duration,
             'target_weight': indexed.$2.targetWeight,
             'index': indexed.$1,

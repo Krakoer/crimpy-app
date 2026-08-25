@@ -169,7 +169,7 @@ class RepDataModel {
     duration: (json['duration'] as num).toInt(),
     index: (json['index'] as num).toInt(),
     isRest: json['is_rest'] as bool,
-    handSide: (json['right_hand'] as bool) ? HandSide.right : HandSide.left,
+    handSide: handSideFromApi(json['hand'] as String?),
     targetWeight: (json['target_weight'] as num).toDouble(),
     gripPosition: enumFromIndex(
       GripPosition.values,
