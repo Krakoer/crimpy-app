@@ -287,15 +287,10 @@ Training effectiveTraining(Training base, List<SessionOverride> overrides) {
     return merged.copyWith(items: apply(merged.items));
   }).toList();
 
-  return Training(
-    id: base.id,
-    title: base.title,
-    description: base.description,
-    goal: base.goal,
-    comment: base.comment,
-    isFavorite: base.isFavorite,
-    items: apply(base.items),
-  );
+  // Only the items change, so everything else is carried over rather than
+  // relisted: an assessment dropped here would take the question with it and the
+  // run would record nothing.
+  return base.copyWith(items: apply(base.items));
 }
 
 /// A scheduled training within the active program, with its context.

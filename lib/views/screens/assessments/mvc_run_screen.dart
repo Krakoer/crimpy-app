@@ -66,10 +66,18 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
       // TODO: Move this logic to PostAssessmentScreen and show progress indicator/error text accordingly.
       final gripPosition = _gripPosition;
       final prevValueRight = await ref
-          .read(assessmentsProvider(widget.type).notifier)
+          .read(
+            assessmentsProvider(
+              BuiltinAssessmentIds.idOf(widget.type),
+            ).notifier,
+          )
           .getLastValueForHand(HandSide.right, gripPosition: gripPosition);
       final prevValueLeft = await ref
-          .read(assessmentsProvider(widget.type).notifier)
+          .read(
+            assessmentsProvider(
+              BuiltinAssessmentIds.idOf(widget.type),
+            ).notifier,
+          )
           .getLastValueForHand(HandSide.left, gripPosition: gripPosition);
 
       if (mounted) {
@@ -77,11 +85,11 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (ctx) => PostAssessmentScreen(
-              type: widget.type,
+              definition: BuiltinAssessmentIds.definitionOf(widget.type),
               rightHandResults: (prevValueRight, rightMax),
               leftHandResults: (prevValueLeft, leftMax),
               saveAssessment: AssessmentResultModel(
-                type: widget.type,
+                assessmentId: BuiltinAssessmentIds.idOf(widget.type),
                 rightValue: rightMax,
                 leftValue: leftMax,
                 gripPosition: _gripPosition,

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:crimpy/database/database.dart';
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'generated/schema.dart';
@@ -15,6 +16,7 @@ import 'generated/schema_v4.dart' as v4;
 import 'generated/schema_v5.dart' as v5;
 import 'generated/schema_v6.dart' as v6;
 import 'generated/schema_v8.dart' as v8;
+import 'generated/schema_v9.dart' as v9;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -726,6 +728,95 @@ void main() {
 
     test('a rep stored as not the right hand becomes the left one', () async {
       expect(await migratedHand(0), 'left');
+    });
+  });
+
+  group('v9 to v10 data migration', () {
+    // Assessments stopped being a closed set of three, so the results already
+    // recorded are re-pointed from the old discriminator at the rows the
+    // migration seeds. A wrong mapping would quietly reassign a whole history to
+    // another assessment, which is why each one is asserted.
+    Future<AppDatabase> migratedWithTypes(List<int> types) async {
+      final schema = await verifier.schemaAt(9);
+      final oldDb = v9.DatabaseAtV9(schema.newConnection());
+      await oldDb
+          .into(oldDb.sessions)
+          .insert(
+            const v9.SessionsData(
+              id: 's-1',
+              name: 'Session',
+              notes: '',
+              date: 1700000000,
+              dataPath: '',
+              isAssessment: 1,
+              activity: 0,
+              origin: 'played',
+              duration: 10,
+              updatedAt: 1700000000,
+            ),
+          );
+      for (final (index, type) in types.indexed) {
+        await oldDb
+            .into(oldDb.assessments)
+            .insert(
+              v9.AssessmentsData(
+                id: 'a-$index',
+                type: type,
+                rightValue: 40.0 + index,
+                sessionId: 's-1',
+                gripPosition: 0,
+                updatedAt: 1700000000,
+              ),
+            );
+      }
+      await oldDb.close();
+
+      return AppDatabase(schema.newConnection());
+    }
+
+    test('each discriminator lands on the assessment it named', () async {
+      final db = await migratedWithTypes([0, 1, 2]);
+      final rows = await db.select(db.assessments).get();
+      expect(
+        {for (final row in rows) row.id: row.assessmentId},
+        {
+          'a-0': BuiltinAssessmentIds.criticalForce,
+          'a-1': BuiltinAssessmentIds.maxForce,
+          'a-2': BuiltinAssessmentIds.endurance60,
+        },
+      );
+      await db.close();
+    });
+
+    test('the assessments Crimpy ships are seeded', () async {
+      final db = await migratedWithTypes([]);
+      final definitions = await db.getAssessmentDefinitions();
+      expect(definitions.map((d) => d.id).toSet(), {
+        BuiltinAssessmentIds.criticalForce,
+        BuiltinAssessmentIds.maxForce,
+        BuiltinAssessmentIds.endurance60,
+      });
+      // The unit is what decides which item field a percentage of a result may
+      // drive, so it has to survive the seed.
+      final byId = {for (final d in definitions) d.id: d};
+      expect(
+        byId[BuiltinAssessmentIds.maxForce]!.unit,
+        AssessmentUnit.kilograms,
+      );
+      expect(
+        byId[BuiltinAssessmentIds.endurance60]!.unit,
+        AssessmentUnit.seconds,
+      );
+      // Each is measured on one hand at a time, and the profile branches on it.
+      expect(byId.values.every((d) => d.perHand), isTrue);
+      await db.close();
+    });
+
+    test('a result naming no known assessment is dropped', () async {
+      final db = await migratedWithTypes([1, 99]);
+      final rows = await db.select(db.assessments).get();
+      expect(rows.map((row) => row.id), ['a-0']);
+      await db.close();
     });
   });
 }

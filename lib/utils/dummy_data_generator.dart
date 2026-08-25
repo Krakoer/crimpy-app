@@ -391,7 +391,7 @@ class DummyDataGenerator {
           .into(gDatabase.assessments)
           .insert(
             AssessmentsCompanion.insert(
-              type: AssessmentType.mvc.index,
+              assessmentId: BuiltinAssessmentIds.maxForce,
               rightValue: drift.Value(rightMVC),
               leftValue: drift.Value(leftMVC),
               sessionId: sessionId,
@@ -430,7 +430,7 @@ class DummyDataGenerator {
           .into(gDatabase.assessments)
           .insert(
             AssessmentsCompanion.insert(
-              type: AssessmentType.criticalForce.index,
+              assessmentId: BuiltinAssessmentIds.criticalForce,
               rightValue: drift.Value(rightCF),
               leftValue: drift.Value(leftCF),
               sessionId: sessionId,

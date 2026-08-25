@@ -703,6 +703,473 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   }
 }
 
+class $AssessmentDefinitionsTable extends AssessmentDefinitions
+    with TableInfo<$AssessmentDefinitionsTable, AssessmentDefinitionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AssessmentDefinitionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _perHandMeta = const VerificationMeta(
+    'perHand',
+  );
+  @override
+  late final GeneratedColumn<bool> perHand = GeneratedColumn<bool>(
+    'per_hand',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("per_hand" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _promptMeta = const VerificationMeta('prompt');
+  @override
+  late final GeneratedColumn<String> prompt = GeneratedColumn<String>(
+    'prompt',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _trainingIdMeta = const VerificationMeta(
+    'trainingId',
+  );
+  @override
+  late final GeneratedColumn<String> trainingId = GeneratedColumn<String>(
+    'training_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    label,
+    unit,
+    perHand,
+    prompt,
+    trainingId,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'assessment_definitions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AssessmentDefinitionRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelMeta);
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unitMeta);
+    }
+    if (data.containsKey('per_hand')) {
+      context.handle(
+        _perHandMeta,
+        perHand.isAcceptableOrUnknown(data['per_hand']!, _perHandMeta),
+      );
+    }
+    if (data.containsKey('prompt')) {
+      context.handle(
+        _promptMeta,
+        prompt.isAcceptableOrUnknown(data['prompt']!, _promptMeta),
+      );
+    }
+    if (data.containsKey('training_id')) {
+      context.handle(
+        _trainingIdMeta,
+        trainingId.isAcceptableOrUnknown(data['training_id']!, _trainingIdMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AssessmentDefinitionRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AssessmentDefinitionRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      )!,
+      perHand: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}per_hand'],
+      )!,
+      prompt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}prompt'],
+      ),
+      trainingId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}training_id'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $AssessmentDefinitionsTable createAlias(String alias) {
+    return $AssessmentDefinitionsTable(attachedDatabase, alias);
+  }
+}
+
+class AssessmentDefinitionRow extends DataClass
+    implements Insertable<AssessmentDefinitionRow> {
+  final String id;
+  final String label;
+
+  /// 'kilograms', 'seconds' or 'repetitions', as the server stores it.
+  final String unit;
+  final bool perHand;
+
+  /// The question a coach assessment ends on, null on the ones Crimpy ships.
+  final String? prompt;
+
+  /// The training a coach assessment is run from, null on the ones Crimpy ships.
+  final String? trainingId;
+  final DateTime updatedAt;
+  const AssessmentDefinitionRow({
+    required this.id,
+    required this.label,
+    required this.unit,
+    required this.perHand,
+    this.prompt,
+    this.trainingId,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['label'] = Variable<String>(label);
+    map['unit'] = Variable<String>(unit);
+    map['per_hand'] = Variable<bool>(perHand);
+    if (!nullToAbsent || prompt != null) {
+      map['prompt'] = Variable<String>(prompt);
+    }
+    if (!nullToAbsent || trainingId != null) {
+      map['training_id'] = Variable<String>(trainingId);
+    }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  AssessmentDefinitionsCompanion toCompanion(bool nullToAbsent) {
+    return AssessmentDefinitionsCompanion(
+      id: Value(id),
+      label: Value(label),
+      unit: Value(unit),
+      perHand: Value(perHand),
+      prompt: prompt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(prompt),
+      trainingId: trainingId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(trainingId),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory AssessmentDefinitionRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AssessmentDefinitionRow(
+      id: serializer.fromJson<String>(json['id']),
+      label: serializer.fromJson<String>(json['label']),
+      unit: serializer.fromJson<String>(json['unit']),
+      perHand: serializer.fromJson<bool>(json['perHand']),
+      prompt: serializer.fromJson<String?>(json['prompt']),
+      trainingId: serializer.fromJson<String?>(json['trainingId']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'label': serializer.toJson<String>(label),
+      'unit': serializer.toJson<String>(unit),
+      'perHand': serializer.toJson<bool>(perHand),
+      'prompt': serializer.toJson<String?>(prompt),
+      'trainingId': serializer.toJson<String?>(trainingId),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  AssessmentDefinitionRow copyWith({
+    String? id,
+    String? label,
+    String? unit,
+    bool? perHand,
+    Value<String?> prompt = const Value.absent(),
+    Value<String?> trainingId = const Value.absent(),
+    DateTime? updatedAt,
+  }) => AssessmentDefinitionRow(
+    id: id ?? this.id,
+    label: label ?? this.label,
+    unit: unit ?? this.unit,
+    perHand: perHand ?? this.perHand,
+    prompt: prompt.present ? prompt.value : this.prompt,
+    trainingId: trainingId.present ? trainingId.value : this.trainingId,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  AssessmentDefinitionRow copyWithCompanion(
+    AssessmentDefinitionsCompanion data,
+  ) {
+    return AssessmentDefinitionRow(
+      id: data.id.present ? data.id.value : this.id,
+      label: data.label.present ? data.label.value : this.label,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      perHand: data.perHand.present ? data.perHand.value : this.perHand,
+      prompt: data.prompt.present ? data.prompt.value : this.prompt,
+      trainingId: data.trainingId.present
+          ? data.trainingId.value
+          : this.trainingId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssessmentDefinitionRow(')
+          ..write('id: $id, ')
+          ..write('label: $label, ')
+          ..write('unit: $unit, ')
+          ..write('perHand: $perHand, ')
+          ..write('prompt: $prompt, ')
+          ..write('trainingId: $trainingId, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, label, unit, perHand, prompt, trainingId, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AssessmentDefinitionRow &&
+          other.id == this.id &&
+          other.label == this.label &&
+          other.unit == this.unit &&
+          other.perHand == this.perHand &&
+          other.prompt == this.prompt &&
+          other.trainingId == this.trainingId &&
+          other.updatedAt == this.updatedAt);
+}
+
+class AssessmentDefinitionsCompanion
+    extends UpdateCompanion<AssessmentDefinitionRow> {
+  final Value<String> id;
+  final Value<String> label;
+  final Value<String> unit;
+  final Value<bool> perHand;
+  final Value<String?> prompt;
+  final Value<String?> trainingId;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const AssessmentDefinitionsCompanion({
+    this.id = const Value.absent(),
+    this.label = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.perHand = const Value.absent(),
+    this.prompt = const Value.absent(),
+    this.trainingId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AssessmentDefinitionsCompanion.insert({
+    required String id,
+    required String label,
+    required String unit,
+    this.perHand = const Value.absent(),
+    this.prompt = const Value.absent(),
+    this.trainingId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       label = Value(label),
+       unit = Value(unit);
+  static Insertable<AssessmentDefinitionRow> custom({
+    Expression<String>? id,
+    Expression<String>? label,
+    Expression<String>? unit,
+    Expression<bool>? perHand,
+    Expression<String>? prompt,
+    Expression<String>? trainingId,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (label != null) 'label': label,
+      if (unit != null) 'unit': unit,
+      if (perHand != null) 'per_hand': perHand,
+      if (prompt != null) 'prompt': prompt,
+      if (trainingId != null) 'training_id': trainingId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AssessmentDefinitionsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? label,
+    Value<String>? unit,
+    Value<bool>? perHand,
+    Value<String?>? prompt,
+    Value<String?>? trainingId,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return AssessmentDefinitionsCompanion(
+      id: id ?? this.id,
+      label: label ?? this.label,
+      unit: unit ?? this.unit,
+      perHand: perHand ?? this.perHand,
+      prompt: prompt ?? this.prompt,
+      trainingId: trainingId ?? this.trainingId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (perHand.present) {
+      map['per_hand'] = Variable<bool>(perHand.value);
+    }
+    if (prompt.present) {
+      map['prompt'] = Variable<String>(prompt.value);
+    }
+    if (trainingId.present) {
+      map['training_id'] = Variable<String>(trainingId.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssessmentDefinitionsCompanion(')
+          ..write('id: $id, ')
+          ..write('label: $label, ')
+          ..write('unit: $unit, ')
+          ..write('perHand: $perHand, ')
+          ..write('prompt: $prompt, ')
+          ..write('trainingId: $trainingId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AssessmentsTable extends Assessments
     with TableInfo<$AssessmentsTable, Assessment> {
   @override
@@ -719,13 +1186,15 @@ class $AssessmentsTable extends Assessments
     requiredDuringInsert: false,
     clientDefault: () => Uuid().v4(),
   );
-  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  static const VerificationMeta _assessmentIdMeta = const VerificationMeta(
+    'assessmentId',
+  );
   @override
-  late final GeneratedColumn<int> type = GeneratedColumn<int>(
-    'type',
+  late final GeneratedColumn<String> assessmentId = GeneratedColumn<String>(
+    'assessment_id',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
   static const VerificationMeta _rightValueMeta = const VerificationMeta(
@@ -788,7 +1257,7 @@ class $AssessmentsTable extends Assessments
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    type,
+    assessmentId,
     rightValue,
     leftValue,
     sessionId,
@@ -810,13 +1279,16 @@ class $AssessmentsTable extends Assessments
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('type')) {
+    if (data.containsKey('assessment_id')) {
       context.handle(
-        _typeMeta,
-        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+        _assessmentIdMeta,
+        assessmentId.isAcceptableOrUnknown(
+          data['assessment_id']!,
+          _assessmentIdMeta,
+        ),
       );
     } else if (isInserting) {
-      context.missing(_typeMeta);
+      context.missing(_assessmentIdMeta);
     }
     if (data.containsKey('right_value')) {
       context.handle(
@@ -866,9 +1338,9 @@ class $AssessmentsTable extends Assessments
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
-      type: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}type'],
+      assessmentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}assessment_id'],
       )!,
       rightValue: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
@@ -901,7 +1373,11 @@ class $AssessmentsTable extends Assessments
 
 class Assessment extends DataClass implements Insertable<Assessment> {
   final String id;
-  final int type;
+
+  /// The assessment measured, naming a row in [AssessmentDefinitions]. The ones
+  /// Crimpy ships are rows there like a coach's own, so there is no builtin
+  /// discriminator beside this.
+  final String assessmentId;
   final double? rightValue;
   final double? leftValue;
   final String sessionId;
@@ -909,7 +1385,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
   final DateTime updatedAt;
   const Assessment({
     required this.id,
-    required this.type,
+    required this.assessmentId,
     this.rightValue,
     this.leftValue,
     required this.sessionId,
@@ -920,7 +1396,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    map['type'] = Variable<int>(type);
+    map['assessment_id'] = Variable<String>(assessmentId);
     if (!nullToAbsent || rightValue != null) {
       map['right_value'] = Variable<double>(rightValue);
     }
@@ -938,7 +1414,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
   AssessmentsCompanion toCompanion(bool nullToAbsent) {
     return AssessmentsCompanion(
       id: Value(id),
-      type: Value(type),
+      assessmentId: Value(assessmentId),
       rightValue: rightValue == null && nullToAbsent
           ? const Value.absent()
           : Value(rightValue),
@@ -960,7 +1436,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Assessment(
       id: serializer.fromJson<String>(json['id']),
-      type: serializer.fromJson<int>(json['type']),
+      assessmentId: serializer.fromJson<String>(json['assessmentId']),
       rightValue: serializer.fromJson<double?>(json['rightValue']),
       leftValue: serializer.fromJson<double?>(json['leftValue']),
       sessionId: serializer.fromJson<String>(json['sessionId']),
@@ -973,7 +1449,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'type': serializer.toJson<int>(type),
+      'assessmentId': serializer.toJson<String>(assessmentId),
       'rightValue': serializer.toJson<double?>(rightValue),
       'leftValue': serializer.toJson<double?>(leftValue),
       'sessionId': serializer.toJson<String>(sessionId),
@@ -984,7 +1460,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
 
   Assessment copyWith({
     String? id,
-    int? type,
+    String? assessmentId,
     Value<double?> rightValue = const Value.absent(),
     Value<double?> leftValue = const Value.absent(),
     String? sessionId,
@@ -992,7 +1468,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     DateTime? updatedAt,
   }) => Assessment(
     id: id ?? this.id,
-    type: type ?? this.type,
+    assessmentId: assessmentId ?? this.assessmentId,
     rightValue: rightValue.present ? rightValue.value : this.rightValue,
     leftValue: leftValue.present ? leftValue.value : this.leftValue,
     sessionId: sessionId ?? this.sessionId,
@@ -1002,7 +1478,9 @@ class Assessment extends DataClass implements Insertable<Assessment> {
   Assessment copyWithCompanion(AssessmentsCompanion data) {
     return Assessment(
       id: data.id.present ? data.id.value : this.id,
-      type: data.type.present ? data.type.value : this.type,
+      assessmentId: data.assessmentId.present
+          ? data.assessmentId.value
+          : this.assessmentId,
       rightValue: data.rightValue.present
           ? data.rightValue.value
           : this.rightValue,
@@ -1019,7 +1497,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
   String toString() {
     return (StringBuffer('Assessment(')
           ..write('id: $id, ')
-          ..write('type: $type, ')
+          ..write('assessmentId: $assessmentId, ')
           ..write('rightValue: $rightValue, ')
           ..write('leftValue: $leftValue, ')
           ..write('sessionId: $sessionId, ')
@@ -1032,7 +1510,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
   @override
   int get hashCode => Object.hash(
     id,
-    type,
+    assessmentId,
     rightValue,
     leftValue,
     sessionId,
@@ -1044,7 +1522,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       identical(this, other) ||
       (other is Assessment &&
           other.id == this.id &&
-          other.type == this.type &&
+          other.assessmentId == this.assessmentId &&
           other.rightValue == this.rightValue &&
           other.leftValue == this.leftValue &&
           other.sessionId == this.sessionId &&
@@ -1054,7 +1532,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
 
 class AssessmentsCompanion extends UpdateCompanion<Assessment> {
   final Value<String> id;
-  final Value<int> type;
+  final Value<String> assessmentId;
   final Value<double?> rightValue;
   final Value<double?> leftValue;
   final Value<String> sessionId;
@@ -1063,7 +1541,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
   final Value<int> rowid;
   const AssessmentsCompanion({
     this.id = const Value.absent(),
-    this.type = const Value.absent(),
+    this.assessmentId = const Value.absent(),
     this.rightValue = const Value.absent(),
     this.leftValue = const Value.absent(),
     this.sessionId = const Value.absent(),
@@ -1073,18 +1551,18 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
   });
   AssessmentsCompanion.insert({
     this.id = const Value.absent(),
-    required int type,
+    required String assessmentId,
     this.rightValue = const Value.absent(),
     this.leftValue = const Value.absent(),
     required String sessionId,
     this.gripPosition = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : type = Value(type),
+  }) : assessmentId = Value(assessmentId),
        sessionId = Value(sessionId);
   static Insertable<Assessment> custom({
     Expression<String>? id,
-    Expression<int>? type,
+    Expression<String>? assessmentId,
     Expression<double>? rightValue,
     Expression<double>? leftValue,
     Expression<String>? sessionId,
@@ -1094,7 +1572,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (type != null) 'type': type,
+      if (assessmentId != null) 'assessment_id': assessmentId,
       if (rightValue != null) 'right_value': rightValue,
       if (leftValue != null) 'left_value': leftValue,
       if (sessionId != null) 'session_id': sessionId,
@@ -1106,7 +1584,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
 
   AssessmentsCompanion copyWith({
     Value<String>? id,
-    Value<int>? type,
+    Value<String>? assessmentId,
     Value<double?>? rightValue,
     Value<double?>? leftValue,
     Value<String>? sessionId,
@@ -1116,7 +1594,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
   }) {
     return AssessmentsCompanion(
       id: id ?? this.id,
-      type: type ?? this.type,
+      assessmentId: assessmentId ?? this.assessmentId,
       rightValue: rightValue ?? this.rightValue,
       leftValue: leftValue ?? this.leftValue,
       sessionId: sessionId ?? this.sessionId,
@@ -1132,8 +1610,8 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
-    if (type.present) {
-      map['type'] = Variable<int>(type.value);
+    if (assessmentId.present) {
+      map['assessment_id'] = Variable<String>(assessmentId.value);
     }
     if (rightValue.present) {
       map['right_value'] = Variable<double>(rightValue.value);
@@ -1160,7 +1638,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
   String toString() {
     return (StringBuffer('AssessmentsCompanion(')
           ..write('id: $id, ')
-          ..write('type: $type, ')
+          ..write('assessmentId: $assessmentId, ')
           ..write('rightValue: $rightValue, ')
           ..write('leftValue: $leftValue, ')
           ..write('sessionId: $sessionId, ')
@@ -1724,6 +2202,17 @@ class $TrainingItemsTable extends TrainingItems
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _variableTargetsJsonMeta =
+      const VerificationMeta('variableTargetsJson');
+  @override
+  late final GeneratedColumn<String> variableTargetsJson =
+      GeneratedColumn<String>(
+        'variable_targets_json',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _loadIsMaxMeta = const VerificationMeta(
     'loadIsMax',
   );
@@ -1803,6 +2292,7 @@ class $TrainingItemsTable extends TrainingItems
     leftLoadsJson,
     handPositionsJson,
     edgeSizesMmJson,
+    variableTargetsJson,
     loadIsMax,
     freeText,
     exerciseId,
@@ -1945,6 +2435,15 @@ class $TrainingItemsTable extends TrainingItems
         ),
       );
     }
+    if (data.containsKey('variable_targets_json')) {
+      context.handle(
+        _variableTargetsJsonMeta,
+        variableTargetsJson.isAcceptableOrUnknown(
+          data['variable_targets_json']!,
+          _variableTargetsJsonMeta,
+        ),
+      );
+    }
     if (data.containsKey('load_is_max')) {
       context.handle(
         _loadIsMaxMeta,
@@ -2052,6 +2551,10 @@ class $TrainingItemsTable extends TrainingItems
         DriftSqlType.string,
         data['${effectivePrefix}edge_sizes_mm_json'],
       ),
+      variableTargetsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}variable_targets_json'],
+      ),
       loadIsMax: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}load_is_max'],
@@ -2099,6 +2602,10 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
   final String? leftLoadsJson;
   final String? handPositionsJson;
   final String? edgeSizesMmJson;
+
+  /// Scalar fields set as a percentage of an assessment result, keyed by field
+  /// name. Stored as JSON, the same shape the server holds.
+  final String? variableTargetsJson;
   final bool loadIsMax;
   final String? freeText;
   final String? exerciseId;
@@ -2122,6 +2629,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     this.leftLoadsJson,
     this.handPositionsJson,
     this.edgeSizesMmJson,
+    this.variableTargetsJson,
     required this.loadIsMax,
     this.freeText,
     this.exerciseId,
@@ -2173,6 +2681,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     }
     if (!nullToAbsent || edgeSizesMmJson != null) {
       map['edge_sizes_mm_json'] = Variable<String>(edgeSizesMmJson);
+    }
+    if (!nullToAbsent || variableTargetsJson != null) {
+      map['variable_targets_json'] = Variable<String>(variableTargetsJson);
     }
     map['load_is_max'] = Variable<bool>(loadIsMax);
     if (!nullToAbsent || freeText != null) {
@@ -2229,6 +2740,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
       edgeSizesMmJson: edgeSizesMmJson == null && nullToAbsent
           ? const Value.absent()
           : Value(edgeSizesMmJson),
+      variableTargetsJson: variableTargetsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(variableTargetsJson),
       loadIsMax: Value(loadIsMax),
       freeText: freeText == null && nullToAbsent
           ? const Value.absent()
@@ -2268,6 +2782,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
         json['handPositionsJson'],
       ),
       edgeSizesMmJson: serializer.fromJson<String?>(json['edgeSizesMmJson']),
+      variableTargetsJson: serializer.fromJson<String?>(
+        json['variableTargetsJson'],
+      ),
       loadIsMax: serializer.fromJson<bool>(json['loadIsMax']),
       freeText: serializer.fromJson<String?>(json['freeText']),
       exerciseId: serializer.fromJson<String?>(json['exerciseId']),
@@ -2296,6 +2813,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
       'leftLoadsJson': serializer.toJson<String?>(leftLoadsJson),
       'handPositionsJson': serializer.toJson<String?>(handPositionsJson),
       'edgeSizesMmJson': serializer.toJson<String?>(edgeSizesMmJson),
+      'variableTargetsJson': serializer.toJson<String?>(variableTargetsJson),
       'loadIsMax': serializer.toJson<bool>(loadIsMax),
       'freeText': serializer.toJson<String?>(freeText),
       'exerciseId': serializer.toJson<String?>(exerciseId),
@@ -2322,6 +2840,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     Value<String?> leftLoadsJson = const Value.absent(),
     Value<String?> handPositionsJson = const Value.absent(),
     Value<String?> edgeSizesMmJson = const Value.absent(),
+    Value<String?> variableTargetsJson = const Value.absent(),
     bool? loadIsMax,
     Value<String?> freeText = const Value.absent(),
     Value<String?> exerciseId = const Value.absent(),
@@ -2355,6 +2874,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     edgeSizesMmJson: edgeSizesMmJson.present
         ? edgeSizesMmJson.value
         : this.edgeSizesMmJson,
+    variableTargetsJson: variableTargetsJson.present
+        ? variableTargetsJson.value
+        : this.variableTargetsJson,
     loadIsMax: loadIsMax ?? this.loadIsMax,
     freeText: freeText.present ? freeText.value : this.freeText,
     exerciseId: exerciseId.present ? exerciseId.value : this.exerciseId,
@@ -2396,6 +2918,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
       edgeSizesMmJson: data.edgeSizesMmJson.present
           ? data.edgeSizesMmJson.value
           : this.edgeSizesMmJson,
+      variableTargetsJson: data.variableTargetsJson.present
+          ? data.variableTargetsJson.value
+          : this.variableTargetsJson,
       loadIsMax: data.loadIsMax.present ? data.loadIsMax.value : this.loadIsMax,
       freeText: data.freeText.present ? data.freeText.value : this.freeText,
       exerciseId: data.exerciseId.present
@@ -2428,6 +2953,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
           ..write('leftLoadsJson: $leftLoadsJson, ')
           ..write('handPositionsJson: $handPositionsJson, ')
           ..write('edgeSizesMmJson: $edgeSizesMmJson, ')
+          ..write('variableTargetsJson: $variableTargetsJson, ')
           ..write('loadIsMax: $loadIsMax, ')
           ..write('freeText: $freeText, ')
           ..write('exerciseId: $exerciseId, ')
@@ -2456,6 +2982,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     leftLoadsJson,
     handPositionsJson,
     edgeSizesMmJson,
+    variableTargetsJson,
     loadIsMax,
     freeText,
     exerciseId,
@@ -2483,6 +3010,7 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
           other.leftLoadsJson == this.leftLoadsJson &&
           other.handPositionsJson == this.handPositionsJson &&
           other.edgeSizesMmJson == this.edgeSizesMmJson &&
+          other.variableTargetsJson == this.variableTargetsJson &&
           other.loadIsMax == this.loadIsMax &&
           other.freeText == this.freeText &&
           other.exerciseId == this.exerciseId &&
@@ -2508,6 +3036,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
   final Value<String?> leftLoadsJson;
   final Value<String?> handPositionsJson;
   final Value<String?> edgeSizesMmJson;
+  final Value<String?> variableTargetsJson;
   final Value<bool> loadIsMax;
   final Value<String?> freeText;
   final Value<String?> exerciseId;
@@ -2532,6 +3061,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     this.leftLoadsJson = const Value.absent(),
     this.handPositionsJson = const Value.absent(),
     this.edgeSizesMmJson = const Value.absent(),
+    this.variableTargetsJson = const Value.absent(),
     this.loadIsMax = const Value.absent(),
     this.freeText = const Value.absent(),
     this.exerciseId = const Value.absent(),
@@ -2557,6 +3087,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     this.leftLoadsJson = const Value.absent(),
     this.handPositionsJson = const Value.absent(),
     this.edgeSizesMmJson = const Value.absent(),
+    this.variableTargetsJson = const Value.absent(),
     this.loadIsMax = const Value.absent(),
     this.freeText = const Value.absent(),
     this.exerciseId = const Value.absent(),
@@ -2583,6 +3114,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     Expression<String>? leftLoadsJson,
     Expression<String>? handPositionsJson,
     Expression<String>? edgeSizesMmJson,
+    Expression<String>? variableTargetsJson,
     Expression<bool>? loadIsMax,
     Expression<String>? freeText,
     Expression<String>? exerciseId,
@@ -2608,6 +3140,8 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
       if (leftLoadsJson != null) 'left_loads_json': leftLoadsJson,
       if (handPositionsJson != null) 'hand_positions_json': handPositionsJson,
       if (edgeSizesMmJson != null) 'edge_sizes_mm_json': edgeSizesMmJson,
+      if (variableTargetsJson != null)
+        'variable_targets_json': variableTargetsJson,
       if (loadIsMax != null) 'load_is_max': loadIsMax,
       if (freeText != null) 'free_text': freeText,
       if (exerciseId != null) 'exercise_id': exerciseId,
@@ -2635,6 +3169,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     Value<String?>? leftLoadsJson,
     Value<String?>? handPositionsJson,
     Value<String?>? edgeSizesMmJson,
+    Value<String?>? variableTargetsJson,
     Value<bool>? loadIsMax,
     Value<String?>? freeText,
     Value<String?>? exerciseId,
@@ -2660,6 +3195,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
       leftLoadsJson: leftLoadsJson ?? this.leftLoadsJson,
       handPositionsJson: handPositionsJson ?? this.handPositionsJson,
       edgeSizesMmJson: edgeSizesMmJson ?? this.edgeSizesMmJson,
+      variableTargetsJson: variableTargetsJson ?? this.variableTargetsJson,
       loadIsMax: loadIsMax ?? this.loadIsMax,
       freeText: freeText ?? this.freeText,
       exerciseId: exerciseId ?? this.exerciseId,
@@ -2723,6 +3259,11 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     if (edgeSizesMmJson.present) {
       map['edge_sizes_mm_json'] = Variable<String>(edgeSizesMmJson.value);
     }
+    if (variableTargetsJson.present) {
+      map['variable_targets_json'] = Variable<String>(
+        variableTargetsJson.value,
+      );
+    }
     if (loadIsMax.present) {
       map['load_is_max'] = Variable<bool>(loadIsMax.value);
     }
@@ -2764,6 +3305,7 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
           ..write('leftLoadsJson: $leftLoadsJson, ')
           ..write('handPositionsJson: $handPositionsJson, ')
           ..write('edgeSizesMmJson: $edgeSizesMmJson, ')
+          ..write('variableTargetsJson: $variableTargetsJson, ')
           ..write('loadIsMax: $loadIsMax, ')
           ..write('freeText: $freeText, ')
           ..write('exerciseId: $exerciseId, ')
@@ -5146,6 +5688,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $SessionsTable sessions = $SessionsTable(this);
+  late final $AssessmentDefinitionsTable assessmentDefinitions =
+      $AssessmentDefinitionsTable(this);
   late final $AssessmentsTable assessments = $AssessmentsTable(this);
   late final $TrainingsTable trainings = $TrainingsTable(this);
   late final $TrainingItemsTable trainingItems = $TrainingItemsTable(this);
@@ -5162,6 +5706,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     sessions,
+    assessmentDefinitions,
     assessments,
     trainings,
     trainingItems,
@@ -5506,10 +6051,269 @@ typedef $$SessionsTableProcessedTableManager =
       Session,
       PrefetchHooks Function()
     >;
+typedef $$AssessmentDefinitionsTableCreateCompanionBuilder =
+    AssessmentDefinitionsCompanion Function({
+      required String id,
+      required String label,
+      required String unit,
+      Value<bool> perHand,
+      Value<String?> prompt,
+      Value<String?> trainingId,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$AssessmentDefinitionsTableUpdateCompanionBuilder =
+    AssessmentDefinitionsCompanion Function({
+      Value<String> id,
+      Value<String> label,
+      Value<String> unit,
+      Value<bool> perHand,
+      Value<String?> prompt,
+      Value<String?> trainingId,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$AssessmentDefinitionsTableFilterComposer
+    extends Composer<_$AppDatabase, $AssessmentDefinitionsTable> {
+  $$AssessmentDefinitionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get perHand => $composableBuilder(
+    column: $table.perHand,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get prompt => $composableBuilder(
+    column: $table.prompt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get trainingId => $composableBuilder(
+    column: $table.trainingId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AssessmentDefinitionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AssessmentDefinitionsTable> {
+  $$AssessmentDefinitionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get perHand => $composableBuilder(
+    column: $table.perHand,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get prompt => $composableBuilder(
+    column: $table.prompt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get trainingId => $composableBuilder(
+    column: $table.trainingId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AssessmentDefinitionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AssessmentDefinitionsTable> {
+  $$AssessmentDefinitionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<bool> get perHand =>
+      $composableBuilder(column: $table.perHand, builder: (column) => column);
+
+  GeneratedColumn<String> get prompt =>
+      $composableBuilder(column: $table.prompt, builder: (column) => column);
+
+  GeneratedColumn<String> get trainingId => $composableBuilder(
+    column: $table.trainingId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$AssessmentDefinitionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AssessmentDefinitionsTable,
+          AssessmentDefinitionRow,
+          $$AssessmentDefinitionsTableFilterComposer,
+          $$AssessmentDefinitionsTableOrderingComposer,
+          $$AssessmentDefinitionsTableAnnotationComposer,
+          $$AssessmentDefinitionsTableCreateCompanionBuilder,
+          $$AssessmentDefinitionsTableUpdateCompanionBuilder,
+          (
+            AssessmentDefinitionRow,
+            BaseReferences<
+              _$AppDatabase,
+              $AssessmentDefinitionsTable,
+              AssessmentDefinitionRow
+            >,
+          ),
+          AssessmentDefinitionRow,
+          PrefetchHooks Function()
+        > {
+  $$AssessmentDefinitionsTableTableManager(
+    _$AppDatabase db,
+    $AssessmentDefinitionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AssessmentDefinitionsTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$AssessmentDefinitionsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$AssessmentDefinitionsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<String> unit = const Value.absent(),
+                Value<bool> perHand = const Value.absent(),
+                Value<String?> prompt = const Value.absent(),
+                Value<String?> trainingId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AssessmentDefinitionsCompanion(
+                id: id,
+                label: label,
+                unit: unit,
+                perHand: perHand,
+                prompt: prompt,
+                trainingId: trainingId,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String label,
+                required String unit,
+                Value<bool> perHand = const Value.absent(),
+                Value<String?> prompt = const Value.absent(),
+                Value<String?> trainingId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AssessmentDefinitionsCompanion.insert(
+                id: id,
+                label: label,
+                unit: unit,
+                perHand: perHand,
+                prompt: prompt,
+                trainingId: trainingId,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AssessmentDefinitionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AssessmentDefinitionsTable,
+      AssessmentDefinitionRow,
+      $$AssessmentDefinitionsTableFilterComposer,
+      $$AssessmentDefinitionsTableOrderingComposer,
+      $$AssessmentDefinitionsTableAnnotationComposer,
+      $$AssessmentDefinitionsTableCreateCompanionBuilder,
+      $$AssessmentDefinitionsTableUpdateCompanionBuilder,
+      (
+        AssessmentDefinitionRow,
+        BaseReferences<
+          _$AppDatabase,
+          $AssessmentDefinitionsTable,
+          AssessmentDefinitionRow
+        >,
+      ),
+      AssessmentDefinitionRow,
+      PrefetchHooks Function()
+    >;
 typedef $$AssessmentsTableCreateCompanionBuilder =
     AssessmentsCompanion Function({
       Value<String> id,
-      required int type,
+      required String assessmentId,
       Value<double?> rightValue,
       Value<double?> leftValue,
       required String sessionId,
@@ -5520,7 +6324,7 @@ typedef $$AssessmentsTableCreateCompanionBuilder =
 typedef $$AssessmentsTableUpdateCompanionBuilder =
     AssessmentsCompanion Function({
       Value<String> id,
-      Value<int> type,
+      Value<String> assessmentId,
       Value<double?> rightValue,
       Value<double?> leftValue,
       Value<String> sessionId,
@@ -5543,8 +6347,8 @@ class $$AssessmentsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get type => $composableBuilder(
-    column: $table.type,
+  ColumnFilters<String> get assessmentId => $composableBuilder(
+    column: $table.assessmentId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5588,8 +6392,8 @@ class $$AssessmentsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get type => $composableBuilder(
-    column: $table.type,
+  ColumnOrderings<String> get assessmentId => $composableBuilder(
+    column: $table.assessmentId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -5631,8 +6435,10 @@ class $$AssessmentsTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<int> get type =>
-      $composableBuilder(column: $table.type, builder: (column) => column);
+  GeneratedColumn<String> get assessmentId => $composableBuilder(
+    column: $table.assessmentId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<double> get rightValue => $composableBuilder(
     column: $table.rightValue,
@@ -5686,7 +6492,7 @@ class $$AssessmentsTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<int> type = const Value.absent(),
+                Value<String> assessmentId = const Value.absent(),
                 Value<double?> rightValue = const Value.absent(),
                 Value<double?> leftValue = const Value.absent(),
                 Value<String> sessionId = const Value.absent(),
@@ -5695,7 +6501,7 @@ class $$AssessmentsTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => AssessmentsCompanion(
                 id: id,
-                type: type,
+                assessmentId: assessmentId,
                 rightValue: rightValue,
                 leftValue: leftValue,
                 sessionId: sessionId,
@@ -5706,7 +6512,7 @@ class $$AssessmentsTableTableManager
           createCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                required int type,
+                required String assessmentId,
                 Value<double?> rightValue = const Value.absent(),
                 Value<double?> leftValue = const Value.absent(),
                 required String sessionId,
@@ -5715,7 +6521,7 @@ class $$AssessmentsTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => AssessmentsCompanion.insert(
                 id: id,
-                type: type,
+                assessmentId: assessmentId,
                 rightValue: rightValue,
                 leftValue: leftValue,
                 sessionId: sessionId,
@@ -5971,6 +6777,7 @@ typedef $$TrainingItemsTableCreateCompanionBuilder =
       Value<String?> leftLoadsJson,
       Value<String?> handPositionsJson,
       Value<String?> edgeSizesMmJson,
+      Value<String?> variableTargetsJson,
       Value<bool> loadIsMax,
       Value<String?> freeText,
       Value<String?> exerciseId,
@@ -5997,6 +6804,7 @@ typedef $$TrainingItemsTableUpdateCompanionBuilder =
       Value<String?> leftLoadsJson,
       Value<String?> handPositionsJson,
       Value<String?> edgeSizesMmJson,
+      Value<String?> variableTargetsJson,
       Value<bool> loadIsMax,
       Value<String?> freeText,
       Value<String?> exerciseId,
@@ -6096,6 +6904,11 @@ class $$TrainingItemsTableFilterComposer
 
   ColumnFilters<String> get edgeSizesMmJson => $composableBuilder(
     column: $table.edgeSizesMmJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get variableTargetsJson => $composableBuilder(
+    column: $table.variableTargetsJson,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6219,6 +7032,11 @@ class $$TrainingItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get variableTargetsJson => $composableBuilder(
+    column: $table.variableTargetsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get loadIsMax => $composableBuilder(
     column: $table.loadIsMax,
     builder: (column) => ColumnOrderings(column),
@@ -6321,6 +7139,11 @@ class $$TrainingItemsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get variableTargetsJson => $composableBuilder(
+    column: $table.variableTargetsJson,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get loadIsMax =>
       $composableBuilder(column: $table.loadIsMax, builder: (column) => column);
 
@@ -6389,6 +7212,7 @@ class $$TrainingItemsTableTableManager
                 Value<String?> leftLoadsJson = const Value.absent(),
                 Value<String?> handPositionsJson = const Value.absent(),
                 Value<String?> edgeSizesMmJson = const Value.absent(),
+                Value<String?> variableTargetsJson = const Value.absent(),
                 Value<bool> loadIsMax = const Value.absent(),
                 Value<String?> freeText = const Value.absent(),
                 Value<String?> exerciseId = const Value.absent(),
@@ -6413,6 +7237,7 @@ class $$TrainingItemsTableTableManager
                 leftLoadsJson: leftLoadsJson,
                 handPositionsJson: handPositionsJson,
                 edgeSizesMmJson: edgeSizesMmJson,
+                variableTargetsJson: variableTargetsJson,
                 loadIsMax: loadIsMax,
                 freeText: freeText,
                 exerciseId: exerciseId,
@@ -6439,6 +7264,7 @@ class $$TrainingItemsTableTableManager
                 Value<String?> leftLoadsJson = const Value.absent(),
                 Value<String?> handPositionsJson = const Value.absent(),
                 Value<String?> edgeSizesMmJson = const Value.absent(),
+                Value<String?> variableTargetsJson = const Value.absent(),
                 Value<bool> loadIsMax = const Value.absent(),
                 Value<String?> freeText = const Value.absent(),
                 Value<String?> exerciseId = const Value.absent(),
@@ -6463,6 +7289,7 @@ class $$TrainingItemsTableTableManager
                 leftLoadsJson: leftLoadsJson,
                 handPositionsJson: handPositionsJson,
                 edgeSizesMmJson: edgeSizesMmJson,
+                variableTargetsJson: variableTargetsJson,
                 loadIsMax: loadIsMax,
                 freeText: freeText,
                 exerciseId: exerciseId,
@@ -7740,6 +8567,8 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$SessionsTableTableManager get sessions =>
       $$SessionsTableTableManager(_db, _db.sessions);
+  $$AssessmentDefinitionsTableTableManager get assessmentDefinitions =>
+      $$AssessmentDefinitionsTableTableManager(_db, _db.assessmentDefinitions);
   $$AssessmentsTableTableManager get assessments =>
       $$AssessmentsTableTableManager(_db, _db.assessments);
   $$TrainingsTableTableManager get trainings =>

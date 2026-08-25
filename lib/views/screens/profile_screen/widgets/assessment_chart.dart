@@ -12,6 +12,10 @@ class ForceChart extends StatefulWidget {
   final Color accentRight;
   final VoidCallback onStartAssessment;
 
+  /// Hidden when a single series is drawn, since there are no hands to tell
+  /// apart and naming the one line "Right Hand" would misread the result.
+  final bool showLegend;
+
   const ForceChart({
     super.key,
     required this.leftData,
@@ -19,6 +23,7 @@ class ForceChart extends StatefulWidget {
     required this.accentLeft,
     required this.accentRight,
     required this.onStartAssessment,
+    this.showLegend = true,
   });
 
   @override
@@ -74,22 +79,25 @@ class _ForceChartState extends State<ForceChart> {
                 ),
                 labelStyle: TextStyle(color: CrimpyTheme.primaryBlack),
               ),
-              legend: const Legend(
-                isVisible: true,
+              legend: Legend(
+                isVisible: widget.showLegend,
                 position: LegendPosition.bottom,
               ),
               series: <LineSeries<(DateTime, double), DateTime>>[
+                if (widget.showLegend)
+                  LineSeries<(DateTime, double), DateTime>(
+                    name: "Left Hand",
+                    dataSource: allData.isEmpty
+                        ? _generateFakeData()
+                        : leftData,
+                    xValueMapper: (data, _) => data.$1,
+                    yValueMapper: (data, _) => data.$2,
+                    color: widget.accentLeft,
+                    width: 2,
+                    markerSettings: const MarkerSettings(isVisible: true),
+                  ),
                 LineSeries<(DateTime, double), DateTime>(
-                  name: "Left Hand",
-                  dataSource: allData.isEmpty ? _generateFakeData() : leftData,
-                  xValueMapper: (data, _) => data.$1,
-                  yValueMapper: (data, _) => data.$2,
-                  color: widget.accentLeft,
-                  width: 2,
-                  markerSettings: const MarkerSettings(isVisible: true),
-                ),
-                LineSeries<(DateTime, double), DateTime>(
-                  name: "Right Hand",
+                  name: widget.showLegend ? "Right Hand" : "Result",
                   dataSource: allData.isEmpty ? _generateFakeData() : rightData,
                   xValueMapper: (data, _) => data.$1,
                   yValueMapper: (data, _) => data.$2,

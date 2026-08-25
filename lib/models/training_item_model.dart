@@ -33,42 +33,39 @@ enum TrainingItemType {
 /// load value carries the percentage, as it does for percent_bw.
 const String percentAssessmentUnit = 'percent_assessment';
 
-/// Parses the assessment discriminator shared with the backend and the coach
-/// portal. Null for a value outside the known assessments.
-AssessmentType? assessmentTypeFromIndex(num? index) {
-  if (index == null) return null;
-  final i = index.toInt();
-  return i >= 0 && i < AssessmentType.values.length
-      ? AssessmentType.values[i]
-      : null;
+/// The assessment a percentage names, or null when the payload names none, in
+/// which case the coach fixed value applies instead.
+String? assessmentIdFromJson(Object? value) {
+  final id = value as String?;
+  return (id == null || id.isEmpty) ? null : id;
 }
 
 /// A number the coach set as a percentage of the athlete latest result for an
 /// assessment, with the value to use until that assessment is done.
 class VariableTarget {
-  final AssessmentType assessmentType;
+  final String assessmentId;
   final double percent;
   final double fallback;
 
   const VariableTarget({
-    required this.assessmentType,
+    required this.assessmentId,
     required this.percent,
     required this.fallback,
   });
 
   static VariableTarget? fromJson(Map<String, dynamic> json) {
-    final type = assessmentTypeFromIndex(json['assessment_type'] as num?);
+    final assessmentId = assessmentIdFromJson(json['assessment_id']);
     final percent = (json['percent'] as num?)?.toDouble();
-    if (type == null || percent == null) return null;
+    if (assessmentId == null || percent == null) return null;
     return VariableTarget(
-      assessmentType: type,
+      assessmentId: assessmentId,
       percent: percent,
       fallback: (json['fallback'] as num?)?.toDouble() ?? 0.0,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'assessment_type': assessmentType.index,
+    'assessment_id': assessmentId,
     'percent': percent,
     'fallback': fallback,
   };
@@ -82,8 +79,8 @@ class VariableTarget {
     required AssessmentUnit expects,
     HandSide? handSide,
   }) {
-    if (getAssessmentUnit(assessmentType) != expects) return fallback;
-    final measured = results.value(assessmentType, handSide: handSide);
+    if (results.unitOf(assessmentId) != expects) return fallback;
+    final measured = results.value(assessmentId, handSide: handSide);
     return measured == null ? fallback : measured * percent / 100;
   }
 }
@@ -94,13 +91,13 @@ class Load {
 
   /// Set only on a percent_assessment load: the assessment the percentage
   /// applies to, and the kilograms to use until it has been done.
-  final AssessmentType? assessmentType;
+  final String? assessmentId;
   final double? fallback;
 
   const Load({
     required this.value,
     required this.unit,
-    this.assessmentType,
+    this.assessmentId,
     this.fallback,
   });
 
@@ -109,21 +106,21 @@ class Load {
   factory Load.fromJson(Map<String, dynamic> json) => Load(
     value: (json['value'] as num?)?.toDouble() ?? 0.0,
     unit: json['unit'] as String? ?? 'kg',
-    assessmentType: assessmentTypeFromIndex(json['assessment_type'] as num?),
+    assessmentId: assessmentIdFromJson(json['assessment_id']),
     fallback: (json['fallback'] as num?)?.toDouble(),
   );
 
   Map<String, dynamic> toJson() => {
     'value': value,
     'unit': unit,
-    if (assessmentType != null) 'assessment_type': assessmentType!.index,
+    if (assessmentId != null) 'assessment_id': assessmentId,
     if (fallback != null) 'fallback': fallback,
   };
 
   /// Whether the load is a percentage of an assessment result, and so only
   /// becomes kilograms once that assessment has been done.
   bool get isAssessmentRelative =>
-      unit == percentAssessmentUnit && assessmentType != null;
+      unit == percentAssessmentUnit && assessmentId != null;
 
   bool get isBodyweight =>
       !isAssessmentRelative &&
@@ -152,7 +149,7 @@ class Load {
     if (isMax || isBodyweight) return null;
     if (isAssessmentRelative) {
       return VariableTarget(
-        assessmentType: assessmentType!,
+        assessmentId: assessmentId!,
         percent: value,
         fallback: fallback ?? 0.0,
       ).resolve(results, expects: AssessmentUnit.kilograms, handSide: handSide);
@@ -176,7 +173,7 @@ class Load {
     if (isMax) return 'MAX';
     if (isBodyweight) return 'BW';
     if (isAssessmentRelative) {
-      final name = assessmentTypeToString(assessmentType!);
+      final name = results.labelOf(assessmentId!);
       final kg = kilograms(results: results, handSide: handSide);
       final base = '${_format(value)}% $name';
       return kg == null ? base : '$base (${_format(kg)} kg)';
@@ -437,10 +434,10 @@ class TrainingItem {
 
   /// Every assessment this item resolves a load, duration or rep count
   /// against, so a screen can tell the athlete which ones it is missing.
-  Set<AssessmentType> get referencedAssessments => {
-    for (final target in variableTargets.values) target.assessmentType,
+  Set<String> get referencedAssessments => {
+    for (final target in variableTargets.values) target.assessmentId,
     for (final load in [...?loads, ...?leftLoads])
-      if (load.isAssessmentRelative) load.assessmentType!,
+      if (load.isAssessmentRelative) load.assessmentId!,
     for (final child in items) ...child.referencedAssessments,
   };
 

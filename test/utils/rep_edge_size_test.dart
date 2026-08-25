@@ -21,7 +21,7 @@ TimedItem hang({int? edgeSizeMm}) => TimedItem(
 List<AssessmentResultModel> maxForce() => [
   for (final grip in GripPosition.values)
     AssessmentResultModel(
-      type: AssessmentType.mvc,
+      assessmentId: BuiltinAssessmentIds.maxForce,
       rightValue: 50,
       leftValue: 48,
       gripPosition: grip,

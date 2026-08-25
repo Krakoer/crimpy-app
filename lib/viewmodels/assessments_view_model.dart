@@ -24,24 +24,40 @@ List<AssessmentTrainingModel> assessmentTrainings(Ref ref) =>
 AssessmentTrainingModel assessmentTraining(Ref ref, AssessmentType type) =>
     ref.watch(assessmentTrainingsProvider).firstWhere((a) => a.type == type);
 
+/// Every assessment that can be measured, so a result can be named and a
+/// percentage of one unit checked. Cached locally, so it answers offline.
+@riverpod
+Future<List<AssessmentDefinition>> assessmentDefinitions(Ref ref) =>
+    ref.watch(assessmentRepositoryProvider).getAssessmentDefinitions();
+
 /// The athlete latest result per assessment, used to turn the loads, durations
 /// and reps a coach set as a percentage of an assessment into numbers.
+///
+/// The definitions only add names for assessments that were never measured,
+/// since a result carries its own, so failing to fetch them must not cost the
+/// athlete the numbers they did measure.
 @riverpod
-Future<AssessmentResults> assessmentResults(Ref ref) async =>
-    AssessmentResults.fromHistory(
-      await ref.watch(assessmentsProvider(null).future),
-    );
+Future<AssessmentResults> assessmentResults(Ref ref) async {
+  final measured = await ref.watch(assessmentsProvider(null).future);
+  List<AssessmentDefinition> definitions = const [];
+  try {
+    definitions = await ref.watch(assessmentDefinitionsProvider.future);
+  } catch (e) {
+    AppLoggerHelper.warning("Could not load the assessment definitions: $e");
+  }
+  return AssessmentResults.fromHistory(measured, definitions: definitions);
+}
 
 /// Returns the list of assessments.
-/// Allow to filter on `type`.
+/// Allow to filter on the assessment measured.
 @riverpod
 class Assessments extends _$Assessments {
   late AssessmentRepository _assessmentRepository;
 
   @override
-  Future<List<AssessmentModel>> build(AssessmentType? type) {
+  Future<List<AssessmentModel>> build(String? assessmentId) {
     _assessmentRepository = ref.watch(assessmentRepositoryProvider);
-    return _assessmentRepository.getAssessments(type: type);
+    return _assessmentRepository.getAssessments(assessmentId: assessmentId);
   }
 
   /// Save the assessment into the database. If the assessment has already been done today, the previous results will be deleted.
@@ -71,6 +87,9 @@ class Assessments extends _$Assessments {
       ref.invalidateSelf();
       // Invalidate the null provider as well, since it fetches all trainings.
       ref.invalidate(assessmentsProvider(null));
+      // What the next percentage driven run reads, so a training prescribed
+      // against this assessment resolves against the number just measured.
+      ref.invalidate(assessmentResultsProvider);
       // Refresh builtin trainings availability since we have new assessment data
       ref.invalidate(allTrainingsProvider);
     }
@@ -78,34 +97,36 @@ class Assessments extends _$Assessments {
 
   /// Returns the last assessment result for a given hand.
   /// If `gripPosition` is provided, only assessments with that grip position will be considered.
-  /// Only call this method with a non null type family.
+  /// Only call this method on a family keyed to an assessment.
   Future<double?> getLastValueForHand(
     HandSide handSide, {
     GripPosition? gripPosition,
   }) async {
-    if (type == null) {
-      AppLoggerHelper.warning("Called getLastValueForHand with a type null.");
+    if (assessmentId == null) {
+      AppLoggerHelper.warning("Called getLastValueForHand with no assessment.");
       return 0;
     }
     return _assessmentRepository.getLastValueForHand(
-      type!,
+      assessmentId!,
       handSide,
       gripPosition: gripPosition,
     );
   }
 
   /// Retuns the id of the assessment that has been done the same day with the same hand and grip position, if any.
-  /// Only call this method with a non null type family.
+  /// Only call this method on a family keyed to an assessment.
   Future<String?> getSameDayAssessment({
     HandSide? handSide,
     GripPosition? gripPosition,
   }) async {
-    if (type == null) {
-      AppLoggerHelper.warning("Called getSameDayAssessment with a type null.");
+    if (assessmentId == null) {
+      AppLoggerHelper.warning(
+        "Called getSameDayAssessment with no assessment.",
+      );
       return "";
     }
     final prevAssessment = (await _assessmentRepository.getAssessments(
-      type: type,
+      assessmentId: assessmentId,
       handSide: handSide,
       gripPosition: gripPosition,
     )).lastOrNull;

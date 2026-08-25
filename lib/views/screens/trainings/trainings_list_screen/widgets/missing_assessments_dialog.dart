@@ -88,7 +88,9 @@ class MissingAssessmentsDialog extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    assessmentTypeToString(requirement.type),
+                                    builtinAssessmentLabel(
+                                      requirement.assessmentId,
+                                    ),
                                     style: Theme.of(context).textTheme.bodyLarge
                                         ?.copyWith(fontWeight: FontWeight.w500),
                                   ),

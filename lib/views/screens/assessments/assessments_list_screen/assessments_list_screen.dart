@@ -78,7 +78,11 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
       // First check if the assessment has been done today.
       // If so, show the dialog
       if (await ref
-              .read(assessmentsProvider(model.type).notifier)
+              .read(
+                assessmentsProvider(
+                  BuiltinAssessmentIds.idOf(model.type),
+                ).notifier,
+              )
               .getSameDayAssessment(
                 handSide: handSide,
                 gripPosition: gripPosition,
@@ -109,12 +113,14 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
 
     final isConnected =
         ref.watch(connectionStateProvider) == BleConnectionState.connected;
-    final mvcAssessments = ref.watch(assessmentsProvider(AssessmentType.mvc));
+    final mvcAssessments = ref.watch(
+      assessmentsProvider(BuiltinAssessmentIds.maxForce),
+    );
     final cfAssessments = ref.watch(
-      assessmentsProvider(AssessmentType.criticalForce),
+      assessmentsProvider(BuiltinAssessmentIds.criticalForce),
     );
     final e60Assessments = ref.watch(
-      assessmentsProvider(AssessmentType.endurance60),
+      assessmentsProvider(BuiltinAssessmentIds.endurance60),
     );
 
     String? lastResultFor(AssessmentType type) {
@@ -292,7 +298,7 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
                               final mvcValue = await ref
                                   .read(
                                     assessmentsProvider(
-                                      AssessmentType.mvc,
+                                      BuiltinAssessmentIds.maxForce,
                                     ).notifier,
                                   )
                                   .getLastValueForHand(

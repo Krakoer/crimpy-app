@@ -128,7 +128,7 @@ final List<BuiltinTrainingModel> builtinTrainings = [
     description: "3 sets of 10 7/3 repeaters at 65% of max force.",
     requiredAssessments: [
       AssessmentRequirement(
-        type: AssessmentType.mvc,
+        assessmentId: BuiltinAssessmentIds.maxForce,
         gripPosition: GripPosition.halfCrimp,
       ),
     ], // Requires MVC for max force calculation
@@ -136,13 +136,13 @@ final List<BuiltinTrainingModel> builtinTrainings = [
       // Check if we have both right and left hand MVC values
       final mvcRight = assessmentValues.lastWhereOrNull(
         (assessment) =>
-            assessment.type == AssessmentType.mvc &&
+            assessment.assessmentId == BuiltinAssessmentIds.maxForce &&
             assessment.gripPosition == GripPosition.halfCrimp &&
             assessment.rightValue != null,
       );
       final mvcLeft = assessmentValues.lastWhereOrNull(
         (assessment) =>
-            assessment.type == AssessmentType.mvc &&
+            assessment.assessmentId == BuiltinAssessmentIds.maxForce &&
             assessment.gripPosition == GripPosition.halfCrimp &&
             assessment.leftValue != null,
       );
@@ -157,7 +157,8 @@ final List<BuiltinTrainingModel> builtinTrainings = [
               assessmentValues
                   .lastWhereOrNull(
                     (assessment) =>
-                        assessment.type == AssessmentType.mvc &&
+                        assessment.assessmentId ==
+                            BuiltinAssessmentIds.maxForce &&
                         assessment.gripPosition == GripPosition.halfCrimp &&
                         assessment.rightValue != null,
                   )
@@ -167,7 +168,8 @@ final List<BuiltinTrainingModel> builtinTrainings = [
               assessmentValues
                   .lastWhereOrNull(
                     (assessment) =>
-                        assessment.type == AssessmentType.mvc &&
+                        assessment.assessmentId ==
+                            BuiltinAssessmentIds.maxForce &&
                         assessment.gripPosition == GripPosition.halfCrimp &&
                         assessment.leftValue != null,
                   )
@@ -228,7 +230,7 @@ final List<BuiltinTrainingModel> builtinTrainings = [
     description: "Max force training at 85% of max force.",
     requiredAssessments: [
       AssessmentRequirement(
-        type: AssessmentType.mvc,
+        assessmentId: BuiltinAssessmentIds.maxForce,
         gripPosition: GripPosition.halfCrimp,
       ),
     ], // Requires MVC for max force calculation
@@ -236,13 +238,13 @@ final List<BuiltinTrainingModel> builtinTrainings = [
       // Check if we have both right and left hand MVC values
       final mvcRight = assessmentValues.lastWhereOrNull(
         (assessment) =>
-            assessment.type == AssessmentType.mvc &&
+            assessment.assessmentId == BuiltinAssessmentIds.maxForce &&
             assessment.gripPosition == GripPosition.halfCrimp &&
             assessment.rightValue != null,
       );
       final mvcLeft = assessmentValues.lastWhereOrNull(
         (assessment) =>
-            assessment.type == AssessmentType.mvc &&
+            assessment.assessmentId == BuiltinAssessmentIds.maxForce &&
             assessment.gripPosition == GripPosition.halfCrimp &&
             assessment.leftValue != null,
       );
@@ -257,7 +259,8 @@ final List<BuiltinTrainingModel> builtinTrainings = [
               assessmentValues
                   .lastWhereOrNull(
                     (assessment) =>
-                        assessment.type == AssessmentType.mvc &&
+                        assessment.assessmentId ==
+                            BuiltinAssessmentIds.maxForce &&
                         assessment.gripPosition == GripPosition.halfCrimp &&
                         assessment.rightValue != null,
                   )
@@ -267,7 +270,8 @@ final List<BuiltinTrainingModel> builtinTrainings = [
               assessmentValues
                   .lastWhereOrNull(
                     (assessment) =>
-                        assessment.type == AssessmentType.mvc &&
+                        assessment.assessmentId ==
+                            BuiltinAssessmentIds.maxForce &&
                         assessment.gripPosition == GripPosition.halfCrimp &&
                         assessment.leftValue != null,
                   )
@@ -329,15 +333,15 @@ final List<BuiltinTrainingModel> builtinTrainings = [
         "Progressive warmup through all grip positions at 20%, 35%, 50%, 60%, 75%, and 95% of MVC.",
     requiredAssessments: [
       AssessmentRequirement(
-        type: AssessmentType.mvc,
+        assessmentId: BuiltinAssessmentIds.maxForce,
         gripPosition: GripPosition.threeFinger,
       ),
       AssessmentRequirement(
-        type: AssessmentType.mvc,
+        assessmentId: BuiltinAssessmentIds.maxForce,
         gripPosition: GripPosition.openHand,
       ),
       AssessmentRequirement(
-        type: AssessmentType.mvc,
+        assessmentId: BuiltinAssessmentIds.maxForce,
         gripPosition: GripPosition.halfCrimp,
       ),
     ],
@@ -350,14 +354,14 @@ final List<BuiltinTrainingModel> builtinTrainings = [
       ]) {
         final mvcRight = assessmentValues.lastWhereOrNull(
           (assessment) =>
-              assessment.type == AssessmentType.mvc &&
+              assessment.assessmentId == BuiltinAssessmentIds.maxForce &&
               assessment.gripPosition == grip &&
               assessment.rightValue != null &&
               assessment.rightValue! > 0,
         );
         final mvcLeft = assessmentValues.lastWhereOrNull(
           (assessment) =>
-              assessment.type == AssessmentType.mvc &&
+              assessment.assessmentId == BuiltinAssessmentIds.maxForce &&
               assessment.gripPosition == grip &&
               assessment.leftValue != null &&
               assessment.leftValue! > 0,
@@ -375,7 +379,8 @@ final List<BuiltinTrainingModel> builtinTrainings = [
             return assessmentValues
                     .lastWhereOrNull(
                       (assessment) =>
-                          assessment.type == AssessmentType.mvc &&
+                          assessment.assessmentId ==
+                              BuiltinAssessmentIds.maxForce &&
                           assessment.gripPosition == grip &&
                           (isRight
                               ? assessment.rightValue != null
@@ -487,12 +492,12 @@ final List<BuiltinTrainingModel> builtinTrainings = [
   //     // Check if we have both right and left hand MVC values
   //     final mvcRight = assessmentValues.lastWhereOrNull(
   //       (assessment) =>
-  //           assessment.type == AssessmentType.mvc &&
+  //           assessment.assessmentId == BuiltinAssessmentIds.maxForce &&
   //           assessment.rightValue != null,
   //     );
   //     final mvcLeft = assessmentValues.lastWhereOrNull(
   //       (assessment) =>
-  //           assessment.type == AssessmentType.mvc &&
+  //           assessment.assessmentId == BuiltinAssessmentIds.maxForce &&
   //           assessment.leftValue != null,
   //     );
   //     return mvcRight != null &&
@@ -509,7 +514,7 @@ final List<BuiltinTrainingModel> builtinTrainings = [
   //         assessmentValues
   //             .lastWhereOrNull(
   //               (assessment) =>
-  //                   assessment.type == AssessmentType.mvc &&
+  //                   assessment.assessmentId == BuiltinAssessmentIds.maxForce &&
   //                   assessment.rightValue != null,
   //             )
   //             ?.rightValue ??
@@ -518,7 +523,7 @@ final List<BuiltinTrainingModel> builtinTrainings = [
   //         assessmentValues
   //             .lastWhereOrNull(
   //               (assessment) =>
-  //                   assessment.type == AssessmentType.mvc &&
+  //                   assessment.assessmentId == BuiltinAssessmentIds.maxForce &&
   //                   assessment.leftValue != null,
   //             )
   //             ?.leftValue ??

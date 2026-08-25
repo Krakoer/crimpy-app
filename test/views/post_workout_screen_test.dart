@@ -6,6 +6,8 @@ import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -75,6 +77,8 @@ Future<SessionModel> _saveFrom(
 }
 
 void main() {
+  group('custom assessment question', _assessmentQuestionTests);
+
   testWidgets('logs the session under the type it was run with', (
     tester,
   ) async {
@@ -207,5 +211,161 @@ void main() {
 
     expect(saved.trainingId, 't-1');
     expect(saved.programSessionId, 'ps-1');
+  });
+}
+
+/// Captures what an assessment run writes, standing in for the notifier that
+/// would otherwise reach the database.
+class CapturingAssessments extends Assessments {
+  AssessmentResultModel? savedResult;
+  SessionModel? savedSession;
+
+  @override
+  Future<List<AssessmentModel>> build(String? assessmentId) async => [];
+
+  @override
+  Future<void> saveAssessment(
+    AssessmentResultModel assessmentModel,
+    SessionModel session,
+    List<RepDataModel> reps, {
+    List<BleDataPoint>? data,
+  }) async {
+    savedResult = assessmentModel;
+    savedSession = session;
+  }
+}
+
+const _pullUpPyramid = AssessmentDefinition(
+  id: 'a9b8c7d6-0000-0000-0000-000000000001',
+  label: 'Pull up pyramid',
+  unit: AssessmentUnit.repetitions,
+  prompt: 'How many pull ups did you do?',
+);
+
+const _lockOff = AssessmentDefinition(
+  id: 'a9b8c7d6-0000-0000-0000-000000000002',
+  label: 'One arm lock off',
+  unit: AssessmentUnit.seconds,
+  perHand: true,
+  prompt: 'How long did you hold, each arm?',
+);
+
+Future<CapturingAssessments> _answer(
+  WidgetTester tester,
+  AssessmentDefinition definition,
+  Map<String, String> answers,
+) async {
+  final assessments = CapturingAssessments();
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        assessmentsProvider(definition.id).overrideWith(() => assessments),
+      ],
+      child: MaterialApp(
+        home: Navigator(
+          onGenerateRoute: (_) => MaterialPageRoute(
+            builder: (_) => PostWorkoutScreen(
+              template: Training(
+                id: definition.trainingId ?? 't-assessment',
+                title: definition.label,
+                assessment: definition,
+              ),
+              results: const [],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  for (final entry in answers.entries) {
+    await tester.enterText(
+      find.widgetWithText(TextFormField, entry.key),
+      entry.value,
+    );
+  }
+  await tester.tap(find.text('Save result'));
+  await tester.pumpAndSettle();
+  return assessments;
+}
+
+void _assessmentQuestionTests() {
+  testWidgets('asks the question the assessment ends on', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          assessmentsProvider(
+            _pullUpPyramid.id,
+          ).overrideWith(CapturingAssessments.new),
+        ],
+        child: const MaterialApp(
+          home: PostWorkoutScreen(
+            template: Training(
+              id: 't-assessment',
+              title: 'Pull up pyramid',
+              assessment: _pullUpPyramid,
+            ),
+            results: [],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('How many pull ups did you do?'), findsOneWidget);
+    // A single value assessment asks once, without naming a hand.
+    expect(find.widgetWithText(TextFormField, 'Result'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Right'), findsNothing);
+  });
+
+  testWidgets('records a single value against the assessment', (tester) async {
+    final assessments = await _answer(tester, _pullUpPyramid, {'Result': '14'});
+
+    expect(assessments.savedResult!.assessmentId, _pullUpPyramid.id);
+    // The one number lands on the right, which is where a reader takes it from.
+    expect(assessments.savedResult!.rightValue, 14);
+    expect(assessments.savedResult!.leftValue, isNull);
+    // The session is what marks the run as measuring something.
+    expect(assessments.savedSession!.isAssessment, isTrue);
+    expect(assessments.savedSession!.origin, SessionOrigin.played);
+  });
+
+  testWidgets('asks each arm apart when the assessment is per hand', (
+    tester,
+  ) async {
+    final assessments = await _answer(tester, _lockOff, {
+      'Right': '3',
+      'Left': '6',
+    });
+
+    expect(assessments.savedResult!.rightValue, 3);
+    expect(assessments.savedResult!.leftValue, 6);
+  });
+
+  testWidgets('refuses to save an unanswered question', (tester) async {
+    final assessments = CapturingAssessments();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          assessmentsProvider(
+            _pullUpPyramid.id,
+          ).overrideWith(() => assessments),
+        ],
+        child: const MaterialApp(
+          home: PostWorkoutScreen(
+            template: Training(
+              id: 't-assessment',
+              title: 'Pull up pyramid',
+              assessment: _pullUpPyramid,
+            ),
+            results: [],
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Save result'));
+    await tester.pumpAndSettle();
+
+    expect(assessments.savedResult, isNull);
+    expect(find.text('Enter a number'), findsOneWidget);
   });
 }

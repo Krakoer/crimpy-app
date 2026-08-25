@@ -905,14 +905,16 @@ void main() {
   group('assessment-relative loads', () {
     final results = AssessmentResults.fromHistory([
       AssessmentModel(
-        type: AssessmentType.mvc,
+        definition: BuiltinAssessmentIds.definitionOf(AssessmentType.mvc),
         id: 'a1',
         date: DateTime(2026, 1, 1),
         rightValue: 50,
         leftValue: 40,
       ),
       AssessmentModel(
-        type: AssessmentType.endurance60,
+        definition: BuiltinAssessmentIds.definitionOf(
+          AssessmentType.endurance60,
+        ),
         id: 'a2',
         date: DateTime(2026, 1, 1),
         rightValue: 120,
@@ -923,7 +925,7 @@ void main() {
     const relativeLoad = Load(
       value: 80,
       unit: percentAssessmentUnit,
-      assessmentType: AssessmentType.mvc,
+      assessmentId: BuiltinAssessmentIds.maxForce,
       fallback: 25,
     );
 
@@ -981,7 +983,7 @@ void main() {
         duration: 60,
         variableTargets: const {
           'duration': VariableTarget(
-            assessmentType: AssessmentType.endurance60,
+            assessmentId: BuiltinAssessmentIds.endurance60,
             percent: 75,
             fallback: 60,
           ),
