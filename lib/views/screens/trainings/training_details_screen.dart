@@ -48,8 +48,12 @@ class TrainingDetailScreen extends ConsumerWidget {
     final goal = template.goal?.trim() ?? '';
     final comment = template.comment?.trim() ?? '';
     final bodyweightKg = ref.watch(bodyweightProvider).value;
+    // The training carries the definitions of the assessments its items read
+    // against, which is what names one the athlete has no result for: a
+    // coach's assessment is not in the catalog they can fetch.
     final results =
-        ref.watch(assessmentResultsProvider).value ?? AssessmentResults.none;
+        (ref.watch(assessmentResultsProvider).value ?? AssessmentResults.none)
+            .withDefinitions(template.referencedAssessments);
 
     return Scaffold(
       appBar: AppBar(title: Text(template.title)),

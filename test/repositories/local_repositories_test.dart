@@ -343,6 +343,32 @@ void main() {
       expect(left, 40);
     });
 
+    // The rows used to come back in whatever order SQLite gave them, so the
+    // last one was the last written rather than the most recent measured.
+    test('the most recent result wins over the order it was written', () async {
+      await saveOn(DateTime(2026, 2, 1), right: 42);
+      await saveOn(DateTime(2026, 1, 1), right: 30);
+
+      final right = await assessments.getLastValueForHand(
+        BuiltinAssessmentIds.maxForce,
+        HandSide.right,
+      );
+
+      expect(right, 42);
+    });
+
+    test('reads the assessments back chronologically', () async {
+      await saveOn(DateTime(2026, 3, 1), right: 45);
+      await saveOn(DateTime(2026, 1, 1), right: 30);
+      await saveOn(DateTime(2026, 2, 1), right: 42);
+
+      final history = await assessments.getAssessments(
+        assessmentId: BuiltinAssessmentIds.maxForce,
+      );
+
+      expect(history.map((a) => a.rightValue), [30, 42, 45]);
+    });
+
     test('getLastValueForHand is null when nothing was recorded', () async {
       final value = await assessments.getLastValueForHand(
         BuiltinAssessmentIds.criticalForce,

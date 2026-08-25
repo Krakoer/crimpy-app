@@ -58,9 +58,13 @@ class ScheduledTrainingScreen extends ConsumerWidget {
           ),
           data: (training) {
             final merged = effectiveTraining(training, session.overrides);
+            // The training carries the definitions of the assessments its items
+            // read against, which is what names one the athlete has no result
+            // for: a coach's assessment is not in the catalog they can fetch.
             final results =
-                ref.watch(assessmentResultsProvider).value ??
-                AssessmentResults.none;
+                (ref.watch(assessmentResultsProvider).value ??
+                        AssessmentResults.none)
+                    .withDefinitions(merged.referencedAssessments);
             return _content(context, ref, merged, results);
           },
         ),
@@ -522,7 +526,9 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     // running everything at the coach fallbacks.
     var measured = results;
     try {
-      measured = await ref.read(assessmentResultsProvider.future);
+      measured = (await ref.read(
+        assessmentResultsProvider.future,
+      )).withDefinitions(training.referencedAssessments);
     } catch (_) {
       // A failed fetch runs on the fallbacks rather than blocking the training.
     }

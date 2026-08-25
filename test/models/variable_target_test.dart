@@ -299,6 +299,61 @@ void main() {
       expect(results.labelOf(lockOff.id), 'One arm lock off');
       expect(results.unitOf(lockOff.id), AssessmentUnit.seconds);
     });
+
+    // A coach assessment the athlete has never done is in no catalog they can
+    // fetch, so without the definitions the training hands over, a load read
+    // against it says "80% assessment" and never resolves.
+    test('names one it has no result for from the given definitions', () {
+      final results = AssessmentResults.none.withDefinitions([lockOff]);
+
+      expect(results.labelOf(lockOff.id), 'One arm lock off');
+      expect(results.unitOf(lockOff.id), AssessmentUnit.seconds);
+      expect(results.value(lockOff.id), isNull);
+    });
+
+    test('a given definition wins over the one a past result froze', () {
+      const renamed = AssessmentDefinition(
+        id: 'a9b8c7d6-0000-0000-0000-000000000002',
+        label: 'Lock off at 90 degrees',
+        unit: AssessmentUnit.seconds,
+        perHand: true,
+      );
+      final results = AssessmentResults.fromHistory([
+        _custom(lockOff, right: 3, left: 6),
+      ]).withDefinitions([renamed]);
+
+      expect(results.labelOf(lockOff.id), 'Lock off at 90 degrees');
+      expect(results.value(lockOff.id, handSide: HandSide.right), 3);
+    });
+
+    test('keeps what it knows when no definition is given', () {
+      final results = AssessmentResults.fromHistory([
+        _custom(lockOff, right: 3, left: 6),
+      ]).withDefinitions(const []);
+
+      expect(results.labelOf(lockOff.id), 'One arm lock off');
+      expect(results.value(lockOff.id, handSide: HandSide.left), 6);
+    });
+
+    test('names a load read against an assessment never measured', () {
+      const weightedHang = AssessmentDefinition(
+        id: 'a9b8c7d6-0000-0000-0000-000000000003',
+        label: 'Weighted hang',
+        unit: AssessmentUnit.kilograms,
+      );
+      const load = Load(
+        value: 80,
+        unit: percentAssessmentUnit,
+        assessmentId: 'a9b8c7d6-0000-0000-0000-000000000003',
+        fallback: 25,
+      );
+      final results = AssessmentResults.none.withDefinitions([weightedHang]);
+
+      // Named, and still on the fallback: a definition says what the assessment
+      // is, never what the athlete measured.
+      expect(load.label(results: results), '80% Weighted hang (25 kg)');
+      expect(load.kilograms(results: results), 25);
+    });
   });
 
   group('variable reps and duration', () {

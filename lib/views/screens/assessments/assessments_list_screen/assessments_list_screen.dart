@@ -137,11 +137,15 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
           : diff.inDays == 1
           ? '1d ago'
           : '${diff.inDays}d ago';
+      // The unit comes from the assessment the card is for, not from the row:
+      // an endurance result reads in seconds, and a result whose definition has
+      // not synced carries a kilograms fallback that would say otherwise.
+      final unit = BuiltinAssessmentIds.definitionOf(type).unit;
       final parts = <String>[
         if (last.rightValue != null)
-          'R: ${last.rightValue!.toStringAsFixed(1)} kg',
+          'R: ${formatAssessmentValue(last.rightValue!, unit)}',
         if (last.leftValue != null)
-          'L: ${last.leftValue!.toStringAsFixed(1)} kg',
+          'L: ${formatAssessmentValue(last.leftValue!, unit)}',
       ];
       return parts.isEmpty ? timeAgo : '${parts.join('  ')}  $timeAgo';
     }

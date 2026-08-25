@@ -84,7 +84,13 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       widget.training,
       useSensor: widget.useSensor,
       bodyweightKg: widget.bodyweightKg,
-      results: widget.results,
+      // Merged here rather than trusted from the caller, so a run always reads
+      // the training against the definitions it carries. They name an
+      // assessment the athlete has no result for, and a caller that rebuilds
+      // the results between the screen and the run would otherwise drop them.
+      results: widget.results.withDefinitions(
+        widget.training.referencedAssessments,
+      ),
     ),
   ];
 
