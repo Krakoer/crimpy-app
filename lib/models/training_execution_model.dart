@@ -1,9 +1,10 @@
 import 'package:crimpy/models/common.dart';
 
-/// Where a step sits inside an emom: which block it is a round of, which round,
-/// and whether it is the step the round starts on. Every step of the block
-/// carries it, so the run can close each round back on the clock and can end
-/// the block at the round the athlete dropped out of.
+/// Where a step sits inside an emom: which block it is a round of, and which
+/// round. Every step of the block carries it, so the run can close each round
+/// back on the clock and can end the block at the round the athlete dropped out
+/// of. Where a round starts is read off a change in these two rather than
+/// stamped on a step, so nothing has to be copied onto the opening step.
 class EmomPosition {
   /// Identifies this run of the block, unique within the run. The steps of one
   /// emom are told from those of another by it, which an item id cannot do:
@@ -22,26 +23,17 @@ class EmomPosition {
   /// Round index from 0.
   final int round;
 
-  /// Whether the round starts here. The rest that closes the round is measured
-  /// back to this step rather than run for a fixed length, since the work in
-  /// between may be self paced.
-  final bool opensRound;
-
   const EmomPosition({
     required this.blockKey,
     required this.itemId,
     required this.occurrence,
     required this.round,
-    this.opensRound = false,
   });
 
-  EmomPosition opening() => EmomPosition(
-    blockKey: blockKey,
-    itemId: itemId,
-    occurrence: occurrence,
-    round: round,
-    opensRound: true,
-  );
+  /// Whether [other] belongs to a different round than this one, which is what
+  /// a run watches for to know a round has just started.
+  bool isSameRoundAs(EmomPosition? other) =>
+      other != null && other.blockKey == blockKey && other.round == round;
 }
 
 sealed class TrainingExecutionItem {

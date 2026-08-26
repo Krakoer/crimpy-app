@@ -224,63 +224,7 @@ void _expandEmom(
         emom: position,
       ),
     );
-
-    _markRoundOpening(out, lengthBeforeRound, position);
   }
-}
-
-/// Marks the first step of the round, which is the point the rest closing it is
-/// measured back to. A round holding no item at all opens on its own rest, so
-/// the block still runs its interval rather than collapsing.
-void _markRoundOpening(
-  List<TrainingExecutionItem> out,
-  int roundStart,
-  EmomPosition position,
-) {
-  final opening = position.opening();
-  final step = out[roundStart];
-  out[roundStart] = switch (step) {
-    TimedItem() => TimedItem(
-      label: step.label,
-      durationSeconds: step.durationSeconds,
-      targetLoad: step.targetLoad,
-      handSide: step.handSide,
-      gripPosition: step.gripPosition,
-      collectSensorData: step.collectSensorData,
-      edgeSizeMm: step.edgeSizeMm,
-      isHang: step.isHang,
-      subtitle: step.subtitle,
-      comment: step.comment,
-      trainingItemId: step.trainingItemId,
-      occurrence: step.occurrence,
-      emom: opening,
-    ),
-    ConfirmItem() => ConfirmItem(
-      label: step.label,
-      instructions: step.instructions,
-      reps: step.reps,
-      load: step.load,
-      repsAreOpen: step.repsAreOpen,
-      subtitle: step.subtitle,
-      comment: step.comment,
-      trainingItemId: step.trainingItemId,
-      occurrence: step.occurrence,
-      emom: opening,
-    ),
-    IntervalRestItem() => IntervalRestItem(
-      durationSeconds: step.durationSeconds,
-      intervalSeconds: step.intervalSeconds,
-      trainingItemId: step.trainingItemId,
-      occurrence: step.occurrence,
-      emom: opening,
-    ),
-    RestItem() => RestItem(
-      durationSeconds: step.durationSeconds,
-      trainingItemId: step.trainingItemId,
-      occurrence: step.occurrence,
-      emom: opening,
-    ),
-  };
 }
 
 void _expandExercise(

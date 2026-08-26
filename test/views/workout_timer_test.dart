@@ -140,12 +140,11 @@ void main() {
   });
 
   group('emom rounds', () {
-    EmomPosition at(int round, {bool opens = false}) => EmomPosition(
+    EmomPosition at(int round) => EmomPosition(
       blockKey: 'emom#0',
       itemId: 'emom',
       occurrence: 0,
       round: round,
-      opensRound: opens,
     );
 
     List<TrainingExecutionItem> block() => [
@@ -156,7 +155,7 @@ void main() {
         handSide: HandSide.right,
         gripPosition: GripPosition.halfCrimp,
         collectSensorData: false,
-        emom: at(0, opens: true),
+        emom: at(0),
       ),
       IntervalRestItem(durationSeconds: 50, intervalSeconds: 60, emom: at(0)),
       TimedItem(
@@ -166,7 +165,7 @@ void main() {
         handSide: HandSide.right,
         gripPosition: GripPosition.halfCrimp,
         collectSensorData: false,
-        emom: at(1, opens: true),
+        emom: at(1),
       ),
       IntervalRestItem(durationSeconds: 50, intervalSeconds: 60, emom: at(1)),
     ];
@@ -177,7 +176,7 @@ void main() {
     /// fifty seven, and the round after it still starts on the clock.
     test('rests to the mark the next round starts on', () {
       final items = [
-        ConfirmItem(label: 'Pull up', emom: at(0, opens: true)),
+        ConfirmItem(label: 'Pull up', emom: at(0)),
         IntervalRestItem(durationSeconds: 60, intervalSeconds: 60, emom: at(0)),
       ];
       late WorkoutTimer timer;

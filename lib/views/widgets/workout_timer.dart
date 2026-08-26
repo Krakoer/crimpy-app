@@ -152,9 +152,14 @@ class WorkoutTimer {
 
     startCurrentRep = nextStart();
     final entering = nextItem!;
+    // Read off the round the step belongs to rather than a flag stamped on it,
+    // so a step opening a round is whatever the expander happened to lay down
+    // first and nothing has to be copied onto it.
+    if (!(entering.emom?.isSameRoundAs(currentItem.emom) ?? false)) {
+      _roundStartedAt = startCurrentRep;
+    }
     onNextRep?.call(_durationAt(currentItemIndex + 1, startCurrentRep));
     currentItemIndex += 1;
-    if (entering.emom?.opensRound ?? false) _roundStartedAt = startCurrentRep;
     // A transition does not always coincide with a second change: skipping or
     // confirming a rep moves the reference point mid-second. Repaint here so
     // the new rep is shown immediately instead of leaving the previous value
@@ -216,10 +221,7 @@ class WorkoutTimer {
   int _durationAt(int index, int startsAt) {
     final item = items[index];
     if (item is! IntervalRestItem) return item.durationSeconds;
-    final roundStart = (item.emom?.opensRound ?? false)
-        ? startsAt
-        : _roundStartedAt;
-    final worked = (startsAt - roundStart) ~/ 1000;
+    final worked = (startsAt - _roundStartedAt) ~/ 1000;
     return (item.intervalSeconds - worked).clamp(0, item.intervalSeconds);
   }
 

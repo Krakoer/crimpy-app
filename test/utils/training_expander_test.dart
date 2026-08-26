@@ -1153,7 +1153,7 @@ void main() {
       expect((out[1] as IntervalRestItem).durationSeconds, 60);
     });
 
-    test('marks the step each round opens on and keys the whole block', () {
+    test('keys every step to its block and its round', () {
       final training = _training([
         TrainingItem(
           id: 'emom',
@@ -1168,13 +1168,11 @@ void main() {
       final out = expandTrainingItems(training, useSensor: false);
 
       expect(out.every((step) => step.emom?.blockKey == 'emom#0'), isTrue);
-      expect(out.map((step) => step.emom!.opensRound).toList(), [
-        true,
-        false,
-        true,
-        false,
-      ]);
+      // Where a round starts is read off this list rather than stamped on a
+      // step: the run watches for the round changing.
       expect(out.map((step) => step.emom!.round).toList(), [0, 0, 1, 1]);
+      expect(out[0].emom!.isSameRoundAs(out[1].emom), isTrue);
+      expect(out[1].emom!.isSameRoundAs(out[2].emom), isFalse);
     });
 
     test('leaves an open rep count for the athlete to answer', () {
