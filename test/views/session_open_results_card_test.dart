@@ -1,6 +1,6 @@
-import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_open_results_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,44 +22,30 @@ const _emom = TrainingItem(
   items: [_pullUps],
 );
 
-SessionModel _session({
-  List<SessionItemResultModel> results = const [],
-  List<TrainingItem>? items,
-}) => SessionModel(
-  id: 's1',
-  name: 'Pull up EMOM',
-  isAssessment: false,
-  origin: SessionOrigin.played,
-  prescriptionItems: items ?? const [_emom],
-  itemResults: results,
-);
+const _prescription = [_emom];
 
 void main() {
   test('reads each count against the item it answers', () {
-    final results = openItemResults(
-      _session(
-        results: const [
-          SessionItemResultModel(
-            trainingItemId: 'pullup-1',
-            occurrence: 1,
-            field: SessionItemField.reps,
-            value: 18,
-          ),
-          SessionItemResultModel(
-            trainingItemId: 'pullup-1',
-            occurrence: 0,
-            field: SessionItemField.reps,
-            value: 23,
-          ),
-          SessionItemResultModel(
-            trainingItemId: 'emom-1',
-            occurrence: 0,
-            field: SessionItemField.cycles,
-            value: 7,
-          ),
-        ],
+    final results = openItemResults(const [
+      SessionItemResultModel(
+        trainingItemId: 'pullup-1',
+        occurrence: 1,
+        field: SessionItemField.reps,
+        value: 18,
       ),
-    );
+      SessionItemResultModel(
+        trainingItemId: 'pullup-1',
+        occurrence: 0,
+        field: SessionItemField.reps,
+        value: 23,
+      ),
+      SessionItemResultModel(
+        trainingItemId: 'emom-1',
+        occurrence: 0,
+        field: SessionItemField.cycles,
+        value: 7,
+      ),
+    ], _prescription);
 
     expect(results, hasLength(2));
     final emom = results.firstWhere((r) => r.prescribed.contains('rounds'));
@@ -74,18 +60,14 @@ void main() {
   test(
     'leaves out a count naming an item the prescription no longer holds',
     () {
-      final results = openItemResults(
-        _session(
-          results: const [
-            SessionItemResultModel(
-              trainingItemId: 'deleted',
-              occurrence: 0,
-              field: SessionItemField.reps,
-              value: 12,
-            ),
-          ],
+      final results = openItemResults(const [
+        SessionItemResultModel(
+          trainingItemId: 'deleted',
+          occurrence: 0,
+          field: SessionItemField.reps,
+          value: 12,
         ),
-      );
+      ], _prescription);
 
       expect(results, isEmpty);
     },
@@ -98,22 +80,20 @@ void main() {
       MaterialApp(
         home: Scaffold(
           body: SessionOpenResultsCard(
-            session: _session(
-              results: const [
-                SessionItemResultModel(
-                  trainingItemId: 'pullup-1',
-                  occurrence: 0,
-                  field: SessionItemField.reps,
-                  value: 23,
-                ),
-                SessionItemResultModel(
-                  trainingItemId: 'emom-1',
-                  occurrence: 0,
-                  field: SessionItemField.cycles,
-                  value: 7,
-                ),
-              ],
-            ),
+            results: openItemResults(const [
+              SessionItemResultModel(
+                trainingItemId: 'pullup-1',
+                occurrence: 0,
+                field: SessionItemField.reps,
+                value: 23,
+              ),
+              SessionItemResultModel(
+                trainingItemId: 'emom-1',
+                occurrence: 0,
+                field: SessionItemField.cycles,
+                value: 7,
+              ),
+            ], _prescription),
           ),
         ),
       ),

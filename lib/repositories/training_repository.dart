@@ -71,7 +71,15 @@ class LocalTrainingRepository extends TrainingRepository {
         .toList();
     final result = <SessionModel>[];
     for (final row in rows) {
-      result.add(row.toModel(reps: await _database.getRepsForSession(row.id)));
+      // The counts ride along with the reps rather than waiting for the detail
+      // read: this list already fills the reps, so a session it hands over is
+      // never fetched again and the detail screen would have nothing to show.
+      result.add(
+        row.toModel(
+          reps: await _database.getRepsForSession(row.id),
+          itemResults: await _database.getItemResultsForSession(row.id),
+        ),
+      );
     }
     return result;
   }
