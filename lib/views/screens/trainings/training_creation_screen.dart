@@ -136,7 +136,19 @@ class _UnifiedTrainingCreationScreenState
       await ref.read(trainingsProvider.notifier).saveTraining(training);
     }
 
-    if (mounted) Navigator.of(context).pop();
+    if (!mounted) return;
+
+    // A refused save leaves the notifier holding the error. Closing the editor
+    // on it would throw away work the server never took, and the only sign of
+    // it would be the list underneath rendering the exception.
+    if (ref.read(trainingsProvider).hasError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not save, your changes are kept')),
+      );
+      return;
+    }
+
+    Navigator.of(context).pop();
   }
 
   /// Numbers the whole tree, so a nested item carries its rank among its
