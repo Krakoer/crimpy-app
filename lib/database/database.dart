@@ -1249,6 +1249,18 @@ class AppDatabase extends _$AppDatabase {
     ).write(const AssessmentsCompanion(serverId: Value(null)));
   }
 
+  /// Drops the mark a training and its items carry, for a training the server
+  /// turns out not to hold any more. The ids it names answer nothing, so the
+  /// import creates the training again rather than aiming update after update
+  /// at a row that is gone.
+  Future<void> clearTrainingImport(String trainingId) => transaction(() async {
+    await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
+      const TrainingsCompanion(serverId: Value(null), importedAt: Value(null)),
+    );
+    await (update(trainingItems)..where((i) => i.trainingId.equals(trainingId)))
+        .write(const TrainingItemsCompanion(serverId: Value(null)));
+  });
+
   /// The trainings the import already put on the server and the athlete has
   /// edited since. The server holds a copy of what the training was, so the
   /// next run has to update it: skipping it leaves the edit on the device for

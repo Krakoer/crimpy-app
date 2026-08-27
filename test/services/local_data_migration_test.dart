@@ -11,6 +11,7 @@ import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/services/api_client.dart';
+import 'package:crimpy/services/api_exception.dart';
 import 'package:crimpy/services/local_data_migration.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
@@ -45,6 +46,11 @@ class _FakeRemoteTrainings implements TrainingRepository {
   /// Stores the training with no items at all, standing in for a response whose
   /// tree does not line up with what was sent.
   final bool dropsItems;
+
+  /// Refuses every update while it holds the training all the same, the way a
+  /// dropped connection does. Flipped mid-test, so a run that failed on an
+  /// update can be followed by one that does not.
+  bool refusedUpdates = false;
 
   _FakeRemoteTrainings({
     this.refusedTitles = const {},
@@ -108,8 +114,13 @@ class _FakeRemoteTrainings implements TrainingRepository {
   @override
   Future<Training> updateTraining(Training training) async {
     calls.add('training-update');
+    if (refusedUpdates) throw Exception('refused update');
     final held = stored[training.id];
-    if (held == null) throw Exception('unknown training ${training.id}');
+    // What the API answers for a training the account does not hold, which is
+    // what a mark left by an import whose training was deleted since aims at.
+    if (held == null) {
+      throw ApiException('Training not found', statusCode: 404);
+    }
     return stored[training.id] = Training(
       id: training.id,
       title: training.title,
@@ -574,6 +585,72 @@ void main() {
       await migrationWith(remote).uploadAll(_userId);
 
       expect(remote.stored.values.single.isFavorite, isTrue);
+    });
+
+    // The server drops an item the payload no longer carries. The reps and the
+    // open counts an imported session recorded against it are not held down by
+    // a foreign key, by design, so they survive it and the import does not have
+    // to hold the edit back to protect them.
+    test('sends an edit that removed an item', () async {
+      final local = await saveLocalTraining();
+      final remote = _FakeRemoteTrainings();
+      await migrationWith(remote).uploadAll(_userId);
+
+      final group = local.items.single;
+      await db.updateTraining(
+        local.copyWith(items: [group.copyWith(items: const [])]),
+      );
+      expect(await migrationWith(remote).uploadAll(_userId), 0);
+
+      expect(remote.stored, hasLength(1));
+      expect(remote.stored.values.single.items.single.items, isEmpty);
+    });
+
+    // A failed update leaves the mark as it was, so the next run tries the
+    // same update rather than posting the training a second time.
+    test('is retried as an update after the update failed', () async {
+      final local = await saveLocalTraining();
+      final remote = _FakeRemoteTrainings();
+      await migrationWith(remote).uploadAll(_userId);
+      await addExercise(local);
+
+      remote.refusedUpdates = true;
+      expect(await migrationWith(remote).uploadAll(_userId), 1);
+
+      remote.refusedUpdates = false;
+      expect(await migrationWith(remote).uploadAll(_userId), 0);
+      expect(remote.stored, hasLength(1));
+      expect(remote.calls.where((c) => c == 'training'), hasLength(1));
+      expect(remote.stored.values.single.items.single.items, hasLength(2));
+    });
+
+    // The athlete deleted the training from the account after the import, so
+    // the mark aims at nothing. Failing on it every run would hold back the
+    // sessions played from it and keep the local copy from ever being cleared.
+    test('is created again when the account no longer holds it', () async {
+      final local = await saveLocalTraining();
+      final remote = _FakeRemoteTrainings();
+      await migrationWith(remote).uploadAll(_userId);
+      final gone = remote.stored.keys.single;
+      remote.stored.remove(gone);
+
+      final edited = await addExercise(local);
+      final added = edited.items.single.items.last;
+      await db.saveSession(playedSession(trainingId: local.id), [
+        rep(trainingItemId: added.id),
+      ]);
+
+      expect(await migrationWith(remote).uploadAll(_userId), 0);
+
+      final stored = remote.stored.values.single;
+      expect(stored.id, isNot(gone));
+      expect(stored.items.single.items, hasLength(2));
+      final posted = remote.postedSessions.single;
+      expect(posted.session.trainingId, stored.id);
+      expect(
+        posted.reps.single.trainingItemId,
+        stored.items.single.items.last.id,
+      );
     });
 
     // The dialog is offered off this count, so an edit that is not on the

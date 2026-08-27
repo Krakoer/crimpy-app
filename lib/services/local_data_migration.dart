@@ -6,6 +6,7 @@ import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/services/api_client.dart';
+import 'package:crimpy/services/api_exception.dart';
 
 /// How much guest data is sitting on the device, so the user can be asked
 /// whether to keep it before signing in.
@@ -262,9 +263,7 @@ class LocalDataMigration {
         // this training are keyed on that.
         final stored = importedId == null
             ? await _remoteTrainings.saveTraining(training)
-            : await _remoteTrainings.updateTraining(
-                _asServerHoldsIt(training, importedId, ids.items),
-              );
+            : await _updateOrCreate(training, importedId, ids.items);
         final itemIds = <String, String>{};
         final paired = _pairItemIds(training.items, stored.items, itemIds);
         // Recorded even when the trees did not line up. The training is on the
@@ -291,11 +290,43 @@ class LocalDataMigration {
     return failures;
   }
 
+  /// Sends the edit as an update, and falls back to creating the training when
+  /// the account no longer holds what the mark names. A training deleted from
+  /// the account while the athlete was signed in leaves a mark aimed at
+  /// nothing, and without this every run from then on fails on it, holds back
+  /// the sessions played from it, and so never lets the local copy be cleared.
+  Future<Training> _updateOrCreate(
+    Training training,
+    String serverId,
+    Map<String, String> itemIds,
+  ) async {
+    try {
+      return await _remoteTrainings.updateTraining(
+        _asServerHoldsIt(training, serverId, itemIds),
+      );
+    } on ApiException catch (e) {
+      // Not found, or found under another account. Either way this one cannot
+      // update it, and creating a second copy is not a risk: the training the
+      // mark named is not on the account to be duplicated.
+      if (e.statusCode != 404 && e.statusCode != 403) rethrow;
+      AppLoggerHelper.warning(
+        'Training ${training.id} is no longer on the account under $serverId, '
+        'importing it again',
+      );
+      await _database.clearTrainingImport(training.id);
+      return _remoteTrainings.saveTraining(training);
+    }
+  }
+
   /// The training under the ids the server knows it by, which is what an update
   /// has to be addressed with. An item the import has already put up is named
   /// by the id it was given; one the athlete added since goes up with an empty
   /// id, which is what has the API mint one for it. Sending the local id
   /// instead is refused: it belongs to no training the server holds.
+  ///
+  /// Only the id is rewritten. Which item hangs from which is carried by the
+  /// nesting, which the API reads the parent from, and never by [parentId],
+  /// which no payload sends.
   Training _asServerHoldsIt(
     Training training,
     String serverId,
