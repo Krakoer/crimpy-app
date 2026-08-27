@@ -454,4 +454,33 @@ void main() {
       expect(original.items.single.id, 'h');
     });
   });
+
+  group('TrainingItem.toJson id', () {
+    test('sends the id back so an update keeps the stored row', () {
+      final item = TrainingItem.fromJson({
+        'id': 'stored-item',
+        'type': 'repeater',
+        'position': 0,
+        'items': [
+          {'id': 'nested-item', 'type': 'hangboard_rep', 'position': 0},
+        ],
+      });
+
+      final json = item.toJson();
+      expect(json['id'], 'stored-item');
+      expect((json['items'] as List).single['id'], 'nested-item');
+    });
+
+    // An item the editor just added, or a duplicate, has no stored row yet, and
+    // an empty id would be refused rather than read as "give me one".
+    test('omits the id of an item that was never stored', () {
+      final added = TrainingItem.fromJson({
+        'id': 'stored-item',
+        'type': 'repeater',
+        'position': 0,
+      }).duplicate();
+
+      expect(added.toJson().containsKey('id'), isFalse);
+    });
+  });
 }
