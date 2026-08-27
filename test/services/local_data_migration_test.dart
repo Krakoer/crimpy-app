@@ -1,4 +1,5 @@
 import 'package:crimpy/database/database.dart';
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
@@ -31,7 +32,14 @@ class _FakeRemoteTrainings implements TrainingRepository {
   final List<String> calls = [];
   int _next = 0;
 
-  _FakeRemoteTrainings({this.refusedTitles = const {}});
+  /// Refuses every session create, so a run can be made to land its trainings
+  /// and fail its sessions the way a dropped connection would.
+  final bool refusedSessions;
+
+  _FakeRemoteTrainings({
+    this.refusedTitles = const {},
+    this.refusedSessions = false,
+  });
 
   String _mintId(String prefix) => '$prefix-${_next++}';
 
@@ -67,6 +75,7 @@ class _FakeRemoteTrainings implements TrainingRepository {
     List<SessionItemResultModel> itemResults = const [],
   }) async {
     calls.add('session');
+    if (refusedSessions) throw Exception('refused session');
     postedSessions.add(_PostedSession(session, reps, itemResults));
     return _mintId('server-session');
   }
@@ -78,6 +87,27 @@ class _FakeRemoteTrainings implements TrainingRepository {
 }
 
 class _FakeRemoteAssessments implements AssessmentRepository {
+  /// Refuses this many saves before starting to accept them, so a run that
+  /// half succeeded can be retried in a test.
+  int refusals;
+  final List<String> savedSessionIds = [];
+  int _next = 0;
+
+  _FakeRemoteAssessments({this.refusals = 0});
+
+  @override
+  Future<String> saveAssessment(
+    AssessmentResultModel assessment,
+    String sessionId,
+  ) async {
+    if (refusals > 0) {
+      refusals--;
+      throw Exception('refused assessment');
+    }
+    savedSessionIds.add(sessionId);
+    return 'server-assessment-${_next++}';
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -90,13 +120,15 @@ void main() {
   setUp(() => db = AppDatabase(NativeDatabase.memory()));
   tearDown(() => db.close());
 
-  LocalDataMigration migrationWith(_FakeRemoteTrainings remote) =>
-      LocalDataMigration(
-        apiClient: _FakeApiClient(),
-        remoteTrainings: remote,
-        remoteAssessments: _FakeRemoteAssessments(),
-        database: db,
-      );
+  LocalDataMigration migrationWith(
+    _FakeRemoteTrainings remote, {
+    _FakeRemoteAssessments? assessments,
+  }) => LocalDataMigration(
+    apiClient: _FakeApiClient(),
+    remoteTrainings: remote,
+    remoteAssessments: assessments ?? _FakeRemoteAssessments(),
+    database: db,
+  );
 
   RepDataModel rep({String? trainingItemId}) => RepDataModel(
     averageWeight: 25,
@@ -273,6 +305,109 @@ void main() {
       final posted = remote.postedSessions.single;
       expect(posted.session.trainingId, isNull);
       expect(posted.reps.single.trainingItemId, isNull);
+    });
+  });
+
+  group('a retry after a partial import', () {
+    test('does not send a training that already went up', () async {
+      await saveLocalTraining();
+
+      final remote = _FakeRemoteTrainings();
+      await migrationWith(remote).uploadAll();
+      await migrationWith(remote).uploadAll();
+
+      expect(remote.calls.where((c) => c == 'training').length, 1);
+      expect(remote.stored, hasLength(1));
+    });
+
+    test('does not send a session that already went up', () async {
+      final local = await saveLocalTraining();
+      await db.saveSession(playedSession(trainingId: local.id), [rep()]);
+
+      final remote = _FakeRemoteTrainings();
+      await migrationWith(remote).uploadAll();
+      await migrationWith(remote).uploadAll();
+
+      expect(remote.postedSessions, hasLength(1));
+    });
+
+    // The id map lives in memory for the length of one run, so without the
+    // stored ids a session going up on the second attempt would name a
+    // training the first attempt uploaded and find nothing to name it with.
+    test(
+      'links a held back session to the training of the earlier run',
+      () async {
+        final local = await saveLocalTraining();
+        final exerciseId = local.items.single.items.single.id;
+        await db.saveSession(playedSession(trainingId: local.id), [
+          rep(trainingItemId: exerciseId),
+        ]);
+
+        // The training lands, the session does not.
+        final firstRemote = _FakeRemoteTrainings(refusedSessions: true);
+        expect(await migrationWith(firstRemote).uploadAll(), 1);
+        final serverTraining = firstRemote.stored.values.single;
+
+        final secondRemote = _FakeRemoteTrainings();
+        expect(await migrationWith(secondRemote).uploadAll(), 0);
+
+        expect(secondRemote.calls.where((c) => c == 'training'), isEmpty);
+        final posted = secondRemote.postedSessions.single;
+        expect(posted.session.trainingId, serverTraining.id);
+        expect(
+          posted.reps.single.trainingItemId,
+          serverTraining.items.single.items.single.id,
+        );
+      },
+    );
+
+    test('retries an assessment without resending its session', () async {
+      final sessionId = await db.saveSession(
+        SessionModel(
+          name: 'Critical force',
+          isAssessment: true,
+          origin: SessionOrigin.played,
+          date: DateTime(2026, 8, 20),
+        ),
+        [rep()],
+      );
+      await db.saveAssessment(
+        AssessmentResultModel(
+          assessmentId: BuiltinAssessmentIds.criticalForce,
+          rightValue: 31.2,
+        ),
+        sessionId,
+      );
+
+      final remote = _FakeRemoteTrainings();
+      final refusing = _FakeRemoteAssessments(refusals: 1);
+      expect(await migrationWith(remote, assessments: refusing).uploadAll(), 1);
+      expect(remote.postedSessions, hasLength(1));
+
+      final accepting = _FakeRemoteAssessments();
+      expect(
+        await migrationWith(remote, assessments: accepting).uploadAll(),
+        0,
+      );
+
+      expect(remote.postedSessions, hasLength(1));
+      expect(accepting.savedSessionIds, hasLength(1));
+    });
+
+    test('counts only what is left when asked what is pending', () async {
+      final local = await saveLocalTraining();
+      await db.saveSession(playedSession(trainingId: local.id), [rep()]);
+
+      final remote = _FakeRemoteTrainings(refusedSessions: true);
+      final migration = migrationWith(remote);
+      expect((await migration.pendingData()).sessionCount, 1);
+      expect((await migration.pendingData()).trainingCount, 1);
+
+      await migration.uploadAll();
+
+      final left = await migration.pendingData();
+      expect(left.trainingCount, 0);
+      expect(left.sessionCount, 1);
     });
   });
 }

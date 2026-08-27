@@ -9,11 +9,11 @@ class RemoteAssessmentRepository extends AssessmentRepository {
   RemoteAssessmentRepository(this._apiClient);
 
   @override
-  Future<void> saveAssessment(
+  Future<String> saveAssessment(
     AssessmentResultModel assessment,
     String sessionId,
   ) async {
-    await _apiClient.createAssessmentApi({
+    final created = await _apiClient.createAssessmentApi({
       'session_id': sessionId,
       'assessment_id': assessment.assessmentId,
       if (assessment.rightValue != null) 'right_value': assessment.rightValue,
@@ -21,6 +21,7 @@ class RemoteAssessmentRepository extends AssessmentRepository {
       if (assessment.gripPosition != null)
         'grip_position': assessment.gripPosition!.index,
     });
+    return created['id'] as String;
   }
 
   @override

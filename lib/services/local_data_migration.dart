@@ -63,10 +63,13 @@ class LocalDataMigration {
        _remoteAssessments = remoteAssessments,
        _database = database ?? gDatabase;
 
-  /// What is currently stored locally, without uploading anything.
+  /// What is currently stored locally, without uploading anything. Counts only
+  /// what is still to go up: after a run that failed partway, the athlete is
+  /// asked about the rows that did not make it, not about the ones already on
+  /// the server.
   Future<LocalImportStatus> pendingData() async {
-    final sessions = await _database.getAllSessions();
-    final trainings = await _database.getAllTrainings();
+    final sessions = await _database.pendingSessions();
+    final trainings = await _database.pendingTrainings();
     return LocalImportStatus(
       sessionCount: sessions.length,
       trainingCount: trainings.length,
@@ -96,6 +99,16 @@ class LocalDataMigration {
   Future<int> _uploadSessions(_ImportedTrainingIds ids) async {
     var failures = 0;
     for (final row in await _database.getAllSessions()) {
+      final importedSessionId = row.serverId;
+      if (importedSessionId != null) {
+        // Already on the server from an earlier run. Only its assessments can
+        // still be outstanding, and they are keyed on the session id it got.
+        if (row.isAssessment) {
+          failures += await _uploadAssessmentsFor(row.id, importedSessionId);
+        }
+        continue;
+      }
+
       final localTrainingId = row.trainingId;
       if (localTrainingId != null && ids.failed.contains(localTrainingId)) {
         failures++;
@@ -164,6 +177,7 @@ class LocalDataMigration {
           reps,
           itemResults: itemResults,
         );
+        await _database.markSessionImported(row.id, serverSessionId);
         if (row.isAssessment) {
           failures += await _uploadAssessmentsFor(row.id, serverSessionId);
         }
@@ -182,11 +196,13 @@ class LocalDataMigration {
     var failures = 0;
     final rows = await _database.getAssessmentsForSession(localSessionId);
     for (final row in rows) {
+      if (row.serverId != null) continue;
       try {
-        await _remoteAssessments.saveAssessment(
+        final serverId = await _remoteAssessments.saveAssessment(
           row.toResult(),
           serverSessionId,
         );
+        await _database.markAssessmentImported(row.id, serverId);
       } catch (e) {
         failures++;
         AppLoggerHelper.error(
@@ -199,7 +215,15 @@ class LocalDataMigration {
 
   Future<int> _uploadTrainings(_ImportedTrainingIds ids) async {
     var failures = 0;
+    // What an earlier run already put up. Seeded before anything is sent, so a
+    // session imported on this attempt can name a training uploaded on the
+    // last one, items included.
+    final done = await _database.importedTrainingIds();
+    ids.trainings.addAll(done.trainings);
+    ids.items.addAll(done.items);
+
     for (final training in await _database.getAllTrainings()) {
+      if (ids.trainings.containsKey(training.id)) continue;
       try {
         // The save answers with the training as the server now holds it, under
         // the ids it minted. Nothing else says which stored item each local one
@@ -212,6 +236,7 @@ class LocalDataMigration {
             'imported training ${stored.id} came back a different shape',
           );
         }
+        await _database.markTrainingImported(training.id, stored.id, itemIds);
         ids.trainings[training.id] = stored.id;
         ids.items.addAll(itemIds);
       } catch (e) {
@@ -241,6 +266,9 @@ class LocalDataMigration {
     return true;
   }
 
+  // Nothing is recorded for the pins and the weight overrides: both upsert on a
+  // natural key server side, so a second send updates the row the first one
+  // created rather than adding another.
   Future<int> _uploadPinnedBuiltins() async {
     var failures = 0;
     for (final id in await _database.getPinnedBuiltinTrainingIds()) {
