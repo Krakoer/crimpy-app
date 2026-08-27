@@ -30,6 +30,14 @@ void main() {
       expect(json['ms'], [0, 1000]);
     });
 
+    // A reading is a raw double and the API keeps a float32, so the digits past
+    // the hundredth are thrown away on arrival and cost bytes on the way.
+    test('rounds the readings to the precision the API keeps', () {
+      final json = ForceCurve.toJson([BleDataPoint(12.313739386739588, t0)])!;
+
+      expect(json['kg'], [12.31]);
+    });
+
     test('is nothing at all when the run recorded no samples', () {
       expect(ForceCurve.toJson([]), isNull);
     });
