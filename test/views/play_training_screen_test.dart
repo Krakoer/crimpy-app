@@ -626,7 +626,7 @@ void main() {
       await _pumpRun(tester, _amrapEmom());
       await _skip(tester);
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'DONE'));
+      await tester.tap(find.text('DONE'));
       await tester.pumpAndSettle();
 
       expect(find.text('How many did you manage?'), findsOneWidget);
@@ -646,7 +646,7 @@ void main() {
       await _pumpRun(tester, _amrapEmom());
       await _skip(tester);
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'DONE'));
+      await tester.tap(find.text('DONE'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
       await tester.pumpAndSettle();
@@ -678,7 +678,7 @@ void main() {
       await _pumpRun(tester, _amrapEmom());
       await _skip(tester);
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'DONE'));
+      await tester.tap(find.text('DONE'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), '23');
       await tester.tap(find.widgetWithText(TextButton, 'Save'));
