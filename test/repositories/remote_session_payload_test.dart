@@ -1,3 +1,4 @@
+import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/repositories/training_repository.dart';
@@ -27,16 +28,30 @@ RepDataModel _rep({String? trainingItemId, HandSide hand = HandSide.right}) =>
       trainingItemId: trainingItemId,
     );
 
-SessionModel _session({String? trainingId, String? programSessionId}) =>
-    SessionModel(
-      name: 'Session',
-      date: DateTime.utc(2026, 8, 21),
-      isAssessment: false,
-      activity: SessionActivity.hangboard,
-      origin: SessionOrigin.played,
-      trainingId: trainingId,
-      programSessionId: programSessionId,
-    );
+SessionModel _session({
+  String? trainingId,
+  String? programSessionId,
+  bool isAssessment = false,
+}) => SessionModel(
+  name: 'Session',
+  date: DateTime.utc(2026, 8, 21),
+  isAssessment: isAssessment,
+  activity: SessionActivity.hangboard,
+  origin: SessionOrigin.played,
+  trainingId: trainingId,
+  programSessionId: programSessionId,
+);
+
+Future<Map<String, dynamic>> _postedBody({
+  bool isAssessment = false,
+  List<BleDataPoint>? data,
+}) async {
+  final client = _CapturingApiClient();
+  await RemoteTrainingRepository(
+    client,
+  ).saveSession(_session(isAssessment: isAssessment), [_rep()], data: data);
+  return client.body!;
+}
 
 Future<Map<String, dynamic>> _postedRep({
   String? trainingId,
@@ -91,6 +106,37 @@ void main() {
       expect((await _postedRep(hand: HandSide.right))['hand'], 'right');
       expect((await _postedRep(hand: HandSide.left))['hand'], 'left');
       expect((await _postedRep(hand: HandSide.both))['hand'], 'both');
+    });
+  });
+
+  group('the force curve of a posted session', () {
+    final t0 = DateTime.utc(2026, 8, 21, 10);
+    final points = [
+      BleDataPoint(0, t0),
+      BleDataPoint(31.5, t0.add(const Duration(milliseconds: 125))),
+    ];
+
+    test('rides along with an assessment', () async {
+      final body = await _postedBody(isAssessment: true, data: points);
+
+      final samples = body['samples'] as Map<String, dynamic>;
+      expect(samples['t0'], '2026-08-21T10:00:00.000Z');
+      expect(samples['ms'], [0, 125]);
+      expect(samples['kg'], [0, 31.5]);
+    });
+
+    // The API takes a curve on an assessment only, and refuses the request
+    // outright otherwise, so sending one would fail the whole save.
+    test('is left off an ordinary session', () async {
+      final body = await _postedBody(data: points);
+
+      expect(body.containsKey('samples'), isFalse);
+    });
+
+    test('is left off an assessment that recorded nothing', () async {
+      final body = await _postedBody(isAssessment: true);
+
+      expect(body.containsKey('samples'), isFalse);
     });
   });
 }

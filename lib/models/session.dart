@@ -122,12 +122,14 @@ class SessionModel {
     Map<String, dynamic> json, {
     List<RepDataModel>? reps,
     List<SessionItemResultModel> itemResults = const [],
+    List<BleDataPoint>? dataPoints,
   }) => SessionModel(
     id: json['id'] as String,
     name: json['name'] as String,
     notes: json['notes'] as String? ?? '',
     date: DateTime.parse(json['date'] as String),
     reps: reps,
+    dataPoints: dataPoints,
     isAssessment: json['is_assessment'] as bool? ?? false,
     activity: enumFromIndex(
       SessionActivity.values,

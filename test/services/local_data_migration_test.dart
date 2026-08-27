@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
@@ -8,6 +11,7 @@ import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/local_data_migration.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -17,8 +21,9 @@ class _PostedSession {
   final SessionModel session;
   final List<RepDataModel> reps;
   final List<SessionItemResultModel> itemResults;
+  final List<BleDataPoint>? data;
 
-  _PostedSession(this.session, this.reps, this.itemResults);
+  _PostedSession(this.session, this.reps, this.itemResults, this.data);
 }
 
 /// Stands in for the API, minting its own ids the way the server does: nothing
@@ -67,7 +72,7 @@ class _FakeRemoteTrainings implements TrainingRepository {
     List<SessionItemResultModel> itemResults = const [],
   }) async {
     calls.add('session');
-    postedSessions.add(_PostedSession(session, reps, itemResults));
+    postedSessions.add(_PostedSession(session, reps, itemResults, data));
     return _mintId('server-session');
   }
 
@@ -273,6 +278,56 @@ void main() {
       final posted = remote.postedSessions.single;
       expect(posted.session.trainingId, isNull);
       expect(posted.reps.single.trainingItemId, isNull);
+    });
+  });
+
+  group('the force curve of an imported session', () {
+    /// Writes a run's samples where the session row says they are, the way a
+    /// played session does when it is saved.
+    Future<String> saveSessionWithCurve({required bool isAssessment}) async {
+      final file = File(
+        '${Directory.systemTemp.createTempSync('crimpy-curve').path}/points',
+      );
+      await file.writeAsString(
+        jsonEncode([
+          BleDataPoint(31.5, DateTime(2026, 8, 20, 10)),
+          BleDataPoint(28.25, DateTime(2026, 8, 20, 10, 0, 0, 125)),
+        ]),
+      );
+      final id = await db.saveSession(
+        SessionModel(
+          name: isAssessment ? 'Critical force' : 'Repeaters',
+          isAssessment: isAssessment,
+          origin: SessionOrigin.played,
+          date: DateTime(2026, 8, 20),
+        ),
+        [rep()],
+      );
+      await (db.update(db.sessions)..where((s) => s.id.equals(id))).write(
+        SessionsCompanion(dataPath: Value(file.path)),
+      );
+      return id;
+    }
+
+    test('goes up with the assessment that recorded it', () async {
+      await saveSessionWithCurve(isAssessment: true);
+
+      final remote = _FakeRemoteTrainings();
+      await migrationWith(remote).uploadAll();
+
+      final sent = remote.postedSessions.single.data!;
+      expect(sent.map((p) => p.value), [31.5, 28.25]);
+    });
+
+    // The API takes a curve on an assessment only, so reading the file for an
+    // ordinary session would load a run's worth of points to throw them away.
+    test('is not read for an ordinary session', () async {
+      await saveSessionWithCurve(isAssessment: false);
+
+      final remote = _FakeRemoteTrainings();
+      await migrationWith(remote).uploadAll();
+
+      expect(remote.postedSessions.single.data, isNull);
     });
   });
 }
