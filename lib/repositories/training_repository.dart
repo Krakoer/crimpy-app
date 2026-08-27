@@ -18,10 +18,14 @@ abstract class TrainingRepository {
   Future<void> deleteTraining(String trainingId);
   Future<List<SessionModel>> getAllSessionsWithReps({SessionFilter? filters});
   Future<SessionModel?> getSessionWithData(String sessionId);
+
+  /// Saves a session with its reps and with the counts the run resolved for the
+  /// items the prescription left open.
   Future<String> saveSession(
     SessionModel session,
     List<RepDataModel> reps, {
     List<BleDataPoint>? data,
+    List<SessionItemResultModel> itemResults = const [],
   });
   Future<void> updateSession(SessionModel session);
   Future<void> deleteSession(String sessionId);
@@ -67,7 +71,15 @@ class LocalTrainingRepository extends TrainingRepository {
         .toList();
     final result = <SessionModel>[];
     for (final row in rows) {
-      result.add(row.toModel(reps: await _database.getRepsForSession(row.id)));
+      // The counts ride along with the reps rather than waiting for the detail
+      // read: this list already fills the reps, so a session it hands over is
+      // never fetched again and the detail screen would have nothing to show.
+      result.add(
+        row.toModel(
+          reps: await _database.getRepsForSession(row.id),
+          itemResults: await _database.getItemResultsForSession(row.id),
+        ),
+      );
     }
     return result;
   }
@@ -81,7 +93,13 @@ class LocalTrainingRepository extends TrainingRepository {
     SessionModel session,
     List<RepDataModel> reps, {
     List<BleDataPoint>? data,
-  }) => _database.saveSession(session, reps, points: data);
+    List<SessionItemResultModel> itemResults = const [],
+  }) => _database.saveSession(
+    session,
+    reps,
+    points: data,
+    itemResults: itemResults,
+  );
 
   @override
   Future<void> updateSession(SessionModel session) =>
@@ -171,7 +189,11 @@ class RemoteTrainingRepository extends TrainingRepository {
         .cast<Map<String, dynamic>>();
 
     final reps = repDatas.map(RepDataModel.fromJson).toList();
-    return SessionModel.fromJson(s, reps: reps);
+    final itemResults = (data['item_results'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>()
+        .map(SessionItemResultModel.fromJson)
+        .toList();
+    return SessionModel.fromJson(s, reps: reps, itemResults: itemResults);
   }
 
   @override
@@ -179,6 +201,7 @@ class RemoteTrainingRepository extends TrainingRepository {
     SessionModel session,
     List<RepDataModel> reps, {
     List<BleDataPoint>? data,
+    List<SessionItemResultModel> itemResults = const [],
   }) async {
     final repDatas = reps.indexed
         .map(
@@ -219,6 +242,11 @@ class RemoteTrainingRepository extends TrainingRepository {
         'program_session_id': session.programSessionId,
       'duration': duration,
       'rep_datas': repDatas,
+      // The server reads a count against the prescription it froze, so a run
+      // that answers no prescription has nothing to key one into.
+      if ((session.trainingId != null || session.programSessionId != null) &&
+          itemResults.isNotEmpty)
+        'item_results': itemResults.map((r) => r.toJson()).toList(),
     };
 
     final created = await _apiClient.createSession(body);

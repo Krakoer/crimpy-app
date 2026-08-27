@@ -12,8 +12,12 @@ String trainingItemDetail(
   final load = item.loadLabel(bodyweightKg: bodyweightKg, results: results);
   final reps = item.effectiveReps(results);
   final duration = item.effectiveDuration(results);
-  // An item is either rep-based or time-based, never both.
-  final amount = reps != null
+  // An item is either rep-based or time-based, never both. An AMRAP is
+  // rep-based with the count left open, so it names itself rather than a
+  // number nothing has yet.
+  final amount = item.repsIsMax
+      ? 'AMRAP'
+      : reps != null
       ? '$reps reps'
       : duration != null
       ? '${duration}s'
@@ -37,11 +41,26 @@ String trainingItemDetail(
         if ((item.cycleRestSeconds ?? 0) > 0)
           '${item.cycleRestSeconds}s between cycles',
       ].join(' - ');
+    case TrainingItemType.emom:
+      return [
+        '${item.cycles ?? 1} rounds',
+        'every ${_intervalLabel(item.intervalSeconds ?? 60)}',
+      ].join(' - ');
     case TrainingItemType.group:
       return '';
     case TrainingItemType.free:
       return duration != null ? '${duration}s' : '';
   }
+}
+
+/// How often an emom starts a round, read as a length rather than as a count of
+/// seconds, so a minute reads as one.
+String _intervalLabel(int seconds) {
+  final minutes = seconds ~/ 60;
+  final rest = seconds % 60;
+  if (minutes > 0 && rest > 0) return '${minutes}mn ${rest}s';
+  if (minutes > 0) return '${minutes}mn';
+  return '${rest}s';
 }
 
 /// Coach comment attached to a training item, e.g. "right leg".

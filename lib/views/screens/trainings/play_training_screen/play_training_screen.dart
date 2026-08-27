@@ -5,6 +5,7 @@ import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/trai
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/next_rep_preview.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_progress_info.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/training_controls.dart';
+import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/open_reps_dialog.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/run_screen_style.dart';
 import 'package:crimpy/models/training_execution_model.dart';
@@ -74,6 +75,11 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
   /// List of the average weights done during the training.
   List<RepDataModel> repResults = [];
+
+  /// What the run answered the open items with: the reps an AMRAP turned out to
+  /// be, and the rounds of an emom the athlete dropped out of. No rep carries
+  /// either, so this is the only record of them.
+  final List<SessionItemResultModel> itemResults = [];
 
   /// Duration of the preparation rest in seconds
   static const int _preparationDuration = 10;
@@ -166,6 +172,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
           builder: (context) => PostWorkoutScreen(
             template: widget.training,
             results: repResults,
+            itemResults: itemResults,
             activity: widget.activity,
             trainingId: widget.trainingId,
             programSessionId: widget.programSessionId,
@@ -204,6 +211,73 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       _serieController.stop();
     });
   }
+
+  /// Finishes the self-paced step the run is on. An AMRAP prescribes no rep
+  /// count, so it asks for the one the athlete reached before moving on, and
+  /// stays put when they back out of answering.
+  Future<void> _confirmStep() async {
+    final step = timer.currentItem;
+    if (step is ConfirmItem && step.repsAreOpen) {
+      final done = await showOpenRepsDialog(context, step.label);
+      if (done == null || !mounted) return;
+      _recordItemResult(step, SessionItemField.reps, done);
+    }
+    if (!timer.isRunning) _start();
+    setState(() => timer.confirmRep());
+  }
+
+  /// Ends the emom the run is inside, recording the rounds the athlete carried
+  /// through before dropping out. The rounds still queued are not played: the
+  /// block stops where they stopped.
+  Future<void> _dropOutOfEmom() async {
+    final step = timer.currentItem;
+    final emom = step.emom;
+    if (emom == null) return;
+    final wasRunning = timer.isRunning;
+    if (wasRunning) _stop();
+    final confirmed = await confirmEmomDropOut(context, emom.round);
+    if (!mounted) return;
+    if (!confirmed) {
+      if (wasRunning) _start();
+      return;
+    }
+    if (emom.itemId != null) {
+      itemResults.add(
+        SessionItemResultModel(
+          trainingItemId: emom.itemId!,
+          occurrence: emom.occurrence,
+          field: SessionItemField.cycles,
+          value: emom.round,
+        ),
+      );
+    }
+    timer.dropRemainingBlock(emom.blockKey);
+    _start();
+    setState(timer.skipRep);
+  }
+
+  void _recordItemResult(
+    TrainingExecutionItem step,
+    SessionItemField field,
+    int value,
+  ) {
+    final itemId = step.trainingItemId;
+    if (itemId == null) return;
+    itemResults.add(
+      SessionItemResultModel(
+        trainingItemId: itemId,
+        occurrence: step.occurrence,
+        field: field,
+        value: value,
+      ),
+    );
+  }
+
+  /// Whether the step the run is on can be dropped out of, which is a working
+  /// step of an emom. A rest is the block running itself out, so there is
+  /// nothing to fail during one.
+  bool get _canDropOutOfEmom =>
+      timer.currentItem.emom != null && timer.currentItem is! RestItem;
 
   /// Whether the background took the workout down, as opposed to the user
   /// pausing it themselves. Only the former resumes on its own.
@@ -355,6 +429,25 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     return trimmed.isEmpty ? null : trimmed;
   }
 
+  /// Ends the emom the run is inside. Held apart from the play and skip
+  /// controls, which move the run on inside the block rather than out of it.
+  Widget _dropOutButton() => Padding(
+    padding: const EdgeInsets.only(top: 8, left: 24, right: 24),
+    child: SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: _dropOutOfEmom,
+        icon: const Icon(Icons.flag_outlined, size: 16),
+        label: const Text('I CANNOT MAKE THE NEXT ROUND'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: CrimpyTheme.statusError,
+          side: const BorderSide(color: CrimpyTheme.statusError),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+        ),
+      ),
+    ),
+  );
+
   Widget _contextSlot() {
     final context = _currentContext();
     return SizedBox(
@@ -478,15 +571,14 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   );
 
   /// Total timed length of the run, preparation included. Self-paced steps
-  /// count for nothing, which is what makes the time left unknown.
-  late final int _totalTrainingSeconds = _itemsWithPreparation.fold(
-    0,
-    (sum, item) => sum + item.durationSeconds,
-  );
+  /// count for nothing, which is what makes the time left unknown. Read off the
+  /// queue rather than fixed once, since dropping out of an emom takes the
+  /// rounds that will not be played out of it.
+  int get _totalTrainingSeconds =>
+      _itemsWithPreparation.fold(0, (sum, item) => sum + item.durationSeconds);
 
-  late final bool _isFullyTimed = !_itemsWithPreparation.any(
-    (item) => item is ConfirmItem,
-  );
+  bool get _isFullyTimed =>
+      !_itemsWithPreparation.any((item) => item is ConfirmItem);
 
   /// The design where the gauge is the whole screen. It owns the body outright
   /// rather than slotting into the ring layout, timer and controls included.
@@ -513,10 +605,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         _start();
         timer.skipRep();
       },
-      onConfirm: () {
-        if (!timer.isRunning) _start();
-        setState(() => timer.confirmRep());
-      },
+      onConfirm: _confirmStep,
+      showDropOut: _canDropOutOfEmom,
+      onDropOut: _dropOutOfEmom,
     );
   }
 
@@ -524,7 +615,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     final rep = timer.currentItem as ConfirmItem;
     final comment = _commentOf(rep);
     final details = [
-      if (rep.reps != null) '${rep.reps} reps',
+      if (rep.repsAreOpen)
+        'AMRAP'
+      else if (rep.reps != null)
+        '${rep.reps} reps',
       if (rep.load != null) rep.load!,
     ].join('  -  ');
     return Padding(
@@ -561,8 +655,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             ),
           ],
           const SizedBox(height: 16),
-          const Text(
-            'Tap DONE when finished',
+          Text(
+            rep.repsAreOpen
+                ? 'Tap DONE and say how many'
+                : 'Tap DONE when finished',
             style: TextStyle(
               fontFamily: 'JetBrainsMono',
               fontSize: 12,
@@ -696,10 +792,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                                   child: SizedBox(
                                     width: double.infinity,
                                     child: ElevatedButton.icon(
-                                      onPressed: () {
-                                        if (!timer.isRunning) _start();
-                                        setState(() => timer.confirmRep());
-                                      },
+                                      onPressed: _confirmStep,
                                       icon: const Icon(Icons.check),
                                       label: const Text('DONE'),
                                       style: ElevatedButton.styleFrom(
@@ -722,6 +815,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                                     timer.skipRep();
                                   },
                                 ),
+                              if (_canDropOutOfEmom) _dropOutButton(),
                             ],
                           );
                         },

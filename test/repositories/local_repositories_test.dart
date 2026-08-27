@@ -392,4 +392,41 @@ void main() {
       expect(mvc, hasLength(1));
     });
   });
+
+  // A guest run stores the counts it resolved for the open items, and the list
+  // is the only read a local session gets: it already fills the reps, so the
+  // detail fetch that carries them on the remote side is never reached here.
+  test('a listed local session carries the counts its run recorded', () async {
+    final saved = await trainings.saveSession(
+      SessionModel(
+        name: 'Pull up EMOM',
+        isAssessment: false,
+        origin: SessionOrigin.played,
+      ),
+      [rep(index: 0, isRest: false)],
+      itemResults: const [
+        SessionItemResultModel(
+          trainingItemId: 'pullup-1',
+          occurrence: 0,
+          field: SessionItemField.reps,
+          value: 23,
+        ),
+        SessionItemResultModel(
+          trainingItemId: 'emom-1',
+          occurrence: 0,
+          field: SessionItemField.cycles,
+          value: 7,
+        ),
+      ],
+    );
+
+    final listed = (await trainings.getAllSessionsWithReps()).single;
+    expect(listed.id, saved);
+    expect(
+      listed.itemResults.map(
+        (r) => '${r.trainingItemId}/${r.field.apiValue}/${r.value}',
+      ),
+      containsAll(['pullup-1/reps/23', 'emom-1/cycles/7']),
+    );
+  });
 }

@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 class CapturingSessions extends Sessions {
   SessionModel? saved;
+  List<SessionItemResultModel> savedItemResults = const [];
 
   @override
   Future<List<SessionModel>> build() async => [];
@@ -22,8 +23,10 @@ class CapturingSessions extends Sessions {
     SessionModel session,
     List<RepDataModel> reps, {
     List<BleDataPoint>? data,
+    List<SessionItemResultModel> itemResults = const [],
   }) async {
     saved = session;
+    savedItemResults = itemResults;
     return 'session-id';
   }
 }
@@ -229,6 +232,7 @@ class CapturingAssessments extends Assessments {
     SessionModel session,
     List<RepDataModel> reps, {
     List<BleDataPoint>? data,
+    List<SessionItemResultModel> itemResults = const [],
   }) async {
     savedResult = assessmentModel;
     savedSession = session;

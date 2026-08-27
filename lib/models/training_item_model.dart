@@ -7,7 +7,8 @@ enum TrainingItemType {
   free,
   exercise,
   circuit,
-  group;
+  group,
+  emom;
 
   static TrainingItemType fromString(String value) => switch (value) {
     'repeater' => TrainingItemType.repeater,
@@ -16,6 +17,7 @@ enum TrainingItemType {
     'exercise' => TrainingItemType.exercise,
     'circuit' => TrainingItemType.circuit,
     'group' => TrainingItemType.group,
+    'emom' => TrainingItemType.emom,
     _ => TrainingItemType.free,
   };
 
@@ -26,6 +28,7 @@ enum TrainingItemType {
     TrainingItemType.exercise => 'exercise',
     TrainingItemType.circuit => 'circuit',
     TrainingItemType.group => 'group',
+    TrainingItemType.emom => 'emom',
   };
 }
 
@@ -281,6 +284,7 @@ String trainingItemTitle(TrainingItem item) => switch (item.type) {
   TrainingItemType.hangboardRep => 'Hang rep',
   TrainingItemType.exercise => item.exerciseName ?? 'Exercise',
   TrainingItemType.free => item.freeText ?? 'Note',
+  TrainingItemType.emom => 'EMOM',
 };
 
 class TrainingItem {
@@ -297,8 +301,19 @@ class TrainingItem {
   final int? cycles;
   final int? cycleRestSeconds;
 
+  /// How often a round of an emom starts, in seconds. Null on every other type.
+  /// It is what makes the block every minute on the minute: the work of a round
+  /// is self paced and whatever is left of the interval is the rest, so the
+  /// round after it starts on the clock however fast the one before it went.
+  final int? intervalSeconds;
+
   // Repeater/exercise: reps per cycle or total reps
   final int? reps;
+
+  /// Whether the rep count is left open, which is an AMRAP: the coach set no
+  /// number, so the athlete does as many as they can and records how many that
+  /// was. Exercises only, and [reps] is read by nothing when it is set.
+  final bool repsIsMax;
 
   // Exercise: explicit duration (for timed exercises like planks)
   final int? duration;
@@ -353,7 +368,9 @@ class TrainingItem {
     this.restSeconds,
     this.cycles,
     this.cycleRestSeconds,
+    this.intervalSeconds,
     this.reps,
+    this.repsIsMax = false,
     this.duration,
     this.hand,
     this.granularity,
@@ -376,7 +393,11 @@ class TrainingItem {
 
   /// Reps to perform when this is a rep-based item, null otherwise.
   /// An item is never both rep-based and time-based.
+  /// An open rep count prescribes no number at all, which is what tells an
+  /// AMRAP from an exercise the coach simply gave one rep. Nothing resolves it:
+  /// the number only exists once the athlete has done the set and said so.
   int? effectiveReps([AssessmentResults results = AssessmentResults.none]) {
+    if (repsIsMax) return null;
     final target = variableTargets['reps'];
     if (target != null) {
       final resolved = target
@@ -486,7 +507,9 @@ class TrainingItem {
       restSeconds: (json['rest_seconds'] as num?)?.toInt(),
       cycles: (json['cycles'] as num?)?.toInt(),
       cycleRestSeconds: (json['cycle_rest_seconds'] as num?)?.toInt(),
+      intervalSeconds: (json['interval_seconds'] as num?)?.toInt(),
       reps: (json['reps'] as num?)?.toInt(),
+      repsIsMax: json['reps_is_max'] as bool? ?? false,
       duration: (json['duration'] as num?)?.toInt(),
       hand: json['hand'] as String?,
       granularity: json['granularity'] as String?,
@@ -511,7 +534,9 @@ class TrainingItem {
     if (restSeconds != null) map['rest_seconds'] = restSeconds;
     if (cycles != null) map['cycles'] = cycles;
     if (cycleRestSeconds != null) map['cycle_rest_seconds'] = cycleRestSeconds;
+    if (intervalSeconds != null) map['interval_seconds'] = intervalSeconds;
     if (reps != null) map['reps'] = reps;
+    map['reps_is_max'] = repsIsMax;
     if (duration != null) map['duration'] = duration;
     if (hand != null) map['hand'] = hand;
     if (granularity != null) map['granularity'] = granularity;
@@ -546,7 +571,9 @@ class TrainingItem {
     int? restSeconds,
     int? cycles,
     int? cycleRestSeconds,
+    int? intervalSeconds,
     int? reps,
+    bool? repsIsMax,
     int? duration,
     String? hand,
     String? granularity,
@@ -568,7 +595,9 @@ class TrainingItem {
       restSeconds: restSeconds ?? this.restSeconds,
       cycles: cycles ?? this.cycles,
       cycleRestSeconds: cycleRestSeconds ?? this.cycleRestSeconds,
+      intervalSeconds: intervalSeconds ?? this.intervalSeconds,
       reps: reps ?? this.reps,
+      repsIsMax: repsIsMax ?? this.repsIsMax,
       duration: duration ?? this.duration,
       hand: hand ?? this.hand,
       granularity: granularity ?? this.granularity,
@@ -598,7 +627,9 @@ class TrainingItem {
     restSeconds: restSeconds,
     cycles: cycles,
     cycleRestSeconds: cycleRestSeconds,
+    intervalSeconds: intervalSeconds,
     reps: reps,
+    repsIsMax: repsIsMax,
     duration: duration,
     hand: hand,
     granularity: granularity,

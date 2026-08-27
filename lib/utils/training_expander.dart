@@ -10,6 +10,50 @@ import 'package:crimpy/utils/hangboard_layout.dart';
 /// and "no item" has one representation here, the null the column documents.
 String? _linkId(TrainingItem item) => item.id.isEmpty ? null : item.id;
 
+/// What every expander needs and none of them owns: how the loads resolve, and
+/// how many passes through each item have been laid down so far.
+class _ExpandContext {
+  final bool useSensor;
+  final double? bodyweightKg;
+  final AssessmentResults results;
+
+  /// Passes already laid down per item id. Blocks nest, so a global count per
+  /// item is the only one that numbers the passes of an exercise inside an emom
+  /// inside a circuit the way the run actually plays them.
+  final Map<String, int> _passes = {};
+
+  _ExpandContext({
+    required this.useSensor,
+    required this.bodyweightKg,
+    required this.results,
+  });
+
+  /// Claims the next pass through [item], from 0.
+  int nextOccurrence(TrainingItem item) {
+    final id = _linkId(item) ?? '';
+    final next = _passes[id] ?? 0;
+    _passes[id] = next + 1;
+    return next;
+  }
+}
+
+/// Where a step being laid down sits: the set or round label it shows, the
+/// coach comment it inherits, the pass through its item, and the emom round it
+/// belongs to when it is inside one.
+class _StepPlacement {
+  final String? context;
+  final String? comment;
+  final int occurrence;
+  final EmomPosition? emom;
+
+  const _StepPlacement({
+    this.context,
+    this.comment,
+    this.occurrence = 0,
+    this.emom,
+  });
+}
+
 /// Expands a training tree into a flat, runnable sequence of execution items.
 /// [useSensor] controls whether hangboard/repeater hangs collect live force
 /// data (and thus show the gauge); when false the whole training runs without
@@ -24,9 +68,14 @@ List<TrainingExecutionItem> expandTrainingItems(
   double? bodyweightKg,
   AssessmentResults results = AssessmentResults.none,
 }) {
+  final context = _ExpandContext(
+    useSensor: useSensor,
+    bodyweightKg: bodyweightKg,
+    results: results,
+  );
   final out = <TrainingExecutionItem>[];
   for (final item in training.items) {
-    _expandItem(item, out, useSensor, bodyweightKg, results);
+    _expandItem(item, out, context, const _StepPlacement());
   }
   return out;
 }
@@ -41,65 +90,33 @@ int trainingDurationSeconds(Training training) => expandTrainingItems(
 void _expandItem(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor,
-  double? bodyweightKg,
-  AssessmentResults results, {
-  String? context,
-  String? inheritedComment,
-}) {
+  _ExpandContext ctx,
+  _StepPlacement placement,
+) {
   // An item without a comment of its own carries the one of the circuit or
   // group it belongs to, so a coach instruction is never lost during the run.
-  final comment = _cleanComment(item.comment) ?? inheritedComment;
+  final comment = _cleanComment(item.comment) ?? placement.comment;
+  final at = _StepPlacement(
+    context: placement.context,
+    comment: comment,
+    occurrence: ctx.nextOccurrence(item),
+    emom: placement.emom,
+  );
   switch (item.type) {
     case TrainingItemType.repeater:
-      _expandRepeater(
-        item,
-        out,
-        useSensor,
-        bodyweightKg,
-        results,
-        comment: comment,
-      );
+      _expandRepeater(item, out, ctx, at);
     case TrainingItemType.hangboardRep:
-      _expandHangboardRep(
-        item,
-        out,
-        useSensor,
-        bodyweightKg,
-        results,
-        context: context,
-        comment: comment,
-      );
+      _expandHangboardRep(item, out, ctx, at);
     case TrainingItemType.circuit:
-      _expandCircuit(
-        item,
-        out,
-        useSensor,
-        bodyweightKg,
-        results,
-        comment: comment,
-      );
+      _expandCircuit(item, out, ctx, at);
+    case TrainingItemType.emom:
+      _expandEmom(item, out, ctx, at);
     case TrainingItemType.group:
-      _expandGroup(
-        item,
-        out,
-        useSensor,
-        bodyweightKg,
-        results,
-        context: context,
-        comment: comment,
-      );
+      _expandGroup(item, out, ctx, at);
     case TrainingItemType.exercise:
-      _expandExercise(
-        item,
-        out,
-        bodyweightKg,
-        results,
-        context: context,
-        comment: comment,
-      );
+      _expandExercise(item, out, ctx, at);
     case TrainingItemType.free:
-      _expandFree(item, out, results, context: context, comment: comment);
+      _expandFree(item, out, ctx, at);
   }
 }
 
@@ -111,49 +128,32 @@ String? _cleanComment(String? comment) {
 void _expandGroup(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor,
-  double? bodyweightKg,
-  AssessmentResults results, {
-  String? context,
-  String? comment,
-}) {
+  _ExpandContext ctx,
+  _StepPlacement at,
+) {
   for (final child in item.items) {
-    _expandItem(
-      child,
-      out,
-      useSensor,
-      bodyweightKg,
-      results,
-      context: context,
-      inheritedComment: comment,
-    );
+    _expandItem(child, out, ctx, at);
   }
 }
 
 void _expandCircuit(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor,
-  double? bodyweightKg,
-  AssessmentResults results, {
-  String? comment,
-}) {
+  _ExpandContext ctx,
+  _StepPlacement at,
+) {
   final cycles = item.cycles ?? 1;
   final cycleRest = item.cycleRestSeconds ?? 0;
   final childRest = item.restSeconds ?? 0;
   for (int cycle = 0; cycle < cycles; cycle++) {
-    final context = cycles > 1 ? 'ROUND ${cycle + 1}/$cycles' : null;
+    final inCycle = _StepPlacement(
+      context: cycles > 1 ? 'ROUND ${cycle + 1}/$cycles' : null,
+      comment: at.comment,
+      emom: at.emom,
+    );
     for (final (index, child) in item.items.indexed) {
       final lengthBeforeChild = out.length;
-      _expandItem(
-        child,
-        out,
-        useSensor,
-        bodyweightKg,
-        results,
-        context: context,
-        inheritedComment: comment,
-      );
+      _expandItem(child, out, ctx, inCycle);
       final isLastChild = index == item.items.length - 1;
       final rest = isLastChild
           ? (cycle < cycles - 1 ? cycleRest : 0)
@@ -165,21 +165,75 @@ void _expandCircuit(
         final childEndsOnRest =
             out.length > lengthBeforeChild && out.last is RestItem;
         if (childEndsOnRest) out.removeLast();
-        out.add(RestItem(durationSeconds: rest, trainingItemId: _linkId(item)));
+        out.add(
+          RestItem(
+            durationSeconds: rest,
+            trainingItemId: _linkId(item),
+            occurrence: at.occurrence,
+            emom: at.emom,
+          ),
+        );
       }
     }
+  }
+}
+
+/// Lays out an emom: every round runs its items back to back, then rests for
+/// whatever is left of the interval, so the round after it starts on the clock
+/// however fast the one before it went.
+void _expandEmom(
+  TrainingItem item,
+  List<TrainingExecutionItem> out,
+  _ExpandContext ctx,
+  _StepPlacement at,
+) {
+  final rounds = item.cycles ?? 1;
+  final interval = item.intervalSeconds ?? 60;
+  final itemId = _linkId(item);
+  final blockKey = '${itemId ?? 'emom'}#${at.occurrence}';
+
+  for (int round = 0; round < rounds; round++) {
+    final position = EmomPosition(
+      blockKey: blockKey,
+      itemId: itemId,
+      occurrence: at.occurrence,
+      round: round,
+    );
+    final lengthBeforeRound = out.length;
+    final inRound = _StepPlacement(
+      context: 'ROUND ${round + 1}/$rounds',
+      comment: at.comment,
+      emom: position,
+    );
+    for (final child in item.items) {
+      _expandItem(child, out, ctx, inRound);
+    }
+
+    // The rest is what is left of the interval once the timed work is taken
+    // out. Self paced work counts for nothing here, which is why the run
+    // measures the rest back to the step the round opened on instead.
+    final worked = out
+        .skip(lengthBeforeRound)
+        .fold(0, (sum, step) => sum + step.durationSeconds);
+    out.add(
+      IntervalRestItem(
+        durationSeconds: (interval - worked).clamp(0, interval),
+        intervalSeconds: interval,
+        trainingItemId: itemId,
+        occurrence: at.occurrence,
+        emom: position,
+      ),
+    );
   }
 }
 
 void _expandExercise(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  double? bodyweightKg,
-  AssessmentResults results, {
-  String? context,
-  String? comment,
-}) {
-  final duration = item.effectiveDuration(results);
+  _ExpandContext ctx,
+  _StepPlacement at,
+) {
+  final duration = item.effectiveDuration(ctx.results);
   final name = item.exerciseName ?? 'Exercise';
   if (duration != null) {
     out.add(
@@ -190,37 +244,53 @@ void _expandExercise(
         handSide: HandSide.both,
         gripPosition: GripPosition.halfCrimp,
         collectSensorData: false,
-        subtitle: context,
-        comment: comment,
+        subtitle: at.context,
+        comment: at.comment,
         trainingItemId: _linkId(item),
+        occurrence: at.occurrence,
+        emom: at.emom,
       ),
     );
   } else {
     out.add(
       ConfirmItem(
         label: name,
-        reps: item.effectiveReps(results),
-        load: item.loadLabel(bodyweightKg: bodyweightKg, results: results),
-        subtitle: context,
-        comment: comment,
+        reps: item.effectiveReps(ctx.results),
+        // An open rep count is only recordable against an item the session can
+        // key it to, so an unsaved one runs as a plain self paced step.
+        repsAreOpen: item.repsIsMax && _linkId(item) != null,
+        load: item.loadLabel(
+          bodyweightKg: ctx.bodyweightKg,
+          results: ctx.results,
+        ),
+        subtitle: at.context,
+        comment: at.comment,
         trainingItemId: _linkId(item),
+        occurrence: at.occurrence,
+        emom: at.emom,
       ),
     );
   }
   final rest = item.restSeconds ?? 0;
   if (rest > 0) {
-    out.add(RestItem(durationSeconds: rest, trainingItemId: _linkId(item)));
+    out.add(
+      RestItem(
+        durationSeconds: rest,
+        trainingItemId: _linkId(item),
+        occurrence: at.occurrence,
+        emom: at.emom,
+      ),
+    );
   }
 }
 
 void _expandFree(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  AssessmentResults results, {
-  String? context,
-  String? comment,
-}) {
-  final duration = item.effectiveDuration(results);
+  _ExpandContext ctx,
+  _StepPlacement at,
+) {
+  final duration = item.effectiveDuration(ctx.results);
   if (duration != null) {
     out.add(
       TimedItem(
@@ -230,18 +300,22 @@ void _expandFree(
         handSide: HandSide.both,
         gripPosition: GripPosition.halfCrimp,
         collectSensorData: false,
-        subtitle: context,
-        comment: comment,
+        subtitle: at.context,
+        comment: at.comment,
         trainingItemId: _linkId(item),
+        occurrence: at.occurrence,
+        emom: at.emom,
       ),
     );
   } else {
     out.add(
       ConfirmItem(
         label: item.freeText ?? 'Free',
-        subtitle: context,
-        comment: comment,
+        subtitle: at.context,
+        comment: at.comment,
         trainingItemId: _linkId(item),
+        occurrence: at.occurrence,
+        emom: at.emom,
       ),
     );
   }
@@ -250,12 +324,9 @@ void _expandFree(
 void _expandHangboardRep(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor,
-  double? bodyweightKg,
-  AssessmentResults results, {
-  String? context,
-  String? comment,
-}) {
+  _ExpandContext ctx,
+  _StepPlacement at,
+) {
   final worktime = item.worktimeSeconds ?? 7;
   final resttime = item.restSeconds ?? 3;
   final hand = item.hand ?? HangboardHand.both;
@@ -271,8 +342,8 @@ void _expandHangboardRep(
       layout
           .load(0, 0, leftHand: leftHand)
           ?.kilograms(
-            bodyweightKg: bodyweightKg,
-            results: results,
+            bodyweightKg: ctx.bodyweightKg,
+            results: ctx.results,
             handSide: handSide,
           ) ??
       0.0;
@@ -287,25 +358,32 @@ void _expandHangboardRep(
       edgeSizeMm: layout.edgeSizeMm(0, 0),
       isHang: true,
       // Only a hang on a single hand passes through the sensor.
-      collectSensorData: useSensor && handSide != HandSide.both,
-      subtitle: context,
-      comment: comment,
+      collectSensorData: ctx.useSensor && handSide != HandSide.both,
+      subtitle: at.context,
+      comment: at.comment,
       trainingItemId: _linkId(item),
+      occurrence: at.occurrence,
+      emom: at.emom,
     ),
   );
   if (resttime > 0) {
-    out.add(RestItem(durationSeconds: resttime, trainingItemId: _linkId(item)));
+    out.add(
+      RestItem(
+        durationSeconds: resttime,
+        trainingItemId: _linkId(item),
+        occurrence: at.occurrence,
+        emom: at.emom,
+      ),
+    );
   }
 }
 
 void _expandRepeater(
   TrainingItem item,
   List<TrainingExecutionItem> out,
-  bool useSensor,
-  double? bodyweightKg,
-  AssessmentResults results, {
-  String? comment,
-}) {
+  _ExpandContext ctx,
+  _StepPlacement at,
+) {
   final cycles = item.cycles ?? 1;
   final repsPerCycle = item.reps ?? 1;
   final worktime = item.worktimeSeconds ?? 7;
@@ -330,8 +408,8 @@ void _expandRepeater(
           layout
               .load(cycle, rep, leftHand: leftHand)
               ?.kilograms(
-                bodyweightKg: bodyweightKg,
-                results: results,
+                bodyweightKg: ctx.bodyweightKg,
+                results: ctx.results,
                 handSide: side,
               ) ??
           0.0,
@@ -340,15 +418,21 @@ void _expandRepeater(
       edgeSizeMm: layout.edgeSizeMm(cycle, rep),
       isHang: true,
       // Only a hang on a single hand passes through the sensor.
-      collectSensorData: useSensor && side != HandSide.both,
+      collectSensorData: ctx.useSensor && side != HandSide.both,
       subtitle: setRep(cycle, rep),
-      comment: comment,
+      comment: at.comment,
       trainingItemId: _linkId(item),
+      occurrence: at.occurrence,
+      emom: at.emom,
     );
   }
 
-  RestItem rest(int seconds) =>
-      RestItem(durationSeconds: seconds, trainingItemId: _linkId(item));
+  RestItem rest(int seconds) => RestItem(
+    durationSeconds: seconds,
+    trainingItemId: _linkId(item),
+    occurrence: at.occurrence,
+    emom: at.emom,
+  );
 
   switch (hand) {
     case HangboardHand.split:

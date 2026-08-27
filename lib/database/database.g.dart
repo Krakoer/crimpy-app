@@ -2095,6 +2095,17 @@ class $TrainingItemsTable extends TrainingItems
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _intervalSecondsMeta = const VerificationMeta(
+    'intervalSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> intervalSeconds = GeneratedColumn<int>(
+    'interval_seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _repsMeta = const VerificationMeta('reps');
   @override
   late final GeneratedColumn<int> reps = GeneratedColumn<int>(
@@ -2103,6 +2114,21 @@ class $TrainingItemsTable extends TrainingItems
     true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
+  );
+  static const VerificationMeta _repsIsMaxMeta = const VerificationMeta(
+    'repsIsMax',
+  );
+  @override
+  late final GeneratedColumn<bool> repsIsMax = GeneratedColumn<bool>(
+    'reps_is_max',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("reps_is_max" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
   );
   static const VerificationMeta _durationMeta = const VerificationMeta(
     'duration',
@@ -2282,7 +2308,9 @@ class $TrainingItemsTable extends TrainingItems
     position,
     cycles,
     cycleRestSeconds,
+    intervalSeconds,
     reps,
+    repsIsMax,
     duration,
     restSeconds,
     worktimeSeconds,
@@ -2357,10 +2385,25 @@ class $TrainingItemsTable extends TrainingItems
         ),
       );
     }
+    if (data.containsKey('interval_seconds')) {
+      context.handle(
+        _intervalSecondsMeta,
+        intervalSeconds.isAcceptableOrUnknown(
+          data['interval_seconds']!,
+          _intervalSecondsMeta,
+        ),
+      );
+    }
     if (data.containsKey('reps')) {
       context.handle(
         _repsMeta,
         reps.isAcceptableOrUnknown(data['reps']!, _repsMeta),
+      );
+    }
+    if (data.containsKey('reps_is_max')) {
+      context.handle(
+        _repsIsMaxMeta,
+        repsIsMax.isAcceptableOrUnknown(data['reps_is_max']!, _repsIsMaxMeta),
       );
     }
     if (data.containsKey('duration')) {
@@ -2511,10 +2554,18 @@ class $TrainingItemsTable extends TrainingItems
         DriftSqlType.int,
         data['${effectivePrefix}cycle_rest_seconds'],
       ),
+      intervalSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}interval_seconds'],
+      ),
       reps: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}reps'],
       ),
+      repsIsMax: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}reps_is_max'],
+      )!,
       duration: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}duration'],
@@ -2592,7 +2643,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
   final int position;
   final int? cycles;
   final int? cycleRestSeconds;
+  final int? intervalSeconds;
   final int? reps;
+  final bool repsIsMax;
   final int? duration;
   final int? restSeconds;
   final int? worktimeSeconds;
@@ -2619,7 +2672,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     required this.position,
     this.cycles,
     this.cycleRestSeconds,
+    this.intervalSeconds,
     this.reps,
+    required this.repsIsMax,
     this.duration,
     this.restSeconds,
     this.worktimeSeconds,
@@ -2652,9 +2707,13 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     if (!nullToAbsent || cycleRestSeconds != null) {
       map['cycle_rest_seconds'] = Variable<int>(cycleRestSeconds);
     }
+    if (!nullToAbsent || intervalSeconds != null) {
+      map['interval_seconds'] = Variable<int>(intervalSeconds);
+    }
     if (!nullToAbsent || reps != null) {
       map['reps'] = Variable<int>(reps);
     }
+    map['reps_is_max'] = Variable<bool>(repsIsMax);
     if (!nullToAbsent || duration != null) {
       map['duration'] = Variable<int>(duration);
     }
@@ -2714,7 +2773,11 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
       cycleRestSeconds: cycleRestSeconds == null && nullToAbsent
           ? const Value.absent()
           : Value(cycleRestSeconds),
+      intervalSeconds: intervalSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(intervalSeconds),
       reps: reps == null && nullToAbsent ? const Value.absent() : Value(reps),
+      repsIsMax: Value(repsIsMax),
       duration: duration == null && nullToAbsent
           ? const Value.absent()
           : Value(duration),
@@ -2770,7 +2833,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
       position: serializer.fromJson<int>(json['position']),
       cycles: serializer.fromJson<int?>(json['cycles']),
       cycleRestSeconds: serializer.fromJson<int?>(json['cycleRestSeconds']),
+      intervalSeconds: serializer.fromJson<int?>(json['intervalSeconds']),
       reps: serializer.fromJson<int?>(json['reps']),
+      repsIsMax: serializer.fromJson<bool>(json['repsIsMax']),
       duration: serializer.fromJson<int?>(json['duration']),
       restSeconds: serializer.fromJson<int?>(json['restSeconds']),
       worktimeSeconds: serializer.fromJson<int?>(json['worktimeSeconds']),
@@ -2803,7 +2868,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
       'position': serializer.toJson<int>(position),
       'cycles': serializer.toJson<int?>(cycles),
       'cycleRestSeconds': serializer.toJson<int?>(cycleRestSeconds),
+      'intervalSeconds': serializer.toJson<int?>(intervalSeconds),
       'reps': serializer.toJson<int?>(reps),
+      'repsIsMax': serializer.toJson<bool>(repsIsMax),
       'duration': serializer.toJson<int?>(duration),
       'restSeconds': serializer.toJson<int?>(restSeconds),
       'worktimeSeconds': serializer.toJson<int?>(worktimeSeconds),
@@ -2830,7 +2897,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     int? position,
     Value<int?> cycles = const Value.absent(),
     Value<int?> cycleRestSeconds = const Value.absent(),
+    Value<int?> intervalSeconds = const Value.absent(),
     Value<int?> reps = const Value.absent(),
+    bool? repsIsMax,
     Value<int?> duration = const Value.absent(),
     Value<int?> restSeconds = const Value.absent(),
     Value<int?> worktimeSeconds = const Value.absent(),
@@ -2856,7 +2925,11 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     cycleRestSeconds: cycleRestSeconds.present
         ? cycleRestSeconds.value
         : this.cycleRestSeconds,
+    intervalSeconds: intervalSeconds.present
+        ? intervalSeconds.value
+        : this.intervalSeconds,
     reps: reps.present ? reps.value : this.reps,
+    repsIsMax: repsIsMax ?? this.repsIsMax,
     duration: duration.present ? duration.value : this.duration,
     restSeconds: restSeconds.present ? restSeconds.value : this.restSeconds,
     worktimeSeconds: worktimeSeconds.present
@@ -2896,7 +2969,11 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
       cycleRestSeconds: data.cycleRestSeconds.present
           ? data.cycleRestSeconds.value
           : this.cycleRestSeconds,
+      intervalSeconds: data.intervalSeconds.present
+          ? data.intervalSeconds.value
+          : this.intervalSeconds,
       reps: data.reps.present ? data.reps.value : this.reps,
+      repsIsMax: data.repsIsMax.present ? data.repsIsMax.value : this.repsIsMax,
       duration: data.duration.present ? data.duration.value : this.duration,
       restSeconds: data.restSeconds.present
           ? data.restSeconds.value
@@ -2943,7 +3020,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
           ..write('position: $position, ')
           ..write('cycles: $cycles, ')
           ..write('cycleRestSeconds: $cycleRestSeconds, ')
+          ..write('intervalSeconds: $intervalSeconds, ')
           ..write('reps: $reps, ')
+          ..write('repsIsMax: $repsIsMax, ')
           ..write('duration: $duration, ')
           ..write('restSeconds: $restSeconds, ')
           ..write('worktimeSeconds: $worktimeSeconds, ')
@@ -2972,7 +3051,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
     position,
     cycles,
     cycleRestSeconds,
+    intervalSeconds,
     reps,
+    repsIsMax,
     duration,
     restSeconds,
     worktimeSeconds,
@@ -3000,7 +3081,9 @@ class TrainingItemRow extends DataClass implements Insertable<TrainingItemRow> {
           other.position == this.position &&
           other.cycles == this.cycles &&
           other.cycleRestSeconds == this.cycleRestSeconds &&
+          other.intervalSeconds == this.intervalSeconds &&
           other.reps == this.reps &&
+          other.repsIsMax == this.repsIsMax &&
           other.duration == this.duration &&
           other.restSeconds == this.restSeconds &&
           other.worktimeSeconds == this.worktimeSeconds &&
@@ -3026,7 +3109,9 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
   final Value<int> position;
   final Value<int?> cycles;
   final Value<int?> cycleRestSeconds;
+  final Value<int?> intervalSeconds;
   final Value<int?> reps;
+  final Value<bool> repsIsMax;
   final Value<int?> duration;
   final Value<int?> restSeconds;
   final Value<int?> worktimeSeconds;
@@ -3051,7 +3136,9 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     this.position = const Value.absent(),
     this.cycles = const Value.absent(),
     this.cycleRestSeconds = const Value.absent(),
+    this.intervalSeconds = const Value.absent(),
     this.reps = const Value.absent(),
+    this.repsIsMax = const Value.absent(),
     this.duration = const Value.absent(),
     this.restSeconds = const Value.absent(),
     this.worktimeSeconds = const Value.absent(),
@@ -3077,7 +3164,9 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     this.position = const Value.absent(),
     this.cycles = const Value.absent(),
     this.cycleRestSeconds = const Value.absent(),
+    this.intervalSeconds = const Value.absent(),
     this.reps = const Value.absent(),
+    this.repsIsMax = const Value.absent(),
     this.duration = const Value.absent(),
     this.restSeconds = const Value.absent(),
     this.worktimeSeconds = const Value.absent(),
@@ -3104,7 +3193,9 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     Expression<int>? position,
     Expression<int>? cycles,
     Expression<int>? cycleRestSeconds,
+    Expression<int>? intervalSeconds,
     Expression<int>? reps,
+    Expression<bool>? repsIsMax,
     Expression<int>? duration,
     Expression<int>? restSeconds,
     Expression<int>? worktimeSeconds,
@@ -3130,7 +3221,9 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
       if (position != null) 'position': position,
       if (cycles != null) 'cycles': cycles,
       if (cycleRestSeconds != null) 'cycle_rest_seconds': cycleRestSeconds,
+      if (intervalSeconds != null) 'interval_seconds': intervalSeconds,
       if (reps != null) 'reps': reps,
+      if (repsIsMax != null) 'reps_is_max': repsIsMax,
       if (duration != null) 'duration': duration,
       if (restSeconds != null) 'rest_seconds': restSeconds,
       if (worktimeSeconds != null) 'worktime_seconds': worktimeSeconds,
@@ -3159,7 +3252,9 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     Value<int>? position,
     Value<int?>? cycles,
     Value<int?>? cycleRestSeconds,
+    Value<int?>? intervalSeconds,
     Value<int?>? reps,
+    Value<bool>? repsIsMax,
     Value<int?>? duration,
     Value<int?>? restSeconds,
     Value<int?>? worktimeSeconds,
@@ -3185,7 +3280,9 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
       position: position ?? this.position,
       cycles: cycles ?? this.cycles,
       cycleRestSeconds: cycleRestSeconds ?? this.cycleRestSeconds,
+      intervalSeconds: intervalSeconds ?? this.intervalSeconds,
       reps: reps ?? this.reps,
+      repsIsMax: repsIsMax ?? this.repsIsMax,
       duration: duration ?? this.duration,
       restSeconds: restSeconds ?? this.restSeconds,
       worktimeSeconds: worktimeSeconds ?? this.worktimeSeconds,
@@ -3229,8 +3326,14 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
     if (cycleRestSeconds.present) {
       map['cycle_rest_seconds'] = Variable<int>(cycleRestSeconds.value);
     }
+    if (intervalSeconds.present) {
+      map['interval_seconds'] = Variable<int>(intervalSeconds.value);
+    }
     if (reps.present) {
       map['reps'] = Variable<int>(reps.value);
+    }
+    if (repsIsMax.present) {
+      map['reps_is_max'] = Variable<bool>(repsIsMax.value);
     }
     if (duration.present) {
       map['duration'] = Variable<int>(duration.value);
@@ -3295,7 +3398,9 @@ class TrainingItemsCompanion extends UpdateCompanion<TrainingItemRow> {
           ..write('position: $position, ')
           ..write('cycles: $cycles, ')
           ..write('cycleRestSeconds: $cycleRestSeconds, ')
+          ..write('intervalSeconds: $intervalSeconds, ')
           ..write('reps: $reps, ')
+          ..write('repsIsMax: $repsIsMax, ')
           ..write('duration: $duration, ')
           ..write('restSeconds: $restSeconds, ')
           ..write('worktimeSeconds: $worktimeSeconds, ')
@@ -4087,6 +4192,468 @@ class RepDatasCompanion extends UpdateCompanion<RepData> {
           ..write('edgeSizeMm: $edgeSizeMm, ')
           ..write('trainingItemId: $trainingItemId, ')
           ..write('targetUnmeasured: $targetUnmeasured, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SessionItemResultsTable extends SessionItemResults
+    with TableInfo<$SessionItemResultsTable, SessionItemResult> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SessionItemResultsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => Uuid().v4(),
+  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
+    'sessionId',
+  );
+  @override
+  late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
+    'session_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _trainingItemIdMeta = const VerificationMeta(
+    'trainingItemId',
+  );
+  @override
+  late final GeneratedColumn<String> trainingItemId = GeneratedColumn<String>(
+    'training_item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _occurrenceMeta = const VerificationMeta(
+    'occurrence',
+  );
+  @override
+  late final GeneratedColumn<int> occurrence = GeneratedColumn<int>(
+    'occurrence',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _fieldMeta = const VerificationMeta('field');
+  @override
+  late final GeneratedColumn<String> field = GeneratedColumn<String>(
+    'field',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<int> value = GeneratedColumn<int>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    sessionId,
+    trainingItemId,
+    occurrence,
+    field,
+    value,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'session_item_results';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SessionItemResult> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('session_id')) {
+      context.handle(
+        _sessionIdMeta,
+        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionIdMeta);
+    }
+    if (data.containsKey('training_item_id')) {
+      context.handle(
+        _trainingItemIdMeta,
+        trainingItemId.isAcceptableOrUnknown(
+          data['training_item_id']!,
+          _trainingItemIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_trainingItemIdMeta);
+    }
+    if (data.containsKey('occurrence')) {
+      context.handle(
+        _occurrenceMeta,
+        occurrence.isAcceptableOrUnknown(data['occurrence']!, _occurrenceMeta),
+      );
+    }
+    if (data.containsKey('field')) {
+      context.handle(
+        _fieldMeta,
+        field.isAcceptableOrUnknown(data['field']!, _fieldMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fieldMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SessionItemResult map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SessionItemResult(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      sessionId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_id'],
+      )!,
+      trainingItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}training_item_id'],
+      )!,
+      occurrence: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}occurrence'],
+      )!,
+      field: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}field'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}value'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SessionItemResultsTable createAlias(String alias) {
+    return $SessionItemResultsTable(attachedDatabase, alias);
+  }
+}
+
+class SessionItemResult extends DataClass
+    implements Insertable<SessionItemResult> {
+  final String id;
+  final String sessionId;
+  final String trainingItemId;
+  final int occurrence;
+  final String field;
+  final int value;
+  final DateTime updatedAt;
+  const SessionItemResult({
+    required this.id,
+    required this.sessionId,
+    required this.trainingItemId,
+    required this.occurrence,
+    required this.field,
+    required this.value,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['session_id'] = Variable<String>(sessionId);
+    map['training_item_id'] = Variable<String>(trainingItemId);
+    map['occurrence'] = Variable<int>(occurrence);
+    map['field'] = Variable<String>(field);
+    map['value'] = Variable<int>(value);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  SessionItemResultsCompanion toCompanion(bool nullToAbsent) {
+    return SessionItemResultsCompanion(
+      id: Value(id),
+      sessionId: Value(sessionId),
+      trainingItemId: Value(trainingItemId),
+      occurrence: Value(occurrence),
+      field: Value(field),
+      value: Value(value),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SessionItemResult.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SessionItemResult(
+      id: serializer.fromJson<String>(json['id']),
+      sessionId: serializer.fromJson<String>(json['sessionId']),
+      trainingItemId: serializer.fromJson<String>(json['trainingItemId']),
+      occurrence: serializer.fromJson<int>(json['occurrence']),
+      field: serializer.fromJson<String>(json['field']),
+      value: serializer.fromJson<int>(json['value']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'sessionId': serializer.toJson<String>(sessionId),
+      'trainingItemId': serializer.toJson<String>(trainingItemId),
+      'occurrence': serializer.toJson<int>(occurrence),
+      'field': serializer.toJson<String>(field),
+      'value': serializer.toJson<int>(value),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SessionItemResult copyWith({
+    String? id,
+    String? sessionId,
+    String? trainingItemId,
+    int? occurrence,
+    String? field,
+    int? value,
+    DateTime? updatedAt,
+  }) => SessionItemResult(
+    id: id ?? this.id,
+    sessionId: sessionId ?? this.sessionId,
+    trainingItemId: trainingItemId ?? this.trainingItemId,
+    occurrence: occurrence ?? this.occurrence,
+    field: field ?? this.field,
+    value: value ?? this.value,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  SessionItemResult copyWithCompanion(SessionItemResultsCompanion data) {
+    return SessionItemResult(
+      id: data.id.present ? data.id.value : this.id,
+      sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
+      trainingItemId: data.trainingItemId.present
+          ? data.trainingItemId.value
+          : this.trainingItemId,
+      occurrence: data.occurrence.present
+          ? data.occurrence.value
+          : this.occurrence,
+      field: data.field.present ? data.field.value : this.field,
+      value: data.value.present ? data.value.value : this.value,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionItemResult(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('trainingItemId: $trainingItemId, ')
+          ..write('occurrence: $occurrence, ')
+          ..write('field: $field, ')
+          ..write('value: $value, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    sessionId,
+    trainingItemId,
+    occurrence,
+    field,
+    value,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SessionItemResult &&
+          other.id == this.id &&
+          other.sessionId == this.sessionId &&
+          other.trainingItemId == this.trainingItemId &&
+          other.occurrence == this.occurrence &&
+          other.field == this.field &&
+          other.value == this.value &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SessionItemResultsCompanion extends UpdateCompanion<SessionItemResult> {
+  final Value<String> id;
+  final Value<String> sessionId;
+  final Value<String> trainingItemId;
+  final Value<int> occurrence;
+  final Value<String> field;
+  final Value<int> value;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const SessionItemResultsCompanion({
+    this.id = const Value.absent(),
+    this.sessionId = const Value.absent(),
+    this.trainingItemId = const Value.absent(),
+    this.occurrence = const Value.absent(),
+    this.field = const Value.absent(),
+    this.value = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SessionItemResultsCompanion.insert({
+    this.id = const Value.absent(),
+    required String sessionId,
+    required String trainingItemId,
+    this.occurrence = const Value.absent(),
+    required String field,
+    required int value,
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : sessionId = Value(sessionId),
+       trainingItemId = Value(trainingItemId),
+       field = Value(field),
+       value = Value(value);
+  static Insertable<SessionItemResult> custom({
+    Expression<String>? id,
+    Expression<String>? sessionId,
+    Expression<String>? trainingItemId,
+    Expression<int>? occurrence,
+    Expression<String>? field,
+    Expression<int>? value,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (sessionId != null) 'session_id': sessionId,
+      if (trainingItemId != null) 'training_item_id': trainingItemId,
+      if (occurrence != null) 'occurrence': occurrence,
+      if (field != null) 'field': field,
+      if (value != null) 'value': value,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SessionItemResultsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? sessionId,
+    Value<String>? trainingItemId,
+    Value<int>? occurrence,
+    Value<String>? field,
+    Value<int>? value,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return SessionItemResultsCompanion(
+      id: id ?? this.id,
+      sessionId: sessionId ?? this.sessionId,
+      trainingItemId: trainingItemId ?? this.trainingItemId,
+      occurrence: occurrence ?? this.occurrence,
+      field: field ?? this.field,
+      value: value ?? this.value,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (sessionId.present) {
+      map['session_id'] = Variable<String>(sessionId.value);
+    }
+    if (trainingItemId.present) {
+      map['training_item_id'] = Variable<String>(trainingItemId.value);
+    }
+    if (occurrence.present) {
+      map['occurrence'] = Variable<int>(occurrence.value);
+    }
+    if (field.present) {
+      map['field'] = Variable<String>(field.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<int>(value.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SessionItemResultsCompanion(')
+          ..write('id: $id, ')
+          ..write('sessionId: $sessionId, ')
+          ..write('trainingItemId: $trainingItemId, ')
+          ..write('occurrence: $occurrence, ')
+          ..write('field: $field, ')
+          ..write('value: $value, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -5694,6 +6261,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TrainingsTable trainings = $TrainingsTable(this);
   late final $TrainingItemsTable trainingItems = $TrainingItemsTable(this);
   late final $RepDatasTable repDatas = $RepDatasTable(this);
+  late final $SessionItemResultsTable sessionItemResults =
+      $SessionItemResultsTable(this);
   late final $SensorConfigsTable sensorConfigs = $SensorConfigsTable(this);
   late final $BuiltinTrainingWeightsTable builtinTrainingWeights =
       $BuiltinTrainingWeightsTable(this);
@@ -5711,6 +6280,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     trainings,
     trainingItems,
     repDatas,
+    sessionItemResults,
     sensorConfigs,
     builtinTrainingWeights,
     pinnedBuiltinTrainings,
@@ -6767,7 +7337,9 @@ typedef $$TrainingItemsTableCreateCompanionBuilder =
       Value<int> position,
       Value<int?> cycles,
       Value<int?> cycleRestSeconds,
+      Value<int?> intervalSeconds,
       Value<int?> reps,
+      Value<bool> repsIsMax,
       Value<int?> duration,
       Value<int?> restSeconds,
       Value<int?> worktimeSeconds,
@@ -6794,7 +7366,9 @@ typedef $$TrainingItemsTableUpdateCompanionBuilder =
       Value<int> position,
       Value<int?> cycles,
       Value<int?> cycleRestSeconds,
+      Value<int?> intervalSeconds,
       Value<int?> reps,
+      Value<bool> repsIsMax,
       Value<int?> duration,
       Value<int?> restSeconds,
       Value<int?> worktimeSeconds,
@@ -6857,8 +7431,18 @@ class $$TrainingItemsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get intervalSeconds => $composableBuilder(
+    column: $table.intervalSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<int> get reps => $composableBuilder(
     column: $table.reps,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get repsIsMax => $composableBuilder(
+    column: $table.repsIsMax,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6982,8 +7566,18 @@ class $$TrainingItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get intervalSeconds => $composableBuilder(
+    column: $table.intervalSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get reps => $composableBuilder(
     column: $table.reps,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get repsIsMax => $composableBuilder(
+    column: $table.repsIsMax,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -7097,8 +7691,16 @@ class $$TrainingItemsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get intervalSeconds => $composableBuilder(
+    column: $table.intervalSeconds,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get reps =>
       $composableBuilder(column: $table.reps, builder: (column) => column);
+
+  GeneratedColumn<bool> get repsIsMax =>
+      $composableBuilder(column: $table.repsIsMax, builder: (column) => column);
 
   GeneratedColumn<int> get duration =>
       $composableBuilder(column: $table.duration, builder: (column) => column);
@@ -7202,7 +7804,9 @@ class $$TrainingItemsTableTableManager
                 Value<int> position = const Value.absent(),
                 Value<int?> cycles = const Value.absent(),
                 Value<int?> cycleRestSeconds = const Value.absent(),
+                Value<int?> intervalSeconds = const Value.absent(),
                 Value<int?> reps = const Value.absent(),
+                Value<bool> repsIsMax = const Value.absent(),
                 Value<int?> duration = const Value.absent(),
                 Value<int?> restSeconds = const Value.absent(),
                 Value<int?> worktimeSeconds = const Value.absent(),
@@ -7227,7 +7831,9 @@ class $$TrainingItemsTableTableManager
                 position: position,
                 cycles: cycles,
                 cycleRestSeconds: cycleRestSeconds,
+                intervalSeconds: intervalSeconds,
                 reps: reps,
+                repsIsMax: repsIsMax,
                 duration: duration,
                 restSeconds: restSeconds,
                 worktimeSeconds: worktimeSeconds,
@@ -7254,7 +7860,9 @@ class $$TrainingItemsTableTableManager
                 Value<int> position = const Value.absent(),
                 Value<int?> cycles = const Value.absent(),
                 Value<int?> cycleRestSeconds = const Value.absent(),
+                Value<int?> intervalSeconds = const Value.absent(),
                 Value<int?> reps = const Value.absent(),
+                Value<bool> repsIsMax = const Value.absent(),
                 Value<int?> duration = const Value.absent(),
                 Value<int?> restSeconds = const Value.absent(),
                 Value<int?> worktimeSeconds = const Value.absent(),
@@ -7279,7 +7887,9 @@ class $$TrainingItemsTableTableManager
                 position: position,
                 cycles: cycles,
                 cycleRestSeconds: cycleRestSeconds,
+                intervalSeconds: intervalSeconds,
                 reps: reps,
+                repsIsMax: repsIsMax,
                 duration: duration,
                 restSeconds: restSeconds,
                 worktimeSeconds: worktimeSeconds,
@@ -7678,6 +8288,261 @@ typedef $$RepDatasTableProcessedTableManager =
       $$RepDatasTableUpdateCompanionBuilder,
       (RepData, BaseReferences<_$AppDatabase, $RepDatasTable, RepData>),
       RepData,
+      PrefetchHooks Function()
+    >;
+typedef $$SessionItemResultsTableCreateCompanionBuilder =
+    SessionItemResultsCompanion Function({
+      Value<String> id,
+      required String sessionId,
+      required String trainingItemId,
+      Value<int> occurrence,
+      required String field,
+      required int value,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$SessionItemResultsTableUpdateCompanionBuilder =
+    SessionItemResultsCompanion Function({
+      Value<String> id,
+      Value<String> sessionId,
+      Value<String> trainingItemId,
+      Value<int> occurrence,
+      Value<String> field,
+      Value<int> value,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$SessionItemResultsTableFilterComposer
+    extends Composer<_$AppDatabase, $SessionItemResultsTable> {
+  $$SessionItemResultsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get trainingItemId => $composableBuilder(
+    column: $table.trainingItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get occurrence => $composableBuilder(
+    column: $table.occurrence,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get field => $composableBuilder(
+    column: $table.field,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SessionItemResultsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SessionItemResultsTable> {
+  $$SessionItemResultsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sessionId => $composableBuilder(
+    column: $table.sessionId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get trainingItemId => $composableBuilder(
+    column: $table.trainingItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get occurrence => $composableBuilder(
+    column: $table.occurrence,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get field => $composableBuilder(
+    column: $table.field,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SessionItemResultsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SessionItemResultsTable> {
+  $$SessionItemResultsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => column);
+
+  GeneratedColumn<String> get trainingItemId => $composableBuilder(
+    column: $table.trainingItemId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get occurrence => $composableBuilder(
+    column: $table.occurrence,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get field =>
+      $composableBuilder(column: $table.field, builder: (column) => column);
+
+  GeneratedColumn<int> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$SessionItemResultsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SessionItemResultsTable,
+          SessionItemResult,
+          $$SessionItemResultsTableFilterComposer,
+          $$SessionItemResultsTableOrderingComposer,
+          $$SessionItemResultsTableAnnotationComposer,
+          $$SessionItemResultsTableCreateCompanionBuilder,
+          $$SessionItemResultsTableUpdateCompanionBuilder,
+          (
+            SessionItemResult,
+            BaseReferences<
+              _$AppDatabase,
+              $SessionItemResultsTable,
+              SessionItemResult
+            >,
+          ),
+          SessionItemResult,
+          PrefetchHooks Function()
+        > {
+  $$SessionItemResultsTableTableManager(
+    _$AppDatabase db,
+    $SessionItemResultsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SessionItemResultsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SessionItemResultsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SessionItemResultsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> sessionId = const Value.absent(),
+                Value<String> trainingItemId = const Value.absent(),
+                Value<int> occurrence = const Value.absent(),
+                Value<String> field = const Value.absent(),
+                Value<int> value = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SessionItemResultsCompanion(
+                id: id,
+                sessionId: sessionId,
+                trainingItemId: trainingItemId,
+                occurrence: occurrence,
+                field: field,
+                value: value,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String sessionId,
+                required String trainingItemId,
+                Value<int> occurrence = const Value.absent(),
+                required String field,
+                required int value,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SessionItemResultsCompanion.insert(
+                id: id,
+                sessionId: sessionId,
+                trainingItemId: trainingItemId,
+                occurrence: occurrence,
+                field: field,
+                value: value,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SessionItemResultsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SessionItemResultsTable,
+      SessionItemResult,
+      $$SessionItemResultsTableFilterComposer,
+      $$SessionItemResultsTableOrderingComposer,
+      $$SessionItemResultsTableAnnotationComposer,
+      $$SessionItemResultsTableCreateCompanionBuilder,
+      $$SessionItemResultsTableUpdateCompanionBuilder,
+      (
+        SessionItemResult,
+        BaseReferences<
+          _$AppDatabase,
+          $SessionItemResultsTable,
+          SessionItemResult
+        >,
+      ),
+      SessionItemResult,
       PrefetchHooks Function()
     >;
 typedef $$SensorConfigsTableCreateCompanionBuilder =
@@ -8577,6 +9442,8 @@ class $AppDatabaseManager {
       $$TrainingItemsTableTableManager(_db, _db.trainingItems);
   $$RepDatasTableTableManager get repDatas =>
       $$RepDatasTableTableManager(_db, _db.repDatas);
+  $$SessionItemResultsTableTableManager get sessionItemResults =>
+      $$SessionItemResultsTableTableManager(_db, _db.sessionItemResults);
   $$SensorConfigsTableTableManager get sensorConfigs =>
       $$SensorConfigsTableTableManager(_db, _db.sensorConfigs);
   $$BuiltinTrainingWeightsTableTableManager get builtinTrainingWeights =>

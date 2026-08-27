@@ -8,6 +8,7 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_overview_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_performance_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_reps_card.dart';
+import 'package:crimpy/views/screens/home_screen/history/widgets/session_open_results_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_notes_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_raw_data_card.dart';
 
@@ -106,6 +107,7 @@ class SessionDetailScreen extends ConsumerWidget {
     SessionModel session,
   ) {
     final sessionColor = CrimpyTheme.activityColor(session.activity);
+    final openResults = _resolveOpenResults(ref, session);
     final resolvedBlocks = _resolveBlocks(ref, session);
     final blocks = resolvedBlocks.value;
     // A session whose blocks are still resolving has no answer to give yet, and
@@ -141,6 +143,13 @@ class SessionDetailScreen extends ConsumerWidget {
             const SizedBox(height: 16),
           ],
 
+          // The counts the run answered the open items with. No rep carries
+          // either, so this is the only place they show up.
+          if (openResults.isNotEmpty) ...[
+            SessionOpenResultsCard(results: openResults),
+            const SizedBox(height: 16),
+          ],
+
           // Notes section
           if (session.notes != null && session.notes!.isNotEmpty) ...[
             SessionNotesCard(notes: session.notes!),
@@ -154,6 +163,24 @@ class SessionDetailScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// The counts the run recorded, read against the items they answer. Those
+  /// items come from the frozen prescription when the session carries one, and
+  /// from the athlete's own training otherwise, which is the same fallback
+  /// [_resolveBlocks] makes and the only one a guest-mode session has.
+  List<OpenItemResult> _resolveOpenResults(
+    WidgetRef ref,
+    SessionModel session,
+  ) {
+    if (session.itemResults.isEmpty) return const [];
+    final frozen = session.prescriptionItems;
+    if (frozen != null) return openItemResults(session.itemResults, frozen);
+    return ref
+            .watch(sessionTrainingItemsProvider(session.trainingId))
+            .whenData((items) => openItemResults(session.itemResults, items))
+            .value ??
+        const [];
   }
 
   /// A rep names the training item it was played from, so the session reads

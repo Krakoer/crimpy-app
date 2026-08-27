@@ -140,6 +140,7 @@ String sessionBlockLabel(TrainingItem item) {
   final label = switch (item.type) {
     TrainingItemType.group => 'Group',
     TrainingItemType.circuit => 'Circuit',
+    TrainingItemType.emom => 'EMOM',
     TrainingItemType.repeater => 'Hangboard',
     TrainingItemType.hangboardRep => 'Hang rep',
     TrainingItemType.exercise => 'Exercise',
@@ -149,6 +150,44 @@ String sessionBlockLabel(TrainingItem item) {
   // block is left on its type alone.
   final edges = <int>{...?item.edgeSizesMm};
   return edges.length == 1 ? '$label ${edges.first}mm' : label;
+}
+
+/// One item the prescription left open and what the run answered it with, in
+/// the order the passes were played.
+typedef OpenItemResult = ({String label, String prescribed, List<int> values});
+
+/// Reads the counts a run recorded against the items they answer, so each one
+/// is shown next to what was asked for rather than as a bare number. A count
+/// naming an item [items] does not hold is left out: there is nothing to head
+/// it with.
+List<OpenItemResult> openItemResults(
+  List<SessionItemResultModel> results,
+  List<TrainingItem> items,
+) {
+  if (results.isEmpty || items.isEmpty) return const [];
+  final byId = trainingItemsById(items);
+
+  final ordered = [...results]
+    ..sort((a, b) => a.occurrence.compareTo(b.occurrence));
+  final values = <String, List<int>>{};
+  for (final result in ordered) {
+    if (!byId.containsKey(result.trainingItemId)) continue;
+    (values[result.trainingItemId] ??= []).add(result.value);
+  }
+
+  final out = <OpenItemResult>[];
+  for (final item in byId.values) {
+    final done = values[item.id];
+    if (done == null) continue;
+    out.add((
+      label: sessionBlockLabel(item),
+      prescribed: item.type == TrainingItemType.emom
+          ? 'of ${item.cycles ?? 1} rounds'
+          : 'reps, as many as possible',
+      values: done,
+    ));
+  }
+  return out;
 }
 
 /// Every item of a training by id, nested ones included, so a rep naming one

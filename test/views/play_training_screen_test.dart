@@ -163,6 +163,31 @@ Training _percentAssessmentExercise() => const Training(
   ],
 );
 
+/// An EMOM of a single AMRAP exercise, which is the shape the ticket names: a
+/// coach asks for as many pull ups as possible every minute for three minutes.
+Training _amrapEmom() => const Training(
+  id: 't7',
+  title: 'Pull up EMOM',
+  items: [
+    TrainingItem(
+      id: 'emom-1',
+      type: TrainingItemType.emom,
+      position: 0,
+      cycles: 3,
+      intervalSeconds: 60,
+      items: [
+        TrainingItem(
+          id: 'pullup-1',
+          type: TrainingItemType.exercise,
+          position: 0,
+          exerciseName: 'Pull up',
+          repsIsMax: true,
+        ),
+      ],
+    ),
+  ],
+);
+
 /// One sensor notification carrying [kilograms], in the frame layout the
 /// firmware sends: two header bytes then the reading as a little endian float.
 /// The repository is left at its default tare and coefficient, so the value
@@ -581,5 +606,110 @@ void main() {
 
     expect(find.textContaining('80% Weighted hang'), findsOneWidget);
     expect(find.textContaining('80% assessment'), findsNothing);
+  });
+
+  group('AMRAP and EMOM', () {
+    testWidgets('an open rep count asks how many rather than naming one', (
+      tester,
+    ) async {
+      await _pumpRun(tester, _amrapEmom());
+      await _skip(tester);
+
+      expect(find.text('AMRAP'), findsOneWidget);
+      expect(find.textContaining('Tap DONE and say how many'), findsOneWidget);
+      expect(find.text('ROUND 1/3'), findsOneWidget);
+    });
+
+    testWidgets('finishing an AMRAP records the count the athlete gives', (
+      tester,
+    ) async {
+      await _pumpRun(tester, _amrapEmom());
+      await _skip(tester);
+
+      await tester.tap(find.text('DONE'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('How many did you manage?'), findsOneWidget);
+      await tester.enterText(find.byType(TextField), '23');
+      await tester.tap(find.widgetWithText(TextButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      // The run moves on to the rest that closes the round, so the question
+      // was answered rather than dismissed.
+      expect(find.text('How many did you manage?'), findsNothing);
+      expect(find.text('AMRAP'), findsNothing);
+    });
+
+    testWidgets('backing out of the question leaves the step where it was', (
+      tester,
+    ) async {
+      await _pumpRun(tester, _amrapEmom());
+      await _skip(tester);
+
+      await tester.tap(find.text('DONE'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('AMRAP'), findsOneWidget);
+    });
+
+    testWidgets('dropping out of the block ends it at the round reached', (
+      tester,
+    ) async {
+      await _pumpRun(tester, _amrapEmom());
+      await _skip(tester);
+
+      await tester.tap(find.textContaining('I CANNOT MAKE THE NEXT ROUND'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Stop this block?'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Stop'));
+      await tester.pumpAndSettle();
+
+      // The block held three rounds and the athlete dropped out of the first,
+      // so the run has nothing left to play.
+      expect(find.byType(PostWorkoutScreen), findsOneWidget);
+    });
+
+    testWidgets('the counts a run resolved reach the screen that saves them', (
+      tester,
+    ) async {
+      await _pumpRun(tester, _amrapEmom());
+      await _skip(tester);
+
+      await tester.tap(find.text('DONE'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), '23');
+      await tester.tap(find.widgetWithText(TextButton, 'Save'));
+      await tester.pumpAndSettle();
+
+      // Out of the rest that closed round one, then out of the block.
+      await _skip(tester);
+      await tester.tap(find.textContaining('I CANNOT MAKE THE NEXT ROUND'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Stop'));
+      await tester.pumpAndSettle();
+
+      final post = tester.widget<PostWorkoutScreen>(
+        find.byType(PostWorkoutScreen),
+      );
+      expect(
+        post.itemResults.map(
+          (r) =>
+              '${r.trainingItemId}/${r.occurrence}/${r.field.apiValue}/${r.value}',
+        ),
+        ['pullup-1/0/reps/23', 'emom-1/0/cycles/1'],
+      );
+    });
+
+    testWidgets('there is nothing to drop out of outside an emom', (
+      tester,
+    ) async {
+      await _pumpRun(tester, _stretchingCircuit());
+      await _skip(tester);
+
+      expect(find.textContaining('I CANNOT MAKE THE NEXT ROUND'), findsNothing);
+    });
   });
 }

@@ -145,9 +145,16 @@ class TrainingItems extends Table {
   // Repeater and circuit cycles
   late final IntColumn cycles = integer().nullable()();
   late final IntColumn cycleRestSeconds = integer().nullable()();
+  // How often a round of an emom starts, null on every other type.
+  late final IntColumn intervalSeconds = integer().nullable()();
 
   // Reps (per cycle for repeaters, total for exercises)
   late final IntColumn reps = integer().nullable()();
+  // Whether the rep count is left open, which is an AMRAP: the athlete does as
+  // many as they can and records how many that was.
+  late final BoolColumn repsIsMax = boolean().withDefault(
+    const Constant(false),
+  )();
   // Explicit duration in seconds (exercises, free items)
   late final IntColumn duration = integer().nullable()();
   // Rest after the item or between reps
@@ -221,6 +228,38 @@ class RepDatas extends Table {
   late final BoolColumn targetUnmeasured = boolean().withDefault(
     const Constant(false),
   )();
+
+  late final DateTimeColumn updatedAt = dateTime().withDefault(
+    currentDateAndTime,
+  )();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE',
+  ];
+}
+
+// Stores what the athlete achieved on a step the prescription left open: the
+// reps an AMRAP turned out to be, and the rounds an emom was carried through.
+// Neither can be read back off the reps, since a set of pull ups passes through
+// no sensor and so records none.
+class SessionItemResults extends Table {
+  late final TextColumn id = text().clientDefault(() => Uuid().v4())();
+
+  late final TextColumn sessionId = text()();
+  // Which item of the prescription the count answers. Not a reference, for the
+  // reason the rep link is not one either: the training stays editable while
+  // the played session keeps the prescription it was run from.
+  late final TextColumn trainingItemId = text()();
+  // Which pass through that item the count belongs to, from 0, so a block that
+  // repeats can be answered once per round.
+  late final IntColumn occurrence = integer().withDefault(const Constant(0))();
+  // 'reps' for an AMRAP, 'cycles' for the rounds an emom was carried through.
+  late final TextColumn field = text()();
+  late final IntColumn value = integer()();
 
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
@@ -314,6 +353,7 @@ class Users extends Table {
     Trainings,
     TrainingItems,
     RepDatas,
+    SessionItemResults,
     SensorConfigs,
     BuiltinTrainingWeights,
     PinnedBuiltinTrainings,
@@ -335,7 +375,10 @@ class AppDatabase extends _$AppDatabase {
         ? []
         : await getSessionData(session.dataPath);
 
-    return session.toModel(dataPoints: dataPoints);
+    return session.toModel(
+      dataPoints: dataPoints,
+      itemResults: await getItemResultsForSession(sessionId),
+    );
   }
 
   /// Get all saved sessions. Filtering is deliberately not done here:
@@ -347,6 +390,27 @@ class AppDatabase extends _$AppDatabase {
   /// Get the repetitions data for a given session.
   Future<List<RepDataModel>> getRepsForSession(String sessionId) async =>
       (await _repRowsForSession(sessionId)).map((r) => r.toModel()).toList();
+
+  /// The counts the run recorded for the items the prescription left open.
+  Future<List<SessionItemResultModel>> getItemResultsForSession(
+    String sessionId,
+  ) async =>
+      (await (select(sessionItemResults)
+                ..where((r) => r.sessionId.equals(sessionId))
+                ..orderBy([
+                  (r) => OrderingTerm(expression: r.trainingItemId),
+                  (r) => OrderingTerm(expression: r.occurrence),
+                ]))
+              .get())
+          .map(
+            (r) => SessionItemResultModel(
+              trainingItemId: r.trainingItemId,
+              occurrence: r.occurrence,
+              field: SessionItemField.fromApi(r.field),
+              value: r.value,
+            ),
+          )
+          .toList();
 
   Future<List<RepData>> _repRowsForSession(String sessionId) =>
       (select(repDatas)
@@ -361,6 +425,7 @@ class AppDatabase extends _$AppDatabase {
     SessionModel session,
     List<RepDataModel> reps, {
     List<BleDataPoint>? points,
+    List<SessionItemResultModel> itemResults = const [],
   }) async {
     String dataPath = "";
 
@@ -414,8 +479,22 @@ class AppDatabase extends _$AppDatabase {
         )
         .toList();
 
+    final resultCompanions = itemResults
+        .map(
+          (result) => SessionItemResultsCompanion(
+            sessionId: Value(sessionId),
+            trainingItemId: Value(result.trainingItemId),
+            occurrence: Value(result.occurrence),
+            field: Value(result.field.apiValue),
+            value: Value(result.value),
+            updatedAt: Value(DateTime.now()),
+          ),
+        )
+        .toList();
+
     batch((batch) {
       batch.insertAll(repDatas, companions);
+      batch.insertAll(sessionItemResults, resultCompanions);
     });
 
     return sessionId;
@@ -513,7 +592,9 @@ class AppDatabase extends _$AppDatabase {
       parentId: row.parentId,
       cycles: row.cycles,
       cycleRestSeconds: row.cycleRestSeconds,
+      intervalSeconds: row.intervalSeconds,
       reps: row.reps,
+      repsIsMax: row.repsIsMax,
       duration: row.duration,
       restSeconds: row.restSeconds,
       worktimeSeconds: row.worktimeSeconds,
@@ -626,7 +707,9 @@ class AppDatabase extends _$AppDatabase {
           position: Value(item.position),
           cycles: Value(item.cycles),
           cycleRestSeconds: Value(item.cycleRestSeconds),
+          intervalSeconds: Value(item.intervalSeconds),
           reps: Value(item.reps),
+          repsIsMax: Value(item.repsIsMax),
           duration: Value(item.duration),
           restSeconds: Value(item.restSeconds),
           worktimeSeconds: Value(item.worktimeSeconds),
@@ -944,7 +1027,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1294,6 +1377,16 @@ class AppDatabase extends _$AppDatabase {
           schema.trainingItems.variableTargetsJson,
         );
       },
+      from10To11: (m, schema) async {
+        // An emom is a block, and a rep count may be left open, so a run now
+        // has counts to record that no rep carries.
+        await m.addColumn(
+          schema.trainingItems,
+          schema.trainingItems.intervalSeconds,
+        );
+        await m.addColumn(schema.trainingItems, schema.trainingItems.repsIsMax);
+        await m.createTable(schema.sessionItemResults);
+      },
     ),
   );
 }
@@ -1367,6 +1460,7 @@ extension SessionRowToModel on Session {
   SessionModel toModel({
     List<RepDataModel>? reps,
     List<BleDataPoint>? dataPoints,
+    List<SessionItemResultModel> itemResults = const [],
   }) => SessionModel(
     id: id,
     name: name,
@@ -1384,6 +1478,7 @@ extension SessionRowToModel on Session {
     trainingId: trainingId,
     programSessionId: programSessionId,
     durationInSeconds: duration,
+    itemResults: itemResults,
   );
 }
 
