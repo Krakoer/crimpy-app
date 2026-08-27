@@ -40,6 +40,15 @@ class Sessions extends Table {
   late final TextColumn programSessionId = text().nullable()();
   late final IntColumn duration = integer().withDefault(const Constant(0))();
 
+  // The items the run was played from, frozen as JSON when it was saved, the
+  // way the server freezes a prescription onto the session it creates. It is
+  // the only copy that still names the blocks once the training is edited or
+  // deleted, and so the only thing that keeps the reps and the open counts
+  // recorded against an item id readable. Null on a session that answered no
+  // training, and on every session saved before the column existed, which is
+  // what leaves those falling back to the live training.
+  late final TextColumn prescriptionJson = text().nullable()();
+
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
@@ -453,6 +462,7 @@ class AppDatabase extends _$AppDatabase {
         trainingId: Value(session.trainingId),
         programSessionId: Value(session.programSessionId),
         duration: Value(sessionDuration),
+        prescriptionJson: _encodePrescription(session.prescriptionItems),
         updatedAt: Value(DateTime.now()),
       ),
     );
@@ -1096,7 +1106,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1456,6 +1466,14 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(schema.trainingItems, schema.trainingItems.repsIsMax);
         await m.createTable(schema.sessionItemResults);
       },
+      from11To12: (m, schema) async {
+        // A session now freezes what it was played from, so its reps and its
+        // open counts stay readable once the training is edited or deleted.
+        // The sessions already stored are left without one: they were saved
+        // from a training that may have drifted since, and a snapshot taken
+        // now would freeze that drift as though the run had played it.
+        await m.addColumn(schema.sessions, schema.sessions.prescriptionJson);
+      },
     ),
   );
 }
@@ -1523,6 +1541,34 @@ extension RepDataRowToModel on RepData {
   );
 }
 
+/// The items a run was played from, as the column holds them: the envelope the
+/// server sends a prescription in, so both stores hold one shape and are read
+/// back by one parser. A tree with no items is stored as none rather than as an
+/// empty snapshot: a run that named no block has nothing to freeze, and an
+/// empty list would claim the training was read and found bare.
+Value<String?> _encodePrescription(List<TrainingItem>? items) =>
+    items == null || items.isEmpty
+    ? const Value(null)
+    : Value(
+        jsonEncode({
+          'items': items.map((i) => i.toPrescriptionJson()).toList(),
+        }),
+      );
+
+/// The frozen prescription of a session row, or null when it holds none. A
+/// snapshot that no longer parses is read as none rather than thrown: the reps
+/// are still worth showing, headed by the live training as they were before
+/// the column existed.
+List<TrainingItem>? _decodePrescription(String? stored) {
+  if (stored == null || stored.isEmpty) return null;
+  try {
+    return SessionModel.prescriptionItemsOf(jsonDecode(stored));
+  } catch (error) {
+    AppLoggerHelper.error('Unreadable session prescription', error);
+    return null;
+  }
+}
+
 /// Maps a stored session row onto the domain model, optionally with the
 /// repetitions and sensor samples that were loaded alongside it.
 extension SessionRowToModel on Session {
@@ -1547,6 +1593,7 @@ extension SessionRowToModel on Session {
     trainingId: trainingId,
     programSessionId: programSessionId,
     durationInSeconds: duration,
+    prescriptionItems: _decodePrescription(prescriptionJson),
     itemResults: itemResults,
   );
 }

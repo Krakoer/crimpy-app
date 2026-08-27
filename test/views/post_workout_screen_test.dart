@@ -102,6 +102,27 @@ void main() {
     expect(saved.origin, SessionOrigin.played);
   });
 
+  testWidgets('freezes the template it played onto the session', (
+    tester,
+  ) async {
+    final sessions = CapturingSessions();
+    final template = Training(
+      id: 't1',
+      title: 'Hangs',
+      items: [_item('a'), _item('b')],
+    );
+
+    final saved = await _saveFrom(
+      tester,
+      PostWorkoutScreen(template: template, results: const []),
+      sessions,
+    );
+
+    // Without this the session saves no prescription and its reps go back to
+    // being read against a training that is free to drift under them.
+    expect(saved.prescriptionItems, template.items);
+  });
+
   testWidgets('defaults to a hangboard session', (tester) async {
     final sessions = CapturingSessions();
 

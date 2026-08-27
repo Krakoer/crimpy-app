@@ -128,14 +128,18 @@ class SessionModel {
     programSessionId: json['program_session_id'] as String?,
     durationInSeconds: (json['duration'] as num? ?? 0).toInt(),
     reportedRepCount: (json['rep_count'] as num?)?.toInt(),
-    prescriptionItems: _prescriptionItems(json['prescription']),
+    prescriptionItems: prescriptionItemsOf(json['prescription']),
     itemResults: itemResults,
   );
 
-  /// The items of the frozen prescription, or null when the session carries
-  /// none. The listing endpoint leaves the prescription out, so a session read
-  /// from it has no items until its detail is loaded.
-  static List<TrainingItem>? _prescriptionItems(Object? prescription) {
+  /// The items of a frozen prescription, or null when there is none to read.
+  /// The listing endpoint leaves the prescription out, so a session read from
+  /// it has no items until its detail is loaded.
+  ///
+  /// Public because the local store freezes its own copy under the same
+  /// envelope the server sends, and reads it back through here: one shape and
+  /// one reader, so the two stores cannot answer the same session differently.
+  static List<TrainingItem>? prescriptionItemsOf(Object? prescription) {
     if (prescription is! Map<String, dynamic>) return null;
     final raw = prescription['items'];
     if (raw is! List) return null;

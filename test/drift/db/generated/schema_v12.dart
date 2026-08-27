@@ -104,6 +104,14 @@ class Sessions extends Table with TableInfo<Sessions, SessionsData> {
     $customConstraints: 'NOT NULL DEFAULT 0',
     defaultValue: const CustomExpression('0'),
   );
+  late final GeneratedColumn<String> prescriptionJson = GeneratedColumn<String>(
+    'prescription_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    $customConstraints: 'NULL',
+  );
   late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
     'updated_at',
     aliasedName,
@@ -129,6 +137,7 @@ class Sessions extends Table with TableInfo<Sessions, SessionsData> {
     trainingId,
     programSessionId,
     duration,
+    prescriptionJson,
     updatedAt,
   ];
   @override
@@ -186,6 +195,10 @@ class Sessions extends Table with TableInfo<Sessions, SessionsData> {
         DriftSqlType.int,
         data['${effectivePrefix}duration'],
       )!,
+      prescriptionJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}prescription_json'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}updated_at'],
@@ -216,6 +229,7 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
   final String? trainingId;
   final String? programSessionId;
   final int duration;
+  final String? prescriptionJson;
   final int updatedAt;
   const SessionsData({
     required this.id,
@@ -229,6 +243,7 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
     this.trainingId,
     this.programSessionId,
     required this.duration,
+    this.prescriptionJson,
     required this.updatedAt,
   });
   @override
@@ -249,6 +264,9 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
       map['program_session_id'] = Variable<String>(programSessionId);
     }
     map['duration'] = Variable<int>(duration);
+    if (!nullToAbsent || prescriptionJson != null) {
+      map['prescription_json'] = Variable<String>(prescriptionJson);
+    }
     map['updated_at'] = Variable<int>(updatedAt);
     return map;
   }
@@ -270,6 +288,9 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
           ? const Value.absent()
           : Value(programSessionId),
       duration: Value(duration),
+      prescriptionJson: prescriptionJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(prescriptionJson),
       updatedAt: Value(updatedAt),
     );
   }
@@ -291,6 +312,7 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
       trainingId: serializer.fromJson<String?>(json['trainingId']),
       programSessionId: serializer.fromJson<String?>(json['programSessionId']),
       duration: serializer.fromJson<int>(json['duration']),
+      prescriptionJson: serializer.fromJson<String?>(json['prescriptionJson']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
     );
   }
@@ -309,6 +331,7 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
       'trainingId': serializer.toJson<String?>(trainingId),
       'programSessionId': serializer.toJson<String?>(programSessionId),
       'duration': serializer.toJson<int>(duration),
+      'prescriptionJson': serializer.toJson<String?>(prescriptionJson),
       'updatedAt': serializer.toJson<int>(updatedAt),
     };
   }
@@ -325,6 +348,7 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
     Value<String?> trainingId = const Value.absent(),
     Value<String?> programSessionId = const Value.absent(),
     int? duration,
+    Value<String?> prescriptionJson = const Value.absent(),
     int? updatedAt,
   }) => SessionsData(
     id: id ?? this.id,
@@ -340,6 +364,9 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
         ? programSessionId.value
         : this.programSessionId,
     duration: duration ?? this.duration,
+    prescriptionJson: prescriptionJson.present
+        ? prescriptionJson.value
+        : this.prescriptionJson,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   SessionsData copyWithCompanion(SessionsCompanion data) {
@@ -361,6 +388,9 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
           ? data.programSessionId.value
           : this.programSessionId,
       duration: data.duration.present ? data.duration.value : this.duration,
+      prescriptionJson: data.prescriptionJson.present
+          ? data.prescriptionJson.value
+          : this.prescriptionJson,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -379,6 +409,7 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
           ..write('trainingId: $trainingId, ')
           ..write('programSessionId: $programSessionId, ')
           ..write('duration: $duration, ')
+          ..write('prescriptionJson: $prescriptionJson, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -397,6 +428,7 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
     trainingId,
     programSessionId,
     duration,
+    prescriptionJson,
     updatedAt,
   );
   @override
@@ -414,6 +446,7 @@ class SessionsData extends DataClass implements Insertable<SessionsData> {
           other.trainingId == this.trainingId &&
           other.programSessionId == this.programSessionId &&
           other.duration == this.duration &&
+          other.prescriptionJson == this.prescriptionJson &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -429,6 +462,7 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
   final Value<String?> trainingId;
   final Value<String?> programSessionId;
   final Value<int> duration;
+  final Value<String?> prescriptionJson;
   final Value<int> updatedAt;
   final Value<int> rowid;
   const SessionsCompanion({
@@ -443,6 +477,7 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
     this.trainingId = const Value.absent(),
     this.programSessionId = const Value.absent(),
     this.duration = const Value.absent(),
+    this.prescriptionJson = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -458,6 +493,7 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
     this.trainingId = const Value.absent(),
     this.programSessionId = const Value.absent(),
     this.duration = const Value.absent(),
+    this.prescriptionJson = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -476,6 +512,7 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
     Expression<String>? trainingId,
     Expression<String>? programSessionId,
     Expression<int>? duration,
+    Expression<String>? prescriptionJson,
     Expression<int>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -491,6 +528,7 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
       if (trainingId != null) 'training_id': trainingId,
       if (programSessionId != null) 'program_session_id': programSessionId,
       if (duration != null) 'duration': duration,
+      if (prescriptionJson != null) 'prescription_json': prescriptionJson,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -508,6 +546,7 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
     Value<String?>? trainingId,
     Value<String?>? programSessionId,
     Value<int>? duration,
+    Value<String?>? prescriptionJson,
     Value<int>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -523,6 +562,7 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
       trainingId: trainingId ?? this.trainingId,
       programSessionId: programSessionId ?? this.programSessionId,
       duration: duration ?? this.duration,
+      prescriptionJson: prescriptionJson ?? this.prescriptionJson,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -564,6 +604,9 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
     if (duration.present) {
       map['duration'] = Variable<int>(duration.value);
     }
+    if (prescriptionJson.present) {
+      map['prescription_json'] = Variable<String>(prescriptionJson.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
@@ -587,6 +630,7 @@ class SessionsCompanion extends UpdateCompanion<SessionsData> {
           ..write('trainingId: $trainingId, ')
           ..write('programSessionId: $programSessionId, ')
           ..write('duration: $duration, ')
+          ..write('prescriptionJson: $prescriptionJson, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -5276,8 +5320,8 @@ class UsersCompanion extends UpdateCompanion<UsersData> {
   }
 }
 
-class DatabaseAtV11 extends GeneratedDatabase {
-  DatabaseAtV11(QueryExecutor e) : super(e);
+class DatabaseAtV12 extends GeneratedDatabase {
+  DatabaseAtV12(QueryExecutor e) : super(e);
   late final Sessions sessions = Sessions(this);
   late final AssessmentDefinitions assessmentDefinitions =
       AssessmentDefinitions(this);
@@ -5341,5 +5385,5 @@ class DatabaseAtV11 extends GeneratedDatabase {
     ),
   ]);
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 }
