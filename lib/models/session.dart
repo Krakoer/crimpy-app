@@ -49,6 +49,17 @@ class SessionItemResultModel {
     'field': field.apiValue,
     'value': value,
   };
+
+  /// The same count, answering [trainingItemId] instead. The guest import
+  /// rewrites the local item id into the one the server minted for it, since
+  /// the count is stored against an item the server has never seen.
+  SessionItemResultModel withTrainingItem(String trainingItemId) =>
+      SessionItemResultModel(
+        trainingItemId: trainingItemId,
+        occurrence: occurrence,
+        field: field,
+        value: value,
+      );
 }
 
 class SessionModel {
@@ -174,6 +185,29 @@ class SessionModel {
     itemResults: itemResults,
   );
 
+  /// The same session played from [trainingId], or from no training when it is
+  /// null. Separate from [copyWith], which carries a field over when it is
+  /// given none and so cannot clear one. The guest import needs both: it swaps
+  /// the local training id for the one the server minted, and lets go of a
+  /// training the athlete deleted after playing it.
+  SessionModel withTrainingId(String? trainingId) => SessionModel(
+    id: id,
+    name: name,
+    notes: notes,
+    date: date,
+    dataPoints: dataPoints,
+    reps: reps,
+    isAssessment: isAssessment,
+    activity: activity,
+    origin: origin,
+    trainingId: trainingId,
+    programSessionId: programSessionId,
+    durationInSeconds: durationInSeconds,
+    reportedRepCount: reportedRepCount,
+    prescriptionItems: prescriptionItems,
+    itemResults: itemResults,
+  );
+
   int get duration =>
       durationInSeconds ??
       (reps == null ? 0 : reps!.fold(0, (prev, r) => prev + r.duration));
@@ -240,5 +274,21 @@ class RepDataModel {
     edgeSizeMm: (json['edge_size_mm'] as num?)?.toInt(),
     trainingItemId: json['training_item_id'] as String?,
     targetUnmeasured: json['target_unmeasured'] as bool? ?? false,
+  );
+
+  /// The same rep played from [trainingItemId], or from no item when it is
+  /// null. The guest import rewrites the local item id into the one the server
+  /// minted, and drops the link when the item is no longer there to rewrite.
+  RepDataModel withTrainingItem(String? trainingItemId) => RepDataModel(
+    averageWeight: averageWeight,
+    duration: duration,
+    index: index,
+    isRest: isRest,
+    handSide: handSide,
+    targetWeight: targetWeight,
+    gripPosition: gripPosition,
+    edgeSizeMm: edgeSizeMm,
+    trainingItemId: trainingItemId,
+    targetUnmeasured: targetUnmeasured,
   );
 }
