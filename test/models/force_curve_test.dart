@@ -1,0 +1,77 @@
+import 'package:crimpy/models/ble_data_model.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  final t0 = DateTime.utc(2026, 8, 27, 9, 12, 3);
+
+  group('a force curve on its way to the API', () {
+    test('carries one start instant and an offset per reading', () {
+      final json = ForceCurve.toJson([
+        BleDataPoint(0, t0),
+        BleDataPoint(12.5, t0.add(const Duration(milliseconds: 125))),
+        BleDataPoint(31.25, t0.add(const Duration(milliseconds: 250))),
+      ])!;
+
+      expect(json['t0'], '2026-08-27T09:12:03.000Z');
+      expect(json['ms'], [0, 125, 250]);
+      expect(json['kg'], [0, 12.5, 31.25]);
+    });
+
+    // The offsets are read against the first sample, not against midnight or
+    // the session date, so a run that started at any hour comes back where it
+    // was recorded.
+    test('measures the offsets from the first sample', () {
+      final json = ForceCurve.toJson([
+        BleDataPoint(5, t0.add(const Duration(seconds: 30))),
+        BleDataPoint(6, t0.add(const Duration(seconds: 31))),
+      ])!;
+
+      expect(json['t0'], '2026-08-27T09:12:33.000Z');
+      expect(json['ms'], [0, 1000]);
+    });
+
+    test('is nothing at all when the run recorded no samples', () {
+      expect(ForceCurve.toJson([]), isNull);
+    });
+
+    test('survives the round trip', () {
+      final points = [
+        BleDataPoint(0, t0),
+        BleDataPoint(12.5, t0.add(const Duration(milliseconds: 125))),
+      ];
+
+      final read = ForceCurve.fromJson(ForceCurve.toJson(points));
+
+      expect(read.map((p) => p.value), points.map((p) => p.value));
+      expect(read.map((p) => p.timestamp), points.map((p) => p.timestamp));
+    });
+  });
+
+  group('a force curve read back off the API', () {
+    test('is empty when the session carries none', () {
+      expect(ForceCurve.fromJson(null), isEmpty);
+    });
+
+    // The API refuses to store a curve whose arrays disagree, but a row written
+    // before it did could still hold one, and half a curve is worse than none.
+    test('is empty when the two arrays disagree', () {
+      final read = ForceCurve.fromJson({
+        't0': '2026-08-27T09:12:03.000Z',
+        'ms': [0, 125],
+        'kg': [12.5],
+      });
+
+      expect(read, isEmpty);
+    });
+
+    test('is empty when the start instant is not a date', () {
+      final read = ForceCurve.fromJson({
+        't0': 'not a date',
+        'ms': [0],
+        'kg': [12.5],
+      });
+
+      expect(read, isEmpty);
+    });
+  });
+}
