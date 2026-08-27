@@ -693,65 +693,134 @@ class AppDatabase extends _$AppDatabase {
     return trainingId;
   }
 
+  /// The columns of one item row. The insert and the reconcile paths share it,
+  /// so a field added to one of them cannot be forgotten by the other.
+  TrainingItemsCompanion _itemCompanion(
+    TrainingItem item,
+    String trainingId,
+    String? parentId,
+  ) {
+    return TrainingItemsCompanion(
+      trainingId: Value(trainingId),
+      parentId: Value(parentId),
+      type: Value(item.type.apiValue),
+      position: Value(item.position),
+      cycles: Value(item.cycles),
+      cycleRestSeconds: Value(item.cycleRestSeconds),
+      intervalSeconds: Value(item.intervalSeconds),
+      reps: Value(item.reps),
+      repsIsMax: Value(item.repsIsMax),
+      duration: Value(item.duration),
+      restSeconds: Value(item.restSeconds),
+      worktimeSeconds: Value(item.worktimeSeconds),
+      hand: Value(item.hand),
+      granularity: Value(item.granularity),
+      loadsJson: Value(_loadsToJson(item.loads)),
+      leftLoadsJson: Value(_loadsToJson(item.leftLoads)),
+      handPositionsJson: Value(_handPositionsToJson(item)),
+      edgeSizesMmJson: Value(_intsToJson(item.edgeSizesMm)),
+      variableTargetsJson: Value(_variableTargetsToJson(item.variableTargets)),
+      loadIsMax: Value(item.loadIsMax),
+      freeText: Value(item.freeText),
+      exerciseId: Value(item.exerciseId),
+      groupTitle: Value(item.groupTitle),
+      updatedAt: Value(DateTime.now()),
+    );
+  }
+
   Future<void> _insertItems(
     List<TrainingItem> items,
     String trainingId,
     String? parentId,
   ) async {
     for (final item in items) {
-      final itemRowId = await into(trainingItems).insert(
-        TrainingItemsCompanion(
-          trainingId: Value(trainingId),
-          parentId: Value(parentId),
-          type: Value(item.type.apiValue),
-          position: Value(item.position),
-          cycles: Value(item.cycles),
-          cycleRestSeconds: Value(item.cycleRestSeconds),
-          intervalSeconds: Value(item.intervalSeconds),
-          reps: Value(item.reps),
-          repsIsMax: Value(item.repsIsMax),
-          duration: Value(item.duration),
-          restSeconds: Value(item.restSeconds),
-          worktimeSeconds: Value(item.worktimeSeconds),
-          hand: Value(item.hand),
-          granularity: Value(item.granularity),
-          loadsJson: Value(_loadsToJson(item.loads)),
-          leftLoadsJson: Value(_loadsToJson(item.leftLoads)),
-          handPositionsJson: Value(_handPositionsToJson(item)),
-          edgeSizesMmJson: Value(_intsToJson(item.edgeSizesMm)),
-          variableTargetsJson: Value(
-            _variableTargetsToJson(item.variableTargets),
-          ),
-          loadIsMax: Value(item.loadIsMax),
-          freeText: Value(item.freeText),
-          exerciseId: Value(item.exerciseId),
-          groupTitle: Value(item.groupTitle),
-          updatedAt: Value(DateTime.now()),
-        ),
-      );
-      final itemId = (await (select(
-        trainingItems,
-      )..where((i) => i.rowId.equals(itemRowId))).getSingle()).id;
+      final itemId = await _insertItem(item, trainingId, parentId);
       if (item.items.isNotEmpty) {
         await _insertItems(item.items, trainingId, itemId);
       }
     }
   }
 
-  /// Update an existing training (replaces all items).
-  Future<void> updateTraining(Training training) async {
-    await (update(trainings)..where((t) => t.id.equals(training.id))).write(
-      TrainingsCompanion(
-        title: Value(training.title),
-        description: Value(training.description),
-        isFavorite: Value(training.isFavorite),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
-    await (delete(
+  /// Inserts one item and returns the id storage minted for it.
+  Future<String> _insertItem(
+    TrainingItem item,
+    String trainingId,
+    String? parentId,
+  ) async {
+    final itemRowId = await into(
       trainingItems,
-    )..where((i) => i.trainingId.equals(training.id))).go();
-    await _insertItems(training.items, training.id, null);
+    ).insert(_itemCompanion(item, trainingId, parentId));
+    return (await (select(
+      trainingItems,
+    )..where((i) => i.rowId.equals(itemRowId))).getSingle()).id;
+  }
+
+  /// Writes [items] onto the rows already stored for [trainingId] rather than
+  /// recreating them: an item carrying the id it was read under keeps that row,
+  /// one the editor added or duplicated carries an empty id and gets a new row.
+  /// The ids the tree still holds are collected into [keptIds], so the caller
+  /// can delete the rows that disappeared and only those.
+  Future<void> _syncItems(
+    List<TrainingItem> items,
+    String trainingId,
+    String? parentId,
+    Set<String> keptIds,
+  ) async {
+    for (final item in items) {
+      final String itemId;
+      if (item.id.isEmpty) {
+        itemId = await _insertItem(item, trainingId, parentId);
+        keptIds.add(itemId);
+      } else {
+        itemId = item.id;
+        // Two items claiming one row would collapse onto it, and the tree
+        // would come back a node short with nothing to say so.
+        if (!keptIds.add(itemId)) {
+          throw StateError('training item $itemId appears twice in the tree');
+        }
+        final written =
+            await (update(trainingItems)..where(
+                  (i) => i.id.equals(itemId) & i.trainingId.equals(trainingId),
+                ))
+                .write(_itemCompanion(item, trainingId, parentId));
+        if (written == 0) {
+          throw StateError(
+            'training item $itemId does not belong to training $trainingId',
+          );
+        }
+      }
+      if (item.items.isNotEmpty) {
+        await _syncItems(item.items, trainingId, itemId, keptIds);
+      }
+    }
+  }
+
+  /// Update an existing training, reconciling its items against the stored rows
+  /// instead of replacing them. The reps and the open rep counts a session
+  /// recorded are written against the item ids in force when it ran, so minting
+  /// a fresh id per row on every save strands all of them, on an edit that
+  /// never touched the item they point at.
+  Future<void> updateTraining(Training training) async {
+    await transaction(() async {
+      await (update(trainings)..where((t) => t.id.equals(training.id))).write(
+        TrainingsCompanion(
+          title: Value(training.title),
+          description: Value(training.description),
+          isFavorite: Value(training.isFavorite),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
+      final keptIds = <String>{};
+      await _syncItems(training.items, training.id, null, keptIds);
+
+      // An empty set of kept ids deletes the whole tree: drift reads `isNotIn`
+      // on no value as true rather than emitting `id NOT IN ()`.
+      await (delete(trainingItems)..where(
+            (i) => i.trainingId.equals(training.id) & i.id.isNotIn(keptIds),
+          ))
+          .go();
+    });
   }
 
   /// Toggle the favorite status of a training.
