@@ -49,6 +49,12 @@ class Sessions extends Table {
   // what leaves those falling back to the live training.
   late final TextColumn prescriptionJson = text().nullable()();
 
+  /// The id the API gave this row when the guest import put it on the server,
+  /// null while it is only local. The import skips a row that carries one, so a
+  /// run that failed partway can be retried without uploading, and duplicating,
+  /// everything that already went up.
+  late final TextColumn serverId = text().nullable()();
+
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
@@ -105,6 +111,12 @@ class Assessments extends Table {
     const Constant(0),
   )(); // 0 = halfCrimp (default)
 
+  /// The id the API gave this row when the guest import put it on the server,
+  /// null while it is only local. The import skips a row that carries one, so a
+  /// run that failed partway can be retried without uploading, and duplicating,
+  /// everything that already went up.
+  late final TextColumn serverId = text().nullable()();
+
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
@@ -130,6 +142,12 @@ class Trainings extends Table {
   late final BoolColumn isFavorite = boolean().withDefault(
     const Constant(false),
   )();
+
+  /// The id the API gave this row when the guest import put it on the server,
+  /// null while it is only local. The import skips a row that carries one, so a
+  /// run that failed partway can be retried without uploading, and duplicating,
+  /// everything that already went up.
+  late final TextColumn serverId = text().nullable()();
 
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
@@ -191,6 +209,12 @@ class TrainingItems extends Table {
   late final TextColumn freeText = text().nullable()();
   late final TextColumn exerciseId = text().nullable()();
   late final TextColumn groupTitle = text().nullable()();
+
+  /// The id the API gave this row when the guest import put it on the server,
+  /// null while it is only local. The import skips a row that carries one, so a
+  /// run that failed partway can be retried without uploading, and duplicating,
+  /// everything that already went up.
+  late final TextColumn serverId = text().nullable()();
 
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
@@ -283,6 +307,21 @@ class SessionItemResults extends Table {
   ];
 }
 
+// Which account the guest import marks belong to. A server id recorded on a row
+// only means anything against the account it was uploaded to: without this, an
+// athlete who is dropped back to guest mode by an expired token and then signs
+// in as somebody else would have those rows skipped as already imported, and
+// then wiped once the run reported no failures, losing them from the device
+// while they sit on the first account.
+class GuestImportTargets extends Table {
+  // Always zero: the table holds one row, or none before the first import.
+  late final IntColumn id = integer().withDefault(const Constant(0))();
+  late final TextColumn userId = text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // Stores the IDs of pinned builtin trainings
 class PinnedBuiltinTrainings extends Table {
   late final TextColumn builtinTrainingId = text()();
@@ -366,6 +405,7 @@ class Users extends Table {
     SensorConfigs,
     BuiltinTrainingWeights,
     PinnedBuiltinTrainings,
+    GuestImportTargets,
     Users,
   ],
 )
@@ -1095,6 +1135,110 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Clear all user-generated local data (called on logout after remote import).
+  // -------------------------- GUEST DATA IMPORT --------------------------
+  // What the API called the rows the import has already put up. Only the
+  // trainings, their items, the sessions and the assessments are tracked: the
+  // pinned builtins and the builtin weight overrides upsert on a natural key
+  // server side, so sending one twice updates the same row rather than adding
+  // a second, and there is nothing to remember for them.
+
+  /// The local to server id map the import has established so far, for the
+  /// trainings it has already put on the server and for their items. A session
+  /// imported on a later attempt still has to name the training it was played
+  /// from and the blocks its reps came from, and neither id survives in memory
+  /// between two runs.
+  Future<({Map<String, String> trainings, Map<String, String> items})>
+  importedTrainingIds() async {
+    final trainingRows = await (select(
+      trainings,
+    )..where((t) => t.serverId.isNotNull())).get();
+    final itemRows = await (select(
+      trainingItems,
+    )..where((i) => i.serverId.isNotNull())).get();
+    return (
+      trainings: {for (final row in trainingRows) row.id: row.serverId!},
+      items: {for (final row in itemRows) row.id: row.serverId!},
+    );
+  }
+
+  /// Records what the API called a training and each of its items, so a retry
+  /// skips the upload and still resolves the links its sessions carry.
+  Future<void> markTrainingImported(
+    String localId,
+    String serverId,
+    Map<String, String> itemIds,
+  ) => transaction(() async {
+    await (update(trainings)..where((t) => t.id.equals(localId))).write(
+      TrainingsCompanion(serverId: Value(serverId)),
+    );
+    for (final entry in itemIds.entries) {
+      await (update(trainingItems)..where((i) => i.id.equals(entry.key))).write(
+        TrainingItemsCompanion(serverId: Value(entry.value)),
+      );
+    }
+  });
+
+  Future<void> markSessionImported(String localId, String serverId) =>
+      (update(sessions)..where((s) => s.id.equals(localId))).write(
+        SessionsCompanion(serverId: Value(serverId)),
+      );
+
+  Future<void> markAssessmentImported(String localId, String serverId) =>
+      (update(assessments)..where((a) => a.id.equals(localId))).write(
+        AssessmentsCompanion(serverId: Value(serverId)),
+      );
+
+  /// The sessions still to import: the ones never uploaded, and the ones whose
+  /// own upload succeeded while one of their assessments did not. Leaving that
+  /// second kind out would let the run report nothing left to do while a result
+  /// is still stranded on the device.
+  Future<List<Session>> pendingSessions() {
+    final withPendingResult = selectOnly(assessments)
+      ..addColumns([assessments.sessionId])
+      ..where(assessments.serverId.isNull());
+    return (select(sessions)..where(
+          (s) => s.serverId.isNull() | s.id.isInQuery(withPendingResult),
+        ))
+        .get();
+  }
+
+  /// Makes [userId] the account the import marks belong to, dropping the marks
+  /// first when they were made against a different one. A server id says where
+  /// a row went, and it says nothing at all about an account that has never
+  /// seen it.
+  Future<void> retargetImport(String userId) => transaction(() async {
+    final current = await select(guestImportTargets).getSingleOrNull();
+    if (current != null && current.userId == userId) return;
+    await _clearImportMarks();
+    await delete(guestImportTargets).go();
+    await into(
+      guestImportTargets,
+    ).insert(GuestImportTargetsCompanion.insert(userId: userId));
+  });
+
+  Future<void> _clearImportMarks() async {
+    await update(
+      sessions,
+    ).write(const SessionsCompanion(serverId: Value(null)));
+    await update(
+      trainings,
+    ).write(const TrainingsCompanion(serverId: Value(null)));
+    await update(
+      trainingItems,
+    ).write(const TrainingItemsCompanion(serverId: Value(null)));
+    await update(
+      assessments,
+    ).write(const AssessmentsCompanion(serverId: Value(null)));
+  }
+
+  /// The trainings still to import.
+  Future<List<Training>> pendingTrainings() async {
+    final imported = (await importedTrainingIds()).trainings;
+    return (await getAllTrainings())
+        .where((t) => !imported.containsKey(t.id))
+        .toList();
+  }
+
   Future<void> wipeLocalData() async {
     await delete(assessments).go();
     await delete(repDatas).go();
@@ -1106,7 +1250,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1473,6 +1617,17 @@ class AppDatabase extends _$AppDatabase {
         // from a training that may have drifted since, and a snapshot taken
         // now would freeze that drift as though the run had played it.
         await m.addColumn(schema.sessions, schema.sessions.prescriptionJson);
+      },
+      from12To13: (m, schema) async {
+        // The guest import now records what it managed to upload, so a retry
+        // after a partial failure skips what is already on the server instead
+        // of sending it a second time. Everything stored before this is left
+        // null, which is what an unimported row looks like anyway.
+        await m.addColumn(schema.sessions, schema.sessions.serverId);
+        await m.addColumn(schema.trainings, schema.trainings.serverId);
+        await m.addColumn(schema.assessments, schema.assessments.serverId);
+        await m.addColumn(schema.trainingItems, schema.trainingItems.serverId);
+        await m.createTable(schema.guestImportTargets);
       },
     ),
   );

@@ -1,3 +1,4 @@
+import 'package:crimpy/services/local_data_migration.dart';
 import 'package:crimpy/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,6 +24,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  /// Names what is left to import, leaving out the parts there are none of: a
+  /// retry after a partial run often has only one kind of row still to go, and
+  /// offering to import "0 session(s)" reads like a bug.
+  String _localDataSummary(LocalImportStatus status) {
+    final parts = [
+      if (status.sessionCount > 0) '${status.sessionCount} session(s)',
+      if (status.trainingCount > 0) '${status.trainingCount} training(s)',
+      if (status.otherCount > 0) '${status.otherCount} saved preference(s)',
+    ];
+    if (parts.length == 1) return parts.single;
+    return '${parts.sublist(0, parts.length - 1).join(', ')} and ${parts.last}';
   }
 
   void _showImportFailure(int failures) {
@@ -65,8 +79,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           builder: (ctx) => AlertDialog(
             title: const Text('Import local data?'),
             content: Text(
-              'You have ${localStatus.sessionCount} session(s) and '
-              '${localStatus.trainingCount} training(s) stored locally. '
+              'You have ${_localDataSummary(localStatus)} stored locally. '
               'Import them to your account?',
             ),
             actions: [

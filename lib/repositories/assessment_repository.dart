@@ -3,7 +3,9 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 
 abstract class AssessmentRepository {
-  Future<void> saveAssessment(
+  /// Saves a result and hands back the id storage gave it, which the guest
+  /// import records so a retry does not send the same result twice.
+  Future<String> saveAssessment(
     AssessmentResultModel assessment,
     String sessionId,
   );
@@ -44,7 +46,7 @@ class LocalAssessmentRepository extends AssessmentRepository {
     : _database = database ?? gDatabase;
 
   @override
-  Future<void> saveAssessment(
+  Future<String> saveAssessment(
     AssessmentResultModel assessment,
     String sessionId,
   ) => _database.saveAssessment(assessment, sessionId);
