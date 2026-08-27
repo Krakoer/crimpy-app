@@ -814,12 +814,11 @@ class AppDatabase extends _$AppDatabase {
       final keptIds = <String>{};
       await _syncItems(training.items, training.id, null, keptIds);
 
-      await (delete(trainingItems)..where((i) {
-            final ofTraining = i.trainingId.equals(training.id);
-            // An empty tree keeps nothing, and `id NOT IN ()` is not valid SQL.
-            if (keptIds.isEmpty) return ofTraining;
-            return ofTraining & i.id.isNotIn(keptIds);
-          }))
+      // An empty set of kept ids deletes the whole tree: drift reads `isNotIn`
+      // on no value as true rather than emitting `id NOT IN ()`.
+      await (delete(trainingItems)..where(
+            (i) => i.trainingId.equals(training.id) & i.id.isNotIn(keptIds),
+          ))
           .go();
     });
   }

@@ -1,6 +1,9 @@
 import 'package:crimpy/database/database.dart';
+import 'package:crimpy/models/common.dart';
+import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -182,17 +185,75 @@ void main() {
     );
   });
 
+  // The refusal comes after the title write and after the insert of the added
+  // item, so nothing but the transaction can take those back.
   test('a refused update leaves the stored tree untouched', () async {
     final stored = await store([rep(position: 0), rep(position: 1)]);
     final before = await storedItemIds(stored.id);
 
     await expectLater(
       db.updateTraining(
-        stored.copyWith(items: [stored.items[0], stored.items[0]]),
+        stored.copyWith(
+          title: 'Renamed',
+          items: [rep(position: 0), stored.items[0], stored.items[0]],
+        ),
       ),
       throwsStateError,
     );
 
     expect(await storedItemIds(stored.id), before);
+    expect((await db.getTraining(stored.id))!.title, 'Session');
   });
+
+  // What the rotating ids cost: a count recorded against an item is written by
+  // id and recomputed by nothing, so it is only readable while the id holds.
+  test(
+    'a recorded open rep count still names its item after an edit',
+    () async {
+      final stored = await store([
+        TrainingItem(
+          id: '',
+          type: TrainingItemType.exercise,
+          position: 0,
+          repsIsMax: true,
+          freeText: 'Pull ups',
+        ),
+        rep(position: 1),
+      ]);
+      final amrap = stored.items[0];
+
+      final sessionId = await db.saveSession(
+        SessionModel(
+          name: 'Session',
+          isAssessment: false,
+          origin: SessionOrigin.played,
+          trainingId: stored.id,
+        ),
+        const [],
+        itemResults: [
+          SessionItemResultModel(
+            trainingItemId: amrap.id,
+            occurrence: 0,
+            field: SessionItemField.reps,
+            value: 9,
+          ),
+        ],
+      );
+
+      // An edit that never touched the item the count answers.
+      await db.updateTraining(
+        stored.copyWith(
+          items: [amrap, stored.items[1].copyWith(worktimeSeconds: 12)],
+        ),
+      );
+
+      final reread = (await db.getTraining(stored.id))!;
+      final results = openItemResults(
+        await db.getItemResultsForSession(sessionId),
+        reread.items,
+      );
+      expect(results, hasLength(1));
+      expect(results.single.values, [9]);
+    },
+  );
 }
