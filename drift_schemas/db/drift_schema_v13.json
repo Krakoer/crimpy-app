@@ -1166,6 +1166,43 @@
       "references": [],
       "type": "table",
       "data": {
+        "name": "guest_import_targets",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "id",
+            "getter_name": "id",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "user_id",
+            "getter_name": "userId",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "references": [],
+      "type": "table",
+      "data": {
         "name": "users",
         "was_declared_in_moor": false,
         "columns": [
@@ -1373,6 +1410,15 @@
         {
           "dialect": "sqlite",
           "sql": "CREATE TABLE IF NOT EXISTS \"pinned_builtin_trainings\" (\"builtin_training_id\" TEXT NOT NULL, \"updated_at\" INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)), PRIMARY KEY (\"builtin_training_id\"));"
+        }
+      ]
+    },
+    {
+      "name": "guest_import_targets",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"guest_import_targets\" (\"id\" INTEGER NOT NULL DEFAULT 0, \"user_id\" TEXT NOT NULL, PRIMARY KEY (\"id\"));"
         }
       ]
     },

@@ -5012,6 +5012,182 @@ class PinnedBuiltinTrainingsCompanion
   }
 }
 
+class GuestImportTargets extends Table
+    with TableInfo<GuestImportTargets, GuestImportTargetsData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  GuestImportTargets(this.attachedDatabase, [this._alias]);
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    $customConstraints: 'NOT NULL DEFAULT 0',
+    defaultValue: const CustomExpression('0'),
+  );
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    $customConstraints: 'NOT NULL',
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, userId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'guest_import_targets';
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GuestImportTargetsData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GuestImportTargetsData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+    );
+  }
+
+  @override
+  GuestImportTargets createAlias(String alias) {
+    return GuestImportTargets(attachedDatabase, alias);
+  }
+
+  @override
+  List<String> get customConstraints => const ['PRIMARY KEY(id)'];
+  @override
+  bool get dontWriteConstraints => true;
+}
+
+class GuestImportTargetsData extends DataClass
+    implements Insertable<GuestImportTargetsData> {
+  final int id;
+  final String userId;
+  const GuestImportTargetsData({required this.id, required this.userId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['user_id'] = Variable<String>(userId);
+    return map;
+  }
+
+  GuestImportTargetsCompanion toCompanion(bool nullToAbsent) {
+    return GuestImportTargetsCompanion(id: Value(id), userId: Value(userId));
+  }
+
+  factory GuestImportTargetsData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GuestImportTargetsData(
+      id: serializer.fromJson<int>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'userId': serializer.toJson<String>(userId),
+    };
+  }
+
+  GuestImportTargetsData copyWith({int? id, String? userId}) =>
+      GuestImportTargetsData(id: id ?? this.id, userId: userId ?? this.userId);
+  GuestImportTargetsData copyWithCompanion(GuestImportTargetsCompanion data) {
+    return GuestImportTargetsData(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GuestImportTargetsData(')
+          ..write('id: $id, ')
+          ..write('userId: $userId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, userId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GuestImportTargetsData &&
+          other.id == this.id &&
+          other.userId == this.userId);
+}
+
+class GuestImportTargetsCompanion
+    extends UpdateCompanion<GuestImportTargetsData> {
+  final Value<int> id;
+  final Value<String> userId;
+  const GuestImportTargetsCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+  });
+  GuestImportTargetsCompanion.insert({
+    this.id = const Value.absent(),
+    required String userId,
+  }) : userId = Value(userId);
+  static Insertable<GuestImportTargetsData> custom({
+    Expression<int>? id,
+    Expression<String>? userId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+    });
+  }
+
+  GuestImportTargetsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? userId,
+  }) {
+    return GuestImportTargetsCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GuestImportTargetsCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class Users extends Table with TableInfo<Users, UsersData> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -5494,6 +5670,7 @@ class DatabaseAtV13 extends GeneratedDatabase {
       BuiltinTrainingWeights(this);
   late final PinnedBuiltinTrainings pinnedBuiltinTrainings =
       PinnedBuiltinTrainings(this);
+  late final GuestImportTargets guestImportTargets = GuestImportTargets(this);
   late final Users users = Users(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -5510,6 +5687,7 @@ class DatabaseAtV13 extends GeneratedDatabase {
     sensorConfigs,
     builtinTrainingWeights,
     pinnedBuiltinTrainings,
+    guestImportTargets,
     users,
   ];
   @override

@@ -3670,6 +3670,7 @@ final class Schema13 extends i0.VersionedSchema {
     sensorConfigs,
     builtinTrainingWeights,
     pinnedBuiltinTrainings,
+    guestImportTargets,
     users,
   ];
   late final Shape22 sessions = Shape22(
@@ -3889,6 +3890,17 @@ final class Schema13 extends i0.VersionedSchema {
     ),
     alias: null,
   );
+  late final Shape26 guestImportTargets = Shape26(
+    source: i0.VersionedTable(
+      entityName: 'guest_import_targets',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [_column_85, _column_86],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
   late final Shape8 users = Shape8(
     source: i0.VersionedTable(
       entityName: 'users',
@@ -4045,6 +4057,31 @@ class Shape25 extends i0.VersionedTable {
       columnsByName['updated_at']! as i1.GeneratedColumn<int>;
 }
 
+class Shape26 extends i0.VersionedTable {
+  Shape26({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<int> get id =>
+      columnsByName['id']! as i1.GeneratedColumn<int>;
+  i1.GeneratedColumn<String> get userId =>
+      columnsByName['user_id']! as i1.GeneratedColumn<String>;
+}
+
+i1.GeneratedColumn<int> _column_85(String aliasedName) =>
+    i1.GeneratedColumn<int>(
+      'id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.int,
+      $customConstraints: 'NOT NULL DEFAULT 0',
+      defaultValue: const i1.CustomExpression('0'),
+    );
+i1.GeneratedColumn<String> _column_86(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'user_id',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,

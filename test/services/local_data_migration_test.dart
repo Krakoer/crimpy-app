@@ -29,6 +29,7 @@ class _FakeRemoteTrainings implements TrainingRepository {
   final Set<String> refusedTitles;
   final Map<String, Training> stored = {};
   final List<_PostedSession> postedSessions = [];
+  final List<String> sessionIds = [];
   final List<String> calls = [];
   int _next = 0;
 
@@ -36,9 +37,14 @@ class _FakeRemoteTrainings implements TrainingRepository {
   /// and fail its sessions the way a dropped connection would.
   final bool refusedSessions;
 
+  /// Stores the training with no items at all, standing in for a response whose
+  /// tree does not line up with what was sent.
+  final bool dropsItems;
+
   _FakeRemoteTrainings({
     this.refusedTitles = const {},
     this.refusedSessions = false,
+    this.dropsItems = false,
   });
 
   String _mintId(String prefix) => '$prefix-${_next++}';
@@ -63,7 +69,7 @@ class _FakeRemoteTrainings implements TrainingRepository {
     return stored[id] = Training(
       id: id,
       title: training.title,
-      items: _mintItems(training.items),
+      items: dropsItems ? const [] : _mintItems(training.items),
     );
   }
 
@@ -77,7 +83,9 @@ class _FakeRemoteTrainings implements TrainingRepository {
     calls.add('session');
     if (refusedSessions) throw Exception('refused session');
     postedSessions.add(_PostedSession(session, reps, itemResults));
-    return _mintId('server-session');
+    final id = _mintId('server-session');
+    sessionIds.add(id);
+    return id;
   }
 
   // The import calls nothing else, so anything that reaches here is a test that
@@ -113,6 +121,10 @@ class _FakeRemoteAssessments implements AssessmentRepository {
 }
 
 class _FakeApiClient extends ApiClient {}
+
+/// The account the import uploads to. Written to storage in setUp, the way a
+/// login does, since the marks the import leaves are kept per account.
+const _userId = 'user-1';
 
 void main() {
   late AppDatabase db;
@@ -184,7 +196,7 @@ void main() {
       ]);
 
       final remote = _FakeRemoteTrainings();
-      final failures = await migrationWith(remote).uploadAll();
+      final failures = await migrationWith(remote).uploadAll(_userId);
 
       expect(failures, 0);
       final posted = remote.postedSessions.single;
@@ -201,7 +213,7 @@ void main() {
       await db.saveSession(playedSession(trainingId: local.id), [rep()]);
 
       final remote = _FakeRemoteTrainings();
-      await migrationWith(remote).uploadAll();
+      await migrationWith(remote).uploadAll(_userId);
 
       expect(remote.calls, ['training', 'session']);
     });
@@ -223,7 +235,7 @@ void main() {
       );
 
       final remote = _FakeRemoteTrainings();
-      await migrationWith(remote).uploadAll();
+      await migrationWith(remote).uploadAll(_userId);
 
       final posted = remote.postedSessions.single;
       final serverExerciseId =
@@ -243,7 +255,7 @@ void main() {
       ]);
 
       final remote = _FakeRemoteTrainings();
-      final failures = await migrationWith(remote).uploadAll();
+      final failures = await migrationWith(remote).uploadAll(_userId);
 
       expect(failures, 0);
       expect(remote.postedSessions.single.reps.single.trainingItemId, isNull);
@@ -267,7 +279,7 @@ void main() {
       );
 
       final remote = _FakeRemoteTrainings();
-      final failures = await migrationWith(remote).uploadAll();
+      final failures = await migrationWith(remote).uploadAll(_userId);
 
       expect(failures, 0);
       expect(remote.postedSessions.single.itemResults, isEmpty);
@@ -284,7 +296,7 @@ void main() {
       await db.saveSession(playedSession(trainingId: local.id), [rep()]);
 
       final remote = _FakeRemoteTrainings(refusedTitles: {'Refused'});
-      final failures = await migrationWith(remote).uploadAll();
+      final failures = await migrationWith(remote).uploadAll(_userId);
 
       expect(remote.postedSessions, isEmpty);
       expect(failures, 2);
@@ -299,7 +311,7 @@ void main() {
       ]);
 
       final remote = _FakeRemoteTrainings();
-      final failures = await migrationWith(remote).uploadAll();
+      final failures = await migrationWith(remote).uploadAll(_userId);
 
       expect(failures, 0);
       final posted = remote.postedSessions.single;
@@ -313,8 +325,8 @@ void main() {
       await saveLocalTraining();
 
       final remote = _FakeRemoteTrainings();
-      await migrationWith(remote).uploadAll();
-      await migrationWith(remote).uploadAll();
+      await migrationWith(remote).uploadAll(_userId);
+      await migrationWith(remote).uploadAll(_userId);
 
       expect(remote.calls.where((c) => c == 'training').length, 1);
       expect(remote.stored, hasLength(1));
@@ -325,8 +337,8 @@ void main() {
       await db.saveSession(playedSession(trainingId: local.id), [rep()]);
 
       final remote = _FakeRemoteTrainings();
-      await migrationWith(remote).uploadAll();
-      await migrationWith(remote).uploadAll();
+      await migrationWith(remote).uploadAll(_userId);
+      await migrationWith(remote).uploadAll(_userId);
 
       expect(remote.postedSessions, hasLength(1));
     });
@@ -345,11 +357,11 @@ void main() {
 
         // The training lands, the session does not.
         final firstRemote = _FakeRemoteTrainings(refusedSessions: true);
-        expect(await migrationWith(firstRemote).uploadAll(), 1);
+        expect(await migrationWith(firstRemote).uploadAll(_userId), 1);
         final serverTraining = firstRemote.stored.values.single;
 
         final secondRemote = _FakeRemoteTrainings();
-        expect(await migrationWith(secondRemote).uploadAll(), 0);
+        expect(await migrationWith(secondRemote).uploadAll(_userId), 0);
 
         expect(secondRemote.calls.where((c) => c == 'training'), isEmpty);
         final posted = secondRemote.postedSessions.single;
@@ -381,17 +393,22 @@ void main() {
 
       final remote = _FakeRemoteTrainings();
       final refusing = _FakeRemoteAssessments(refusals: 1);
-      expect(await migrationWith(remote, assessments: refusing).uploadAll(), 1);
+      expect(
+        await migrationWith(remote, assessments: refusing).uploadAll(_userId),
+        1,
+      );
       expect(remote.postedSessions, hasLength(1));
 
       final accepting = _FakeRemoteAssessments();
       expect(
-        await migrationWith(remote, assessments: accepting).uploadAll(),
+        await migrationWith(remote, assessments: accepting).uploadAll(_userId),
         0,
       );
 
       expect(remote.postedSessions, hasLength(1));
-      expect(accepting.savedSessionIds, hasLength(1));
+      // The retry has to answer the session id the first run was given, not a
+      // fresh one and not an empty string.
+      expect(accepting.savedSessionIds, [remote.sessionIds.single]);
     });
 
     test('counts only what is left when asked what is pending', () async {
@@ -403,11 +420,73 @@ void main() {
       expect((await migration.pendingData()).sessionCount, 1);
       expect((await migration.pendingData()).trainingCount, 1);
 
-      await migration.uploadAll();
+      await migration.uploadAll(_userId);
 
       final left = await migration.pendingData();
       expect(left.trainingCount, 0);
       expect(left.sessionCount, 1);
+    });
+  });
+
+  group('signing in as a different account', () {
+    // A server id says where a row went. Skipping it for an account that has
+    // never seen it, and then wiping the local copy because the run reported no
+    // failures, takes the row off the device for good.
+    test('re-imports rows the earlier account already took', () async {
+      await saveLocalTraining();
+
+      final first = _FakeRemoteTrainings();
+      await migrationWith(first).uploadAll(_userId);
+      expect(first.stored, hasLength(1));
+
+      final second = _FakeRemoteTrainings();
+      await migrationWith(second).uploadAll('user-2');
+
+      expect(second.stored, hasLength(1));
+    });
+
+    test('keeps skipping them for the account that took them', () async {
+      await saveLocalTraining();
+
+      final first = _FakeRemoteTrainings();
+      await migrationWith(first).uploadAll(_userId);
+      await migrationWith(first).uploadAll('user-2');
+      final third = _FakeRemoteTrainings();
+      await migrationWith(third).uploadAll('user-2');
+
+      expect(third.stored, isEmpty);
+    });
+  });
+
+  group('what is left to import', () {
+    // A run whose only failure was a pin used to report nothing pending, so the
+    // dialog never came back and the pin went with the next wipe.
+    test('counts a pinned builtin nothing else accounts for', () async {
+      await db.pinBuiltinTraining('builtin-1');
+
+      final status = await migrationWith(_FakeRemoteTrainings()).pendingData();
+
+      expect(status.sessionCount, 0);
+      expect(status.trainingCount, 0);
+      expect(status.otherCount, 1);
+      expect(status.hasData, isTrue);
+    });
+  });
+
+  group('a training the server stored under a shape it was not sent', () {
+    // It is on the server whichever way the pairing went, so the run has to
+    // remember it or the next one makes a second copy.
+    test('is still recorded, so a retry does not send it twice', () async {
+      await saveLocalTraining();
+
+      final remote = _FakeRemoteTrainings(dropsItems: true);
+      expect(await migrationWith(remote).uploadAll(_userId), 1);
+      expect(remote.stored, hasLength(1));
+
+      final retry = _FakeRemoteTrainings();
+      await migrationWith(retry).uploadAll(_userId);
+
+      expect(retry.stored, isEmpty);
     });
   });
 }

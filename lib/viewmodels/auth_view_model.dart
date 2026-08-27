@@ -182,8 +182,19 @@ class AuthState extends _$AuthState {
   Future<LocalImportStatus> checkLocalDataBeforeLogin() =>
       ref.read(localDataMigrationProvider).pendingData();
 
-  Future<int> importLocalDataToApi() =>
-      ref.read(localDataMigrationProvider).uploadAll();
+  /// Uploads the guest data to the account that just signed in. The user id is
+  /// read from storage rather than taken on trust: the import marks are kept
+  /// per account, and marking a row against the wrong one loses it.
+  Future<int> importLocalDataToApi() async {
+    final user = await ref.read(userRepositoryProvider).currentUser();
+    if (user == null) {
+      AppLoggerHelper.error(
+        'Local data import asked for with nobody signed in',
+      );
+      return 0;
+    }
+    return ref.read(localDataMigrationProvider).uploadAll(user.id);
+  }
 
   Future<void> clearLocalDataAfterLogin() async {
     await ref.read(localDataMigrationProvider).clearLocalData();

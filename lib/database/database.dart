@@ -307,6 +307,21 @@ class SessionItemResults extends Table {
   ];
 }
 
+// Which account the guest import marks belong to. A server id recorded on a row
+// only means anything against the account it was uploaded to: without this, an
+// athlete who is dropped back to guest mode by an expired token and then signs
+// in as somebody else would have those rows skipped as already imported, and
+// then wiped once the run reported no failures, losing them from the device
+// while they sit on the first account.
+class GuestImportTargets extends Table {
+  // Always zero: the table holds one row, or none before the first import.
+  late final IntColumn id = integer().withDefault(const Constant(0))();
+  late final TextColumn userId = text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // Stores the IDs of pinned builtin trainings
 class PinnedBuiltinTrainings extends Table {
   late final TextColumn builtinTrainingId = text()();
@@ -390,6 +405,7 @@ class Users extends Table {
     SensorConfigs,
     BuiltinTrainingWeights,
     PinnedBuiltinTrainings,
+    GuestImportTargets,
     Users,
   ],
 )
@@ -1176,18 +1192,43 @@ class AppDatabase extends _$AppDatabase {
   /// own upload succeeded while one of their assessments did not. Leaving that
   /// second kind out would let the run report nothing left to do while a result
   /// is still stranded on the device.
-  Future<List<Session>> pendingSessions() async {
-    final rows = await select(sessions).get();
-    final pending = <Session>[];
-    for (final row in rows) {
-      if (row.serverId == null) {
-        pending.add(row);
-        continue;
-      }
-      final results = await getAssessmentsForSession(row.id);
-      if (results.any((a) => a.serverId == null)) pending.add(row);
-    }
-    return pending;
+  Future<List<Session>> pendingSessions() {
+    final withPendingResult = selectOnly(assessments)
+      ..addColumns([assessments.sessionId])
+      ..where(assessments.serverId.isNull());
+    return (select(sessions)..where(
+          (s) => s.serverId.isNull() | s.id.isInQuery(withPendingResult),
+        ))
+        .get();
+  }
+
+  /// Makes [userId] the account the import marks belong to, dropping the marks
+  /// first when they were made against a different one. A server id says where
+  /// a row went, and it says nothing at all about an account that has never
+  /// seen it.
+  Future<void> retargetImport(String userId) => transaction(() async {
+    final current = await select(guestImportTargets).getSingleOrNull();
+    if (current != null && current.userId == userId) return;
+    await _clearImportMarks();
+    await delete(guestImportTargets).go();
+    await into(
+      guestImportTargets,
+    ).insert(GuestImportTargetsCompanion.insert(userId: userId));
+  });
+
+  Future<void> _clearImportMarks() async {
+    await update(
+      sessions,
+    ).write(const SessionsCompanion(serverId: Value(null)));
+    await update(
+      trainings,
+    ).write(const TrainingsCompanion(serverId: Value(null)));
+    await update(
+      trainingItems,
+    ).write(const TrainingItemsCompanion(serverId: Value(null)));
+    await update(
+      assessments,
+    ).write(const AssessmentsCompanion(serverId: Value(null)));
   }
 
   /// The trainings still to import.
@@ -1586,6 +1627,7 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(schema.trainings, schema.trainings.serverId);
         await m.addColumn(schema.assessments, schema.assessments.serverId);
         await m.addColumn(schema.trainingItems, schema.trainingItems.serverId);
+        await m.createTable(schema.guestImportTargets);
       },
     ),
   );

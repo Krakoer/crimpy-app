@@ -5953,6 +5953,199 @@ class PinnedBuiltinTrainingsCompanion
   }
 }
 
+class $GuestImportTargetsTable extends GuestImportTargets
+    with TableInfo<$GuestImportTargetsTable, GuestImportTarget> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GuestImportTargetsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, userId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'guest_import_targets';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GuestImportTarget> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GuestImportTarget map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GuestImportTarget(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+    );
+  }
+
+  @override
+  $GuestImportTargetsTable createAlias(String alias) {
+    return $GuestImportTargetsTable(attachedDatabase, alias);
+  }
+}
+
+class GuestImportTarget extends DataClass
+    implements Insertable<GuestImportTarget> {
+  final int id;
+  final String userId;
+  const GuestImportTarget({required this.id, required this.userId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['user_id'] = Variable<String>(userId);
+    return map;
+  }
+
+  GuestImportTargetsCompanion toCompanion(bool nullToAbsent) {
+    return GuestImportTargetsCompanion(id: Value(id), userId: Value(userId));
+  }
+
+  factory GuestImportTarget.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GuestImportTarget(
+      id: serializer.fromJson<int>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'userId': serializer.toJson<String>(userId),
+    };
+  }
+
+  GuestImportTarget copyWith({int? id, String? userId}) =>
+      GuestImportTarget(id: id ?? this.id, userId: userId ?? this.userId);
+  GuestImportTarget copyWithCompanion(GuestImportTargetsCompanion data) {
+    return GuestImportTarget(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GuestImportTarget(')
+          ..write('id: $id, ')
+          ..write('userId: $userId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, userId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GuestImportTarget &&
+          other.id == this.id &&
+          other.userId == this.userId);
+}
+
+class GuestImportTargetsCompanion extends UpdateCompanion<GuestImportTarget> {
+  final Value<int> id;
+  final Value<String> userId;
+  const GuestImportTargetsCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+  });
+  GuestImportTargetsCompanion.insert({
+    this.id = const Value.absent(),
+    required String userId,
+  }) : userId = Value(userId);
+  static Insertable<GuestImportTarget> custom({
+    Expression<int>? id,
+    Expression<String>? userId,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+    });
+  }
+
+  GuestImportTargetsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? userId,
+  }) {
+    return GuestImportTargetsCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GuestImportTargetsCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $UsersTable extends Users with TableInfo<$UsersTable, User> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -6539,6 +6732,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $BuiltinTrainingWeightsTable(this);
   late final $PinnedBuiltinTrainingsTable pinnedBuiltinTrainings =
       $PinnedBuiltinTrainingsTable(this);
+  late final $GuestImportTargetsTable guestImportTargets =
+      $GuestImportTargetsTable(this);
   late final $UsersTable users = $UsersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -6555,6 +6750,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sensorConfigs,
     builtinTrainingWeights,
     pinnedBuiltinTrainings,
+    guestImportTargets,
     users,
   ];
 }
@@ -9521,6 +9717,147 @@ typedef $$PinnedBuiltinTrainingsTableProcessedTableManager =
       PinnedBuiltinTraining,
       PrefetchHooks Function()
     >;
+typedef $$GuestImportTargetsTableCreateCompanionBuilder =
+    GuestImportTargetsCompanion Function({
+      Value<int> id,
+      required String userId,
+    });
+typedef $$GuestImportTargetsTableUpdateCompanionBuilder =
+    GuestImportTargetsCompanion Function({Value<int> id, Value<String> userId});
+
+class $$GuestImportTargetsTableFilterComposer
+    extends Composer<_$AppDatabase, $GuestImportTargetsTable> {
+  $$GuestImportTargetsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GuestImportTargetsTableOrderingComposer
+    extends Composer<_$AppDatabase, $GuestImportTargetsTable> {
+  $$GuestImportTargetsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GuestImportTargetsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GuestImportTargetsTable> {
+  $$GuestImportTargetsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+}
+
+class $$GuestImportTargetsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GuestImportTargetsTable,
+          GuestImportTarget,
+          $$GuestImportTargetsTableFilterComposer,
+          $$GuestImportTargetsTableOrderingComposer,
+          $$GuestImportTargetsTableAnnotationComposer,
+          $$GuestImportTargetsTableCreateCompanionBuilder,
+          $$GuestImportTargetsTableUpdateCompanionBuilder,
+          (
+            GuestImportTarget,
+            BaseReferences<
+              _$AppDatabase,
+              $GuestImportTargetsTable,
+              GuestImportTarget
+            >,
+          ),
+          GuestImportTarget,
+          PrefetchHooks Function()
+        > {
+  $$GuestImportTargetsTableTableManager(
+    _$AppDatabase db,
+    $GuestImportTargetsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GuestImportTargetsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GuestImportTargetsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GuestImportTargetsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+              }) => GuestImportTargetsCompanion(id: id, userId: userId),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String userId,
+              }) => GuestImportTargetsCompanion.insert(id: id, userId: userId),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GuestImportTargetsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GuestImportTargetsTable,
+      GuestImportTarget,
+      $$GuestImportTargetsTableFilterComposer,
+      $$GuestImportTargetsTableOrderingComposer,
+      $$GuestImportTargetsTableAnnotationComposer,
+      $$GuestImportTargetsTableCreateCompanionBuilder,
+      $$GuestImportTargetsTableUpdateCompanionBuilder,
+      (
+        GuestImportTarget,
+        BaseReferences<
+          _$AppDatabase,
+          $GuestImportTargetsTable,
+          GuestImportTarget
+        >,
+      ),
+      GuestImportTarget,
+      PrefetchHooks Function()
+    >;
 typedef $$UsersTableCreateCompanionBuilder =
     UsersCompanion Function({
       required String id,
@@ -9824,6 +10161,8 @@ class $AppDatabaseManager {
         _db,
         _db.pinnedBuiltinTrainings,
       );
+  $$GuestImportTargetsTableTableManager get guestImportTargets =>
+      $$GuestImportTargetsTableTableManager(_db, _db.guestImportTargets);
   $$UsersTableTableManager get users =>
       $$UsersTableTableManager(_db, _db.users);
 }
