@@ -530,6 +530,12 @@ class TrainingItem {
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{'type': type.apiValue};
+    // Sent back on an update so the stored row keeps its id: the reps, the open
+    // counts and the program overrides recorded against this item all key on
+    // it, and an item that comes back under a new id strands every one of them.
+    // Empty on an item the editor just added or duplicated, which is what tells
+    // the backend to give it one.
+    if (id.isNotEmpty) map['id'] = id;
     if (worktimeSeconds != null) map['worktime_seconds'] = worktimeSeconds;
     if (restSeconds != null) map['rest_seconds'] = restSeconds;
     if (cycles != null) map['cycles'] = cycles;
