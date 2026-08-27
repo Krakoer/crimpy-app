@@ -149,6 +149,12 @@ class Trainings extends Table {
   /// everything that already went up.
   late final TextColumn serverId = text().nullable()();
 
+  /// When the import last put this training on the server, and so the moment
+  /// the copy the server holds was written from. Every local edit clears it,
+  /// which is what tells the next run the stored copy is behind and has to be
+  /// updated rather than skipped.
+  late final DateTimeColumn importedAt = dateTime().nullable()();
+
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
   )();
@@ -852,11 +858,16 @@ class AppDatabase extends _$AppDatabase {
   /// never touched the item they point at.
   Future<void> updateTraining(Training training) async {
     await transaction(() async {
+      // The mark the guest import left says the server holds this training as
+      // it was written then, and it no longer does. Clearing it is what has the
+      // next run update the stored copy instead of skipping a training it
+      // believes is already up.
       await (update(trainings)..where((t) => t.id.equals(training.id))).write(
         TrainingsCompanion(
           title: Value(training.title),
           description: Value(training.description),
           isFavorite: Value(training.isFavorite),
+          importedAt: const Value(null),
           updatedAt: Value(DateTime.now()),
         ),
       );
@@ -881,6 +892,7 @@ class AppDatabase extends _$AppDatabase {
     await (update(trainings)..where((t) => t.id.equals(trainingId))).write(
       TrainingsCompanion(
         isFavorite: Value(!row.isFavorite),
+        importedAt: const Value(null),
         updatedAt: Value(DateTime.now()),
       ),
     );
@@ -1162,14 +1174,20 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Records what the API called a training and each of its items, so a retry
-  /// skips the upload and still resolves the links its sessions carry.
+  /// skips the upload and still resolves the links its sessions carry. The mark
+  /// is stamped with the moment it was made, which the next local edit clears:
+  /// that is what has the run after it update the stored copy rather than skip
+  /// a training the server holds an older version of.
   Future<void> markTrainingImported(
     String localId,
     String serverId,
     Map<String, String> itemIds,
   ) => transaction(() async {
     await (update(trainings)..where((t) => t.id.equals(localId))).write(
-      TrainingsCompanion(serverId: Value(serverId)),
+      TrainingsCompanion(
+        serverId: Value(serverId),
+        importedAt: Value(DateTime.now()),
+      ),
     );
     for (final entry in itemIds.entries) {
       await (update(trainingItems)..where((i) => i.id.equals(entry.key))).write(
@@ -1220,9 +1238,9 @@ class AppDatabase extends _$AppDatabase {
     await update(
       sessions,
     ).write(const SessionsCompanion(serverId: Value(null)));
-    await update(
-      trainings,
-    ).write(const TrainingsCompanion(serverId: Value(null)));
+    await update(trainings).write(
+      const TrainingsCompanion(serverId: Value(null), importedAt: Value(null)),
+    );
     await update(
       trainingItems,
     ).write(const TrainingItemsCompanion(serverId: Value(null)));
@@ -1231,11 +1249,31 @@ class AppDatabase extends _$AppDatabase {
     ).write(const AssessmentsCompanion(serverId: Value(null)));
   }
 
-  /// The trainings still to import.
+  /// The trainings the import already put on the server and the athlete has
+  /// edited since. The server holds a copy of what the training was, so the
+  /// next run has to update it: skipping it leaves the edit on the device for
+  /// good, and the items the edit added with no server id to name them, which
+  /// strands the reps and the open counts of every session played from them.
+  ///
+  /// A local edit clears the time the mark was made, so a training carrying a
+  /// server id and no time is one the server holds an older copy of. The marks
+  /// written before the time was recorded read as behind for the same reason:
+  /// nothing says whether an edit came after them, and an update the server did
+  /// not need costs one request.
+  Future<Set<String>> staleImportedTrainingIds() async {
+    final rows = await (select(
+      trainings,
+    )..where((t) => t.serverId.isNotNull() & t.importedAt.isNull())).get();
+    return {for (final row in rows) row.id};
+  }
+
+  /// The trainings still to import: the ones never uploaded, and the ones
+  /// uploaded before an edit the server has not been told about.
   Future<List<Training>> pendingTrainings() async {
     final imported = (await importedTrainingIds()).trainings;
+    final stale = await staleImportedTrainingIds();
     return (await getAllTrainings())
-        .where((t) => !imported.containsKey(t.id))
+        .where((t) => !imported.containsKey(t.id) || stale.contains(t.id))
         .toList();
   }
 
@@ -1250,7 +1288,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1628,6 +1666,15 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(schema.assessments, schema.assessments.serverId);
         await m.addColumn(schema.trainingItems, schema.trainingItems.serverId);
         await m.createTable(schema.guestImportTargets);
+      },
+      from13To14: (m, schema) async {
+        // The import now stamps the mark it leaves on a training, and a local
+        // edit clears the stamp, so a training the server holds an older copy
+        // of is sent up as an update instead of skipped. The marks already
+        // stored are left without a stamp, which reads as edited: an update
+        // the server did not need costs one request, and a guest edit made
+        // before this shipped reaches the account it was skipped for.
+        await m.addColumn(schema.trainings, schema.trainings.importedAt);
       },
     ),
   );

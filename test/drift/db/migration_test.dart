@@ -18,6 +18,7 @@ import 'generated/schema_v6.dart' as v6;
 import 'generated/schema_v8.dart' as v8;
 import 'generated/schema_v9.dart' as v9;
 import 'generated/schema_v11.dart' as v11;
+import 'generated/schema_v13.dart' as v13;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -817,6 +818,39 @@ void main() {
       final db = await migratedWithTypes([1, 99]);
       final rows = await db.select(db.assessments).get();
       expect(rows.map((row) => row.id), ['a-0']);
+      await db.close();
+    });
+  });
+
+  group('v13 to v14 data migration', () {
+    // The mark the version before this left said the training had gone up and
+    // nothing about when, so an edit may well have landed after it. The
+    // training is read as one the server holds an older copy of, which sends it
+    // up again as an update rather than skipping it for good.
+    test('a training imported before the stamp reads as edited', () async {
+      final schema = await verifier.schemaAt(13);
+      final oldDb = v13.DatabaseAtV13(schema.newConnection());
+      await oldDb.batch((b) {
+        b.insertAll(oldDb.trainings, const [
+          v13.TrainingsData(
+            id: 't-imported',
+            title: 'Repeaters',
+            isFavorite: 0,
+            serverId: 'server-1',
+            updatedAt: 1700000000,
+          ),
+          v13.TrainingsData(
+            id: 't-local',
+            title: 'Never imported',
+            isFavorite: 0,
+            updatedAt: 1700000000,
+          ),
+        ]);
+      });
+      await oldDb.close();
+
+      final db = AppDatabase(schema.newConnection());
+      expect(await db.staleImportedTrainingIds(), {'t-imported'});
       await db.close();
     });
   });
