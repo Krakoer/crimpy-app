@@ -590,6 +590,7 @@ class TrainingItem {
   /// one clears the title, since an editor always has some text to hand over
   /// and a group is allowed to have no name.
   TrainingItem copyWith({
+    String? id,
     int? position,
     int? worktimeSeconds,
     int? restSeconds,
@@ -611,7 +612,7 @@ class TrainingItem {
     List<TrainingItem>? items,
   }) {
     return TrainingItem(
-      id: id,
+      id: id ?? this.id,
       type: type,
       position: position ?? this.position,
       parentId: parentId,

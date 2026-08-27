@@ -1,6 +1,7 @@
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/session.dart';
+import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
@@ -245,15 +246,25 @@ class LocalDataMigration {
     final done = await _database.importedTrainingIds();
     ids.trainings.addAll(done.trainings);
     ids.items.addAll(done.items);
+    // The ones the athlete edited after they went up. The server holds the
+    // training as it was, so they are sent again as an update rather than
+    // skipped, or the edit stays on the device and the items it added never
+    // get a server id for the reps of a session to name.
+    final stale = await _database.staleImportedTrainingIds();
 
     for (final training in await _database.getAllTrainings()) {
-      if (ids.trainings.containsKey(training.id)) continue;
+      final importedId = ids.trainings[training.id];
+      if (importedId != null && !stale.contains(training.id)) continue;
       try {
-        // The save answers with the training as the server now holds it, under
+        // The call answers with the training as the server now holds it, under
         // the ids it minted. Nothing else says which stored item each local one
         // became, and the reps and the open counts of every session played from
         // this training are keyed on that.
-        final stored = await _remoteTrainings.saveTraining(training);
+        final stored = importedId == null
+            ? await _remoteTrainings.saveTraining(training)
+            : await _remoteTrainings.updateTraining(
+                _asServerHoldsIt(training, importedId, ids.items),
+              );
         final itemIds = <String, String>{};
         final paired = _pairItemIds(training.items, stored.items, itemIds);
         // Recorded even when the trees did not line up. The training is on the
@@ -278,6 +289,23 @@ class LocalDataMigration {
       }
     }
     return failures;
+  }
+
+  /// The training under the ids the server knows it by, which is what an update
+  /// has to be addressed with. An item the import has already put up is named
+  /// by the id it was given; one the athlete added since goes up with an empty
+  /// id, which is what has the API mint one for it. Sending the local id
+  /// instead is refused: it belongs to no training the server holds.
+  Training _asServerHoldsIt(
+    Training training,
+    String serverId,
+    Map<String, String> itemIds,
+  ) {
+    List<TrainingItem> renamed(List<TrainingItem> items) => [
+      for (final item in items)
+        item.copyWith(id: itemIds[item.id] ?? '', items: renamed(item.items)),
+    ];
+    return training.copyWith(id: serverId, items: renamed(training.items));
   }
 
   /// Pairs the items sent up with the ones that came back, which the server

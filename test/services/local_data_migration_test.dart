@@ -74,7 +74,47 @@ class _FakeRemoteTrainings implements TrainingRepository {
     return stored[id] = Training(
       id: id,
       title: training.title,
+      isFavorite: training.isFavorite,
       items: dropsItems ? const [] : _mintItems(training.items),
+    );
+  }
+
+  /// Reconciles the tree against the stored one the way the API does: an item
+  /// sent back with an id the training holds keeps that row, one sent without
+  /// an id is added under a fresh one, and an id the training does not hold is
+  /// refused rather than quietly created.
+  List<TrainingItem> _syncItems(List<TrainingItem> items, Set<String> held) {
+    final result = <TrainingItem>[];
+    for (final item in items) {
+      if (item.id.isNotEmpty && !held.contains(item.id)) {
+        throw Exception('item ${item.id} does not belong to this training');
+      }
+      result.add(
+        TrainingItem(
+          id: item.id.isEmpty ? _mintId('server-item') : item.id,
+          type: item.type,
+          position: item.position,
+          items: _syncItems(item.items, held),
+        ),
+      );
+    }
+    return result;
+  }
+
+  Set<String> _itemIdsOf(List<TrainingItem> items) => {
+    for (final item in items) ...{item.id, ..._itemIdsOf(item.items)},
+  };
+
+  @override
+  Future<Training> updateTraining(Training training) async {
+    calls.add('training-update');
+    final held = stored[training.id];
+    if (held == null) throw Exception('unknown training ${training.id}');
+    return stored[training.id] = Training(
+      id: training.id,
+      title: training.title,
+      isFavorite: training.isFavorite,
+      items: _syncItems(training.items, _itemIdsOf(held.items)),
     );
   }
 
@@ -430,6 +470,126 @@ void main() {
       final left = await migration.pendingData();
       expect(left.trainingCount, 0);
       expect(left.sessionCount, 1);
+    });
+  });
+
+  group('a training edited after it was imported', () {
+    /// Appends a second exercise under the group, the way the editor does: the
+    /// item it hands over carries no id until storage mints one.
+    Future<Training> addExercise(Training training) async {
+      final group = training.items.single;
+      await db.updateTraining(
+        training.copyWith(
+          items: [
+            group.copyWith(
+              items: [
+                ...group.items,
+                TrainingItem(
+                  id: '',
+                  type: TrainingItemType.exercise,
+                  position: 1,
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+      return (await db.getTraining(training.id))!;
+    }
+
+    test('is updated rather than created a second time', () async {
+      final local = await saveLocalTraining();
+      final remote = _FakeRemoteTrainings();
+      await migrationWith(remote).uploadAll(_userId);
+
+      await addExercise(local);
+      expect(await migrationWith(remote).uploadAll(_userId), 0);
+
+      expect(remote.stored, hasLength(1));
+      expect(remote.calls.where((c) => c == 'training'), hasLength(1));
+      expect(remote.calls.where((c) => c == 'training-update'), hasLength(1));
+      expect(remote.stored.values.single.items.single.items, hasLength(2));
+    });
+
+    // The whole point of the update: the item the edit added is on the server
+    // under an id of its own, so the reps played against it name a block
+    // instead of going up with nothing.
+    test('lets a rep played against the added item name it', () async {
+      final local = await saveLocalTraining();
+      final remote = _FakeRemoteTrainings();
+      await migrationWith(remote).uploadAll(_userId);
+
+      final edited = await addExercise(local);
+      final added = edited.items.single.items.last;
+      await db.saveSession(playedSession(trainingId: local.id), [
+        rep(trainingItemId: added.id),
+      ]);
+
+      expect(await migrationWith(remote).uploadAll(_userId), 0);
+
+      final stored = remote.stored.values.single;
+      final posted = remote.postedSessions.single;
+      expect(posted.session.trainingId, stored.id);
+      expect(
+        posted.reps.single.trainingItemId,
+        stored.items.single.items.last.id,
+      );
+    });
+
+    // An item sent back under the id it was given keeps its row, so the reps
+    // and the open counts a session already imported recorded against it are
+    // still answered by something on the server.
+    test('leaves the id of an item already imported alone', () async {
+      final local = await saveLocalTraining();
+      final remote = _FakeRemoteTrainings();
+      await migrationWith(remote).uploadAll(_userId);
+      final before = remote.stored.values.single.items.single.items.single.id;
+
+      await addExercise(local);
+      await migrationWith(remote).uploadAll(_userId);
+
+      expect(remote.stored.values.single.items.single.items.first.id, before);
+    });
+
+    test('is not sent again once the update has gone up', () async {
+      final local = await saveLocalTraining();
+      final remote = _FakeRemoteTrainings();
+      await migrationWith(remote).uploadAll(_userId);
+      await addExercise(local);
+      await migrationWith(remote).uploadAll(_userId);
+
+      await migrationWith(remote).uploadAll(_userId);
+
+      expect(remote.calls.where((c) => c == 'training-update'), hasLength(1));
+    });
+
+    // Marking it as a favourite is an edit like any other: the server was told
+    // what the training was, and it is no longer that.
+    test('goes up when the edit is only a favourite toggle', () async {
+      final local = await saveLocalTraining();
+      final remote = _FakeRemoteTrainings();
+      await migrationWith(remote).uploadAll(_userId);
+
+      await db.toggleFav(local.id);
+      await migrationWith(remote).uploadAll(_userId);
+
+      expect(remote.stored.values.single.isFavorite, isTrue);
+    });
+
+    // The dialog is offered off this count, so an edit that is not on the
+    // server yet has to keep the training in it.
+    test('is counted as pending until the update goes up', () async {
+      final local = await saveLocalTraining();
+      final remote = _FakeRemoteTrainings();
+      final migration = migrationWith(remote);
+      await migration.uploadAll(_userId);
+      expect((await migration.pendingData()).trainingCount, 0);
+
+      await addExercise(local);
+      expect((await migration.pendingData()).trainingCount, 1);
+
+      await migration.uploadAll(_userId);
+      expect((await migration.pendingData()).trainingCount, 0);
     });
   });
 
