@@ -1541,14 +1541,19 @@ extension RepDataRowToModel on RepData {
   );
 }
 
-/// The items a run was played from, as the column holds them. A tree with no
-/// items is stored as none rather than as an empty snapshot: a run that named
-/// no block has nothing to freeze, and an empty list would claim the training
-/// was read and found bare.
+/// The items a run was played from, as the column holds them: the envelope the
+/// server sends a prescription in, so both stores hold one shape and are read
+/// back by one parser. A tree with no items is stored as none rather than as an
+/// empty snapshot: a run that named no block has nothing to freeze, and an
+/// empty list would claim the training was read and found bare.
 Value<String?> _encodePrescription(List<TrainingItem>? items) =>
     items == null || items.isEmpty
     ? const Value(null)
-    : Value(jsonEncode(items.map((i) => i.toPrescriptionJson()).toList()));
+    : Value(
+        jsonEncode({
+          'items': items.map((i) => i.toPrescriptionJson()).toList(),
+        }),
+      );
 
 /// The frozen prescription of a session row, or null when it holds none. A
 /// snapshot that no longer parses is read as none rather than thrown: the reps
@@ -1557,12 +1562,7 @@ Value<String?> _encodePrescription(List<TrainingItem>? items) =>
 List<TrainingItem>? _decodePrescription(String? stored) {
   if (stored == null || stored.isEmpty) return null;
   try {
-    final raw = jsonDecode(stored);
-    if (raw is! List) return null;
-    return raw
-        .whereType<Map<String, dynamic>>()
-        .map(TrainingItem.fromJson)
-        .toList();
+    return SessionModel.prescriptionItemsOf(jsonDecode(stored));
   } catch (error) {
     AppLoggerHelper.error('Unreadable session prescription', error);
     return null;

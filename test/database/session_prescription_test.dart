@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
@@ -164,6 +166,31 @@ void main() {
     expect(frozen.single.items.map((i) => i.position), [0, 1]);
     expect(frozen.single.items.first.parentId, training.items.single.id);
     expect(frozen.single.items.last.edgeSizesMm, [20]);
+  });
+
+  test('the column holds the envelope the server sends', () async {
+    final training = await store([amrap(position: 0), hang(position: 1)]);
+    final sessionId = await play(training);
+
+    final row = await (db.select(
+      db.sessions,
+    )..where((s) => s.id.equals(sessionId))).getSingle();
+    final stored = jsonDecode(row.prescriptionJson!);
+
+    // Read back through the parser an API response goes through, so the local
+    // snapshot and the server's cannot drift into two shapes.
+    final asServerSent = SessionModel.fromJson({
+      'id': sessionId,
+      'name': 'Run',
+      'date': DateTime.now().toUtc().toIso8601String(),
+      'origin': 'played',
+      'prescription': stored,
+    });
+
+    expect(
+      asServerSent.prescriptionItems?.map((i) => i.id),
+      training.items.map((i) => i.id),
+    );
   });
 
   test('the listing carries the snapshot the detail read', () async {
