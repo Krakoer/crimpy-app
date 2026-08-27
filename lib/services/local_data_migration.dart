@@ -188,9 +188,17 @@ class LocalDataMigration {
           );
         }
 
+        // The samples live in a file beside the row, so they are only read for
+        // the sessions the API takes a curve for. Reading them for every
+        // session would load a run's worth of points per row to throw them away.
+        final curve = row.isAssessment && row.dataPath.isNotEmpty
+            ? await getSessionData(row.dataPath)
+            : null;
+
         final serverSessionId = await _remoteTrainings.saveSession(
           row.toModel().withTrainingId(serverTrainingId),
           reps,
+          data: curve,
           itemResults: itemResults,
         );
         await _database.markSessionImported(row.id, serverSessionId);

@@ -202,7 +202,12 @@ class RemoteTrainingRepository extends TrainingRepository {
         .cast<Map<String, dynamic>>()
         .map(SessionItemResultModel.fromJson)
         .toList();
-    return SessionModel.fromJson(s, reps: reps, itemResults: itemResults);
+    return SessionModel.fromJson(
+      s,
+      reps: reps,
+      itemResults: itemResults,
+      dataPoints: ForceCurve.fromJson(s['samples'] as Map<String, dynamic>?),
+    );
   }
 
   @override
@@ -239,6 +244,8 @@ class RemoteTrainingRepository extends TrainingRepository {
     final int duration =
         session.durationInSeconds ?? reps.fold(0, (p, r) => p + r.duration);
 
+    final curve = ForceCurve.toJson(data ?? const []);
+
     final body = {
       'name': session.name,
       'notes': session.notes ?? '',
@@ -256,6 +263,11 @@ class RemoteTrainingRepository extends TrainingRepository {
       if ((session.trainingId != null || session.programSessionId != null) &&
           itemResults.isNotEmpty)
         'item_results': itemResults.map((r) => r.toJson()).toList(),
+      // The force curve is what a critical force or an MVC result means, so it
+      // goes up with the assessment that recorded it. The API takes it on an
+      // assessment only: on an ordinary repeater the samples are bulk nothing
+      // reads, and sending them anyway is refused rather than stored.
+      if (session.isAssessment && curve != null) 'samples': curve,
     };
 
     final created = await _apiClient.createSession(body);
