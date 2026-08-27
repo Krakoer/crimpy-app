@@ -568,6 +568,21 @@ class TrainingItem {
     return map;
   }
 
+  /// The item as a frozen prescription holds it, which is [toJson] plus what
+  /// the API derives on its side rather than accepts from the client: where the
+  /// item sits, which item it hangs from, and the name the exercise catalog
+  /// resolved. A snapshot is read back with [fromJson] long after the run, with
+  /// no tree and no catalog left to ask, so it carries all three itself.
+  Map<String, dynamic> toPrescriptionJson() => {
+    ...toJson(),
+    'id': id,
+    'position': position,
+    if (parentId != null) 'parent_id': parentId,
+    if (exerciseName != null) 'exercise_name': exerciseName,
+    if (items.isNotEmpty)
+      'items': items.map((i) => i.toPrescriptionJson()).toList(),
+  };
+
   /// A null argument leaves the field alone, except for [groupTitle]: a blank
   /// one clears the title, since an editor always has some text to hand over
   /// and a group is allowed to have no name.

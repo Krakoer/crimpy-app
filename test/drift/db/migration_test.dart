@@ -17,6 +17,7 @@ import 'generated/schema_v5.dart' as v5;
 import 'generated/schema_v6.dart' as v6;
 import 'generated/schema_v8.dart' as v8;
 import 'generated/schema_v9.dart' as v9;
+import 'generated/schema_v11.dart' as v11;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -816,6 +817,42 @@ void main() {
       final db = await migratedWithTypes([1, 99]);
       final rows = await db.select(db.assessments).get();
       expect(rows.map((row) => row.id), ['a-0']);
+      await db.close();
+    });
+  });
+
+  group('v11 to v12 data migration', () {
+    // A session now freezes what it was played from. The ones already
+    // stored were saved from a training that may have drifted since, so they
+    // are left without a snapshot rather than handed one taken now, and keep
+    // reading against the live training as they always did.
+    test('a session stored before the snapshot keeps none', () async {
+      final schema = await verifier.schemaAt(11);
+      final oldDb = v11.DatabaseAtV11(schema.newConnection());
+      await oldDb
+          .into(oldDb.sessions)
+          .insert(
+            const v11.SessionsData(
+              id: 's-1',
+              name: 'Session',
+              notes: '',
+              date: 1700000000,
+              dataPath: '',
+              isAssessment: 0,
+              activity: 0,
+              origin: 'played',
+              trainingId: 't-1',
+              duration: 10,
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb.close();
+
+      final db = AppDatabase(schema.newConnection());
+      final session = await db.select(db.sessions).getSingle();
+      expect(session.prescriptionJson, null);
+      // The link the reps are read through has to survive the added column.
+      expect(session.trainingId, 't-1');
       await db.close();
     });
   });

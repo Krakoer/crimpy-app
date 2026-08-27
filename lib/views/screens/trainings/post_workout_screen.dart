@@ -209,6 +209,12 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
               origin: SessionOrigin.played,
               trainingId: widget.trainingId,
               programSessionId: widget.programSessionId,
+              // Frozen onto the session, the way the server freezes its own
+              // copy: the reps and the open counts name items of this tree, so
+              // it is what still heads them once the training is edited or
+              // deleted. The template played is the copy taken, not the one the
+              // library holds now, since only the first is what ran.
+              prescriptionItems: widget.template.items,
             );
             try {
               if (assessment == null) {

@@ -128,6 +128,17 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _prescriptionJsonMeta = const VerificationMeta(
+    'prescriptionJson',
+  );
+  @override
+  late final GeneratedColumn<String> prescriptionJson = GeneratedColumn<String>(
+    'prescription_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -153,6 +164,7 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     trainingId,
     programSessionId,
     duration,
+    prescriptionJson,
     updatedAt,
   ];
   @override
@@ -242,6 +254,15 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         duration.isAcceptableOrUnknown(data['duration']!, _durationMeta),
       );
     }
+    if (data.containsKey('prescription_json')) {
+      context.handle(
+        _prescriptionJsonMeta,
+        prescriptionJson.isAcceptableOrUnknown(
+          data['prescription_json']!,
+          _prescriptionJsonMeta,
+        ),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -301,6 +322,10 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.int,
         data['${effectivePrefix}duration'],
       )!,
+      prescriptionJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}prescription_json'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -326,6 +351,7 @@ class Session extends DataClass implements Insertable<Session> {
   final String? trainingId;
   final String? programSessionId;
   final int duration;
+  final String? prescriptionJson;
   final DateTime updatedAt;
   const Session({
     required this.id,
@@ -339,6 +365,7 @@ class Session extends DataClass implements Insertable<Session> {
     this.trainingId,
     this.programSessionId,
     required this.duration,
+    this.prescriptionJson,
     required this.updatedAt,
   });
   @override
@@ -359,6 +386,9 @@ class Session extends DataClass implements Insertable<Session> {
       map['program_session_id'] = Variable<String>(programSessionId);
     }
     map['duration'] = Variable<int>(duration);
+    if (!nullToAbsent || prescriptionJson != null) {
+      map['prescription_json'] = Variable<String>(prescriptionJson);
+    }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -380,6 +410,9 @@ class Session extends DataClass implements Insertable<Session> {
           ? const Value.absent()
           : Value(programSessionId),
       duration: Value(duration),
+      prescriptionJson: prescriptionJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(prescriptionJson),
       updatedAt: Value(updatedAt),
     );
   }
@@ -401,6 +434,7 @@ class Session extends DataClass implements Insertable<Session> {
       trainingId: serializer.fromJson<String?>(json['trainingId']),
       programSessionId: serializer.fromJson<String?>(json['programSessionId']),
       duration: serializer.fromJson<int>(json['duration']),
+      prescriptionJson: serializer.fromJson<String?>(json['prescriptionJson']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -419,6 +453,7 @@ class Session extends DataClass implements Insertable<Session> {
       'trainingId': serializer.toJson<String?>(trainingId),
       'programSessionId': serializer.toJson<String?>(programSessionId),
       'duration': serializer.toJson<int>(duration),
+      'prescriptionJson': serializer.toJson<String?>(prescriptionJson),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -435,6 +470,7 @@ class Session extends DataClass implements Insertable<Session> {
     Value<String?> trainingId = const Value.absent(),
     Value<String?> programSessionId = const Value.absent(),
     int? duration,
+    Value<String?> prescriptionJson = const Value.absent(),
     DateTime? updatedAt,
   }) => Session(
     id: id ?? this.id,
@@ -450,6 +486,9 @@ class Session extends DataClass implements Insertable<Session> {
         ? programSessionId.value
         : this.programSessionId,
     duration: duration ?? this.duration,
+    prescriptionJson: prescriptionJson.present
+        ? prescriptionJson.value
+        : this.prescriptionJson,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   Session copyWithCompanion(SessionsCompanion data) {
@@ -471,6 +510,9 @@ class Session extends DataClass implements Insertable<Session> {
           ? data.programSessionId.value
           : this.programSessionId,
       duration: data.duration.present ? data.duration.value : this.duration,
+      prescriptionJson: data.prescriptionJson.present
+          ? data.prescriptionJson.value
+          : this.prescriptionJson,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -489,6 +531,7 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('trainingId: $trainingId, ')
           ..write('programSessionId: $programSessionId, ')
           ..write('duration: $duration, ')
+          ..write('prescriptionJson: $prescriptionJson, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -507,6 +550,7 @@ class Session extends DataClass implements Insertable<Session> {
     trainingId,
     programSessionId,
     duration,
+    prescriptionJson,
     updatedAt,
   );
   @override
@@ -524,6 +568,7 @@ class Session extends DataClass implements Insertable<Session> {
           other.trainingId == this.trainingId &&
           other.programSessionId == this.programSessionId &&
           other.duration == this.duration &&
+          other.prescriptionJson == this.prescriptionJson &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -539,6 +584,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<String?> trainingId;
   final Value<String?> programSessionId;
   final Value<int> duration;
+  final Value<String?> prescriptionJson;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const SessionsCompanion({
@@ -553,6 +599,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.trainingId = const Value.absent(),
     this.programSessionId = const Value.absent(),
     this.duration = const Value.absent(),
+    this.prescriptionJson = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -568,6 +615,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.trainingId = const Value.absent(),
     this.programSessionId = const Value.absent(),
     this.duration = const Value.absent(),
+    this.prescriptionJson = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : name = Value(name),
@@ -585,6 +633,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<String>? trainingId,
     Expression<String>? programSessionId,
     Expression<int>? duration,
+    Expression<String>? prescriptionJson,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -600,6 +649,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (trainingId != null) 'training_id': trainingId,
       if (programSessionId != null) 'program_session_id': programSessionId,
       if (duration != null) 'duration': duration,
+      if (prescriptionJson != null) 'prescription_json': prescriptionJson,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -617,6 +667,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<String?>? trainingId,
     Value<String?>? programSessionId,
     Value<int>? duration,
+    Value<String?>? prescriptionJson,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -632,6 +683,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       trainingId: trainingId ?? this.trainingId,
       programSessionId: programSessionId ?? this.programSessionId,
       duration: duration ?? this.duration,
+      prescriptionJson: prescriptionJson ?? this.prescriptionJson,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -673,6 +725,9 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (duration.present) {
       map['duration'] = Variable<int>(duration.value);
     }
+    if (prescriptionJson.present) {
+      map['prescription_json'] = Variable<String>(prescriptionJson.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -696,6 +751,7 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('trainingId: $trainingId, ')
           ..write('programSessionId: $programSessionId, ')
           ..write('duration: $duration, ')
+          ..write('prescriptionJson: $prescriptionJson, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -6301,6 +6357,7 @@ typedef $$SessionsTableCreateCompanionBuilder =
       Value<String?> trainingId,
       Value<String?> programSessionId,
       Value<int> duration,
+      Value<String?> prescriptionJson,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -6317,6 +6374,7 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<String?> trainingId,
       Value<String?> programSessionId,
       Value<int> duration,
+      Value<String?> prescriptionJson,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -6382,6 +6440,11 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<int> get duration => $composableBuilder(
     column: $table.duration,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get prescriptionJson => $composableBuilder(
+    column: $table.prescriptionJson,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6455,6 +6518,11 @@ class $$SessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get prescriptionJson => $composableBuilder(
+    column: $table.prescriptionJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -6509,6 +6577,11 @@ class $$SessionsTableAnnotationComposer
   GeneratedColumn<int> get duration =>
       $composableBuilder(column: $table.duration, builder: (column) => column);
 
+  GeneratedColumn<String> get prescriptionJson => $composableBuilder(
+    column: $table.prescriptionJson,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -6552,6 +6625,7 @@ class $$SessionsTableTableManager
                 Value<String?> trainingId = const Value.absent(),
                 Value<String?> programSessionId = const Value.absent(),
                 Value<int> duration = const Value.absent(),
+                Value<String?> prescriptionJson = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion(
@@ -6566,6 +6640,7 @@ class $$SessionsTableTableManager
                 trainingId: trainingId,
                 programSessionId: programSessionId,
                 duration: duration,
+                prescriptionJson: prescriptionJson,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -6582,6 +6657,7 @@ class $$SessionsTableTableManager
                 Value<String?> trainingId = const Value.absent(),
                 Value<String?> programSessionId = const Value.absent(),
                 Value<int> duration = const Value.absent(),
+                Value<String?> prescriptionJson = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion.insert(
@@ -6596,6 +6672,7 @@ class $$SessionsTableTableManager
                 trainingId: trainingId,
                 programSessionId: programSessionId,
                 duration: duration,
+                prescriptionJson: prescriptionJson,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
