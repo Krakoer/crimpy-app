@@ -12,7 +12,11 @@ abstract class TrainingRepository {
   /// One training by id, or null when it no longer exists. Used to read a
   /// played session against the items it was run from.
   Future<Training?> getTraining(String trainingId);
-  Future<String> saveTraining(Training training);
+
+  /// Saves a new training and hands back the stored copy: storage mints the
+  /// ids, for the items as much as for the training itself, so the argument
+  /// cannot say what was written.
+  Future<Training> saveTraining(Training training);
   Future<void> updateTraining(Training training);
   Future<void> toggleFav(String trainingId);
   Future<void> deleteTraining(String trainingId);
@@ -46,8 +50,10 @@ class LocalTrainingRepository extends TrainingRepository {
       _database.getTraining(trainingId);
 
   @override
-  Future<String> saveTraining(Training training) =>
-      _database.saveTraining(training);
+  Future<Training> saveTraining(Training training) async {
+    final id = await _database.saveTraining(training);
+    return (await _database.getTraining(id))!;
+  }
 
   @override
   Future<void> updateTraining(Training training) =>
@@ -141,9 +147,12 @@ class RemoteTrainingRepository extends TrainingRepository {
   }
 
   @override
-  Future<String> saveTraining(Training training) async {
+  Future<Training> saveTraining(Training training) async {
+    // The create answers with the training as the server now holds it, every
+    // item under an id it minted itself. Reading it out of the response is what
+    // spares the caller a second round trip to learn them.
     final result = await _apiClient.createTraining(training.toJson());
-    return result['id'] as String? ?? '';
+    return Training.fromJson(result);
   }
 
   @override

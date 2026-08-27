@@ -46,22 +46,18 @@ class _FakeRemoteTrainings implements TrainingRepository {
   ];
 
   @override
-  Future<String> saveTraining(Training training) async {
+  Future<Training> saveTraining(Training training) async {
     calls.add('training');
     if (refusedTitles.contains(training.title)) {
       throw Exception('refused ${training.title}');
     }
     final id = _mintId('server-training');
-    stored[id] = Training(
+    return stored[id] = Training(
       id: id,
       title: training.title,
       items: _mintItems(training.items),
     );
-    return id;
   }
-
-  @override
-  Future<Training?> getTraining(String trainingId) async => stored[trainingId];
 
   @override
   Future<String> saveSession(
@@ -219,6 +215,34 @@ void main() {
 
       expect(failures, 0);
       expect(remote.postedSessions.single.reps.single.trainingItemId, isNull);
+    });
+
+    // Dropped rather than nulled the way a rep link is: the count exists only
+    // to answer an item, so one that answers nothing has nothing left to say.
+    test('drops an open count answering an item that is gone', () async {
+      final local = await saveLocalTraining();
+      await db.saveSession(
+        playedSession(trainingId: local.id),
+        [rep(trainingItemId: local.items.single.items.single.id)],
+        itemResults: [
+          SessionItemResultModel(
+            trainingItemId: 'deleted-item',
+            occurrence: 0,
+            field: SessionItemField.reps,
+            value: 12,
+          ),
+        ],
+      );
+
+      final remote = _FakeRemoteTrainings();
+      final failures = await migrationWith(remote).uploadAll();
+
+      expect(failures, 0);
+      expect(remote.postedSessions.single.itemResults, isEmpty);
+      expect(
+        remote.postedSessions.single.reps.single.trainingItemId,
+        isNotNull,
+      );
     });
   });
 

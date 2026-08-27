@@ -118,10 +118,20 @@ class LocalDataMigration {
           return ids.items[localItemId];
         }
 
+        final localReps = await _database.getRepsForSession(row.id);
         final reps = [
-          for (final rep in await _database.getRepsForSession(row.id))
+          for (final rep in localReps)
             rep.withTrainingItem(serverItemId(rep.trainingItemId)),
         ];
+        // Only the reps that had a link and lost it. A rest, and any rep
+        // recorded outside a training, names no item to begin with.
+        final droppedRepLinks = localReps
+            .where(
+              (rep) =>
+                  rep.trainingItemId != null &&
+                  serverItemId(rep.trainingItemId) == null,
+            )
+            .length;
         final itemResults = <SessionItemResultModel>[];
         for (final result in await _database.getItemResultsForSession(row.id)) {
           final itemId = serverItemId(result.trainingItemId);
@@ -130,13 +140,23 @@ class LocalDataMigration {
             // count naming an item its prescription does not hold. Nothing is
             // left to attach it to, so it is dropped rather than failing the
             // whole session over it.
-            AppLoggerHelper.error(
+            AppLoggerHelper.warning(
               'Dropped an open count of session ${row.id}: '
               'item ${result.trainingItemId} is not on the server',
             );
             continue;
           }
           itemResults.add(result.withTrainingItem(itemId));
+        }
+
+        // Reported once for the session rather than once per rep, which a
+        // training edited after it was played would turn into a wall of lines.
+        if (droppedRepLinks > 0 && serverTrainingId != null) {
+          AppLoggerHelper.warning(
+            'Session ${row.id} imported with $droppedRepLinks of '
+            '${localReps.length} rep(s) naming an item that is not on the '
+            'server',
+          );
         }
 
         final serverSessionId = await _remoteTrainings.saveSession(
@@ -181,20 +201,18 @@ class LocalDataMigration {
     var failures = 0;
     for (final training in await _database.getAllTrainings()) {
       try {
-        final serverId = await _remoteTrainings.saveTraining(training);
-        // The create only answers with the training id, so the stored tree is
-        // read back for the item ids the server minted. Nothing else says
-        // which stored item each local one became, and the reps and the open
-        // counts of every session played from it are keyed on that.
-        final stored = await _remoteTrainings.getTraining(serverId);
+        // The save answers with the training as the server now holds it, under
+        // the ids it minted. Nothing else says which stored item each local one
+        // became, and the reps and the open counts of every session played from
+        // this training are keyed on that.
+        final stored = await _remoteTrainings.saveTraining(training);
         final itemIds = <String, String>{};
-        if (stored == null ||
-            !_pairItemIds(training.items, stored.items, itemIds)) {
+        if (!_pairItemIds(training.items, stored.items, itemIds)) {
           throw StateError(
-            'imported training $serverId came back a different shape',
+            'imported training ${stored.id} came back a different shape',
           );
         }
-        ids.trainings[training.id] = serverId;
+        ids.trainings[training.id] = stored.id;
         ids.items.addAll(itemIds);
       } catch (e) {
         failures++;

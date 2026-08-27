@@ -117,7 +117,7 @@ class DummyDataGenerator {
 
   /// Generate custom training definitions
   Future<void> _generateCustomTrainings() async {
-    final trainingId = await _trainingRepository.saveTraining(
+    final trainingId = (await _trainingRepository.saveTraining(
       Training(
         id: '',
         title: 'Beginner Repeaters',
@@ -134,7 +134,7 @@ class DummyDataGenerator {
           ),
         ],
       ),
-    );
+    )).id;
     AppLoggerHelper.info('Created Beginner Repeaters: $trainingId');
 
     await _trainingRepository.saveTraining(
