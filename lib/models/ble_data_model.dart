@@ -1,3 +1,5 @@
+import 'package:crimpy/utils/datetimes.dart';
+
 class BleDataPoint {
   final double value;
   final DateTime timestamp;
@@ -55,7 +57,7 @@ abstract final class ForceCurve {
     final offsets = (json['ms'] as List<dynamic>? ?? []).cast<num>();
     final values = (json['kg'] as List<dynamic>? ?? []).cast<num>();
     if (offsets.length != values.length) return [];
-    final t0 = DateTime.tryParse(json['t0'] as String? ?? '');
+    final t0 = tryParseApiInstant(json['t0'] as String?);
     if (t0 == null) return [];
     return [
       for (var i = 0; i < offsets.length; i++)

@@ -51,7 +51,9 @@ void main() {
       final read = ForceCurve.fromJson(ForceCurve.toJson(points));
 
       expect(read.map((p) => p.value), points.map((p) => p.value));
-      expect(read.map((p) => p.timestamp), points.map((p) => p.timestamp));
+      for (final (index, point) in read.indexed) {
+        expect(point.timestamp.isAtSameMomentAs(points[index].timestamp), true);
+      }
     });
   });
 
@@ -70,6 +72,26 @@ void main() {
       });
 
       expect(read, isEmpty);
+    });
+
+    // The API sends the start instant in UTC and the raw data card formats the
+    // point timestamps with no zone conversion of its own, so a run recorded at
+    // 09:12 in UTC+2 reads back as 07:12 unless the curve lands local here.
+    test('carries the local time the run was recorded at', () {
+      final read = ForceCurve.fromJson({
+        't0': '2026-08-27T09:12:03.000Z',
+        'ms': [0, 125],
+        'kg': [12.5, 13.0],
+      });
+
+      expect(read.first.timestamp.isUtc, false);
+      expect(read.first.timestamp.isAtSameMomentAs(t0), true);
+      expect(
+        read.last.timestamp.isAtSameMomentAs(
+          t0.add(const Duration(milliseconds: 125)),
+        ),
+        true,
+      );
     });
 
     test('is empty when the start instant is not a date', () {

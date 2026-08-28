@@ -1,6 +1,7 @@
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/utils/datetimes.dart';
 
 /// Which open field a count answers, mirroring the field column the server
 /// stores it in.
@@ -127,7 +128,7 @@ class SessionModel {
     id: json['id'] as String,
     name: json['name'] as String,
     notes: json['notes'] as String? ?? '',
-    date: DateTime.parse(json['date'] as String),
+    date: parseApiInstant(json['date'] as String),
     reps: reps,
     dataPoints: dataPoints,
     isAssessment: json['is_assessment'] as bool? ?? false,
