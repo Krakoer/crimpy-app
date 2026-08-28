@@ -9,16 +9,35 @@ import 'package:crimpy/views/screens/home_screen/history/widgets/session_overvie
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_performance_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_reps_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_open_results_card.dart';
-import 'package:crimpy/views/screens/home_screen/history/widgets/session_notes_card.dart';
+import 'package:crimpy/views/screens/home_screen/history/widgets/session_feedback_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_raw_data_card.dart';
 
-class SessionDetailScreen extends ConsumerWidget {
+class SessionDetailScreen extends ConsumerStatefulWidget {
   final SessionModel session;
 
   const SessionDetailScreen({super.key, required this.session});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SessionDetailScreen> createState() =>
+      _SessionDetailScreenState();
+}
+
+class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Opening the session is what reads the coach's answer, so the receipt is
+    // sent from here rather than from the card: the card is rebuilt whenever
+    // anything on the screen changes.
+    final id = widget.session.id;
+    if (id != null && widget.session.hasUnreadCoachReply) {
+      ref.read(sessionsProvider.notifier).markCoachReplyRead(id);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final session = widget.session;
     // Get full session data if we only have basic info
     final asyncFullSession = session.reps == null
         ? ref.watch(sessionWithDataProvider(session.id!))
@@ -150,9 +169,20 @@ class SessionDetailScreen extends ConsumerWidget {
             const SizedBox(height: 16),
           ],
 
-          // Notes section
-          if (session.notes != null && session.notes!.isNotEmpty) ...[
-            SessionNotesCard(notes: session.notes!),
+          // What the athlete wrote about the session and what their coach
+          // answered, read as one exchange.
+          if (SessionFeedbackCard.hasContent(
+            notes: session.notes,
+            coachReply: session.coachReply,
+          )) ...[
+            SessionFeedbackCard(
+              notes: session.notes,
+              coachReply: session.coachReply,
+              coachReplyAt: session.coachReplyAt,
+              // The receipt was sent when the screen opened, so the badge is
+              // read off the session as it arrived rather than as it stands.
+              unread: widget.session.hasUnreadCoachReply,
+            ),
             const SizedBox(height: 16),
           ],
 
@@ -260,7 +290,7 @@ class SessionDetailScreen extends ConsumerWidget {
       case 'edit':
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => EditSessionScreen(session: session),
+            builder: (context) => EditSessionScreen(session: widget.session),
           ),
         );
         break;
@@ -283,7 +313,7 @@ class SessionDetailScreen extends ConsumerWidget {
                   try {
                     await ref
                         .read(sessionsProvider.notifier)
-                        .deleteSession(session.id!);
+                        .deleteSession(widget.session.id!);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(

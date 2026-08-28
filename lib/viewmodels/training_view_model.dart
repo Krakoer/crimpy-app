@@ -175,6 +175,22 @@ class Sessions extends _$Sessions {
     }
   }
 
+  /// Marks the coach's answer to a session as seen, and drops the badge in
+  /// place rather than refetching the whole history for one flag.
+  ///
+  /// Sends the receipt whether or not the history is loaded: the screen that
+  /// asks is reading the answer either way, and the server keeps the first
+  /// read, so asking twice costs nothing.
+  Future<void> markCoachReplyRead(String sessionId) async {
+    await _trainingRepository.markCoachReplyRead(sessionId);
+    if (!ref.mounted) return;
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData([
+      for (final s in current) s.id == sessionId ? s.withCoachReplyRead() : s,
+    ]);
+  }
+
   Future<void> deleteSession(String sessionId) async {
     try {
       await _trainingRepository.deleteSession(sessionId);

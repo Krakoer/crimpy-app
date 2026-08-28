@@ -405,3 +405,151 @@ final class TrainingReminderSyncProvider
 
 String _$trainingReminderSyncHash() =>
     r'32bce71c0d0bd94df566c00efbc2b3c7707dac0a';
+
+@ProviderFor(coachReplyAnnouncer)
+const coachReplyAnnouncerProvider = CoachReplyAnnouncerProvider._();
+
+final class CoachReplyAnnouncerProvider
+    extends
+        $FunctionalProvider<
+          CoachReplyAnnouncer,
+          CoachReplyAnnouncer,
+          CoachReplyAnnouncer
+        >
+    with $Provider<CoachReplyAnnouncer> {
+  const CoachReplyAnnouncerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'coachReplyAnnouncerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$coachReplyAnnouncerHash();
+
+  @$internal
+  @override
+  $ProviderElement<CoachReplyAnnouncer> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CoachReplyAnnouncer create(Ref ref) {
+    return coachReplyAnnouncer(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CoachReplyAnnouncer value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CoachReplyAnnouncer>(value),
+    );
+  }
+}
+
+String _$coachReplyAnnouncerHash() =>
+    r'6c9086f5db1f51b7175cfa04107383ac5403e593';
+
+/// The sessions carrying an answer the athlete has not opened yet, newest
+/// answer first. Read by the history badge and by the sync below.
+
+@ProviderFor(unreadCoachReplies)
+const unreadCoachRepliesProvider = UnreadCoachRepliesProvider._();
+
+/// The sessions carrying an answer the athlete has not opened yet, newest
+/// answer first. Read by the history badge and by the sync below.
+
+final class UnreadCoachRepliesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<SessionModel>>,
+          List<SessionModel>,
+          FutureOr<List<SessionModel>>
+        >
+    with
+        $FutureModifier<List<SessionModel>>,
+        $FutureProvider<List<SessionModel>> {
+  /// The sessions carrying an answer the athlete has not opened yet, newest
+  /// answer first. Read by the history badge and by the sync below.
+  const UnreadCoachRepliesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'unreadCoachRepliesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$unreadCoachRepliesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<SessionModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<SessionModel>> create(Ref ref) {
+    return unreadCoachReplies(ref);
+  }
+}
+
+String _$unreadCoachRepliesHash() =>
+    r'3169d0a382c0a757626bb243d3f4762012ed5061';
+
+/// Tells the athlete about the answers their coach wrote, whenever the session
+/// history changes. Watched by the app shell so it stays alive.
+///
+/// Signing out clears what has been announced instead: the answers belong to
+/// the account leaving, and the guest store has none to announce.
+
+@ProviderFor(coachReplySync)
+const coachReplySyncProvider = CoachReplySyncProvider._();
+
+/// Tells the athlete about the answers their coach wrote, whenever the session
+/// history changes. Watched by the app shell so it stays alive.
+///
+/// Signing out clears what has been announced instead: the answers belong to
+/// the account leaving, and the guest store has none to announce.
+
+final class CoachReplySyncProvider
+    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
+    with $FutureModifier<void>, $FutureProvider<void> {
+  /// Tells the athlete about the answers their coach wrote, whenever the session
+  /// history changes. Watched by the app shell so it stays alive.
+  ///
+  /// Signing out clears what has been announced instead: the answers belong to
+  /// the account leaving, and the guest store has none to announce.
+  const CoachReplySyncProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'coachReplySyncProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$coachReplySyncHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<void> create(Ref ref) {
+    return coachReplySync(ref);
+  }
+}
+
+String _$coachReplySyncHash() => r'07eba222ce7bf8390269da99e067499523b37efe';

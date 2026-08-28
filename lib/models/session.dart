@@ -99,6 +99,15 @@ class SessionModel {
   /// it had none. Only the detail endpoint carries them.
   final List<SessionItemResultModel> itemResults;
 
+  /// What the coach answered the [notes] with, null while they have not.
+  /// [coachReplyAt] dates that answer and [coachReplyRead] says whether it has
+  /// been opened since it was last written, which is what the unread badge and
+  /// the notification are raised from. Always null on a guest-mode session:
+  /// there is no coach to answer one.
+  final String? coachReply;
+  final DateTime? coachReplyAt;
+  final bool coachReplyRead;
+
   SessionModel({
     this.id,
     this.notes,
@@ -114,8 +123,14 @@ class SessionModel {
     this.reportedRepCount,
     this.prescriptionItems,
     this.itemResults = const [],
+    this.coachReply,
+    this.coachReplyAt,
+    this.coachReplyRead = false,
     date,
   }) : date = date ?? DateTime.now();
+
+  /// Whether the coach has answered and the athlete has not opened it yet.
+  bool get hasUnreadCoachReply => coachReply != null && !coachReplyRead;
 
   /// Parses a session as returned by the API, which speaks snake_case in
   /// both directions.
@@ -144,6 +159,9 @@ class SessionModel {
     reportedRepCount: (json['rep_count'] as num?)?.toInt(),
     prescriptionItems: prescriptionItemsOf(json['prescription']),
     itemResults: itemResults,
+    coachReply: json['coach_reply'] as String?,
+    coachReplyAt: tryParseApiInstant(json['coach_reply_at'] as String?),
+    coachReplyRead: json['coach_reply_read'] as bool? ?? false,
   );
 
   /// The items of a frozen prescription, or null when there is none to read.
@@ -186,6 +204,9 @@ class SessionModel {
     reportedRepCount: reportedRepCount,
     prescriptionItems: prescriptionItems,
     itemResults: itemResults,
+    coachReply: coachReply,
+    coachReplyAt: coachReplyAt,
+    coachReplyRead: coachReplyRead,
   );
 
   /// The same session played from [trainingId], or from no training when it is
@@ -209,6 +230,32 @@ class SessionModel {
     reportedRepCount: reportedRepCount,
     prescriptionItems: prescriptionItems,
     itemResults: itemResults,
+    coachReply: coachReply,
+    coachReplyAt: coachReplyAt,
+    coachReplyRead: coachReplyRead,
+  );
+
+  /// The same session with the coach's answer marked as seen, so the list can
+  /// drop its badge without refetching every session.
+  SessionModel withCoachReplyRead() => SessionModel(
+    id: id,
+    name: name,
+    notes: notes,
+    date: date,
+    dataPoints: dataPoints,
+    reps: reps,
+    isAssessment: isAssessment,
+    activity: activity,
+    origin: origin,
+    trainingId: trainingId,
+    programSessionId: programSessionId,
+    durationInSeconds: durationInSeconds,
+    reportedRepCount: reportedRepCount,
+    prescriptionItems: prescriptionItems,
+    itemResults: itemResults,
+    coachReply: coachReply,
+    coachReplyAt: coachReplyAt,
+    coachReplyRead: true,
   );
 
   int get duration =>

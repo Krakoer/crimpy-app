@@ -37,6 +37,10 @@ abstract class TrainingRepository {
   });
   Future<void> updateSession(SessionModel session);
   Future<void> deleteSession(String sessionId);
+
+  /// Stamps the coach's answer to a session as seen. A store with no coach
+  /// behind it has nothing to stamp and answers by doing nothing.
+  Future<void> markCoachReplyRead(String sessionId);
 }
 
 class LocalTrainingRepository extends TrainingRepository {
@@ -120,6 +124,11 @@ class LocalTrainingRepository extends TrainingRepository {
   @override
   Future<void> deleteSession(String sessionId) =>
       _database.deleteSession(sessionId);
+
+  // A guest-mode session was never seen by a coach, so it can carry no answer
+  // to mark as read.
+  @override
+  Future<void> markCoachReplyRead(String sessionId) async {}
 }
 
 class RemoteTrainingRepository extends TrainingRepository {
@@ -306,5 +315,10 @@ class RemoteTrainingRepository extends TrainingRepository {
   @override
   Future<void> deleteSession(String sessionId) async {
     await _apiClient.deleteSessionApi(sessionId);
+  }
+
+  @override
+  Future<void> markCoachReplyRead(String sessionId) async {
+    await _apiClient.markCoachReplyRead(sessionId);
   }
 }

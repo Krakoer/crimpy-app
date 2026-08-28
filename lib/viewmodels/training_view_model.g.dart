@@ -351,7 +351,7 @@ final class SessionsProvider
   Sessions create() => Sessions();
 }
 
-String _$sessionsHash() => r'b0667a2a2c3e6c04338d8ba98873791b73106f79';
+String _$sessionsHash() => r'c47addca0761e073dc8e71be5e6f6727873dd877';
 
 /// Returns the list of all sessions, and allows the creation of new sessions.
 

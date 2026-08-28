@@ -2,6 +2,8 @@ import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/cached_program_schedule.dart';
 import 'package:crimpy/models/notification_preferences.dart';
 import 'package:crimpy/models/program_model.dart';
+import 'package:crimpy/models/session.dart';
+import 'package:crimpy/services/coach_reply_announcer.dart';
 import 'package:crimpy/services/notification_preferences_service.dart';
 import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/services/training_reminder_scheduler.dart';
@@ -186,4 +188,37 @@ Future<void> trainingReminderSync(Ref ref) async {
         sessions: sessions,
       );
   AppLoggerHelper.debug('Training reminders rescheduled');
+}
+
+@Riverpod(keepAlive: true)
+CoachReplyAnnouncer coachReplyAnnouncer(Ref ref) =>
+    CoachReplyAnnouncer(ref.watch(notificationServiceProvider));
+
+/// The sessions carrying an answer the athlete has not opened yet, newest
+/// answer first. Read by the history badge and by the sync below.
+@riverpod
+Future<List<SessionModel>> unreadCoachReplies(Ref ref) async {
+  final sessions = await ref.watch(sessionsProvider.future);
+  final unread = sessions.where((s) => s.hasUnreadCoachReply).toList()
+    ..sort((a, b) {
+      final left = a.coachReplyAt ?? a.date;
+      final right = b.coachReplyAt ?? b.date;
+      return right.compareTo(left);
+    });
+  return unread;
+}
+
+/// Tells the athlete about the answers their coach wrote, whenever the session
+/// history changes. Watched by the app shell so it stays alive.
+///
+/// Signing out clears what has been announced instead: the answers belong to
+/// the account leaving, and the guest store has none to announce.
+@Riverpod(keepAlive: true)
+Future<void> coachReplySync(Ref ref) async {
+  final announcer = ref.watch(coachReplyAnnouncerProvider);
+  if (isSignedOut(ref.watch(authStateProvider))) {
+    await announcer.clear();
+    return;
+  }
+  await announcer.announce(await ref.watch(sessionsProvider.future));
 }
