@@ -1876,6 +1876,17 @@ class $TrainingsTable extends Trainings
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _importedAtMeta = const VerificationMeta(
+    'importedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> importedAt = GeneratedColumn<DateTime>(
+    'imported_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -1895,6 +1906,7 @@ class $TrainingsTable extends Trainings
     description,
     isFavorite,
     serverId,
+    importedAt,
     updatedAt,
   ];
   @override
@@ -1941,6 +1953,12 @@ class $TrainingsTable extends Trainings
         serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta),
       );
     }
+    if (data.containsKey('imported_at')) {
+      context.handle(
+        _importedAtMeta,
+        importedAt.isAcceptableOrUnknown(data['imported_at']!, _importedAtMeta),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -1976,6 +1994,10 @@ class $TrainingsTable extends Trainings
         DriftSqlType.string,
         data['${effectivePrefix}server_id'],
       ),
+      importedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}imported_at'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -2000,6 +2022,12 @@ class TrainingRow extends DataClass implements Insertable<TrainingRow> {
   /// run that failed partway can be retried without uploading, and duplicating,
   /// everything that already went up.
   final String? serverId;
+
+  /// When the import last put this training on the server, and so the moment
+  /// the copy the server holds was written from. Every local edit clears it,
+  /// which is what tells the next run the stored copy is behind and has to be
+  /// updated rather than skipped.
+  final DateTime? importedAt;
   final DateTime updatedAt;
   const TrainingRow({
     required this.id,
@@ -2007,6 +2035,7 @@ class TrainingRow extends DataClass implements Insertable<TrainingRow> {
     this.description,
     required this.isFavorite,
     this.serverId,
+    this.importedAt,
     required this.updatedAt,
   });
   @override
@@ -2020,6 +2049,9 @@ class TrainingRow extends DataClass implements Insertable<TrainingRow> {
     map['is_favorite'] = Variable<bool>(isFavorite);
     if (!nullToAbsent || serverId != null) {
       map['server_id'] = Variable<String>(serverId);
+    }
+    if (!nullToAbsent || importedAt != null) {
+      map['imported_at'] = Variable<DateTime>(importedAt);
     }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -2036,6 +2068,9 @@ class TrainingRow extends DataClass implements Insertable<TrainingRow> {
       serverId: serverId == null && nullToAbsent
           ? const Value.absent()
           : Value(serverId),
+      importedAt: importedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(importedAt),
       updatedAt: Value(updatedAt),
     );
   }
@@ -2051,6 +2086,7 @@ class TrainingRow extends DataClass implements Insertable<TrainingRow> {
       description: serializer.fromJson<String?>(json['description']),
       isFavorite: serializer.fromJson<bool>(json['isFavorite']),
       serverId: serializer.fromJson<String?>(json['serverId']),
+      importedAt: serializer.fromJson<DateTime?>(json['importedAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -2063,6 +2099,7 @@ class TrainingRow extends DataClass implements Insertable<TrainingRow> {
       'description': serializer.toJson<String?>(description),
       'isFavorite': serializer.toJson<bool>(isFavorite),
       'serverId': serializer.toJson<String?>(serverId),
+      'importedAt': serializer.toJson<DateTime?>(importedAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -2073,6 +2110,7 @@ class TrainingRow extends DataClass implements Insertable<TrainingRow> {
     Value<String?> description = const Value.absent(),
     bool? isFavorite,
     Value<String?> serverId = const Value.absent(),
+    Value<DateTime?> importedAt = const Value.absent(),
     DateTime? updatedAt,
   }) => TrainingRow(
     id: id ?? this.id,
@@ -2080,6 +2118,7 @@ class TrainingRow extends DataClass implements Insertable<TrainingRow> {
     description: description.present ? description.value : this.description,
     isFavorite: isFavorite ?? this.isFavorite,
     serverId: serverId.present ? serverId.value : this.serverId,
+    importedAt: importedAt.present ? importedAt.value : this.importedAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   TrainingRow copyWithCompanion(TrainingsCompanion data) {
@@ -2093,6 +2132,9 @@ class TrainingRow extends DataClass implements Insertable<TrainingRow> {
           ? data.isFavorite.value
           : this.isFavorite,
       serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      importedAt: data.importedAt.present
+          ? data.importedAt.value
+          : this.importedAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -2105,14 +2147,22 @@ class TrainingRow extends DataClass implements Insertable<TrainingRow> {
           ..write('description: $description, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('serverId: $serverId, ')
+          ..write('importedAt: $importedAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, description, isFavorite, serverId, updatedAt);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    description,
+    isFavorite,
+    serverId,
+    importedAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2122,6 +2172,7 @@ class TrainingRow extends DataClass implements Insertable<TrainingRow> {
           other.description == this.description &&
           other.isFavorite == this.isFavorite &&
           other.serverId == this.serverId &&
+          other.importedAt == this.importedAt &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -2131,6 +2182,7 @@ class TrainingsCompanion extends UpdateCompanion<TrainingRow> {
   final Value<String?> description;
   final Value<bool> isFavorite;
   final Value<String?> serverId;
+  final Value<DateTime?> importedAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const TrainingsCompanion({
@@ -2139,6 +2191,7 @@ class TrainingsCompanion extends UpdateCompanion<TrainingRow> {
     this.description = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.serverId = const Value.absent(),
+    this.importedAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -2148,6 +2201,7 @@ class TrainingsCompanion extends UpdateCompanion<TrainingRow> {
     this.description = const Value.absent(),
     this.isFavorite = const Value.absent(),
     this.serverId = const Value.absent(),
+    this.importedAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : title = Value(title);
@@ -2157,6 +2211,7 @@ class TrainingsCompanion extends UpdateCompanion<TrainingRow> {
     Expression<String>? description,
     Expression<bool>? isFavorite,
     Expression<String>? serverId,
+    Expression<DateTime>? importedAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -2166,6 +2221,7 @@ class TrainingsCompanion extends UpdateCompanion<TrainingRow> {
       if (description != null) 'description': description,
       if (isFavorite != null) 'is_favorite': isFavorite,
       if (serverId != null) 'server_id': serverId,
+      if (importedAt != null) 'imported_at': importedAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -2177,6 +2233,7 @@ class TrainingsCompanion extends UpdateCompanion<TrainingRow> {
     Value<String?>? description,
     Value<bool>? isFavorite,
     Value<String?>? serverId,
+    Value<DateTime?>? importedAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -2186,6 +2243,7 @@ class TrainingsCompanion extends UpdateCompanion<TrainingRow> {
       description: description ?? this.description,
       isFavorite: isFavorite ?? this.isFavorite,
       serverId: serverId ?? this.serverId,
+      importedAt: importedAt ?? this.importedAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -2209,6 +2267,9 @@ class TrainingsCompanion extends UpdateCompanion<TrainingRow> {
     if (serverId.present) {
       map['server_id'] = Variable<String>(serverId.value);
     }
+    if (importedAt.present) {
+      map['imported_at'] = Variable<DateTime>(importedAt.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -2226,6 +2287,7 @@ class TrainingsCompanion extends UpdateCompanion<TrainingRow> {
           ..write('description: $description, ')
           ..write('isFavorite: $isFavorite, ')
           ..write('serverId: $serverId, ')
+          ..write('importedAt: $importedAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -7657,6 +7719,7 @@ typedef $$TrainingsTableCreateCompanionBuilder =
       Value<String?> description,
       Value<bool> isFavorite,
       Value<String?> serverId,
+      Value<DateTime?> importedAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -7667,6 +7730,7 @@ typedef $$TrainingsTableUpdateCompanionBuilder =
       Value<String?> description,
       Value<bool> isFavorite,
       Value<String?> serverId,
+      Value<DateTime?> importedAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -7702,6 +7766,11 @@ class $$TrainingsTableFilterComposer
 
   ColumnFilters<String> get serverId => $composableBuilder(
     column: $table.serverId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get importedAt => $composableBuilder(
+    column: $table.importedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7745,6 +7814,11 @@ class $$TrainingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get importedAt => $composableBuilder(
+    column: $table.importedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -7778,6 +7852,11 @@ class $$TrainingsTableAnnotationComposer
 
   GeneratedColumn<String> get serverId =>
       $composableBuilder(column: $table.serverId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get importedAt => $composableBuilder(
+    column: $table.importedAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
@@ -7819,6 +7898,7 @@ class $$TrainingsTableTableManager
                 Value<String?> description = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<String?> serverId = const Value.absent(),
+                Value<DateTime?> importedAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TrainingsCompanion(
@@ -7827,6 +7907,7 @@ class $$TrainingsTableTableManager
                 description: description,
                 isFavorite: isFavorite,
                 serverId: serverId,
+                importedAt: importedAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -7837,6 +7918,7 @@ class $$TrainingsTableTableManager
                 Value<String?> description = const Value.absent(),
                 Value<bool> isFavorite = const Value.absent(),
                 Value<String?> serverId = const Value.absent(),
+                Value<DateTime?> importedAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TrainingsCompanion.insert(
@@ -7845,6 +7927,7 @@ class $$TrainingsTableTableManager
                 description: description,
                 isFavorite: isFavorite,
                 serverId: serverId,
+                importedAt: importedAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),

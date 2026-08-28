@@ -17,7 +17,11 @@ abstract class TrainingRepository {
   /// ids, for the items as much as for the training itself, so the argument
   /// cannot say what was written.
   Future<Training> saveTraining(Training training);
-  Future<void> updateTraining(Training training);
+
+  /// Writes an existing training and hands back the stored copy, for the same
+  /// reason [saveTraining] does: an item the edit added is stored under an id
+  /// storage mints, and only the answer says which one.
+  Future<Training> updateTraining(Training training);
   Future<void> toggleFav(String trainingId);
   Future<void> deleteTraining(String trainingId);
   Future<List<SessionModel>> getAllSessionsWithReps({SessionFilter? filters});
@@ -56,8 +60,10 @@ class LocalTrainingRepository extends TrainingRepository {
   }
 
   @override
-  Future<void> updateTraining(Training training) =>
-      _database.updateTraining(training);
+  Future<Training> updateTraining(Training training) async {
+    await _database.updateTraining(training);
+    return (await _database.getTraining(training.id))!;
+  }
 
   @override
   Future<void> toggleFav(String trainingId) => _database.toggleFav(trainingId);
@@ -156,8 +162,12 @@ class RemoteTrainingRepository extends TrainingRepository {
   }
 
   @override
-  Future<void> updateTraining(Training training) async {
-    await _apiClient.updateTrainingApi(training.id, training.toJson());
+  Future<Training> updateTraining(Training training) async {
+    final result = await _apiClient.updateTrainingApi(
+      training.id,
+      training.toJson(),
+    );
+    return Training.fromJson(result);
   }
 
   @override

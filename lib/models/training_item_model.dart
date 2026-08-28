@@ -589,7 +589,14 @@ class TrainingItem {
   /// A null argument leaves the field alone, except for [groupTitle]: a blank
   /// one clears the title, since an editor always has some text to hand over
   /// and a group is allowed to have no name.
+  ///
+  /// [id] is for the guest import alone, which has to name every item by what
+  /// the server calls it. Nothing that edits a training passes one: the reps,
+  /// the open counts and the program overrides recorded against an item all key
+  /// on its id, and an item that changes identity strands every one of them.
+  /// A copy meant to stand on its own goes through [duplicate] instead.
   TrainingItem copyWith({
+    String? id,
     int? position,
     int? worktimeSeconds,
     int? restSeconds,
@@ -611,7 +618,7 @@ class TrainingItem {
     List<TrainingItem>? items,
   }) {
     return TrainingItem(
-      id: id,
+      id: id ?? this.id,
       type: type,
       position: position ?? this.position,
       parentId: parentId,
