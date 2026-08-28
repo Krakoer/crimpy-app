@@ -1,0 +1,108 @@
+import 'package:crimpy/models/common.dart';
+import 'package:crimpy/models/session.dart';
+import 'package:crimpy/services/coach_reply_announcer.dart';
+import 'package:crimpy/services/notification_service.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// Records what would have been posted, so the announcer can be exercised
+/// without the notifications plugin.
+class _RecordingNotificationService extends NotificationService {
+  final List<String> shown = [];
+
+  @override
+  Future<void> showCoachReply({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    shown.add(body);
+  }
+}
+
+SessionModel _session({
+  required String id,
+  String? coachReply,
+  bool coachReplyRead = false,
+}) => SessionModel(
+  id: id,
+  name: 'Repeaters',
+  notes: 'Felt heavy',
+  isAssessment: false,
+  origin: SessionOrigin.logged,
+  activity: SessionActivity.hangboard,
+  coachReply: coachReply,
+  coachReplyAt: coachReply == null ? null : DateTime(2026, 8, 28),
+  coachReplyRead: coachReplyRead,
+);
+
+void main() {
+  late _RecordingNotificationService notifications;
+  late CoachReplyAnnouncer announcer;
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    notifications = _RecordingNotificationService();
+    announcer = CoachReplyAnnouncer(notifications);
+  });
+
+  test('announces an unread reply once', () async {
+    final sessions = [_session(id: 's-1', coachReply: 'Rest more')];
+
+    await announcer.announce(sessions);
+    await announcer.announce(sessions);
+
+    expect(notifications.shown, ['Repeaters: Rest more']);
+  });
+
+  test('says nothing about a reply the athlete has read', () async {
+    await announcer.announce([
+      _session(id: 's-1', coachReply: 'Rest more', coachReplyRead: true),
+    ]);
+
+    expect(notifications.shown, isEmpty);
+  });
+
+  test('says nothing about a session with no reply', () async {
+    await announcer.announce([_session(id: 's-1')]);
+
+    expect(notifications.shown, isEmpty);
+  });
+
+  test('announces a rewritten reply again once the first was read', () async {
+    await announcer.announce([_session(id: 's-1', coachReply: 'Rest more')]);
+    await announcer.announce([
+      _session(id: 's-1', coachReply: 'Rest more', coachReplyRead: true),
+    ]);
+    await announcer.announce([_session(id: 's-1', coachReply: 'Correction')]);
+
+    expect(notifications.shown, [
+      'Repeaters: Rest more',
+      'Repeaters: Correction',
+    ]);
+  });
+
+  test('forgets what was announced when the account signs out', () async {
+    final sessions = [_session(id: 's-1', coachReply: 'Rest more')];
+    await announcer.announce(sessions);
+
+    await announcer.clear();
+    await announcer.announce(sessions);
+
+    expect(notifications.shown, [
+      'Repeaters: Rest more',
+      'Repeaters: Rest more',
+    ]);
+  });
+
+  test('keeps a notification id inside the block it reserved', () {
+    for (final id in ['s-1', 'a-much-longer-session-uuid', '']) {
+      final notificationId = CoachReplyAnnouncer.notificationIdFor(id);
+      expect(notificationId, greaterThanOrEqualTo(coachReplyIdBase));
+      expect(
+        notificationId,
+        lessThan(coachReplyIdBase + coachReplyIdBlockSize),
+      );
+    }
+  });
+}
