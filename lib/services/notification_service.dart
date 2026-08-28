@@ -216,6 +216,14 @@ class NotificationService {
     return true;
   }
 
+  /// Whether this platform can deliver a notification at all. Exposed on the
+  /// service rather than read off [supportsTrainingReminders] directly so the
+  /// callers deciding what to offer stay testable off a device.
+  bool get canNotify => supportsTrainingReminders;
+
+  /// Whether the OS currently accepts our notifications. Asked rather than
+  /// assumed: a coach answer is dropped silently when it does not, and the
+  /// announcer must not record it as delivered.
   Future<bool> hasPermission() async {
     if (!supportsTrainingReminders) return false;
     await initialize();
