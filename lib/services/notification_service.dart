@@ -230,6 +230,14 @@ class NotificationService {
     if (Platform.isAndroid) {
       return await _androidPlugin?.areNotificationsEnabled() ?? true;
     }
+    if (Platform.isIOS) {
+      // Initialization asks for nothing, so an athlete who never turned
+      // reminders on has never been prompted and holds no permission.
+      // A provisional grant still delivers, quietly, so it counts.
+      final options = await _iosPlugin?.checkPermissions();
+      if (options == null) return false;
+      return options.isEnabled || options.isProvisionalEnabled;
+    }
     return true;
   }
 
