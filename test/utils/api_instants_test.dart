@@ -109,5 +109,21 @@ void main() {
       expect(startDate.month, 8);
       expect(startDate.day, 31);
     });
+
+    // The cache writes a program back out through toJson and reads it in again
+    // through fromJson, so the two have to agree on the shape. The API is the
+    // stricter of the two readers: it rejects a start date that is not
+    // YYYY-MM-DD outright.
+    test('writes its start date back in the shape the API takes', () {
+      expect(parse().toJson()['start_date'], '2026-08-31');
+    });
+
+    test('survives the round trip through the cache', () {
+      final cached = Program.fromJson(parse().toJson());
+
+      expect(cached.startDate, parse().startDate);
+      expect(cached.createdAt.isAtSameMomentAs(instant), true);
+      expect(cached.updatedAt.isAtSameMomentAs(instant), true);
+    });
   });
 }

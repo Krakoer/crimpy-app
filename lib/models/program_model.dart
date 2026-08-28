@@ -2,6 +2,7 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/utils/datetimes.dart';
+import 'package:intl/intl.dart';
 
 /// Maps a backend training_type string to the app SessionActivity.
 SessionActivity sessionActivityFromApi(String? value) => switch (value) {
@@ -60,7 +61,9 @@ class Program {
     'user_id': userId,
     'name': name,
     'objective': objective,
-    'start_date': startDate.toIso8601String(),
+    // A calendar date on the way out too: the API rejects anything that is
+    // not YYYY-MM-DD, and the cache reads this back through the same parse.
+    'start_date': DateFormat('yyyy-MM-dd').format(startDate),
     'duration_weeks': durationWeeks,
     'created_at': createdAt.toIso8601String(),
     'updated_at': updatedAt.toIso8601String(),
