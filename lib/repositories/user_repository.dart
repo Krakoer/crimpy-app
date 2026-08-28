@@ -1,5 +1,6 @@
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/auth_models.dart' as auth_models;
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:drift/drift.dart' as drift;
 
 /// Stores the signed-in user on the device.
@@ -38,9 +39,12 @@ class UserRepository {
       isAdmin: drift.Value(user.isAdmin),
       isCoach: drift.Value(user.isCoach),
       coachValidated: drift.Value(user.coachValidated),
-      // DateTime are in format "2006-01-02 15:04:05.999999999 +0000 UTC"
+      // The API sends this one as a Go time.Time String(), which is
+      // "2006-01-02 15:04:05.999999999 +0000 UTC" and not something
+      // DateTime.parse reads. Swapping the trailing marker for a Z makes it
+      // an instant the parse boundary handles like every other one.
       createdAt: drift.Value(
-        DateTime.parse(user.createdAt.replaceAll(" +0000 UTC", "")),
+        parseApiInstant(user.createdAt.replaceAll(" +0000 UTC", "Z")),
       ),
     ),
   );

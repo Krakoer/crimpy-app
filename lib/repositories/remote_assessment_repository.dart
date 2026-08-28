@@ -2,6 +2,7 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/services/api_client.dart';
+import 'package:crimpy/utils/datetimes.dart';
 
 class RemoteAssessmentRepository extends AssessmentRepository {
   final ApiClient _apiClient;
@@ -46,11 +47,9 @@ class RemoteAssessmentRepository extends AssessmentRepository {
     List<AssessmentModel> result = data.map((a) {
       return AssessmentModel(
         id: a['id'] as String,
-        date: DateTime.parse(
-          a['session_date'] as String? ??
-              a['date'] as String? ??
-              DateTime.now().toIso8601String(),
-        ),
+        date:
+            tryParseApiInstant((a['session_date'] ?? a['date']) as String?) ??
+            DateTime.now(),
         // Each row carries its own definition, so the history can be named
         // and formatted without a second request.
         definition: AssessmentDefinition(
