@@ -315,6 +315,11 @@ class NotificationService {
   }
 }
 
+/// Shown wherever a permission request comes back denied. One copy, so the
+/// reminder settings and the coach answer ask cannot drift apart.
+const String notificationsBlockedMessage =
+    'Notifications are blocked. Enable them for Crimpy in your device settings.';
+
 /// Whether the current platform can deliver scheduled reminders at all.
 bool get supportsTrainingReminders => Platform.isAndroid || Platform.isIOS;
 

@@ -248,11 +248,17 @@ Future<CoachNotificationPrompt?> pendingCoachNotificationPrompt(Ref ref) async {
   final service = ref.watch(coachNotificationPromptServiceProvider);
   final sessions = await ref.watch(sessionsProvider.future);
   final hasUnreadReply = sessions.any((session) => session.hasUnreadCoachReply);
-  if (hasUnreadReply &&
-      !await service.hasAsked(CoachNotificationPrompt.unreadReply)) {
+  // The two are a ladder, not two chances at the same question: once the ask
+  // naming a waiting answer has been made, the weaker one that only says an
+  // answer could come is behind the facts and is never made.
+  final askedAboutReply = await service.hasAsked(
+    CoachNotificationPrompt.unreadReply,
+  );
+  if (hasUnreadReply && !askedAboutReply) {
     return CoachNotificationPrompt.unreadReply;
   }
-  if (!await service.hasAsked(CoachNotificationPrompt.enrolled)) {
+  if (!askedAboutReply &&
+      !await service.hasAsked(CoachNotificationPrompt.enrolled)) {
     return CoachNotificationPrompt.enrolled;
   }
   return null;

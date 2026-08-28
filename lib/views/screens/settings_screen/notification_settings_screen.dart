@@ -110,13 +110,9 @@ class _Content extends ConsumerWidget {
         .read(notificationPreferencesControllerProvider.notifier)
         .setEnabled(value);
     if (granted || !context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Notifications are blocked. Enable them for Crimpy in your device settings.',
-        ),
-      ),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text(notificationsBlockedMessage)));
   }
 }
 

@@ -185,6 +185,35 @@ void main() {
     );
   });
 
+  test(
+    'the ask about a waiting answer is never followed by the weaker one',
+    () async {
+      await CoachNotificationPromptService().markAsked(
+        CoachNotificationPrompt.unreadReply,
+      );
+      final container = _containerWith(
+        user: _user,
+        enrollment: _enrollment,
+        sessions: [_session(coachReply: 'Nice work')],
+      );
+
+      expect(
+        await container.read(pendingCoachNotificationPromptProvider.future),
+        isNull,
+      );
+    },
+  );
+
+  test('signing out forgets that the account was asked', () async {
+    final service = CoachNotificationPromptService();
+    await service.markAsked(CoachNotificationPrompt.enrolled);
+    final container = _containerWith(enrollment: _enrollment);
+
+    await container.read(coachReplySyncProvider.future);
+
+    expect(await service.hasAsked(CoachNotificationPrompt.enrolled), isFalse);
+  });
+
   test('both asks spent leaves nothing due', () async {
     final service = CoachNotificationPromptService();
     await service.markAsked(CoachNotificationPrompt.enrolled);
