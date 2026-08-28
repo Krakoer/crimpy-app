@@ -95,6 +95,17 @@ class SessionCard extends StatelessWidget {
                   ],
                 ),
               ),
+              // An answer from the coach the athlete has not opened yet. Shown
+              // on the row rather than only inside the session, so it can be
+              // found without opening every one.
+              if (session.hasUnreadCoachReply) ...[
+                Icon(
+                  Icons.mark_chat_unread,
+                  size: 18,
+                  color: CrimpyTheme.primaryOrange,
+                ),
+                const SizedBox(width: 8),
+              ],
               // Arrow indicator
               Icon(Icons.chevron_right, color: CrimpyTheme.gray400),
             ],

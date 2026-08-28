@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/session_filter.dart';
 import 'package:crimpy/repositories/builtin_preferences_repository.dart';
@@ -173,6 +174,31 @@ class Sessions extends _$Sessions {
       }
       rethrow;
     }
+  }
+
+  /// Marks the coach's answer to a session as seen, and drops the badge in
+  /// place rather than refetching the whole history for one flag.
+  ///
+  /// Sends the receipt whether or not the history is loaded: the screen that
+  /// asks is reading the answer either way, and the server keeps the first
+  /// read, so asking twice costs nothing.
+  Future<void> markCoachReplyRead(String sessionId) async {
+    try {
+      await _trainingRepository.markCoachReplyRead(sessionId);
+    } catch (error) {
+      // A receipt that did not land is not worth an error state: the answer is
+      // on the screen either way, and the badge simply stays until the next
+      // time the session is opened. Offline, and an answer the coach took back
+      // since the last fetch, both come through here.
+      AppLoggerHelper.warning('Coach reply receipt failed: $error');
+      return;
+    }
+    if (!ref.mounted) return;
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData([
+      for (final s in current) s.id == sessionId ? s.withCoachReplyRead() : s,
+    ]);
   }
 
   Future<void> deleteSession(String sessionId) async {

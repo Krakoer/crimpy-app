@@ -2,6 +2,7 @@ import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/cached_program_schedule.dart';
 import 'package:crimpy/models/notification_preferences.dart';
 import 'package:crimpy/models/program_model.dart';
+import 'package:crimpy/services/coach_reply_announcer.dart';
 import 'package:crimpy/services/notification_preferences_service.dart';
 import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/services/training_reminder_scheduler.dart';
@@ -186,4 +187,29 @@ Future<void> trainingReminderSync(Ref ref) async {
         sessions: sessions,
       );
   AppLoggerHelper.debug('Training reminders rescheduled');
+}
+
+@Riverpod(keepAlive: true)
+CoachReplyAnnouncer coachReplyAnnouncer(Ref ref) =>
+    CoachReplyAnnouncer(ref.watch(notificationServiceProvider));
+
+/// Tells the athlete about the answers their coach wrote, whenever the session
+/// history changes. Watched by the app shell so it stays alive.
+///
+/// Signing out clears what has been announced instead: the answers belong to
+/// the account leaving, and the guest store has none to announce.
+@Riverpod(keepAlive: true)
+Future<void> coachReplySync(Ref ref) async {
+  final announcer = ref.watch(coachReplyAnnouncerProvider);
+
+  // Awaited rather than read off the current state: auth is still loading on
+  // every cold start, and the session history answers from the guest store
+  // until it resolves. Announcing against that store would say nothing was
+  // unread and wipe the record of what has already been announced.
+  final user = await ref.watch(authStateProvider.future);
+  if (user == null) {
+    await announcer.clear();
+    return;
+  }
+  await announcer.announce(await ref.watch(sessionsProvider.future));
 }

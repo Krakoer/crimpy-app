@@ -349,6 +349,12 @@ class ApiClient {
     await delete('/api/sessions/$id');
   }
 
+  /// Stamps the coach's answer to a session as seen. Idempotent on the server,
+  /// which keeps the first read.
+  Future<void> markCoachReplyRead(String id) async {
+    await put('/api/sessions/$id/coach-reply/read');
+  }
+
   // ----- Trainings -----
   Future<List<Map<String, dynamic>>> getTrainings() async {
     final res = await get('/api/trainings');

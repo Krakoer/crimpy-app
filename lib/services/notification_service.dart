@@ -24,6 +24,33 @@ class NotificationService {
     importance: Importance.defaultImportance,
   );
 
+  static const String _coachReplyChannelId = 'coach_replies';
+  static const String _coachReplyChannelName = 'Coach replies';
+  static const String _coachReplyChannelDescription =
+      'Tells you when your coach answered the feedback you left on a session.';
+
+  static const AndroidNotificationChannel _coachReplyChannel =
+      AndroidNotificationChannel(
+        _coachReplyChannelId,
+        _coachReplyChannelName,
+        description: _coachReplyChannelDescription,
+        importance: Importance.defaultImportance,
+      );
+
+  // A separate channel from the reminders so the two can be silenced apart: a
+  // reminder is a nudge the user may not want, an answer from their coach is
+  // not the same thing.
+  static const NotificationDetails _coachReplyDetails = NotificationDetails(
+    android: AndroidNotificationDetails(
+      _coachReplyChannelId,
+      _coachReplyChannelName,
+      channelDescription: _coachReplyChannelDescription,
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+    ),
+    iOS: DarwinNotificationDetails(),
+  );
+
   /// Identifies the snooze button in a notification response, and the iOS
   /// category the button is registered under.
   static const String snoozeActionId = 'snooze_training_reminder';
@@ -132,6 +159,7 @@ class NotificationService {
       onDidReceiveNotificationResponse: _handleResponse,
     );
     await _androidPlugin?.createNotificationChannel(_channel);
+    await _androidPlugin?.createNotificationChannel(_coachReplyChannel);
 
     // A snooze tapped while the app was not running launches it, and the
     // response callback above can fire before anything is listening. The launch
@@ -219,6 +247,32 @@ class NotificationService {
       );
     }
     AppLoggerHelper.debug('Scheduled ${occurrences.length} training reminders');
+  }
+
+  /// Posts the answer a coach wrote to a session, right now. Unlike a reminder
+  /// this is not scheduled: the answer is already there by the time the app
+  /// learns of it.
+  Future<void> showCoachReply({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    await initialize();
+    if (!supportsTrainingReminders) return;
+    await _plugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: _coachReplyDetails,
+    );
+  }
+
+  /// Takes one coach reply notification out of the shade, for an answer the
+  /// athlete has since read in the app.
+  Future<void> cancelCoachReply(int id) async {
+    await initialize();
+    if (!supportsTrainingReminders) return;
+    await _plugin.cancel(id: id);
   }
 
   /// Cancels the reminder id block only, leaving any other notification alone.

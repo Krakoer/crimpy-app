@@ -11,7 +11,9 @@ import 'package:crimpy/views/screens/settings_screen/settings_screen.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../viewmodels/ble_view_model.dart';
 import '../viewmodels/app_info_view_model.dart';
+import '../viewmodels/auth_view_model.dart';
 import '../viewmodels/notification_view_model.dart';
+import '../viewmodels/training_view_model.dart';
 import 'widgets/ble/connection_dialog.dart';
 import 'widgets/whats_new_dialog.dart';
 
@@ -104,6 +106,10 @@ class _MainPageState extends ConsumerState<MainPage>
     if (state == AppLifecycleState.resumed) {
       ref.invalidate(programScheduleCacheProvider);
       ref.invalidate(trainingReminderSyncProvider);
+      // A reply written while the app was in the background only shows up on
+      // the next fetch, so the history is what has to be refreshed here. Guest
+      // mode has no coach to answer, and nothing else here needs the refetch.
+      if (ref.read(isAuthenticatedProvider)) ref.invalidate(sessionsProvider);
     }
   }
 
@@ -172,6 +178,9 @@ class _MainPageState extends ConsumerState<MainPage>
     // Keeps the reminder plan in step with the settings, the coach program and
     // the logged sessions for as long as the app is running.
     ref.watch(trainingReminderSyncProvider);
+    // Tells the athlete about an answer their coach wrote, for as long as the
+    // app is running.
+    ref.watch(coachReplySyncProvider);
     // Snoozing from the notification brings the app up so the hour can be
     // picked, which cannot happen from the notification itself.
     ref.listen(snoozeRequestsProvider, (_, next) {
