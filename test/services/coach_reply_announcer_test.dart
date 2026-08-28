@@ -6,9 +6,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Records what would have been posted, so the announcer can be exercised
-/// without the notifications plugin.
+/// without the notifications plugin. The platform check inside the real service
+/// answers false off a device, so permission is stated here instead.
 class _RecordingNotificationService extends NotificationService {
+  _RecordingNotificationService({this.permitted = true});
+
+  final bool permitted;
   final List<String> shown = [];
+  final List<int> cancelled = [];
+
+  @override
+  Future<bool> hasPermission() async => permitted;
 
   @override
   Future<void> showCoachReply({
@@ -17,6 +25,11 @@ class _RecordingNotificationService extends NotificationService {
     required String body,
   }) async {
     shown.add(body);
+  }
+
+  @override
+  Future<void> cancelCoachReply(int id) async {
+    cancelled.add(id);
   }
 }
 
@@ -93,6 +106,45 @@ void main() {
       'Repeaters: Rest more',
       'Repeaters: Rest more',
     ]);
+  });
+
+  test('says nothing, and records nothing, without the permission', () async {
+    final blocked = _RecordingNotificationService(permitted: false);
+    final sessions = [_session(id: 's-1', coachReply: 'Rest more')];
+
+    await CoachReplyAnnouncer(blocked).announce(sessions);
+
+    expect(blocked.shown, isEmpty);
+
+    // Nothing was recorded, so the answer is still announced the first time the
+    // athlete allows notifications.
+    await announcer.announce(sessions);
+    expect(notifications.shown, ['Repeaters: Rest more']);
+  });
+
+  test('takes the notification down once the answer has been read', () async {
+    await announcer.announce([_session(id: 's-1', coachReply: 'Rest more')]);
+
+    await announcer.announce([
+      _session(id: 's-1', coachReply: 'Rest more', coachReplyRead: true),
+    ]);
+
+    expect(notifications.cancelled, [
+      CoachReplyAnnouncer.notificationIdFor('s-1'),
+    ]);
+  });
+
+  test('keeps the record when handed a history that omits the session', () async {
+    final sessions = [_session(id: 's-1', coachReply: 'Rest more')];
+    await announcer.announce(sessions);
+
+    // The guest store answers with nothing while the sign in resolves. Treating
+    // that as "no longer unread" would re-announce everything on the next run.
+    await announcer.announce(const []);
+    await announcer.announce(sessions);
+
+    expect(notifications.shown, ['Repeaters: Rest more']);
+    expect(notifications.cancelled, isEmpty);
   });
 
   test('keeps a notification id inside the block it reserved', () {

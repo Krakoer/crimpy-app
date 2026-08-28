@@ -4,7 +4,6 @@ import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/session_filter.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/repositories/training_repository.dart';
-import 'package:crimpy/viewmodels/notification_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,9 +11,10 @@ import 'package:flutter_test/flutter_test.dart';
 /// Serves a fixed history and records the read receipts, so the notifier can
 /// be exercised without a database or a server.
 class _FakeRepository extends TrainingRepository {
-  _FakeRepository(this.sessions);
+  _FakeRepository(this.sessions, {this.receiptFails = false});
 
   final List<SessionModel> sessions;
+  final bool receiptFails;
   final List<String> receipts = [];
 
   @override
@@ -24,6 +24,7 @@ class _FakeRepository extends TrainingRepository {
 
   @override
   Future<void> markCoachReplyRead(String sessionId) async {
+    if (receiptFails) throw Exception('offline');
     receipts.add(sessionId);
   }
 
@@ -126,22 +127,6 @@ void main() {
     });
   });
 
-  group('unreadCoachRepliesProvider', () {
-    test('keeps only the answers still waiting to be read', () async {
-      final container = _containerWith(
-        _FakeRepository([
-          _session(id: 's-1', coachReply: 'Rest more'),
-          _session(id: 's-2'),
-          _session(id: 's-3', coachReply: 'Nice', coachReplyRead: true),
-        ]),
-      );
-
-      final unread = await container.read(unreadCoachRepliesProvider.future);
-
-      expect(unread.map((s) => s.id), ['s-1']);
-    });
-  });
-
   group('Sessions.markCoachReplyRead', () {
     test('sends the receipt and drops the badge in place', () async {
       final repository = _FakeRepository([
@@ -156,6 +141,21 @@ void main() {
       final sessions = container.read(sessionsProvider).requireValue;
       expect(sessions.single.hasUnreadCoachReply, isFalse);
       expect(sessions.single.coachReply, 'Rest more');
+    });
+
+    test('keeps the badge when the receipt cannot be sent', () async {
+      final repository = _FakeRepository([
+        _session(id: 's-1', coachReply: 'Rest more'),
+      ], receiptFails: true);
+      final container = _containerWith(repository);
+      await container.read(sessionsProvider.future);
+
+      // A receipt lost offline must not surface as an error state, and must not
+      // pretend the answer was read either.
+      await container.read(sessionsProvider.notifier).markCoachReplyRead('s-1');
+
+      final sessions = container.read(sessionsProvider).requireValue;
+      expect(sessions.single.hasUnreadCoachReply, isTrue);
     });
 
     test('leaves the rest of the history untouched', () async {

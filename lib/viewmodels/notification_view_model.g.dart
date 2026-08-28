@@ -454,56 +454,6 @@ final class CoachReplyAnnouncerProvider
 String _$coachReplyAnnouncerHash() =>
     r'6c9086f5db1f51b7175cfa04107383ac5403e593';
 
-/// The sessions carrying an answer the athlete has not opened yet, newest
-/// answer first. Read by the history badge and by the sync below.
-
-@ProviderFor(unreadCoachReplies)
-const unreadCoachRepliesProvider = UnreadCoachRepliesProvider._();
-
-/// The sessions carrying an answer the athlete has not opened yet, newest
-/// answer first. Read by the history badge and by the sync below.
-
-final class UnreadCoachRepliesProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<SessionModel>>,
-          List<SessionModel>,
-          FutureOr<List<SessionModel>>
-        >
-    with
-        $FutureModifier<List<SessionModel>>,
-        $FutureProvider<List<SessionModel>> {
-  /// The sessions carrying an answer the athlete has not opened yet, newest
-  /// answer first. Read by the history badge and by the sync below.
-  const UnreadCoachRepliesProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'unreadCoachRepliesProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$unreadCoachRepliesHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<List<SessionModel>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<List<SessionModel>> create(Ref ref) {
-    return unreadCoachReplies(ref);
-  }
-}
-
-String _$unreadCoachRepliesHash() =>
-    r'3169d0a382c0a757626bb243d3f4762012ed5061';
-
 /// Tells the athlete about the answers their coach wrote, whenever the session
 /// history changes. Watched by the app shell so it stays alive.
 ///
@@ -552,4 +502,4 @@ final class CoachReplySyncProvider
   }
 }
 
-String _$coachReplySyncHash() => r'07eba222ce7bf8390269da99e067499523b37efe';
+String _$coachReplySyncHash() => r'59360cccd835823223ce5a9dd3bae1100143c6ce';

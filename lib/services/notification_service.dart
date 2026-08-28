@@ -267,6 +267,14 @@ class NotificationService {
     );
   }
 
+  /// Takes one coach reply notification out of the shade, for an answer the
+  /// athlete has since read in the app.
+  Future<void> cancelCoachReply(int id) async {
+    await initialize();
+    if (!supportsTrainingReminders) return;
+    await _plugin.cancel(id: id);
+  }
+
   /// Cancels the reminder id block only, leaving any other notification alone.
   Future<void> cancelAll() => _serialized(_cancelAll);
 
