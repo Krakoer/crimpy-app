@@ -383,6 +383,16 @@ class ApiClient {
     await delete('/api/trainings/$id');
   }
 
+  // ----- Coach enrollment (coachee) -----
+
+  /// The coach this account is enrolled with. The endpoint answers 404 rather
+  /// than an empty body when there is none, which the repository turns into a
+  /// null.
+  Future<Map<String, dynamic>> getUserEnrollment() async {
+    final res = await get('/api/user/enrollment');
+    return res.data as Map<String, dynamic>;
+  }
+
   // ----- Programs (coachee, read-only) -----
   Future<List<Map<String, dynamic>>> getMyPrograms() async {
     final res = await get('/api/user/programs');

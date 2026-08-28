@@ -216,11 +216,27 @@ class NotificationService {
     return true;
   }
 
+  /// Whether this platform can deliver a notification at all. Exposed on the
+  /// service rather than read off [supportsTrainingReminders] directly so the
+  /// callers deciding what to offer stay testable off a device.
+  bool get canNotify => supportsTrainingReminders;
+
+  /// Whether the OS currently accepts our notifications. Asked rather than
+  /// assumed: a coach answer is dropped silently when it does not, and the
+  /// announcer must not record it as delivered.
   Future<bool> hasPermission() async {
     if (!supportsTrainingReminders) return false;
     await initialize();
     if (Platform.isAndroid) {
       return await _androidPlugin?.areNotificationsEnabled() ?? true;
+    }
+    if (Platform.isIOS) {
+      // Initialization asks for nothing, so an athlete who never turned
+      // reminders on has never been prompted and holds no permission.
+      // A provisional grant still delivers, quietly, so it counts.
+      final options = await _iosPlugin?.checkPermissions();
+      if (options == null) return false;
+      return options.isEnabled || options.isProvisionalEnabled;
     }
     return true;
   }
@@ -298,6 +314,11 @@ class NotificationService {
     }
   }
 }
+
+/// Shown wherever a permission request comes back denied. One copy, so the
+/// reminder settings and the coach answer ask cannot drift apart.
+const String notificationsBlockedMessage =
+    'Notifications are blocked. Enable them for Crimpy in your device settings.';
 
 /// Whether the current platform can deliver scheduled reminders at all.
 bool get supportsTrainingReminders => Platform.isAndroid || Platform.isIOS;

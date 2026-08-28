@@ -1,4 +1,5 @@
 import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/assessments_list_screen.dart';
 import 'package:crimpy/views/screens/profile_screen/profile_screen.dart';
 import 'package:crimpy/views/widgets/ble/tare_dialog.dart';
@@ -12,9 +13,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../viewmodels/ble_view_model.dart';
 import '../viewmodels/app_info_view_model.dart';
 import '../viewmodels/auth_view_model.dart';
+import '../viewmodels/coach_view_model.dart';
 import '../viewmodels/notification_view_model.dart';
 import '../viewmodels/training_view_model.dart';
 import 'widgets/ble/connection_dialog.dart';
+import 'widgets/coach_notification_dialog.dart';
 import 'widgets/whats_new_dialog.dart';
 
 class _NavItem extends StatelessWidget {
@@ -84,8 +87,11 @@ class _MainPageState extends ConsumerState<MainPage>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkForUpdates();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _checkForUpdates();
+      // After the release notes rather than beside them: both are dialogs, and
+      // the athlete should not be answering two of them at once.
+      await _askForCoachNotifications();
     });
   }
 
@@ -157,6 +163,72 @@ class _MainPageState extends ConsumerState<MainPage>
     );
   }
 
+  /// Asks a coached athlete to allow the notifications their coach's answers
+  /// are delivered through, explaining what they are before the OS sheet does
+  /// not. Answered once per reason: an athlete who declines is not asked again
+  /// for the same one on the next launch.
+  /// Guards against two asks at once: the startup pass and a sign in landing
+  /// together would each show their own dialog.
+  bool _asking = false;
+
+  Future<void> _askForCoachNotifications() async {
+    if (_asking) return;
+    _asking = true;
+    try {
+      await _askForCoachNotificationsOnce();
+    } finally {
+      _asking = false;
+    }
+  }
+
+  Future<void> _askForCoachNotificationsOnce() async {
+    final prompt = await ref.read(
+      pendingCoachNotificationPromptProvider.future,
+    );
+    if (prompt == null || !mounted) return;
+
+    final enrollment = await ref.read(coachEnrollmentProvider.future);
+    if (enrollment == null || !mounted) return;
+
+    // The enrollment fetch and the session history can take the whole request
+    // timeout, by which time the athlete may be deep in a workout. A dialog
+    // pushed onto the root navigator would land on top of it, so the ask waits
+    // for them to be back on the main page, still unspent.
+    if (Navigator.of(context).canPop()) return;
+
+    // Recorded before the OS is asked: whichever way the athlete answers, and
+    // whatever the sheet does after, they have now been asked this once.
+    await ref.read(coachNotificationPromptServiceProvider).markAsked(prompt);
+    if (!mounted) return;
+
+    final wanted = await showDialog<bool>(
+      context: context,
+      // Dismissing by tapping beside it would spend the ask on a stray tap.
+      barrierDismissible: false,
+      builder: (context) => CoachNotificationDialog(
+        prompt: prompt,
+        coachName: enrollment.coachName,
+      ),
+    );
+    if (wanted != true || !mounted) return;
+
+    final granted = await ref
+        .read(notificationServiceProvider)
+        .requestPermission();
+    if (!mounted) return;
+
+    if (granted) {
+      // The announcer skipped every answer it could not deliver, so the unread
+      // ones are still waiting to be raised.
+      ref.invalidate(reminderPermissionProvider);
+      ref.invalidate(coachReplySyncProvider);
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text(notificationsBlockedMessage)));
+  }
+
   /// Check if the app has been updated and show the "What's New" dialog
   Future<void> _checkForUpdates() async {
     final whatsNewManager = ref.read(whatsNewProvider);
@@ -185,6 +257,17 @@ class _MainPageState extends ConsumerState<MainPage>
     // picked, which cannot happen from the notification itself.
     ref.listen(snoozeRequestsProvider, (_, next) {
       if (next.hasValue) _askSnoozeTime();
+    });
+    // This page is built once for the life of the process and login is a route
+    // pushed over it, so an athlete who signs in mid session would otherwise
+    // not be asked until the next cold start. Invalidated rather than awaited:
+    // the recompute the auth change triggers is not scheduled yet, and the
+    // cached answer still describes the guest who was here a moment ago.
+    ref.listen(authStateProvider, (previous, next) {
+      if (previous == null || !isSignedOut(previous)) return;
+      if (next.asData?.value == null) return;
+      ref.invalidate(pendingCoachNotificationPromptProvider);
+      _askForCoachNotifications();
     });
 
     return Scaffold(

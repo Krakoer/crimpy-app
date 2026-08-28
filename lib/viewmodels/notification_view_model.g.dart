@@ -502,4 +502,115 @@ final class CoachReplySyncProvider
   }
 }
 
-String _$coachReplySyncHash() => r'59360cccd835823223ce5a9dd3bae1100143c6ce';
+String _$coachReplySyncHash() => r'2527443f47c9a44742a3fceb4bf6cbbbd6645f4f';
+
+@ProviderFor(coachNotificationPromptService)
+const coachNotificationPromptServiceProvider =
+    CoachNotificationPromptServiceProvider._();
+
+final class CoachNotificationPromptServiceProvider
+    extends
+        $FunctionalProvider<
+          CoachNotificationPromptService,
+          CoachNotificationPromptService,
+          CoachNotificationPromptService
+        >
+    with $Provider<CoachNotificationPromptService> {
+  const CoachNotificationPromptServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'coachNotificationPromptServiceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$coachNotificationPromptServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<CoachNotificationPromptService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CoachNotificationPromptService create(Ref ref) {
+    return coachNotificationPromptService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CoachNotificationPromptService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CoachNotificationPromptService>(
+        value,
+      ),
+    );
+  }
+}
+
+String _$coachNotificationPromptServiceHash() =>
+    r'0cd3fdb28d63865bc7f6847595c65f2fc2629f30';
+
+/// Which permission ask a coached athlete is due, null when none is.
+///
+/// Notifications are only ever asked for from the reminder settings, which an
+/// athlete who does not want a nudge to train never opens. Their coach's
+/// answers then have nowhere to land, so the ask has to happen on its own.
+
+@ProviderFor(pendingCoachNotificationPrompt)
+const pendingCoachNotificationPromptProvider =
+    PendingCoachNotificationPromptProvider._();
+
+/// Which permission ask a coached athlete is due, null when none is.
+///
+/// Notifications are only ever asked for from the reminder settings, which an
+/// athlete who does not want a nudge to train never opens. Their coach's
+/// answers then have nowhere to land, so the ask has to happen on its own.
+
+final class PendingCoachNotificationPromptProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<CoachNotificationPrompt?>,
+          CoachNotificationPrompt?,
+          FutureOr<CoachNotificationPrompt?>
+        >
+    with
+        $FutureModifier<CoachNotificationPrompt?>,
+        $FutureProvider<CoachNotificationPrompt?> {
+  /// Which permission ask a coached athlete is due, null when none is.
+  ///
+  /// Notifications are only ever asked for from the reminder settings, which an
+  /// athlete who does not want a nudge to train never opens. Their coach's
+  /// answers then have nowhere to land, so the ask has to happen on its own.
+  const PendingCoachNotificationPromptProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'pendingCoachNotificationPromptProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$pendingCoachNotificationPromptHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<CoachNotificationPrompt?> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<CoachNotificationPrompt?> create(Ref ref) {
+    return pendingCoachNotificationPrompt(ref);
+  }
+}
+
+String _$pendingCoachNotificationPromptHash() =>
+    r'4ab40e82c3ae4e15ce62d7adfd66f0497a8c33e9';

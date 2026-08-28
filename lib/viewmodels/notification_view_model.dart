@@ -2,11 +2,13 @@ import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/cached_program_schedule.dart';
 import 'package:crimpy/models/notification_preferences.dart';
 import 'package:crimpy/models/program_model.dart';
+import 'package:crimpy/services/coach_notification_prompt_service.dart';
 import 'package:crimpy/services/coach_reply_announcer.dart';
 import 'package:crimpy/services/notification_preferences_service.dart';
 import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/services/training_reminder_scheduler.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
+import 'package:crimpy/viewmodels/coach_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -209,7 +211,55 @@ Future<void> coachReplySync(Ref ref) async {
   final user = await ref.watch(authStateProvider.future);
   if (user == null) {
     await announcer.clear();
+    // Whether the permission was asked for belongs to the account leaving too,
+    // so the next athlete on this device gets asked rather than inheriting a
+    // refusal that was never theirs.
+    await ref.read(coachNotificationPromptServiceProvider).clear();
     return;
   }
   await announcer.announce(await ref.watch(sessionsProvider.future));
+}
+
+@Riverpod(keepAlive: true)
+CoachNotificationPromptService coachNotificationPromptService(Ref ref) =>
+    CoachNotificationPromptService();
+
+/// Which permission ask a coached athlete is due, null when none is.
+///
+/// Notifications are only ever asked for from the reminder settings, which an
+/// athlete who does not want a nudge to train never opens. Their coach's
+/// answers then have nowhere to land, so the ask has to happen on its own.
+@Riverpod(keepAlive: true)
+Future<CoachNotificationPrompt?> pendingCoachNotificationPrompt(Ref ref) async {
+  final notifications = ref.watch(notificationServiceProvider);
+  if (!notifications.canNotify) return null;
+
+  // Awaited for the same reason as the announcer above: auth is still loading
+  // on a cold start, and asking before it resolves would read no coach and no
+  // history, and answer that nothing is due.
+  final user = await ref.watch(authStateProvider.future);
+  if (user == null) return null;
+
+  final enrollment = await ref.watch(coachEnrollmentProvider.future);
+  if (enrollment == null) return null;
+
+  if (await notifications.hasPermission()) return null;
+
+  final service = ref.watch(coachNotificationPromptServiceProvider);
+  final sessions = await ref.watch(sessionsProvider.future);
+  final hasUnreadReply = sessions.any((session) => session.hasUnreadCoachReply);
+  // The two are a ladder, not two chances at the same question: once the ask
+  // naming a waiting answer has been made, the weaker one that only says an
+  // answer could come is behind the facts and is never made.
+  final askedAboutReply = await service.hasAsked(
+    CoachNotificationPrompt.unreadReply,
+  );
+  if (hasUnreadReply && !askedAboutReply) {
+    return CoachNotificationPrompt.unreadReply;
+  }
+  if (!askedAboutReply &&
+      !await service.hasAsked(CoachNotificationPrompt.enrolled)) {
+    return CoachNotificationPrompt.enrolled;
+  }
+  return null;
 }
