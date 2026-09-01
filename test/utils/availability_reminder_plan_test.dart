@@ -1,6 +1,7 @@
 import 'package:crimpy/models/notification_preferences.dart';
 import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/utils/availability_reminder_plan.dart';
+import 'package:crimpy/services/coach_reply_announcer.dart';
 import 'package:crimpy/utils/reminder_plan.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -102,7 +103,7 @@ void main() {
     test('never lands on the training reminder or coach reply blocks', () {
       for (final occurrence in _plan()) {
         expect(occurrence.notificationId, lessThan(reminderIdBase));
-        expect(occurrence.notificationId, lessThan(800000));
+        expect(occurrence.notificationId, lessThan(coachReplyIdBase));
       }
     });
 
@@ -116,9 +117,9 @@ void main() {
 
   group('notification id blocks', () {
     // Cancelling one plan clears its whole block, so an overlap between two
-    // blocks means writing one plan silently kills the other.
-    const coachReplyIdBase = 800000;
-    const coachReplyIdBlockSize = 500;
+    // blocks means writing one plan silently kills the other. The coach reply
+    // bounds are imported rather than restated: a copy here would keep passing
+    // after somebody moved the real ones onto this block.
 
     test('the availability block holds only its own ids', () {
       expect(

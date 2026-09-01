@@ -5,6 +5,7 @@ import 'package:crimpy/views/screens/availability/widgets/day_availability_row.d
 import 'package:crimpy/views/widgets/section_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:crimpy/utils/datetimes.dart';
 
 const List<String> _weekdayNames = [
   'Monday',
@@ -34,35 +35,75 @@ class _WeekAvailabilityScreenState
     extends ConsumerState<WeekAvailabilityScreen> {
   late DateTime _weekStart;
   WeekAvailability? _week;
+  Object? _loadError;
   bool _saving = false;
   bool _dirty = false;
 
   @override
   void initState() {
     super.initState();
-    _weekStart =
-        widget.weekStart ??
-        mondayOf(DateTime.now()).add(const Duration(days: 7));
+    _weekStart = widget.weekStart ?? getStartOfNextWeek(DateTime.now());
     _loadWeek();
   }
 
   Future<void> _loadWeek() async {
-    final week = await ref
-        .read(myAvailabilityProvider.notifier)
-        .weekOf(_weekStart);
-    if (!mounted) return;
-    setState(() {
-      _week = week;
-      _dirty = false;
-    });
+    try {
+      final week = await ref
+          .read(myAvailabilityProvider.notifier)
+          .weekOf(_weekStart);
+      if (!mounted) return;
+      setState(() {
+        _week = week;
+        _loadError = null;
+        _dirty = false;
+      });
+    } catch (error) {
+      // The provider keeps its error, so a silent spinner here would never
+      // resolve and re-entering the screen would land on the same cached one.
+      if (!mounted) return;
+      setState(() {
+        _week = null;
+        _loadError = error;
+      });
+    }
   }
 
-  void _showWeek(DateTime weekStart) {
+  Future<void> _retry() async {
+    setState(() => _loadError = null);
+    ref.invalidate(myAvailabilityProvider);
+    await _loadWeek();
+  }
+
+  Future<void> _showWeek(DateTime weekStart) async {
+    if (_dirty && !await _confirmDiscard()) return;
+    if (!mounted) return;
     setState(() {
       _weekStart = weekStart;
       _week = null;
+      _loadError = null;
     });
-    _loadWeek();
+    await _loadWeek();
+  }
+
+  Future<bool> _confirmDiscard() async {
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Leave this week?'),
+        content: const Text('What you changed here has not been sent yet.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Stay'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+    return discard ?? false;
   }
 
   void _updateDay(DayAvailability day) {
@@ -102,7 +143,9 @@ class _WeekAvailabilityScreenState
     final week = _week;
     return Scaffold(
       appBar: AppBar(title: const Text('Your week')),
-      body: week == null
+      body: _loadError != null
+          ? _LoadFailure(onRetry: _retry)
+          : week == null
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.all(16),
@@ -126,6 +169,11 @@ class _WeekAvailabilityScreenState
                 const SizedBox(height: 8),
                 for (final day in week.days)
                   DayAvailabilityRow(
+                    // Keyed by the week as well as the day: switching weeks
+                    // resolves from a loaded provider without ever painting the
+                    // spinner, so an unkeyed row would be reused and keep the
+                    // previous week's text in its controllers.
+                    key: ValueKey((_weekStart, day.dayOfWeek)),
                     label: _weekdayNames[day.dayOfWeek],
                     day: day,
                     enabled: !_saving,
@@ -157,11 +205,11 @@ class _WeekSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final thisWeek = mondayOf(DateTime.now());
+    final thisWeek = getStartOfWeek(DateTime.now());
     final options = [
       thisWeek,
-      thisWeek.add(const Duration(days: 7)),
-      thisWeek.add(const Duration(days: 14)),
+      DateTime(thisWeek.year, thisWeek.month, thisWeek.day + 7),
+      DateTime(thisWeek.year, thisWeek.month, thisWeek.day + 14),
     ];
     return Wrap(
       spacing: 8,
@@ -184,4 +232,33 @@ class _WeekSwitcher extends StatelessWidget {
     };
     return '$name (${monday.day}/${monday.month})';
   }
+}
+
+/// Shown when the declared weeks could not be read. Without it the screen sits
+/// on a spinner that never resolves, since the provider keeps its error.
+class _LoadFailure extends StatelessWidget {
+  final Future<void> Function() onRetry;
+
+  const _LoadFailure({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.cloud_off, color: CrimpyTheme.textMuted),
+          const SizedBox(height: 12),
+          const Text(
+            'Your weeks could not be loaded.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: CrimpyTheme.textSecondary),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(onPressed: onRetry, child: const Text('Try again')),
+        ],
+      ),
+    ),
+  );
 }

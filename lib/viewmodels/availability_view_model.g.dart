@@ -95,7 +95,7 @@ final class MyAvailabilityProvider
   MyAvailability create() => MyAvailability();
 }
 
-String _$myAvailabilityHash() => r'c494c5257632b82021f2a8e62919b1a247bb16f4';
+String _$myAvailabilityHash() => r'1c7afa38056183e04fa2677d849f58fdc2b001d7';
 
 /// Every calendar week the athlete has declared. Empty when they are not
 /// signed in.
@@ -175,7 +175,7 @@ final class AvailabilityPlanCacheProvider
 }
 
 String _$availabilityPlanCacheHash() =>
-    r'232ab9c08b6623653bafc53d8a0764847fdac9f3';
+    r'142771f31507207408e7ec77a8475f06a1c4fa90';
 
 /// Rewrites the pending availability reminders whenever the coach setting or
 /// the declared weeks change. Watched by the app shell so it stays alive.

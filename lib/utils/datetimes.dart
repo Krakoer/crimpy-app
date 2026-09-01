@@ -1,11 +1,18 @@
-/// Get the start of the week (Monday) of the given day.
-DateTime getStartOfWeek(DateTime date) {
-  int weekday = date.weekday;
-  return DateTime(
-    date.year,
-    date.month,
-    date.day,
-  ).subtract(Duration(days: weekday - 1));
+/// Get the start of the week (Monday) of the given day, at local midnight.
+///
+/// Counted in calendar days rather than by subtracting a Duration: a Duration
+/// is elapsed time, so across a DST change it lands an hour either side of
+/// midnight and a week start stops comparing equal to another one.
+DateTime getStartOfWeek(DateTime date) => DateTime(
+  date.year,
+  date.month,
+  date.day - (date.weekday - DateTime.monday),
+);
+
+/// The Monday of the week after the one [date] falls in, at local midnight.
+DateTime getStartOfNextWeek(DateTime date) {
+  final monday = getStartOfWeek(date);
+  return DateTime(monday.year, monday.month, monday.day + 7);
 }
 
 /// An instant the API sends, read as the local time it happened at.

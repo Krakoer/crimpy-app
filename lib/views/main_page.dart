@@ -114,7 +114,10 @@ class _MainPageState extends ConsumerState<MainPage>
       ref.invalidate(programScheduleCacheProvider);
       ref.invalidate(trainingReminderSyncProvider);
       // The week the nudge is about changes with the date, and the athlete may
-      // have declared it on another device since.
+      // have declared it on another device since, which only a refetch of the
+      // declared weeks themselves can see: the provider is keepAlive and would
+      // otherwise hand the cache back unchanged.
+      ref.invalidate(myAvailabilityProvider);
       ref.invalidate(availabilityPlanCacheProvider);
       ref.invalidate(availabilityReminderSyncProvider);
       // A reply written while the app was in the background only shows up on

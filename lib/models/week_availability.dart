@@ -1,5 +1,8 @@
 import 'package:crimpy/models/notification_preferences.dart';
 
+/// Longest note the API accepts on a day, counted in runes.
+const int maxAvailabilityNoteLength = 2000;
+
 /// What the athlete said they can do on one day, 0=Mon..6=Sun.
 ///
 /// Deliberately permissive: a day may carry nothing but a sentence. A coach
@@ -120,12 +123,6 @@ class CoachAvailabilityReminder {
     'day_of_week': dayOfWeek,
     ...time.toJson(),
   };
-}
-
-/// The Monday of the calendar week the given day falls in, at local midnight.
-DateTime mondayOf(DateTime day) {
-  final midnight = DateTime(day.year, day.month, day.day);
-  return midnight.subtract(Duration(days: midnight.weekday - DateTime.monday));
 }
 
 /// The date part alone, which is what the API keys a week on.

@@ -1,5 +1,6 @@
 import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/utils/reminder_plan.dart';
+import 'package:crimpy/utils/datetimes.dart';
 
 /// First notification id reserved for availability reminders. Its own block, so
 /// rewriting this plan never clears the training reminders at [reminderIdBase]
@@ -32,7 +33,7 @@ List<ReminderOccurrence> planAvailabilityReminders({
 }) {
   if (reminder == null || !reminder.enabled) return [];
 
-  final declared = declaredWeekStarts.map(mondayOf).toSet();
+  final declared = declaredWeekStarts.map(getStartOfWeek).toSet();
   final occurrences = <ReminderOccurrence>[];
 
   for (var offset = 0; offset < horizonDays; offset++) {
@@ -50,7 +51,7 @@ List<ReminderOccurrence> planAvailabilityReminders({
 
     // The week the nudge is about is the one starting after the day it fires,
     // which is the point of asking on a Friday for a program written Saturday.
-    final target = mondayOf(day).add(const Duration(days: 7));
+    final target = getStartOfNextWeek(day);
     if (declared.contains(target)) continue;
 
     occurrences.add(_availabilityOccurrence(when: when, weekStart: target));
@@ -67,7 +68,9 @@ ReminderOccurrence _availabilityOccurrence({
   slot: 0,
   title: _availabilityReminderTitle,
   body: _availabilityReminderBody,
-  idOverride: availabilityReminderIdBase + (_weekIndex(weekStart) % 8),
+  idOverride:
+      availabilityReminderIdBase +
+      (_weekIndex(weekStart) % availabilityReminderIdBlockSize),
 );
 
 /// Derived from the week being nudged about, so replanning the same week reuses

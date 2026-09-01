@@ -88,6 +88,42 @@ void main() {
     expect(day.note, 'travelling');
   });
 
+  testWidgets('a row keyed to another week does not keep the old text', (
+    tester,
+  ) async {
+    // Switching weeks resolves from an already loaded provider without ever
+    // painting the spinner, so an unkeyed row would be reused and show the
+    // previous week's note over the new week's model.
+    Widget rowFor(DateTime weekStart, DayAvailability day) => MaterialApp(
+      home: Scaffold(
+        body: DayAvailabilityRow(
+          key: ValueKey((weekStart, day.dayOfWeek)),
+          label: 'Tuesday',
+          day: day,
+          enabled: true,
+          onChanged: (_) {},
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(
+      rowFor(
+        DateTime(2026, 6, 8),
+        const DayAvailability(
+          dayOfWeek: 1,
+          isAvailable: true,
+          note: 'gym after work',
+        ),
+      ),
+    );
+    expect(find.text('gym after work'), findsOneWidget);
+
+    await tester.pumpWidget(rowFor(DateTime(2026, 6, 1), tuesdayOff));
+    await tester.pumpAndSettle();
+
+    expect(find.text('gym after work'), findsNothing);
+  });
+
   testWidgets('a note of only spaces is dropped', (tester) async {
     final day = await _pumpRow(
       tester,

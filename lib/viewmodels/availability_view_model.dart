@@ -3,9 +3,9 @@ import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/repositories/availability_repository.dart';
 import 'package:crimpy/utils/availability_reminder_plan.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
-import 'package:crimpy/viewmodels/coach_view_model.dart';
 import 'package:crimpy/viewmodels/notification_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:crimpy/utils/datetimes.dart';
 
 part 'availability_view_model.g.dart';
 
@@ -32,9 +32,9 @@ class MyAvailability extends _$MyAvailability {
   /// declared, so the screen edits the same shape either way.
   Future<WeekAvailability> weekOf(DateTime monday) async {
     final weeks = await future;
-    final start = mondayOf(monday);
+    final start = getStartOfWeek(monday);
     for (final week in weeks) {
-      if (mondayOf(week.weekStart) == start) return week;
+      if (getStartOfWeek(week.weekStart) == start) return week;
     }
     return WeekAvailability.empty(start);
   }
@@ -61,11 +61,13 @@ Future<CachedAvailabilityPlan?> availabilityPlanCache(Ref ref) async {
   }
 
   try {
-    // No coach is an answer rather than a failure, and so is a coach who set no
-    // reminder: both are stored as a plan with no reminder, so the next launch
-    // reads "off" instead of falling back to a mirror that never expires.
-    final enrollment = await ref.watch(coachEnrollmentProvider.future);
-    final reminder = enrollment == null ? null : await repository.getReminder();
+    // Asked straight of the reminder endpoint rather than gated on the
+    // enrollment: coachEnrollment answers null for a failed fetch as well as
+    // for no coach, so gating on it would write a transient outage into the
+    // mirror as "your coach set none" and cancel the pending nudges. The
+    // endpoint already answers 404 for both real cases, which is a null here,
+    // and a genuine failure throws into the fallback below.
+    final reminder = await repository.getReminder();
     final weeks = await ref.watch(myAvailabilityProvider.future);
 
     final plan = CachedAvailabilityPlan(

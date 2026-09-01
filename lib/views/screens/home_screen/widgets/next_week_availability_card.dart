@@ -1,4 +1,3 @@
-import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/availability_view_model.dart';
 import 'package:crimpy/viewmodels/coach_view_model.dart';
@@ -6,6 +5,7 @@ import 'package:crimpy/views/screens/availability/week_availability_screen.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:crimpy/utils/datetimes.dart';
 
 /// Asks a coached athlete to say when they can train next week, so their coach
 /// writes the program around the week they actually have.
@@ -20,11 +20,13 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
     final enrollment = ref.watch(coachEnrollmentProvider);
     if (enrollment.asData?.value == null) return const SizedBox.shrink();
 
-    final nextWeek = mondayOf(DateTime.now()).add(const Duration(days: 7));
+    final nextWeek = getStartOfNextWeek(DateTime.now());
     final weeks = ref.watch(myAvailabilityProvider).asData?.value;
     if (weeks == null) return const SizedBox.shrink();
 
-    final declared = weeks.any((week) => mondayOf(week.weekStart) == nextWeek);
+    final declared = weeks.any(
+      (week) => getStartOfWeek(week.weekStart) == nextWeek,
+    );
 
     return CrimpyCard.category(
       accentColor: declared

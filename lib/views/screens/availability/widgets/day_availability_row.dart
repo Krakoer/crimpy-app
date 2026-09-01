@@ -113,6 +113,16 @@ class _DayAvailabilityRowState extends State<DayAvailabilityRow> {
             enabled: widget.enabled,
             maxLines: 2,
             minLines: 1,
+            // The API refuses a longer note, and learning that only at save
+            // time would cost the athlete the whole form.
+            maxLength: maxAvailabilityNoteLength,
+            buildCounter:
+                (
+                  context, {
+                  required currentLength,
+                  required isFocused,
+                  required maxLength,
+                }) => null,
             textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(
               labelText: 'Anything worth saying',
