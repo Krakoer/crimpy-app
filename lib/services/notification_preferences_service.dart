@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/cached_program_schedule.dart';
 import 'package:crimpy/models/notification_preferences.dart';
+import 'package:crimpy/models/week_availability.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Device-local storage for the training reminder settings and for the copy of
@@ -11,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class NotificationPreferencesService {
   static const String _preferencesKey = 'notification_preferences';
   static const String _scheduleKey = 'reminder_program_schedule';
+  static const String _availabilityKey = 'availability_reminder_plan';
 
   Future<NotificationPreferences> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -38,6 +40,7 @@ class NotificationPreferencesService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_preferencesKey);
     await prefs.remove(_scheduleKey);
+    await prefs.remove(_availabilityKey);
   }
 
   Future<CachedProgramSchedule?> loadSchedule() async {
@@ -61,5 +64,30 @@ class NotificationPreferencesService {
       return;
     }
     await prefs.setString(_scheduleKey, jsonEncode(schedule.toJson()));
+  }
+
+  /// The coach reminder and the weeks already declared, kept so the nudge can
+  /// be planned while offline the way the program schedule is.
+  Future<CachedAvailabilityPlan?> loadAvailabilityPlan() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_availabilityKey);
+    if (raw == null) return null;
+    try {
+      return CachedAvailabilityPlan.fromJson(
+        jsonDecode(raw) as Map<String, dynamic>,
+      );
+    } catch (error) {
+      AppLoggerHelper.error('Unreadable cached availability plan', error);
+      return null;
+    }
+  }
+
+  Future<void> saveAvailabilityPlan(CachedAvailabilityPlan? plan) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (plan == null) {
+      await prefs.remove(_availabilityKey);
+      return;
+    }
+    await prefs.setString(_availabilityKey, jsonEncode(plan.toJson()));
   }
 }

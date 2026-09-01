@@ -393,6 +393,32 @@ class ApiClient {
     return res.data as Map<String, dynamic>;
   }
 
+  // ----- Availability (coachee) -----
+
+  /// Every calendar week the athlete has declared, keyed by its Monday.
+  Future<List<Map<String, dynamic>>> getMyAvailability() async {
+    final res = await get('/api/user/availability');
+    return _asList(res.data);
+  }
+
+  /// Declares one week. The body carries all seven days: the API only holds a
+  /// week written whole, and its presence is what says the week was declared.
+  Future<Map<String, dynamic>> putMyWeekAvailability(
+    String weekStart,
+    Map<String, dynamic> body,
+  ) async {
+    final res = await put('/api/user/availability/$weekStart', data: body);
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// The reminder this athlete's coach configured. The endpoint answers 404
+  /// when there is no coach or no reminder, which the repository turns into a
+  /// null.
+  Future<Map<String, dynamic>> getAvailabilityReminder() async {
+    final res = await get('/api/user/availability-reminder');
+    return res.data as Map<String, dynamic>;
+  }
+
   // ----- Programs (coachee, read-only) -----
   Future<List<Map<String, dynamic>>> getMyPrograms() async {
     final res = await get('/api/user/programs');

@@ -16,6 +16,13 @@ const int reminderIdBlockSize = 801;
 /// without ever colliding with a day and slot.
 const int snoozeNotificationId = reminderIdBase + 800;
 
+/// Whether a notification id belongs to the block starting at [base].
+///
+/// Cancelling is what makes this load bearing: each planner clears its own
+/// block and must leave the others alone, so a wrong bound here silently kills
+/// somebody else's notifications.
+bool idIsInBlock(int id, int base, int size) => id >= base && id < base + size;
+
 /// Days of schedule planned ahead. Reminders are rewritten whenever the app
 /// runs, so this only has to outlast a stretch of the app never being opened.
 const int reminderHorizonDays = 14;
@@ -41,19 +48,26 @@ class ReminderOccurrence {
   /// scheduled slots.
   final bool isSnoozed;
 
+  /// Set by a planner owning a different id block, which derives its ids from
+  /// something other than the day and slot a training reminder uses.
+  final int? idOverride;
+
   const ReminderOccurrence({
     required this.when,
     required this.slot,
     required this.title,
     required this.body,
     this.isSnoozed = false,
+    this.idOverride,
   });
 
   /// Derived from the day and the slot so rescheduling the same plan reuses the
   /// same ids and never leaves a stale duplicate behind.
-  int get notificationId => isSnoozed
-      ? snoozeNotificationId
-      : reminderIdBase + (_epochDay(when) % 400) * 2 + (slot % 2);
+  int get notificationId =>
+      idOverride ??
+      (isSnoozed
+          ? snoozeNotificationId
+          : reminderIdBase + (_epochDay(when) % 400) * 2 + (slot % 2));
 }
 
 /// The trainings still owed on a given day, as reminder labels.

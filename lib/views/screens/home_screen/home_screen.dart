@@ -1,6 +1,7 @@
 import 'package:crimpy/views/screens/home_screen/history/week_histogram_card.dart';
 import 'package:crimpy/views/screens/home_screen/favorite_training.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/log_session_buttons.dart';
+import 'package:crimpy/views/screens/home_screen/widgets/next_week_availability_card.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/today_training_card.dart';
 import 'package:flutter/material.dart';
 
@@ -26,6 +27,8 @@ class _HomeScreenState extends State<HomeScreen>
           children: [
             // Today's scheduled training from the active program.
             TodayTrainingCard(),
+            // Ask for next week before the coach has to guess it.
+            NextWeekAvailabilityCard(),
             // Weekly session histogram.
             WeekHistogramCard(maxBarHeight: 75),
             // Log session buttons.

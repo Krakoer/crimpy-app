@@ -7,7 +7,9 @@ import 'package:crimpy/models/run_screen_style.dart';
 import 'package:crimpy/viewmodels/run_screen_style_view_model.dart';
 import 'package:crimpy/views/screens/settings_screen/run_screen_style_picker_screen.dart';
 import 'package:crimpy/viewmodels/app_info_view_model.dart';
+import 'package:crimpy/viewmodels/coach_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
+import 'package:crimpy/views/screens/availability/week_availability_screen.dart';
 import 'package:crimpy/views/screens/settings_screen/notification_settings_screen.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/debug_modal.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/sensor_settings_list.dart';
@@ -192,6 +194,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       ),
                     ),
                   ),
+                  // Only for a coached athlete: with no coach there is nobody
+                  // for the week to be sent to.
+                  if (ref.watch(coachEnrollmentProvider).asData?.value != null)
+                    ListTile(
+                      leading: const Icon(Icons.event_available),
+                      title: const Text('Your week'),
+                      subtitle: const Text(
+                        'Tell your coach when you can train',
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (ctx) => const WeekAvailabilityScreen(),
+                        ),
+                      ),
+                    ),
                   // Reminders only exist for coach-assigned programs, and only
                   // on the platforms that can deliver a scheduled notification.
                   if (supportsTrainingReminders &&
