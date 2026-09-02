@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:crimpy/views/widgets/section_widgets.dart';
+import 'package:crimpy/utils/datetimes.dart';
 
 /// Program overview: header, week selector and a week-strip / calendar schedule.
 class ProgramDetailScreen extends ConsumerStatefulWidget {
@@ -385,9 +386,8 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
     );
   }
 
-  DateTime _dateForDay(int dayOfWeek) => widget.program
-      .weekStart(widget.weekNumber)
-      .add(Duration(days: dayOfWeek));
+  DateTime _dateForDay(int dayOfWeek) =>
+      addCalendarDays(widget.program.weekStart(widget.weekNumber), dayOfWeek);
 
   Widget _dayPicker(Map<int, List<WeekSession>> byDay, int selected) {
     final today = DateTime.now();
@@ -587,9 +587,7 @@ class _CalendarView extends StatelessWidget {
                   child: Center(
                     child: Text(
                       // Columns run Monday-Sunday.
-                      weekdayInitial(
-                        program.weekStart(1).add(Duration(days: d)),
-                      ),
+                      weekdayInitial(addCalendarDays(program.weekStart(1), d)),
                       style: const TextStyle(
                         fontFamily: 'JetBrainsMono',
                         fontSize: 9,
@@ -699,7 +697,7 @@ class _CalendarRow extends ConsumerWidget {
           final session = daySessions.isNotEmpty ? daySessions.first : null;
           // Columns are Monday-anchored, so offset from the week start rather
           // than from the program start date.
-          final date = program.weekStart(weekNumber).add(Duration(days: d));
+          final date = addCalendarDays(program.weekStart(weekNumber), d);
           final isToday = isSameDay(date, today);
           final fill = session != null
               ? programSessionColor(session.activity)

@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:crimpy/views/widgets/section_widgets.dart';
+import 'package:crimpy/utils/datetimes.dart';
 
 /// Home card summarizing the program: today's trainings (with their duration
 /// and done state), the flexible "this week" trainings, a countdown before the
@@ -46,12 +47,8 @@ class TodayTrainingCard extends ConsumerWidget {
     );
   }
 
-  int _daysUntilStart(DateTime startDate) {
-    final now = DateTime.now();
-    final start = DateTime(startDate.year, startDate.month, startDate.day);
-    final today = DateTime(now.year, now.month, now.day);
-    return start.difference(today).inDays;
-  }
+  int _daysUntilStart(DateTime startDate) =>
+      calendarDaysBetween(DateTime.now(), startDate);
 
   String _relativeStart(int days) {
     if (days == 1) return 'tomorrow';

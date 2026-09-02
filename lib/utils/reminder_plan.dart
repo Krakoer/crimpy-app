@@ -3,6 +3,7 @@ import 'package:crimpy/models/notification_preferences.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/utils/program_completion.dart';
+import 'package:crimpy/utils/datetimes.dart';
 
 /// First notification id reserved for training reminders. Reminders own the
 /// whole block so rescheduling can clear it without touching anything else.
@@ -153,7 +154,7 @@ List<ReminderOccurrence> planReminders({
   final occurrences = <ReminderOccurrence>[];
 
   for (var offset = 0; offset < horizonDays; offset++) {
-    final day = DateTime(from.year, from.month, from.day + offset);
+    final day = addCalendarDays(from, offset);
     if (!program.isActiveOn(day)) continue;
     if (!preferences.activeWeekdays.contains(day.weekday - 1)) continue;
 

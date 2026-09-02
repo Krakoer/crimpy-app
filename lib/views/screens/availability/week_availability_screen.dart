@@ -213,8 +213,8 @@ class _WeekSwitcher extends StatelessWidget {
     final thisWeek = getStartOfWeek(DateTime.now());
     final options = [
       thisWeek,
-      DateTime(thisWeek.year, thisWeek.month, thisWeek.day + 7),
-      DateTime(thisWeek.year, thisWeek.month, thisWeek.day + 14),
+      addCalendarDays(thisWeek, 7),
+      addCalendarDays(thisWeek, 14),
     ];
     return Wrap(
       spacing: 8,

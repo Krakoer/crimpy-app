@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/session.dart';
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:intl/intl.dart';
 import 'session_card.dart';
@@ -21,7 +22,7 @@ class DateGroup extends StatelessWidget {
     final isToday = DateUtils.isSameDay(date, DateTime.now());
     final isYesterday = DateUtils.isSameDay(
       date,
-      DateTime.now().subtract(const Duration(days: 1)),
+      addCalendarDays(DateTime.now(), -1),
     );
 
     String dateLabel;

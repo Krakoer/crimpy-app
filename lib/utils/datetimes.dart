@@ -1,19 +1,30 @@
-/// Get the start of the week (Monday) of the given day, at local midnight.
+/// [date] moved [days] calendar days, at local midnight.
 ///
-/// Counted in calendar days rather than by subtracting a Duration: a Duration
-/// is elapsed time, so across a DST change it lands an hour either side of
-/// midnight and a week start stops comparing equal to another one.
-DateTime getStartOfWeek(DateTime date) => DateTime(
-  date.year,
-  date.month,
-  date.day - (date.weekday - DateTime.monday),
-);
+/// Counted in calendar days rather than by adding a Duration: a Duration is
+/// elapsed time, so across a DST change `add(Duration(days: 7))` lands an hour
+/// either side of midnight instead of on the same time of day a week later.
+/// Use this anywhere a date is stepped by a whole number of days.
+DateTime addCalendarDays(DateTime date, int days) =>
+    DateTime(date.year, date.month, date.day + days);
+
+/// Whole calendar days from [from] to [to], negative when [to] is earlier.
+///
+/// The counterpart to [addCalendarDays]: `difference(...).inDays` on two local
+/// midnights returns 6 or 8 for a week that spans a DST change, because it
+/// truncates elapsed hours. Comparing the dates in UTC counts the days.
+int calendarDaysBetween(DateTime from, DateTime to) => DateTime.utc(
+  to.year,
+  to.month,
+  to.day,
+).difference(DateTime.utc(from.year, from.month, from.day)).inDays;
+
+/// Get the start of the week (Monday) of the given day, at local midnight.
+DateTime getStartOfWeek(DateTime date) =>
+    addCalendarDays(date, -(date.weekday - DateTime.monday));
 
 /// The Monday of the week after the one [date] falls in, at local midnight.
-DateTime getStartOfNextWeek(DateTime date) {
-  final monday = getStartOfWeek(date);
-  return DateTime(monday.year, monday.month, monday.day + 7);
-}
+DateTime getStartOfNextWeek(DateTime date) =>
+    addCalendarDays(getStartOfWeek(date), 7);
 
 /// An instant the API sends, read as the local time it happened at.
 ///

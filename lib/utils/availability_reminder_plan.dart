@@ -37,7 +37,7 @@ List<ReminderOccurrence> planAvailabilityReminders({
   final occurrences = <ReminderOccurrence>[];
 
   for (var offset = 0; offset < horizonDays; offset++) {
-    final day = DateTime(from.year, from.month, from.day + offset);
+    final day = addCalendarDays(from, offset);
     if (day.weekday - 1 != reminder.dayOfWeek) continue;
 
     final when = DateTime(
