@@ -14,6 +14,7 @@ import '../viewmodels/ble_view_model.dart';
 import '../viewmodels/app_info_view_model.dart';
 import '../viewmodels/auth_view_model.dart';
 import '../viewmodels/coach_view_model.dart';
+import '../viewmodels/availability_view_model.dart';
 import '../viewmodels/notification_view_model.dart';
 import '../viewmodels/training_view_model.dart';
 import 'widgets/ble/connection_dialog.dart';
@@ -112,6 +113,13 @@ class _MainPageState extends ConsumerState<MainPage>
     if (state == AppLifecycleState.resumed) {
       ref.invalidate(programScheduleCacheProvider);
       ref.invalidate(trainingReminderSyncProvider);
+      // The week the nudge is about changes with the date, and the athlete may
+      // have declared it on another device since, which only a refetch of the
+      // declared weeks themselves can see: the provider is keepAlive and would
+      // otherwise hand the cache back unchanged.
+      ref.invalidate(myAvailabilityProvider);
+      ref.invalidate(availabilityPlanCacheProvider);
+      ref.invalidate(availabilityReminderSyncProvider);
       // A reply written while the app was in the background only shows up on
       // the next fetch, so the history is what has to be refreshed here. Guest
       // mode has no coach to answer, and nothing else here needs the refetch.
@@ -253,6 +261,9 @@ class _MainPageState extends ConsumerState<MainPage>
     // Tells the athlete about an answer their coach wrote, for as long as the
     // app is running.
     ref.watch(coachReplySyncProvider);
+    // Keeps the nudge to declare next week in step with the coach setting and
+    // the weeks already declared.
+    ref.watch(availabilityReminderSyncProvider);
     // Snoozing from the notification brings the app up so the hour can be
     // picked, which cannot happen from the notification itself.
     ref.listen(snoozeRequestsProvider, (_, next) {

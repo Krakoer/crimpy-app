@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:crimpy/logger.dart';
+import 'package:crimpy/utils/availability_reminder_plan.dart';
 import 'package:crimpy/utils/reminder_plan.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
@@ -36,6 +37,32 @@ class NotificationService {
         description: _coachReplyChannelDescription,
         importance: Importance.defaultImportance,
       );
+
+  static const String _availabilityChannelId = 'availability_reminders';
+  static const String _availabilityChannelName = 'Availability reminders';
+  static const String _availabilityChannelDescription =
+      'Reminds you to tell your coach when you can train next week.';
+
+  static const AndroidNotificationChannel _availabilityChannel =
+      AndroidNotificationChannel(
+        _availabilityChannelId,
+        _availabilityChannelName,
+        description: _availabilityChannelDescription,
+        importance: Importance.defaultImportance,
+      );
+
+  // No snooze action and no Darwin category: postponing this one by an hour
+  // says nothing, and the button would route into the training snooze flow.
+  static const NotificationDetails _availabilityDetails = NotificationDetails(
+    android: AndroidNotificationDetails(
+      _availabilityChannelId,
+      _availabilityChannelName,
+      channelDescription: _availabilityChannelDescription,
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+    ),
+    iOS: DarwinNotificationDetails(),
+  );
 
   // A separate channel from the reminders so the two can be silenced apart: a
   // reminder is a nudge the user may not want, an answer from their coach is
@@ -160,6 +187,7 @@ class NotificationService {
     );
     await _androidPlugin?.createNotificationChannel(_channel);
     await _androidPlugin?.createNotificationChannel(_coachReplyChannel);
+    await _androidPlugin?.createNotificationChannel(_availabilityChannel);
 
     // A snooze tapped while the app was not running launches it, and the
     // response callback above can fire before anything is listening. The launch
@@ -243,26 +271,53 @@ class NotificationService {
 
   /// Replaces every pending reminder with [occurrences]. Ids are derived from
   /// the day and slot, so an unchanged plan rewrites itself identically.
-  Future<void> scheduleAll(List<ReminderOccurrence> occurrences) =>
-      _serialized(() => _scheduleAll(occurrences));
+  Future<void> scheduleAll(List<ReminderOccurrence> occurrences) => _serialized(
+    () => _scheduleBlock(
+      occurrences,
+      base: reminderIdBase,
+      size: reminderIdBlockSize,
+      details: _details,
+      label: 'training',
+    ),
+  );
 
-  Future<void> _scheduleAll(List<ReminderOccurrence> occurrences) async {
+  /// Replaces every pending availability reminder. Its own id block, so writing
+  /// one plan never clears the other.
+  Future<void> scheduleAvailabilityReminders(
+    List<ReminderOccurrence> occurrences,
+  ) => _serialized(
+    () => _scheduleBlock(
+      occurrences,
+      base: availabilityReminderIdBase,
+      size: availabilityReminderIdBlockSize,
+      details: _availabilityDetails,
+      label: 'availability',
+    ),
+  );
+
+  Future<void> _scheduleBlock(
+    List<ReminderOccurrence> occurrences, {
+    required int base,
+    required int size,
+    required NotificationDetails details,
+    required String label,
+  }) async {
     await initialize();
     if (!supportsTrainingReminders) return;
-    await _cancelAll();
+    await _cancelBlock(base, size);
     for (final occurrence in occurrences) {
       await _plugin.zonedSchedule(
         id: occurrence.notificationId,
         title: occurrence.title,
         body: occurrence.body,
         scheduledDate: tz.TZDateTime.from(occurrence.when, tz.local),
-        notificationDetails: _details,
+        notificationDetails: details,
         // Reminders do not need minute precision, and inexact alarms avoid the
         // exact alarm permission Android 14 puts behind a policy review.
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
     }
-    AppLoggerHelper.debug('Scheduled ${occurrences.length} training reminders');
+    AppLoggerHelper.debug('Scheduled ${occurrences.length} $label reminders');
   }
 
   /// Posts the answer a coach wrote to a session, right now. Unlike a reminder
@@ -291,10 +346,22 @@ class NotificationService {
     await _plugin.cancel(id: id);
   }
 
-  /// Cancels the reminder id block only, leaving any other notification alone.
+  /// Cancels the training reminder id block only, leaving any other
+  /// notification alone.
   Future<void> cancelAll() => _serialized(_cancelAll);
 
-  Future<void> _cancelAll() async {
+  /// Cancels the availability reminder id block only.
+  Future<void> cancelAvailabilityReminders() => _serialized(
+    () => _cancelBlock(
+      availabilityReminderIdBase,
+      availabilityReminderIdBlockSize,
+    ),
+  );
+
+  Future<void> _cancelAll() =>
+      _cancelBlock(reminderIdBase, reminderIdBlockSize);
+
+  Future<void> _cancelBlock(int base, int size) async {
     await initialize();
     if (!supportsTrainingReminders) return;
 
@@ -308,7 +375,7 @@ class NotificationService {
     };
 
     for (final id in ids) {
-      if (id >= reminderIdBase && id < reminderIdBase + reminderIdBlockSize) {
+      if (idIsInBlock(id, base, size)) {
         await _plugin.cancel(id: id);
       }
     }

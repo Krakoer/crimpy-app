@@ -613,4 +613,4 @@ final class PendingCoachNotificationPromptProvider
 }
 
 String _$pendingCoachNotificationPromptHash() =>
-    r'4ab40e82c3ae4e15ce62d7adfd66f0497a8c33e9';
+    r'75e7d7b3fb96357b92c5cb1b87cb30a390c231b1';
