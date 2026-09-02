@@ -10,6 +10,7 @@ import 'widgets/date_group.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/error_state.dart';
 import 'package:crimpy/models/session_filter.dart';
+import 'package:crimpy/utils/datetimes.dart';
 
 class SessionHistoryScreen extends ConsumerStatefulWidget {
   const SessionHistoryScreen({super.key});
@@ -164,19 +165,10 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
           _currentFilter = const SessionFilter(isAssessment: false);
           break;
         case 'week':
-          final now = DateTime.now();
-          final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+          final startOfWeek = getStartOfWeek(DateTime.now());
           _currentFilter = SessionFilter(
-            startDate: DateTime(
-              startOfWeek.year,
-              startOfWeek.month,
-              startOfWeek.day,
-            ),
-            endDate: DateTime(
-              startOfWeek.year,
-              startOfWeek.month,
-              startOfWeek.day + 7,
-            ),
+            startDate: startOfWeek,
+            endDate: addCalendarDays(startOfWeek, 7),
           );
           break;
         case 'month':

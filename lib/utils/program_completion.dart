@@ -1,4 +1,5 @@
 import 'package:crimpy/models/program_model.dart';
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/models/session.dart';
 
@@ -28,7 +29,7 @@ int completionsInWeek(
   WeekSession scheduled,
 ) {
   final start = program.weekStart(weekNumber);
-  final end = start.add(const Duration(days: 7));
+  final end = addCalendarDays(start, 7);
   return sessions
       .where(
         (s) =>

@@ -49,7 +49,7 @@ class WeekHistogramWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             // Draw the bars
             children: List.generate(7, (dayIndex) {
-              final DateTime currentDay = monday.add(Duration(days: dayIndex));
+              final DateTime currentDay = addCalendarDays(monday, dayIndex);
               final Map<SessionActivity, Duration> dayDurations =
                   durationsPerDay[dayIndex];
               final Duration totalDuration = dayDurations.values.fold(
@@ -186,7 +186,7 @@ class WeekHistogramWidget extends StatelessWidget {
       final SessionActivity activity = entry.activity;
 
       // Check if entry is within current week
-      final int dayDifference = _daysBetween(startOfWeek, entryDate);
+      final int dayDifference = calendarDaysBetween(startOfWeek, entryDate);
       if (dayDifference >= 0 && dayDifference < 7) {
         durationsPerDay[dayDifference][activity] =
             (durationsPerDay[dayDifference][activity] ?? Duration.zero) +
@@ -195,14 +195,6 @@ class WeekHistogramWidget extends StatelessWidget {
     }
 
     return durationsPerDay;
-  }
-
-  /// Returns the number of days between two given dates.
-  int _daysBetween(DateTime from, DateTime to) {
-    // Remove hours and minutes
-    from = DateTime(from.year, from.month, from.day);
-    to = DateTime(to.year, to.month, to.day);
-    return (to.difference(from).inDays);
   }
 
   /// Format duration as HH:MM

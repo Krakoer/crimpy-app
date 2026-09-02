@@ -34,6 +34,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    # Runners are UTC, where no amount of Duration arithmetic on dates can go
+    # wrong. The week and reminder date tests only bite in a zone that has a
+    # DST transition, so the suite is run in one.
+    env:
+      TZ: Europe/Paris
+
     steps:
     - uses: actions/checkout@v4
 

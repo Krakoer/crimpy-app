@@ -23,20 +23,21 @@ class _HistoryScreenState extends ConsumerState<WeekHistogramCard> {
 
   @override
   Widget build(BuildContext context) {
-    final startOfTheWeek = getStartOfWeek(
-      DateTime.now(),
-    ).add(Duration(days: 7 * _weekOffset));
+    final startOfTheWeek = addCalendarDays(
+      getStartOfWeek(DateTime.now()),
+      7 * _weekOffset,
+    );
     // Get the sessions of the week
     final asyncSessions = ref.watch(
       filteredSessionsProvider(
         SessionFilter(
           startDate: startOfTheWeek,
-          endDate: startOfTheWeek.add(Duration(days: 7)),
+          endDate: addCalendarDays(startOfTheWeek, 7),
         ),
       ),
     );
 
-    final endOfWeek = startOfTheWeek.add(Duration(days: 6));
+    final endOfWeek = addCalendarDays(startOfTheWeek, 6);
     final String weekTitle = _weekOffset == 0
         ? "This Week"
         : "${startOfTheWeek.day}/${startOfTheWeek.month} - ${endOfWeek.day}/${endOfWeek.month}";
