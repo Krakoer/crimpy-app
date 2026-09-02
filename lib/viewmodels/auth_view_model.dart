@@ -30,6 +30,19 @@ bool isSignedOut(AsyncValue<auth_models.User?> auth) => switch (auth) {
   _ => false,
 };
 
+/// The auth state once it has stopped loading, for the providers that must not
+/// answer while it is pending. Reading it unsettled means reading the cold
+/// start, where nobody is signed in yet and no device-local data is safe to
+/// judge. An auth failure comes back as an error rather than as an absence, so
+/// [isSignedOut] keeps the settings for it.
+Future<AsyncValue<auth_models.User?>> settledAuth(Ref ref) async {
+  try {
+    return AsyncData(await ref.watch(authStateProvider.future));
+  } catch (error, stackTrace) {
+    return AsyncError(error, stackTrace);
+  }
+}
+
 /// Whether a user is signed in. Repositories watch this rather than the whole
 /// auth state: it only changes when the user signs in or out, so refreshing the
 /// profile no longer tears down and refetches every list in the app.

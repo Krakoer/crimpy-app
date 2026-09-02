@@ -85,7 +85,7 @@ final class BodyweightControllerProvider
 }
 
 String _$bodyweightControllerHash() =>
-    r'6bc0d140bfc89b578da37bfe8921a7101fe22b58';
+    r'c6314c3e439c6b4718ab9e8a371a386162d880d0';
 
 /// The athlete bodyweight in kilograms, null until it is entered or measured.
 

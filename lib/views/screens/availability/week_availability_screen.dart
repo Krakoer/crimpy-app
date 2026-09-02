@@ -38,6 +38,7 @@ class _WeekAvailabilityScreenState
   Object? _loadError;
   bool _saving = false;
   bool _dirty = false;
+  bool _declared = true;
 
   @override
   void initState() {
@@ -48,12 +49,13 @@ class _WeekAvailabilityScreenState
 
   Future<void> _loadWeek() async {
     try {
-      final week = await ref
+      final loaded = await ref
           .read(myAvailabilityProvider.notifier)
           .weekOf(_weekStart);
       if (!mounted) return;
       setState(() {
-        _week = week;
+        _week = loaded.week;
+        _declared = loaded.declared;
         _loadError = null;
         _dirty = false;
       });
@@ -181,7 +183,10 @@ class _WeekAvailabilityScreenState
                   ),
                 const SizedBox(height: 20),
                 FilledButton(
-                  onPressed: _saving || !_dirty ? null : _save,
+                  // A week never declared sends as it stands, untouched: an
+                  // athlete who cannot train at all is answering, and the API
+                  // reads a missing week as silence and keeps nudging for it.
+                  onPressed: _saving || (_declared && !_dirty) ? null : _save,
                   child: Text(_saving ? 'Saving' : 'Send to my coach'),
                 ),
               ],

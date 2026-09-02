@@ -93,8 +93,6 @@ class WeekAvailability {
         existing.dayOfWeek == day.dayOfWeek ? day : existing,
     ],
   );
-
-  bool get hasAnyAvailability => days.any((day) => day.isAvailable);
 }
 
 /// The weekly nudge a coach configured for the athletes they train. The hour is

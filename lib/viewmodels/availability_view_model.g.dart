@@ -95,7 +95,7 @@ final class MyAvailabilityProvider
   MyAvailability create() => MyAvailability();
 }
 
-String _$myAvailabilityHash() => r'1c7afa38056183e04fa2677d849f58fdc2b001d7';
+String _$myAvailabilityHash() => r'62eb5ec7658da62809642b77edf2ff109b154236';
 
 /// Every calendar week the athlete has declared. Empty when they are not
 /// signed in.
@@ -125,15 +125,17 @@ abstract class _$MyAvailability extends $AsyncNotifier<List<WeekAvailability>> {
 }
 
 /// The reminder the coach set, with the weeks already declared, mirrored to the
-/// device so the nudge survives an offline launch. Null once when the athlete
-/// is signed out, which is what stops a stale plan reaching the next account.
+/// device so the nudge survives an offline launch. Dropped once the athlete is
+/// resolved to be signed out, which is what stops a stale plan reaching the
+/// next account.
 
 @ProviderFor(availabilityPlanCache)
 const availabilityPlanCacheProvider = AvailabilityPlanCacheProvider._();
 
 /// The reminder the coach set, with the weeks already declared, mirrored to the
-/// device so the nudge survives an offline launch. Null once when the athlete
-/// is signed out, which is what stops a stale plan reaching the next account.
+/// device so the nudge survives an offline launch. Dropped once the athlete is
+/// resolved to be signed out, which is what stops a stale plan reaching the
+/// next account.
 
 final class AvailabilityPlanCacheProvider
     extends
@@ -146,8 +148,9 @@ final class AvailabilityPlanCacheProvider
         $FutureModifier<CachedAvailabilityPlan?>,
         $FutureProvider<CachedAvailabilityPlan?> {
   /// The reminder the coach set, with the weeks already declared, mirrored to the
-  /// device so the nudge survives an offline launch. Null once when the athlete
-  /// is signed out, which is what stops a stale plan reaching the next account.
+  /// device so the nudge survives an offline launch. Dropped once the athlete is
+  /// resolved to be signed out, which is what stops a stale plan reaching the
+  /// next account.
   const AvailabilityPlanCacheProvider._()
     : super(
         from: null,
@@ -175,7 +178,7 @@ final class AvailabilityPlanCacheProvider
 }
 
 String _$availabilityPlanCacheHash() =>
-    r'142771f31507207408e7ec77a8475f06a1c4fa90';
+    r'54c61660ba5dba11ed34eab81ee82824eedf2c7f';
 
 /// Rewrites the pending availability reminders whenever the coach setting or
 /// the declared weeks change. Watched by the app shell so it stays alive.
