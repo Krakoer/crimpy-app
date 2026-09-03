@@ -109,8 +109,10 @@ land on a commit that has already been promoted. It reads the current version
 out of `pubspec.yaml`, which is the source of truth here rather than the tags:
 it also carries the build number, and that has to keep going up for the stores.
 The build number is incremented on every release. Pushing the tag triggers
-`.github/workflows/release.yml`, which builds the prod APK and publishes the
-GitHub release.
+`.github/workflows/release.yml`, which builds the `prod` flavor and publishes the
+GitHub release. That workflow builds `--debug`, so the APK it attaches is
+debuggable and signed with the debug key, not the upload key. Krakoer/crimpy#57
+tracks moving it to a signed `--release` build.
 
 Both scripts show what they are about to push and ask for confirmation; pass
 `-y` to skip the prompt.

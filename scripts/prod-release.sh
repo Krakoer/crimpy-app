@@ -47,8 +47,20 @@ if [ "$(git rev-parse dev)" != "$(git rev-parse origin/dev)" ]; then
     exit 1
 fi
 
+if ! git rev-parse -q --verify origin/main >/dev/null; then
+    echo "origin/main does not exist" >&2
+    exit 1
+fi
+
 if [ "$(git rev-parse origin/main)" != "$(git rev-parse origin/dev)" ]; then
     echo "origin/main is not origin/dev: run scripts/preprod-release.sh first" >&2
+    exit 1
+fi
+
+head_tag=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)
+if [ -n "$head_tag" ]; then
+    echo "HEAD is already tagged $head_tag, there is nothing new to release" >&2
+    echo "if that tag failed to publish, push it again: git push origin $head_tag" >&2
     exit 1
 fi
 
@@ -76,14 +88,21 @@ patch) next="$major.$minor.$((patch + 1))" ;;
 esac
 
 tag="v$next"
+if [ "$next" = "$current" ] || [ "$(printf '%s\n%s\n' "$current" "$next" | sort -V | tail -n 1)" != "$next" ]; then
+    echo "$tag does not sort above the current version v$current" >&2
+    exit 1
+fi
+
 if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
     echo "$tag already exists" >&2
+    echo "if an earlier run stopped after tagging, finish it with:" >&2
+    echo "  git push origin dev && git push origin dev:refs/heads/main && git push origin $tag" >&2
     exit 1
 fi
 
 next_build=$((build + 1))
 
-previous=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)
+previous=$(git tag --list 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)
 if [ -n "$previous" ]; then
     echo "Releasing $tag+$next_build, changes since $previous:"
     git --no-pager log --oneline "$previous..HEAD"
@@ -110,10 +129,13 @@ rm -f "$tmp"
 git add pubspec.yaml
 git commit -m "Release $tag"
 
+# tag before pushing: a push that fails then leaves a state the guards above
+# recognise on the next run, instead of a bump that happens twice
+git tag -a "$tag" -m "$tag"
 git push origin dev
 git push origin dev:refs/heads/main
-git tag -a "$tag" -m "$tag"
 git push origin "$tag"
 
 echo
-echo "$tag pushed, the CI is building the prod APK and the GitHub release"
+echo "$tag pushed, the CI is building the prod flavor and the GitHub release"
+echo "that build is --debug, so the published APK is debug signed, see Krakoer/crimpy#57"
