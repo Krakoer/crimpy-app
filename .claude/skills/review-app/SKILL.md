@@ -5,7 +5,7 @@ description: Architecture, design and style knowledge for reviewing changes in c
 
 # Reviewing crimpy-app
 
-Flutter (Dart SDK 3.8+, Flutter 3.38.5) climbing training app that talks to a BLE
+Flutter (Dart SDK 3.8+, Flutter 3.41.7) climbing training app that talks to a BLE
 force sensor. Riverpod 3 with code generation, Drift for local SQLite, Dio for
 the backend API, Sentry, flavors `beta` and `prod`. Read `crimpy-app/CLAUDE.md`
 for commands; this file is what to check in a diff.
