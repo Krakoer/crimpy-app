@@ -76,9 +76,16 @@ Crimpy helps climbers track and improve their performance through:
 
 ### Building for Production
 
+Both artifacts are built obfuscated, because Sentry is initialized in every
+release build and unobfuscated AOT Dart frames arrive as bare addresses that
+cannot be symbolicated after the fact. `dart run sentry_dart_plugin` uploads the
+`.symbols` files and the obfuscation map those flags produce, and needs
+`SENTRY_AUTH_TOKEN` in the environment.
+
 **Android APK (Production)**
 ```bash
-flutter build apk --flavor prod --release
+flutter build apk --flavor prod --release --obfuscate --split-debug-info=build/debug-info --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json
+dart run sentry_dart_plugin
 ```
 
 **Android AAB (Store release)**
@@ -109,13 +116,16 @@ land on a commit that has already been promoted. It reads the current version
 out of `pubspec.yaml`, which is the source of truth here rather than the tags:
 it also carries the build number, and that has to keep going up for the stores.
 The build number is incremented on every release. Pushing the tag triggers
-`.github/workflows/release.yml`, which builds `--flavor prod --release`, checks
-the APK is not signed with the debug key, and publishes it on the GitHub release.
+`.github/workflows/release.yml`, which builds `--flavor prod --release`
+obfuscated, checks the APK is not signed with the debug key, uploads the debug
+symbols to Sentry, and publishes the APK on the GitHub release. The upload runs
+before the release is created, so a tag never ships an APK whose crash reports
+cannot be read.
 
 Both scripts show what they are about to push and ask for confirmation; pass
 `-y` to skip the prompt.
 
-#### Signing secrets
+#### Release secrets
 
 The workflow signs with the upload keystore, which it takes from four repository
 secrets and writes back into `android/key.properties` for the build. Set them
@@ -128,8 +138,17 @@ gh secret set ANDROID_KEY_ALIAS --repo Krakoer/crimpy-app
 gh secret set ANDROID_KEY_PASSWORD --repo Krakoer/crimpy-app
 ```
 
-A tag pushed while any of them is missing fails the workflow before the build,
-rather than publishing an APK signed with the debug key. Locally the same file
+The symbol upload needs a fifth secret, an organization auth token from the
+Sentry organization settings. It both creates a release and uploads debug
+information files, which the `org:ci` scope an organization token carries covers:
+
+```bash
+gh secret set SENTRY_AUTH_TOKEN --repo Krakoer/crimpy-app
+```
+
+A tag pushed while any of the five is missing fails the workflow before the
+build, rather than publishing an APK signed with the debug key or one Sentry
+cannot symbolicate. Locally the keystore secrets live in the same file, which
 drives the release build:
 
 ```properties
