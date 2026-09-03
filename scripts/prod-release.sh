@@ -53,7 +53,7 @@ if ! git rev-parse -q --verify origin/main >/dev/null; then
 fi
 
 if [ "$(git rev-parse origin/main)" != "$(git rev-parse origin/dev)" ]; then
-    echo "origin/main is not origin/dev: run scripts/preprod-release.sh first" >&2
+    echo "origin/main is not origin/dev: run scripts/promote.sh first" >&2
     exit 1
 fi
 
