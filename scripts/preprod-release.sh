@@ -49,4 +49,11 @@ git push origin origin/dev:refs/heads/main
 
 echo
 echo "main updated, the CI is running analyze and tests on it"
-echo "hand a beta build to testers with: flutter build apk --flavor beta --debug"
+echo
+echo "to hand testers a build, cut a beta release and let the CI build it:"
+echo "  just beta-release"
+echo
+echo "that bumps the build number, tags beta-v*, and the CI builds the beta"
+echo "flavor obfuscated, uploads its symbols to Sentry and publishes it as a"
+echo "prerelease. A local --debug build reports nothing to Sentry, so do not"
+echo "hand one out."

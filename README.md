@@ -94,6 +94,17 @@ flutter build appbundle --flavor prod --release --obfuscate --split-debug-info=b
 dart run sentry_dart_plugin
 ```
 
+**Android APK (Beta, for the pre-prod test)**
+
+Same recipe with the beta flavor, but prefer the tag below over building this by
+hand. It installs as `com.crimpyclimbing.crimpy.beta`, alongside production
+rather than over it.
+
+```bash
+flutter build apk --flavor beta --release --obfuscate --split-debug-info=build/debug-info --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json
+dart run sentry_dart_plugin
+```
+
 **Install without losing data**
 ```bash
 adb install -r ./build/app/outputs/flutter-apk/app-prod-release.apk
@@ -124,6 +135,27 @@ cannot be read.
 
 Both scripts show what they are about to push and ask for confirmation; pass
 `-y` to skip the prompt.
+
+#### Beta releases
+
+The same workflow builds the beta channel, off a `beta-v*` tag rather than `v*`:
+
+```bash
+just beta-release        # or -y to skip the prompt
+```
+
+That bumps the build number in `pubspec.yaml`, leaving the version alone, and
+tags `beta-v<version>-<build>`. Only the build number moves, so a month of betas
+off one version stays ordered, every tag is unique, and Sentry can attribute an
+event to the build that produced it. The CI then builds `--flavor beta --release`
+through the same signing, obfuscation and symbol upload as production, and
+publishes it as a GitHub prerelease.
+
+A beta release leaves `dev` ahead of `main`, so run `just preprod-release` again
+before cutting production.
+
+Never hand testers a local `--flavor beta --debug` build. Sentry is initialized
+only in release builds, so a debug build reports nothing for the whole test.
 
 #### Release secrets
 
@@ -163,6 +195,27 @@ keyPassword=...
 to the debug key, so `flutter build apk --release` needs the keystore in place.
 
 ## Development
+
+### Application ids, labels and Sentry environments
+
+Every variant installs under its own application id and shows its own launcher
+label, so a phone can carry the beta test build, a production install and
+whatever the editor last pushed without any of them replacing another.
+
+| build                     | application id                           | launcher label         | Sentry  |
+| ------------------------- | ---------------------------------------- | ---------------------- | ------- |
+| `prod` release            | `com.crimpyclimbing.crimpy`              | Crimpy                 | `prod`  |
+| `beta` release            | `com.crimpyclimbing.crimpy.beta`         | Crimpy (beta)          | `beta`  |
+| `prod` debug              | `com.crimpyclimbing.crimpy.debug`        | Crimpy (debug)         | off     |
+| `beta` debug              | `com.crimpyclimbing.crimpy.beta.debug`   | Crimpy (beta debug)    | off     |
+| `prod` profile            | `com.crimpyclimbing.crimpy.profile`      | Crimpy (profile)       | off     |
+| `beta` profile            | `com.crimpyclimbing.crimpy.beta.profile` | Crimpy (beta profile)  | off     |
+
+The suffixes are what keep a run from the editor from uninstalling the beta
+build a tester is carrying, along with the month of local data behind it. Sentry
+is gated on `kReleaseMode`, so errors watched live in the debugger never reach
+it, and `options.environment` comes from `appFlavor` so the beta test stays
+separable from production.
 
 ### Project Structure
 ```

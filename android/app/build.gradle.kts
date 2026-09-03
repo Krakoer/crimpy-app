@@ -1,3 +1,4 @@
+import com.android.build.api.variant.ResValue
 import java.util.Properties
 import java.io.FileInputStream
 
@@ -60,26 +61,44 @@ android {
         release {
             signingConfig = signingConfigs.findByName("release")
         }
+        // Keeps the builds run from the editor off the application ids the beta
+        // testers and production users carry, so running a device does not
+        // uninstall their build and the local data behind it. Flutter declares
+        // the profile build type itself, hence maybeCreate.
+        debug {
+            applicationIdSuffix = ".debug"
+        }
+        maybeCreate("profile").applicationIdSuffix = ".profile"
     }
 
     flavorDimensions += "default"
     productFlavors {
         create("beta") {
             dimension = "default"
-            resValue(
-                type = "string",
-                name = "app_name",
-                value = "Crimpy (beta)")
             applicationIdSuffix = ".beta"
         }
         create("prod") {
             dimension = "default"
-            resValue(
-                type = "string",
-                name = "app_name",
-                value = "Crimpy")
             // Production uses base applicationId without suffix
         }
+    }
+}
+
+// The launcher label names both halves of the variant, so a phone carrying the
+// beta test build, a production install and whatever the editor last pushed
+// shows three distinct entries rather than three called Crimpy. Set per variant
+// because a build type resValue would override the flavor's and lose the flavor
+// half of the name.
+androidComponents {
+    onVariants { variant ->
+        val marks = listOfNotNull(
+            variant.flavorName?.takeIf { it != "prod" },
+            variant.buildType?.takeIf { it != "release" },
+        )
+        val label = if (marks.isEmpty()) "Crimpy" else "Crimpy (${marks.joinToString(" ")})"
+        variant.resValues.put(
+            variant.makeResValueKey("string", "app_name"),
+            ResValue(label))
     }
 }
 
