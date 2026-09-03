@@ -30,14 +30,77 @@ jobs:
     - name: Generate code
       run: dart run build_runner build --delete-conflicting-outputs
 
+    # Gradle only wires the upload signing config when android/key.properties is
+    # there, so without these secrets the release APK would be signed with the
+    # debug key. Stop before building rather than publish that.
+    - name: Write signing config
+      env:
+        KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      run: |
+        umask 077
+        for secret in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+          if [ -z "${!secret}" ]; then
+            echo "missing repository secret ANDROID_$secret" >&2
+            exit 1
+          fi
+        done
+        echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+        # java.util.Properties reads a backslash as an escape and drops a leading
+        # space, so a password carrying either would reach Gradle mangled.
+        property() {
+          local value=${2//\\/\\\\}
+          printf '%s=%s\n' "$1" "${value/# /\\ }"
+        }
+        {
+          property storeFile upload-keystore.jks
+          property storePassword "$KEYSTORE_PASSWORD"
+          property keyAlias "$KEY_ALIAS"
+          property keyPassword "$KEY_PASSWORD"
+        } > android/key.properties
+
     - name: Build Android APK
-      run: flutter build apk --flavor prod --debug
+      run: flutter build apk --flavor prod --release
+
+    # The fingerprint of the upload certificate, which is public: it comes out of
+    # ./gradlew :app:signingReport. Pinning it rejects the debug key and any other
+    # keystore just as well, and an APK signed by one of those is one no install
+    # can update over.
+    - name: Check the APK signer
+      env:
+        UPLOAD_CERT_SHA256: 6f4ee74549c3a45ecb75eda778ebd6cc08624707f7737e87808be23ba3c217c9
+      run: |
+        if [ -z "${ANDROID_HOME:-}" ]; then
+          echo "ANDROID_HOME is not set" >&2
+          exit 1
+        fi
+        apksigner=$(find "$ANDROID_HOME/build-tools" -name apksigner 2>/dev/null | sort -V | tail -n 1)
+        if [ -z "$apksigner" ]; then
+          echo "no apksigner in $ANDROID_HOME/build-tools" >&2
+          exit 1
+        fi
+        if ! certs=$("$apksigner" verify --print-certs build/app/outputs/flutter-apk/app-prod-release.apk 2>&1); then
+          echo "$certs" >&2
+          echo "the APK is not signed" >&2
+          exit 1
+        fi
+        echo "$certs"
+        if ! echo "$certs" | grep -qi "SHA-256 digest: $UPLOAD_CERT_SHA256"; then
+          echo "the APK is not signed with the upload key" >&2
+          exit 1
+        fi
+
+    - name: Remove signing config
+      if: always()
+      run: rm -f android/key.properties android/app/upload-keystore.jks
 
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          build/app/outputs/flutter-apk/app-prod-debug.apk
+          build/app/outputs/flutter-apk/app-prod-release.apk
         draft: false
         prerelease: false
         generate_release_notes: true

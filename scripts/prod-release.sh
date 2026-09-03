@@ -137,5 +137,4 @@ git push origin dev:refs/heads/main
 git push origin "$tag"
 
 echo
-echo "$tag pushed, the CI is building the prod flavor and the GitHub release"
-echo "that build is --debug, so the published APK is debug signed, see Krakoer/crimpy#57"
+echo "$tag pushed, the CI is building the signed prod APK and the GitHub release"

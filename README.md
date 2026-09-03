@@ -109,13 +109,39 @@ land on a commit that has already been promoted. It reads the current version
 out of `pubspec.yaml`, which is the source of truth here rather than the tags:
 it also carries the build number, and that has to keep going up for the stores.
 The build number is incremented on every release. Pushing the tag triggers
-`.github/workflows/release.yml`, which builds the `prod` flavor and publishes the
-GitHub release. That workflow builds `--debug`, so the APK it attaches is
-debuggable and signed with the debug key, not the upload key. Krakoer/crimpy#57
-tracks moving it to a signed `--release` build.
+`.github/workflows/release.yml`, which builds `--flavor prod --release`, checks
+the APK is not signed with the debug key, and publishes it on the GitHub release.
 
 Both scripts show what they are about to push and ask for confirmation; pass
 `-y` to skip the prompt.
+
+#### Signing secrets
+
+The workflow signs with the upload keystore, which it takes from four repository
+secrets and writes back into `android/key.properties` for the build. Set them
+once, from a checkout that has the keystore:
+
+```bash
+gh secret set ANDROID_KEYSTORE_BASE64 --repo Krakoer/crimpy-app < <(base64 -w0 android/app/upload-keystore.jks)
+gh secret set ANDROID_KEYSTORE_PASSWORD --repo Krakoer/crimpy-app
+gh secret set ANDROID_KEY_ALIAS --repo Krakoer/crimpy-app
+gh secret set ANDROID_KEY_PASSWORD --repo Krakoer/crimpy-app
+```
+
+A tag pushed while any of them is missing fails the workflow before the build,
+rather than publishing an APK signed with the debug key. Locally the same file
+drives the release build:
+
+```properties
+storeFile=upload-keystore.jks
+storePassword=...
+keyAlias=...
+keyPassword=...
+```
+
+`storeFile` is resolved from `android/app/`, and both files are gitignored. Without
+`android/key.properties` the release build is left unsigned instead of falling back
+to the debug key, so `flutter build apk --release` needs the keystore in place.
 
 ## Development
 
