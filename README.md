@@ -46,8 +46,8 @@ Crimpy helps climbers track and improve their performance through:
 ## Getting Started
 
 ### Prerequisites
-- Flutter SDK ^3.7.2
-- Dart SDK ^3.7.2
+- Flutter SDK 3.41.7, the version pinned in `pubspec.yaml`
+- Dart SDK 3.11.5, bundled with that Flutter release
 - Android Studio / VS Code with Flutter extensions
 - Compatible Bluetooth force sensor device
 
