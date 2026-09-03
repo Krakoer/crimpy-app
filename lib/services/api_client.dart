@@ -1,14 +1,21 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/services/api_exception.dart';
 
 class ApiClient {
-  static const String baseUrl = kDebugMode
-      ? 'https://devapi.crimpy.app'
-      // ? 'http://172.25.159.143:3000/'
-      : 'https://api.crimpy.app';
+  /// The stage decides the backend: the prod flavor is the only build that
+  /// reaches production, so a beta release handed to testers cannot write into
+  /// it. Point a run from the editor somewhere else without editing this file:
+  ///
+  ///     flutter run --flavor beta --dart-define=CRIMPY_API_URL=http://192.168.1.10:3000
+  static const String baseUrl = String.fromEnvironment(
+    'CRIMPY_API_URL',
+    defaultValue: appFlavor == 'prod'
+        ? 'https://api.crimpy.app'
+        : 'https://devapi.crimpy.app',
+  );
   static const String tokenKey = 'auth_token';
   static const String refreshTokenKey = 'refresh_token';
 
