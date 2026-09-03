@@ -29,8 +29,8 @@ Never use unicode characters such as long dashes, triple dots, arrows or emojis,
 
 ### Testing & Debugging
 - `adb install -r .\build\app\outputs\flutter-apk\app-prod-release.apk` - Install APK without losing data
-- `adb -d shell "run-as com.crimpyclimbing.crimpy.beta cat /data/user/0/com.crimpyclimbing.crimpy.beta/app_flutter/<filename>" > data.json` - Debug data extraction (beta)
-- `adb -d shell "run-as com.crimpyclimbing.crimpy cat /data/user/0/com.crimpyclimbing.crimpy/app_flutter/<filename>" > data.json` - Debug data extraction (prod)
+- `adb -d shell "run-as com.crimpyclimbing.crimpy.beta.debug cat /data/user/0/com.crimpyclimbing.crimpy.beta.debug/app_flutter/<filename>" > data.json` - Debug data extraction (beta). `run-as` only works on debuggable builds, which carry the `.debug` suffix; drop it to read a release build's data through other means
+- `adb -d shell "run-as com.crimpyclimbing.crimpy.debug cat /data/user/0/com.crimpyclimbing.crimpy.debug/app_flutter/<filename>" > data.json` - Debug data extraction (prod)
 
 ## Architecture Overview
 

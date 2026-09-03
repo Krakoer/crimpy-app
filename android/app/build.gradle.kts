@@ -60,6 +60,16 @@ android {
         release {
             signingConfig = signingConfigs.findByName("release")
         }
+        // Keeps the build run from the editor off the application id the beta
+        // testers carry, so debugging a device does not uninstall their build
+        // and the local data behind it.
+        debug {
+            applicationIdSuffix = ".debug"
+            resValue(
+                type = "string",
+                name = "app_name",
+                value = "Crimpy (debug)")
+        }
     }
 
     flavorDimensions += "default"
