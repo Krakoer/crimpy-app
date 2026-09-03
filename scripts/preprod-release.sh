@@ -47,6 +47,15 @@ fi
 
 git push origin origin/dev:refs/heads/main
 
+version=$(sed -n 's/^version: *//p' pubspec.yaml | head -n 1)
+suggested="beta-v${version/+/-}"
+
 echo
 echo "main updated, the CI is running analyze and tests on it"
-echo "hand a beta build to testers with: flutter build apk --flavor beta --debug"
+echo
+echo "to hand testers a build, push a beta tag and let the CI build it:"
+echo "  git tag -a $suggested -m $suggested && git push origin $suggested"
+echo
+echo "that builds the beta flavor obfuscated, uploads its symbols to Sentry and"
+echo "publishes it as a prerelease. A local --debug build reports nothing to"
+echo "Sentry and installs over the testers app, so do not hand one out."

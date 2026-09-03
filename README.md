@@ -94,6 +94,17 @@ flutter build appbundle --flavor prod --release --obfuscate --split-debug-info=b
 dart run sentry_dart_plugin
 ```
 
+**Android APK (Beta, for the pre-prod test)**
+
+Same recipe with the beta flavor, but prefer the tag below over building this by
+hand. It installs as `com.crimpyclimbing.crimpy.beta`, alongside production
+rather than over it.
+
+```bash
+flutter build apk --flavor beta --release --obfuscate --split-debug-info=build/debug-info --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json
+dart run sentry_dart_plugin
+```
+
 **Install without losing data**
 ```bash
 adb install -r ./build/app/outputs/flutter-apk/app-prod-release.apk
@@ -124,6 +135,22 @@ cannot be read.
 
 Both scripts show what they are about to push and ask for confirmation; pass
 `-y` to skip the prompt.
+
+#### Beta releases
+
+The same workflow builds the beta channel, off a `beta-v*` tag rather than `v*`:
+
+```bash
+git tag -a beta-v2.0.0-7 -m beta-v2.0.0-7
+git push origin beta-v2.0.0-7
+```
+
+That builds `--flavor beta --release` through the same signing, obfuscation and
+symbol upload as production, and publishes it as a GitHub prerelease.
+`preprod-release.sh` prints the exact tag to push once it has promoted `main`.
+
+Never hand testers a local `--flavor beta --debug` build. Sentry is initialized
+only in release builds, so a debug build reports nothing for the whole test.
 
 #### Release secrets
 
@@ -163,6 +190,20 @@ keyPassword=...
 to the debug key, so `flutter build apk --release` needs the keystore in place.
 
 ## Development
+
+### Application ids and Sentry environments
+
+| build                       | application id                        | Sentry            |
+| --------------------------- | ------------------------------------- | ----------------- |
+| `--flavor prod --release`   | `com.crimpyclimbing.crimpy`           | `prod`            |
+| `--flavor beta --release`   | `com.crimpyclimbing.crimpy.beta`      | `beta`            |
+| anything debug or profile   | the above plus `.debug`               | not initialized   |
+
+The debug suffix is what keeps a run from the editor from uninstalling the beta
+build a tester is carrying, along with the month of local data behind it. Sentry
+is gated on `kReleaseMode`, so errors watched live in the debugger never reach
+it, and `options.environment` comes from `appFlavor` so the beta test stays
+separable from production.
 
 ### Project Structure
 ```
