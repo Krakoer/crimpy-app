@@ -1,21 +1,31 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/services/api_exception.dart';
 
 class ApiClient {
-  /// The stage decides the backend: the prod flavor is the only build that
-  /// reaches production, so a beta release handed to testers cannot write into
-  /// it. Point a run from the editor somewhere else without editing this file:
+  /// Set to reach a local stack, or preprod, or production, from a run started
+  /// in the editor, without editing this file:
   ///
   ///     flutter run --flavor beta --dart-define=CRIMPY_API_URL=http://192.168.1.10:3000
-  static const String baseUrl = String.fromEnvironment(
+  ///
+  /// Passing the key with an empty value defines it, so an empty override has to
+  /// fall back rather than hand Dio a baseUrl no relative path can resolve
+  /// against. appFlavor guards itself the same way.
+  static const String _baseUrlOverride = String.fromEnvironment(
     'CRIMPY_API_URL',
-    defaultValue: appFlavor == 'prod'
-        ? 'https://api.crimpy.app'
-        : 'https://devapi.crimpy.app',
   );
+
+  /// The stage decides the backend. A released prod build is the only one that
+  /// reaches production, so neither a beta APK in a tester's hands nor a run
+  /// started from the editor can write into it by default.
+  static const String baseUrl = _baseUrlOverride != ''
+      ? _baseUrlOverride
+      : (appFlavor == 'prod' && kReleaseMode
+            ? 'https://api.crimpy.app'
+            : 'https://devapi.crimpy.app');
   static const String tokenKey = 'auth_token';
   static const String refreshTokenKey = 'refresh_token';
 
