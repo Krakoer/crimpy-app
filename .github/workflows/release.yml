@@ -36,6 +36,17 @@ jobs:
     - name: Generate code
       run: dart run build_runner build --delete-conflicting-outputs
 
+    # The symbol upload runs after a build that takes several minutes, so check
+    # its token up front rather than fail the release at the last step.
+    - name: Check the Sentry auth token
+      env:
+        SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      run: |
+        if [ -z "$SENTRY_AUTH_TOKEN" ]; then
+          echo "missing repository secret SENTRY_AUTH_TOKEN" >&2
+          exit 1
+        fi
+
     # Gradle only wires the upload signing config when android/key.properties is
     # there, so without these secrets the release APK would be signed with the
     # debug key. Stop before building rather than publish that.
@@ -67,8 +78,16 @@ jobs:
           property keyPassword "$KEY_PASSWORD"
         } > android/key.properties
 
+    # Obfuscated so the AOT Dart frames Sentry receives can be symbolicated:
+    # --split-debug-info writes the .symbols files and the obfuscation map is
+    # what pubspec.yaml points sentry_dart_plugin at. A plain --release build
+    # publishes an APK whose stack traces are bare addresses forever.
     - name: Build Android APK
-      run: flutter build apk --flavor prod --release
+      run: |
+        flutter build apk --flavor prod --release \
+          --obfuscate \
+          --split-debug-info=build/debug-info \
+          --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json
 
     # The fingerprint of the upload certificate, which is public: it comes out of
     # ./gradlew :app:signingReport. Pinning it rejects the debug key and any other
@@ -97,6 +116,13 @@ jobs:
           echo "the APK is not signed with the upload key" >&2
           exit 1
         fi
+
+    # Before the release is published, so a failed upload stops the tag from
+    # shipping an APK nothing can symbolicate.
+    - name: Upload debug symbols to Sentry
+      env:
+        SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      run: dart run sentry_dart_plugin
 
     - name: Remove signing config
       if: always()

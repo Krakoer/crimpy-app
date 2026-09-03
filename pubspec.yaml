@@ -144,3 +144,7 @@ sentry:
   dart_symbol_map_path: build/app/obfuscation.map.json
   project: crimpy-app
   org: axel-dt
+  # Associating commits needs a repository integration configured in Sentry, and
+  # sentry-cli failing to find one aborts the whole plugin run, symbol upload
+  # included. Nothing here reads the association, so leave it off.
+  commits: false

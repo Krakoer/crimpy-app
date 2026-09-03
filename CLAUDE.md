@@ -22,7 +22,7 @@ Never use unicode characters such as long dashes, triple dots, arrows or emojis,
 
 ### Development & Building
 - `flutter run` - Run the app in development mode
-- `flutter build apk --flavor prod --release` - Build production APK
+- `flutter build apk --flavor prod --release` - Build production APK. Release artifacts ship obfuscated so Sentry can symbolicate them, see the README build recipes
 - `flutter analyze` - Run static analysis
 - `dart run build_runner build` - Generate code for Drift database and Riverpod
 - `dart run build_runner build --delete-conflicting-outputs` - Regenerate all generated files
