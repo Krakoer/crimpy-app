@@ -47,15 +47,13 @@ fi
 
 git push origin origin/dev:refs/heads/main
 
-version=$(sed -n 's/^version: *//p' pubspec.yaml | head -n 1)
-suggested="beta-v${version/+/-}"
-
 echo
 echo "main updated, the CI is running analyze and tests on it"
 echo
-echo "to hand testers a build, push a beta tag and let the CI build it:"
-echo "  git tag -a $suggested -m $suggested && git push origin $suggested"
+echo "to hand testers a build, cut a beta release and let the CI build it:"
+echo "  just beta-release"
 echo
-echo "that builds the beta flavor obfuscated, uploads its symbols to Sentry and"
-echo "publishes it as a prerelease. A local --debug build reports nothing to"
-echo "Sentry and installs over the testers app, so do not hand one out."
+echo "that bumps the build number, tags beta-v*, and the CI builds the beta"
+echo "flavor obfuscated, uploads its symbols to Sentry and publishes it as a"
+echo "prerelease. A local --debug build reports nothing to Sentry, so do not"
+echo "hand one out."
