@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Promote dev to main, the branch a production tag is cut from.
+# Promote dev to main, the branch a production tag is cut from. This builds
+# and releases nothing: the preprod artifact is what the beta channel produces.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

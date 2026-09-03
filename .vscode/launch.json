@@ -1,0 +1,38 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "crimpy (beta, devapi)",
+            "request": "launch",
+            "type": "dart",
+            "toolArgs": ["--flavor", "beta"]
+        },
+        {
+            "name": "crimpy (beta, local stack)",
+            "request": "launch",
+            "type": "dart",
+            "toolArgs": [
+                "--flavor",
+                "beta",
+                "--dart-define-from-file=.vscode/api.json"
+            ]
+        },
+        {
+            "name": "crimpy (prod, production API)",
+            "request": "launch",
+            "type": "dart",
+            "toolArgs": [
+                "--flavor",
+                "prod",
+                "--dart-define=CRIMPY_API_URL=https://api.crimpy.app"
+            ]
+        },
+        {
+            "name": "crimpy (beta, profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile",
+            "toolArgs": ["--flavor", "beta"]
+        }
+    ]
+}

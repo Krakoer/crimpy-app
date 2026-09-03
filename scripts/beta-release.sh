@@ -95,4 +95,4 @@ git push origin "$tag"
 
 echo
 echo "$tag pushed, the CI is building the signed beta APK and the prerelease"
-echo "dev is now ahead of main: run preprod-release again before a prod release"
+echo "dev is now ahead of main: run just promote again before a prod release"
