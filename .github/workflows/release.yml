@@ -9,6 +9,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    # The repository defaults workflow tokens to read only, so the release step
+    # has to ask for write here. Nothing listens to release events, so the built
+    # in token not triggering further workflows costs nothing.
+    permissions:
+      contents: write
+
     steps:
     - uses: actions/checkout@v4
 
@@ -105,4 +111,4 @@ jobs:
         prerelease: false
         generate_release_notes: true
       env:
-        GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
