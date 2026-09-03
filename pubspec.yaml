@@ -141,6 +141,11 @@ sentry:
   upload_debug_symbols: true
   upload_source_maps: true
   upload_sources: true
+  # Both paths are the ones the release build writes to, so a change to the
+  # --split-debug-info or --save-obfuscation-map flags shows up as wrong here.
+  # Left unset, symbols_path defaults to the project root and walks the whole
+  # checkout looking for them.
+  symbols_path: build/debug-info
   dart_symbol_map_path: build/app/obfuscation.map.json
   project: crimpy-app
   org: axel-dt

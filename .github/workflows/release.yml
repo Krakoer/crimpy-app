@@ -89,6 +89,22 @@ jobs:
           --split-debug-info=build/debug-info \
           --extra-gen-snapshot-options=--save-obfuscation-map=build/app/obfuscation.map.json
 
+    # sentry_dart_plugin only warns and exits 0 when the obfuscation map is
+    # missing, so without this the release would publish green with obfuscated
+    # class names in every issue title. The .symbols upload does fail hard, but
+    # check both here rather than rely on which half is loud.
+    - name: Check the symbol artifacts
+      run: |
+        if [ ! -s build/app/obfuscation.map.json ]; then
+          echo "the build produced no obfuscation map" >&2
+          exit 1
+        fi
+        if ! ls build/debug-info/app.android-*.symbols >/dev/null 2>&1; then
+          echo "the build produced no split debug info" >&2
+          exit 1
+        fi
+        ls -l build/app/obfuscation.map.json build/debug-info
+
     # The fingerprint of the upload certificate, which is public: it comes out of
     # ./gradlew :app:signingReport. Pinning it rejects the debug key and any other
     # keystore just as well, and an APK signed by one of those is one no install

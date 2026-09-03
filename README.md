@@ -138,8 +138,9 @@ gh secret set ANDROID_KEY_ALIAS --repo Krakoer/crimpy-app
 gh secret set ANDROID_KEY_PASSWORD --repo Krakoer/crimpy-app
 ```
 
-The symbol upload needs a fifth secret, an internal integration token from the
-Sentry organization settings with the `project:releases` scope:
+The symbol upload needs a fifth secret, an auth token from the Sentry
+organization settings. It both creates a release and uploads debug information
+files, so use an organization token rather than a narrowly scoped project one:
 
 ```bash
 gh secret set SENTRY_AUTH_TOKEN --repo Krakoer/crimpy-app
