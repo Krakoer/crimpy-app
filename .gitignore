@@ -21,7 +21,11 @@ migrate_working_dir/
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
-.vscode/
+.vscode/*
+# launch.json is tracked: it carries the flavor every Android run needs and the
+# named backends the Run button offers. api.json holds a personal address.
+!.vscode/launch.json
+!.vscode/api.example.json
 
 # Flutter/Dart/Pub related
 **/doc/api/

@@ -3,8 +3,8 @@ gen:
 
 migrate:
     dart run drift_dev make-migrations
-preprod-release *args:
-    ./scripts/preprod-release.sh {{args}}
+promote *args:
+    ./scripts/promote.sh {{args}}
 
 beta-release *args:
     ./scripts/beta-release.sh {{args}}

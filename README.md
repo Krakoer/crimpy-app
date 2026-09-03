@@ -116,11 +116,16 @@ Releases are cut from `dev`, with `main` acting as the promoted branch.
 
 ```bash
 # Fast-forward main to dev, so the CI runs analyze and tests on it
-just preprod-release
+just promote
 
 # Bump pubspec, tag the promoted commit, push
 just prod-release patch    # or minor, major, or an explicit 2.1.0
 ```
+
+`promote` builds and releases nothing, it only moves the branch: the preprod
+artifact is what the beta channel below produces. `crimpy-frontend` keeps a
+`just preprod-release` on purpose, since there the promotion publishes the
+`:edge` image the preproduction stack runs, so do not harmonize the two names.
 
 `prod-release` refuses to run until `main` and `dev` match, so a tag can only
 land on a commit that has already been promoted. It reads the current version
@@ -151,8 +156,8 @@ event to the build that produced it. The CI then builds `--flavor beta --release
 through the same signing, obfuscation and symbol upload as production, and
 publishes it as a GitHub prerelease.
 
-A beta release leaves `dev` ahead of `main`, so run `just preprod-release` again
-before cutting production.
+A beta release leaves `dev` ahead of `main`, so run `just promote` again before
+cutting production.
 
 Never hand testers a local `--flavor beta --debug` build. Sentry is initialized
 only in release builds, so a debug build reports nothing for the whole test.
@@ -202,20 +207,52 @@ Every variant installs under its own application id and shows its own launcher
 label, so a phone can carry the beta test build, a production install and
 whatever the editor last pushed without any of them replacing another.
 
-| build                     | application id                           | launcher label         | Sentry  |
-| ------------------------- | ---------------------------------------- | ---------------------- | ------- |
-| `prod` release            | `com.crimpyclimbing.crimpy`              | Crimpy                 | `prod`  |
-| `beta` release            | `com.crimpyclimbing.crimpy.beta`         | Crimpy (beta)          | `beta`  |
-| `prod` debug              | `com.crimpyclimbing.crimpy.debug`        | Crimpy (debug)         | off     |
-| `beta` debug              | `com.crimpyclimbing.crimpy.beta.debug`   | Crimpy (beta debug)    | off     |
-| `prod` profile            | `com.crimpyclimbing.crimpy.profile`      | Crimpy (profile)       | off     |
-| `beta` profile            | `com.crimpyclimbing.crimpy.beta.profile` | Crimpy (beta profile)  | off     |
+| build          | application id                           | launcher label        | Sentry | backend             |
+| -------------- | ---------------------------------------- | --------------------- | ------ | ------------------- |
+| `prod` release | `com.crimpyclimbing.crimpy`              | Crimpy                | `prod` | `api.crimpy.app`    |
+| `beta` release | `com.crimpyclimbing.crimpy.beta`         | Crimpy (beta)         | `beta` | `devapi.crimpy.app` |
+| `prod` debug   | `com.crimpyclimbing.crimpy.debug`        | Crimpy (debug)        | off    | `devapi.crimpy.app` |
+| `beta` debug   | `com.crimpyclimbing.crimpy.beta.debug`   | Crimpy (beta debug)   | off    | `devapi.crimpy.app` |
+| `prod` profile | `com.crimpyclimbing.crimpy.profile`      | Crimpy (profile)      | off    | `devapi.crimpy.app` |
+| `beta` profile | `com.crimpyclimbing.crimpy.beta.profile` | Crimpy (beta profile) | off    | `devapi.crimpy.app` |
 
-The suffixes are what keep a run from the editor from uninstalling the beta
-build a tester is carrying, along with the month of local data behind it. Sentry
-is gated on `kReleaseMode`, so errors watched live in the debugger never reach
-it, and `options.environment` comes from `appFlavor` so the beta test stays
-separable from production.
+A released `prod` build is the only one that reaches production, so neither a
+beta APK in a tester's hands nor a run started from the editor can write into it
+by accident.
+
+`CRIMPY_API_URL` overrides the backend for a run started from the editor, and
+`.vscode/launch.json` is tracked so the VS Code Run button offers each target as
+a named configuration rather than something to type:
+
+    crimpy (beta, devapi)           the default, no override
+    crimpy (beta, local stack)      reads .vscode/api.json
+    crimpy (prod, production API)   production, deliberately chosen
+    crimpy (beta, profile mode)
+
+Pick one from the dropdown next to the Run button. The local stack address lives
+in `.vscode/api.json`, which is gitignored so it can hold a personal address;
+create it once by copying the example:
+
+```bash
+cp .vscode/api.example.json .vscode/api.json
+```
+
+Every configuration passes `--flavor`, which an Android run needs now that
+Gradle defines product flavors. From a terminal the same override is a flag:
+
+```bash
+flutter run --flavor beta --dart-define=CRIMPY_API_URL=http://192.168.1.10:3000
+```
+
+Cleartext `http` is allowed in the debug and profile build types only, so a
+local stack on the network works while a released build still refuses a plain
+`http` host.
+
+The application id suffixes are what keep a run from the editor from
+uninstalling the beta build a tester is carrying, along with the month of local
+data behind it. Sentry is gated on `kReleaseMode`, so errors watched live in the
+debugger never reach it, and `options.environment` comes from `appFlavor` so the
+beta test stays separable from production.
 
 ### Project Structure
 ```
