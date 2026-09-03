@@ -83,7 +83,7 @@ lib/
 
 ## Development Notes
 
-- Uses Dart SDK ^3.7.2
+- Pinned to Flutter 3.41.7 in `pubspec.yaml`, which bundles Dart 3.11.5
 - Main app entry point: `lib/main.dart` with Riverpod ProviderScope
 - Navigation through bottom tab bar in MainPage
 - Custom lint rules enabled via `custom_lint` package
