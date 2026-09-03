@@ -23,14 +23,18 @@ Future<void> main() async {
   AppLoggerHelper.initialize();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  // Only initialize Sentry in release mode
-  if (kDebugMode) {
+  // Debug and profile builds are the ones run from the editor, where every error
+  // is already on screen. Reporting them would only add noise to Sentry.
+  if (!kReleaseMode) {
     runApp(ProviderScope(retry: boundedRetry, child: const MyApp()));
   } else {
     await SentryFlutter.init(
       (options) {
         options.dsn =
             'https://3fb9714e651c93e73c5c03493392c336@o4510493921705984.ingest.de.sentry.io/4510750311514192';
+        // Keeps the month long beta test separable from production in Sentry.
+        // appFlavor is null for the desktop targets, which build no flavors.
+        options.environment = appFlavor ?? 'unflavored';
         // Adds request headers and IP for users, for more info visit:
         // https://docs.sentry.io/platforms/dart/guides/flutter/data-management/data-collected/
         options.sendDefaultPii = true;
