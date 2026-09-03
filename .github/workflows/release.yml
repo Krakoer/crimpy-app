@@ -48,19 +48,35 @@ jobs:
           fi
         done
         echo "$KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
-        cat > android/key.properties <<EOF
-        storeFile=upload-keystore.jks
-        storePassword=$KEYSTORE_PASSWORD
-        keyAlias=$KEY_ALIAS
-        keyPassword=$KEY_PASSWORD
-        EOF
+        # java.util.Properties reads a backslash as an escape and drops a leading
+        # space, so a password carrying either would reach Gradle mangled.
+        property() {
+          local value=${2//\\/\\\\}
+          printf '%s=%s\n' "$1" "${value/# /\\ }"
+        }
+        {
+          property storeFile upload-keystore.jks
+          property storePassword "$KEYSTORE_PASSWORD"
+          property keyAlias "$KEY_ALIAS"
+          property keyPassword "$KEY_PASSWORD"
+        } > android/key.properties
 
     - name: Build Android APK
       run: flutter build apk --flavor prod --release
 
-    - name: Check the APK is not debug signed
+    # The fingerprint of the upload certificate, which is public: it comes out of
+    # ./gradlew :app:signingReport. Pinning it rejects the debug key and any other
+    # keystore just as well, and an APK signed by one of those is one no install
+    # can update over.
+    - name: Check the APK signer
+      env:
+        UPLOAD_CERT_SHA256: 6f4ee74549c3a45ecb75eda778ebd6cc08624707f7737e87808be23ba3c217c9
       run: |
-        apksigner=$(find "$ANDROID_HOME/build-tools" -name apksigner 2>/dev/null | sort | tail -n 1)
+        if [ -z "${ANDROID_HOME:-}" ]; then
+          echo "ANDROID_HOME is not set" >&2
+          exit 1
+        fi
+        apksigner=$(find "$ANDROID_HOME/build-tools" -name apksigner 2>/dev/null | sort -V | tail -n 1)
         if [ -z "$apksigner" ]; then
           echo "no apksigner in $ANDROID_HOME/build-tools" >&2
           exit 1
@@ -71,8 +87,8 @@ jobs:
           exit 1
         fi
         echo "$certs"
-        if echo "$certs" | grep -q "CN=Android Debug"; then
-          echo "the APK is signed with the debug key" >&2
+        if ! echo "$certs" | grep -qi "SHA-256 digest: $UPLOAD_CERT_SHA256"; then
+          echo "the APK is not signed with the upload key" >&2
           exit 1
         fi
 
