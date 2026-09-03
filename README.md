@@ -92,6 +92,29 @@ dart run sentry_dart_plugin
 adb install -r ./build/app/outputs/flutter-apk/app-prod-release.apk
 ```
 
+### Releasing
+
+Releases are cut from `dev`, with `main` acting as the promoted branch.
+
+```bash
+# Fast-forward main to dev, so the CI runs analyze and tests on it
+just preprod-release
+
+# Bump pubspec, tag the promoted commit, push
+just prod-release patch    # or minor, major, or an explicit 2.1.0
+```
+
+`prod-release` refuses to run until `main` and `dev` match, so a tag can only
+land on a commit that has already been promoted. It reads the current version
+out of `pubspec.yaml`, which is the source of truth here rather than the tags:
+it also carries the build number, and that has to keep going up for the stores.
+The build number is incremented on every release. Pushing the tag triggers
+`.github/workflows/release.yml`, which builds the prod APK and publishes the
+GitHub release.
+
+Both scripts show what they are about to push and ask for confirmation; pass
+`-y` to skip the prompt.
+
 ## Development
 
 ### Project Structure

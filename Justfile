@@ -3,3 +3,8 @@ gen:
 
 migrate:
     dart run drift_dev make-migrations
+preprod-release *args:
+    ./scripts/preprod-release.sh {{args}}
+
+prod-release bump *args:
+    ./scripts/prod-release.sh {{bump}} {{args}}
