@@ -194,6 +194,8 @@ void main() {
       });
 
       expect(reps.applyOverride({'reps_is_max': true}).repsIsMax, isTrue);
+      final open = reps.applyOverride({'reps_is_max': true});
+      expect(open.applyOverride({'reps_is_max': false}).repsIsMax, isFalse);
       // The item level marker still stands in for a max effort on older
       // clients, so a week that prescribes kilograms has to clear it or the app
       // reads MAX where the plan reads the number.

@@ -336,11 +336,17 @@ class ScheduledTrainingScreen extends ConsumerWidget {
 
     final entries = <String>[];
     overrides.forEach((key, value) {
+      // The max effort marker mirrors the load units and always travels with
+      // them, so the load chip beside it already names what the week asks for.
+      if (key == 'load_is_max') return;
       final label = switch (key) {
         'loads' => 'LOAD ${fmtLoads(value)}',
         'left_loads' => 'LEFT ${fmtLoads(value)}',
         'reps' => 'REPS $value',
+        'reps_is_max' => value == true ? 'AMRAP' : 'FIXED REPS',
+        'duration' => 'TIME ${value}s',
         'cycles' => 'CYCLES $value',
+        'interval_seconds' => 'EVERY ${value}s',
         'cycle_rest_seconds' => 'CYCLE REST ${value}s',
         'rest_seconds' => 'REST ${value}s',
         'hb_worktime_seconds' => 'WORK ${value}s',
