@@ -42,6 +42,36 @@ jobs:
           ;;
         esac
 
+    # Nothing in this repo changes when the backend adds an override key, so a
+    # tag cut off an unchanged dev is the one path that could ship a build whose
+    # applyOverride drops one. The question here is narrower than the one the PR
+    # job asks: not whether the vendored list is the current one, but whether
+    # this build reads every key the deployed backend can send. The backend
+    # deploys from main, and this app running ahead of it is normal.
+    #
+    # It compares the key sets and not the merge, which the tests own. A branch
+    # that vendored a key without reading it is red on CI; merging that anyway
+    # and tagging it is the one hole left here.
+    - name: Check the deployed backend sends no override key this build drops
+      run: |
+        URL=https://raw.githubusercontent.com/Krakoer/crimpy-backend/main/contract/override-keys.json
+        if ! curl -fsSL --retry 3 --retry-all-errors "$URL" -o deployed.json; then
+          echo "Could not read $URL." >&2
+          echo "Either the fetch failed, or the canonical list is gone from crimpy-backend," >&2
+          echo "which is where it lives and where it has to be restored." >&2
+          exit 1
+        fi
+        missing=$(jq -rn \
+          --slurpfile deployed deployed.json \
+          --slurpfile vendored contract/override-keys.json \
+          '[$deployed[0].keys[].key] - [$vendored[0].keys[].key] | join(", ")')
+        rm -f deployed.json
+        if [ -n "$missing" ]; then
+          echo "the deployed backend sends override keys this build drops: $missing" >&2
+          echo "Vendor contract/override-keys.json from crimpy-backend and make applyOverride read them." >&2
+          exit 1
+        fi
+
     - name: Setup Java
       uses: actions/setup-java@v4
       with:

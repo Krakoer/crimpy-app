@@ -1,0 +1,40 @@
+name: Override key contract
+
+# The override key set is the backend's, and a key it names that this app does
+# not read is dropped from the prescription the athlete plays rather than merely
+# ignored here. The vendored copy is what the tests hold applyOverride and the
+# chips to, so it has to be the copy the backend actually ships. The release
+# asks its own narrower question against the branch the backend deploys from,
+# since nothing here changes when the backend adds a key.
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  contract:
+    name: Override key contract
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Compare the override key set with crimpy-backend
+      run: |
+        URL=https://raw.githubusercontent.com/Krakoer/crimpy-backend/dev/contract/override-keys.json
+        if ! curl -fsSL --retry 3 --retry-all-errors "$URL" -o canonical.json; then
+          echo "Could not read $URL."
+          echo "Either the fetch failed, or the canonical list is gone from crimpy-backend,"
+          echo "which is where it lives and where it has to be restored."
+          exit 1
+        fi
+        if ! diff -u canonical.json contract/override-keys.json; then
+          echo
+          echo "contract/override-keys.json has drifted from crimpy-backend dev."
+          echo "Copy the canonical file over, then make the override contract tests pass:"
+          echo "a key added on the left has to be read by TrainingItem.applyOverride"
+          echo "and named by overrideChipLabels before an athlete can play it."
+          exit 1
+        fi
