@@ -5,8 +5,10 @@ import 'package:crimpy/utils/format.dart';
 /// closed and mirrors itemOverride in
 /// crimpy-backend/internal/handler/training_items.go: a key the backend names
 /// and no client reads is dropped from the prescription the athlete plays.
-/// [overrideChipLabels] has to name all of them, which is what
-/// override_labels_test asserts.
+/// contract/override-keys.json is that key set, vendored from the backend and
+/// asserted against this list by override_contract_test, which also holds
+/// TrainingItem.applyOverride to it. [overrideChipLabels] has to name all of
+/// them, which is what override_labels_test asserts.
 const overrideKeys = {
   'cycles',
   'cycle_rest_seconds',

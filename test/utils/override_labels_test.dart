@@ -1,43 +1,22 @@
 import 'package:crimpy/utils/override_labels.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../support/override_contract.dart';
+
 void main() {
   group('overrideChipLabels', () {
     test('names every key a week may carry, and never falls through', () {
       // The fallthrough prints the raw key and value, which is how
       // Krakoer/crimpy#51 nearly shipped "REPS_IS_MAX true" to an athlete. A key
       // added to itemOverride on the backend and forgotten here fails this.
-      const sample = <String, dynamic>{
-        'cycles': 4,
-        'cycle_rest_seconds': 120,
-        'interval_seconds': 90,
-        'reps': 8,
-        'reps_is_max': true,
-        'duration': 45,
-        'rest_seconds': 60,
-        'hb_worktime_seconds': 7,
-        'hand': 'split',
-        'granularity': 'rep',
-        'load_is_max': false,
-        'loads': [
-          {'unit': 'kg', 'value': 25},
-        ],
-        'left_loads': [
-          {'unit': 'kg', 'value': 20},
-        ],
-        'hand_positions': [
-          ['HC', 'FC'],
-        ],
-        'edge_sizes_mm': [20, 18],
-        'variable_targets': {
-          'reps': {'assessment_id': 'a1', 'percent': 75, 'fallback': 8},
-        },
+      final sample = {
+        for (final entry in readOverrideContract()) entry.key: entry.sample,
       };
 
       expect(
         sample.keys.toSet(),
         overrideKeys,
-        reason: 'the sample has to cover the whole closed set',
+        reason: 'the contract has to cover the whole closed set',
       );
       expect(
         overrideKeys.difference(labelledOverrideKeys),
