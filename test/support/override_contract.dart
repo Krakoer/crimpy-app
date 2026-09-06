@@ -26,7 +26,14 @@ class OverrideContractKey {
 }
 
 List<OverrideContractKey> readOverrideContract() {
-  final raw = File('contract/override-keys.json').readAsStringSync();
+  final file = File('contract/override-keys.json');
+  if (!file.existsSync()) {
+    throw StateError(
+      'contract/override-keys.json is read against the working directory, so '
+      'these tests have to run from the package root',
+    );
+  }
+  final raw = file.readAsStringSync();
   final keys = (jsonDecode(raw) as Map<String, dynamic>)['keys'] as List;
   return keys
       .cast<Map<String, dynamic>>()

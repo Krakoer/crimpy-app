@@ -3,16 +3,15 @@ name: Override key contract
 # The override key set is the backend's, and a key it names that this app does
 # not read is dropped from the prescription the athlete plays rather than merely
 # ignored here. The vendored copy is what the tests hold applyOverride and the
-# chips to, so it has to be the copy the backend actually ships. A release calls
-# this too: nothing in this repo changes when the backend adds a key, so a tag
-# cut off an unchanged dev is the one way drift could reach a phone unchecked.
+# chips to, so it has to be the copy the backend actually ships. The release
+# asks its own narrower question against the branch the backend deploys from,
+# since nothing here changes when the backend adds a key.
 
 on:
   push:
     branches: [ main, dev ]
   pull_request:
     branches: [ main, dev ]
-  workflow_call:
 
 jobs:
   contract:
@@ -25,7 +24,7 @@ jobs:
     - name: Compare the override key set with crimpy-backend
       run: |
         URL=https://raw.githubusercontent.com/Krakoer/crimpy-backend/dev/contract/override-keys.json
-        if ! curl -fsSL --retry 3 "$URL" -o canonical.json; then
+        if ! curl -fsSL --retry 3 --retry-all-errors "$URL" -o canonical.json; then
           echo "Could not read $URL."
           echo "Either the fetch failed, or the canonical list is gone from crimpy-backend,"
           echo "which is where it lives and where it has to be restored."
