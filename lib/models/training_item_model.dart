@@ -711,12 +711,16 @@ class TrainingItem {
           ? parseVariableTargets(override['variable_targets'])
           : null,
       reps: (override['reps'] as num?)?.toInt(),
+      repsIsMax: override['reps_is_max'] as bool?,
+      duration: (override['duration'] as num?)?.toInt(),
       cycles: (override['cycles'] as num?)?.toInt(),
       cycleRestSeconds: (override['cycle_rest_seconds'] as num?)?.toInt(),
+      intervalSeconds: (override['interval_seconds'] as num?)?.toInt(),
       restSeconds: (override['rest_seconds'] as num?)?.toInt(),
       worktimeSeconds: (override['hb_worktime_seconds'] as num?)?.toInt(),
       hand: override['hand'] as String?,
       granularity: override['granularity'] as String?,
+      loadIsMax: override['load_is_max'] as bool?,
     );
   }
 }

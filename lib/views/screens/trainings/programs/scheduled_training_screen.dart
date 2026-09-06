@@ -4,6 +4,7 @@ import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/format.dart';
+import 'package:crimpy/utils/override_labels.dart';
 import 'package:crimpy/utils/program_completion.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
@@ -308,50 +309,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   }
 
   List<Widget> _overrideChips(Map<String, dynamic> overrides) {
-    // A chip summarises the whole override, so it shows the first row only.
-    String fmtLoads(dynamic raw) {
-      final first = raw is List ? raw.firstOrNull : null;
-      if (first is! Map<String, dynamic>) return '';
-      final value = (first['value'] as num?)?.toString() ?? '';
-      return '$value ${first['unit'] ?? ''}'.trim();
-    }
-
-    String fmtList(dynamic raw) => raw is List ? raw.join('/') : '';
-
-    // Grips arrive as one array per hand, so each hand reads as its own group.
-    String fmtGrips(dynamic raw) {
-      final byHand = parseHandPositions(raw);
-      if (byHand == null) return '';
-      return byHand.map((hand) => hand.join('/')).join(' | ');
-    }
-
-    String fmtHand(dynamic raw) => switch (raw) {
-      HangboardHand.both => 'BOTH HANDS',
-      HangboardHand.alternate => 'ALTERNATE HANDS',
-      HangboardHand.split => 'SPLIT HANDS',
-      HangboardHand.left => 'LEFT HAND',
-      HangboardHand.right => 'RIGHT HAND',
-      _ => '$raw',
-    };
-
-    final entries = <String>[];
-    overrides.forEach((key, value) {
-      final label = switch (key) {
-        'loads' => 'LOAD ${fmtLoads(value)}',
-        'left_loads' => 'LEFT ${fmtLoads(value)}',
-        'reps' => 'REPS $value',
-        'cycles' => 'CYCLES $value',
-        'cycle_rest_seconds' => 'CYCLE REST ${value}s',
-        'rest_seconds' => 'REST ${value}s',
-        'hb_worktime_seconds' => 'WORK ${value}s',
-        'edge_sizes_mm' => 'EDGE ${fmtList(value)}mm',
-        'hand_positions' => 'GRIP ${fmtGrips(value)}',
-        'hand' => fmtHand(value),
-        'granularity' => 'LAYOUT ${'$value'.toUpperCase()}',
-        _ => '${key.toUpperCase()} $value',
-      };
-      entries.add(label);
-    });
+    final entries = overrideChipLabels(overrides);
 
     return entries
         .map(

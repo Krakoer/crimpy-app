@@ -24,6 +24,17 @@ String formatMillisMinutesSeconds(int milliseconds) {
   return '$minutes:$seconds';
 }
 
+/// A length of time read as a length rather than as a count of seconds, so a
+/// minute reads as one: "45s", "1mn 30s", "2mn". This is the wording the
+/// training item tiles use, and the override chips beside them follow it.
+String formatSecondsAsLength(int seconds) {
+  final minutes = seconds ~/ 60;
+  final rest = seconds % 60;
+  if (minutes > 0 && rest > 0) return '${minutes}mn ${rest}s';
+  if (minutes > 0) return '${minutes}mn';
+  return '${rest}s';
+}
+
 /// Format duration in seconds to human-readable format:
 /// 34s, 1m 34s, 4m, 1h 3m, etc...
 String formatDurationHMS(int seconds) {

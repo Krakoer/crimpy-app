@@ -1,6 +1,7 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/format.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -44,23 +45,13 @@ String trainingItemDetail(
     case TrainingItemType.emom:
       return [
         '${item.cycles ?? 1} rounds',
-        'every ${_intervalLabel(item.intervalSeconds ?? 60)}',
+        'every ${formatSecondsAsLength(item.intervalSeconds ?? 60)}',
       ].join(' - ');
     case TrainingItemType.group:
       return '';
     case TrainingItemType.free:
       return duration != null ? '${duration}s' : '';
   }
-}
-
-/// How often an emom starts a round, read as a length rather than as a count of
-/// seconds, so a minute reads as one.
-String _intervalLabel(int seconds) {
-  final minutes = seconds ~/ 60;
-  final rest = seconds % 60;
-  if (minutes > 0 && rest > 0) return '${minutes}mn ${rest}s';
-  if (minutes > 0) return '${minutes}mn';
-  return '${rest}s';
 }
 
 /// Coach comment attached to a training item, e.g. "right leg".

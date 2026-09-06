@@ -156,6 +156,69 @@ void main() {
       expect(overridden.hand, HangboardHand.alternate);
       expect(overridden.granularity, HangboardGranularity.perRep);
     });
+
+    test('a week retimes a duration and moves an emom clock', () {
+      final plank = TrainingItem.fromJson({
+        'id': 'p1',
+        'type': 'exercise',
+        'position': 0,
+        'duration': 30,
+      });
+      final emom = TrainingItem.fromJson({
+        'id': 'e1',
+        'type': 'emom',
+        'position': 0,
+        'cycles': 10,
+        'interval_seconds': 60,
+      });
+
+      expect(plank.applyOverride({'duration': 45}).duration, 45);
+      expect(emom.applyOverride({'interval_seconds': 90}).intervalSeconds, 90);
+    });
+
+    test('a week opens a rep count and lowers a max effort', () {
+      final reps = TrainingItem.fromJson({
+        'id': 'r1',
+        'type': 'exercise',
+        'position': 0,
+        'reps': 8,
+      });
+      final hang = TrainingItem.fromJson({
+        'id': 'h1',
+        'type': 'hangboard_rep',
+        'position': 0,
+        'load_is_max': true,
+        'loads': [
+          {'unit': 'max', 'value': 0},
+        ],
+      });
+
+      final open = reps.applyOverride({'reps_is_max': true});
+      expect(open.repsIsMax, isTrue);
+      expect(open.applyOverride({'reps_is_max': false}).repsIsMax, isFalse);
+      // The item level marker still stands in for a max effort on older
+      // clients, so a week that prescribes kilograms has to clear it or the app
+      // reads MAX where the plan reads the number.
+      final lowered = hang.applyOverride({
+        'load_is_max': false,
+        'loads': [
+          {'unit': 'kg', 'value': 25},
+        ],
+      });
+      expect(lowered.loadIsMax, isFalse);
+      expect(lowered.loadLabel(), '25 kg');
+    });
+
+    test('a key the week leaves out keeps the base marker', () {
+      final hang = TrainingItem.fromJson({
+        'id': 'h1',
+        'type': 'hangboard_rep',
+        'position': 0,
+        'load_is_max': true,
+      });
+
+      expect(hang.applyOverride({'hb_worktime_seconds': 10}).loadIsMax, isTrue);
+    });
   });
 
   group('Load in kilograms', () {
