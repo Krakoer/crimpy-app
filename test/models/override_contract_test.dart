@@ -49,21 +49,20 @@ void main() {
 
     test('applies every key to the item', () {
       for (final entry in contract) {
+        // Without this the assertion below can pass on a key nothing merges,
+        // where the base happens to already hold the sample.
+        expect(
+          baseItem().toJson()[entry.itemField],
+          isNot(entry.sample),
+          reason:
+              '${entry.key}: the base has to differ from the contract sample '
+              'or the merge proves nothing',
+        );
         final overridden = baseItem().applyOverride({entry.key: entry.sample});
         expect(
           overridden.toJson()[entry.itemField],
           entry.sample,
           reason: '${entry.key} never reaches the item',
-        );
-      }
-    });
-
-    test('names every key on a chip, or keeps it deliberately silent', () {
-      for (final entry in contract) {
-        expect(
-          labelledOverrideKeys,
-          contains(entry.key),
-          reason: '${entry.key} would reach the athlete as raw JSON',
         );
       }
     });

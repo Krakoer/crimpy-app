@@ -9,7 +9,14 @@ on:
       - 'beta-v*'
 
 jobs:
+  # Nothing in this repo changes when the backend adds an override key, so a tag
+  # cut off an unchanged dev is the one path that could ship a build whose
+  # applyOverride drops it. The release waits on the same check the PRs run.
+  contract:
+    uses: ./.github/workflows/contract.yml
+
   build:
+    needs: contract
     runs-on: ubuntu-latest
 
     # The repository defaults workflow tokens to read only, so the release step
