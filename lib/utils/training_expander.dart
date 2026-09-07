@@ -82,9 +82,17 @@ List<TrainingExecutionItem> expandTrainingItems(
 
 /// Total timed duration of a training in seconds. Self-paced (rep-based) steps
 /// contribute 0, so this is an estimate for trainings that mix the two.
-int trainingDurationSeconds(Training training) => expandTrainingItems(
+///
+/// [results] resolves a duration the coach set as a percentage of an assessment.
+/// Left out, such a step falls back to the coach's number, which is what a
+/// standalone training does since it is read outside any athlete's results.
+int trainingDurationSeconds(
+  Training training, {
+  AssessmentResults results = AssessmentResults.none,
+}) => expandTrainingItems(
   training,
   useSensor: false,
+  results: results,
 ).fold(0, (sum, item) => sum + item.durationSeconds);
 
 void _expandItem(
