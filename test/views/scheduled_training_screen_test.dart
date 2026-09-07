@@ -41,11 +41,13 @@ final _program = Program(
   updatedAt: DateTime(2026, 1, 1),
 );
 
-Training _training() => const Training(
+Training _training({
+  List<AssessmentDefinition> referencedAssessments = const [_maxPullUps],
+}) => Training(
   id: 't',
   title: 'Pull ups',
-  referencedAssessments: [_maxPullUps],
-  items: [
+  referencedAssessments: referencedAssessments,
+  items: const [
     TrainingItem(
       id: 'i1',
       type: TrainingItemType.exercise,
@@ -82,14 +84,17 @@ WeekSession _session() => const WeekSession(
   ],
 );
 
-Future<void> _pump(WidgetTester tester) async {
+Future<void> _pump(
+  WidgetTester tester, {
+  List<AssessmentDefinition> referencedAssessments = const [_maxPullUps],
+}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        programTrainingProvider(
-          'p',
-          't',
-        ).overrideWith((ref) async => _training()),
+        programTrainingProvider('p', 't').overrideWith(
+          (ref) async =>
+              _training(referencedAssessments: referencedAssessments),
+        ),
         // Nothing measured, so the training definitions are the only names on
         // offer, and the real provider stays off the device database.
         assessmentResultsProvider.overrideWith(
@@ -119,5 +124,18 @@ void main() {
     await _pump(tester);
 
     expect(find.text('REPS 75% Max pull ups'), findsOneWidget);
+  });
+
+  testWidgets('says what it can when nothing names the assessment', (
+    tester,
+  ) async {
+    // The server freezes referenced_assessments from the base training items,
+    // so a week that is the only thing referencing an assessment sends the
+    // athlete no definition for it, and nothing they can fetch holds a coach's.
+    // The chip has to stay readable rather than show an id or nothing at all.
+    // Krakoer/crimpy#92 is what would let it name this one.
+    await _pump(tester, referencedAssessments: const []);
+
+    expect(find.text('REPS 75% assessment'), findsOneWidget);
   });
 }

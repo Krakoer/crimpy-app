@@ -29,7 +29,9 @@ void main() {
       // reach the athlete as a blank where the week asked for something.
       const silenced = {'load_is_max'};
       for (final key in contractKeys) {
-        final labels = overrideChipLabels({key: sample[key]});
+        final labels = overrideChipLabels({
+          key: sample[key],
+        }, results: AssessmentResults.none);
         if (silenced.contains(key)) {
           expect(labels, isEmpty, reason: '$key is meant to carry no chip');
           continue;
@@ -54,26 +56,52 @@ void main() {
         'loads': [
           {'unit': 'max', 'value': 0},
         ],
-      });
+      }, results: AssessmentResults.none);
 
       expect(labels, ['LOAD MAX']);
     });
 
     test('spells a time the way the tile above it does', () {
-      expect(overrideChipLabels({'duration': 90}), ['TIME 1mn 30s']);
-      expect(overrideChipLabels({'interval_seconds': 120}), ['EVERY 2mn']);
-      expect(overrideChipLabels({'rest_seconds': 45}), ['REST 45s']);
+      expect(
+        overrideChipLabels({'duration': 90}, results: AssessmentResults.none),
+        ['TIME 1mn 30s'],
+      );
+      expect(
+        overrideChipLabels({
+          'interval_seconds': 120,
+        }, results: AssessmentResults.none),
+        ['EVERY 2mn'],
+      );
+      expect(
+        overrideChipLabels({
+          'rest_seconds': 45,
+        }, results: AssessmentResults.none),
+        ['REST 45s'],
+      );
     });
 
     test('says an open rep count and a closed one apart', () {
-      expect(overrideChipLabels({'reps_is_max': true}), ['AMRAP']);
-      expect(overrideChipLabels({'reps_is_max': false}), ['FIXED REPS']);
+      expect(
+        overrideChipLabels({
+          'reps_is_max': true,
+        }, results: AssessmentResults.none),
+        ['AMRAP'],
+      );
+      expect(
+        overrideChipLabels({
+          'reps_is_max': false,
+        }, results: AssessmentResults.none),
+        ['FIXED REPS'],
+      );
     });
 
     test('reads the absence of a percentage when a week clears one', () {
-      expect(overrideChipLabels({'variable_targets': <String, dynamic>{}}), [
-        'NO PERCENTAGE',
-      ]);
+      expect(
+        overrideChipLabels({
+          'variable_targets': <String, dynamic>{},
+        }, results: AssessmentResults.none),
+        ['NO PERCENTAGE'],
+      );
     });
 
     test('names the assessment a percentage is read against', () {
@@ -124,7 +152,7 @@ void main() {
             'fallback': 30,
           },
         },
-      });
+      }, results: AssessmentResults.none);
 
       expect(labels, ['DURATION 60% assessment']);
     });

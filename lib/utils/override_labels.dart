@@ -96,12 +96,13 @@ Set<String> get labelledOverrideKeys => {
 /// A key with no entry in [_labels] falls through to the raw key and value,
 /// which is a bug rather than a format: the tests assert it cannot happen.
 ///
-/// [results] names the assessments a percentage is read against. Without one
-/// the chips still read, they just cannot say which assessment a percentage is
-/// of, so every screen showing them passes the catalog it built.
+/// [results] names the assessments a percentage is read against. It is required
+/// rather than defaulted: a screen that left it out would still render, just
+/// saying "75% assessment" where it could name the reference, and nothing would
+/// fail. Passing [AssessmentResults.none] says that was meant.
 List<String> overrideChipLabels(
   Map<String, dynamic> overrides, {
-  AssessmentResults results = AssessmentResults.none,
+  required AssessmentResults results,
 }) {
   final labels = <String>[];
   overrides.forEach((key, value) {
