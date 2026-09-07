@@ -290,7 +290,13 @@ class _TodayTrainingRow extends ConsumerWidget {
         .watch(programTrainingProvider(program.id, session.trainingId))
         .asData
         ?.value;
-    final seconds = training == null ? 0 : trainingDurationSeconds(training);
+    // Estimated from the training as this week prescribes it, so a retimed
+    // plank or a slowed emom moves the number the athlete reads here.
+    final seconds = training == null
+        ? 0
+        : trainingDurationSeconds(
+            effectiveTraining(training, session.overrides),
+          );
 
     return InkWell(
       onTap: () => _openSession(context, program, weekNumber, session),
