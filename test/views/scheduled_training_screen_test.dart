@@ -54,6 +54,16 @@ Training _training({
       position: 0,
       reps: 8,
       exerciseName: 'Pull up',
+      // The training itself reads against the assessment, which is what makes
+      // the server freeze its definition onto referenced_assessments. Without
+      // this the fixture would claim a payload the server never sends.
+      variableTargets: {
+        'reps': VariableTarget(
+          assessmentId: 'a9b8c7d6-0000-0000-0000-000000000007',
+          percent: 50,
+          fallback: 8,
+        ),
+      },
     ),
   ],
 );
@@ -132,8 +142,9 @@ void main() {
     // The server freezes referenced_assessments from the base training items,
     // so a week that is the only thing referencing an assessment sends the
     // athlete no definition for it, and nothing they can fetch holds a coach's.
-    // The chip has to stay readable rather than show an id or nothing at all.
-    // Krakoer/crimpy#92 is what would let it name this one.
+    // This pins the wording for that case: readable, never an id or a blank.
+    // It is not a tripwire on Krakoer/crimpy#92, and cannot be: with an empty
+    // catalog this wording stays correct however the backend changes.
     await _pump(tester, referencedAssessments: const []);
 
     expect(find.text('REPS 75% assessment'), findsOneWidget);

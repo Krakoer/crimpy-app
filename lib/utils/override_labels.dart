@@ -11,13 +11,20 @@ const _silentOverrideKeys = {'load_is_max'};
 /// can be a percentage of one, and naming it needs the catalog: the labels stay
 /// a pure function of what the week carries, so the screen hands its catalog
 /// over rather than lib/utils reaching for a provider.
-typedef _ChipLabel = String Function(dynamic value, AssessmentResults results);
+typedef _ChipLabel =
+    String Function(
+      dynamic value,
+      AssessmentResults results,
+      double? bodyweightKg,
+    );
 
 /// A chip summarises the whole override, so it shows the first row only.
-String _loads(dynamic raw, AssessmentResults results) {
+String _loads(dynamic raw, AssessmentResults results, double? bodyweightKg) {
   final first = raw is List ? raw.firstOrNull : null;
   if (first is! Map<String, dynamic>) return '';
-  return Load.fromJson(first).label(results: results);
+  return Load.fromJson(
+    first,
+  ).label(results: results, bodyweightKg: bodyweightKg);
 }
 
 String _list(dynamic raw) => raw is List ? raw.join('/') : '';
@@ -46,7 +53,7 @@ String _hand(dynamic raw) => switch (raw) {
 /// percentage of nothing. An assessment neither the athlete results nor the
 /// training carry a definition for reads as a percentage of "assessment", the
 /// word the app already uses for one it cannot name, rather than as a raw id.
-String _variableTargets(dynamic raw, AssessmentResults results) {
+String _variableTargets(dynamic raw, AssessmentResults results, double? _) {
   final targets = parseVariableTargets(raw);
   if (targets.isEmpty) return 'NO PERCENTAGE';
   return targets.entries
@@ -66,21 +73,22 @@ String _variableTargets(dynamic raw, AssessmentResults results) {
 /// and this map forgets would otherwise reach the athlete as raw JSON, which is
 /// how "REPS_IS_MAX true" nearly shipped.
 final Map<String, _ChipLabel> _labels = {
-  'loads': (v, results) => 'LOAD ${_loads(v, results)}',
-  'left_loads': (v, results) => 'LEFT ${_loads(v, results)}',
-  'reps': (v, _) => 'REPS $v',
-  'reps_is_max': (v, _) => v == true ? 'AMRAP' : 'FIXED REPS',
-  'duration': (v, _) => 'TIME ${formatSecondsAsLength(v as int)}',
-  'cycles': (v, _) => 'CYCLES $v',
-  'interval_seconds': (v, _) => 'EVERY ${formatSecondsAsLength(v as int)}',
-  'cycle_rest_seconds': (v, _) =>
+  'loads': (v, results, bw) => 'LOAD ${_loads(v, results, bw)}',
+  'left_loads': (v, results, bw) => 'LEFT ${_loads(v, results, bw)}',
+  'reps': (v, _, __) => 'REPS $v',
+  'reps_is_max': (v, _, __) => v == true ? 'AMRAP' : 'FIXED REPS',
+  'duration': (v, _, __) => 'TIME ${formatSecondsAsLength(v as int)}',
+  'cycles': (v, _, __) => 'CYCLES $v',
+  'interval_seconds': (v, _, __) => 'EVERY ${formatSecondsAsLength(v as int)}',
+  'cycle_rest_seconds': (v, _, __) =>
       'CYCLE REST ${formatSecondsAsLength(v as int)}',
-  'rest_seconds': (v, _) => 'REST ${formatSecondsAsLength(v as int)}',
-  'hb_worktime_seconds': (v, _) => 'WORK ${formatSecondsAsLength(v as int)}',
-  'edge_sizes_mm': (v, _) => 'EDGE ${_list(v)}mm',
-  'hand_positions': (v, _) => 'GRIP ${_grips(v)}',
-  'hand': (v, _) => _hand(v),
-  'granularity': (v, _) => 'LAYOUT ${'$v'.toUpperCase()}',
+  'rest_seconds': (v, _, __) => 'REST ${formatSecondsAsLength(v as int)}',
+  'hb_worktime_seconds': (v, _, __) =>
+      'WORK ${formatSecondsAsLength(v as int)}',
+  'edge_sizes_mm': (v, _, __) => 'EDGE ${_list(v)}mm',
+  'hand_positions': (v, _, __) => 'GRIP ${_grips(v)}',
+  'hand': (v, _, __) => _hand(v),
+  'granularity': (v, _, __) => 'LAYOUT ${'$v'.toUpperCase()}',
   'variable_targets': _variableTargets,
 };
 
@@ -103,13 +111,16 @@ Set<String> get labelledOverrideKeys => {
 List<String> overrideChipLabels(
   Map<String, dynamic> overrides, {
   required AssessmentResults results,
+  required double? bodyweightKg,
 }) {
   final labels = <String>[];
   overrides.forEach((key, value) {
     if (_silentOverrideKeys.contains(key)) return;
     final label = _labels[key];
     labels.add(
-      label == null ? '${key.toUpperCase()} $value' : label(value, results),
+      label == null
+          ? '${key.toUpperCase()} $value'
+          : label(value, results, bodyweightKg),
     );
   });
   return labels;
