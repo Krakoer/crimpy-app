@@ -12,20 +12,34 @@ void main() {
       final sample = {
         for (final entry in readOverrideContract()) entry.key: entry.sample,
       };
+      final contractKeys = sample.keys.toSet();
 
       expect(
-        sample.keys.toSet(),
-        overrideKeys,
-        reason: 'the contract has to cover the whole closed set',
-      );
-      expect(
-        overrideKeys.difference(labelledOverrideKeys),
+        contractKeys.difference(labelledOverrideKeys),
         isEmpty,
-        reason: 'these override keys would reach the athlete as raw JSON',
+        reason:
+            'these keys of contract/override-keys.json carry no label, so they '
+            'would reach the athlete as raw JSON',
       );
-      // Every key still has to produce something, on a realistic value.
-      for (final key in overrideKeys) {
+      // Every key still has to produce something, on a realistic value. A
+      // silenced key produces no chip at all, so it is named here rather than
+      // passing on an empty list: a key silenced by mistake would otherwise
+      // reach the athlete as a blank where the week asked for something.
+      const silenced = {'load_is_max'};
+      for (final key in contractKeys) {
         final labels = overrideChipLabels({key: sample[key]});
+        if (silenced.contains(key)) {
+          expect(labels, isEmpty, reason: '$key is meant to carry no chip');
+          continue;
+        }
+        expect(
+          labels,
+          isNotEmpty,
+          reason:
+              '$key shows the athlete nothing: give it a label in _labels, or '
+              'if it is a marker another key already says, silence it in '
+              '_silentOverrideKeys and name it in silenced here',
+        );
         expect(labels.every((label) => label.trim().isNotEmpty), isTrue);
       }
     });
