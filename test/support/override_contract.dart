@@ -35,6 +35,11 @@ List<OverrideContractKey> readOverrideContract() {
   }
   final raw = file.readAsStringSync();
   final keys = (jsonDecode(raw) as Map<String, dynamic>)['keys'] as List;
+  if (keys.isEmpty) {
+    // Every assertion built on the contract walks these keys, so an empty file
+    // would satisfy all of them saying nothing.
+    throw StateError('contract/override-keys.json names no key');
+  }
   return keys
       .cast<Map<String, dynamic>>()
       .map(

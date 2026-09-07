@@ -14,10 +14,6 @@ void main() {
       };
       final contractKeys = sample.keys.toSet();
 
-      // The assertions below all read the contract, so an empty or truncated one
-      // would satisfy them saying nothing. CI diffs the file against the backend
-      // and would catch that first, but a local run should not go quietly green.
-      expect(contractKeys, isNotEmpty);
       expect(
         contractKeys.difference(labelledOverrideKeys),
         isEmpty,
@@ -36,7 +32,14 @@ void main() {
           expect(labels, isEmpty, reason: '$key is meant to carry no chip');
           continue;
         }
-        expect(labels, isNotEmpty, reason: '$key shows the athlete nothing');
+        expect(
+          labels,
+          isNotEmpty,
+          reason:
+              '$key shows the athlete nothing: give it a label in _labels, or '
+              'if it is a marker another key already says, silence it in '
+              '_silentOverrideKeys and name it in silenced here',
+        );
         expect(labels.every((label) => label.trim().isNotEmpty), isTrue);
       }
     });
