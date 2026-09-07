@@ -1,3 +1,4 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/utils/format.dart';
 
@@ -6,11 +7,24 @@ import 'package:crimpy/utils/format.dart';
 /// travels with the loads, whose chip names the effort.
 const _silentOverrideKeys = {'load_is_max'};
 
+/// What one override key reads as. The assessments come along because a value
+/// can be a percentage of one, and naming it needs the catalog: the labels stay
+/// a pure function of what the week carries, so the screen hands its catalog
+/// over rather than lib/utils reaching for a provider.
+typedef _ChipLabel =
+    String Function(
+      dynamic value,
+      AssessmentResults results,
+      double? bodyweightKg,
+    );
+
 /// A chip summarises the whole override, so it shows the first row only.
-String _loads(dynamic raw) {
+String _loads(dynamic raw, AssessmentResults results, double? bodyweightKg) {
   final first = raw is List ? raw.firstOrNull : null;
   if (first is! Map<String, dynamic>) return '';
-  return Load.fromJson(first).label();
+  return Load.fromJson(
+    first,
+  ).label(results: results, bodyweightKg: bodyweightKg);
 }
 
 String _list(dynamic raw) => raw is List ? raw.join('/') : '';
@@ -33,11 +47,21 @@ String _hand(dynamic raw) => switch (raw) {
 
 /// A rep count or a duration the week set as a percentage of an assessment, or
 /// the empty targets that say this week prescribes no percentage at all.
-String _variableTargets(dynamic raw) {
+///
+/// The percentage names what it is a percentage of, the way the tile above the
+/// chip and the portal both do: "REPS 75% Max pull ups" rather than a
+/// percentage of nothing. An assessment neither the athlete results nor the
+/// training carry a definition for reads as a percentage of "assessment", the
+/// word the app already uses for one it cannot name, rather than as a raw id.
+String _variableTargets(dynamic raw, AssessmentResults results, double? _) {
   final targets = parseVariableTargets(raw);
   if (targets.isEmpty) return 'NO PERCENTAGE';
   return targets.entries
-      .map((e) => '${e.key.toUpperCase()} ${e.value.percent.round()}%')
+      .map(
+        (e) =>
+            '${e.key.toUpperCase()} ${e.value.percent.round()}% '
+            '${results.labelOf(e.value.assessmentId)}',
+      )
       .join(', ');
 }
 
@@ -48,21 +72,23 @@ String _variableTargets(dynamic raw) {
 /// crimpy-backend/internal/handler/training_items.go: a key the backend adds
 /// and this map forgets would otherwise reach the athlete as raw JSON, which is
 /// how "REPS_IS_MAX true" nearly shipped.
-final Map<String, String Function(dynamic)> _labels = {
-  'loads': (v) => 'LOAD ${_loads(v)}',
-  'left_loads': (v) => 'LEFT ${_loads(v)}',
-  'reps': (v) => 'REPS $v',
-  'reps_is_max': (v) => v == true ? 'AMRAP' : 'FIXED REPS',
-  'duration': (v) => 'TIME ${formatSecondsAsLength(v as int)}',
-  'cycles': (v) => 'CYCLES $v',
-  'interval_seconds': (v) => 'EVERY ${formatSecondsAsLength(v as int)}',
-  'cycle_rest_seconds': (v) => 'CYCLE REST ${formatSecondsAsLength(v as int)}',
-  'rest_seconds': (v) => 'REST ${formatSecondsAsLength(v as int)}',
-  'hb_worktime_seconds': (v) => 'WORK ${formatSecondsAsLength(v as int)}',
-  'edge_sizes_mm': (v) => 'EDGE ${_list(v)}mm',
-  'hand_positions': (v) => 'GRIP ${_grips(v)}',
-  'hand': _hand,
-  'granularity': (v) => 'LAYOUT ${'$v'.toUpperCase()}',
+final Map<String, _ChipLabel> _labels = {
+  'loads': (v, results, bw) => 'LOAD ${_loads(v, results, bw)}',
+  'left_loads': (v, results, bw) => 'LEFT ${_loads(v, results, bw)}',
+  'reps': (v, _, __) => 'REPS $v',
+  'reps_is_max': (v, _, __) => v == true ? 'AMRAP' : 'FIXED REPS',
+  'duration': (v, _, __) => 'TIME ${formatSecondsAsLength(v as int)}',
+  'cycles': (v, _, __) => 'CYCLES $v',
+  'interval_seconds': (v, _, __) => 'EVERY ${formatSecondsAsLength(v as int)}',
+  'cycle_rest_seconds': (v, _, __) =>
+      'CYCLE REST ${formatSecondsAsLength(v as int)}',
+  'rest_seconds': (v, _, __) => 'REST ${formatSecondsAsLength(v as int)}',
+  'hb_worktime_seconds': (v, _, __) =>
+      'WORK ${formatSecondsAsLength(v as int)}',
+  'edge_sizes_mm': (v, _, __) => 'EDGE ${_list(v)}mm',
+  'hand_positions': (v, _, __) => 'GRIP ${_grips(v)}',
+  'hand': (v, _, __) => _hand(v),
+  'granularity': (v, _, __) => 'LAYOUT ${'$v'.toUpperCase()}',
   'variable_targets': _variableTargets,
 };
 
@@ -77,12 +103,25 @@ Set<String> get labelledOverrideKeys => {
 /// What one program week asks of an item, one short label per key it carries.
 /// A key with no entry in [_labels] falls through to the raw key and value,
 /// which is a bug rather than a format: the tests assert it cannot happen.
-List<String> overrideChipLabels(Map<String, dynamic> overrides) {
+///
+/// [results] names the assessments a percentage is read against. It is required
+/// rather than defaulted: a screen that left it out would still render, just
+/// saying "75% assessment" where it could name the reference, and nothing would
+/// fail. Passing [AssessmentResults.none] says that was meant.
+List<String> overrideChipLabels(
+  Map<String, dynamic> overrides, {
+  required AssessmentResults results,
+  required double? bodyweightKg,
+}) {
   final labels = <String>[];
   overrides.forEach((key, value) {
     if (_silentOverrideKeys.contains(key)) return;
     final label = _labels[key];
-    labels.add(label == null ? '${key.toUpperCase()} $value' : label(value));
+    labels.add(
+      label == null
+          ? '${key.toUpperCase()} $value'
+          : label(value, results, bodyweightKg),
+    );
   });
   return labels;
 }
