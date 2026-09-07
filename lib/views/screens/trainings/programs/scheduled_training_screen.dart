@@ -301,15 +301,23 @@ class ScheduledTrainingScreen extends ConsumerWidget {
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
-                children: _overrideChips(overrideByItem[item.id]!.overrides),
+                children: _overrideChips(
+                  overrideByItem[item.id]!.overrides,
+                  results,
+                ),
               ),
             ]
           : const [],
     );
   }
 
-  List<Widget> _overrideChips(Map<String, dynamic> overrides) {
-    final entries = overrideChipLabels(overrides);
+  /// [results] is what names the assessment a percentage is read against, so a
+  /// chip says "REPS 75% Max pull ups" rather than a percentage of nothing.
+  List<Widget> _overrideChips(
+    Map<String, dynamic> overrides,
+    AssessmentResults results,
+  ) {
+    final entries = overrideChipLabels(overrides, results: results);
 
     return entries
         .map(

@@ -1,3 +1,5 @@
+import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/utils/override_labels.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -68,18 +70,79 @@ void main() {
       expect(overrideChipLabels({'reps_is_max': false}), ['FIXED REPS']);
     });
 
-    test('names a percentage, and its absence when a week clears one', () {
-      expect(
-        overrideChipLabels({
-          'variable_targets': {
-            'reps': {'assessment_id': 'a1', 'percent': 75, 'fallback': 8},
-          },
-        }),
-        ['REPS 75%'],
-      );
+    test('reads the absence of a percentage when a week clears one', () {
       expect(overrideChipLabels({'variable_targets': <String, dynamic>{}}), [
         'NO PERCENTAGE',
       ]);
     });
+
+    test('names the assessment a percentage is read against', () {
+      // Without the catalog the chip read "REPS 75%", a percentage of nothing,
+      // while the same week reads "75% Max pull ups" in the coach portal.
+      final labels = overrideChipLabels({
+        'variable_targets': {
+          'reps': {
+            'assessment_id': _maxPullUps.id,
+            'percent': 75,
+            'fallback': 8,
+          },
+        },
+      }, results: AssessmentResults.none.withDefinitions(const [_maxPullUps]));
+
+      expect(labels, ['REPS 75% Max pull ups']);
+    });
+
+    test('names the assessment a load is a percentage of', () {
+      // The chip spells the load exactly as the tile above it does, kilograms
+      // included: only the name of the assessment was missing from it.
+      final labels = overrideChipLabels(
+        {
+          'loads': [
+            {
+              'unit': percentAssessmentUnit,
+              'value': 80,
+              'assessment_id': _weightedHang.id,
+              'fallback': 25,
+            },
+          ],
+        },
+        results: AssessmentResults.none.withDefinitions(const [_weightedHang]),
+      );
+
+      expect(labels, ['LOAD 80% Weighted hang (25 kg)']);
+    });
+
+    test('says a percentage of an unnamed assessment is still one', () {
+      // A week can name an assessment that is neither the athlete own nor
+      // carried by the training, and Crimpy does not ship it either. The chip
+      // then says what the tiles say, rather than an id or a bare percentage.
+      final labels = overrideChipLabels({
+        'variable_targets': {
+          'duration': {
+            'assessment_id': 'a9b8c7d6-0000-0000-0000-0000000000ff',
+            'percent': 60,
+            'fallback': 30,
+          },
+        },
+      });
+
+      expect(labels, ['DURATION 60% assessment']);
+    });
   });
 }
+
+/// A coach assessment, so the athlete can only be told its name by the catalog
+/// the screen builds from the training and their own results.
+const _maxPullUps = AssessmentDefinition(
+  id: 'a9b8c7d6-0000-0000-0000-000000000007',
+  label: 'Max pull ups',
+  unit: AssessmentUnit.repetitions,
+  trainingId: 't-max-pull-ups',
+);
+
+const _weightedHang = AssessmentDefinition(
+  id: 'a9b8c7d6-0000-0000-0000-000000000003',
+  label: 'Weighted hang',
+  unit: AssessmentUnit.kilograms,
+  trainingId: 't-weighted-hang',
+);
