@@ -1,33 +1,6 @@
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/utils/format.dart';
 
-/// Every key a program week may replace on the item it targets. The set is
-/// closed and mirrors itemOverride in
-/// crimpy-backend/internal/handler/training_items.go: a key the backend names
-/// and no client reads is dropped from the prescription the athlete plays.
-/// contract/override-keys.json is that key set, vendored from the backend and
-/// asserted against this list by override_contract_test, which also holds
-/// TrainingItem.applyOverride to it. [overrideChipLabels] has to name all of
-/// them, which is what override_labels_test asserts.
-const overrideKeys = {
-  'cycles',
-  'cycle_rest_seconds',
-  'interval_seconds',
-  'reps',
-  'reps_is_max',
-  'duration',
-  'rest_seconds',
-  'hb_worktime_seconds',
-  'hand',
-  'granularity',
-  'load_is_max',
-  'loads',
-  'left_loads',
-  'hand_positions',
-  'edge_sizes_mm',
-  'variable_targets',
-};
-
 /// The keys that carry no chip of their own because another key already says
 /// what they mean. The max effort marker mirrors the load units and only ever
 /// travels with the loads, whose chip names the effort.
@@ -70,7 +43,9 @@ String _variableTargets(dynamic raw) {
 
 /// The label each override key reads as, in the words the item tiles above the
 /// chips use. Keyed rather than switched so the set of keys this handles is a
-/// value the tests can compare against [overrideKeys]: a key the backend adds
+/// value the tests can compare against contract/override-keys.json, the closed
+/// key set vendored from itemOverride in
+/// crimpy-backend/internal/handler/training_items.go: a key the backend adds
 /// and this map forgets would otherwise reach the athlete as raw JSON, which is
 /// how "REPS_IS_MAX true" nearly shipped.
 final Map<String, String Function(dynamic)> _labels = {
@@ -92,7 +67,8 @@ final Map<String, String Function(dynamic)> _labels = {
 };
 
 /// Every key [overrideChipLabels] can name, plus the ones it deliberately keeps
-/// silent. Together these have to cover [overrideKeys].
+/// silent. Together these have to cover contract/override-keys.json, which is
+/// what override_labels_test asserts.
 Set<String> get labelledOverrideKeys => {
   ..._labels.keys,
   ..._silentOverrideKeys,

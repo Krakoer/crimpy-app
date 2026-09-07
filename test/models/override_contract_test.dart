@@ -1,5 +1,4 @@
 import 'package:crimpy/models/training_item_model.dart';
-import 'package:crimpy/utils/override_labels.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/override_contract.dart';
@@ -37,16 +36,6 @@ void main() {
   final contract = readOverrideContract();
 
   group('the override key contract', () {
-    test('names the same keys as the backend', () {
-      expect(
-        overrideKeys,
-        contract.map((entry) => entry.key).toSet(),
-        reason:
-            'a key on one side only is dropped from the prescription by whichever '
-            'client does not read it',
-      );
-    });
-
     test('applies every key to the item', () {
       for (final entry in contract) {
         // Without this the assertion below can pass on a key nothing merges,

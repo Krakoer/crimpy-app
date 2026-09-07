@@ -12,19 +12,17 @@ void main() {
       final sample = {
         for (final entry in readOverrideContract()) entry.key: entry.sample,
       };
+      final contractKeys = sample.keys.toSet();
 
       expect(
-        sample.keys.toSet(),
-        overrideKeys,
-        reason: 'the contract has to cover the whole closed set',
-      );
-      expect(
-        overrideKeys.difference(labelledOverrideKeys),
+        contractKeys.difference(labelledOverrideKeys),
         isEmpty,
-        reason: 'these override keys would reach the athlete as raw JSON',
+        reason:
+            'these keys of contract/override-keys.json carry no label, so they '
+            'would reach the athlete as raw JSON',
       );
       // Every key still has to produce something, on a realistic value.
-      for (final key in overrideKeys) {
+      for (final key in contractKeys) {
         final labels = overrideChipLabels({key: sample[key]});
         expect(labels.every((label) => label.trim().isNotEmpty), isTrue);
       }
