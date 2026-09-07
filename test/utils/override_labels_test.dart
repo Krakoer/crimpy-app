@@ -14,6 +14,10 @@ void main() {
       };
       final contractKeys = sample.keys.toSet();
 
+      // The assertions below all read the contract, so an empty or truncated one
+      // would satisfy them saying nothing. CI diffs the file against the backend
+      // and would catch that first, but a local run should not go quietly green.
+      expect(contractKeys, isNotEmpty);
       expect(
         contractKeys.difference(labelledOverrideKeys),
         isEmpty,
@@ -21,9 +25,18 @@ void main() {
             'these keys of contract/override-keys.json carry no label, so they '
             'would reach the athlete as raw JSON',
       );
-      // Every key still has to produce something, on a realistic value.
+      // Every key still has to produce something, on a realistic value. A
+      // silenced key produces no chip at all, so it is named here rather than
+      // passing on an empty list: a key silenced by mistake would otherwise
+      // reach the athlete as a blank where the week asked for something.
+      const silenced = {'load_is_max'};
       for (final key in contractKeys) {
         final labels = overrideChipLabels({key: sample[key]});
+        if (silenced.contains(key)) {
+          expect(labels, isEmpty, reason: '$key is meant to carry no chip');
+          continue;
+        }
+        expect(labels, isNotEmpty, reason: '$key shows the athlete nothing');
         expect(labels.every((label) => label.trim().isNotEmpty), isTrue);
       }
     });
