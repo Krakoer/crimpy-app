@@ -1,9 +1,11 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/utils/program_completion.dart';
 import 'package:crimpy/utils/training_expander.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/trainings/programs/program_detail_screen.dart';
@@ -291,11 +293,21 @@ class _TodayTrainingRow extends ConsumerWidget {
         .asData
         ?.value;
     // Estimated from the training as this week prescribes it, so a retimed
-    // plank or a slowed emom moves the number the athlete reads here.
-    final seconds = training == null
+    // plank or a slowed emom moves the number the athlete reads here. The
+    // athlete's results go in too: a week can retime a step as a percentage of
+    // an assessment, and without them that step reads as the coach's fallback
+    // here while the run plays the resolved number.
+    final merged = training == null
+        ? null
+        : effectiveTraining(training, session.overrides);
+    final seconds = merged == null
         ? 0
         : trainingDurationSeconds(
-            effectiveTraining(training, session.overrides),
+            merged,
+            results:
+                (ref.watch(assessmentResultsProvider).value ??
+                        AssessmentResults.none)
+                    .withDefinitions(merged.referencedAssessments),
           );
 
     return InkWell(
