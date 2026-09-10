@@ -1,4 +1,5 @@
 import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training.dart';
@@ -449,44 +450,57 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   }
 
   /// Starts the run. If the training can be measured with the force sensor,
-  /// asks whether the user has one and lets them connect; otherwise (or if they
-  /// decline) the training runs without the gauge. Loads set in percent of the
-  /// body weight also need one, so it is asked for when still missing.
+  /// a sensor already connected is used as is; otherwise the run asks whether
+  /// the user has one and lets them connect, and runs without the gauge when
+  /// they decline. Loads set in percent of the body weight also need one, so it
+  /// is asked for when still missing.
   Future<void> _startRun(
     BuildContext context,
     WidgetRef ref,
     Training training,
     AssessmentResults results,
   ) async {
+    bool isConnected() =>
+        ref.read(connectionStateProvider) == BleConnectionState.connected;
+
     var useSensor = false;
     if (training.canUseSensor) {
-      final hasSensor = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Force sensor'),
-          content: const Text(
-            'Do you have a Crimpy force sensor to measure this training?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Run without'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Yes, connect'),
-            ),
-          ],
-        ),
-      );
-      if (!context.mounted) return;
-      if (hasSensor == true) {
-        final connected = await showDialog<bool>(
+      // A connected sensor answers the question by itself: asking anyway sent
+      // the athlete into a connection dialog that had nothing left to do, and
+      // closing it ran the training unmeasured.
+      useSensor = isConnected();
+      if (!useSensor) {
+        final hasSensor = await showDialog<bool>(
           context: context,
-          builder: (_) => const ConnectionDialog(),
+          builder: (ctx) => AlertDialog(
+            title: const Text('Force sensor'),
+            content: const Text(
+              'Do you have a Crimpy force sensor to measure this training?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(false),
+                child: const Text('Run without'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(true),
+                child: const Text('Yes, connect'),
+              ),
+            ],
+          ),
         );
         if (!context.mounted) return;
-        useSensor = connected == true;
+        if (hasSensor == true) {
+          final picked = await showDialog<bool>(
+            context: context,
+            builder: (_) => const ConnectionDialog(),
+          );
+          if (!context.mounted) return;
+          // The dialog answers true the moment a device is tapped, while the
+          // connection is still being opened, so the state is only trusted to
+          // add a sensor the dialog did not report, never to take one away.
+          useSensor = picked == true || isConnected();
+        }
       }
     }
     // After the sensor, so a user who just connected one is offered the

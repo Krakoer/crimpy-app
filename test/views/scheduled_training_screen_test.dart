@@ -1,16 +1,46 @@
 import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/repositories/ble_repository.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
+import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
+import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 import 'package:crimpy/views/screens/trainings/programs/scheduled_training_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// Serves a fixed connection state without opening the platform channels the
+/// real notifier subscribes to.
+class _FixedConnection extends BleConnection {
+  _FixedConnection(this._state);
+
+  final BleConnectionState _state;
+
+  @override
+  BleConnectionState build() => _state;
+}
+
+/// The run screen keeps the screen awake and preloads sounds; neither plugin
+/// exists in a test binding, so both channels answer with a no-op.
+void _stubRunPlugins() {
+  final messenger =
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+  for (final channel in const [
+    MethodChannel('dev.fluttercommunity.plus/wakelock'),
+    MethodChannel('xyz.luan/audioplayers'),
+    MethodChannel('xyz.luan/audioplayers.global'),
+  ]) {
+    messenger.setMockMethodCallHandler(channel, (call) async => null);
+  }
+}
 
 /// A coach assessment: the athlete cannot fetch its definition, so the training
 /// carrying it is the only thing that can name it on this screen.
@@ -94,15 +124,36 @@ WeekSession _session() => const WeekSession(
   ],
 );
 
+/// A single-hand hang loaded in kilograms, the shape the force sensor can
+/// measure, so starting it is what asks about the sensor.
+Training _sensorTraining() => const Training(
+  id: 't',
+  title: 'Hangboard',
+  items: [
+    TrainingItem(
+      id: 'h1',
+      type: TrainingItemType.hangboardRep,
+      position: 0,
+      hand: 'right',
+      worktimeSeconds: 7,
+      restSeconds: 10,
+      loads: [Load(value: 30, unit: 'kg')],
+    ),
+  ],
+);
+
 Future<void> _pump(
   WidgetTester tester, {
   List<AssessmentDefinition> referencedAssessments = const [_maxPullUps],
+  Training? training,
+  BleConnectionState connection = BleConnectionState.disconnected,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         programTrainingProvider('p', 't').overrideWith(
           (ref) async =>
+              training ??
               _training(referencedAssessments: referencedAssessments),
         ),
         // Nothing measured, so the training definitions are the only names on
@@ -112,6 +163,12 @@ Future<void> _pump(
         ),
         bodyweightProvider.overrideWith(_StubBodyweight.new),
         sessionsProvider.overrideWith(_NoSessions.new),
+        connectionStateProvider.overrideWith(
+          () => _FixedConnection(connection),
+        ),
+        // Always served, never built: the real provider reaches for the stored
+        // calibration on creation, which no test binding can answer.
+        bleRepositoryProvider.overrideWithValue(BleRepository()),
       ],
       child: MaterialApp(
         home: ScheduledTrainingScreen(
@@ -149,4 +206,55 @@ void main() {
 
     expect(find.text('REPS 75% assessment'), findsOneWidget);
   });
+
+  testWidgets('a connected sensor starts the run measured without asking', (
+    tester,
+  ) async {
+    // The run used to ask whether the athlete had a sensor even with one
+    // connected, and the connection dialog it then opened had nothing to pick,
+    // so closing it ran the training unmeasured.
+    _stubRunPlugins();
+    await _pump(
+      tester,
+      training: _sensorTraining(),
+      connection: BleConnectionState.connected,
+    );
+
+    await tester.tap(find.text('START TRAINING'));
+    await tester.pump();
+
+    expect(find.text('Force sensor'), findsNothing);
+
+    await tester.pumpAndSettle();
+
+    final run = tester.widget<PlayTrainingScreen>(
+      find.byType(PlayTrainingScreen),
+    );
+    expect(run.useSensor, isTrue);
+  });
+
+  testWidgets(
+    'without a sensor connected the run still offers to connect one',
+    (tester) async {
+      _stubRunPlugins();
+      await _pump(
+        tester,
+        training: _sensorTraining(),
+        connection: BleConnectionState.disconnected,
+      );
+
+      await tester.tap(find.text('START TRAINING'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Force sensor'), findsOneWidget);
+
+      await tester.tap(find.text('Run without'));
+      await tester.pumpAndSettle();
+
+      final run = tester.widget<PlayTrainingScreen>(
+        find.byType(PlayTrainingScreen),
+      );
+      expect(run.useSensor, isFalse);
+    },
+  );
 }
