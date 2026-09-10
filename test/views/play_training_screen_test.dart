@@ -13,23 +13,10 @@ import 'package:crimpy/viewmodels/run_screen_style_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// The screen keeps the screen awake and preloads sounds; neither plugin exists
-/// in a test binding, so both channels answer with a no-op.
-void _stubPlugins() {
-  final messenger =
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-  for (final channel in const [
-    MethodChannel('dev.fluttercommunity.plus/wakelock'),
-    MethodChannel('xyz.luan/audioplayers'),
-    MethodChannel('xyz.luan/audioplayers.global'),
-  ]) {
-    messenger.setMockMethodCallHandler(channel, (call) async => null);
-  }
-}
+import '../support/run_screen_plugins.dart';
 
 Training _stretchingCircuit() => const Training(
   id: 't1',
@@ -309,7 +296,7 @@ Future<void> _skip(WidgetTester tester) async {
 }
 
 void main() {
-  setUp(_stubPlugins);
+  setUp(stubRunScreenPlugins);
 
   testWidgets('the comment of a step is shown while a rest follows it', (
     tester,
