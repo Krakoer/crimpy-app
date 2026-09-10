@@ -2,6 +2,7 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/format.dart';
+import 'package:crimpy/utils/video_link.dart';
 import 'package:crimpy/views/widgets/exercise_video_link.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -190,7 +191,10 @@ class TrainingItemTile extends StatelessWidget {
               ],
               if (hasVideo) ...[
                 const SizedBox(height: 4),
-                ExerciseVideoButton(item.exerciseVideoLink),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: ExerciseVideoButton(item.exerciseVideoLink),
+                ),
               ],
               if (extra.isNotEmpty) ...[const SizedBox(height: 9), ...extra],
             ],

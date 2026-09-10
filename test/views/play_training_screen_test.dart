@@ -8,6 +8,7 @@ import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/repositories/ble_repository.dart';
 import 'package:crimpy/services/run_screen_style_service.dart';
+import 'package:crimpy/services/video_launcher.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/run_screen_style_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
@@ -331,6 +332,32 @@ Training _repsWithVideo() => const Training(
     ),
   ],
 );
+
+/// A single timed set with a demo video and nothing after it, which is the run
+/// whose only chance to show the video is the preparation.
+Training _singleTimedSetWithVideo() => const Training(
+  id: 't8',
+  title: 'Plank',
+  items: [
+    TrainingItem(
+      id: 'e1',
+      type: TrainingItemType.exercise,
+      position: 0,
+      duration: 30,
+      exerciseName: 'Plank',
+      exerciseVideoLink: 'https://example.com/plank',
+    ),
+  ],
+);
+
+/// Answers for the platform, which no test binding can: a launcher that refuses
+/// is what the failure message is written against.
+class _RefusingLauncher extends VideoLauncher {
+  const _RefusingLauncher();
+
+  @override
+  Future<bool> open(String? link) async => false;
+}
 
 Future<void> _skip(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.skip_next));
@@ -769,5 +796,58 @@ void main() {
     await _skip(tester);
 
     expect(find.text('WATCH DEMO'), findsOneWidget);
+  });
+
+  // The ticket's requirement has to hold in both designs, not just the default
+  // one, and the full tank is a separate layout with its own blocks.
+  testWidgets('the full tank offers the demo video during the preparation', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _hangWithVideo(), style: RunScreenStyle.fullTank);
+
+    expect(find.text('WATCH DEMO'), findsOneWidget);
+  });
+
+  testWidgets('the full tank hides the demo video while a set is running', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _hangWithVideo(), style: RunScreenStyle.fullTank);
+    await _skip(tester);
+
+    expect(find.text('WATCH DEMO'), findsNothing);
+  });
+
+  testWidgets('the full tank offers the demo video on a self paced step', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _repsWithVideo(), style: RunScreenStyle.fullTank);
+    await _skip(tester);
+
+    expect(find.text('WATCH DEMO'), findsOneWidget);
+  });
+
+  // A run of one timed set is preparation then the set, so if the preparation
+  // did not offer the video nothing would: this is the gap the full tank had.
+  testWidgets('a single timed set still reaches its demo video', (
+    tester,
+  ) async {
+    await _pumpRun(
+      tester,
+      _singleTimedSetWithVideo(),
+      style: RunScreenStyle.fullTank,
+    );
+
+    expect(find.text('WATCH DEMO'), findsOneWidget);
+  });
+
+  testWidgets('a demo video that cannot be opened says so', (tester) async {
+    gVideoLauncher = _RefusingLauncher();
+    addTearDown(() => gVideoLauncher = const VideoLauncher());
+    await _pumpRun(tester, _hangWithVideo());
+
+    await tester.tap(find.text('WATCH DEMO'));
+    await tester.pump();
+
+    expect(find.text('Could not open the video'), findsOneWidget);
   });
 }

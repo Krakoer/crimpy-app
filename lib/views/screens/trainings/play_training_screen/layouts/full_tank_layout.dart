@@ -4,6 +4,7 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/format.dart';
+import 'package:crimpy/utils/video_link.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/views/widgets/exercise_video_link.dart';
@@ -639,6 +640,12 @@ class _TankContent extends StatelessWidget {
             letterSpacing: 1,
           ),
         ),
+      ],
+      // The safest moment there is to look the movement up, and the only one a
+      // run of a single timed set offers at all.
+      if (isPlayableVideoLink(layout.nextVideoLink)) ...[
+        SizedBox(height: _s(10)),
+        ExerciseVideoButton(layout.nextVideoLink, compact: true),
       ],
     ]);
   }

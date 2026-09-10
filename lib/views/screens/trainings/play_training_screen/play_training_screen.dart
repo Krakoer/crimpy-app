@@ -12,6 +12,7 @@ import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/viewmodels/run_screen_style_view_model.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/utils/training_expander.dart';
+import 'package:crimpy/utils/video_link.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/session.dart';
