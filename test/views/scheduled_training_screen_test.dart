@@ -29,7 +29,8 @@ class _FixedConnection extends BleConnection {
 }
 
 /// The run screen keeps the screen awake and preloads sounds; neither plugin
-/// exists in a test binding, so both channels answer with a no-op.
+/// exists in a test binding, so both channels answer with a no-op. Cleared
+/// afterwards, so the stubs belong to the test that asked for them.
 void _stubRunPlugins() {
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -39,6 +40,7 @@ void _stubRunPlugins() {
     MethodChannel('xyz.luan/audioplayers.global'),
   ]) {
     messenger.setMockMethodCallHandler(channel, (call) async => null);
+    addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
   }
 }
 
