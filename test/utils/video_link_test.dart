@@ -36,6 +36,44 @@ void main() {
       expect(videoLinkUri('see the whiteboard'), isNull);
     });
 
+    // The guard's real boundary: a sentence with a full stop in it is still a
+    // sentence. Read as a host it percent-encodes into something that resolves
+    // to nothing, and the athlete gets a WATCH DEMO onto a DNS error.
+    test('refuses prose that happens to contain a full stop', () {
+      expect(videoLinkUri('Ask me. I will show you'), isNull);
+      expect(videoLinkUri('Voir la video sur mon tel. Demande moi'), isNull);
+      expect(videoLinkUri('3 series de 10. Cf. la video'), isNull);
+      expect(videoLinkUri('e.g. slowly'), isNull);
+    });
+
+    test('takes a scheme-less address that carries a port', () {
+      expect(
+        videoLinkUri('example.com:8080/v').toString(),
+        'https://example.com:8080/v',
+      );
+      expect(
+        videoLinkUri('192.168.1.5:8080/demo.mp4').toString(),
+        'https://192.168.1.5:8080/demo.mp4',
+      );
+    });
+
+    // The scheme-less path must not become a way back in for the schemes the
+    // http check above refuses: Dart parses "javascript:alert(1)" as a scheme,
+    // but it is the host shape test that has to reject it.
+    test('refuses an obfuscated scheme through the scheme-less path', () {
+      expect(videoLinkUri('javascript:void(0)//example.com/x'), isNull);
+      expect(videoLinkUri('//evil.com/x'), isNull);
+      expect(videoLinkUri('intent://example.com/x'), isNull);
+      expect(videoLinkUri('data:text/html,<script>alert(1)</script>'), isNull);
+    });
+
+    test('keeps the case of a path, so a video id survives', () {
+      expect(
+        videoLinkUri('youtu.be/dQw4w9WgXcQ').toString(),
+        'https://youtu.be/dQw4w9WgXcQ',
+      );
+    });
+
     test('refuses a host shaped like one but malformed', () {
       expect(videoLinkUri('.com/x'), isNull);
       expect(videoLinkUri('example./x'), isNull);

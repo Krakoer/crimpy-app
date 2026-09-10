@@ -41,14 +41,14 @@ class ExerciseVideoButton extends StatelessWidget {
       ),
       style: TextButton.styleFrom(
         padding: EdgeInsets.symmetric(
-          horizontal: compact ? 8 : 10,
-          vertical: compact ? 4 : 10,
+          horizontal: compact ? 10 : 10,
+          vertical: compact ? 8 : 10,
         ),
         minimumSize: Size.zero,
-        // The run screen wants the small target, deliberately: it sits where an
-        // athlete between sets reaches for it and nowhere near the controls.
-        // The tile is in a scrolling list with room to spare, so it keeps the
-        // standard one.
+        // The run screen keeps the shrink wrapped button so it does not push the
+        // step layout around, but not a tiny one: it sits in the centred content
+        // with a gap to the controls below, so the risk is not an accidental tap
+        // but a deliberate one missed with chalked hands between sets.
         tapTargetSize: compact
             ? MaterialTapTargetSize.shrinkWrap
             : MaterialTapTargetSize.padded,
