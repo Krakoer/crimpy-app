@@ -63,4 +63,54 @@ void main() {
     expect(find.text('Frog'), findsOneWidget);
     expect(find.byType(TrainingItemComment), findsNothing);
   });
+
+  testWidgets('an exercise with a video offers it and shows its description', (
+    tester,
+  ) async {
+    await _pumpItems(tester, [
+      const TrainingItem(
+        id: 'e1',
+        type: TrainingItemType.exercise,
+        position: 0,
+        reps: 8,
+        exerciseName: 'Pull up',
+        exerciseDescription: 'Dead hang start, chin over the bar.',
+        exerciseVideoLink: 'https://example.com/pull-up',
+      ),
+    ]);
+
+    expect(find.text('Dead hang start, chin over the bar.'), findsOneWidget);
+    expect(find.text('WATCH DEMO'), findsOneWidget);
+  });
+
+  testWidgets('an exercise without a video offers none', (tester) async {
+    await _pumpItems(tester, [
+      const TrainingItem(
+        id: 'e1',
+        type: TrainingItemType.exercise,
+        position: 0,
+        reps: 8,
+        exerciseName: 'Pull up',
+      ),
+    ]);
+
+    expect(find.text('WATCH DEMO'), findsNothing);
+  });
+
+  // The coach types the link by hand, so a non address must read as no video
+  // rather than as a button that fails on tap.
+  testWidgets('a link that is not an address offers no button', (tester) async {
+    await _pumpItems(tester, [
+      const TrainingItem(
+        id: 'e1',
+        type: TrainingItemType.exercise,
+        position: 0,
+        reps: 8,
+        exerciseName: 'Pull up',
+        exerciseVideoLink: 'ask me for the video',
+      ),
+    ]);
+
+    expect(find.text('WATCH DEMO'), findsNothing);
+  });
 }

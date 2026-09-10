@@ -290,6 +290,48 @@ List<RepDataModel> _recordedReps(WidgetTester tester) =>
     tester.widget<PostWorkoutScreen>(find.byType(PostWorkoutScreen)).results;
 
 /// Moves to the next step of the run, the way the skip button does.
+/// A hang whose exercise carries a demo video, so a run of it can be asked
+/// where that video is reachable from.
+Training _hangWithVideo() => const Training(
+  id: 't6',
+  title: 'Hang with video',
+  items: [
+    // Two reps with a rest between them, so the running hang really does have
+    // an upcoming step to preview: the guard under test is the one that keeps
+    // the preview's video off the screen while the hang itself is running, and
+    // a hang with nothing after it would pass without exercising it.
+    TrainingItem(
+      id: 'h1',
+      type: TrainingItemType.hangboardRep,
+      position: 0,
+      hand: 'right',
+      reps: 2,
+      worktimeSeconds: 7,
+      restSeconds: 30,
+      loads: [Load(value: 30, unit: 'kg')],
+      exerciseName: 'Half crimp hang',
+      exerciseVideoLink: 'https://example.com/hang',
+    ),
+  ],
+);
+
+/// A self paced exercise with a demo video: the athlete ends it themselves, so
+/// they are stood in front of the phone rather than hanging off it.
+Training _repsWithVideo() => const Training(
+  id: 't7',
+  title: 'Pull ups',
+  items: [
+    TrainingItem(
+      id: 'e1',
+      type: TrainingItemType.exercise,
+      position: 0,
+      reps: 8,
+      exerciseName: 'Pull up',
+      exerciseVideoLink: 'https://example.com/pull-up',
+    ),
+  ],
+);
+
 Future<void> _skip(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.skip_next));
   await tester.pump();
@@ -698,5 +740,34 @@ void main() {
 
       expect(find.textContaining('I CANNOT MAKE THE NEXT ROUND'), findsNothing);
     });
+  });
+
+  // The video has to reach the run, and it has to reach it where a tap is safe.
+  // The preparation rest previews the first step, which is where an athlete
+  // about to hang can still look the movement up with both hands free.
+  testWidgets('the demo video is offered during the preparation rest', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _hangWithVideo());
+
+    expect(find.text('WATCH DEMO'), findsOneWidget);
+  });
+
+  // The requirement the ticket states: a tap target during a running set has to
+  // not be reachable by accident. Once the hang starts there is none.
+  testWidgets('the demo video is not reachable while a set is running', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _hangWithVideo());
+    await _skip(tester);
+
+    expect(find.text('WATCH DEMO'), findsNothing);
+  });
+
+  testWidgets('a self paced step offers the demo video', (tester) async {
+    await _pumpRun(tester, _repsWithVideo());
+    await _skip(tester);
+
+    expect(find.text('WATCH DEMO'), findsOneWidget);
   });
 }

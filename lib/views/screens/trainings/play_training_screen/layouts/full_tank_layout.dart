@@ -6,6 +6,7 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
+import 'package:crimpy/views/widgets/exercise_video_link.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -119,6 +120,13 @@ class FullTankLayout extends ConsumerWidget {
   final String? comment;
   final String? nextComment;
 
+  /// Demo videos of the running and upcoming steps. Only offered where the
+  /// athlete is not mid set: the upcoming one during a rest, the running one on
+  /// a self paced step they end themselves. A timed step shows neither, so
+  /// nothing is tappable while they are hanging.
+  final String? videoLink;
+  final String? nextVideoLink;
+
   final VoidCallback onPlayPause;
   final VoidCallback onSkip;
   final VoidCallback onConfirm;
@@ -140,6 +148,8 @@ class FullTankLayout extends ConsumerWidget {
     required this.repContext,
     required this.comment,
     required this.nextComment,
+    required this.videoLink,
+    required this.nextVideoLink,
     required this.onPlayPause,
     required this.onSkip,
     required this.onConfirm,
@@ -708,6 +718,10 @@ class _TankContent extends StatelessWidget {
           style: _style(13, color: palette.secondary, height: 1.4),
         ),
       ],
+      if (isPlayableVideoLink(layout.nextVideoLink)) ...[
+        SizedBox(height: _s(10)),
+        ExerciseVideoButton(layout.nextVideoLink, compact: true),
+      ],
     ]);
   }
 
@@ -802,6 +816,10 @@ class _TankContent extends StatelessWidget {
           textAlign: TextAlign.center,
           style: _style(30, color: palette.force, weight: FontWeight.w900),
         ),
+      ],
+      if (isPlayableVideoLink(layout.videoLink)) ...[
+        SizedBox(height: _s(10)),
+        ExerciseVideoButton(layout.videoLink, compact: true),
       ],
       SizedBox(height: _s(14)),
       Text(

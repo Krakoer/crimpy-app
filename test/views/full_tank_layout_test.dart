@@ -61,6 +61,8 @@ Future<void> _pump(
   bool isRunning = true,
   String? repContext = 'SET 2/4 - REP 3/6',
   String? comment,
+  String? videoLink,
+  String? nextVideoLink,
   TargetPlatform platform = TargetPlatform.android,
   bool showDropOut = false,
 }) async {
@@ -85,6 +87,8 @@ Future<void> _pump(
             repContext: repContext,
             comment: comment,
             nextComment: null,
+            videoLink: videoLink,
+            nextVideoLink: nextVideoLink,
             onPlayPause: () {},
             onSkip: () {},
             onConfirm: () {},
