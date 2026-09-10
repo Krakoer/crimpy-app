@@ -13,9 +13,10 @@ import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 import 'package:crimpy/views/screens/trainings/programs/scheduled_training_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../support/run_screen_plugins.dart';
 
 /// Serves a fixed connection state without opening the platform channels the
 /// real notifier subscribes to.
@@ -26,22 +27,6 @@ class _FixedConnection extends BleConnection {
 
   @override
   BleConnectionState build() => _state;
-}
-
-/// The run screen keeps the screen awake and preloads sounds; neither plugin
-/// exists in a test binding, so both channels answer with a no-op. Cleared
-/// afterwards, so the stubs belong to the test that asked for them.
-void _stubRunPlugins() {
-  final messenger =
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
-  for (final channel in const [
-    MethodChannel('dev.fluttercommunity.plus/wakelock'),
-    MethodChannel('xyz.luan/audioplayers'),
-    MethodChannel('xyz.luan/audioplayers.global'),
-  ]) {
-    messenger.setMockMethodCallHandler(channel, (call) async => null);
-    addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
-  }
 }
 
 /// A coach assessment: the athlete cannot fetch its definition, so the training
@@ -144,6 +129,9 @@ Training _sensorTraining() => const Training(
   ],
 );
 
+/// Pumps the screen for the scheduled session. [training] serves a fixture of
+/// its own, in which case [referencedAssessments] does not apply: it only
+/// tunes the default one.
 Future<void> _pump(
   WidgetTester tester, {
   List<AssessmentDefinition> referencedAssessments = const [_maxPullUps],
@@ -215,7 +203,7 @@ void main() {
     // The run used to ask whether the athlete had a sensor even with one
     // connected, and the connection dialog it then opened had nothing to pick,
     // so closing it ran the training unmeasured.
-    _stubRunPlugins();
+    stubRunScreenPlugins();
     await _pump(
       tester,
       training: _sensorTraining(),
@@ -238,7 +226,7 @@ void main() {
   testWidgets(
     'without a sensor connected the run still offers to connect one',
     (tester) async {
-      _stubRunPlugins();
+      stubRunScreenPlugins();
       await _pump(
         tester,
         training: _sensorTraining(),
