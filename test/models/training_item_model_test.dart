@@ -559,6 +559,7 @@ void main() {
       'exercise_id': 'x1',
       'exercise_name': 'Pull up',
       'exercise_description': 'Dead hang start.',
+      'exercise_comment': 'Shoulders engaged.',
       'exercise_video_link': 'https://example.com/pull-up',
     };
 
@@ -566,6 +567,7 @@ void main() {
       final item = TrainingItem.fromJson(json);
 
       expect(item.exerciseDescription, 'Dead hang start.');
+      expect(item.exerciseComment, 'Shoulders engaged.');
       expect(item.exerciseVideoLink, 'https://example.com/pull-up');
     });
 
@@ -575,6 +577,7 @@ void main() {
       );
 
       expect(frozen.exerciseDescription, 'Dead hang start.');
+      expect(frozen.exerciseComment, 'Shoulders engaged.');
       expect(frozen.exerciseVideoLink, 'https://example.com/pull-up');
     });
 
@@ -587,6 +590,7 @@ void main() {
       });
 
       expect(item.exerciseDescription, isNull);
+      expect(item.exerciseComment, isNull);
       expect(item.exerciseVideoLink, isNull);
       expect(
         item.toPrescriptionJson().containsKey('exercise_video_link'),

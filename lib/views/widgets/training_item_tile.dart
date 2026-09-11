@@ -134,7 +134,13 @@ class TrainingItemTile extends StatelessWidget {
       results: results,
     );
     final comment = item.comment?.trim() ?? '';
-    final exerciseNotes = item.exerciseDescription?.trim() ?? '';
+    // What the coach wrote about the movement itself: what it is, then how to
+    // execute it. Both come off the exercise rather than off this step, which is
+    // what the item's own comment above is.
+    final exerciseNotes = [
+      item.exerciseDescription?.trim() ?? '',
+      item.exerciseComment?.trim() ?? '',
+    ].where((line) => line.isNotEmpty).toList();
     final hasVideo = isPlayableVideoLink(item.exerciseVideoLink);
     final child = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,9 +187,9 @@ class TrainingItemTile extends StatelessWidget {
                   ),
                 ),
               ],
-              if (exerciseNotes.isNotEmpty) ...[
+              for (final note in exerciseNotes) ...[
                 const SizedBox(height: 4),
-                ExerciseDescription(exerciseNotes),
+                ExerciseDescription(note),
               ],
               if (comment.isNotEmpty) ...[
                 const SizedBox(height: 8),

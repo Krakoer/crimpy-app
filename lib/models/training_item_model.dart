@@ -353,10 +353,13 @@ class TrainingItem {
   // Exercise display name (denormalized from the referenced exercise)
   final String? exerciseName;
 
-  // How the movement is performed, and a demo video of it, both authored by the
-  // coach on the exercise. Denormalized like the name because the athlete is
-  // refused every coach exercise route and cannot fetch them for themselves.
+  // How the movement is performed, the coach's notes on executing it, and a
+  // demo video, all authored on the exercise. Denormalized like the name because
+  // the athlete is refused every coach exercise route and cannot fetch them for
+  // themselves. exerciseComment is about the exercise wherever it is used, which
+  // is what makes it a different field from the item's own comment above.
   final String? exerciseDescription;
+  final String? exerciseComment;
   final String? exerciseVideoLink;
 
   // Group label
@@ -391,6 +394,7 @@ class TrainingItem {
     this.exerciseId,
     this.exerciseName,
     this.exerciseDescription,
+    this.exerciseComment,
     this.exerciseVideoLink,
     this.groupTitle,
     this.items = const [],
@@ -532,6 +536,7 @@ class TrainingItem {
       exerciseId: json['exercise_id'] as String?,
       exerciseName: json['exercise_name'] as String?,
       exerciseDescription: json['exercise_description'] as String?,
+      exerciseComment: json['exercise_comment'] as String?,
       exerciseVideoLink: json['exercise_video_link'] as String?,
       groupTitle: json['group_title'] as String?,
       items: nestedItems,
@@ -594,6 +599,7 @@ class TrainingItem {
     if (exerciseName != null) 'exercise_name': exerciseName,
     if (exerciseDescription != null)
       'exercise_description': exerciseDescription,
+    if (exerciseComment != null) 'exercise_comment': exerciseComment,
     if (exerciseVideoLink != null) 'exercise_video_link': exerciseVideoLink,
     if (items.isNotEmpty)
       'items': items.map((i) => i.toPrescriptionJson()).toList(),
@@ -656,6 +662,7 @@ class TrainingItem {
       exerciseId: exerciseId,
       exerciseName: exerciseName,
       exerciseDescription: exerciseDescription,
+      exerciseComment: exerciseComment,
       exerciseVideoLink: exerciseVideoLink,
       groupTitle: groupTitle == null ? this.groupTitle : cleanTitle(groupTitle),
       items: items ?? this.items,
@@ -690,6 +697,7 @@ class TrainingItem {
     exerciseId: exerciseId,
     exerciseName: exerciseName,
     exerciseDescription: exerciseDescription,
+    exerciseComment: exerciseComment,
     exerciseVideoLink: exerciseVideoLink,
     groupTitle: groupTitle,
     items: items.map((child) => child.duplicate()).toList(),

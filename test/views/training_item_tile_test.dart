@@ -75,12 +75,44 @@ void main() {
         reps: 8,
         exerciseName: 'Pull up',
         exerciseDescription: 'Dead hang start, chin over the bar.',
+        exerciseComment: 'Keep the shoulders engaged at the bottom.',
         exerciseVideoLink: 'https://example.com/pull-up',
       ),
     ]);
 
     expect(find.text('Dead hang start, chin over the bar.'), findsOneWidget);
+    // The coach's execution notes, which is a different field from the note
+    // they attached to this step.
+    expect(
+      find.text('Keep the shoulders engaged at the bottom.'),
+      findsOneWidget,
+    );
     expect(find.text('WATCH DEMO'), findsOneWidget);
+  });
+
+  // The item's own comment is about this step; the exercise's is about the
+  // movement everywhere it is used. Both show, and they do not replace one
+  // another.
+  testWidgets('a step comment and the exercise notes both show', (
+    tester,
+  ) async {
+    await _pumpItems(tester, [
+      const TrainingItem(
+        id: 'e1',
+        type: TrainingItemType.exercise,
+        position: 0,
+        reps: 8,
+        exerciseName: 'Pull up',
+        comment: 'Add 10kg today',
+        exerciseComment: 'Keep the shoulders engaged at the bottom.',
+      ),
+    ]);
+
+    expect(find.text('Add 10kg today'), findsOneWidget);
+    expect(
+      find.text('Keep the shoulders engaged at the bottom.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('an exercise without a video offers none', (tester) async {
