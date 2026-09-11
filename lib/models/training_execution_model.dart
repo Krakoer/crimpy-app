@@ -82,6 +82,11 @@ final class TimedItem extends TrainingExecutionItem {
   /// Optional coach comment shown to the athlete during the step.
   final String? comment;
 
+  /// Demo video of the movement, carried from the exercise the step came from.
+  /// Only offered when the athlete is not mid set, so a link is never something
+  /// they can hit while hanging.
+  final String? videoLink;
+
   /// Whether the step measured the athlete. Collecting sensor data is decided
   /// when the training is expanded, from the sensor the run started with, so a
   /// step still measures nothing when the sensor drops before it runs and
@@ -113,6 +118,7 @@ final class TimedItem extends TrainingExecutionItem {
     this.isHang = false,
     this.subtitle,
     this.comment,
+    this.videoLink,
     super.trainingItemId,
     super.occurrence,
     super.emom,
@@ -171,6 +177,9 @@ final class ConfirmItem extends TrainingExecutionItem {
   /// Optional coach comment shown to the athlete during the step.
   final String? comment;
 
+  /// Demo video of the movement, carried from the exercise the step came from.
+  final String? videoLink;
+
   const ConfirmItem({
     required this.label,
     this.instructions,
@@ -179,6 +188,7 @@ final class ConfirmItem extends TrainingExecutionItem {
     this.repsAreOpen = false,
     this.subtitle,
     this.comment,
+    this.videoLink,
     super.trainingItemId,
     super.occurrence,
     super.emom,

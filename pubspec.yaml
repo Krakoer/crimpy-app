@@ -67,6 +67,12 @@ dependencies:
   flutter_local_notifications: ^20.1.0
   timezone: ^0.10.1
   android_intent_plus: ^6.1.0
+  url_launcher: ^6.3.2
+  # Pinned: url_launcher_android 6.3.15 and above pull androidx.browser 1.9.0
+  # and androidx.core 1.17.0, which refuse to build under the Android Gradle
+  # plugin 8.7.0 this project is on. Unpin it with the toolchain bump, not on
+  # its own.
+  url_launcher_android: 6.3.14
 
 dev_dependencies:
   sentry_dart_plugin: ^3.2.1

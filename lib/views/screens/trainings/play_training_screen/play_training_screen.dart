@@ -12,12 +12,14 @@ import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/viewmodels/run_screen_style_view_model.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/utils/training_expander.dart';
+import 'package:crimpy/utils/video_link.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
+import 'package:crimpy/views/widgets/exercise_video_link.dart';
 import 'package:crimpy/views/widgets/gauge.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen.dart';
 import 'package:crimpy/views/widgets/workout_circle.dart';
@@ -352,7 +354,11 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     final Widget below = sensor
         ? timerDisplay
         : showNext
-        ? _nextUpBlock(nextRep, item is RestItem ? _commentOf(nextRep) : null)
+        ? _nextUpBlock(
+            nextRep,
+            item is RestItem ? _commentOf(nextRep) : null,
+            item is RestItem ? _videoOf(nextRep) : null,
+          )
         : const SizedBox.shrink();
 
     // Equal flexible regions above and below keep the circle vertically
@@ -427,6 +433,17 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     };
     final trimmed = comment?.trim() ?? '';
     return trimmed.isEmpty ? null : trimmed;
+  }
+
+  /// Demo video attached to a step, if the exercise it came from carries a
+  /// usable one. A rest has no exercise behind it, so it never has one.
+  String? _videoOf(TrainingExecutionItem? item) {
+    final link = switch (item) {
+      TimedItem() => item.videoLink,
+      ConfirmItem() => item.videoLink,
+      _ => null,
+    };
+    return isPlayableVideoLink(link) ? link : null;
   }
 
   /// Ends the emom the run is inside. Held apart from the play and skip
@@ -542,14 +559,25 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     ),
   );
 
-  /// Name of the upcoming step and the coach comment that goes with it.
-  Widget _nextUpBlock(TrainingExecutionItem nextRep, String? comment) => Column(
+  /// Name of the upcoming step, the coach comment that goes with it, and the
+  /// demo video of the movement. The video is offered here rather than on the
+  /// running step: a preview only shows during a rest or with a rest coming up,
+  /// so the tap cannot land while the athlete is hanging.
+  Widget _nextUpBlock(
+    TrainingExecutionItem nextRep,
+    String? comment,
+    String? videoLink,
+  ) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
       NextRepPreview(nextRep: nextRep),
       if (comment != null) ...[
         const SizedBox(height: 8),
         _commentText(comment),
+      ],
+      if (videoLink != null) ...[
+        const SizedBox(height: 4),
+        ExerciseVideoButton(videoLink, compact: true),
       ],
     ],
   );
@@ -600,6 +628,8 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       repContext: _currentContext(),
       comment: _commentOf(timer.currentItem),
       nextComment: _commentOf(nextItem),
+      videoLink: _videoOf(timer.currentItem),
+      nextVideoLink: _videoOf(nextItem),
       onPlayPause: timer.isRunning ? _stop : _start,
       onSkip: () {
         _start();
@@ -614,6 +644,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   Widget _buildConfirmContent(double timerFontSize) {
     final rep = timer.currentItem as ConfirmItem;
     final comment = _commentOf(rep);
+    // A self paced step is one the athlete ends themselves, so they are stood
+    // in front of the phone rather than hanging off it: the tap is safe here.
+    final video = _videoOf(rep);
     final details = [
       if (rep.repsAreOpen)
         'AMRAP'
@@ -653,6 +686,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                 color: CrimpyTheme.primaryOrange,
               ),
             ),
+          ],
+          if (video != null) ...[
+            const SizedBox(height: 8),
+            ExerciseVideoButton(video, compact: true),
           ],
           const SizedBox(height: 16),
           Text(

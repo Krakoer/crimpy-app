@@ -2,6 +2,8 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/format.dart';
+import 'package:crimpy/utils/video_link.dart';
+import 'package:crimpy/views/widgets/exercise_video_link.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -132,6 +134,14 @@ class TrainingItemTile extends StatelessWidget {
       results: results,
     );
     final comment = item.comment?.trim() ?? '';
+    // What the coach wrote about the movement itself: what it is, then how to
+    // execute it. Both come off the exercise rather than off this step, which is
+    // what the item's own comment above is.
+    final exerciseNotes = [
+      item.exerciseDescription?.trim() ?? '',
+      item.exerciseComment?.trim() ?? '',
+    ].where((line) => line.isNotEmpty).toList();
+    final hasVideo = isPlayableVideoLink(item.exerciseVideoLink);
     final child = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -177,9 +187,20 @@ class TrainingItemTile extends StatelessWidget {
                   ),
                 ),
               ],
+              for (final note in exerciseNotes) ...[
+                const SizedBox(height: 4),
+                ExerciseDescription(note),
+              ],
               if (comment.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 TrainingItemComment(comment),
+              ],
+              if (hasVideo) ...[
+                const SizedBox(height: 4),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: ExerciseVideoButton(item.exerciseVideoLink),
+                ),
               ],
               if (extra.isNotEmpty) ...[const SizedBox(height: 9), ...extra],
             ],

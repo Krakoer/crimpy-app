@@ -8,6 +8,7 @@ import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/repositories/ble_repository.dart';
 import 'package:crimpy/services/run_screen_style_service.dart';
+import 'package:crimpy/services/video_launcher.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/run_screen_style_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
@@ -290,6 +291,74 @@ List<RepDataModel> _recordedReps(WidgetTester tester) =>
     tester.widget<PostWorkoutScreen>(find.byType(PostWorkoutScreen)).results;
 
 /// Moves to the next step of the run, the way the skip button does.
+/// A hang whose exercise carries a demo video, so a run of it can be asked
+/// where that video is reachable from.
+Training _hangWithVideo() => const Training(
+  id: 't6',
+  title: 'Hang with video',
+  items: [
+    // Two reps with a rest between them, so the running hang really does have
+    // an upcoming step to preview: the guard under test is the one that keeps
+    // the preview's video off the screen while the hang itself is running, and
+    // a hang with nothing after it would pass without exercising it.
+    TrainingItem(
+      id: 'h1',
+      type: TrainingItemType.hangboardRep,
+      position: 0,
+      hand: 'right',
+      reps: 2,
+      worktimeSeconds: 7,
+      restSeconds: 30,
+      loads: [Load(value: 30, unit: 'kg')],
+      exerciseName: 'Half crimp hang',
+      exerciseVideoLink: 'https://example.com/hang',
+    ),
+  ],
+);
+
+/// A self paced exercise with a demo video: the athlete ends it themselves, so
+/// they are stood in front of the phone rather than hanging off it.
+Training _repsWithVideo() => const Training(
+  id: 't7',
+  title: 'Pull ups',
+  items: [
+    TrainingItem(
+      id: 'e1',
+      type: TrainingItemType.exercise,
+      position: 0,
+      reps: 8,
+      exerciseName: 'Pull up',
+      exerciseVideoLink: 'https://example.com/pull-up',
+    ),
+  ],
+);
+
+/// A single timed set with a demo video and nothing after it, which is the run
+/// whose only chance to show the video is the preparation.
+Training _singleTimedSetWithVideo() => const Training(
+  id: 't8',
+  title: 'Plank',
+  items: [
+    TrainingItem(
+      id: 'e1',
+      type: TrainingItemType.exercise,
+      position: 0,
+      duration: 30,
+      exerciseName: 'Plank',
+      exerciseVideoLink: 'https://example.com/plank',
+    ),
+  ],
+);
+
+/// Answers for the platform, which no test binding can: a launcher that refuses
+/// is what the failure message is written against.
+class _RefusingLauncher extends VideoLauncher {
+  const _RefusingLauncher();
+
+  @override
+  Future<bool> open(String? link) async => false;
+}
+
 Future<void> _skip(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.skip_next));
   await tester.pump();
@@ -698,5 +767,87 @@ void main() {
 
       expect(find.textContaining('I CANNOT MAKE THE NEXT ROUND'), findsNothing);
     });
+  });
+
+  // The video has to reach the run, and it has to reach it where a tap is safe.
+  // The preparation rest previews the first step, which is where an athlete
+  // about to hang can still look the movement up with both hands free.
+  testWidgets('the demo video is offered during the preparation rest', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _hangWithVideo());
+
+    expect(find.text('WATCH DEMO'), findsOneWidget);
+  });
+
+  // The requirement the ticket states: a tap target during a running set has to
+  // not be reachable by accident. Once the hang starts there is none.
+  testWidgets('the demo video is not reachable while a set is running', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _hangWithVideo());
+    await _skip(tester);
+
+    expect(find.text('WATCH DEMO'), findsNothing);
+  });
+
+  testWidgets('a self paced step offers the demo video', (tester) async {
+    await _pumpRun(tester, _repsWithVideo());
+    await _skip(tester);
+
+    expect(find.text('WATCH DEMO'), findsOneWidget);
+  });
+
+  // The ticket's requirement has to hold in both designs, not just the default
+  // one, and the full tank is a separate layout with its own blocks.
+  testWidgets('the full tank offers the demo video during the preparation', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _hangWithVideo(), style: RunScreenStyle.fullTank);
+
+    expect(find.text('WATCH DEMO'), findsOneWidget);
+  });
+
+  testWidgets('the full tank hides the demo video while a set is running', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _hangWithVideo(), style: RunScreenStyle.fullTank);
+    await _skip(tester);
+
+    expect(find.text('WATCH DEMO'), findsNothing);
+  });
+
+  testWidgets('the full tank offers the demo video on a self paced step', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _repsWithVideo(), style: RunScreenStyle.fullTank);
+    await _skip(tester);
+
+    expect(find.text('WATCH DEMO'), findsOneWidget);
+  });
+
+  // A run of one timed set is preparation then the set, so if the preparation
+  // did not offer the video nothing would: this is the gap the full tank had.
+  testWidgets('a single timed set still reaches its demo video', (
+    tester,
+  ) async {
+    await _pumpRun(
+      tester,
+      _singleTimedSetWithVideo(),
+      style: RunScreenStyle.fullTank,
+    );
+
+    expect(find.text('WATCH DEMO'), findsOneWidget);
+  });
+
+  testWidgets('a demo video that cannot be opened says so', (tester) async {
+    gVideoLauncher = _RefusingLauncher();
+    addTearDown(() => gVideoLauncher = const VideoLauncher());
+    await _pumpRun(tester, _hangWithVideo());
+
+    await tester.tap(find.text('WATCH DEMO'));
+    await tester.pump();
+
+    expect(find.text('Could not open the video'), findsOneWidget);
   });
 }

@@ -546,4 +546,56 @@ void main() {
       expect(added.toJson().containsKey('id'), isFalse);
     });
   });
+
+  // The athlete cannot read the coach's exercise, so the link only ever arrives
+  // denormalized onto the item, and has to survive the snapshot a played
+  // session freezes: without that the run loses what the schedule screen shows.
+  group('TrainingItem exercise video', () {
+    const json = {
+      'id': 'e1',
+      'type': 'exercise',
+      'position': 0,
+      'reps': 8,
+      'exercise_id': 'x1',
+      'exercise_name': 'Pull up',
+      'exercise_description': 'Dead hang start.',
+      'exercise_comment': 'Shoulders engaged.',
+      'exercise_video_link': 'https://example.com/pull-up',
+    };
+
+    test('is read off the item payload', () {
+      final item = TrainingItem.fromJson(json);
+
+      expect(item.exerciseDescription, 'Dead hang start.');
+      expect(item.exerciseComment, 'Shoulders engaged.');
+      expect(item.exerciseVideoLink, 'https://example.com/pull-up');
+    });
+
+    test('survives the prescription snapshot', () {
+      final frozen = TrainingItem.fromJson(
+        TrainingItem.fromJson(json).toPrescriptionJson(),
+      );
+
+      expect(frozen.exerciseDescription, 'Dead hang start.');
+      expect(frozen.exerciseComment, 'Shoulders engaged.');
+      expect(frozen.exerciseVideoLink, 'https://example.com/pull-up');
+    });
+
+    test('is absent when the exercise carries none', () {
+      final item = TrainingItem.fromJson({
+        'id': 'e1',
+        'type': 'exercise',
+        'position': 0,
+        'reps': 8,
+      });
+
+      expect(item.exerciseDescription, isNull);
+      expect(item.exerciseComment, isNull);
+      expect(item.exerciseVideoLink, isNull);
+      expect(
+        item.toPrescriptionJson().containsKey('exercise_video_link'),
+        isFalse,
+      );
+    });
+  });
 }

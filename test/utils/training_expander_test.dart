@@ -1229,4 +1229,95 @@ void main() {
       expect((out[0] as ConfirmItem).repsAreOpen, isFalse);
     });
   });
+
+  // The run reads the step, not the training tree, so the link has to travel
+  // onto every kind of step an exercise can expand into.
+  group('exercise video link', () {
+    test('reaches a self paced step', () {
+      final out = expandTrainingItems(
+        _training([
+          const TrainingItem(
+            id: 'e1',
+            type: TrainingItemType.exercise,
+            position: 0,
+            reps: 8,
+            exerciseName: 'Pull up',
+            exerciseVideoLink: 'https://example.com/pull-up',
+          ),
+        ]),
+        useSensor: false,
+      );
+
+      final step = out.whereType<ConfirmItem>().single;
+      expect(step.videoLink, 'https://example.com/pull-up');
+    });
+
+    test('reaches a timed step', () {
+      final out = expandTrainingItems(
+        _training([
+          const TrainingItem(
+            id: 'e1',
+            type: TrainingItemType.exercise,
+            position: 0,
+            duration: 30,
+            exerciseName: 'Plank',
+            exerciseVideoLink: 'https://example.com/plank',
+          ),
+        ]),
+        useSensor: false,
+      );
+
+      final step = out.whereType<TimedItem>().single;
+      expect(step.videoLink, 'https://example.com/plank');
+    });
+
+    test('reaches a hang', () {
+      final out = expandTrainingItems(
+        _training([
+          const TrainingItem(
+            id: 'h1',
+            type: TrainingItemType.hangboardRep,
+            position: 0,
+            hand: 'right',
+            worktimeSeconds: 7,
+            restSeconds: 0,
+            loads: [Load(value: 30, unit: 'kg')],
+            exerciseName: 'Half crimp hang',
+            exerciseVideoLink: 'https://example.com/hang',
+          ),
+        ]),
+        useSensor: false,
+      );
+
+      final step = out.whereType<TimedItem>().single;
+      expect(step.videoLink, 'https://example.com/hang');
+    });
+
+    // A circuit has no exercise behind it, so its children keep their own link
+    // instead of inheriting one the container never had.
+    test('is not inherited from a container', () {
+      final out = expandTrainingItems(
+        _training([
+          const TrainingItem(
+            id: 'c1',
+            type: TrainingItemType.circuit,
+            position: 0,
+            cycles: 1,
+            items: [
+              TrainingItem(
+                id: 'e1',
+                type: TrainingItemType.exercise,
+                position: 0,
+                reps: 5,
+                exerciseName: 'Push up',
+              ),
+            ],
+          ),
+        ]),
+        useSensor: false,
+      );
+
+      expect(out.whereType<ConfirmItem>().single.videoLink, isNull);
+    });
+  });
 }
