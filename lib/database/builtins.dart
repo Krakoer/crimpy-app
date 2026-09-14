@@ -329,6 +329,9 @@ final List<BuiltinTrainingModel> builtinTrainings = [
   BuiltinTrainingModel(
     id: "877b39e6-9718-4388-9d27-ed9d70704828",
     name: "Warmup",
+    // Six intensities through three grips is eighteen blocks of a few seconds
+    // each. A line per block is not what there is to say about a warmup.
+    reviewsEachStep: false,
     description:
         "Progressive warmup through all grip positions at 20%, 35%, 50%, 60%, 75%, and 95% of MVC.",
     requiredAssessments: [

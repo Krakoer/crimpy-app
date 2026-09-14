@@ -5,10 +5,15 @@ import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/utils/hangboard_layout.dart';
 
-/// The link a step carries back to the item it came from. Items that were never
-/// saved carry a blank id - builtin trainings and freshly duplicated items -
-/// and "no item" has one representation here, the null the column documents.
-String? _linkId(TrainingItem item) => item.id.isEmpty ? null : item.id;
+/// The link a step carries back to the item it came from, which is the name a
+/// report of that item uses: a generated step is stored nowhere and has no id,
+/// but it has a key, and pooling every one of them under a single blank name
+/// would number the passes of the whole training as if they were one step's.
+///
+/// An item with neither, which nothing has saved and no builtin generated, has
+/// one representation here: the null the column documents.
+String? _linkId(TrainingItem item) =>
+    item.reportKey.isEmpty ? null : item.reportKey;
 
 /// What every expander needs and none of them owns: how the loads resolve, and
 /// how many passes through each item have been laid down so far.

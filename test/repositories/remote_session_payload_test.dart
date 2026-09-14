@@ -1,6 +1,7 @@
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
+import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,6 +33,7 @@ SessionModel _session({
   String? trainingId,
   String? programSessionId,
   bool isAssessment = false,
+  List<TrainingItem>? prescriptionItems,
 }) => SessionModel(
   name: 'Session',
   date: DateTime.utc(2026, 8, 21),
@@ -40,7 +42,20 @@ SessionModel _session({
   origin: SessionOrigin.played,
   trainingId: trainingId,
   programSessionId: programSessionId,
+  prescriptionItems: prescriptionItems,
 );
+
+/// The tree a training generated on the device hands over, named by the keys
+/// the reports use.
+List<TrainingItem> _generatedItems() => const [
+  TrainingItem(
+    id: '',
+    stableKey: 'builtin:mvc:0',
+    type: TrainingItemType.repeater,
+    position: 0,
+    worktimeSeconds: 7,
+  ),
+];
 
 Future<Map<String, dynamic>> _postedBody({
   bool isAssessment = false,
@@ -55,11 +70,12 @@ Future<Map<String, dynamic>> _postedBody({
 
 Future<Map<String, dynamic>> _postedItemResults({
   String? trainingId,
+  List<TrainingItem>? prescriptionItems,
   required List<String> itemKeys,
 }) async {
   final client = _CapturingApiClient();
   await RemoteTrainingRepository(client).saveSession(
-    _session(trainingId: trainingId),
+    _session(trainingId: trainingId, prescriptionItems: prescriptionItems),
     [_rep()],
     itemResults: [
       for (final key in itemKeys)
@@ -139,37 +155,47 @@ void main() {
       );
     });
 
-    // A generated step is named by a key minted on the device. The API parses
-    // the field as a uuid and refuses the whole request over one it cannot
-    // read, so sending it would cost the session, not the report.
-    test('leave out a report on a generated step', () async {
+    // What #111 added: a run of a training generated on the device hands the
+    // server the prescription it played, so a report naming one of its steps
+    // keys into something and goes up with it.
+    test('go up with the prescription the run carries', () async {
       final body = await _postedItemResults(
-        trainingId: 't-1',
+        prescriptionItems: _generatedItems(),
         itemKeys: ['builtin:mvc:0'],
       );
 
-      expect(body.containsKey('item_results'), isFalse);
+      expect(
+        ((body['item_results'] as List).single
+            as Map<String, dynamic>)['training_item_id'],
+        'builtin:mvc:0',
+      );
+      final prescribed =
+          ((body['prescription'] as Map<String, dynamic>)['items'] as List)
+                  .single
+              as Map<String, dynamic>;
+      expect(prescribed['id'], 'builtin:mvc:0');
     });
 
-    test('keep the stored ones when a generated step is alongside', () async {
+    // The server freezes its own copy from a training or a program slot and
+    // refuses a second opinion alongside either, so none is sent there.
+    test('carry no prescription when the run names a training', () async {
       final body = await _postedItemResults(
         trainingId: 't-1',
-        itemKeys: ['builtin:mvc:0', 'item-1'],
+        prescriptionItems: _generatedItems(),
+        itemKeys: ['item-1'],
       );
 
-      final posted = (body['item_results'] as List)
-          .cast<Map<String, dynamic>>();
-      expect(posted.map((r) => r['training_item_id']), ['item-1']);
+      expect(body.containsKey('prescription'), isFalse);
+      expect((body['item_results'] as List), hasLength(1));
     });
 
-    // The reachable shape of the same thing: a builtin run names no training,
-    // so the server has no prescription to key a report into and none is sent.
-    // The screen no longer collects one here, and this is the layer below it
-    // holding the same line.
-    test('are left out entirely by a run that names no training', () async {
+    // Nothing to key a report into and nothing to hand over: the report has no
+    // home and is left off rather than refused by the server.
+    test('are left out by a run carrying neither', () async {
       final body = await _postedItemResults(itemKeys: ['builtin:mvc:0']);
 
       expect(body.containsKey('item_results'), isFalse);
+      expect(body.containsKey('prescription'), isFalse);
     });
   });
 

@@ -349,27 +349,27 @@ bool isReportable(TrainingItem item) =>
 bool _carriesWork(TrainingItem item) =>
     item.type != TrainingItemType.group && item.type != TrainingItemType.free;
 
-/// Whether a run naming [trainingId] and [programSessionId] has somewhere to
-/// put what the athlete reports about its steps, for as long as the session
-/// lives. A run that names neither is every builtin, and nothing else.
+/// Whether a run has somewhere to put what the athlete reports about its steps,
+/// for as long as the session lives.
 ///
-/// The two stores fail it differently, and the gate refuses both for one
-/// behaviour rather than offering a form in one mode and not the other:
+/// A report is keyed to an item of the prescription the session was run from,
+/// so what this asks is whether the session carries one at all. There are two
+/// ways it can: the store resolves it from the training or the program slot the
+/// session names, or the run hands over the prescription it played, which is
+/// what a training generated on the device does.
 ///
-/// - the API keys a report against the prescription it froze, which it reads
-///   from the training or the program slot. It has none for a builtin, and
-///   `session_item_results.training_item_id` is a uuid column besides, which no
-///   generated key can be;
-/// - the local store would hold it today. It keys its rows on the session
-///   alone, and this file already reads them back against the snapshot frozen
-///   onto it. What it cannot survive is the athlete signing in: the import
-///   resolves no server item without a server training, so `LocalDataMigration`
-///   drops every one of those reports on the way up.
-///
-/// So collecting one is collecting something to throw away, in either mode.
-/// Krakoer/crimpy#111 is what removes the first bullet, and the second with it.
-bool sessionKeepsItemReports({String? trainingId, String? programSessionId}) =>
-    trainingId != null || programSessionId != null;
+/// Both stores hold a report either way. The local one keys its rows on the
+/// session alone, and the API takes a prescription with the session and keys
+/// membership against it, so a run that carries one also survives the athlete
+/// signing in with it.
+bool sessionKeepsItemReports({
+  String? trainingId,
+  String? programSessionId,
+  List<TrainingItem>? prescriptionItems,
+}) =>
+    trainingId != null ||
+    programSessionId != null ||
+    (prescriptionItems != null && prescriptionItems.isNotEmpty);
 
 /// Whether a training holds work the athlete could be asked about at all,
 /// whether or not a line is actually offered for it.

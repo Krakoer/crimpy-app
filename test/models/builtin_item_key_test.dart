@@ -16,10 +16,16 @@ List<AssessmentResultModel> maxForce() => [
     ),
 ];
 
+/// The builtins that ask for a line per step. A warmup opts out: six
+/// intensities through three grips is eighteen blocks of a few seconds each,
+/// and a line per block is not what there is to say about a warmup.
+Iterable<BuiltinTrainingModel> get reviewedBuiltins =>
+    builtinTrainings.where((b) => b.reviewsEachStep);
+
 void main() {
   group('a generated builtin training', () {
     test('keys every step it prescribes', () {
-      for (final builtin in builtinTrainings) {
+      for (final builtin in reviewedBuiltins) {
         final training = builtin.generateNewFormatTraining(maxForce());
         expect(
           training,
@@ -50,7 +56,7 @@ void main() {
     });
 
     test('gives each step a key of its own', () {
-      for (final builtin in builtinTrainings) {
+      for (final builtin in reviewedBuiltins) {
         final items = builtin.generateNewFormatTraining(maxForce())!.items;
         final keys = items.map((i) => i.reportKey).toSet();
 
@@ -65,7 +71,7 @@ void main() {
     // A report is written on one run and read back on another, so the same
     // step has to answer to the same name every time it is generated.
     test('mints the same keys on every generation', () {
-      for (final builtin in builtinTrainings) {
+      for (final builtin in reviewedBuiltins) {
         final first = builtin.generateNewFormatTraining(maxForce())!.items;
         final second = builtin.generateNewFormatTraining(maxForce())!.items;
 
@@ -81,7 +87,7 @@ void main() {
     // Whether one is collected is a separate question, and today it is not:
     // a builtin run names no prescription, so there is nowhere to store it.
     test('can be named by a report, a line per step', () {
-      for (final builtin in builtinTrainings) {
+      for (final builtin in reviewedBuiltins) {
         final items = builtin.generateNewFormatTraining(maxForce())!.items;
 
         expect(
@@ -97,13 +103,33 @@ void main() {
       }
     });
 
-    test('names its steps by a key the upload paths can spot', () {
-      final items = builtinTrainings.first
+    test('names its steps by a key a stored item could not be given', () {
+      final items = reviewedBuiltins.first
           .generateNewFormatTraining(maxForce())!
           .items;
 
       expect(items.every((i) => isBuiltinItemKey(i.reportKey)), isTrue);
       expect(isBuiltinItemKey('7f1c9b1e-0000-4000-8000-000000000000'), isFalse);
+    });
+  });
+
+  // A warmup is the one training whose steps are deliberately not worth a line,
+  // so it generates none of the names a report would need.
+  group('a builtin that reviews no step', () {
+    test('names none of its steps', () {
+      final unreviewed = builtinTrainings.where((b) => !b.reviewsEachStep);
+      expect(unreviewed, isNotEmpty, reason: 'nothing exercises the opt out');
+
+      for (final builtin in unreviewed) {
+        final items = builtin.generateNewFormatTraining(maxForce())!.items;
+
+        expect(
+          items.any(isReportable),
+          isFalse,
+          reason: '${builtin.name} still offers a line per step',
+        );
+        expect(reviewLines(items, const []), isEmpty);
+      }
     });
   });
 

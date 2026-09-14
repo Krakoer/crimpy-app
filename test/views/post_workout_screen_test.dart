@@ -477,19 +477,17 @@ void _reviewPassTests() {
     expect(find.text('Check the highlighted fields above'), findsOneWidget);
   });
 
-  // A run that names no prescription has nowhere to store a report, which is
-  // every builtin. The section cannot appear, so the screen says so rather than
-  // leaving a hole where every other training shows one.
-  testWidgets('explains itself on a run that cannot keep a report', (
-    tester,
-  ) async {
-    const builtin = Training(
-      id: 'builtin-1',
-      title: 'Crimpy repeaters',
+  // Work named by nothing has no report to key, which is a training whose steps
+  // were never saved and a builtin that asks for no line per step. The section
+  // cannot appear, so the screen says so rather than leaving a hole where every
+  // other training shows one.
+  testWidgets('explains itself when no step can be noted', (tester) async {
+    const unnamed = Training(
+      id: 'warmup-1',
+      title: 'Warmup',
       items: [
         TrainingItem(
           id: '',
-          stableKey: 'builtin:builtin-1:0',
           type: TrainingItemType.repeater,
           position: 0,
           cycles: 4,
@@ -501,25 +499,50 @@ void _reviewPassTests() {
 
     await _show(
       tester,
-      const PostWorkoutScreen(template: builtin, results: []),
+      const PostWorkoutScreen(template: unnamed, results: []),
     );
 
     expect(find.text('How did each one go?'), findsNothing);
-    expect(
-      find.textContaining('Notes cannot be kept against the steps'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('nothing to note step by step'), findsOneWidget);
   });
 
-  // What round 1 of the review caught: the fields used to be offered here and
-  // the reports dropped at save, so the athlete typed into a form that ate it.
-  testWidgets('collects nothing on a run that cannot keep a report', (
-    tester,
-  ) async {
+  testWidgets('collects nothing when no step can be noted', (tester) async {
+    final sessions = CapturingSessions();
+    const unnamed = Training(
+      id: 'warmup-1',
+      title: 'Warmup',
+      items: [
+        TrainingItem(
+          id: '',
+          type: TrainingItemType.repeater,
+          position: 0,
+          cycles: 4,
+          reps: 6,
+          worktimeSeconds: 7,
+        ),
+      ],
+    );
+
+    await _pumpFor(
+      tester,
+      const PostWorkoutScreen(template: unnamed, results: []),
+      sessions,
+    );
+    await tester.tap(find.text('Save training'));
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(TextFormField, 'Load kg'), findsNothing);
+    expect(sessions.savedItemResults, isEmpty);
+  });
+
+  // What #111 delivered: a run of a training generated on the device names no
+  // training, but carries the prescription it played, so its steps are keyed
+  // and the review pass is offered on them like any other.
+  testWidgets('offers the review pass on a generated training', (tester) async {
     final sessions = CapturingSessions();
     const builtin = Training(
       id: 'builtin-1',
-      title: 'Crimpy repeaters',
+      title: 'Max hangs',
       items: [
         TrainingItem(
           id: '',
@@ -538,11 +561,26 @@ void _reviewPassTests() {
       const PostWorkoutScreen(template: builtin, results: []),
       sessions,
     );
+
+    expect(find.text('How did each one go?'), findsOneWidget);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Note').first,
+      'right hand slipped on the last one',
+    );
     await tester.tap(find.text('Save training'));
     await tester.pumpAndSettle();
 
-    expect(find.widgetWithText(TextFormField, 'Load kg'), findsNothing);
-    expect(sessions.savedItemResults, isEmpty);
+    final reported = sessions.savedItemResults;
+    expect(reported, hasLength(1));
+    expect(reported.single.trainingItemId, 'builtin:builtin-1:0');
+    expect(reported.single.note, 'right hand slipped on the last one');
+    // Frozen onto the session, which is what the server keys the report
+    // against and what heads it when the run is read back.
+    expect(
+      sessions.saved?.prescriptionItems?.single.reportKey,
+      'builtin:builtin-1:0',
+    );
   });
 
   // The other half of the gate, and the one the screen could drop on the floor:

@@ -208,13 +208,29 @@ void main() {
     trainingItemId: trainingItemId,
   );
 
-  SessionModel playedSession({String? trainingId}) => SessionModel(
+  SessionModel playedSession({
+    String? trainingId,
+    List<TrainingItem>? prescriptionItems,
+  }) => SessionModel(
     name: 'Repeaters',
     isAssessment: false,
     origin: SessionOrigin.played,
     date: DateTime(2026, 8, 20),
     trainingId: trainingId,
+    prescriptionItems: prescriptionItems,
   );
+
+  /// The tree a training generated on the device freezes onto its session,
+  /// named by the keys its reports use and stored nowhere else.
+  List<TrainingItem> generatedItems() => const [
+    TrainingItem(
+      id: '',
+      stableKey: 'builtin:max-hangs:0',
+      type: TrainingItemType.repeater,
+      position: 0,
+      worktimeSeconds: 7,
+    ),
+  ];
 
   /// Saves a training holding one group with one exercise under it, and hands
   /// back the ids the local database minted for them.
@@ -371,6 +387,46 @@ void main() {
       final posted = remote.postedSessions.single;
       expect(posted.session.trainingId, isNull);
       expect(posted.reps.single.trainingItemId, isNull);
+    });
+  });
+
+  // A run of a training generated on the device names no training the server
+  // could resolve, and carries the prescription it played instead. Its reports
+  // name steps of that copy, so there is nothing to remap and nothing to drop:
+  // before #111 every one of them died here.
+  group('a guest session played from a generated training', () {
+    test('keeps its reports under the names they were written with', () async {
+      final sessionId = await db.saveSession(
+        playedSession(prescriptionItems: generatedItems()),
+        [rep(trainingItemId: 'builtin:max-hangs:0')],
+        itemResults: const [
+          SessionItemResultModel(
+            trainingItemId: 'builtin:max-hangs:0',
+            occurrence: 0,
+            note: 'right hand slipped on the last one',
+          ),
+        ],
+      );
+      expect(sessionId, isNotEmpty);
+
+      final remote = _FakeRemoteTrainings();
+      final failures = await migrationWith(remote).uploadAll(_userId);
+
+      expect(failures, 0);
+      final posted = remote.postedSessions.single;
+      expect(posted.session.trainingId, isNull);
+      expect(posted.itemResults.single.trainingItemId, 'builtin:max-hangs:0');
+      expect(
+        posted.itemResults.single.note,
+        'right hand slipped on the last one',
+      );
+      // The reps name the same step, so the run still reads block by block.
+      expect(posted.reps.single.trainingItemId, 'builtin:max-hangs:0');
+      // And the copy the server keys all of that against goes up with it.
+      expect(
+        posted.session.prescriptionItems?.single.reportKey,
+        'builtin:max-hangs:0',
+      );
     });
   });
 

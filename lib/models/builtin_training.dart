@@ -45,6 +45,16 @@ class BuiltinTrainingModel {
   final bool Function(List<AssessmentResultModel> assessmentValues) isAvailable;
   final LoadAdjustmentFunction? computeNewWeights;
 
+  /// Whether the athlete is asked how each prescribed step went once the run is
+  /// done. True for a training whose steps are the work, false for one that
+  /// generates a long ladder of near identical blocks: a warmup running six
+  /// intensities through three grips would end in eighteen cards asking for a
+  /// count and a note about five seconds of hanging each, when what there is to
+  /// say about a warmup is one line about the warmup.
+  ///
+  /// The session note is asked for either way, so nothing here is unanswerable.
+  final bool reviewsEachStep;
+
   BuiltinTrainingModel({
     required this.id,
     required this.name,
@@ -53,6 +63,7 @@ class BuiltinTrainingModel {
     required this.trainingGenerator,
     required this.isAvailable,
     this.computeNewWeights,
+    this.reviewsEachStep = true,
   });
 
   /// Generate a unified Training with repeater items from assessment values.
@@ -91,7 +102,9 @@ class BuiltinTrainingModel {
         // No row holds a generated item, and saying otherwise would make this
         // tree look stored to everything that branches on the id.
         id: '',
-        stableKey: builtinItemKey(id, [pos]),
+        // Unnamed when the training asks for no line per step, so nothing
+        // downstream has to ask a second question to know what to offer.
+        stableKey: reviewsEachStep ? builtinItemKey(id, [pos]) : null,
         type: TrainingItemType.repeater,
         position: pos,
         cycles: r.sets,

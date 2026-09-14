@@ -152,7 +152,10 @@ class LocalDataMigration {
         final localReps = await _database.getRepsForSession(row.id);
         final reps = [
           for (final rep in localReps)
-            rep.withTrainingItem(serverItemId(rep.trainingItemId)),
+            if (localTrainingId == null)
+              rep
+            else
+              rep.withTrainingItem(serverItemId(rep.trainingItemId)),
         ];
         // Only the reps that had a link and lost it. A rest, and any rep
         // recorded outside a training, names no item to begin with.
@@ -163,8 +166,17 @@ class LocalDataMigration {
                   serverItemId(rep.trainingItemId) == null,
             )
             .length;
+        // A session that named no training of its own carries the prescription
+        // it played, and goes up with the item names it was recorded under: the
+        // server keys the reports against that copy rather than against a
+        // training it would have to resolve. Nothing to remap, and nothing lost.
+        final carriesOwnPrescription = localTrainingId == null;
         final itemResults = <SessionItemResultModel>[];
         for (final result in await _database.getItemResultsForSession(row.id)) {
+          if (carriesOwnPrescription) {
+            itemResults.add(result);
+            continue;
+          }
           final itemId = serverItemId(result.trainingItemId);
           if (itemId == null) {
             // The item the count answers is gone, and the server refuses a
