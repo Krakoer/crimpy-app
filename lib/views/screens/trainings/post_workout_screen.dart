@@ -8,6 +8,7 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen/widgets/assessment_answer_fields.dart';
+import 'package:crimpy/views/screens/trainings/post_workout_screen/widgets/item_review_fields.dart';
 import 'package:intl/intl.dart';
 import 'package:crimpy/theme.dart';
 
@@ -15,9 +16,10 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
   final Training template;
   final List<RepDataModel> results;
 
-  /// What the run answered the open items with: the reps an AMRAP turned out
-  /// to be, and the rounds of an emom the athlete dropped out of. Empty for a
-  /// run that had none.
+  /// What the run recorded against the prescribed items as it was played: the
+  /// reps an AMRAP turned out to be, and the rounds of an emom the athlete
+  /// dropped out of. Empty for a run that had none, and the review pass below
+  /// is what turns it into a line per exercise.
   final List<SessionItemResultModel> itemResults;
 
   /// Category the session is logged under. Trainings run from the user's own
@@ -51,6 +53,14 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
   final _leftAnswerController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  /// The review pass: one line per prescribed step, seeded with whatever the
+  /// run already recorded against it. Built once, since the controllers hold
+  /// what the athlete is typing.
+  late final List<ItemReviewDraft> _itemReviews = buildItemReviewDrafts(
+    widget.template.items,
+    widget.itemResults,
+  );
+
   /// The assessment this run answers, when the training played is one.
   AssessmentDefinition? get _assessment => widget.template.assessment;
 
@@ -67,8 +77,23 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
     _noteController.dispose();
     _rightAnswerController.dispose();
     _leftAnswerController.dispose();
+    for (final review in _itemReviews) {
+      review.dispose();
+    }
     super.dispose();
   }
+
+  /// What the athlete reported on the prescribed steps, read off the review
+  /// pass rather than off what the run recorded: every count the run took is
+  /// seeded into it, so the review is the only copy that also carries the
+  /// corrections, the loads and the notes.
+  ///
+  /// A step the athlete said nothing about produces no row, which is what keeps
+  /// an untouched review from writing a line per exercise of nothing.
+  List<SessionItemResultModel> get _reportedItemResults => [
+    for (final review in _itemReviews)
+      if (review.toResult() case final result?) result,
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -169,6 +194,10 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                           ),
                           const SizedBox(height: 16),
                         ],
+                        if (_itemReviews.isNotEmpty) ...[
+                          ItemReviewSection(drafts: _itemReviews),
+                          const SizedBox(height: 16),
+                        ],
                         TextField(
                           controller: _noteController,
                           decoration: const InputDecoration(
@@ -223,7 +252,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                     .saveSession(
                       session,
                       widget.results,
-                      itemResults: widget.itemResults,
+                      itemResults: _reportedItemResults,
                     );
               } else {
                 // Goes through the assessment notifier rather than saving the
@@ -244,7 +273,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                       ),
                       session,
                       widget.results,
-                      itemResults: widget.itemResults,
+                      itemResults: _reportedItemResults,
                     );
               }
             } catch (e) {

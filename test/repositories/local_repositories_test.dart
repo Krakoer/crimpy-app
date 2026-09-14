@@ -408,14 +408,13 @@ void main() {
         SessionItemResultModel(
           trainingItemId: 'pullup-1',
           occurrence: 0,
-          field: SessionItemField.reps,
-          value: 23,
+          reps: 23,
+          note: 'hard on the shoulders',
         ),
         SessionItemResultModel(
           trainingItemId: 'emom-1',
           occurrence: 0,
-          field: SessionItemField.cycles,
-          value: 7,
+          cycles: 7,
         ),
       ],
     );
@@ -424,9 +423,12 @@ void main() {
     expect(listed.id, saved);
     expect(
       listed.itemResults.map(
-        (r) => '${r.trainingItemId}/${r.field.apiValue}/${r.value}',
+        (r) => '${r.trainingItemId}/${r.reps}/${r.cycles}/${r.note}',
       ),
-      containsAll(['pullup-1/reps/23', 'emom-1/cycles/7']),
+      containsAll([
+        'pullup-1/23/null/hard on the shoulders',
+        'emom-1/null/7/null',
+      ]),
     );
   });
 }

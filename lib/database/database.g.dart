@@ -4582,23 +4582,52 @@ class $SessionItemResultsTable extends SessionItemResults
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _fieldMeta = const VerificationMeta('field');
+  static const VerificationMeta _repsMeta = const VerificationMeta('reps');
   @override
-  late final GeneratedColumn<String> field = GeneratedColumn<String>(
-    'field',
+  late final GeneratedColumn<int> reps = GeneratedColumn<int>(
+    'reps',
     aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _valueMeta = const VerificationMeta('value');
-  @override
-  late final GeneratedColumn<int> value = GeneratedColumn<int>(
-    'value',
-    aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _cyclesMeta = const VerificationMeta('cycles');
+  @override
+  late final GeneratedColumn<int> cycles = GeneratedColumn<int>(
+    'cycles',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _loadKgMeta = const VerificationMeta('loadKg');
+  @override
+  late final GeneratedColumn<double> loadKg = GeneratedColumn<double>(
+    'load_kg',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _durationSecondsMeta = const VerificationMeta(
+    'durationSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> durationSeconds = GeneratedColumn<int>(
+    'duration_seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
@@ -4618,8 +4647,11 @@ class $SessionItemResultsTable extends SessionItemResults
     sessionId,
     trainingItemId,
     occurrence,
-    field,
-    value,
+    reps,
+    cycles,
+    loadKg,
+    durationSeconds,
+    note,
     updatedAt,
   ];
   @override
@@ -4662,21 +4694,38 @@ class $SessionItemResultsTable extends SessionItemResults
         occurrence.isAcceptableOrUnknown(data['occurrence']!, _occurrenceMeta),
       );
     }
-    if (data.containsKey('field')) {
+    if (data.containsKey('reps')) {
       context.handle(
-        _fieldMeta,
-        field.isAcceptableOrUnknown(data['field']!, _fieldMeta),
+        _repsMeta,
+        reps.isAcceptableOrUnknown(data['reps']!, _repsMeta),
       );
-    } else if (isInserting) {
-      context.missing(_fieldMeta);
     }
-    if (data.containsKey('value')) {
+    if (data.containsKey('cycles')) {
       context.handle(
-        _valueMeta,
-        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+        _cyclesMeta,
+        cycles.isAcceptableOrUnknown(data['cycles']!, _cyclesMeta),
       );
-    } else if (isInserting) {
-      context.missing(_valueMeta);
+    }
+    if (data.containsKey('load_kg')) {
+      context.handle(
+        _loadKgMeta,
+        loadKg.isAcceptableOrUnknown(data['load_kg']!, _loadKgMeta),
+      );
+    }
+    if (data.containsKey('duration_seconds')) {
+      context.handle(
+        _durationSecondsMeta,
+        durationSeconds.isAcceptableOrUnknown(
+          data['duration_seconds']!,
+          _durationSecondsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
     }
     if (data.containsKey('updated_at')) {
       context.handle(
@@ -4709,14 +4758,26 @@ class $SessionItemResultsTable extends SessionItemResults
         DriftSqlType.int,
         data['${effectivePrefix}occurrence'],
       )!,
-      field: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}field'],
-      )!,
-      value: attachedDatabase.typeMapping.read(
+      reps: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
-        data['${effectivePrefix}value'],
-      )!,
+        data['${effectivePrefix}reps'],
+      ),
+      cycles: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cycles'],
+      ),
+      loadKg: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}load_kg'],
+      ),
+      durationSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_seconds'],
+      ),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -4736,16 +4797,22 @@ class SessionItemResult extends DataClass
   final String sessionId;
   final String trainingItemId;
   final int occurrence;
-  final String field;
-  final int value;
+  final int? reps;
+  final int? cycles;
+  final double? loadKg;
+  final int? durationSeconds;
+  final String? note;
   final DateTime updatedAt;
   const SessionItemResult({
     required this.id,
     required this.sessionId,
     required this.trainingItemId,
     required this.occurrence,
-    required this.field,
-    required this.value,
+    this.reps,
+    this.cycles,
+    this.loadKg,
+    this.durationSeconds,
+    this.note,
     required this.updatedAt,
   });
   @override
@@ -4755,8 +4822,21 @@ class SessionItemResult extends DataClass
     map['session_id'] = Variable<String>(sessionId);
     map['training_item_id'] = Variable<String>(trainingItemId);
     map['occurrence'] = Variable<int>(occurrence);
-    map['field'] = Variable<String>(field);
-    map['value'] = Variable<int>(value);
+    if (!nullToAbsent || reps != null) {
+      map['reps'] = Variable<int>(reps);
+    }
+    if (!nullToAbsent || cycles != null) {
+      map['cycles'] = Variable<int>(cycles);
+    }
+    if (!nullToAbsent || loadKg != null) {
+      map['load_kg'] = Variable<double>(loadKg);
+    }
+    if (!nullToAbsent || durationSeconds != null) {
+      map['duration_seconds'] = Variable<int>(durationSeconds);
+    }
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -4767,8 +4847,17 @@ class SessionItemResult extends DataClass
       sessionId: Value(sessionId),
       trainingItemId: Value(trainingItemId),
       occurrence: Value(occurrence),
-      field: Value(field),
-      value: Value(value),
+      reps: reps == null && nullToAbsent ? const Value.absent() : Value(reps),
+      cycles: cycles == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cycles),
+      loadKg: loadKg == null && nullToAbsent
+          ? const Value.absent()
+          : Value(loadKg),
+      durationSeconds: durationSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durationSeconds),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       updatedAt: Value(updatedAt),
     );
   }
@@ -4783,8 +4872,11 @@ class SessionItemResult extends DataClass
       sessionId: serializer.fromJson<String>(json['sessionId']),
       trainingItemId: serializer.fromJson<String>(json['trainingItemId']),
       occurrence: serializer.fromJson<int>(json['occurrence']),
-      field: serializer.fromJson<String>(json['field']),
-      value: serializer.fromJson<int>(json['value']),
+      reps: serializer.fromJson<int?>(json['reps']),
+      cycles: serializer.fromJson<int?>(json['cycles']),
+      loadKg: serializer.fromJson<double?>(json['loadKg']),
+      durationSeconds: serializer.fromJson<int?>(json['durationSeconds']),
+      note: serializer.fromJson<String?>(json['note']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -4796,8 +4888,11 @@ class SessionItemResult extends DataClass
       'sessionId': serializer.toJson<String>(sessionId),
       'trainingItemId': serializer.toJson<String>(trainingItemId),
       'occurrence': serializer.toJson<int>(occurrence),
-      'field': serializer.toJson<String>(field),
-      'value': serializer.toJson<int>(value),
+      'reps': serializer.toJson<int?>(reps),
+      'cycles': serializer.toJson<int?>(cycles),
+      'loadKg': serializer.toJson<double?>(loadKg),
+      'durationSeconds': serializer.toJson<int?>(durationSeconds),
+      'note': serializer.toJson<String?>(note),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -4807,16 +4902,24 @@ class SessionItemResult extends DataClass
     String? sessionId,
     String? trainingItemId,
     int? occurrence,
-    String? field,
-    int? value,
+    Value<int?> reps = const Value.absent(),
+    Value<int?> cycles = const Value.absent(),
+    Value<double?> loadKg = const Value.absent(),
+    Value<int?> durationSeconds = const Value.absent(),
+    Value<String?> note = const Value.absent(),
     DateTime? updatedAt,
   }) => SessionItemResult(
     id: id ?? this.id,
     sessionId: sessionId ?? this.sessionId,
     trainingItemId: trainingItemId ?? this.trainingItemId,
     occurrence: occurrence ?? this.occurrence,
-    field: field ?? this.field,
-    value: value ?? this.value,
+    reps: reps.present ? reps.value : this.reps,
+    cycles: cycles.present ? cycles.value : this.cycles,
+    loadKg: loadKg.present ? loadKg.value : this.loadKg,
+    durationSeconds: durationSeconds.present
+        ? durationSeconds.value
+        : this.durationSeconds,
+    note: note.present ? note.value : this.note,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   SessionItemResult copyWithCompanion(SessionItemResultsCompanion data) {
@@ -4829,8 +4932,13 @@ class SessionItemResult extends DataClass
       occurrence: data.occurrence.present
           ? data.occurrence.value
           : this.occurrence,
-      field: data.field.present ? data.field.value : this.field,
-      value: data.value.present ? data.value.value : this.value,
+      reps: data.reps.present ? data.reps.value : this.reps,
+      cycles: data.cycles.present ? data.cycles.value : this.cycles,
+      loadKg: data.loadKg.present ? data.loadKg.value : this.loadKg,
+      durationSeconds: data.durationSeconds.present
+          ? data.durationSeconds.value
+          : this.durationSeconds,
+      note: data.note.present ? data.note.value : this.note,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -4842,8 +4950,11 @@ class SessionItemResult extends DataClass
           ..write('sessionId: $sessionId, ')
           ..write('trainingItemId: $trainingItemId, ')
           ..write('occurrence: $occurrence, ')
-          ..write('field: $field, ')
-          ..write('value: $value, ')
+          ..write('reps: $reps, ')
+          ..write('cycles: $cycles, ')
+          ..write('loadKg: $loadKg, ')
+          ..write('durationSeconds: $durationSeconds, ')
+          ..write('note: $note, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -4855,8 +4966,11 @@ class SessionItemResult extends DataClass
     sessionId,
     trainingItemId,
     occurrence,
-    field,
-    value,
+    reps,
+    cycles,
+    loadKg,
+    durationSeconds,
+    note,
     updatedAt,
   );
   @override
@@ -4867,8 +4981,11 @@ class SessionItemResult extends DataClass
           other.sessionId == this.sessionId &&
           other.trainingItemId == this.trainingItemId &&
           other.occurrence == this.occurrence &&
-          other.field == this.field &&
-          other.value == this.value &&
+          other.reps == this.reps &&
+          other.cycles == this.cycles &&
+          other.loadKg == this.loadKg &&
+          other.durationSeconds == this.durationSeconds &&
+          other.note == this.note &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -4877,8 +4994,11 @@ class SessionItemResultsCompanion extends UpdateCompanion<SessionItemResult> {
   final Value<String> sessionId;
   final Value<String> trainingItemId;
   final Value<int> occurrence;
-  final Value<String> field;
-  final Value<int> value;
+  final Value<int?> reps;
+  final Value<int?> cycles;
+  final Value<double?> loadKg;
+  final Value<int?> durationSeconds;
+  final Value<String?> note;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const SessionItemResultsCompanion({
@@ -4886,8 +5006,11 @@ class SessionItemResultsCompanion extends UpdateCompanion<SessionItemResult> {
     this.sessionId = const Value.absent(),
     this.trainingItemId = const Value.absent(),
     this.occurrence = const Value.absent(),
-    this.field = const Value.absent(),
-    this.value = const Value.absent(),
+    this.reps = const Value.absent(),
+    this.cycles = const Value.absent(),
+    this.loadKg = const Value.absent(),
+    this.durationSeconds = const Value.absent(),
+    this.note = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -4896,21 +5019,25 @@ class SessionItemResultsCompanion extends UpdateCompanion<SessionItemResult> {
     required String sessionId,
     required String trainingItemId,
     this.occurrence = const Value.absent(),
-    required String field,
-    required int value,
+    this.reps = const Value.absent(),
+    this.cycles = const Value.absent(),
+    this.loadKg = const Value.absent(),
+    this.durationSeconds = const Value.absent(),
+    this.note = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : sessionId = Value(sessionId),
-       trainingItemId = Value(trainingItemId),
-       field = Value(field),
-       value = Value(value);
+       trainingItemId = Value(trainingItemId);
   static Insertable<SessionItemResult> custom({
     Expression<String>? id,
     Expression<String>? sessionId,
     Expression<String>? trainingItemId,
     Expression<int>? occurrence,
-    Expression<String>? field,
-    Expression<int>? value,
+    Expression<int>? reps,
+    Expression<int>? cycles,
+    Expression<double>? loadKg,
+    Expression<int>? durationSeconds,
+    Expression<String>? note,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -4919,8 +5046,11 @@ class SessionItemResultsCompanion extends UpdateCompanion<SessionItemResult> {
       if (sessionId != null) 'session_id': sessionId,
       if (trainingItemId != null) 'training_item_id': trainingItemId,
       if (occurrence != null) 'occurrence': occurrence,
-      if (field != null) 'field': field,
-      if (value != null) 'value': value,
+      if (reps != null) 'reps': reps,
+      if (cycles != null) 'cycles': cycles,
+      if (loadKg != null) 'load_kg': loadKg,
+      if (durationSeconds != null) 'duration_seconds': durationSeconds,
+      if (note != null) 'note': note,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -4931,8 +5061,11 @@ class SessionItemResultsCompanion extends UpdateCompanion<SessionItemResult> {
     Value<String>? sessionId,
     Value<String>? trainingItemId,
     Value<int>? occurrence,
-    Value<String>? field,
-    Value<int>? value,
+    Value<int?>? reps,
+    Value<int?>? cycles,
+    Value<double?>? loadKg,
+    Value<int?>? durationSeconds,
+    Value<String?>? note,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -4941,8 +5074,11 @@ class SessionItemResultsCompanion extends UpdateCompanion<SessionItemResult> {
       sessionId: sessionId ?? this.sessionId,
       trainingItemId: trainingItemId ?? this.trainingItemId,
       occurrence: occurrence ?? this.occurrence,
-      field: field ?? this.field,
-      value: value ?? this.value,
+      reps: reps ?? this.reps,
+      cycles: cycles ?? this.cycles,
+      loadKg: loadKg ?? this.loadKg,
+      durationSeconds: durationSeconds ?? this.durationSeconds,
+      note: note ?? this.note,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -4963,11 +5099,20 @@ class SessionItemResultsCompanion extends UpdateCompanion<SessionItemResult> {
     if (occurrence.present) {
       map['occurrence'] = Variable<int>(occurrence.value);
     }
-    if (field.present) {
-      map['field'] = Variable<String>(field.value);
+    if (reps.present) {
+      map['reps'] = Variable<int>(reps.value);
     }
-    if (value.present) {
-      map['value'] = Variable<int>(value.value);
+    if (cycles.present) {
+      map['cycles'] = Variable<int>(cycles.value);
+    }
+    if (loadKg.present) {
+      map['load_kg'] = Variable<double>(loadKg.value);
+    }
+    if (durationSeconds.present) {
+      map['duration_seconds'] = Variable<int>(durationSeconds.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
@@ -4985,8 +5130,11 @@ class SessionItemResultsCompanion extends UpdateCompanion<SessionItemResult> {
           ..write('sessionId: $sessionId, ')
           ..write('trainingItemId: $trainingItemId, ')
           ..write('occurrence: $occurrence, ')
-          ..write('field: $field, ')
-          ..write('value: $value, ')
+          ..write('reps: $reps, ')
+          ..write('cycles: $cycles, ')
+          ..write('loadKg: $loadKg, ')
+          ..write('durationSeconds: $durationSeconds, ')
+          ..write('note: $note, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -8943,8 +9091,11 @@ typedef $$SessionItemResultsTableCreateCompanionBuilder =
       required String sessionId,
       required String trainingItemId,
       Value<int> occurrence,
-      required String field,
-      required int value,
+      Value<int?> reps,
+      Value<int?> cycles,
+      Value<double?> loadKg,
+      Value<int?> durationSeconds,
+      Value<String?> note,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -8954,8 +9105,11 @@ typedef $$SessionItemResultsTableUpdateCompanionBuilder =
       Value<String> sessionId,
       Value<String> trainingItemId,
       Value<int> occurrence,
-      Value<String> field,
-      Value<int> value,
+      Value<int?> reps,
+      Value<int?> cycles,
+      Value<double?> loadKg,
+      Value<int?> durationSeconds,
+      Value<String?> note,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -8989,13 +9143,28 @@ class $$SessionItemResultsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get field => $composableBuilder(
-    column: $table.field,
+  ColumnFilters<int> get reps => $composableBuilder(
+    column: $table.reps,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get value => $composableBuilder(
-    column: $table.value,
+  ColumnFilters<int> get cycles => $composableBuilder(
+    column: $table.cycles,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get loadKg => $composableBuilder(
+    column: $table.loadKg,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationSeconds => $composableBuilder(
+    column: $table.durationSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9034,13 +9203,28 @@ class $$SessionItemResultsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get field => $composableBuilder(
-    column: $table.field,
+  ColumnOrderings<int> get reps => $composableBuilder(
+    column: $table.reps,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get value => $composableBuilder(
-    column: $table.value,
+  ColumnOrderings<int> get cycles => $composableBuilder(
+    column: $table.cycles,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get loadKg => $composableBuilder(
+    column: $table.loadKg,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationSeconds => $composableBuilder(
+    column: $table.durationSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -9075,11 +9259,22 @@ class $$SessionItemResultsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<String> get field =>
-      $composableBuilder(column: $table.field, builder: (column) => column);
+  GeneratedColumn<int> get reps =>
+      $composableBuilder(column: $table.reps, builder: (column) => column);
 
-  GeneratedColumn<int> get value =>
-      $composableBuilder(column: $table.value, builder: (column) => column);
+  GeneratedColumn<int> get cycles =>
+      $composableBuilder(column: $table.cycles, builder: (column) => column);
+
+  GeneratedColumn<double> get loadKg =>
+      $composableBuilder(column: $table.loadKg, builder: (column) => column);
+
+  GeneratedColumn<int> get durationSeconds => $composableBuilder(
+    column: $table.durationSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
@@ -9129,8 +9324,11 @@ class $$SessionItemResultsTableTableManager
                 Value<String> sessionId = const Value.absent(),
                 Value<String> trainingItemId = const Value.absent(),
                 Value<int> occurrence = const Value.absent(),
-                Value<String> field = const Value.absent(),
-                Value<int> value = const Value.absent(),
+                Value<int?> reps = const Value.absent(),
+                Value<int?> cycles = const Value.absent(),
+                Value<double?> loadKg = const Value.absent(),
+                Value<int?> durationSeconds = const Value.absent(),
+                Value<String?> note = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionItemResultsCompanion(
@@ -9138,8 +9336,11 @@ class $$SessionItemResultsTableTableManager
                 sessionId: sessionId,
                 trainingItemId: trainingItemId,
                 occurrence: occurrence,
-                field: field,
-                value: value,
+                reps: reps,
+                cycles: cycles,
+                loadKg: loadKg,
+                durationSeconds: durationSeconds,
+                note: note,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -9149,8 +9350,11 @@ class $$SessionItemResultsTableTableManager
                 required String sessionId,
                 required String trainingItemId,
                 Value<int> occurrence = const Value.absent(),
-                required String field,
-                required int value,
+                Value<int?> reps = const Value.absent(),
+                Value<int?> cycles = const Value.absent(),
+                Value<double?> loadKg = const Value.absent(),
+                Value<int?> durationSeconds = const Value.absent(),
+                Value<String?> note = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionItemResultsCompanion.insert(
@@ -9158,8 +9362,11 @@ class $$SessionItemResultsTableTableManager
                 sessionId: sessionId,
                 trainingItemId: trainingItemId,
                 occurrence: occurrence,
-                field: field,
-                value: value,
+                reps: reps,
+                cycles: cycles,
+                loadKg: loadKg,
+                durationSeconds: durationSeconds,
+                note: note,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),

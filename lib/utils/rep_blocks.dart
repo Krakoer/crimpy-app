@@ -1,6 +1,7 @@
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/utils/format.dart';
 
 /// The repeater settings that decide how a block of reps splits into sets.
 class RepeaterConfig {
@@ -152,15 +153,59 @@ String sessionBlockLabel(TrainingItem item) {
   return edges.length == 1 ? '$label ${edges.first}mm' : label;
 }
 
-/// One item the prescription left open and what the run answered it with, in
-/// the order the passes were played.
-typedef OpenItemResult = ({String label, String prescribed, List<int> values});
+/// One pass through a prescribed item and what the athlete reported about it:
+/// the numbers on one line, the line they wrote on another.
+typedef ReportedPass = ({String? achieved, String? note});
 
-/// Reads the counts a run recorded against the items they answer, so each one
-/// is shown next to what was asked for rather than as a bare number. A count
+/// One prescribed item, what it asked for, and every pass of it the athlete
+/// reported on, in the order they were played.
+typedef ReportedItem = ({
+  String label,
+  String? prescribed,
+  List<ReportedPass> passes,
+});
+
+/// What an item asked for, in the words the athlete was given it in, or null
+/// when the prescription named no number to read an achievement against. An
+/// AMRAP is the case that names one deliberately: the point of it is that the
+/// coach prescribed no count.
+String? prescribedSummary(TrainingItem item) {
+  if (item.type == TrainingItemType.emom) {
+    final rounds = item.cycles;
+    return rounds == null ? null : 'of $rounds rounds';
+  }
+  if (item.repsIsMax) return 'as many reps as possible';
+  final duration = item.duration;
+  if (duration != null && duration > 0) {
+    return 'of ${formatSecondsAsLength(duration)}';
+  }
+  final reps = item.reps;
+  return reps == null ? null : 'of $reps reps';
+}
+
+/// The numbers one pass reported, read as a line: "8 reps", "7 rounds",
+/// "12 reps at 17.5 kg". Null when the pass reported nothing but a note, which
+/// is a line of its own and needs no figure in front of it.
+String? achievedSummary(SessionItemResultModel result) {
+  final parts = <String>[
+    if (result.reps case final reps?) '$reps reps',
+    if (result.cycles case final cycles?) '$cycles rounds',
+    if (result.durationSeconds case final seconds?)
+      formatSecondsAsLength(seconds),
+  ];
+  final line = parts.join(', ');
+  if (result.loadKg case final load?) {
+    final kg = formatKilograms(load);
+    return line.isEmpty ? '$kg kg' : '$line at $kg kg';
+  }
+  return line.isEmpty ? null : line;
+}
+
+/// Reads what a run reported against the items it answers, so each line is
+/// shown next to what was asked for rather than as a bare number. A report
 /// naming an item [items] does not hold is left out: there is nothing to head
 /// it with.
-List<OpenItemResult> openItemResults(
+List<ReportedItem> reportedItems(
   List<SessionItemResultModel> results,
   List<TrainingItem> items,
 ) {
@@ -169,25 +214,98 @@ List<OpenItemResult> openItemResults(
 
   final ordered = [...results]
     ..sort((a, b) => a.occurrence.compareTo(b.occurrence));
-  final values = <String, List<int>>{};
+  final passes = <String, List<ReportedPass>>{};
   for (final result in ordered) {
     if (!byId.containsKey(result.trainingItemId)) continue;
-    (values[result.trainingItemId] ??= []).add(result.value);
+    final note = result.note?.trim();
+    final pass = (
+      achieved: achievedSummary(result),
+      note: note == null || note.isEmpty ? null : note,
+    );
+    if (pass.achieved == null && pass.note == null) continue;
+    (passes[result.trainingItemId] ??= []).add(pass);
   }
 
-  final out = <OpenItemResult>[];
+  final out = <ReportedItem>[];
   for (final item in byId.values) {
-    final done = values[item.id];
-    if (done == null) continue;
+    final reported = passes[item.id];
+    if (reported == null) continue;
     out.add((
       label: sessionBlockLabel(item),
-      prescribed: item.type == TrainingItemType.emom
-          ? 'of ${item.cycles ?? 1} rounds'
-          : 'reps, as many as possible',
-      values: done,
+      prescribed: prescribedSummary(item),
+      passes: reported,
     ));
   }
   return out;
+}
+
+/// Which numbers a prescribed item is worth asking the athlete for, so the
+/// review pass shows a rep field for a set of pull ups and a rounds field for
+/// an emom rather than every field on every line.
+typedef ReportableFields = ({bool reps, bool cycles, bool load, bool duration});
+
+/// A block that repeats is asked how many rounds it went; anything the athlete
+/// performs is asked for its reps, its load and how long it held, and a timed
+/// step is not asked for reps it does not count in.
+ReportableFields reportableFields(TrainingItem item) {
+  final isBlock =
+      item.type == TrainingItemType.emom ||
+      item.type == TrainingItemType.circuit;
+  if (isBlock) {
+    return (reps: false, cycles: true, load: false, duration: false);
+  }
+  final isTimed = (item.duration ?? 0) > 0 || (item.worktimeSeconds ?? 0) > 0;
+  return (
+    reps: !isTimed || item.repsIsMax,
+    cycles: false,
+    load: true,
+    duration: isTimed,
+  );
+}
+
+/// Whether the athlete has anything to report about an item. A group and a free
+/// note are the two that carry no work of their own: one is a heading, the
+/// other is a line of the coach's own text.
+bool isReportable(TrainingItem item) =>
+    item.type != TrainingItemType.group && item.type != TrainingItemType.free;
+
+/// One line of the post workout review: a prescribed item and which pass of it
+/// the line answers.
+typedef ReviewLine = ({TrainingItem item, int occurrence});
+
+/// The lines the athlete goes back over once the run is done, in the order the
+/// prescription lays them out, nested items included.
+///
+/// An item the run already recorded a pass against gets one line per recorded
+/// pass, so an emom dropped out of twice is annotated round by round. Anything
+/// else gets the single line of its first pass: reporting per round on a block
+/// nothing was recorded against would ask the athlete to fill in a grid, when
+/// what the spreadsheet asked for was a line per exercise.
+List<ReviewLine> reviewLines(
+  List<TrainingItem> items,
+  List<SessionItemResultModel> recorded,
+) {
+  final occurrencesByItem = <String, Set<int>>{};
+  for (final result in recorded) {
+    (occurrencesByItem[result.trainingItemId] ??= {}).add(result.occurrence);
+  }
+
+  final lines = <ReviewLine>[];
+  void walk(List<TrainingItem> items) {
+    for (final item in items) {
+      if (isReportable(item)) {
+        final occurrences = (occurrencesByItem[item.id]?.toList() ?? [0])
+          ..sort();
+        for (final occurrence in occurrences) {
+          lines.add((item: item, occurrence: occurrence));
+        }
+      }
+      walk(item.items);
+    }
+  }
+
+  walk(items);
+  return lines;
 }
 
 /// Every item of a training by id, nested ones included, so a rep naming one

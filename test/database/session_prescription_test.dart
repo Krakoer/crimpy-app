@@ -70,8 +70,7 @@ void main() {
       SessionItemResultModel(
         trainingItemId: training.items.first.id,
         occurrence: 0,
-        field: SessionItemField.reps,
-        value: 9,
+        reps: 9,
       ),
     ],
   );
@@ -123,9 +122,9 @@ void main() {
     );
     expect(blocks?.map((b) => b.label), ['Pull ups', 'Hang rep 20mm']);
 
-    final results = openItemResults(session.itemResults, frozen);
+    final results = reportedItems(session.itemResults, frozen);
     expect(results.single.label, 'Pull ups');
-    expect(results.single.values, [9]);
+    expect(results.single.passes.map((p) => p.achieved), ['9 reps']);
   });
 
   test('the snapshot outlives the whole training', () async {

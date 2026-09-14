@@ -126,7 +126,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     SessionModel session,
   ) {
     final sessionColor = CrimpyTheme.activityColor(session.activity);
-    final openResults = _resolveOpenResults(ref, session);
+    final reported = _resolveReportedItems(ref, session);
     final resolvedBlocks = _resolveBlocks(ref, session);
     final blocks = resolvedBlocks.value;
     // A session whose blocks are still resolving has no answer to give yet, and
@@ -162,10 +162,10 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
             const SizedBox(height: 16),
           ],
 
-          // The counts the run answered the open items with. No rep carries
-          // either, so this is the only place they show up.
-          if (openResults.isNotEmpty) ...[
-            SessionOpenResultsCard(results: openResults),
+          // What the athlete reported on the prescribed items. No rep carries
+          // any of it, so this is the only place it shows up.
+          if (reported.isNotEmpty) ...[
+            SessionOpenResultsCard(items: reported),
             const SizedBox(height: 16),
           ],
 
@@ -195,20 +195,20 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     );
   }
 
-  /// The counts the run recorded, read against the items they answer. Those
-  /// items come from the frozen prescription when the session carries one, and
-  /// from the athlete's own training otherwise, which is the same fallback
+  /// What the athlete reported, read against the items it answers. Those items
+  /// come from the frozen prescription when the session carries one, and from
+  /// the athlete's own training otherwise, which is the same fallback
   /// [_resolveBlocks] makes and the only one a guest-mode session has.
-  List<OpenItemResult> _resolveOpenResults(
+  List<ReportedItem> _resolveReportedItems(
     WidgetRef ref,
     SessionModel session,
   ) {
     if (session.itemResults.isEmpty) return const [];
     final frozen = session.prescriptionItems;
-    if (frozen != null) return openItemResults(session.itemResults, frozen);
+    if (frozen != null) return reportedItems(session.itemResults, frozen);
     return ref
             .watch(sessionTrainingItemsProvider(session.trainingId))
-            .whenData((items) => openItemResults(session.itemResults, items))
+            .whenData((items) => reportedItems(session.itemResults, items))
             .value ??
         const [];
   }

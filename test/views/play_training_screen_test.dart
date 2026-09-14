@@ -752,10 +752,9 @@ void main() {
       );
       expect(
         post.itemResults.map(
-          (r) =>
-              '${r.trainingItemId}/${r.occurrence}/${r.field.apiValue}/${r.value}',
+          (r) => '${r.trainingItemId}/${r.occurrence}/${r.reps}/${r.cycles}',
         ),
-        ['pullup-1/0/reps/23', 'emom-1/0/cycles/1'],
+        ['pullup-1/0/23/null', 'emom-1/0/null/1'],
       );
     });
 
