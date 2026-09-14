@@ -336,6 +336,102 @@ void _reviewPassTests() {
     expect(sessions.savedItemResults, isEmpty);
   });
 
+  // A number the API refuses costs the whole session save, and the athlete is
+  // left on the screen with no idea which of fifteen cards is the problem, so
+  // it is refused here where the offending field can be pointed at.
+  testWidgets('refuses to save a load that is not a number', (tester) async {
+    final sessions = CapturingSessions();
+
+    await _pumpFor(
+      tester,
+      const PostWorkoutScreen(template: _reviewTraining, results: []),
+      sessions,
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Load kg').first,
+      '1.2.3',
+    );
+    await tester.tap(find.text('Save training'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enter a number'), findsOneWidget);
+    expect(sessions.saved, isNull);
+  });
+
+  // The server stores these as 32 bit integers and answers an overflow by
+  // rejecting the entire body, so the field that holds the digits is where the
+  // limit belongs.
+  testWidgets('refuses to save a count the server cannot store', (
+    tester,
+  ) async {
+    final sessions = CapturingSessions();
+
+    await _pumpFor(
+      tester,
+      const PostWorkoutScreen(template: _reviewTraining, results: []),
+      sessions,
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Reps').first,
+      '99999999999',
+    );
+    await tester.tap(find.text('Save training'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Too large'), findsOneWidget);
+    expect(sessions.saved, isNull);
+  });
+
+  // The athlete's own numbers reach the review, so a step prescribed as a
+  // percentage is reviewed against the number the run counted down from rather
+  // than against the fallback the coach set for a client that cannot resolve it.
+  testWidgets('states a percentage prescription in the resolved number', (
+    tester,
+  ) async {
+    const maxPullUps = AssessmentDefinition(
+      id: 'max-pullups',
+      label: 'Max pull ups',
+      unit: AssessmentUnit.repetitions,
+    );
+    final results = AssessmentResults(
+      const {'max-pullups': AssessmentHandValues(right: 20)},
+      definitions: const {'max-pullups': maxPullUps},
+    );
+    const relative = Training(
+      id: 't1',
+      title: 'Pulling',
+      items: [
+        TrainingItem(
+          id: 'pullup-1',
+          type: TrainingItemType.exercise,
+          position: 0,
+          exerciseName: 'Pull up',
+          reps: 5,
+          variableTargets: {
+            'reps': VariableTarget(
+              assessmentId: 'max-pullups',
+              percent: 60,
+              fallback: 5,
+            ),
+          },
+        ),
+      ],
+    );
+
+    await _show(
+      tester,
+      PostWorkoutScreen(
+        template: relative,
+        results: const [],
+        assessmentResults: results,
+      ),
+    );
+
+    // 60% of 20, not the fallback of 5.
+    expect(find.text('Asked of 12 reps'), findsOneWidget);
+    expect(find.text('Asked of 5 reps'), findsNothing);
+  });
+
   // The count the run took mid set is seeded into the review, so the athlete
   // corrects it rather than being asked for it twice, and it still reaches the
   // session when they leave it alone.

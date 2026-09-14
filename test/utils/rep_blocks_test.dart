@@ -1,3 +1,4 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training_item_model.dart';
@@ -787,6 +788,53 @@ void _reviewPassTests() {
         worktimeSeconds: 7,
       );
       expect(isReportable(unsaved), isFalse);
+    });
+  });
+
+  // The plumbing that carries the athlete's own numbers into the review. A
+  // coach may prescribe reps or a duration as a percentage of an assessment,
+  // and the raw field then holds only the fallback, so reading it names a
+  // target nobody was played.
+  group('percent of assessment prescriptions', () {
+    const maxPullUps = AssessmentDefinition(
+      id: 'max-pullups',
+      label: 'Max pull ups',
+      unit: AssessmentUnit.repetitions,
+    );
+    final results = AssessmentResults(
+      const {'max-pullups': AssessmentHandValues(right: 20)},
+      definitions: const {'max-pullups': maxPullUps},
+    );
+    const relative = TrainingItem(
+      id: 'pullup-1',
+      type: TrainingItemType.exercise,
+      position: 0,
+      exerciseName: 'Pull up',
+      reps: 5,
+      variableTargets: {
+        'reps': VariableTarget(
+          assessmentId: 'max-pullups',
+          percent: 60,
+          fallback: 5,
+        ),
+      },
+    );
+
+    test('states the resolved number the run counted down from', () {
+      // 60% of 20 is 12, which is what the athlete actually did.
+      expect(prescribedSummary(relative, results), 'of 12 reps');
+    });
+
+    // The history card has no results to resolve against: the numbers the
+    // athlete has now are not the ones the run was played against. Stating the
+    // fallback there would show a miss against 12 as a rout against 5.
+    test('says nothing rather than the fallback when nothing resolves it', () {
+      expect(prescribedSummary(relative), isNull);
+    });
+
+    test('an item with no percentage is unaffected', () {
+      expect(prescribedSummary(dips), 'of 8 reps');
+      expect(prescribedSummary(dips, results), 'of 8 reps');
     });
   });
 

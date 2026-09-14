@@ -186,10 +186,15 @@ bool _isHang(TrainingItem item) =>
 /// prescribe reps or a duration as a percentage of an assessment and the raw
 /// field then holds only the fallback. The run counted the athlete down from
 /// the resolved number, so that is the number they are asked against.
-String? prescribedSummary(
-  TrainingItem item, [
-  AssessmentResults results = AssessmentResults.none,
-]) {
+///
+/// [results] is null when the caller has no numbers to resolve against, which
+/// is the history card reading a session back: the results the athlete has now
+/// are not the ones the run was played against, and resolving against them
+/// would state a target the session never had. A field prescribed as a
+/// percentage then reads as nothing rather than as its fallback, which is a
+/// number nobody was ever asked for: showing "did 10 reps" over "of 5 reps"
+/// turns a miss against a target of 12 into a rout.
+String? prescribedSummary(TrainingItem item, [AssessmentResults? results]) {
   if (_isBlock(item)) {
     final rounds = item.cycles;
     return rounds == null ? null : 'of $rounds rounds';
@@ -201,9 +206,18 @@ String? prescribedSummary(
         : 'of ${formatSecondsAsLength(work)} hangs';
   }
   if (item.repsIsMax) return 'as many reps as possible';
-  final duration = item.effectiveDuration(results);
+  if (results == null) {
+    // Nothing to resolve against, so a percentage is left unstated rather than
+    // answered with the fallback standing in for it.
+    if (item.variableTargets.containsKey('duration') ||
+        item.variableTargets.containsKey('reps')) {
+      return null;
+    }
+  }
+  final resolved = results ?? AssessmentResults.none;
+  final duration = item.effectiveDuration(resolved);
   if (duration != null) return 'of ${formatSecondsAsLength(duration)}';
-  final reps = item.effectiveReps(results);
+  final reps = item.effectiveReps(resolved);
   return reps == null ? null : 'of $reps reps';
 }
 

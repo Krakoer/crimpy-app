@@ -7,6 +7,17 @@ import 'package:crimpy/views/screens/trainings/post_workout_screen/widgets/asses
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+/// How long a note may be, mirroring maxItemResultNoteLength on the server. Held
+/// here as well as there because the server answers a longer one by refusing
+/// the whole session, which costs the athlete the run over a field they can
+/// still see and shorten.
+const int maxItemNoteLength = 2000;
+
+/// The largest number any reported field takes. The server stores these as
+/// 32 bit integers and refuses the entire request body when one overflows, so
+/// the field that holds the digits is where the limit belongs.
+const int maxReportedNumber = 2147483647;
+
 /// What the athlete is entering about one pass through one prescribed item
 /// while they go back over the run. It owns the text controllers, since a
 /// half typed number is text and only becomes a report when the session is
@@ -19,6 +30,13 @@ class ItemReviewDraft {
   /// reps and a load, an emom for the rounds it went.
   final ReportableFields fields;
 
+  /// What the item asked for, in the athlete's own numbers. Computed here,
+  /// beside the fields, and against the same results: a card stating a
+  /// prescription resolved one way over fields chosen another is the one
+  /// disagreement [reportableFields] documents as forbidden, and holding both
+  /// on the draft is what makes it unbreakable rather than merely intended.
+  final String? prescribed;
+
   final TextEditingController reps;
   final TextEditingController cycles;
   final TextEditingController loadKg;
@@ -29,6 +47,7 @@ class ItemReviewDraft {
     required this.item,
     required this.occurrence,
     required this.fields,
+    required this.prescribed,
     required this.reps,
     required this.cycles,
     required this.loadKg,
@@ -47,6 +66,7 @@ class ItemReviewDraft {
     item: line.item,
     occurrence: line.occurrence,
     fields: reportableFields(line.item, results),
+    prescribed: prescribedSummary(line.item, results),
     reps: TextEditingController(text: recorded?.reps?.toString() ?? ''),
     cycles: TextEditingController(text: recorded?.cycles?.toString() ?? ''),
     loadKg: TextEditingController(text: recorded?.loadKg?.toString() ?? ''),
@@ -116,16 +136,7 @@ List<ItemReviewDraft> buildItemReviewDrafts(
 class ItemReviewSection extends StatelessWidget {
   final List<ItemReviewDraft> drafts;
 
-  /// The athlete's own numbers the prescription is read against, so a step
-  /// prescribed as a percentage of an assessment states the number the run
-  /// counted them down from rather than its fallback.
-  final AssessmentResults results;
-
-  const ItemReviewSection({
-    required this.drafts,
-    this.results = AssessmentResults.none,
-    super.key,
-  });
+  const ItemReviewSection({required this.drafts, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +162,7 @@ class ItemReviewSection extends StatelessWidget {
         for (final draft in drafts)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: ItemReviewCard(draft: draft, results: results),
+            child: ItemReviewCard(draft: draft),
           ),
       ],
     );
@@ -162,13 +173,8 @@ class ItemReviewSection extends StatelessWidget {
 /// reporting, and the note.
 class ItemReviewCard extends StatelessWidget {
   final ItemReviewDraft draft;
-  final AssessmentResults results;
 
-  const ItemReviewCard({
-    required this.draft,
-    this.results = AssessmentResults.none,
-    super.key,
-  });
+  const ItemReviewCard({required this.draft, super.key});
 
   /// One number of the review. Left empty it reports nothing, which is the
   /// common case; typed and unreadable it is refused rather than dropped, since
@@ -198,13 +204,16 @@ class ItemReviewCard extends StatelessWidget {
           : int.tryParse(trimmed)?.toDouble();
       if (parsed == null) return 'Enter a number';
       if (parsed < 0) return 'Cannot be negative';
+      // Refused here rather than by the server, which answers an overflowing
+      // number by rejecting the whole session.
+      if (parsed > maxReportedNumber) return 'Too large';
       return null;
     },
   );
 
   @override
   Widget build(BuildContext context) {
-    final prescribed = prescribedSummary(draft.item, results);
+    final prescribed = draft.prescribed;
     final numbers = [
       if (draft.fields.reps) _number(controller: draft.reps, label: 'Reps'),
       if (draft.fields.cycles)
@@ -269,12 +278,24 @@ class ItemReviewCard extends StatelessWidget {
               controller: draft.note,
               decoration: const InputDecoration(
                 labelText: 'Note',
-                hintText: 'Hard on the shoulders, did it with a band...',
+                hintText: 'Hard on the shoulders, did it with a band',
                 border: OutlineInputBorder(),
                 isDense: true,
                 alignLabelWithHint: true,
               ),
               keyboardType: TextInputType.multiline,
+              // Held to what the server takes, and counted in characters the
+              // way the column counts it, so an accented note is not cut short
+              // of one written in ASCII.
+              maxLength: maxItemNoteLength,
+              maxLengthEnforcement: MaxLengthEnforcement.enforced,
+              buildCounter:
+                  (
+                    context, {
+                    required currentLength,
+                    required isFocused,
+                    required maxLength,
+                  }) => null,
               maxLines: 4,
               minLines: 1,
             ),

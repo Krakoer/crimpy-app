@@ -202,10 +202,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                           const SizedBox(height: 16),
                         ],
                         if (_itemReviews.isNotEmpty) ...[
-                          ItemReviewSection(
-                            drafts: _itemReviews,
-                            results: widget.assessmentResults,
-                          ),
+                          ItemReviewSection(drafts: _itemReviews),
                           const SizedBox(height: 16),
                         ],
                         TextField(
