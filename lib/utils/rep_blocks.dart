@@ -344,22 +344,33 @@ bool isReportable(TrainingItem item) =>
 
 /// Whether an item is work the athlete performs, rather than a heading or a
 /// line of the coach's own text. Spelled once, since [isReportable] and
-/// [hasUnkeyableWork] both turn on it and two copies would drift the first time
-/// a type that carries no work is added.
+/// [holdsReportableWork] both turn on it and two copies would drift the first
+/// time a type that carries no work is added.
 bool _carriesWork(TrainingItem item) =>
     item.type != TrainingItemType.group && item.type != TrainingItemType.free;
 
-/// Whether a training holds work worth reporting on that no report can be keyed
-/// to, which leaves the review pass with no line to offer. The screen says so
-/// rather than simply not appearing, which reads as the feature being broken.
+/// Whether a run naming [trainingId] and [programSessionId] has somewhere to
+/// put what the athlete reports about its steps.
 ///
-/// A builtin no longer lands here: its steps are generated with a key of their
-/// own. What is left is a tree that was never stored and names no builtin
-/// either, which is an item the editor added and nothing has saved yet.
-bool hasUnkeyableWork(List<TrainingItem> items) {
+/// A report is stored against the prescription the session was run from, and
+/// both stores read that from the training or the program slot the session
+/// names: the API freezes its copy from them, and the local one keys its rows
+/// the same way so the two cannot answer the same session differently. A run
+/// that names neither, which is every builtin, has nothing to key a report
+/// into, and collecting one would be collecting something to throw away.
+bool sessionKeepsItemReports({String? trainingId, String? programSessionId}) =>
+    trainingId != null || programSessionId != null;
+
+/// Whether a training holds work the athlete could be asked about at all,
+/// whether or not a line is actually offered for it.
+///
+/// What the screen owes an explanation for: prescribed work and no review pass
+/// over it is a hole where every other training shows one, and silence there
+/// reads as the feature being broken rather than as it not applying.
+bool holdsReportableWork(List<TrainingItem> items) {
   for (final item in items) {
-    if (_carriesWork(item) && item.reportKey.isEmpty) return true;
-    if (hasUnkeyableWork(item.items)) return true;
+    if (_carriesWork(item)) return true;
+    if (holdsReportableWork(item.items)) return true;
   }
   return false;
 }

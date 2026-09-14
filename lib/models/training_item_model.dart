@@ -422,7 +422,11 @@ class TrainingItem {
   /// Kept apart from [id] because the two answer different questions. An item
   /// the editor just added has neither, and is the only thing left with nothing
   /// to key a report to.
-  String get reportKey => stableKey ?? id;
+  ///
+  /// The stored id wins when both are somehow set. A generated item is never
+  /// stored, so nothing produces that pair today, and having the weaker of the
+  /// two names win would be the wrong way round if anything ever did.
+  String get reportKey => id.isNotEmpty ? id : (stableKey ?? '');
 
   /// Grips as one array per hand, empty when the item prescribes none.
   List<List<String>> get handPositionsPerHand => handPositions ?? const [];

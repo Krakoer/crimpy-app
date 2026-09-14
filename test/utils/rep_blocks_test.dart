@@ -865,46 +865,53 @@ void _reviewPassTests() {
     });
   });
 
-  group('hasUnkeyableWork', () {
-    // Work with nothing to key a report to leaves the screen with no line to
-    // offer, so it says so rather than simply not showing the section.
-    test('is true for a training of items that were never saved', () {
-      const unsaved = TrainingItem(
-        id: '',
-        type: TrainingItemType.repeater,
-        position: 0,
-        worktimeSeconds: 7,
-      );
-      expect(hasUnkeyableWork(const [unsaved]), isTrue);
+  group('sessionKeepsItemReports', () {
+    // A report is stored against the prescription the session names, so a run
+    // that names none has nowhere to put one. Every builtin is such a run.
+    test('is false for a run that names no prescription', () {
+      expect(sessionKeepsItemReports(), isFalse);
     });
 
-    test('is false for a saved training', () {
-      expect(hasUnkeyableWork(const [dips]), isFalse);
+    test('is true for a run played from a training', () {
+      expect(sessionKeepsItemReports(trainingId: 't-1'), isTrue);
     });
 
-    // A generated step is stored nowhere and so carries no id, but it does
-    // carry a key, which is all a report needs.
-    test('is false for a builtin, whose steps are keyed without a row', () {
-      const generated = TrainingItem(
-        id: '',
-        stableKey: 'builtin:mvc:0',
-        type: TrainingItemType.repeater,
-        position: 0,
-        worktimeSeconds: 7,
-      );
-      expect(hasUnkeyableWork(const [generated]), isFalse);
+    test('is true for a run played from a coach slot', () {
+      expect(sessionKeepsItemReports(programSessionId: 'ps-1'), isTrue);
+    });
+  });
+
+  group('holdsReportableWork', () {
+    test('is true for a training holding work', () {
+      expect(holdsReportableWork(const [dips]), isTrue);
     });
 
-    // A group carries no work of its own, so a blank one is not the athlete
-    // being denied anything.
-    test('is false for a blank group holding saved work', () {
+    // A group is a heading and a free item is the coach's own text, so a
+    // training of nothing else owes the athlete no explanation.
+    test('is false for a training of headings and notes alone', () {
       const group = TrainingItem(
-        id: '',
+        id: 'group-1',
+        type: TrainingItemType.group,
+        position: 0,
+        groupTitle: 'Warm up',
+      );
+      const note = TrainingItem(
+        id: 'free-1',
+        type: TrainingItemType.free,
+        position: 1,
+        freeText: 'Stay loose',
+      );
+      expect(holdsReportableWork(const [group, note]), isFalse);
+    });
+
+    test('finds work nested inside a heading', () {
+      const group = TrainingItem(
+        id: 'group-1',
         type: TrainingItemType.group,
         position: 0,
         items: [dips],
       );
-      expect(hasUnkeyableWork(const [group]), isFalse);
+      expect(holdsReportableWork(const [group]), isTrue);
     });
   });
 

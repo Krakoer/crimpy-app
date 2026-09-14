@@ -67,12 +67,22 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
   /// The review pass: one line per prescribed step, seeded with whatever the
   /// run already recorded against it. Built once, since the controllers hold
   /// what the athlete is typing.
-  late final List<ItemReviewDraft> _itemReviews = buildItemReviewDrafts(
-    widget.template.items,
-    widget.itemResults,
-    widget.assessmentResults,
-    widget.bodyweightKg,
-  );
+  ///
+  /// Empty when this run has nowhere to store a report, which is a builtin:
+  /// the fields would take what the athlete wrote and drop it at save, and a
+  /// form that eats input is worse than the line that says why there is none.
+  late final List<ItemReviewDraft> _itemReviews =
+      sessionKeepsItemReports(
+        trainingId: widget.trainingId,
+        programSessionId: widget.programSessionId,
+      )
+      ? buildItemReviewDrafts(
+          widget.template.items,
+          widget.itemResults,
+          widget.assessmentResults,
+          widget.bodyweightKg,
+        )
+      : const [];
 
   /// The assessment this run answers, when the training played is one.
   AssessmentDefinition? get _assessment => widget.template.assessment;
@@ -211,18 +221,19 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                           ItemReviewSection(drafts: _itemReviews),
                           const SizedBox(height: 16),
                         ]
-                        // Work with nothing to key a report to leaves no line
-                        // to offer. Said out loud: an athlete who gets the per
-                        // exercise block on every other training and nothing
-                        // here would read the silence as the feature being
-                        // broken.
-                        else if (hasUnkeyableWork(widget.template.items)) ...[
+                        // Prescribed work and no line to offer for it. Said
+                        // out loud: an athlete who gets the per exercise block
+                        // on every other training and nothing here would read
+                        // the silence as the feature being broken.
+                        else if (holdsReportableWork(
+                          widget.template.items,
+                        )) ...[
                           Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              'This training has steps that were never saved, '
-                              'so there is nothing to note against them. Tell '
-                              'us how it went below.',
+                              'Notes cannot be kept against the steps of this '
+                              'training yet, so there is nothing to fill in '
+                              'here. Tell us how it went below.',
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(color: CrimpyTheme.gray500),
                             ),

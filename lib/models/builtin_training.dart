@@ -11,6 +11,12 @@ import 'package:crimpy/models/training_item_model.dart';
 ///
 /// [path] is the position of the item within each level, outermost first, so a
 /// step nested inside another cannot collide with one beside it.
+///
+/// Stable for as long as the generator prescribes the same steps in the same
+/// order, which is to say within a version of the app. A report is read back
+/// against the prescription frozen onto its own session rather than against a
+/// freshly generated one, so a generator that gains a block later renames
+/// nothing that was already written.
 String builtinItemKey(String builtinId, List<int> path) =>
     '$_builtinItemKeyPrefix$builtinId:${path.join('.')}';
 

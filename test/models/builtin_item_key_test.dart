@@ -77,15 +77,17 @@ void main() {
       }
     });
 
-    // What #110 was about: the review pass offered no line at all here.
-    test('offers a review line per step', () {
+    // The keying half of #110: every generated step can be named by a report.
+    // Whether one is collected is a separate question, and today it is not:
+    // a builtin run names no prescription, so there is nowhere to store it.
+    test('can be named by a report, a line per step', () {
       for (final builtin in builtinTrainings) {
         final items = builtin.generateNewFormatTraining(maxForce())!.items;
 
         expect(
-          hasUnkeyableWork(items),
-          isFalse,
-          reason: '${builtin.name} still has work nothing can key',
+          items.every(isReportable),
+          isTrue,
+          reason: '${builtin.name} has steps no report can name',
         );
         expect(
           reviewLines(items, const []),

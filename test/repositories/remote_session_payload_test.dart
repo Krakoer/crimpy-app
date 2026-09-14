@@ -161,6 +161,16 @@ void main() {
           .cast<Map<String, dynamic>>();
       expect(posted.map((r) => r['training_item_id']), ['item-1']);
     });
+
+    // The reachable shape of the same thing: a builtin run names no training,
+    // so the server has no prescription to key a report into and none is sent.
+    // The screen no longer collects one here, and this is the layer below it
+    // holding the same line.
+    test('are left out entirely by a run that names no training', () async {
+      final body = await _postedItemResults(itemKeys: ['builtin:mvc:0']);
+
+      expect(body.containsKey('item_results'), isFalse);
+    });
   });
 
   group('the force curve of a posted session', () {

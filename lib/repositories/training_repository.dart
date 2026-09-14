@@ -230,12 +230,6 @@ class RemoteTrainingRepository extends TrainingRepository {
     );
   }
 
-  /// The reports the API can place. A generated step is named by a key minted
-  /// on the fly, which no server prescription holds and no uuid column takes.
-  static List<SessionItemResultModel> _uploadableResults(
-    List<SessionItemResultModel> results,
-  ) => results.where((r) => !isBuiltinItemKey(r.trainingItemId)).toList();
-
   @override
   Future<String> saveSession(
     SessionModel session,
@@ -267,6 +261,14 @@ class RemoteTrainingRepository extends TrainingRepository {
         )
         .toList();
 
+    // The reports the API can place. A generated step is named by a key minted
+    // on the device, which no server prescription holds and no uuid column
+    // takes: one of those refuses the entire session rather than the single
+    // report, which would lose the run.
+    final postableResults = itemResults
+        .where((r) => !isBuiltinItemKey(r.trainingItemId))
+        .toList();
+
     final int duration =
         session.durationInSeconds ?? reps.fold(0, (p, r) => p + r.duration);
 
@@ -285,15 +287,10 @@ class RemoteTrainingRepository extends TrainingRepository {
       'duration': duration,
       'rep_datas': repDatas,
       // The server reads a count against the prescription it froze, so a run
-      // that answers no prescription has nothing to key one into. What is left
-      // is filtered again: a report on a generated step names it by a key the
-      // API cannot parse, and one of those refuses the entire session rather
-      // than the single report, which would lose the run.
+      // that answers no prescription has nothing to key one into.
       if ((session.trainingId != null || session.programSessionId != null) &&
-          _uploadableResults(itemResults).isNotEmpty)
-        'item_results': _uploadableResults(
-          itemResults,
-        ).map((r) => r.toJson()).toList(),
+          postableResults.isNotEmpty)
+        'item_results': postableResults.map((r) => r.toJson()).toList(),
       // The force curve is what a critical force or an MVC result means, so it
       // goes up with the assessment that recorded it. The API takes it on an
       // assessment only: on an ordinary repeater the samples are bulk nothing
