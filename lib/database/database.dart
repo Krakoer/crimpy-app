@@ -43,7 +43,7 @@ class Sessions extends Table {
   // The items the run was played from, frozen as JSON when it was saved, the
   // way the server freezes a prescription onto the session it creates. It is
   // the only copy that still names the blocks once the training is edited or
-  // deleted, and so the only thing that keeps the reps and the open counts
+  // deleted, and so the only thing that keeps the reps and the item reports
   // recorded against an item id readable. Null on a session that answered no
   // training, and on every session saved before the column existed, which is
   // what leaves those falling back to the live training.
@@ -281,24 +281,29 @@ class RepDatas extends Table {
   ];
 }
 
-// Stores what the athlete achieved on a step the prescription left open: the
-// reps an AMRAP turned out to be, and the rounds an emom was carried through.
-// Neither can be read back off the reps, since a set of pull ups passes through
-// no sensor and so records none.
+// Stores what the athlete reported about one pass through a prescribed step:
+// the reps an AMRAP turned out to be, the rounds an emom was carried through,
+// and for any step at all the load, the duration and the line of text that
+// nothing else records. A set of pull ups passes through no sensor, so without
+// this table the run stores that the step was played and no more.
 class SessionItemResults extends Table {
   late final TextColumn id = text().clientDefault(() => Uuid().v4())();
 
   late final TextColumn sessionId = text()();
-  // Which item of the prescription the count answers. Not a reference, for the
+  // Which item of the prescription the report answers. Not a reference, for the
   // reason the rep link is not one either: the training stays editable while
   // the played session keeps the prescription it was run from.
   late final TextColumn trainingItemId = text()();
-  // Which pass through that item the count belongs to, from 0, so a block that
+  // Which pass through that item the report belongs to, from 0, so a block that
   // repeats can be answered once per round.
   late final IntColumn occurrence = integer().withDefault(const Constant(0))();
-  // 'reps' for an AMRAP, 'cycles' for the rounds an emom was carried through.
-  late final TextColumn field = text()();
-  late final IntColumn value = integer()();
+  // Every reported field is nullable: a pass reports whichever of them the
+  // athlete had something to say about.
+  late final IntColumn reps = integer().nullable()();
+  late final IntColumn cycles = integer().nullable()();
+  late final RealColumn loadKg = real().nullable()();
+  late final IntColumn durationSeconds = integer().nullable()();
+  late final TextColumn note = text().nullable()();
 
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
@@ -446,7 +451,7 @@ class AppDatabase extends _$AppDatabase {
   Future<List<RepDataModel>> getRepsForSession(String sessionId) async =>
       (await _repRowsForSession(sessionId)).map((r) => r.toModel()).toList();
 
-  /// The counts the run recorded for the items the prescription left open.
+  /// What the athlete reported about the items they were prescribed.
   Future<List<SessionItemResultModel>> getItemResultsForSession(
     String sessionId,
   ) async =>
@@ -461,8 +466,11 @@ class AppDatabase extends _$AppDatabase {
             (r) => SessionItemResultModel(
               trainingItemId: r.trainingItemId,
               occurrence: r.occurrence,
-              field: SessionItemField.fromApi(r.field),
-              value: r.value,
+              reps: r.reps,
+              cycles: r.cycles,
+              loadKg: r.loadKg,
+              durationSeconds: r.durationSeconds,
+              note: r.note,
             ),
           )
           .toList();
@@ -535,14 +543,20 @@ class AppDatabase extends _$AppDatabase {
         )
         .toList();
 
+    // A report that says nothing is not stored, which is what the server does
+    // with one anyway.
     final resultCompanions = itemResults
+        .where((result) => result.reported)
         .map(
           (result) => SessionItemResultsCompanion(
             sessionId: Value(sessionId),
             trainingItemId: Value(result.trainingItemId),
             occurrence: Value(result.occurrence),
-            field: Value(result.field.apiValue),
-            value: Value(result.value),
+            reps: Value(result.reps),
+            cycles: Value(result.cycles),
+            loadKg: Value(result.loadKg),
+            durationSeconds: Value(result.durationSeconds),
+            note: Value(result.note),
             updatedAt: Value(DateTime.now()),
           ),
         )
@@ -1265,7 +1279,7 @@ class AppDatabase extends _$AppDatabase {
   /// edited since. The server holds a copy of what the training was, so the
   /// next run has to update it: skipping it leaves the edit on the device for
   /// good, and the items the edit added with no server id to name them, which
-  /// strands the reps and the open counts of every session played from them.
+  /// strands the reps and the item reports of every session played from them.
   ///
   /// A local edit clears the time the mark was made, so a training carrying a
   /// server id and no time is one the server holds an older copy of. The marks
@@ -1300,7 +1314,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1662,7 +1676,7 @@ class AppDatabase extends _$AppDatabase {
       },
       from11To12: (m, schema) async {
         // A session now freezes what it was played from, so its reps and its
-        // open counts stay readable once the training is edited or deleted.
+        // item reports stay readable once the training is edited or deleted.
         // The sessions already stored are left without one: they were saved
         // from a training that may have drifted since, and a snapshot taken
         // now would freeze that drift as though the run had played it.
@@ -1678,6 +1692,17 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(schema.assessments, schema.assessments.serverId);
         await m.addColumn(schema.trainingItems, schema.trainingItems.serverId);
         await m.createTable(schema.guestImportTargets);
+      },
+      from14To15: (m, schema) async {
+        // A run now records what the athlete did on any step, not only on the
+        // two the prescription left open, so the single field-and-value pair
+        // gives way to a column per reported field. The rows already stored
+        // answer a field the new shape has no column for, and there are only
+        // ever a handful of them on a device, so they are dropped rather than
+        // folded: two of them answering the same pass would have to be merged
+        // into the one row that pass now holds.
+        await m.deleteTable('session_item_results');
+        await m.createTable(schema.sessionItemResults);
       },
       from13To14: (m, schema) async {
         // The import now stamps the mark it leaves on a training, and a local

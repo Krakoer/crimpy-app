@@ -78,9 +78,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// List of the average weights done during the training.
   List<RepDataModel> repResults = [];
 
-  /// What the run answered the open items with: the reps an AMRAP turned out to
-  /// be, and the rounds of an emom the athlete dropped out of. No rep carries
-  /// either, so this is the only record of them.
+  /// What the run recorded against the prescribed items as it was played: the
+  /// reps an AMRAP turned out to be, and the rounds of an emom the athlete
+  /// dropped out of. No rep carries either, and the post workout screen adds
+  /// the loads, the durations and the notes to them.
   final List<SessionItemResultModel> itemResults = [];
 
   /// Duration of the preparation rest in seconds
@@ -175,6 +176,12 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             template: widget.training,
             results: repResults,
             itemResults: itemResults,
+            // The same results the run resolved its prescription against, so
+            // the review states the numbers the athlete was actually played.
+            assessmentResults: widget.results.withDefinitions(
+              widget.training.referencedAssessments,
+            ),
+            bodyweightKg: widget.bodyweightKg,
             activity: widget.activity,
             trainingId: widget.trainingId,
             programSessionId: widget.programSessionId,
@@ -222,7 +229,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     if (step is ConfirmItem && step.repsAreOpen) {
       final done = await showOpenRepsDialog(context, step.label);
       if (done == null || !mounted) return;
-      _recordItemResult(step, SessionItemField.reps, done);
+      _recordItemResult(step, reps: done);
     }
     if (!timer.isRunning) _start();
     setState(() => timer.confirmRep());
@@ -248,8 +255,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         SessionItemResultModel(
           trainingItemId: emom.itemId!,
           occurrence: emom.occurrence,
-          field: SessionItemField.cycles,
-          value: emom.round,
+          cycles: emom.round,
         ),
       );
     }
@@ -258,19 +264,15 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     setState(timer.skipRep);
   }
 
-  void _recordItemResult(
-    TrainingExecutionItem step,
-    SessionItemField field,
-    int value,
-  ) {
+  void _recordItemResult(TrainingExecutionItem step, {int? reps, int? cycles}) {
     final itemId = step.trainingItemId;
     if (itemId == null) return;
     itemResults.add(
       SessionItemResultModel(
         trainingItemId: itemId,
         occurrence: step.occurrence,
-        field: field,
-        value: value,
+        reps: reps,
+        cycles: cycles,
       ),
     );
   }

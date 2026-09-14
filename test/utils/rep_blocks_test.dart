@@ -1,3 +1,4 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training_item_model.dart';
@@ -51,6 +52,7 @@ TrainingItem _item({
 );
 
 void main() {
+  group('review pass', _reviewPassTests);
   group('groupRepsByTrainingItem', () {
     test('returns null when no rep names an item', () {
       final reps = [_rep(index: 0), _rep(index: 1)];
@@ -651,6 +653,370 @@ void main() {
 
     test('two blocks cannot be stated as one number', () {
       expect(spansMultipleBlocks([block('a'), block('b')]), true);
+    });
+  });
+}
+
+/// The review pass the post workout screen is built from: which steps it asks
+/// about, what it says each one was asked for, and which numbers it offers to
+/// answer with. The two have to agree, since a card stating a prescription it
+/// gives no field for is worse than one that asks nothing.
+void _reviewPassTests() {
+  const pullUps = TrainingItem(
+    id: 'pullup-1',
+    type: TrainingItemType.exercise,
+    position: 0,
+    exerciseName: 'Pull up',
+    repsIsMax: true,
+  );
+
+  const dips = TrainingItem(
+    id: 'dip-1',
+    type: TrainingItemType.exercise,
+    position: 1,
+    exerciseName: 'Dip',
+    reps: 8,
+  );
+
+  const plank = TrainingItem(
+    id: 'plank-1',
+    type: TrainingItemType.exercise,
+    position: 2,
+    exerciseName: 'Plank',
+    duration: 90,
+  );
+
+  const repeater = TrainingItem(
+    id: 'repeater-1',
+    type: TrainingItemType.repeater,
+    position: 3,
+    cycles: 6,
+    reps: 6,
+    worktimeSeconds: 7,
+    restSeconds: 3,
+  );
+
+  const circuit = TrainingItem(
+    id: 'circuit-1',
+    type: TrainingItemType.circuit,
+    position: 4,
+    cycles: 4,
+    items: [dips],
+  );
+
+  const emom = TrainingItem(
+    id: 'emom-1',
+    type: TrainingItemType.emom,
+    position: 5,
+    cycles: 10,
+    intervalSeconds: 60,
+    items: [pullUps],
+  );
+
+  group('prescribedSummary and reportableFields agree', () {
+    test('an AMRAP names no count and is asked for one', () {
+      expect(prescribedSummary(pullUps), 'as many reps as possible');
+      final fields = reportableFields(pullUps);
+      expect(fields.reps, isTrue);
+      expect(fields.duration, isFalse);
+    });
+
+    test('a rep based exercise names its reps and is asked for reps', () {
+      expect(prescribedSummary(dips), 'of 8 reps');
+      expect(reportableFields(dips).reps, isTrue);
+    });
+
+    test('a timed exercise names its time and is asked for a time', () {
+      expect(prescribedSummary(plank), 'of 1mn 30s');
+      final fields = reportableFields(plank);
+      expect(fields.duration, isTrue);
+      // It counts no repetitions, so it is not asked for any.
+      expect(fields.reps, isFalse);
+    });
+
+    // The case the review missed: the card used to read "Asked of 6 reps" over
+    // a load and a time box and no rep box.
+    test('a repeater names its hang and is asked for a hang', () {
+      expect(prescribedSummary(repeater), 'of 7s hangs');
+      final fields = reportableFields(repeater);
+      expect(fields.duration, isTrue);
+      expect(fields.load, isTrue);
+      expect(fields.reps, isFalse);
+    });
+
+    test('a circuit names its rounds and is asked for rounds', () {
+      expect(prescribedSummary(circuit), 'of 4 rounds');
+      final fields = reportableFields(circuit);
+      expect(fields.cycles, isTrue);
+      expect(fields.reps, isFalse);
+      expect(fields.load, isFalse);
+    });
+
+    test('an emom names its rounds and is asked for rounds', () {
+      expect(prescribedSummary(emom), 'of 10 rounds');
+      expect(reportableFields(emom).cycles, isTrue);
+    });
+  });
+
+  // The review asks the athlete to report a load, so the card has to name the
+  // one they were given or they are reporting against nothing.
+  group('the asked line states the prescribed load', () {
+    const loadedDip = TrainingItem(
+      id: 'dip-1',
+      type: TrainingItemType.exercise,
+      position: 0,
+      exerciseName: 'Dip',
+      reps: 8,
+      loads: [Load(value: 20, unit: 'kg')],
+    );
+
+    test('beside the reps it was prescribed with', () {
+      expect(prescribedSummary(loadedDip), 'of 8 reps at 20 kg');
+    });
+
+    test('beside the hang of a repeater', () {
+      const hangs = TrainingItem(
+        id: 'r-1',
+        type: TrainingItemType.repeater,
+        position: 0,
+        cycles: 4,
+        reps: 6,
+        worktimeSeconds: 7,
+        loads: [Load(value: 25, unit: 'kg')],
+      );
+      expect(prescribedSummary(hangs), 'of 7s hangs at 25 kg');
+    });
+
+    test('beside an AMRAP, which names no count of its own', () {
+      const loadedAmrap = TrainingItem(
+        id: 'p-1',
+        type: TrainingItemType.exercise,
+        position: 0,
+        repsIsMax: true,
+        loads: [Load(value: 10, unit: 'kg')],
+      );
+      expect(
+        prescribedSummary(loadedAmrap),
+        'as many reps as possible at 10 kg',
+      );
+    });
+
+    // A load that only becomes kilograms once an assessment has been done is
+    // left unstated when nothing resolves it, for the reason a percentage rep
+    // count is: the fallback is not the number the athlete was given.
+    test('says nothing of a percentage load when nothing resolves it', () {
+      const relativeLoad = TrainingItem(
+        id: 'h-1',
+        type: TrainingItemType.hangboardRep,
+        position: 0,
+        worktimeSeconds: 10,
+        loads: [
+          Load(
+            value: 80,
+            unit: percentAssessmentUnit,
+            assessmentId: 'max-force',
+            fallback: 30,
+          ),
+        ],
+      );
+      expect(prescribedSummary(relativeLoad), 'of 10s hangs');
+    });
+
+    test('says nothing extra for a step carrying no load', () {
+      expect(prescribedSummary(dips), 'of 8 reps');
+    });
+
+    // A share of the athlete's weight becomes kilograms only once one is known,
+    // and the number is what the review asks them to report against.
+    test('resolves a bodyweight load once a weight is known', () {
+      const bodyweightPullUp = TrainingItem(
+        id: 'p-2',
+        type: TrainingItemType.exercise,
+        position: 0,
+        reps: 5,
+        loads: [Load(value: 80, unit: 'percent_bw')],
+      );
+      expect(
+        prescribedSummary(bodyweightPullUp, AssessmentResults.none, 70),
+        'of 5 reps at 80 %BW (56 kg)',
+      );
+      // With no weight known it still states what was prescribed, in the unit
+      // it was prescribed in.
+      expect(prescribedSummary(bodyweightPullUp), 'of 5 reps at 80 %BW');
+    });
+
+    // The percentage is what cannot be stated, not the load beside it.
+    test('keeps the load of a percentage rep target', () {
+      const relativeReps = TrainingItem(
+        id: 'p-3',
+        type: TrainingItemType.exercise,
+        position: 0,
+        reps: 5,
+        loads: [Load(value: 20, unit: 'kg')],
+        variableTargets: {
+          'reps': VariableTarget(
+            assessmentId: 'max-pullups',
+            percent: 60,
+            fallback: 5,
+          ),
+        },
+      );
+      expect(prescribedSummary(relativeReps), 'at 20 kg');
+    });
+  });
+
+  group('hasUnkeyableWork', () {
+    // A builtin mints its items on the fly with no id to key a report to, so
+    // the screen says so rather than simply not showing the section.
+    test('is true for a training of generated items', () {
+      const unsaved = TrainingItem(
+        id: '',
+        type: TrainingItemType.repeater,
+        position: 0,
+        worktimeSeconds: 7,
+      );
+      expect(hasUnkeyableWork(const [unsaved]), isTrue);
+    });
+
+    test('is false for a saved training', () {
+      expect(hasUnkeyableWork(const [dips]), isFalse);
+    });
+
+    // A group carries no work of its own, so a blank one is not the athlete
+    // being denied anything.
+    test('is false for a blank group holding saved work', () {
+      const group = TrainingItem(
+        id: '',
+        type: TrainingItemType.group,
+        position: 0,
+        items: [dips],
+      );
+      expect(hasUnkeyableWork(const [group]), isFalse);
+    });
+  });
+
+  group('isReportable', () {
+    test('leaves out a group and a free note, which carry no work', () {
+      const group = TrainingItem(
+        id: 'group-1',
+        type: TrainingItemType.group,
+        position: 0,
+        groupTitle: 'Warm up',
+      );
+      const note = TrainingItem(
+        id: 'free-1',
+        type: TrainingItemType.free,
+        position: 1,
+        freeText: 'Stay loose',
+      );
+      expect(isReportable(group), isFalse);
+      expect(isReportable(note), isFalse);
+      expect(isReportable(dips), isTrue);
+    });
+
+    // A builtin training mints its items with a blank id. A line written
+    // against one is keyed to nothing, can never be read back, and collides
+    // with every other blank-keyed line of the same session.
+    test('leaves out an item that was never saved', () {
+      const unsaved = TrainingItem(
+        id: '',
+        type: TrainingItemType.repeater,
+        position: 0,
+        worktimeSeconds: 7,
+      );
+      expect(isReportable(unsaved), isFalse);
+    });
+  });
+
+  // The plumbing that carries the athlete's own numbers into the review. A
+  // coach may prescribe reps or a duration as a percentage of an assessment,
+  // and the raw field then holds only the fallback, so reading it names a
+  // target nobody was played.
+  group('percent of assessment prescriptions', () {
+    const maxPullUps = AssessmentDefinition(
+      id: 'max-pullups',
+      label: 'Max pull ups',
+      unit: AssessmentUnit.repetitions,
+    );
+    final results = AssessmentResults(
+      const {'max-pullups': AssessmentHandValues(right: 20)},
+      definitions: const {'max-pullups': maxPullUps},
+    );
+    const relative = TrainingItem(
+      id: 'pullup-1',
+      type: TrainingItemType.exercise,
+      position: 0,
+      exerciseName: 'Pull up',
+      reps: 5,
+      variableTargets: {
+        'reps': VariableTarget(
+          assessmentId: 'max-pullups',
+          percent: 60,
+          fallback: 5,
+        ),
+      },
+    );
+
+    test('states the resolved number the run counted down from', () {
+      // 60% of 20 is 12, which is what the athlete actually did.
+      expect(prescribedSummary(relative, results), 'of 12 reps');
+    });
+
+    // The history card has no results to resolve against: the numbers the
+    // athlete has now are not the ones the run was played against. Stating the
+    // fallback there would show a miss against 12 as a rout against 5.
+    test('says nothing rather than the fallback when nothing resolves it', () {
+      expect(prescribedSummary(relative), isNull);
+    });
+
+    test('an item with no percentage is unaffected', () {
+      expect(prescribedSummary(dips), 'of 8 reps');
+      expect(prescribedSummary(dips, results), 'of 8 reps');
+    });
+  });
+
+  group('reviewLines', () {
+    test('walks the tree in prescription order, nested items included', () {
+      final lines = reviewLines(const [emom, dips], const []);
+      expect(lines.map((l) => l.item.id), ['emom-1', 'pullup-1', 'dip-1']);
+      expect(lines.every((l) => l.occurrence == 0), isTrue);
+    });
+
+    test('gives an item one line per pass the run already recorded', () {
+      final lines = reviewLines(
+        const [pullUps],
+        const [
+          SessionItemResultModel(
+            trainingItemId: 'pullup-1',
+            occurrence: 2,
+            reps: 15,
+          ),
+          SessionItemResultModel(
+            trainingItemId: 'pullup-1',
+            occurrence: 0,
+            reps: 23,
+          ),
+        ],
+      );
+
+      // Ordered by pass, whatever order they arrived in.
+      expect(lines.map((l) => l.occurrence), [0, 2]);
+    });
+
+    test('gives an item the run answered nothing for a single line', () {
+      final lines = reviewLines(const [dips], const []);
+      expect(lines, hasLength(1));
+      expect(lines.single.occurrence, 0);
+    });
+
+    test('holds no line for a training of builtin items', () {
+      const unsaved = TrainingItem(
+        id: '',
+        type: TrainingItemType.repeater,
+        position: 0,
+        worktimeSeconds: 7,
+      );
+      expect(reviewLines(const [unsaved], const []), isEmpty);
     });
   });
 }

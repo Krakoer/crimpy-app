@@ -3,63 +3,94 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/utils/datetimes.dart';
 
-/// Which open field a count answers, mirroring the field column the server
-/// stores it in.
-enum SessionItemField {
-  reps,
-  cycles;
-
-  static SessionItemField fromApi(String? value) =>
-      value == 'cycles' ? SessionItemField.cycles : SessionItemField.reps;
-
-  String get apiValue => name;
-}
-
-/// A count the run resolved for an item the prescription left open: the reps an
-/// AMRAP turned out to be, or the rounds an emom was carried through before the
-/// athlete dropped out. Neither is recorded anywhere else, since a set of pull
-/// ups passes through no sensor and so leaves no rep behind.
+/// What the athlete reported about one pass through a prescribed item. It
+/// started as the two counts the prescription itself leaves open, an AMRAP with
+/// no rep count until it has been run and an emom the athlete dropped out of,
+/// and now carries what they did on any step at all: the set of pull ups that
+/// passed through no sensor, the dip taken at a load nobody prescribed, and the
+/// line of text that is the whole of the coaching loop.
+///
+/// Every reported field is nullable, since a pass reports whichever of them the
+/// athlete has something to say about. A pass reporting none of them is not
+/// worth storing, which is what [reported] is asked before writing one.
 class SessionItemResultModel {
-  /// The prescription item the count answers, keyed the way a rep is.
+  /// The prescription item the report answers, keyed the way a rep is.
   final String trainingItemId;
 
-  /// Which pass through that item the count belongs to, from 0.
+  /// Which pass through that item the report belongs to, from 0.
   final int occurrence;
 
-  final SessionItemField field;
-  final int value;
+  /// How many repetitions the pass did, which an AMRAP has no other record of.
+  final int? reps;
+
+  /// How many rounds of a block the pass was carried through before the athlete
+  /// dropped out, which an emom has no other record of.
+  final int? cycles;
+
+  /// The load the pass was actually worked at, in kilograms, reported rather
+  /// than measured so it covers the steps no sensor sees.
+  final double? loadKg;
+
+  /// How long the pass actually held, in seconds.
+  final int? durationSeconds;
+
+  /// What the athlete wrote about the pass.
+  final String? note;
 
   const SessionItemResultModel({
     required this.trainingItemId,
     required this.occurrence,
-    required this.field,
-    required this.value,
+    this.reps,
+    this.cycles,
+    this.loadKg,
+    this.durationSeconds,
+    this.note,
   });
+
+  /// Whether the pass says anything at all. A report of nothing is dropped
+  /// rather than sent, which is what the server does with one anyway.
+  bool get reported =>
+      reps != null ||
+      cycles != null ||
+      loadKg != null ||
+      durationSeconds != null ||
+      (note != null && note!.trim().isNotEmpty);
 
   factory SessionItemResultModel.fromJson(Map<String, dynamic> json) =>
       SessionItemResultModel(
         trainingItemId: json['training_item_id'] as String,
         occurrence: (json['occurrence'] as num?)?.toInt() ?? 0,
-        field: SessionItemField.fromApi(json['field'] as String?),
-        value: (json['value'] as num?)?.toInt() ?? 0,
+        reps: (json['reps'] as num?)?.toInt(),
+        cycles: (json['cycles'] as num?)?.toInt(),
+        loadKg: (json['load_kg'] as num?)?.toDouble(),
+        durationSeconds: (json['duration_seconds'] as num?)?.toInt(),
+        note: json['note'] as String?,
       );
 
+  /// The report as the API takes it, with every field the pass said nothing
+  /// about left out rather than sent as a zero the athlete never gave.
   Map<String, dynamic> toJson() => {
     'training_item_id': trainingItemId,
     'occurrence': occurrence,
-    'field': field.apiValue,
-    'value': value,
+    if (reps != null) 'reps': reps,
+    if (cycles != null) 'cycles': cycles,
+    if (loadKg != null) 'load_kg': loadKg,
+    if (durationSeconds != null) 'duration_seconds': durationSeconds,
+    if (note != null) 'note': note,
   };
 
-  /// The same count, answering [trainingItemId] instead. The guest import
+  /// The same report, answering [trainingItemId] instead. The guest import
   /// rewrites the local item id into the one the server minted for it, since
-  /// the count is stored against an item the server has never seen.
+  /// the report is stored against an item the server has never seen.
   SessionItemResultModel withTrainingItem(String trainingItemId) =>
       SessionItemResultModel(
         trainingItemId: trainingItemId,
         occurrence: occurrence,
-        field: field,
-        value: value,
+        reps: reps,
+        cycles: cycles,
+        loadKg: loadKg,
+        durationSeconds: durationSeconds,
+        note: note,
       );
 }
 

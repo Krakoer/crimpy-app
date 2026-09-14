@@ -284,8 +284,7 @@ void main() {
           SessionItemResultModel(
             trainingItemId: exerciseId,
             occurrence: 0,
-            field: SessionItemField.reps,
-            value: 12,
+            reps: 12,
           ),
         ],
       );
@@ -297,7 +296,7 @@ void main() {
       final serverExerciseId =
           remote.stored.values.single.items.single.items.single.id;
       expect(posted.itemResults.single.trainingItemId, serverExerciseId);
-      expect(posted.itemResults.single.value, 12);
+      expect(posted.itemResults.single.reps, 12);
     });
 
     // The training stays editable while a played session keeps the prescription
@@ -317,9 +316,9 @@ void main() {
       expect(remote.postedSessions.single.reps.single.trainingItemId, isNull);
     });
 
-    // Dropped rather than nulled the way a rep link is: the count exists only
+    // Dropped rather than nulled the way a rep link is: the report exists only
     // to answer an item, so one that answers nothing has nothing left to say.
-    test('drops an open count answering an item that is gone', () async {
+    test('drops a report answering an item that is gone', () async {
       final local = await saveLocalTraining();
       await db.saveSession(
         playedSession(trainingId: local.id),
@@ -328,8 +327,7 @@ void main() {
           SessionItemResultModel(
             trainingItemId: 'deleted-item',
             occurrence: 0,
-            field: SessionItemField.reps,
-            value: 12,
+            reps: 12,
           ),
         ],
       );

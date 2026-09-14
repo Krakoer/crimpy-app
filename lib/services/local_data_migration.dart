@@ -34,7 +34,7 @@ class LocalImportStatus {
 /// ids the rest of the guest data still names.
 ///
 /// The API mints its own ids on create and takes none from the client, so a
-/// session played in guest mode names a training, and its reps and open counts
+/// session played in guest mode names a training, and its reps and item reports
 /// name items, that the server has never seen. Every one of those links has to
 /// be rewritten through this before the session is posted, or the create is
 /// refused.
@@ -172,7 +172,7 @@ class LocalDataMigration {
             // left to attach it to, so it is dropped rather than failing the
             // whole session over it.
             AppLoggerHelper.warning(
-              'Dropped an open count of session ${row.id}: '
+              'Dropped an item report of session ${row.id}: '
               'item ${result.trainingItemId} is not on the server',
             );
             continue;
@@ -259,7 +259,7 @@ class LocalDataMigration {
       try {
         // The call answers with the training as the server now holds it, under
         // the ids it minted. Nothing else says which stored item each local one
-        // became, and the reps and the open counts of every session played from
+        // became, and the reps and the item reports of every session played from
         // this training are keyed on that.
         final stored = importedId == null
             ? await _remoteTrainings.saveTraining(training)

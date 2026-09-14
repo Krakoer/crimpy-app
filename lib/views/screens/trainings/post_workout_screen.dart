@@ -8,6 +8,7 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen/widgets/assessment_answer_fields.dart';
+import 'package:crimpy/views/screens/trainings/post_workout_screen/widgets/item_review_fields.dart';
 import 'package:intl/intl.dart';
 import 'package:crimpy/theme.dart';
 
@@ -15,10 +16,20 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
   final Training template;
   final List<RepDataModel> results;
 
-  /// What the run answered the open items with: the reps an AMRAP turned out
-  /// to be, and the rounds of an emom the athlete dropped out of. Empty for a
-  /// run that had none.
+  /// What the run recorded against the prescribed items as it was played: the
+  /// reps an AMRAP turned out to be, and the rounds of an emom the athlete
+  /// dropped out of. Empty for a run that had none, and the review pass below
+  /// is what turns it into a line per exercise.
   final List<SessionItemResultModel> itemResults;
+
+  /// The athlete's own numbers the prescription was read against, carried over
+  /// from the run so a step prescribed as a percentage of an assessment is
+  /// reviewed against the number it was actually played at, not its fallback.
+  final AssessmentResults assessmentResults;
+
+  /// The weight a load set as a share of it resolves against, carried over from
+  /// the run for the same reason.
+  final double? bodyweightKg;
 
   /// Category the session is logged under. Trainings run from the user's own
   /// library are hangboard sessions; program trainings carry the coach's label.
@@ -33,6 +44,8 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
     required this.results,
     required this.template,
     this.itemResults = const [],
+    this.assessmentResults = AssessmentResults.none,
+    this.bodyweightKg,
     this.activity = SessionActivity.hangboard,
     this.trainingId,
     this.programSessionId,
@@ -51,6 +64,16 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
   final _leftAnswerController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  /// The review pass: one line per prescribed step, seeded with whatever the
+  /// run already recorded against it. Built once, since the controllers hold
+  /// what the athlete is typing.
+  late final List<ItemReviewDraft> _itemReviews = buildItemReviewDrafts(
+    widget.template.items,
+    widget.itemResults,
+    widget.assessmentResults,
+    widget.bodyweightKg,
+  );
+
   /// The assessment this run answers, when the training played is one.
   AssessmentDefinition? get _assessment => widget.template.assessment;
 
@@ -67,8 +90,23 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
     _noteController.dispose();
     _rightAnswerController.dispose();
     _leftAnswerController.dispose();
+    for (final review in _itemReviews) {
+      review.dispose();
+    }
     super.dispose();
   }
+
+  /// What the athlete reported on the prescribed steps, read off the review
+  /// pass rather than off what the run recorded: every count the run took is
+  /// seeded into it, so the review is the only copy that also carries the
+  /// corrections, the loads and the notes.
+  ///
+  /// A step the athlete said nothing about produces no row, which is what keeps
+  /// an untouched review from writing a line per exercise of nothing.
+  List<SessionItemResultModel> get _reportedItemResults => [
+    for (final review in _itemReviews)
+      if (review.toResult() case final result?) result,
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -169,6 +207,28 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                           ),
                           const SizedBox(height: 16),
                         ],
+                        if (_itemReviews.isNotEmpty) ...[
+                          ItemReviewSection(drafts: _itemReviews),
+                          const SizedBox(height: 16),
+                        ]
+                        // A builtin generates its items on the fly with no id
+                        // to key a report to, so there is no line to offer.
+                        // Said out loud: an athlete who gets the per exercise
+                        // block on every other training and nothing here would
+                        // read the silence as the feature being broken.
+                        else if (hasUnkeyableWork(widget.template.items)) ...[
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'This training is one of Crimpy\'s own, so there '
+                              'is nothing to note against its steps yet. Tell '
+                              'us how it went below.',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: CrimpyTheme.gray500),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         TextField(
                           controller: _noteController,
                           decoration: const InputDecoration(
@@ -194,6 +254,17 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
           style: null,
           onPressed: () async {
             if (!_formKey.currentState!.validate()) {
+              // The offending field may be several cards above the docked
+              // button, where nothing about the failure is visible, so the
+              // button would otherwise read as dead. Named by neither field nor
+              // type: the training name and the assessment answer fail the same
+              // gate, and pointing at the numbers would send an athlete who
+              // cleared the name looking in the wrong place.
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Check the highlighted fields above'),
+                ),
+              );
               return;
             }
             final assessment = _assessment;
@@ -210,7 +281,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
               trainingId: widget.trainingId,
               programSessionId: widget.programSessionId,
               // Frozen onto the session, the way the server freezes its own
-              // copy: the reps and the open counts name items of this tree, so
+              // copy: the reps and the item reports name items of this tree, so
               // it is what still heads them once the training is edited or
               // deleted. The template played is the copy taken, not the one the
               // library holds now, since only the first is what ran.
@@ -223,7 +294,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                     .saveSession(
                       session,
                       widget.results,
-                      itemResults: widget.itemResults,
+                      itemResults: _reportedItemResults,
                     );
               } else {
                 // Goes through the assessment notifier rather than saving the
@@ -244,7 +315,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                       ),
                       session,
                       widget.results,
-                      itemResults: widget.itemResults,
+                      itemResults: _reportedItemResults,
                     );
               }
             } catch (e) {

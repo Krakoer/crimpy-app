@@ -249,9 +249,16 @@ Future<void> _pumpRun(
   bool useSensor = false,
   BleSessionStats? sensorStats,
   bool liveSensorStats = false,
+  AssessmentResults results = AssessmentResults.none,
+  double? bodyweightKg,
 }) async {
   final screen = MaterialApp(
-    home: PlayTrainingScreen(training, useSensor: useSensor),
+    home: PlayTrainingScreen(
+      training,
+      useSensor: useSensor,
+      results: results,
+      bodyweightKg: bodyweightKg,
+    ),
   );
   await tester.pumpWidget(
     ProviderScope(
@@ -679,7 +686,14 @@ void main() {
     testWidgets('finishing an AMRAP records the count the athlete gives', (
       tester,
     ) async {
-      await _pumpRun(tester, _amrapEmom());
+      await _pumpRun(
+        tester,
+        _amrapEmom(),
+        results: AssessmentResults(const {
+          'max-pullups': AssessmentHandValues(right: 20),
+        }),
+        bodyweightKg: 70,
+      );
       await _skip(tester);
 
       await tester.tap(find.text('DONE'));
@@ -699,7 +713,14 @@ void main() {
     testWidgets('backing out of the question leaves the step where it was', (
       tester,
     ) async {
-      await _pumpRun(tester, _amrapEmom());
+      await _pumpRun(
+        tester,
+        _amrapEmom(),
+        results: AssessmentResults(const {
+          'max-pullups': AssessmentHandValues(right: 20),
+        }),
+        bodyweightKg: 70,
+      );
       await _skip(tester);
 
       await tester.tap(find.text('DONE'));
@@ -731,7 +752,14 @@ void main() {
     testWidgets('the counts a run resolved reach the screen that saves them', (
       tester,
     ) async {
-      await _pumpRun(tester, _amrapEmom());
+      await _pumpRun(
+        tester,
+        _amrapEmom(),
+        results: AssessmentResults(const {
+          'max-pullups': AssessmentHandValues(right: 20),
+        }),
+        bodyweightKg: 70,
+      );
       await _skip(tester);
 
       await tester.tap(find.text('DONE'));
@@ -752,11 +780,19 @@ void main() {
       );
       expect(
         post.itemResults.map(
-          (r) =>
-              '${r.trainingItemId}/${r.occurrence}/${r.field.apiValue}/${r.value}',
+          (r) => '${r.trainingItemId}/${r.occurrence}/${r.reps}/${r.cycles}',
         ),
-        ['pullup-1/0/reps/23', 'emom-1/0/cycles/1'],
+        ['pullup-1/0/23/null', 'emom-1/0/null/1'],
       );
+      // The review pass resolves the prescription against the same numbers the
+      // run was played against, so the screen has to be handed them. Without
+      // this the plumbing can be deleted and every other test stays green while
+      // the athlete is reviewed against the coach's fallbacks.
+      expect(post.assessmentResults.value('max-pullups'), 20);
+      // Carried for the same reason and just as silently droppable: without
+      // this, deleting the argument leaves a card stating "80 %BW" where it
+      // should state the kilograms behind it, and every test stays green.
+      expect(post.bodyweightKg, 70);
     });
 
     testWidgets('there is nothing to drop out of outside an emom', (

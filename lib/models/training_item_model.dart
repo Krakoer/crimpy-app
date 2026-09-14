@@ -454,6 +454,13 @@ class TrainingItem {
     return first.label(bodyweightKg: bodyweightKg, results: results);
   }
 
+  /// Whether the load this item shows only becomes kilograms once an assessment
+  /// has been done. A reader with no results to resolve against, such as a
+  /// session read back long after it was played, would otherwise be shown the
+  /// coach's fallback as though it were the number the athlete was given.
+  bool get loadReadsAgainstResults =>
+      loads?.firstOrNull?.isAssessmentRelative ?? false;
+
   /// Whether any rep of this item is loaded relative to the bodyweight, and so
   /// would show or hit a different number once one is known. Kept in step with
   /// [loadLabel]: a load this item never resolves must not make the app ask for
@@ -611,7 +618,7 @@ class TrainingItem {
   ///
   /// [id] is for the guest import alone, which has to name every item by what
   /// the server calls it. Nothing that edits a training passes one: the reps,
-  /// the open counts and the program overrides recorded against an item all key
+  /// the item reports and the program overrides recorded against an item all key
   /// on its id, and an item that changes identity strands every one of them.
   /// A copy meant to stand on its own goes through [duplicate] instead.
   TrainingItem copyWith({

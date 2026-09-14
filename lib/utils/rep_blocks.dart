@@ -1,6 +1,8 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/utils/format.dart';
 
 /// The repeater settings that decide how a block of reps splits into sets.
 class RepeaterConfig {
@@ -152,15 +154,120 @@ String sessionBlockLabel(TrainingItem item) {
   return edges.length == 1 ? '$label ${edges.first}mm' : label;
 }
 
-/// One item the prescription left open and what the run answered it with, in
-/// the order the passes were played.
-typedef OpenItemResult = ({String label, String prescribed, List<int> values});
+/// One pass through a prescribed item and what the athlete reported about it:
+/// the numbers on one line, the line they wrote on another.
+typedef ReportedPass = ({int occurrence, String? achieved, String? note});
 
-/// Reads the counts a run recorded against the items they answer, so each one
-/// is shown next to what was asked for rather than as a bare number. A count
+/// One prescribed item, what it asked for, and every pass of it the athlete
+/// reported on, in the order they were played.
+typedef ReportedItem = ({
+  String label,
+  String? prescribed,
+  List<ReportedPass> passes,
+});
+
+/// Whether an item is a block that repeats, which is what is asked for its
+/// rounds rather than for what was done inside it.
+bool _isBlock(TrainingItem item) =>
+    item.type == TrainingItemType.emom || item.type == TrainingItemType.circuit;
+
+/// Whether an item is a hang, which is worked for a time on a board rather than
+/// counted in repetitions.
+bool _isHang(TrainingItem item) =>
+    item.type == TrainingItemType.repeater ||
+    item.type == TrainingItemType.hangboardRep;
+
+/// What an item asked for, in the words the athlete was given it in, or null
+/// when the prescription named no number to read an achievement against. An
+/// AMRAP is the case that names one deliberately: the point of it is that the
+/// coach prescribed no count.
+///
+/// Read against [results] rather than off the raw fields, since a coach may
+/// prescribe reps or a duration as a percentage of an assessment and the raw
+/// field then holds only the fallback. The run counted the athlete down from
+/// the resolved number, so that is the number they are asked against.
+///
+/// [results] is null when the caller has no numbers to resolve against, which
+/// is the history card reading a session back: the results the athlete has now
+/// are not the ones the run was played against, and resolving against them
+/// would state a target the session never had. A field prescribed as a
+/// percentage then reads as nothing rather than as its fallback, which is a
+/// number nobody was ever asked for: showing "did 10 reps" over "of 5 reps"
+/// turns a miss against a target of 12 into a rout.
+/// [bodyweightKg] turns a load set as a share of the athlete's weight into
+/// kilograms. Null where none is known, which states the load in the unit it was
+/// prescribed in ("80 %BW") rather than guessing at the kilograms behind it.
+String? prescribedSummary(
+  TrainingItem item, [
+  AssessmentResults? results,
+  double? bodyweightKg,
+]) {
+  if (_isBlock(item)) {
+    final rounds = item.cycles;
+    return rounds == null ? null : 'of $rounds rounds';
+  }
+  final resolved = results ?? AssessmentResults.none;
+  // The load the item was given, stated for every step that carries one, since
+  // the review asks the athlete to report a load against it and a card offering
+  // the field without naming the target leaves them reporting against nothing.
+  final load = results == null && item.loadReadsAgainstResults
+      ? null
+      : item.loadLabel(bodyweightKg: bodyweightKg, results: resolved);
+  final at = load == null ? '' : ' at $load';
+
+  if (_isHang(item)) {
+    final work = item.worktimeSeconds;
+    // A hang with no worktime still states its load: that is the number the
+    // review asks the athlete to report against.
+    return work == null || work <= 0
+        ? (load == null ? null : 'at $load')
+        : 'of ${formatSecondsAsLength(work)} hangs$at';
+  }
+  if (item.repsIsMax) return 'as many reps as possible$at';
+  if (results == null) {
+    // Nothing to resolve against, so a percentage is left unstated rather than
+    // answered with the fallback standing in for it. The load is unaffected by
+    // that and is still worth stating: it was never percentage dependent, and
+    // it is what the review asks the athlete to report against.
+    if (item.variableTargets.containsKey('duration') ||
+        item.variableTargets.containsKey('reps')) {
+      return load == null ? null : 'at $load';
+    }
+  }
+  final duration = item.effectiveDuration(resolved);
+  if (duration != null) {
+    return 'of ${formatSecondsAsLength(duration)}$at';
+  }
+  final reps = item.effectiveReps(resolved);
+  if (reps != null) return 'of $reps reps$at';
+  // Nothing was prescribed but a load, which is still worth stating: it is what
+  // the athlete is being asked to report against.
+  return load == null ? null : 'at $load';
+}
+
+/// The numbers one pass reported, read as a line: "8 reps", "7 rounds",
+/// "12 reps at 17.5 kg". Null when the pass reported nothing but a note, which
+/// is a line of its own and needs no figure in front of it.
+String? achievedSummary(SessionItemResultModel result) {
+  final parts = <String>[
+    if (result.reps case final reps?) '$reps reps',
+    if (result.cycles case final cycles?) '$cycles rounds',
+    if (result.durationSeconds case final seconds?)
+      formatSecondsAsLength(seconds),
+  ];
+  final line = parts.join(', ');
+  if (result.loadKg case final load?) {
+    final kg = formatKilograms(load);
+    return line.isEmpty ? '$kg kg' : '$line at $kg kg';
+  }
+  return line.isEmpty ? null : line;
+}
+
+/// Reads what a run reported against the items it answers, so each line is
+/// shown next to what was asked for rather than as a bare number. A report
 /// naming an item [items] does not hold is left out: there is nothing to head
 /// it with.
-List<OpenItemResult> openItemResults(
+List<ReportedItem> reportedItems(
   List<SessionItemResultModel> results,
   List<TrainingItem> items,
 ) {
@@ -169,25 +276,129 @@ List<OpenItemResult> openItemResults(
 
   final ordered = [...results]
     ..sort((a, b) => a.occurrence.compareTo(b.occurrence));
-  final values = <String, List<int>>{};
+  final passes = <String, List<ReportedPass>>{};
   for (final result in ordered) {
     if (!byId.containsKey(result.trainingItemId)) continue;
-    (values[result.trainingItemId] ??= []).add(result.value);
+    final note = result.note?.trim();
+    final pass = (
+      occurrence: result.occurrence,
+      achieved: achievedSummary(result),
+      note: note == null || note.isEmpty ? null : note,
+    );
+    if (pass.achieved == null && pass.note == null) continue;
+    (passes[result.trainingItemId] ??= []).add(pass);
   }
 
-  final out = <OpenItemResult>[];
+  final out = <ReportedItem>[];
   for (final item in byId.values) {
-    final done = values[item.id];
-    if (done == null) continue;
+    final reported = passes[item.id];
+    if (reported == null) continue;
     out.add((
       label: sessionBlockLabel(item),
-      prescribed: item.type == TrainingItemType.emom
-          ? 'of ${item.cycles ?? 1} rounds'
-          : 'reps, as many as possible',
-      values: done,
+      prescribed: prescribedSummary(item),
+      passes: reported,
     ));
   }
   return out;
+}
+
+/// Which numbers a prescribed item is worth asking the athlete for, so the
+/// review pass shows a rep field for a set of pull ups and a rounds field for
+/// an emom rather than every field on every line.
+///
+/// Kept in step with [prescribedSummary] deliberately: a card stating what was
+/// asked and then offering no field to answer it is worse than one that asks
+/// nothing.
+typedef ReportableFields = ({bool reps, bool cycles, bool load, bool duration});
+
+ReportableFields reportableFields(
+  TrainingItem item, [
+  AssessmentResults results = AssessmentResults.none,
+]) {
+  // A block that repeats is asked how many rounds it went, and nothing about
+  // the work inside it: that belongs to the items it holds, which get their own
+  // lines.
+  if (_isBlock(item)) {
+    return (reps: false, cycles: true, load: false, duration: false);
+  }
+  // A hang is held for a time at a load, and counts no repetitions of its own:
+  // the repeater is the block that repeats a hang.
+  if (_isHang(item)) {
+    return (reps: false, cycles: false, load: true, duration: true);
+  }
+  final isTimed = item.effectiveDuration(results) != null;
+  return (reps: !isTimed, cycles: false, load: true, duration: isTimed);
+}
+
+/// Whether the athlete has anything to report about an item. A group and a free
+/// note are the two that carry no work of their own: one is a heading, the
+/// other is a line of the coach's own text.
+///
+/// An item with no id is left out for the reason the run refuses to open a rep
+/// count on one: a report is keyed to the item it answers, and a builtin
+/// training mints its items on the fly with a blank id, so a line written
+/// against one could never be read back and would collide with every other
+/// blank-keyed line of the same session.
+bool isReportable(TrainingItem item) =>
+    item.id.isNotEmpty && _carriesWork(item);
+
+/// Whether an item is work the athlete performs, rather than a heading or a
+/// line of the coach's own text. Spelled once, since [isReportable] and
+/// [hasUnkeyableWork] both turn on it and two copies would drift the first time
+/// a type that carries no work is added.
+bool _carriesWork(TrainingItem item) =>
+    item.type != TrainingItemType.group && item.type != TrainingItemType.free;
+
+/// Whether a training holds work worth reporting on that no report can be keyed
+/// to. A builtin mints its items on the fly with a blank id, so there is nothing
+/// for a report to name and the review pass has no line to offer. The screen
+/// says so rather than simply not appearing, which reads as the feature being
+/// broken on the trainings Crimpy ships.
+bool hasUnkeyableWork(List<TrainingItem> items) {
+  for (final item in items) {
+    if (_carriesWork(item) && item.id.isEmpty) return true;
+    if (hasUnkeyableWork(item.items)) return true;
+  }
+  return false;
+}
+
+/// One line of the post workout review: a prescribed item and which pass of it
+/// the line answers.
+typedef ReviewLine = ({TrainingItem item, int occurrence});
+
+/// The lines the athlete goes back over once the run is done, in the order the
+/// prescription lays them out, nested items included.
+///
+/// An item the run already recorded a pass against gets one line per recorded
+/// pass, so an emom dropped out of twice is annotated round by round. Anything
+/// else gets the single line of its first pass: reporting per round on a block
+/// nothing was recorded against would ask the athlete to fill in a grid, when
+/// what the spreadsheet asked for was a line per exercise.
+List<ReviewLine> reviewLines(
+  List<TrainingItem> items,
+  List<SessionItemResultModel> recorded,
+) {
+  final occurrencesByItem = <String, Set<int>>{};
+  for (final result in recorded) {
+    (occurrencesByItem[result.trainingItemId] ??= {}).add(result.occurrence);
+  }
+
+  final lines = <ReviewLine>[];
+  void walk(List<TrainingItem> items) {
+    for (final item in items) {
+      if (isReportable(item)) {
+        final occurrences = (occurrencesByItem[item.id]?.toList() ?? [0])
+          ..sort();
+        for (final occurrence in occurrences) {
+          lines.add((item: item, occurrence: occurrence));
+        }
+      }
+      walk(item.items);
+    }
+  }
+
+  walk(items);
+  return lines;
 }
 
 /// Every item of a training by id, nested ones included, so a rep naming one

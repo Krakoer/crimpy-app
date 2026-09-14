@@ -234,8 +234,7 @@ void main() {
           SessionItemResultModel(
             trainingItemId: amrap.id,
             occurrence: 0,
-            field: SessionItemField.reps,
-            value: 9,
+            reps: 9,
           ),
         ],
       );
@@ -248,12 +247,12 @@ void main() {
       );
 
       final reread = (await db.getTraining(stored.id))!;
-      final results = openItemResults(
+      final results = reportedItems(
         await db.getItemResultsForSession(sessionId),
         reread.items,
       );
       expect(results, hasLength(1));
-      expect(results.single.values, [9]);
+      expect(results.single.passes.map((p) => p.achieved), ['9 reps']);
     },
   );
 }

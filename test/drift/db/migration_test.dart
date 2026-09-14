@@ -6,6 +6,7 @@ import 'package:drift_dev/api/migrations_native.dart';
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/models/session.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'generated/schema.dart';
 
@@ -19,6 +20,7 @@ import 'generated/schema_v8.dart' as v8;
 import 'generated/schema_v9.dart' as v9;
 import 'generated/schema_v11.dart' as v11;
 import 'generated/schema_v13.dart' as v13;
+import 'generated/schema_v14.dart' as v14;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -818,6 +820,91 @@ void main() {
       final db = await migratedWithTypes([1, 99]);
       final rows = await db.select(db.assessments).get();
       expect(rows.map((row) => row.id), ['a-0']);
+      await db.close();
+    });
+  });
+
+  group('v14 to v15 data migration', () {
+    // A run now reports a count, a load, a duration and a note per pass, where
+    // the shape before it held one field name and one number. The rows already
+    // stored answer a field the new table has no column for, so they go rather
+    // than being folded into a shape they only half fit; the session they were
+    // recorded against is untouched, since it is the run that matters and the
+    // counts were only ever an annotation on it.
+    test('the counts stored under the old shape are dropped', () async {
+      final schema = await verifier.schemaAt(14);
+      final oldDb = v14.DatabaseAtV14(schema.newConnection());
+      await oldDb
+          .into(oldDb.sessions)
+          .insert(
+            const v14.SessionsData(
+              id: 's-1',
+              name: 'Pull up EMOM',
+              notes: '',
+              date: 1700000000,
+              dataPath: '',
+              isAssessment: 0,
+              activity: 3,
+              origin: 'played',
+              duration: 420,
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb
+          .into(oldDb.sessionItemResults)
+          .insert(
+            const v14.SessionItemResultsData(
+              id: 'r-1',
+              sessionId: 's-1',
+              trainingItemId: 'pullup-1',
+              occurrence: 0,
+              field: 'reps',
+              value: 23,
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb.close();
+
+      final db = AppDatabase(schema.newConnection());
+      expect(await db.getItemResultsForSession('s-1'), isEmpty);
+      // The session itself is not what the reshape was about.
+      expect((await db.select(db.sessions).getSingle()).name, 'Pull up EMOM');
+      await db.close();
+    });
+
+    // The columns the issue was raised for have to be there afterwards, not
+    // only the old ones gone.
+    test('a report carries a load, a duration and a note', () async {
+      final schema = await verifier.schemaAt(14);
+      final oldDb = v14.DatabaseAtV14(schema.newConnection());
+      await oldDb.close();
+
+      final db = AppDatabase(schema.newConnection());
+      await db.saveSession(
+        SessionModel(
+          name: 'Pull ups',
+          date: DateTime.now(),
+          isAssessment: false,
+          origin: SessionOrigin.played,
+        ),
+        const [],
+        itemResults: const [
+          SessionItemResultModel(
+            trainingItemId: 'pullup-1',
+            occurrence: 0,
+            reps: 8,
+            loadKg: 17.5,
+            durationSeconds: 42,
+            note: 'failed at 8 reps on the last set but no pain',
+          ),
+        ],
+      );
+
+      final stored = (await db.select(db.sessionItemResults).get()).single;
+      expect(stored.reps, 8);
+      expect(stored.loadKg, 17.5);
+      expect(stored.durationSeconds, 42);
+      expect(stored.note, 'failed at 8 reps on the last set but no pain');
       await db.close();
     });
   });

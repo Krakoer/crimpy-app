@@ -59,21 +59,29 @@ Future<void> _show(WidgetTester tester, Widget screen) => tester.pumpWidget(
   ),
 );
 
+/// Shows the screen against [sessions], stopping short of saving, so a test can
+/// fill the review pass in before it taps the button.
+Future<void> _pumpFor(
+  WidgetTester tester,
+  Widget screen,
+  CapturingSessions sessions,
+) => tester.pumpWidget(
+  ProviderScope(
+    overrides: [sessionsProvider.overrideWith(() => sessions)],
+    child: MaterialApp(
+      home: Navigator(
+        onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => screen),
+      ),
+    ),
+  ),
+);
+
 Future<SessionModel> _saveFrom(
   WidgetTester tester,
   Widget screen,
   CapturingSessions sessions,
 ) async {
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: [sessionsProvider.overrideWith(() => sessions)],
-      child: MaterialApp(
-        home: Navigator(
-          onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => screen),
-        ),
-      ),
-    ),
-  );
+  await _pumpFor(tester, screen, sessions);
   await tester.tap(find.text('Save training'));
   await tester.pumpAndSettle();
   return sessions.saved!;
@@ -235,6 +243,282 @@ void main() {
 
     expect(saved.trainingId, 't-1');
     expect(saved.programSessionId, 'ps-1');
+  });
+
+  group('review pass', _reviewPassTests);
+}
+
+const _pullUps = TrainingItem(
+  id: 'pullup-1',
+  type: TrainingItemType.exercise,
+  position: 0,
+  exerciseName: 'Pull up',
+  repsIsMax: true,
+);
+
+const _dips = TrainingItem(
+  id: 'dip-1',
+  type: TrainingItemType.exercise,
+  position: 1,
+  exerciseName: 'Dip',
+  reps: 8,
+);
+
+const _reviewTraining = Training(
+  id: 't1',
+  title: 'Strength',
+  items: [_pullUps, _dips],
+);
+
+/// The review pass the whole issue is about: the athlete goes back over what
+/// they just did and writes the line per exercise the spreadsheet had a column
+/// for.
+void _reviewPassTests() {
+  testWidgets('asks about every prescribed step', (tester) async {
+    await _show(
+      tester,
+      const PostWorkoutScreen(template: _reviewTraining, results: []),
+    );
+
+    expect(find.text('How did each one go?'), findsOneWidget);
+    expect(find.text('Pull up'), findsOneWidget);
+    expect(find.text('Dip'), findsOneWidget);
+    // What was asked for is stated beside each one, so the athlete reports
+    // against it rather than from memory.
+    expect(find.text('Asked as many reps as possible'), findsOneWidget);
+    expect(find.text('Asked of 8 reps'), findsOneWidget);
+  });
+
+  testWidgets('records the note and the numbers the athlete filled in', (
+    tester,
+  ) async {
+    final sessions = CapturingSessions();
+
+    await _pumpFor(
+      tester,
+      const PostWorkoutScreen(template: _reviewTraining, results: []),
+      sessions,
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Note').first,
+      'hard on the shoulders',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Reps').first,
+      '28',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Load kg').first,
+      '17.5',
+    );
+    await tester.tap(find.text('Save training'));
+    await tester.pumpAndSettle();
+
+    final reported = sessions.savedItemResults.single;
+    expect(reported.trainingItemId, 'pullup-1');
+    expect(reported.occurrence, 0);
+    expect(reported.reps, 28);
+    expect(reported.loadKg, 17.5);
+    expect(reported.note, 'hard on the shoulders');
+  });
+
+  // An untouched review is an athlete with nothing to add, not a line of
+  // nothing per exercise.
+  testWidgets('records nothing for a step left alone', (tester) async {
+    final sessions = CapturingSessions();
+
+    await _saveFrom(
+      tester,
+      const PostWorkoutScreen(template: _reviewTraining, results: []),
+      sessions,
+    );
+
+    expect(sessions.savedItemResults, isEmpty);
+  });
+
+  // A number the API refuses costs the whole session save, and the athlete is
+  // left on the screen with no idea which of fifteen cards is the problem, so
+  // it is refused here where the offending field can be pointed at.
+  testWidgets('refuses to save a load that is not a number', (tester) async {
+    final sessions = CapturingSessions();
+
+    await _pumpFor(
+      tester,
+      const PostWorkoutScreen(template: _reviewTraining, results: []),
+      sessions,
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Load kg').first,
+      '1.2.3',
+    );
+    await tester.tap(find.text('Save training'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enter a number'), findsOneWidget);
+    expect(sessions.saved, isNull);
+  });
+
+  // The server stores these as 32 bit integers and answers an overflow by
+  // rejecting the entire body, so the field that holds the digits is where the
+  // limit belongs.
+  testWidgets('refuses to save a count the server cannot store', (
+    tester,
+  ) async {
+    final sessions = CapturingSessions();
+
+    await _pumpFor(
+      tester,
+      const PostWorkoutScreen(template: _reviewTraining, results: []),
+      sessions,
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Reps').first,
+      '99999999999',
+    );
+    await tester.tap(find.text('Save training'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Too large'), findsOneWidget);
+    expect(sessions.saved, isNull);
+  });
+
+  // The athlete's own numbers reach the review, so a step prescribed as a
+  // percentage is reviewed against the number the run counted down from rather
+  // than against the fallback the coach set for a client that cannot resolve it.
+  testWidgets('states a percentage prescription in the resolved number', (
+    tester,
+  ) async {
+    const maxPullUps = AssessmentDefinition(
+      id: 'max-pullups',
+      label: 'Max pull ups',
+      unit: AssessmentUnit.repetitions,
+    );
+    final results = AssessmentResults(
+      const {'max-pullups': AssessmentHandValues(right: 20)},
+      definitions: const {'max-pullups': maxPullUps},
+    );
+    const relative = Training(
+      id: 't1',
+      title: 'Pulling',
+      items: [
+        TrainingItem(
+          id: 'pullup-1',
+          type: TrainingItemType.exercise,
+          position: 0,
+          exerciseName: 'Pull up',
+          reps: 5,
+          variableTargets: {
+            'reps': VariableTarget(
+              assessmentId: 'max-pullups',
+              percent: 60,
+              fallback: 5,
+            ),
+          },
+        ),
+      ],
+    );
+
+    await _show(
+      tester,
+      PostWorkoutScreen(
+        template: relative,
+        results: const [],
+        assessmentResults: results,
+      ),
+    );
+
+    // 60% of 20, not the fallback of 5.
+    expect(find.text('Asked of 12 reps'), findsOneWidget);
+    expect(find.text('Asked of 5 reps'), findsNothing);
+  });
+
+  // A failure on a card several screens above the docked button would otherwise
+  // leave the button reading as dead.
+  testWidgets('says so when a number stops the save', (tester) async {
+    final sessions = CapturingSessions();
+
+    await _pumpFor(
+      tester,
+      const PostWorkoutScreen(template: _reviewTraining, results: []),
+      sessions,
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Load kg').first,
+      '1.2.3',
+    );
+    await tester.tap(find.text('Save training'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Check the highlighted fields above'), findsOneWidget);
+  });
+
+  // A builtin generates its items with no id to key a report to. The section
+  // cannot appear, so the screen says why rather than leaving a hole where
+  // every other training shows one.
+  testWidgets('explains itself on a training it cannot annotate', (
+    tester,
+  ) async {
+    const builtin = Training(
+      id: 'builtin-1',
+      title: 'Crimpy repeaters',
+      items: [
+        TrainingItem(
+          id: '',
+          type: TrainingItemType.repeater,
+          position: 0,
+          cycles: 4,
+          reps: 6,
+          worktimeSeconds: 7,
+        ),
+      ],
+    );
+
+    await _show(
+      tester,
+      const PostWorkoutScreen(template: builtin, results: []),
+    );
+
+    expect(find.text('How did each one go?'), findsNothing);
+    expect(
+      find.textContaining('nothing to note against its steps'),
+      findsOneWidget,
+    );
+  });
+
+  // The count the run took mid set is seeded into the review, so the athlete
+  // corrects it rather than being asked for it twice, and it still reaches the
+  // session when they leave it alone.
+  testWidgets('seeds what the run already recorded', (tester) async {
+    final sessions = CapturingSessions();
+
+    await _pumpFor(
+      tester,
+      const PostWorkoutScreen(
+        template: _reviewTraining,
+        results: [],
+        itemResults: [
+          SessionItemResultModel(
+            trainingItemId: 'pullup-1',
+            occurrence: 0,
+            reps: 23,
+          ),
+        ],
+      ),
+      sessions,
+    );
+    expect(find.widgetWithText(TextFormField, 'Reps').first, findsOneWidget);
+    expect(find.text('23'), findsOneWidget);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Note').first,
+      'last three were ugly',
+    );
+    await tester.tap(find.text('Save training'));
+    await tester.pumpAndSettle();
+
+    final reported = sessions.savedItemResults.single;
+    expect(reported.reps, 23);
+    expect(reported.note, 'last three were ugly');
   });
 }
 
