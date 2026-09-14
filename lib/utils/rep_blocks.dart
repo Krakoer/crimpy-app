@@ -194,9 +194,9 @@ bool _isHang(TrainingItem item) =>
 /// percentage then reads as nothing rather than as its fallback, which is a
 /// number nobody was ever asked for: showing "did 10 reps" over "of 5 reps"
 /// turns a miss against a target of 12 into a rout.
-/// [bodyweightKg] resolves a load set as a share of the athlete's weight, and is
-/// null wherever one is not known, which leaves such a load unstated rather than
-/// stated in the wrong number.
+/// [bodyweightKg] turns a load set as a share of the athlete's weight into
+/// kilograms. Null where none is known, which states the load in the unit it was
+/// prescribed in ("80 %BW") rather than guessing at the kilograms behind it.
 String? prescribedSummary(
   TrainingItem item, [
   AssessmentResults? results,
@@ -217,17 +217,21 @@ String? prescribedSummary(
 
   if (_isHang(item)) {
     final work = item.worktimeSeconds;
+    // A hang with no worktime still states its load: that is the number the
+    // review asks the athlete to report against.
     return work == null || work <= 0
-        ? null
+        ? (load == null ? null : 'at $load')
         : 'of ${formatSecondsAsLength(work)} hangs$at';
   }
   if (item.repsIsMax) return 'as many reps as possible$at';
   if (results == null) {
     // Nothing to resolve against, so a percentage is left unstated rather than
-    // answered with the fallback standing in for it.
+    // answered with the fallback standing in for it. The load is unaffected by
+    // that and is still worth stating: it was never percentage dependent, and
+    // it is what the review asks the athlete to report against.
     if (item.variableTargets.containsKey('duration') ||
         item.variableTargets.containsKey('reps')) {
-      return null;
+      return load == null ? null : 'at $load';
     }
   }
   final duration = item.effectiveDuration(resolved);
@@ -336,9 +340,14 @@ ReportableFields reportableFields(
 /// against one could never be read back and would collide with every other
 /// blank-keyed line of the same session.
 bool isReportable(TrainingItem item) =>
-    item.id.isNotEmpty &&
-    item.type != TrainingItemType.group &&
-    item.type != TrainingItemType.free;
+    item.id.isNotEmpty && _carriesWork(item);
+
+/// Whether an item is work the athlete performs, rather than a heading or a
+/// line of the coach's own text. Spelled once, since [isReportable] and
+/// [hasUnkeyableWork] both turn on it and two copies would drift the first time
+/// a type that carries no work is added.
+bool _carriesWork(TrainingItem item) =>
+    item.type != TrainingItemType.group && item.type != TrainingItemType.free;
 
 /// Whether a training holds work worth reporting on that no report can be keyed
 /// to. A builtin mints its items on the fly with a blank id, so there is nothing
@@ -347,10 +356,7 @@ bool isReportable(TrainingItem item) =>
 /// broken on the trainings Crimpy ships.
 bool hasUnkeyableWork(List<TrainingItem> items) {
   for (final item in items) {
-    final carriesWork =
-        item.type != TrainingItemType.group &&
-        item.type != TrainingItemType.free;
-    if (carriesWork && item.id.isEmpty) return true;
+    if (_carriesWork(item) && item.id.isEmpty) return true;
     if (hasUnkeyableWork(item.items)) return true;
   }
   return false;

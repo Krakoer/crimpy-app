@@ -449,7 +449,7 @@ void _reviewPassTests() {
     await tester.tap(find.text('Save training'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Check the numbers you entered'), findsOneWidget);
+    expect(find.text('Check the highlighted fields above'), findsOneWidget);
   });
 
   // A builtin generates its items with no id to key a report to. The section

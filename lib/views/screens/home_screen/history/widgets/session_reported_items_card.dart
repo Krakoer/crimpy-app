@@ -96,11 +96,15 @@ class _ReportedItemRow extends StatelessWidget {
               child: Text.rich(
                 TextSpan(
                   children: [
-                    // Named by pass only when the item was played more than
-                    // once, where a bare line cannot say which pass it answers.
-                    if (item.passes.length > 1)
+                    // Named by the pass it answers whenever that is not the
+                    // first, which is the rule the review card labels on too.
+                    // How many passes reported is not the test: an item played
+                    // three times and answered only on the last leaves one
+                    // line, and a bare one reads as being about the whole
+                    // exercise.
+                    if (pass.occurrence > 0) ...[
                       TextSpan(
-                        text: 'Pass ${pass.occurrence + 1}  ',
+                        text: 'Pass ${pass.occurrence + 1}',
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
@@ -108,6 +112,8 @@ class _ReportedItemRow extends StatelessWidget {
                           color: CrimpyTheme.textSecondary,
                         ),
                       ),
+                      const WidgetSpan(child: SizedBox(width: 6)),
+                    ],
                     TextSpan(text: note),
                   ],
                 ),

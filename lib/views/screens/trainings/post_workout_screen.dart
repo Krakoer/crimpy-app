@@ -256,9 +256,14 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
             if (!_formKey.currentState!.validate()) {
               // The offending field may be several cards above the docked
               // button, where nothing about the failure is visible, so the
-              // button would otherwise read as dead.
+              // button would otherwise read as dead. Named by neither field nor
+              // type: the training name and the assessment answer fail the same
+              // gate, and pointing at the numbers would send an athlete who
+              // cleared the name looking in the wrong place.
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Check the numbers you entered')),
+                const SnackBar(
+                  content: Text('Check the highlighted fields above'),
+                ),
               );
               return;
             }

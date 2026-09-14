@@ -250,9 +250,15 @@ Future<void> _pumpRun(
   BleSessionStats? sensorStats,
   bool liveSensorStats = false,
   AssessmentResults results = AssessmentResults.none,
+  double? bodyweightKg,
 }) async {
   final screen = MaterialApp(
-    home: PlayTrainingScreen(training, useSensor: useSensor, results: results),
+    home: PlayTrainingScreen(
+      training,
+      useSensor: useSensor,
+      results: results,
+      bodyweightKg: bodyweightKg,
+    ),
   );
   await tester.pumpWidget(
     ProviderScope(
@@ -686,6 +692,7 @@ void main() {
         results: AssessmentResults(const {
           'max-pullups': AssessmentHandValues(right: 20),
         }),
+        bodyweightKg: 70,
       );
       await _skip(tester);
 
@@ -712,6 +719,7 @@ void main() {
         results: AssessmentResults(const {
           'max-pullups': AssessmentHandValues(right: 20),
         }),
+        bodyweightKg: 70,
       );
       await _skip(tester);
 
@@ -750,6 +758,7 @@ void main() {
         results: AssessmentResults(const {
           'max-pullups': AssessmentHandValues(right: 20),
         }),
+        bodyweightKg: 70,
       );
       await _skip(tester);
 
@@ -780,6 +789,10 @@ void main() {
       // this the plumbing can be deleted and every other test stays green while
       // the athlete is reviewed against the coach's fallbacks.
       expect(post.assessmentResults.value('max-pullups'), 20);
+      // Carried for the same reason and just as silently droppable: without
+      // this, deleting the argument leaves a card stating "80 %BW" where it
+      // should state the kilograms behind it, and every test stays green.
+      expect(post.bodyweightKg, 70);
     });
 
     testWidgets('there is nothing to drop out of outside an emom', (

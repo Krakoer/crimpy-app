@@ -825,6 +825,44 @@ void _reviewPassTests() {
     test('says nothing extra for a step carrying no load', () {
       expect(prescribedSummary(dips), 'of 8 reps');
     });
+
+    // A share of the athlete's weight becomes kilograms only once one is known,
+    // and the number is what the review asks them to report against.
+    test('resolves a bodyweight load once a weight is known', () {
+      const bodyweightPullUp = TrainingItem(
+        id: 'p-2',
+        type: TrainingItemType.exercise,
+        position: 0,
+        reps: 5,
+        loads: [Load(value: 80, unit: 'percent_bw')],
+      );
+      expect(
+        prescribedSummary(bodyweightPullUp, AssessmentResults.none, 70),
+        'of 5 reps at 80 %BW (56 kg)',
+      );
+      // With no weight known it still states what was prescribed, in the unit
+      // it was prescribed in.
+      expect(prescribedSummary(bodyweightPullUp), 'of 5 reps at 80 %BW');
+    });
+
+    // The percentage is what cannot be stated, not the load beside it.
+    test('keeps the load of a percentage rep target', () {
+      const relativeReps = TrainingItem(
+        id: 'p-3',
+        type: TrainingItemType.exercise,
+        position: 0,
+        reps: 5,
+        loads: [Load(value: 20, unit: 'kg')],
+        variableTargets: {
+          'reps': VariableTarget(
+            assessmentId: 'max-pullups',
+            percent: 60,
+            fallback: 5,
+          ),
+        },
+      );
+      expect(prescribedSummary(relativeReps), 'at 20 kg');
+    });
   });
 
   group('hasUnkeyableWork', () {
