@@ -1,6 +1,7 @@
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/utils/datetimes.dart';
 
 /// What the athlete reported about one pass through a prescribed item. It
@@ -202,6 +203,24 @@ class SessionModel {
   /// Public because the local store freezes its own copy under the same
   /// envelope the server sends, and reads it back through here: one shape and
   /// one reader, so the two stores cannot answer the same session differently.
+  /// The prescription this session has to hand over for anything to be keyed
+  /// against it, or null when it has none worth sending.
+  ///
+  /// Null when the store can resolve one for itself, which it does from the
+  /// training or the coach slot the session names. Null too when the snapshot
+  /// holds a step with no name: the API refuses the whole request over one, so
+  /// sending it would cost the run rather than the reports it could not carry.
+  /// Sessions frozen before a generated step had a name of its own are exactly
+  /// that case, and they are already on devices waiting to be imported.
+  static List<TrainingItem>? ownPrescriptionOf(SessionModel session) {
+    if (session.trainingId != null || session.programSessionId != null) {
+      return null;
+    }
+    final items = session.prescriptionItems;
+    if (items == null || items.isEmpty) return null;
+    return everyItemIsNamed(items) ? items : null;
+  }
+
   static List<TrainingItem>? prescriptionItemsOf(Object? prescription) {
     if (prescription is! Map<String, dynamic>) return null;
     final raw = prescription['items'];

@@ -149,10 +149,21 @@ class LocalDataMigration {
           return ids.items[localItemId];
         }
 
+        // A session going up with its own prescription keeps the item names it
+        // was recorded under: the server keys the reports against that copy
+        // rather than against a training it would have to resolve. Nothing to
+        // remap, and nothing lost.
+        //
+        // Asked of the session that will actually be posted, since that is what
+        // decides whether the copy is sent. A training deleted after the run
+        // lands here too, and its reports are worth as much as a builtin's.
+        final posted = row.toModel().withTrainingId(serverTrainingId);
+        final carriesOwnPrescription =
+            SessionModel.ownPrescriptionOf(posted) != null;
         final localReps = await _database.getRepsForSession(row.id);
         final reps = [
           for (final rep in localReps)
-            if (localTrainingId == null)
+            if (carriesOwnPrescription)
               rep
             else
               rep.withTrainingItem(serverItemId(rep.trainingItemId)),
@@ -166,11 +177,6 @@ class LocalDataMigration {
                   serverItemId(rep.trainingItemId) == null,
             )
             .length;
-        // A session that named no training of its own carries the prescription
-        // it played, and goes up with the item names it was recorded under: the
-        // server keys the reports against that copy rather than against a
-        // training it would have to resolve. Nothing to remap, and nothing lost.
-        final carriesOwnPrescription = localTrainingId == null;
         final itemResults = <SessionItemResultModel>[];
         for (final result in await _database.getItemResultsForSession(row.id)) {
           if (carriesOwnPrescription) {
@@ -210,7 +216,7 @@ class LocalDataMigration {
             : null;
 
         final serverSessionId = await _remoteTrainings.saveSession(
-          row.toModel().withTrainingId(serverTrainingId),
+          posted,
           reps,
           data: curve,
           itemResults: itemResults,

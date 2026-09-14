@@ -535,6 +535,35 @@ void _reviewPassTests() {
     expect(sessions.savedItemResults, isEmpty);
   });
 
+  // A training that asks for no line per step still names every one of them,
+  // so the run keys its reps and the prescription it hands over is one the
+  // server accepts. Only the form is withheld.
+  testWidgets('asks nothing per step on a training that reviews none', (
+    tester,
+  ) async {
+    const warmup = Training(
+      id: 'warmup-1',
+      title: 'Warmup',
+      reviewsEachStep: false,
+      items: [
+        TrainingItem(
+          id: '',
+          stableKey: 'builtin:warmup-1:0',
+          type: TrainingItemType.repeater,
+          position: 0,
+          cycles: 4,
+          reps: 6,
+          worktimeSeconds: 7,
+        ),
+      ],
+    );
+
+    await _show(tester, const PostWorkoutScreen(template: warmup, results: []));
+
+    expect(find.text('How did each one go?'), findsNothing);
+    expect(find.textContaining('nothing to note step by step'), findsOneWidget);
+  });
+
   // What #111 delivered: a run of a training generated on the device names no
   // training, but carries the prescription it played, so its steps are keyed
   // and the review pass is offered on them like any other.

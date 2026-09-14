@@ -22,6 +22,14 @@ class Training {
   /// database, which only ever holds the athlete's own.
   final List<AssessmentDefinition> referencedAssessments;
 
+  /// Whether the athlete is asked how each prescribed step went once the run is
+  /// done. False only on a training Crimpy generates whose steps are a ladder
+  /// of near identical blocks, where a line per block is not what there is to
+  /// say about the run. Never sent or stored: a training the athlete or their
+  /// coach wrote is always worth a line per step, so a copy read back from
+  /// either store comes back true.
+  final bool reviewsEachStep;
+
   const Training({
     required this.id,
     required this.title,
@@ -32,6 +40,7 @@ class Training {
     this.items = const [],
     this.assessment,
     this.referencedAssessments = const [],
+    this.reviewsEachStep = true,
   });
 
   /// Rebuilds the training with some fields replaced. Every caller goes through
@@ -57,6 +66,7 @@ class Training {
     items: items ?? this.items,
     assessment: assessment ?? this.assessment,
     referencedAssessments: referencedAssessments ?? this.referencedAssessments,
+    reviewsEachStep: reviewsEachStep,
   );
 
   factory Training.fromJson(Map<String, dynamic> json) {

@@ -240,11 +240,9 @@ class RemoteTrainingRepository extends TrainingRepository {
     // The prescription a run played that the server cannot read for itself: a
     // training generated on the device. Sent only then, since the server
     // freezes its own copy from a training or a program slot and refuses a
-    // second opinion alongside either.
-    final ownPrescription =
-        (session.trainingId == null && session.programSessionId == null)
-        ? session.prescriptionItems
-        : null;
+    // second opinion alongside either, and only when every step in it has a
+    // name, since the API refuses the whole request over one that has not.
+    final ownPrescription = SessionModel.ownPrescriptionOf(session);
 
     // Spelled once: the reps and the reports below both turn on it.
     final namesAPrescription = sessionKeepsItemReports(
@@ -298,12 +296,11 @@ class RemoteTrainingRepository extends TrainingRepository {
         'item_results': itemResults.map((r) => r.toJson()).toList(),
       // What the run was asked to do, when the server has no training to read
       // it from. It is what the reps and the reports above name their steps
-      // against, and what heads them when the session is read back.
-      if (ownPrescription != null && ownPrescription.isNotEmpty)
+      // against, and what heads them when the session is read back. The same
+      // shape the local store freezes, so the two cannot answer the same
+      // session differently.
+      if (ownPrescription != null)
         'prescription': {
-          'id': session.trainingId ?? '',
-          'title': session.name,
-          'training_type': 'hangboard',
           'items': ownPrescription.map((i) => i.toPrescriptionJson()).toList(),
         },
       // The force curve is what a critical force or an MVC result means, so it

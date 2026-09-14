@@ -371,6 +371,21 @@ bool sessionKeepsItemReports({
     programSessionId != null ||
     (prescriptionItems != null && prescriptionItems.isNotEmpty);
 
+/// Whether every item of a prescription carries a name, nested ones included.
+///
+/// A snapshot is only worth handing over when it does: the reps and the reports
+/// name their steps by it, and the API refuses one outright rather than storing
+/// a step nothing can point at. Sessions frozen before a generated step had a
+/// name of its own hold a blank id for every one of them, and they are already
+/// on devices waiting to be imported.
+bool everyItemIsNamed(List<TrainingItem> items) {
+  for (final item in items) {
+    if (item.reportKey.isEmpty) return false;
+    if (!everyItemIsNamed(item.items)) return false;
+  }
+  return true;
+}
+
 /// Whether a training holds work the athlete could be asked about at all,
 /// whether or not a line is actually offered for it.
 ///
@@ -424,26 +439,13 @@ List<ReviewLine> reviewLines(
   return lines;
 }
 
-/// Every item of a training by id, nested ones included, so a rep naming one
-/// can be headed with it. A rep names the row it was played from, which is why
-/// this keys on the id and not on the report key.
-Map<String, TrainingItem> trainingItemsById(List<TrainingItem> items) {
-  final byId = <String, TrainingItem>{};
-  void walk(List<TrainingItem> items) {
-    for (final item in items) {
-      byId[item.id] = item;
-      walk(item.items);
-    }
-  }
-
-  walk(items);
-  return byId;
-}
-
-/// Every item of a training by what a report names it, nested ones included.
-/// Items with no key at all are left out rather than collapsed onto one entry:
-/// no report can name them, and keeping them would have the first of them
-/// answer for the rest.
+/// Every item of a training by what names it, nested ones included, so a rep or
+/// a report naming one can be headed with it. Both name a step the same way,
+/// through the report key, which is the stored id wherever there is one.
+///
+/// Items with no name at all are left out rather than collapsed onto one entry:
+/// nothing can name them, and keeping them would have the first of them answer
+/// for the rest.
 Map<String, TrainingItem> trainingItemsByReportKey(List<TrainingItem> items) {
   final byKey = <String, TrainingItem>{};
   void walk(List<TrainingItem> items) {
@@ -591,7 +593,7 @@ List<RepBlock>? groupRepsByTrainingItem(
 ) {
   if (!reps.any((rep) => rep.trainingItemId != null)) return null;
 
-  final byId = trainingItemsById(items);
+  final byId = trainingItemsByReportKey(items);
   final blocks =
       <({String label, List<RepDataModel> reps, TrainingItem? item})>[];
   String? currentId;

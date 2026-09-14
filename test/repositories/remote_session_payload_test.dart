@@ -176,6 +176,23 @@ void main() {
       expect(prescribed['id'], 'builtin:mvc:0');
     });
 
+    // What round 1 of the review caught. A session frozen before a generated
+    // step had a name of its own holds a blank id for every one of them, and
+    // those sessions are already on devices waiting to be imported. The API
+    // refuses such a prescription outright, so sending it would cost the run
+    // rather than the reports it could not carry.
+    test('hand over no prescription naming an unnamed step', () async {
+      final body = await _postedItemResults(
+        prescriptionItems: const [
+          TrainingItem(id: '', type: TrainingItemType.repeater, position: 0),
+        ],
+        itemKeys: ['builtin:mvc:0'],
+      );
+
+      expect(body.containsKey('prescription'), isFalse);
+      expect(body.containsKey('item_results'), isFalse);
+    });
+
     // The server freezes its own copy from a training or a program slot and
     // refuses a second opinion alongside either, so none is sent there.
     test('carry no prescription when the run names a training', () async {

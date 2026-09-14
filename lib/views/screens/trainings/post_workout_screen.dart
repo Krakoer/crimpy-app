@@ -68,17 +68,18 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
   /// run already recorded against it. Built once, since the controllers hold
   /// what the athlete is typing.
   ///
-  /// Empty when this run has nowhere to store a report: the fields would take
-  /// what the athlete wrote and drop it at save, and a form that eats input is
-  /// worse than the line that says there is none. A run of a training generated
-  /// on the device carries its own prescription, so it stores them like any
-  /// other; what stays empty is a training whose steps are named by nothing.
+  /// Empty when the training asks for no line per step, and when this run has
+  /// nowhere to store one: the fields would take what the athlete wrote and
+  /// drop it at save, and a form that eats input is worse than the line that
+  /// says there is none. A run of a training generated on the device carries
+  /// its own prescription, so it stores them like any other.
   late final List<ItemReviewDraft> _itemReviews =
-      sessionKeepsItemReports(
-        trainingId: widget.trainingId,
-        programSessionId: widget.programSessionId,
-        prescriptionItems: widget.template.items,
-      )
+      widget.template.reviewsEachStep &&
+          sessionKeepsItemReports(
+            trainingId: widget.trainingId,
+            programSessionId: widget.programSessionId,
+            prescriptionItems: widget.template.items,
+          )
       ? buildItemReviewDrafts(
           widget.template.items,
           widget.itemResults,

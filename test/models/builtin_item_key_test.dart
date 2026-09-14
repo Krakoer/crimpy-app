@@ -103,32 +103,44 @@ void main() {
       }
     });
 
-    test('names its steps by a key a stored item could not be given', () {
+    test('names its steps by something a stored item never holds', () {
       final items = reviewedBuiltins.first
           .generateNewFormatTraining(maxForce())!
           .items;
 
-      expect(items.every((i) => isBuiltinItemKey(i.reportKey)), isTrue);
-      expect(isBuiltinItemKey('7f1c9b1e-0000-4000-8000-000000000000'), isFalse);
+      expect(items.every((i) => i.reportKey.startsWith('builtin:')), isTrue);
     });
   });
 
-  // A warmup is the one training whose steps are deliberately not worth a line,
-  // so it generates none of the names a report would need.
+  // A warmup is the one training whose steps are deliberately not worth a line.
+  // Round 1 of the review caught the first shape of that opt out leaving them
+  // unnamed too, which handed the server a prescription it refuses and lost the
+  // whole run. Naming a step and asking about it are different questions.
   group('a builtin that reviews no step', () {
-    test('names none of its steps', () {
+    test('still names every step it prescribes', () {
       final unreviewed = builtinTrainings.where((b) => !b.reviewsEachStep);
       expect(unreviewed, isNotEmpty, reason: 'nothing exercises the opt out');
 
       for (final builtin in unreviewed) {
-        final items = builtin.generateNewFormatTraining(maxForce())!.items;
+        final training = builtin.generateNewFormatTraining(maxForce())!;
 
         expect(
-          items.any(isReportable),
-          isFalse,
-          reason: '${builtin.name} still offers a line per step',
+          everyItemIsNamed(training.items),
+          isTrue,
+          reason: '${builtin.name} prescribes a step nothing can name',
         );
-        expect(reviewLines(items, const []), isEmpty);
+        // What the screen turns on, and the only thing the opt out decides.
+        expect(training.reviewsEachStep, isFalse);
+      }
+    });
+
+    test('carries the opt out onto the training it generates', () {
+      for (final builtin in reviewedBuiltins) {
+        expect(
+          builtin.generateNewFormatTraining(maxForce())!.reviewsEachStep,
+          isTrue,
+          reason: '${builtin.name} lost its review pass',
+        );
       }
     });
   });
