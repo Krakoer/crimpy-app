@@ -545,9 +545,10 @@ void _reviewPassTests() {
     expect(sessions.savedItemResults, isEmpty);
   });
 
-  // The review pass is still offered wherever the report has somewhere to go,
-  // which is every run played from a training or a coach slot.
-  testWidgets('offers the review pass on a run played from a training', (
+  // The other half of the gate, and the one the screen could drop on the floor:
+  // a coach slot names a prescription without naming a training, so the second
+  // argument has to be wired through or a scheduled run loses its review pass.
+  testWidgets('offers the review pass on a run played from a coach slot', (
     tester,
   ) async {
     await _show(
@@ -555,7 +556,7 @@ void _reviewPassTests() {
       const PostWorkoutScreen(
         template: _reviewTraining,
         results: [],
-        trainingId: 't-1',
+        programSessionId: 'ps-1',
       ),
     );
 
