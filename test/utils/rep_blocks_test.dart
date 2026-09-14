@@ -51,6 +51,7 @@ TrainingItem _item({
 );
 
 void main() {
+  group('review pass', _reviewPassTests);
   group('groupRepsByTrainingItem', () {
     test('returns null when no rep names an item', () {
       final reps = [_rep(index: 0), _rep(index: 1)];
@@ -651,6 +652,186 @@ void main() {
 
     test('two blocks cannot be stated as one number', () {
       expect(spansMultipleBlocks([block('a'), block('b')]), true);
+    });
+  });
+}
+
+/// The review pass the post workout screen is built from: which steps it asks
+/// about, what it says each one was asked for, and which numbers it offers to
+/// answer with. The two have to agree, since a card stating a prescription it
+/// gives no field for is worse than one that asks nothing.
+void _reviewPassTests() {
+  const pullUps = TrainingItem(
+    id: 'pullup-1',
+    type: TrainingItemType.exercise,
+    position: 0,
+    exerciseName: 'Pull up',
+    repsIsMax: true,
+  );
+
+  const dips = TrainingItem(
+    id: 'dip-1',
+    type: TrainingItemType.exercise,
+    position: 1,
+    exerciseName: 'Dip',
+    reps: 8,
+  );
+
+  const plank = TrainingItem(
+    id: 'plank-1',
+    type: TrainingItemType.exercise,
+    position: 2,
+    exerciseName: 'Plank',
+    duration: 90,
+  );
+
+  const repeater = TrainingItem(
+    id: 'repeater-1',
+    type: TrainingItemType.repeater,
+    position: 3,
+    cycles: 6,
+    reps: 6,
+    worktimeSeconds: 7,
+    restSeconds: 3,
+  );
+
+  const circuit = TrainingItem(
+    id: 'circuit-1',
+    type: TrainingItemType.circuit,
+    position: 4,
+    cycles: 4,
+    items: [dips],
+  );
+
+  const emom = TrainingItem(
+    id: 'emom-1',
+    type: TrainingItemType.emom,
+    position: 5,
+    cycles: 10,
+    intervalSeconds: 60,
+    items: [pullUps],
+  );
+
+  group('prescribedSummary and reportableFields agree', () {
+    test('an AMRAP names no count and is asked for one', () {
+      expect(prescribedSummary(pullUps), 'as many reps as possible');
+      final fields = reportableFields(pullUps);
+      expect(fields.reps, isTrue);
+      expect(fields.duration, isFalse);
+    });
+
+    test('a rep based exercise names its reps and is asked for reps', () {
+      expect(prescribedSummary(dips), 'of 8 reps');
+      expect(reportableFields(dips).reps, isTrue);
+    });
+
+    test('a timed exercise names its time and is asked for a time', () {
+      expect(prescribedSummary(plank), 'of 1mn 30s');
+      final fields = reportableFields(plank);
+      expect(fields.duration, isTrue);
+      // It counts no repetitions, so it is not asked for any.
+      expect(fields.reps, isFalse);
+    });
+
+    // The case the review missed: the card used to read "Asked of 6 reps" over
+    // a load and a time box and no rep box.
+    test('a repeater names its hang and is asked for a hang', () {
+      expect(prescribedSummary(repeater), 'of 7s hangs');
+      final fields = reportableFields(repeater);
+      expect(fields.duration, isTrue);
+      expect(fields.load, isTrue);
+      expect(fields.reps, isFalse);
+    });
+
+    test('a circuit names its rounds and is asked for rounds', () {
+      expect(prescribedSummary(circuit), 'of 4 rounds');
+      final fields = reportableFields(circuit);
+      expect(fields.cycles, isTrue);
+      expect(fields.reps, isFalse);
+      expect(fields.load, isFalse);
+    });
+
+    test('an emom names its rounds and is asked for rounds', () {
+      expect(prescribedSummary(emom), 'of 10 rounds');
+      expect(reportableFields(emom).cycles, isTrue);
+    });
+  });
+
+  group('isReportable', () {
+    test('leaves out a group and a free note, which carry no work', () {
+      const group = TrainingItem(
+        id: 'group-1',
+        type: TrainingItemType.group,
+        position: 0,
+        groupTitle: 'Warm up',
+      );
+      const note = TrainingItem(
+        id: 'free-1',
+        type: TrainingItemType.free,
+        position: 1,
+        freeText: 'Stay loose',
+      );
+      expect(isReportable(group), isFalse);
+      expect(isReportable(note), isFalse);
+      expect(isReportable(dips), isTrue);
+    });
+
+    // A builtin training mints its items with a blank id. A line written
+    // against one is keyed to nothing, can never be read back, and collides
+    // with every other blank-keyed line of the same session.
+    test('leaves out an item that was never saved', () {
+      const unsaved = TrainingItem(
+        id: '',
+        type: TrainingItemType.repeater,
+        position: 0,
+        worktimeSeconds: 7,
+      );
+      expect(isReportable(unsaved), isFalse);
+    });
+  });
+
+  group('reviewLines', () {
+    test('walks the tree in prescription order, nested items included', () {
+      final lines = reviewLines(const [emom, dips], const []);
+      expect(lines.map((l) => l.item.id), ['emom-1', 'pullup-1', 'dip-1']);
+      expect(lines.every((l) => l.occurrence == 0), isTrue);
+    });
+
+    test('gives an item one line per pass the run already recorded', () {
+      final lines = reviewLines(
+        const [pullUps],
+        const [
+          SessionItemResultModel(
+            trainingItemId: 'pullup-1',
+            occurrence: 2,
+            reps: 15,
+          ),
+          SessionItemResultModel(
+            trainingItemId: 'pullup-1',
+            occurrence: 0,
+            reps: 23,
+          ),
+        ],
+      );
+
+      // Ordered by pass, whatever order they arrived in.
+      expect(lines.map((l) => l.occurrence), [0, 2]);
+    });
+
+    test('gives an item the run answered nothing for a single line', () {
+      final lines = reviewLines(const [dips], const []);
+      expect(lines, hasLength(1));
+      expect(lines.single.occurrence, 0);
+    });
+
+    test('holds no line for a training of builtin items', () {
+      const unsaved = TrainingItem(
+        id: '',
+        type: TrainingItemType.repeater,
+        position: 0,
+        worktimeSeconds: 7,
+      );
+      expect(reviewLines(const [unsaved], const []), isEmpty);
     });
   });
 }

@@ -79,29 +79,6 @@ class SessionItemResultModel {
     if (note != null) 'note': note,
   };
 
-  SessionItemResultModel copyWith({
-    int? reps,
-    int? cycles,
-    double? loadKg,
-    int? durationSeconds,
-    String? note,
-    bool clearReps = false,
-    bool clearCycles = false,
-    bool clearLoadKg = false,
-    bool clearDurationSeconds = false,
-    bool clearNote = false,
-  }) => SessionItemResultModel(
-    trainingItemId: trainingItemId,
-    occurrence: occurrence,
-    reps: clearReps ? null : reps ?? this.reps,
-    cycles: clearCycles ? null : cycles ?? this.cycles,
-    loadKg: clearLoadKg ? null : loadKg ?? this.loadKg,
-    durationSeconds: clearDurationSeconds
-        ? null
-        : durationSeconds ?? this.durationSeconds,
-    note: clearNote ? null : note ?? this.note,
-  );
-
   /// The same report, answering [trainingItemId] instead. The guest import
   /// rewrites the local item id into the one the server minted for it, since
   /// the report is stored against an item the server has never seen.

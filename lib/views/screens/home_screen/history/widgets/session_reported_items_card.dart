@@ -5,11 +5,12 @@ import 'package:flutter/material.dart';
 /// What the athlete reported on the steps they were prescribed: the numbers
 /// they reached, and the line they wrote about each one. Nothing else records
 /// any of it, since a set of pull ups passes through no sensor, so this card is
-/// the only place it shows up.
-class SessionOpenResultsCard extends StatelessWidget {
+/// the only place it shows up. Named for what it holds now: it began as the two
+/// counts the prescription left open and carries every reported step.
+class SessionReportedItemsCard extends StatelessWidget {
   final List<ReportedItem> items;
 
-  const SessionOpenResultsCard({super.key, required this.items});
+  const SessionReportedItemsCard({super.key, required this.items});
 
   @override
   Widget build(BuildContext context) {

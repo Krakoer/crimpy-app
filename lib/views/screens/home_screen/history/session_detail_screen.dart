@@ -8,7 +8,7 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_overview_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_performance_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_reps_card.dart';
-import 'package:crimpy/views/screens/home_screen/history/widgets/session_open_results_card.dart';
+import 'package:crimpy/views/screens/home_screen/history/widgets/session_reported_items_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_feedback_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_raw_data_card.dart';
 
@@ -165,7 +165,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
           // What the athlete reported on the prescribed items. No rep carries
           // any of it, so this is the only place it shows up.
           if (reported.isNotEmpty) ...[
-            SessionOpenResultsCard(items: reported),
+            SessionReportedItemsCard(items: reported),
             const SizedBox(height: 16),
           ],
 

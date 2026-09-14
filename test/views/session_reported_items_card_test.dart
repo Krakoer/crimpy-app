@@ -1,7 +1,7 @@
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
-import 'package:crimpy/views/screens/home_screen/history/widgets/session_open_results_card.dart';
+import 'package:crimpy/views/screens/home_screen/history/widgets/session_reported_items_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -107,7 +107,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: SessionOpenResultsCard(
+          body: SessionReportedItemsCard(
             items: reportedItems(const [
               SessionItemResultModel(
                 trainingItemId: 'pullup-1',

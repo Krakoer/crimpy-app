@@ -176,6 +176,11 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             template: widget.training,
             results: repResults,
             itemResults: itemResults,
+            // The same results the run resolved its prescription against, so
+            // the review states the numbers the athlete was actually played.
+            assessmentResults: widget.results.withDefinitions(
+              widget.training.referencedAssessments,
+            ),
             activity: widget.activity,
             trainingId: widget.trainingId,
             programSessionId: widget.programSessionId,

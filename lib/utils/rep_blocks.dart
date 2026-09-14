@@ -1,3 +1,4 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training_item_model.dart';
@@ -165,21 +166,44 @@ typedef ReportedItem = ({
   List<ReportedPass> passes,
 });
 
+/// Whether an item is a block that repeats, which is what is asked for its
+/// rounds rather than for what was done inside it.
+bool _isBlock(TrainingItem item) =>
+    item.type == TrainingItemType.emom || item.type == TrainingItemType.circuit;
+
+/// Whether an item is a hang, which is worked for a time on a board rather than
+/// counted in repetitions.
+bool _isHang(TrainingItem item) =>
+    item.type == TrainingItemType.repeater ||
+    item.type == TrainingItemType.hangboardRep;
+
 /// What an item asked for, in the words the athlete was given it in, or null
 /// when the prescription named no number to read an achievement against. An
 /// AMRAP is the case that names one deliberately: the point of it is that the
 /// coach prescribed no count.
-String? prescribedSummary(TrainingItem item) {
-  if (item.type == TrainingItemType.emom) {
+///
+/// Read against [results] rather than off the raw fields, since a coach may
+/// prescribe reps or a duration as a percentage of an assessment and the raw
+/// field then holds only the fallback. The run counted the athlete down from
+/// the resolved number, so that is the number they are asked against.
+String? prescribedSummary(
+  TrainingItem item, [
+  AssessmentResults results = AssessmentResults.none,
+]) {
+  if (_isBlock(item)) {
     final rounds = item.cycles;
     return rounds == null ? null : 'of $rounds rounds';
   }
-  if (item.repsIsMax) return 'as many reps as possible';
-  final duration = item.duration;
-  if (duration != null && duration > 0) {
-    return 'of ${formatSecondsAsLength(duration)}';
+  if (_isHang(item)) {
+    final work = item.worktimeSeconds;
+    return work == null || work <= 0
+        ? null
+        : 'of ${formatSecondsAsLength(work)} hangs';
   }
-  final reps = item.reps;
+  if (item.repsIsMax) return 'as many reps as possible';
+  final duration = item.effectiveDuration(results);
+  if (duration != null) return 'of ${formatSecondsAsLength(duration)}';
+  final reps = item.effectiveReps(results);
   return reps == null ? null : 'of $reps reps';
 }
 
@@ -242,32 +266,44 @@ List<ReportedItem> reportedItems(
 /// Which numbers a prescribed item is worth asking the athlete for, so the
 /// review pass shows a rep field for a set of pull ups and a rounds field for
 /// an emom rather than every field on every line.
+///
+/// Kept in step with [prescribedSummary] deliberately: a card stating what was
+/// asked and then offering no field to answer it is worse than one that asks
+/// nothing.
 typedef ReportableFields = ({bool reps, bool cycles, bool load, bool duration});
 
-/// A block that repeats is asked how many rounds it went; anything the athlete
-/// performs is asked for its reps, its load and how long it held, and a timed
-/// step is not asked for reps it does not count in.
-ReportableFields reportableFields(TrainingItem item) {
-  final isBlock =
-      item.type == TrainingItemType.emom ||
-      item.type == TrainingItemType.circuit;
-  if (isBlock) {
+ReportableFields reportableFields(
+  TrainingItem item, [
+  AssessmentResults results = AssessmentResults.none,
+]) {
+  // A block that repeats is asked how many rounds it went, and nothing about
+  // the work inside it: that belongs to the items it holds, which get their own
+  // lines.
+  if (_isBlock(item)) {
     return (reps: false, cycles: true, load: false, duration: false);
   }
-  final isTimed = (item.duration ?? 0) > 0 || (item.worktimeSeconds ?? 0) > 0;
-  return (
-    reps: !isTimed || item.repsIsMax,
-    cycles: false,
-    load: true,
-    duration: isTimed,
-  );
+  // A hang is held for a time at a load, and counts no repetitions of its own:
+  // the repeater is the block that repeats a hang.
+  if (_isHang(item)) {
+    return (reps: false, cycles: false, load: true, duration: true);
+  }
+  final isTimed = item.effectiveDuration(results) != null;
+  return (reps: !isTimed, cycles: false, load: true, duration: isTimed);
 }
 
 /// Whether the athlete has anything to report about an item. A group and a free
 /// note are the two that carry no work of their own: one is a heading, the
 /// other is a line of the coach's own text.
+///
+/// An item with no id is left out for the reason the run refuses to open a rep
+/// count on one: a report is keyed to the item it answers, and a builtin
+/// training mints its items on the fly with a blank id, so a line written
+/// against one could never be read back and would collide with every other
+/// blank-keyed line of the same session.
 bool isReportable(TrainingItem item) =>
-    item.type != TrainingItemType.group && item.type != TrainingItemType.free;
+    item.id.isNotEmpty &&
+    item.type != TrainingItemType.group &&
+    item.type != TrainingItemType.free;
 
 /// One line of the post workout review: a prescribed item and which pass of it
 /// the line answers.

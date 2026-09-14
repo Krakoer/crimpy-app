@@ -22,6 +22,11 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
   /// is what turns it into a line per exercise.
   final List<SessionItemResultModel> itemResults;
 
+  /// The athlete's own numbers the prescription was read against, carried over
+  /// from the run so a step prescribed as a percentage of an assessment is
+  /// reviewed against the number it was actually played at, not its fallback.
+  final AssessmentResults assessmentResults;
+
   /// Category the session is logged under. Trainings run from the user's own
   /// library are hangboard sessions; program trainings carry the coach's label.
   final SessionActivity activity;
@@ -35,6 +40,7 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
     required this.results,
     required this.template,
     this.itemResults = const [],
+    this.assessmentResults = AssessmentResults.none,
     this.activity = SessionActivity.hangboard,
     this.trainingId,
     this.programSessionId,
@@ -59,6 +65,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
   late final List<ItemReviewDraft> _itemReviews = buildItemReviewDrafts(
     widget.template.items,
     widget.itemResults,
+    widget.assessmentResults,
   );
 
   /// The assessment this run answers, when the training played is one.
@@ -195,7 +202,10 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                           const SizedBox(height: 16),
                         ],
                         if (_itemReviews.isNotEmpty) ...[
-                          ItemReviewSection(drafts: _itemReviews),
+                          ItemReviewSection(
+                            drafts: _itemReviews,
+                            results: widget.assessmentResults,
+                          ),
                           const SizedBox(height: 16),
                         ],
                         TextField(

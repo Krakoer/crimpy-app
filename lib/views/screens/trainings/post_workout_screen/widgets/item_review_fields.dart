@@ -1,3 +1,4 @@
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
@@ -40,11 +41,12 @@ class ItemReviewDraft {
   /// rather than asked for a second time.
   factory ItemReviewDraft.forLine(
     ReviewLine line,
-    SessionItemResultModel? recorded,
-  ) => ItemReviewDraft(
+    SessionItemResultModel? recorded, [
+    AssessmentResults results = AssessmentResults.none,
+  ]) => ItemReviewDraft(
     item: line.item,
     occurrence: line.occurrence,
-    fields: reportableFields(line.item),
+    fields: reportableFields(line.item, results),
     reps: TextEditingController(text: recorded?.reps?.toString() ?? ''),
     cycles: TextEditingController(text: recorded?.cycles?.toString() ?? ''),
     loadKg: TextEditingController(text: recorded?.loadKg?.toString() ?? ''),
@@ -90,8 +92,9 @@ class ItemReviewDraft {
 /// A draft per line of the review, in prescription order.
 List<ItemReviewDraft> buildItemReviewDrafts(
   List<TrainingItem> items,
-  List<SessionItemResultModel> recorded,
-) {
+  List<SessionItemResultModel> recorded, [
+  AssessmentResults results = AssessmentResults.none,
+]) {
   final byPass = {
     for (final result in recorded)
       '${result.trainingItemId}/${result.occurrence}': result,
@@ -101,6 +104,7 @@ List<ItemReviewDraft> buildItemReviewDrafts(
       ItemReviewDraft.forLine(
         line,
         byPass['${line.item.id}/${line.occurrence}'],
+        results,
       ),
   ];
 }
@@ -112,7 +116,16 @@ List<ItemReviewDraft> buildItemReviewDrafts(
 class ItemReviewSection extends StatelessWidget {
   final List<ItemReviewDraft> drafts;
 
-  const ItemReviewSection({required this.drafts, super.key});
+  /// The athlete's own numbers the prescription is read against, so a step
+  /// prescribed as a percentage of an assessment states the number the run
+  /// counted them down from rather than its fallback.
+  final AssessmentResults results;
+
+  const ItemReviewSection({
+    required this.drafts,
+    this.results = AssessmentResults.none,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +151,7 @@ class ItemReviewSection extends StatelessWidget {
         for (final draft in drafts)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: ItemReviewCard(draft: draft),
+            child: ItemReviewCard(draft: draft, results: results),
           ),
       ],
     );
@@ -149,9 +162,17 @@ class ItemReviewSection extends StatelessWidget {
 /// reporting, and the note.
 class ItemReviewCard extends StatelessWidget {
   final ItemReviewDraft draft;
+  final AssessmentResults results;
 
-  const ItemReviewCard({required this.draft, super.key});
+  const ItemReviewCard({
+    required this.draft,
+    this.results = AssessmentResults.none,
+    super.key,
+  });
 
+  /// One number of the review. Left empty it reports nothing, which is the
+  /// common case; typed and unreadable it is refused rather than dropped, since
+  /// an athlete who typed a load believes it was recorded.
   Widget _number({
     required TextEditingController controller,
     required String label,
@@ -169,11 +190,21 @@ class ItemReviewCard extends StatelessWidget {
       border: const OutlineInputBorder(),
       isDense: true,
     ),
+    validator: (value) {
+      final trimmed = value?.trim() ?? '';
+      if (trimmed.isEmpty) return null;
+      final parsed = decimal
+          ? parseAnswer(trimmed)
+          : int.tryParse(trimmed)?.toDouble();
+      if (parsed == null) return 'Enter a number';
+      if (parsed < 0) return 'Cannot be negative';
+      return null;
+    },
   );
 
   @override
   Widget build(BuildContext context) {
-    final prescribed = prescribedSummary(draft.item);
+    final prescribed = prescribedSummary(draft.item, results);
     final numbers = [
       if (draft.fields.reps) _number(controller: draft.reps, label: 'Reps'),
       if (draft.fields.cycles)
@@ -181,7 +212,7 @@ class ItemReviewCard extends StatelessWidget {
       if (draft.fields.load)
         _number(controller: draft.loadKg, label: 'Load kg', decimal: true),
       if (draft.fields.duration)
-        _number(controller: draft.durationSeconds, label: 'Time s'),
+        _number(controller: draft.durationSeconds, label: 'Seconds'),
     ];
 
     return Card(
