@@ -171,10 +171,17 @@ class LocalDataMigration {
             // count naming an item its prescription does not hold. Nothing is
             // left to attach it to, so it is dropped rather than failing the
             // whole session over it.
-            AppLoggerHelper.warning(
-              'Dropped an item report of session ${row.id}: '
-              'item ${result.trainingItemId} is not on the server',
-            );
+            //
+            // Quiet when the session named no training to begin with: a run of
+            // a builtin reports against steps that exist nowhere but on the
+            // device, so the server holding none of them is the normal case
+            // and not a loss worth a line per report.
+            if (localTrainingId != null) {
+              AppLoggerHelper.warning(
+                'Dropped an item report of session ${row.id}: '
+                'item ${result.trainingItemId} is not on the server',
+              );
+            }
             continue;
           }
           itemResults.add(result.withTrainingItem(itemId));

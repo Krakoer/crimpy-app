@@ -211,17 +211,17 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                           ItemReviewSection(drafts: _itemReviews),
                           const SizedBox(height: 16),
                         ]
-                        // A builtin generates its items on the fly with no id
-                        // to key a report to, so there is no line to offer.
-                        // Said out loud: an athlete who gets the per exercise
-                        // block on every other training and nothing here would
-                        // read the silence as the feature being broken.
+                        // Work with nothing to key a report to leaves no line
+                        // to offer. Said out loud: an athlete who gets the per
+                        // exercise block on every other training and nothing
+                        // here would read the silence as the feature being
+                        // broken.
                         else if (hasUnkeyableWork(widget.template.items)) ...[
                           Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              'This training is one of Crimpy\'s own, so there '
-                              'is nothing to note against its steps yet. Tell '
+                              'This training has steps that were never saved, '
+                              'so there is nothing to note against them. Tell '
                               'us how it went below.',
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(color: CrimpyTheme.gray500),

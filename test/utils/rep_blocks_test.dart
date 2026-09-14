@@ -866,9 +866,9 @@ void _reviewPassTests() {
   });
 
   group('hasUnkeyableWork', () {
-    // A builtin mints its items on the fly with no id to key a report to, so
-    // the screen says so rather than simply not showing the section.
-    test('is true for a training of generated items', () {
+    // Work with nothing to key a report to leaves the screen with no line to
+    // offer, so it says so rather than simply not showing the section.
+    test('is true for a training of items that were never saved', () {
       const unsaved = TrainingItem(
         id: '',
         type: TrainingItemType.repeater,
@@ -880,6 +880,19 @@ void _reviewPassTests() {
 
     test('is false for a saved training', () {
       expect(hasUnkeyableWork(const [dips]), isFalse);
+    });
+
+    // A generated step is stored nowhere and so carries no id, but it does
+    // carry a key, which is all a report needs.
+    test('is false for a builtin, whose steps are keyed without a row', () {
+      const generated = TrainingItem(
+        id: '',
+        stableKey: 'builtin:mvc:0',
+        type: TrainingItemType.repeater,
+        position: 0,
+        worktimeSeconds: 7,
+      );
+      expect(hasUnkeyableWork(const [generated]), isFalse);
     });
 
     // A group carries no work of its own, so a blank one is not the athlete
@@ -914,10 +927,10 @@ void _reviewPassTests() {
       expect(isReportable(dips), isTrue);
     });
 
-    // A builtin training mints its items with a blank id. A line written
-    // against one is keyed to nothing, can never be read back, and collides
-    // with every other blank-keyed line of the same session.
-    test('leaves out an item that was never saved', () {
+    // A line written against an item with no key at all is keyed to nothing,
+    // can never be read back, and collides with every other nameless line of
+    // the same session.
+    test('leaves out an item with neither an id nor a key', () {
       const unsaved = TrainingItem(
         id: '',
         type: TrainingItemType.repeater,
@@ -925,6 +938,20 @@ void _reviewPassTests() {
         worktimeSeconds: 7,
       );
       expect(isReportable(unsaved), isFalse);
+    });
+
+    // What #110 was about: a builtin's steps are generated rather than stored,
+    // and used to be left out of the review pass for want of an id.
+    test('takes a generated item, which is keyed without being stored', () {
+      const generated = TrainingItem(
+        id: '',
+        stableKey: 'builtin:mvc:0',
+        type: TrainingItemType.repeater,
+        position: 0,
+        worktimeSeconds: 7,
+      );
+      expect(isReportable(generated), isTrue);
+      expect(generated.reportKey, 'builtin:mvc:0');
     });
   });
 

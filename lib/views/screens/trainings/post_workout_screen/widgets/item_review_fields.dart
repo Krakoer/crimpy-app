@@ -82,7 +82,7 @@ class ItemReviewDraft {
   /// an earlier shape of the card cannot leak into an exercise.
   SessionItemResultModel? toResult() {
     final result = SessionItemResultModel(
-      trainingItemId: item.id,
+      trainingItemId: item.reportKey,
       occurrence: occurrence,
       reps: fields.reps ? _int(reps) : null,
       cycles: fields.cycles ? _int(cycles) : null,
@@ -125,7 +125,7 @@ List<ItemReviewDraft> buildItemReviewDrafts(
     for (final line in reviewLines(items, recorded))
       ItemReviewDraft.forLine(
         line,
-        byPass['${line.item.id}/${line.occurrence}'],
+        byPass['${line.item.reportKey}/${line.occurrence}'],
         results,
         bodyweightKg,
       ),

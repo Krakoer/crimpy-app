@@ -452,15 +452,15 @@ void _reviewPassTests() {
     expect(find.text('Check the highlighted fields above'), findsOneWidget);
   });
 
-  // A builtin generates its items with no id to key a report to. The section
+  // Work stored nowhere and named by nothing has no report to key. The section
   // cannot appear, so the screen says why rather than leaving a hole where
   // every other training shows one.
   testWidgets('explains itself on a training it cannot annotate', (
     tester,
   ) async {
-    const builtin = Training(
-      id: 'builtin-1',
-      title: 'Crimpy repeaters',
+    const unsaved = Training(
+      id: 'unsaved-1',
+      title: 'Never saved',
       items: [
         TrainingItem(
           id: '',
@@ -475,14 +475,40 @@ void _reviewPassTests() {
 
     await _show(
       tester,
-      const PostWorkoutScreen(template: builtin, results: []),
+      const PostWorkoutScreen(template: unsaved, results: []),
     );
 
     expect(find.text('How did each one go?'), findsNothing);
-    expect(
-      find.textContaining('nothing to note against its steps'),
-      findsOneWidget,
+    expect(find.textContaining('steps that were never saved'), findsOneWidget);
+  });
+
+  // What #110 was about. A builtin's steps are generated rather than stored,
+  // and carry a key of their own, so the review pass is offered here as it is
+  // on a training from the athlete's own library.
+  testWidgets('offers the review pass on a builtin training', (tester) async {
+    const builtin = Training(
+      id: 'builtin-1',
+      title: 'Crimpy repeaters',
+      items: [
+        TrainingItem(
+          id: '',
+          stableKey: 'builtin:builtin-1:0',
+          type: TrainingItemType.repeater,
+          position: 0,
+          cycles: 4,
+          reps: 6,
+          worktimeSeconds: 7,
+        ),
+      ],
     );
+
+    await _show(
+      tester,
+      const PostWorkoutScreen(template: builtin, results: []),
+    );
+
+    expect(find.text('How did each one go?'), findsOneWidget);
+    expect(find.textContaining('steps that were never saved'), findsNothing);
   });
 
   // The count the run took mid set is seeded into the review, so the athlete

@@ -272,13 +272,13 @@ List<ReportedItem> reportedItems(
   List<TrainingItem> items,
 ) {
   if (results.isEmpty || items.isEmpty) return const [];
-  final byId = trainingItemsById(items);
+  final byKey = trainingItemsByReportKey(items);
 
   final ordered = [...results]
     ..sort((a, b) => a.occurrence.compareTo(b.occurrence));
   final passes = <String, List<ReportedPass>>{};
   for (final result in ordered) {
-    if (!byId.containsKey(result.trainingItemId)) continue;
+    if (!byKey.containsKey(result.trainingItemId)) continue;
     final note = result.note?.trim();
     final pass = (
       occurrence: result.occurrence,
@@ -290,8 +290,8 @@ List<ReportedItem> reportedItems(
   }
 
   final out = <ReportedItem>[];
-  for (final item in byId.values) {
-    final reported = passes[item.id];
+  for (final item in byKey.values) {
+    final reported = passes[item.reportKey];
     if (reported == null) continue;
     out.add((
       label: sessionBlockLabel(item),
@@ -334,13 +334,13 @@ ReportableFields reportableFields(
 /// note are the two that carry no work of their own: one is a heading, the
 /// other is a line of the coach's own text.
 ///
-/// An item with no id is left out for the reason the run refuses to open a rep
-/// count on one: a report is keyed to the item it answers, and a builtin
-/// training mints its items on the fly with a blank id, so a line written
-/// against one could never be read back and would collide with every other
-/// blank-keyed line of the same session.
+/// An item with no report key is left out: a report is keyed to the item it
+/// answers, so a line written against a nameless one could never be read back
+/// and would collide with every other nameless line of the same session. A
+/// builtin's items are generated rather than stored and so carry no id, but
+/// they do carry a key, and are reported on like anything else.
 bool isReportable(TrainingItem item) =>
-    item.id.isNotEmpty && _carriesWork(item);
+    item.reportKey.isNotEmpty && _carriesWork(item);
 
 /// Whether an item is work the athlete performs, rather than a heading or a
 /// line of the coach's own text. Spelled once, since [isReportable] and
@@ -350,13 +350,15 @@ bool _carriesWork(TrainingItem item) =>
     item.type != TrainingItemType.group && item.type != TrainingItemType.free;
 
 /// Whether a training holds work worth reporting on that no report can be keyed
-/// to. A builtin mints its items on the fly with a blank id, so there is nothing
-/// for a report to name and the review pass has no line to offer. The screen
-/// says so rather than simply not appearing, which reads as the feature being
-/// broken on the trainings Crimpy ships.
+/// to, which leaves the review pass with no line to offer. The screen says so
+/// rather than simply not appearing, which reads as the feature being broken.
+///
+/// A builtin no longer lands here: its steps are generated with a key of their
+/// own. What is left is a tree that was never stored and names no builtin
+/// either, which is an item the editor added and nothing has saved yet.
 bool hasUnkeyableWork(List<TrainingItem> items) {
   for (final item in items) {
-    if (_carriesWork(item) && item.id.isEmpty) return true;
+    if (_carriesWork(item) && item.reportKey.isEmpty) return true;
     if (hasUnkeyableWork(item.items)) return true;
   }
   return false;
@@ -387,7 +389,7 @@ List<ReviewLine> reviewLines(
   void walk(List<TrainingItem> items) {
     for (final item in items) {
       if (isReportable(item)) {
-        final occurrences = (occurrencesByItem[item.id]?.toList() ?? [0])
+        final occurrences = (occurrencesByItem[item.reportKey]?.toList() ?? [0])
           ..sort();
         for (final occurrence in occurrences) {
           lines.add((item: item, occurrence: occurrence));
@@ -402,7 +404,8 @@ List<ReviewLine> reviewLines(
 }
 
 /// Every item of a training by id, nested ones included, so a rep naming one
-/// can be headed with it.
+/// can be headed with it. A rep names the row it was played from, which is why
+/// this keys on the id and not on the report key.
 Map<String, TrainingItem> trainingItemsById(List<TrainingItem> items) {
   final byId = <String, TrainingItem>{};
   void walk(List<TrainingItem> items) {
@@ -414,6 +417,23 @@ Map<String, TrainingItem> trainingItemsById(List<TrainingItem> items) {
 
   walk(items);
   return byId;
+}
+
+/// Every item of a training by what a report names it, nested ones included.
+/// Items with no key at all are left out rather than collapsed onto one entry:
+/// no report can name them, and keeping them would have the first of them
+/// answer for the rest.
+Map<String, TrainingItem> trainingItemsByReportKey(List<TrainingItem> items) {
+  final byKey = <String, TrainingItem>{};
+  void walk(List<TrainingItem> items) {
+    for (final item in items) {
+      if (item.reportKey.isNotEmpty) byKey[item.reportKey] = item;
+      walk(item.items);
+    }
+  }
+
+  walk(items);
+  return byKey;
 }
 
 /// Whether a session played more than one block, which is when a number stated
