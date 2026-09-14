@@ -758,6 +758,105 @@ void _reviewPassTests() {
     });
   });
 
+  // The review asks the athlete to report a load, so the card has to name the
+  // one they were given or they are reporting against nothing.
+  group('the asked line states the prescribed load', () {
+    const loadedDip = TrainingItem(
+      id: 'dip-1',
+      type: TrainingItemType.exercise,
+      position: 0,
+      exerciseName: 'Dip',
+      reps: 8,
+      loads: [Load(value: 20, unit: 'kg')],
+    );
+
+    test('beside the reps it was prescribed with', () {
+      expect(prescribedSummary(loadedDip), 'of 8 reps at 20 kg');
+    });
+
+    test('beside the hang of a repeater', () {
+      const hangs = TrainingItem(
+        id: 'r-1',
+        type: TrainingItemType.repeater,
+        position: 0,
+        cycles: 4,
+        reps: 6,
+        worktimeSeconds: 7,
+        loads: [Load(value: 25, unit: 'kg')],
+      );
+      expect(prescribedSummary(hangs), 'of 7s hangs at 25 kg');
+    });
+
+    test('beside an AMRAP, which names no count of its own', () {
+      const loadedAmrap = TrainingItem(
+        id: 'p-1',
+        type: TrainingItemType.exercise,
+        position: 0,
+        repsIsMax: true,
+        loads: [Load(value: 10, unit: 'kg')],
+      );
+      expect(
+        prescribedSummary(loadedAmrap),
+        'as many reps as possible at 10 kg',
+      );
+    });
+
+    // A load that only becomes kilograms once an assessment has been done is
+    // left unstated when nothing resolves it, for the reason a percentage rep
+    // count is: the fallback is not the number the athlete was given.
+    test('says nothing of a percentage load when nothing resolves it', () {
+      const relativeLoad = TrainingItem(
+        id: 'h-1',
+        type: TrainingItemType.hangboardRep,
+        position: 0,
+        worktimeSeconds: 10,
+        loads: [
+          Load(
+            value: 80,
+            unit: percentAssessmentUnit,
+            assessmentId: 'max-force',
+            fallback: 30,
+          ),
+        ],
+      );
+      expect(prescribedSummary(relativeLoad), 'of 10s hangs');
+    });
+
+    test('says nothing extra for a step carrying no load', () {
+      expect(prescribedSummary(dips), 'of 8 reps');
+    });
+  });
+
+  group('hasUnkeyableWork', () {
+    // A builtin mints its items on the fly with no id to key a report to, so
+    // the screen says so rather than simply not showing the section.
+    test('is true for a training of generated items', () {
+      const unsaved = TrainingItem(
+        id: '',
+        type: TrainingItemType.repeater,
+        position: 0,
+        worktimeSeconds: 7,
+      );
+      expect(hasUnkeyableWork(const [unsaved]), isTrue);
+    });
+
+    test('is false for a saved training', () {
+      expect(hasUnkeyableWork(const [dips]), isFalse);
+    });
+
+    // A group carries no work of its own, so a blank one is not the athlete
+    // being denied anything.
+    test('is false for a blank group holding saved work', () {
+      const group = TrainingItem(
+        id: '',
+        type: TrainingItemType.group,
+        position: 0,
+        items: [dips],
+      );
+      expect(hasUnkeyableWork(const [group]), isFalse);
+    });
+  });
+
   group('isReportable', () {
     test('leaves out a group and a free note, which carry no work', () {
       const group = TrainingItem(

@@ -27,6 +27,10 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
   /// reviewed against the number it was actually played at, not its fallback.
   final AssessmentResults assessmentResults;
 
+  /// The weight a load set as a share of it resolves against, carried over from
+  /// the run for the same reason.
+  final double? bodyweightKg;
+
   /// Category the session is logged under. Trainings run from the user's own
   /// library are hangboard sessions; program trainings carry the coach's label.
   final SessionActivity activity;
@@ -41,6 +45,7 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
     required this.template,
     this.itemResults = const [],
     this.assessmentResults = AssessmentResults.none,
+    this.bodyweightKg,
     this.activity = SessionActivity.hangboard,
     this.trainingId,
     this.programSessionId,
@@ -66,6 +71,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
     widget.template.items,
     widget.itemResults,
     widget.assessmentResults,
+    widget.bodyweightKg,
   );
 
   /// The assessment this run answers, when the training played is one.
@@ -204,6 +210,24 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                         if (_itemReviews.isNotEmpty) ...[
                           ItemReviewSection(drafts: _itemReviews),
                           const SizedBox(height: 16),
+                        ]
+                        // A builtin generates its items on the fly with no id
+                        // to key a report to, so there is no line to offer.
+                        // Said out loud: an athlete who gets the per exercise
+                        // block on every other training and nothing here would
+                        // read the silence as the feature being broken.
+                        else if (hasUnkeyableWork(widget.template.items)) ...[
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'This training is one of Crimpy\'s own, so there '
+                              'is nothing to note against its steps yet. Tell '
+                              'us how it went below.',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: CrimpyTheme.gray500),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                         ],
                         TextField(
                           controller: _noteController,
@@ -230,6 +254,12 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
           style: null,
           onPressed: () async {
             if (!_formKey.currentState!.validate()) {
+              // The offending field may be several cards above the docked
+              // button, where nothing about the failure is visible, so the
+              // button would otherwise read as dead.
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Check the numbers you entered')),
+              );
               return;
             }
             final assessment = _assessment;
@@ -246,7 +276,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
               trainingId: widget.trainingId,
               programSessionId: widget.programSessionId,
               // Frozen onto the session, the way the server freezes its own
-              // copy: the reps and the open counts name items of this tree, so
+              // copy: the reps and the item reports name items of this tree, so
               // it is what still heads them once the training is edited or
               // deleted. The template played is the copy taken, not the one the
               // library holds now, since only the first is what ran.

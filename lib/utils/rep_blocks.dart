@@ -156,7 +156,7 @@ String sessionBlockLabel(TrainingItem item) {
 
 /// One pass through a prescribed item and what the athlete reported about it:
 /// the numbers on one line, the line they wrote on another.
-typedef ReportedPass = ({String? achieved, String? note});
+typedef ReportedPass = ({int occurrence, String? achieved, String? note});
 
 /// One prescribed item, what it asked for, and every pass of it the athlete
 /// reported on, in the order they were played.
@@ -194,18 +194,34 @@ bool _isHang(TrainingItem item) =>
 /// percentage then reads as nothing rather than as its fallback, which is a
 /// number nobody was ever asked for: showing "did 10 reps" over "of 5 reps"
 /// turns a miss against a target of 12 into a rout.
-String? prescribedSummary(TrainingItem item, [AssessmentResults? results]) {
+/// [bodyweightKg] resolves a load set as a share of the athlete's weight, and is
+/// null wherever one is not known, which leaves such a load unstated rather than
+/// stated in the wrong number.
+String? prescribedSummary(
+  TrainingItem item, [
+  AssessmentResults? results,
+  double? bodyweightKg,
+]) {
   if (_isBlock(item)) {
     final rounds = item.cycles;
     return rounds == null ? null : 'of $rounds rounds';
   }
+  final resolved = results ?? AssessmentResults.none;
+  // The load the item was given, stated for every step that carries one, since
+  // the review asks the athlete to report a load against it and a card offering
+  // the field without naming the target leaves them reporting against nothing.
+  final load = results == null && item.loadReadsAgainstResults
+      ? null
+      : item.loadLabel(bodyweightKg: bodyweightKg, results: resolved);
+  final at = load == null ? '' : ' at $load';
+
   if (_isHang(item)) {
     final work = item.worktimeSeconds;
     return work == null || work <= 0
         ? null
-        : 'of ${formatSecondsAsLength(work)} hangs';
+        : 'of ${formatSecondsAsLength(work)} hangs$at';
   }
-  if (item.repsIsMax) return 'as many reps as possible';
+  if (item.repsIsMax) return 'as many reps as possible$at';
   if (results == null) {
     // Nothing to resolve against, so a percentage is left unstated rather than
     // answered with the fallback standing in for it.
@@ -214,11 +230,15 @@ String? prescribedSummary(TrainingItem item, [AssessmentResults? results]) {
       return null;
     }
   }
-  final resolved = results ?? AssessmentResults.none;
   final duration = item.effectiveDuration(resolved);
-  if (duration != null) return 'of ${formatSecondsAsLength(duration)}';
+  if (duration != null) {
+    return 'of ${formatSecondsAsLength(duration)}$at';
+  }
   final reps = item.effectiveReps(resolved);
-  return reps == null ? null : 'of $reps reps';
+  if (reps != null) return 'of $reps reps$at';
+  // Nothing was prescribed but a load, which is still worth stating: it is what
+  // the athlete is being asked to report against.
+  return load == null ? null : 'at $load';
 }
 
 /// The numbers one pass reported, read as a line: "8 reps", "7 rounds",
@@ -257,6 +277,7 @@ List<ReportedItem> reportedItems(
     if (!byId.containsKey(result.trainingItemId)) continue;
     final note = result.note?.trim();
     final pass = (
+      occurrence: result.occurrence,
       achieved: achievedSummary(result),
       note: note == null || note.isEmpty ? null : note,
     );
@@ -318,6 +339,22 @@ bool isReportable(TrainingItem item) =>
     item.id.isNotEmpty &&
     item.type != TrainingItemType.group &&
     item.type != TrainingItemType.free;
+
+/// Whether a training holds work worth reporting on that no report can be keyed
+/// to. A builtin mints its items on the fly with a blank id, so there is nothing
+/// for a report to name and the review pass has no line to offer. The screen
+/// says so rather than simply not appearing, which reads as the feature being
+/// broken on the trainings Crimpy ships.
+bool hasUnkeyableWork(List<TrainingItem> items) {
+  for (final item in items) {
+    final carriesWork =
+        item.type != TrainingItemType.group &&
+        item.type != TrainingItemType.free;
+    if (carriesWork && item.id.isEmpty) return true;
+    if (hasUnkeyableWork(item.items)) return true;
+  }
+  return false;
+}
 
 /// One line of the post workout review: a prescribed item and which pass of it
 /// the line answers.

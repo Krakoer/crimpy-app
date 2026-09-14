@@ -181,6 +181,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             assessmentResults: widget.results.withDefinitions(
               widget.training.referencedAssessments,
             ),
+            bodyweightKg: widget.bodyweightKg,
             activity: widget.activity,
             trainingId: widget.trainingId,
             programSessionId: widget.programSessionId,

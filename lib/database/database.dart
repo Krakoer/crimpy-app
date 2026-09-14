@@ -43,7 +43,7 @@ class Sessions extends Table {
   // The items the run was played from, frozen as JSON when it was saved, the
   // way the server freezes a prescription onto the session it creates. It is
   // the only copy that still names the blocks once the training is edited or
-  // deleted, and so the only thing that keeps the reps and the open counts
+  // deleted, and so the only thing that keeps the reps and the item reports
   // recorded against an item id readable. Null on a session that answered no
   // training, and on every session saved before the column existed, which is
   // what leaves those falling back to the live training.
@@ -451,7 +451,7 @@ class AppDatabase extends _$AppDatabase {
   Future<List<RepDataModel>> getRepsForSession(String sessionId) async =>
       (await _repRowsForSession(sessionId)).map((r) => r.toModel()).toList();
 
-  /// The counts the run recorded for the items the prescription left open.
+  /// What the athlete reported about the items they were prescribed.
   Future<List<SessionItemResultModel>> getItemResultsForSession(
     String sessionId,
   ) async =>
@@ -1279,7 +1279,7 @@ class AppDatabase extends _$AppDatabase {
   /// edited since. The server holds a copy of what the training was, so the
   /// next run has to update it: skipping it leaves the edit on the device for
   /// good, and the items the edit added with no server id to name them, which
-  /// strands the reps and the open counts of every session played from them.
+  /// strands the reps and the item reports of every session played from them.
   ///
   /// A local edit clears the time the mark was made, so a training carrying a
   /// server id and no time is one the server holds an older copy of. The marks
@@ -1676,7 +1676,7 @@ class AppDatabase extends _$AppDatabase {
       },
       from11To12: (m, schema) async {
         // A session now freezes what it was played from, so its reps and its
-        // open counts stay readable once the training is edited or deleted.
+        // item reports stay readable once the training is edited or deleted.
         // The sessions already stored are left without one: they were saved
         // from a training that may have drifted since, and a snapshot taken
         // now would freeze that drift as though the run had played it.

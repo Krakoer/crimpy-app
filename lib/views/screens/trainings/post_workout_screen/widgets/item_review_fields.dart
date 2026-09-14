@@ -62,11 +62,12 @@ class ItemReviewDraft {
     ReviewLine line,
     SessionItemResultModel? recorded, [
     AssessmentResults results = AssessmentResults.none,
+    double? bodyweightKg,
   ]) => ItemReviewDraft(
     item: line.item,
     occurrence: line.occurrence,
     fields: reportableFields(line.item, results),
-    prescribed: prescribedSummary(line.item, results),
+    prescribed: prescribedSummary(line.item, results, bodyweightKg),
     reps: TextEditingController(text: recorded?.reps?.toString() ?? ''),
     cycles: TextEditingController(text: recorded?.cycles?.toString() ?? ''),
     loadKg: TextEditingController(text: recorded?.loadKg?.toString() ?? ''),
@@ -114,6 +115,7 @@ List<ItemReviewDraft> buildItemReviewDrafts(
   List<TrainingItem> items,
   List<SessionItemResultModel> recorded, [
   AssessmentResults results = AssessmentResults.none,
+  double? bodyweightKg,
 ]) {
   final byPass = {
     for (final result in recorded)
@@ -125,6 +127,7 @@ List<ItemReviewDraft> buildItemReviewDrafts(
         line,
         byPass['${line.item.id}/${line.occurrence}'],
         results,
+        bodyweightKg,
       ),
   ];
 }
@@ -289,13 +292,25 @@ class ItemReviewCard extends StatelessWidget {
               // of one written in ASCII.
               maxLength: maxItemNoteLength,
               maxLengthEnforcement: MaxLengthEnforcement.enforced,
+              // Counted only as the limit comes into view. A permanent counter
+              // on every card is noise, and no counter at all leaves the
+              // athlete who reaches the cap with a field that simply stops
+              // taking keystrokes.
               buildCounter:
                   (
                     context, {
                     required currentLength,
                     required isFocused,
                     required maxLength,
-                  }) => null,
+                  }) => currentLength < (maxLength ?? 0) * 9 ~/ 10
+                  ? null
+                  : Text(
+                      '$currentLength/$maxLength',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: CrimpyTheme.textSecondary,
+                      ),
+                    ),
               maxLines: 4,
               minLines: 1,
             ),

@@ -101,6 +101,63 @@ void main() {
     },
   );
 
+  // Two passes, one annotated. Without the label the line reads as though it
+  // answered the first of them.
+  testWidgets('names the pass a note answers when an item ran twice', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SessionReportedItemsCard(
+            items: reportedItems(const [
+              SessionItemResultModel(
+                trainingItemId: 'pullup-1',
+                occurrence: 0,
+                reps: 23,
+              ),
+              SessionItemResultModel(
+                trainingItemId: 'pullup-1',
+                occurrence: 1,
+                reps: 18,
+                note: 'shoulder complained on this one',
+              ),
+            ], _prescription),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.textContaining('Pass 2'), findsOneWidget);
+    expect(
+      find.textContaining('shoulder complained on this one'),
+      findsOneWidget,
+    );
+  });
+
+  // One pass needs no label: there is nothing to tell it apart from.
+  testWidgets('leaves a single pass note unlabelled', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SessionReportedItemsCard(
+            items: reportedItems(const [
+              SessionItemResultModel(
+                trainingItemId: 'pullup-1',
+                occurrence: 0,
+                reps: 23,
+                note: 'hard on the shoulders',
+              ),
+            ], _prescription),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.textContaining('Pass'), findsNothing);
+    expect(find.text('hard on the shoulders'), findsOneWidget);
+  });
+
   testWidgets('shows what the athlete managed against what was asked', (
     tester,
   ) async {

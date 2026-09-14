@@ -93,8 +93,24 @@ class _ReportedItemRow extends StatelessWidget {
           if (pass.note case final note?)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                note,
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    // Named by pass only when the item was played more than
+                    // once, where a bare line cannot say which pass it answers.
+                    if (item.passes.length > 1)
+                      TextSpan(
+                        text: 'Pass ${pass.occurrence + 1}  ',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          fontStyle: FontStyle.normal,
+                          color: CrimpyTheme.textSecondary,
+                        ),
+                      ),
+                    TextSpan(text: note),
+                  ],
+                ),
                 style: const TextStyle(
                   fontSize: 13,
                   height: 1.4,

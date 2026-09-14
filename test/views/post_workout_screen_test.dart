@@ -432,6 +432,59 @@ void _reviewPassTests() {
     expect(find.text('Asked of 5 reps'), findsNothing);
   });
 
+  // A failure on a card several screens above the docked button would otherwise
+  // leave the button reading as dead.
+  testWidgets('says so when a number stops the save', (tester) async {
+    final sessions = CapturingSessions();
+
+    await _pumpFor(
+      tester,
+      const PostWorkoutScreen(template: _reviewTraining, results: []),
+      sessions,
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Load kg').first,
+      '1.2.3',
+    );
+    await tester.tap(find.text('Save training'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Check the numbers you entered'), findsOneWidget);
+  });
+
+  // A builtin generates its items with no id to key a report to. The section
+  // cannot appear, so the screen says why rather than leaving a hole where
+  // every other training shows one.
+  testWidgets('explains itself on a training it cannot annotate', (
+    tester,
+  ) async {
+    const builtin = Training(
+      id: 'builtin-1',
+      title: 'Crimpy repeaters',
+      items: [
+        TrainingItem(
+          id: '',
+          type: TrainingItemType.repeater,
+          position: 0,
+          cycles: 4,
+          reps: 6,
+          worktimeSeconds: 7,
+        ),
+      ],
+    );
+
+    await _show(
+      tester,
+      const PostWorkoutScreen(template: builtin, results: []),
+    );
+
+    expect(find.text('How did each one go?'), findsNothing);
+    expect(
+      find.textContaining('nothing to note against its steps'),
+      findsOneWidget,
+    );
+  });
+
   // The count the run took mid set is seeded into the review, so the athlete
   // corrects it rather than being asked for it twice, and it still reaches the
   // session when they leave it alone.
