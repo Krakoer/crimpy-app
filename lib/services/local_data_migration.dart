@@ -158,8 +158,7 @@ class LocalDataMigration {
         // decides whether the copy is sent. A training deleted after the run
         // lands here too, and its reports are worth as much as a builtin's.
         final posted = row.toModel().withTrainingId(serverTrainingId);
-        final carriesOwnPrescription =
-            SessionModel.ownPrescriptionOf(posted) != null;
+        final carriesOwnPrescription = posted.ownPrescription != null;
         final localReps = await _database.getRepsForSession(row.id);
         final reps = [
           for (final rep in localReps)

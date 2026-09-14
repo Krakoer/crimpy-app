@@ -25,7 +25,7 @@ Iterable<BuiltinTrainingModel> get reviewedBuiltins =>
 void main() {
   group('a generated builtin training', () {
     test('keys every step it prescribes', () {
-      for (final builtin in reviewedBuiltins) {
+      for (final builtin in builtinTrainings) {
         final training = builtin.generateNewFormatTraining(maxForce());
         expect(
           training,
@@ -56,7 +56,7 @@ void main() {
     });
 
     test('gives each step a key of its own', () {
-      for (final builtin in reviewedBuiltins) {
+      for (final builtin in builtinTrainings) {
         final items = builtin.generateNewFormatTraining(maxForce())!.items;
         final keys = items.map((i) => i.reportKey).toSet();
 
@@ -71,7 +71,7 @@ void main() {
     // A report is written on one run and read back on another, so the same
     // step has to answer to the same name every time it is generated.
     test('mints the same keys on every generation', () {
-      for (final builtin in reviewedBuiltins) {
+      for (final builtin in builtinTrainings) {
         final first = builtin.generateNewFormatTraining(maxForce())!.items;
         final second = builtin.generateNewFormatTraining(maxForce())!.items;
 
@@ -133,8 +133,28 @@ void main() {
         expect(training.reviewsEachStep, isFalse);
       }
     });
+  });
 
-    test('carries the opt out onto the training it generates', () {
+  // Round 2 of the review caught the reps of a warmup grouping into eighteen
+  // blocks that all read "Hangboard 20mm": same type, same edge, and nothing
+  // else in the label. What differs is the grip and the load.
+  group('the blocks a generated run reads back as', () {
+    test('are told apart by their labels', () {
+      for (final builtin in builtinTrainings) {
+        final items = builtin.generateNewFormatTraining(maxForce())!.items;
+        final labels = items.map(sessionBlockLabel).toSet();
+
+        expect(
+          labels,
+          hasLength(items.length),
+          reason: '${builtin.name} heads two blocks with the same line',
+        );
+      }
+    });
+  });
+
+  group('a builtin that reviews every step', () {
+    test('carries that onto the training it generates', () {
       for (final builtin in reviewedBuiltins) {
         expect(
           builtin.generateNewFormatTraining(maxForce())!.reviewsEachStep,

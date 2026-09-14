@@ -130,6 +130,16 @@ List<RepSet> groupRepsIntoSets(List<RepDataModel> reps, RepeaterConfig config) {
 /// same name. The training editor keeps its own vocabulary through
 /// [trainingItemTitle]: a block listed among the blocks of a training is named
 /// for what it is, one listed under a run is named for what was hung.
+/// The short name of a grip a block prescribes, or the stored value when it
+/// names none this app knows: a session read back is worth heading with what it
+/// says rather than with nothing.
+String _gripLabel(String stored) {
+  for (final grip in GripPosition.values) {
+    if (grip.name == stored) return grip.shortName;
+  }
+  return stored;
+}
+
 String sessionBlockLabel(TrainingItem item) {
   final named =
       (item.type == TrainingItemType.exercise
@@ -148,10 +158,26 @@ String sessionBlockLabel(TrainingItem item) {
     TrainingItemType.exercise => 'Exercise',
     TrainingItemType.free => 'Note',
   };
-  // One edge names the block; several would name only its first hang, so the
-  // block is left on its type alone.
+  // One value names the block; several would name only its first hang, so the
+  // block keeps only what holds for the whole of it. A ladder of hangs that
+  // differ in nothing else reads as one line repeated without these: a warmup
+  // works six intensities through three grips on the same edge.
   final edges = <int>{...?item.edgeSizesMm};
-  return edges.length == 1 ? '$label ${edges.first}mm' : label;
+  final grips = <String>{...?item.handPositions?.expand((hand) => hand)};
+  // Read off one hand, the way every other label that states a load does: the
+  // two hands of a split block are pulled at different numbers, and naming both
+  // would put the arithmetic of the whole block in its heading.
+  final loads = <String>{
+    for (final load in [...?item.loads])
+      if (!load.isBodyweight && !load.isAssessmentRelative) load.label(),
+  };
+
+  final parts = <String>[
+    if (edges.length == 1) '${edges.first}mm',
+    if (grips.length == 1) _gripLabel(grips.first),
+    if (loads.length == 1) 'at ${loads.first}',
+  ];
+  return parts.isEmpty ? label : '$label ${parts.join(', ')}';
 }
 
 /// One pass through a prescribed item and what the athlete reported about it:

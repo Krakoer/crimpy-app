@@ -196,13 +196,6 @@ class SessionModel {
     coachReplyRead: json['coach_reply_read'] as bool? ?? false,
   );
 
-  /// The items of a frozen prescription, or null when there is none to read.
-  /// The listing endpoint leaves the prescription out, so a session read from
-  /// it has no items until its detail is loaded.
-  ///
-  /// Public because the local store freezes its own copy under the same
-  /// envelope the server sends, and reads it back through here: one shape and
-  /// one reader, so the two stores cannot answer the same session differently.
   /// The prescription this session has to hand over for anything to be keyed
   /// against it, or null when it has none worth sending.
   ///
@@ -212,15 +205,20 @@ class SessionModel {
   /// sending it would cost the run rather than the reports it could not carry.
   /// Sessions frozen before a generated step had a name of its own are exactly
   /// that case, and they are already on devices waiting to be imported.
-  static List<TrainingItem>? ownPrescriptionOf(SessionModel session) {
-    if (session.trainingId != null || session.programSessionId != null) {
-      return null;
-    }
-    final items = session.prescriptionItems;
+  List<TrainingItem>? get ownPrescription {
+    if (trainingId != null || programSessionId != null) return null;
+    final items = prescriptionItems;
     if (items == null || items.isEmpty) return null;
     return everyItemIsNamed(items) ? items : null;
   }
 
+  /// The items of a frozen prescription, or null when there is none to read.
+  /// The listing endpoint leaves the prescription out, so a session read from
+  /// it has no items until its detail is loaded.
+  ///
+  /// Public because the local store freezes its own copy under the same
+  /// envelope the server sends, and reads it back through here: one shape and
+  /// one reader, so the two stores cannot answer the same session differently.
   static List<TrainingItem>? prescriptionItemsOf(Object? prescription) {
     if (prescription is! Map<String, dynamic>) return null;
     final raw = prescription['items'];

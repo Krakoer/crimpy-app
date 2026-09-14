@@ -242,7 +242,7 @@ class RemoteTrainingRepository extends TrainingRepository {
     // freezes its own copy from a training or a program slot and refuses a
     // second opinion alongside either, and only when every step in it has a
     // name, since the API refuses the whole request over one that has not.
-    final ownPrescription = SessionModel.ownPrescriptionOf(session);
+    final ownPrescription = session.ownPrescription;
 
     // Spelled once: the reps and the reports below both turn on it.
     final namesAPrescription = sessionKeepsItemReports(

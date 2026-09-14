@@ -78,7 +78,9 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
           sessionKeepsItemReports(
             trainingId: widget.trainingId,
             programSessionId: widget.programSessionId,
-            prescriptionItems: widget.template.items,
+            prescriptionItems: everyItemIsNamed(widget.template.items)
+                ? widget.template.items
+                : null,
           )
       ? buildItemReviewDrafts(
           widget.template.items,
