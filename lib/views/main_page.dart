@@ -287,6 +287,8 @@ class _MainPageState extends ConsumerState<MainPage>
     // cached answer still describes the guest who was here a moment ago.
     ref.listen(authStateProvider, (previous, next) {
       if (previous == null || !isSignedOut(previous)) return;
+      // Auth state, as above: a sign out should empty the shell.
+      // ignore: keep_the_held_value
       if (next.asData?.value == null) return;
       ref.invalidate(pendingCoachNotificationPromptProvider);
       _askForCoachNotifications();

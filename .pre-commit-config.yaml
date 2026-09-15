@@ -15,3 +15,13 @@ repos:
         language: system
         files: \.dart$
         pass_filenames: false
+
+      # Runs the rules flutter analyze does not: riverpod_lint, and this app's
+      # own. Slower than the rest of the hooks, and worth it for the class of
+      # bug it catches.
+      - id: custom-lint
+        name: Provider Usage
+        entry: dart run custom_lint
+        language: system
+        files: \.dart$
+        pass_filenames: false

@@ -21,7 +21,13 @@ class NotificationSettingsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Training reminders')),
       body: switch (preferences) {
+        // Permissions and local reminder settings, read from the device. Nothing
+        // refreshes them and a stale answer would be worse than a blank one.
+        // ignore: keep_the_held_value
         AsyncData(:final value) => _Content(preferences: value),
+        // Permissions and local reminder settings, read from the device. Nothing
+        // refreshes them and a stale answer would be worse than a blank one.
+        // ignore: keep_the_held_value
         AsyncError(:final error) => Center(child: Text('$error')),
         _ => const Center(child: CircularProgressIndicator()),
       },
@@ -39,6 +45,9 @@ class _Content extends ConsumerWidget {
     final enabled = preferences.enabled;
 
     final permissionRevoked =
+        // Permissions and local reminder settings, read from the device. Nothing
+        // refreshes them and a stale answer would be worse than a blank one.
+        // ignore: keep_the_held_value
         enabled && ref.watch(reminderPermissionProvider).asData?.value == false;
 
     return ListView(

@@ -1,0 +1,42 @@
+// Each function is named for what it does with the state, so a test can assert
+// which ones the rule flags by name.
+import 'package:riverpod/riverpod.dart';
+
+final numbers = FutureProvider<int>((ref) async => 1);
+
+int? readsAsData(Ref ref) => ref.watch(numbers).asData?.value; // LINT
+
+int? readsValue(Ref ref) => ref.watch(numbers).value;
+
+String matchesAsyncData(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncData(:final value) => '$value', // LINT
+  _ => 'nothing',
+};
+
+String matchesAsyncError(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncError(:final error) => '$error', // LINT
+  _ => 'nothing',
+};
+
+String matchesTheHeldValue(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncValue(:final value?) => '$value',
+  _ => 'nothing',
+};
+
+String whensWithoutTheFlags(Ref ref) => ref
+    .watch(numbers)
+    .when( // LINT
+      data: (value) => '$value',
+      error: (_, _) => 'error',
+      loading: () => 'loading',
+    );
+
+String whensWithTheFlags(Ref ref) => ref
+    .watch(numbers)
+    .when(
+      skipLoadingOnReload: true,
+      skipError: true,
+      data: (value) => '$value',
+      error: (_, _) => 'error',
+      loading: () => 'loading',
+    );

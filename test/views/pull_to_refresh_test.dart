@@ -186,6 +186,8 @@ void main() {
             captured = ref;
             return ref
                 .watch(derived)
+                // The point of this case is a when() that skips a reload and not an error.
+                // ignore: keep_the_held_value
                 .when(
                   skipLoadingOnReload: true,
                   loading: () => const Text('BLANK'),

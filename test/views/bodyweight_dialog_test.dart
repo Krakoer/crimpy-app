@@ -1,3 +1,7 @@
+// ignore_for_file: scoped_providers_should_specify_dependencies
+// A test container is the root container. The rule is about a scope nested
+// under another one, where an override the parent cannot see is a bug.
+
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';

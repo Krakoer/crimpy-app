@@ -83,6 +83,10 @@ class _BodyweightMeasureScreenState
     AsyncValue<List<BleDataPoint>> bleData,
     double? lastValue,
     bool holding,
+    // A BLE stream, which carries the sensor's live state. A held value here is
+    // last second's reading, and showing it as though it were current is worse
+    // than showing nothing.
+    // ignore: keep_the_held_value
   ) => bleData.when(
     data: (data) {
       if (data.isEmpty) return const SizedBox();

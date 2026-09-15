@@ -53,3 +53,9 @@ sentry.properties
 archive/
 # Sensor data pulled off a device for debugging
 data.json
+
+# The lint package and its fixture resolve their own dependencies.
+tool/crimpy_lints/.dart_tool/
+tool/crimpy_lints/pubspec.lock
+tool/crimpy_lints/test/fixture/.dart_tool/
+tool/crimpy_lints/test/fixture/pubspec.lock

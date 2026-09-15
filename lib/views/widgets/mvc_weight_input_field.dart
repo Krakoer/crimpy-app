@@ -40,6 +40,8 @@ class _MvcWeightInputFieldState extends ConsumerState<MvcWeightInputField> {
       assessmentsProvider(BuiltinAssessmentIds.maxForce),
     );
 
+    // No call site anywhere in lib/. Left as found rather than converted.
+    // ignore: keep_the_held_value
     return mvcAssessmentsAsync.when(
       data: (assessments) {
         // Get the last MVC value for the specific hand
