@@ -43,8 +43,7 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen>
       children: [
         PullToRefresh(
           // The list is headed by the program card, which reads the coach's
-          // program rather than the athlete's trainings, so a pull that asked
-          // only for the trainings would leave the top of the screen stale.
+          // program rather than the athlete's trainings.
           onRefresh: () async {
             ref.invalidate(programsProvider);
             ref.invalidate(weekDetailProvider);

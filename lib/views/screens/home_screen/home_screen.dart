@@ -28,15 +28,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   /// shows. A pull here has to refresh all of them, or it would answer for the
   /// card that happens to be on top and leave the rest as they were.
   ///
-  /// What is invalidated is the providers that do the fetching, not the ones
-  /// the cards read. Riverpod invalidates a provider alone and never what it
-  /// was derived from, so refreshing `activeProgram` would re-filter the
-  /// program list already cached and hand back the same answer: the week the
-  /// coach just wrote would arrive on no pull at all.
-  ///
-  /// Awaited afterwards through the derived providers the cards actually read,
-  /// so the spinner is up until the slowest card has its answer rather than
-  /// until the first one does.
+  /// Awaited through the derived providers the cards actually read, so the
+  /// spinner is up until the slowest card has its answer rather than until the
+  /// first one does.
   Future<void> _refresh() {
     ref.invalidate(programsProvider);
     ref.invalidate(weekDetailProvider);

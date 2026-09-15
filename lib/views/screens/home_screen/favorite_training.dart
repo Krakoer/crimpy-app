@@ -19,8 +19,11 @@ class FavoriteTrainingList extends ConsumerWidget {
     final pinned = ref.watch(pinnedTrainingsProvider);
     return HomeCard(
       title: "Favorite Trainings",
+      // Matched on what the state holds rather than on which state it is, so a
+      // pull refetching the list leaves it on screen instead of collapsing the
+      // card to a spinner and back.
       child: switch (pinned) {
-        AsyncData(:final value) => SizedBox(
+        AsyncValue(:final value?) => SizedBox(
           height: 200,
           child: SingleChildScrollView(
             child: Column(
@@ -117,7 +120,7 @@ class FavoriteTrainingList extends ConsumerWidget {
             ),
           ),
         ),
-        AsyncError(:final error) => Center(
+        AsyncValue(:final error?) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -129,7 +132,7 @@ class FavoriteTrainingList extends ConsumerWidget {
             ],
           ),
         ),
-        AsyncLoading() => const Center(child: CircularProgressIndicator()),
+        _ => const Center(child: CircularProgressIndicator()),
       },
     );
   }

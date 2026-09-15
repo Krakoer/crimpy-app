@@ -133,6 +133,77 @@ void main() {
     expect(_asked, 2);
   });
 
+  // Round 2 caught the cards below the converted screens still reading through
+  // AsyncData, asData and when(). A provider rebuilt because a dependency was
+  // invalidated is a reload, so all three lose the value it is still carrying
+  // and the card blanks itself for as long as the pull runs.
+  group('a card whose provider is reloading', () {
+    testWidgets('keeps what it holds when matched on the value', (
+      tester,
+    ) async {
+      final derived = FutureProvider<String>(
+        (ref) async => (await ref.watch(_items.future)).first,
+      );
+      late WidgetRef captured;
+
+      await _pump(
+        tester,
+        Consumer(
+          builder: (context, ref, _) {
+            captured = ref;
+            final held = ref.watch(derived);
+            return switch (held) {
+              AsyncValue(:final value?) => Text(value),
+              _ => const Text('BLANK'),
+            };
+          },
+        ),
+      );
+
+      expect(find.text('first'), findsOneWidget);
+
+      captured.invalidate(_items);
+      await tester.pump();
+
+      expect(find.text('first'), findsOneWidget);
+      expect(find.text('BLANK'), findsNothing);
+    });
+
+    testWidgets('keeps what it holds when when() skips a reload', (
+      tester,
+    ) async {
+      final derived = FutureProvider<String>(
+        (ref) async => (await ref.watch(_items.future)).first,
+      );
+      late WidgetRef captured;
+
+      await _pump(
+        tester,
+        Consumer(
+          builder: (context, ref, _) {
+            captured = ref;
+            return ref
+                .watch(derived)
+                .when(
+                  skipLoadingOnReload: true,
+                  loading: () => const Text('BLANK'),
+                  error: (_, _) => const Text('BLANK'),
+                  data: Text.new,
+                );
+          },
+        ),
+      );
+
+      expect(find.text('first'), findsOneWidget);
+
+      captured.invalidate(_items);
+      await tester.pump();
+
+      expect(find.text('first'), findsOneWidget);
+      expect(find.text('BLANK'), findsNothing);
+    });
+  });
+
   group('a refresh that fails', () {
     // RefreshIndicator drops the future it is handed, so an onRefresh that
     // throws used to become an uncaught async error: one Sentry report per

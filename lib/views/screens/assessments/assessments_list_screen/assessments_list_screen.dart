@@ -125,10 +125,13 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
     );
 
     String? lastResultFor(AssessmentType type) {
+      // Read off what the state holds: a pull refetches all three, and a
+      // failure keeps the last result rather than blanking the line that says
+      // when the athlete last measured it.
       final data = switch (type) {
-        AssessmentType.mvc => mvcAssessments.asData?.value,
-        AssessmentType.criticalForce => cfAssessments.asData?.value,
-        AssessmentType.endurance60 => e60Assessments.asData?.value,
+        AssessmentType.mvc => mvcAssessments.value,
+        AssessmentType.criticalForce => cfAssessments.value,
+        AssessmentType.endurance60 => e60Assessments.value,
       };
       if (data == null || data.isEmpty) return null;
       final last = data.reduce((a, b) => a.date.isAfter(b.date) ? a : b);

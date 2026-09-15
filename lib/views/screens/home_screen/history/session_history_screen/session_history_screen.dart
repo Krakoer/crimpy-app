@@ -68,9 +68,6 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
       ),
       body: SafeArea(
         child: PullToRefresh(
-          // The filter is derived from the session list and fetches nothing of
-          // its own, so refreshing it alone would recompute it against the
-          // answer already cached and hand back what is already on screen.
           onRefresh: () async {
             ref.invalidate(sessionsProvider);
             await ref.read(filteredSessionsProvider(_currentFilter).future);

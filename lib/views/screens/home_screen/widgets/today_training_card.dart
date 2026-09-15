@@ -26,7 +26,11 @@ class TodayTrainingCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final programAsync = ref.watch(activeProgramProvider);
+    // Skips the loading arm while what is being reloaded is what this card is
+    // already showing: a pull would otherwise take today's training off the
+    // dashboard for as long as the fetch runs, and leave it off if it fails.
     return programAsync.when(
+      skipLoadingOnReload: true,
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
       data: (program) {

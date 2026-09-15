@@ -77,13 +77,16 @@ class _HistoryScreenState extends ConsumerState<WeekHistogramCard> {
       ),
       child: SizedBox(
         height: widget.maxBarHeight + 66, // Fixed height to prevent flickering
+        // Matched on what the state holds rather than on which state it is: a
+        // pull refetches the sessions this reads, and the bars are worth more
+        // on screen than a spinner is while they are asked for again.
         child: switch (asyncSessions) {
-          AsyncData(:final value) => WeekHistogramWidget(
+          AsyncValue(:final value?) => WeekHistogramWidget(
             sessions: value,
             maxBarHeight: widget.maxBarHeight,
             startOfWeek: startOfTheWeek,
           ),
-          AsyncError(:final error) => () {
+          AsyncValue(:final error?) => () {
             AppLoggerHelper.error(error.toString());
             return Center(child: Text('Error: $error'));
           }(),

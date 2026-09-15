@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 /// How long a pull waits before it gives up on saying anything.
 ///
@@ -23,9 +24,14 @@ const Duration _refreshPatience = Duration(seconds: 15);
 /// spinner is the app's own colour rather than the framework's blue. A failure
 /// is answered for rather than dropped: `RefreshIndicator` discards the future
 /// it is handed, so an `onRefresh` that throws becomes an uncaught async error
-/// reported to Sentry and nothing at all to the athlete, who is left looking at
-/// a list that did not change and was never told why. And a pull cannot outlast
+/// and nothing at all to the athlete, who is left looking at a list that did
+/// not change and was never told why. And a pull cannot outlast
 /// [_refreshPatience].
+///
+/// Catching it here takes it off the path that would otherwise have reported
+/// it, since the zone `main` guards is what sends anything to Sentry and
+/// [AppLoggerHelper] only writes to the console and the in-memory log the debug
+/// screen shows. So this reports it instead of only swallowing it.
 class PullToRefresh extends StatelessWidget {
   const PullToRefresh({
     super.key,
@@ -50,9 +56,16 @@ class PullToRefresh extends StatelessWidget {
       await onRefresh().timeout(_refreshPatience);
     } on TimeoutException {
       _say(messenger, 'Still trying. This is taking longer than usual.');
-    } catch (error) {
+    } catch (error, stackTrace) {
       AppLoggerHelper.error('Could not refresh', error);
-      _say(messenger, 'Could not refresh. Check your connection.');
+      // The stack of the failure rather than of this catch, which is the only
+      // one that says which call it came from.
+      unawaited(Sentry.captureException(error, stackTrace: stackTrace));
+      // Says what happened and not why: a refresh fails on a dropped
+      // connection and on a server that answered 500 alike, and naming the
+      // first would be a diagnosis this has no way of making. The cause goes
+      // where it can be read rather than being guessed at on screen.
+      _say(messenger, 'Could not refresh. Please try again.');
     }
   }
 
