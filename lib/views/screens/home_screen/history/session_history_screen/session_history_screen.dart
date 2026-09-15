@@ -80,7 +80,9 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
             AsyncValue(:final error?) => RefreshableColumn(
               child: ErrorState(
                 error: error.toString(),
-                onRetry: () => setState(() {}),
+                // Asks again rather than rebuilding a widget over a provider
+                // that is still holding the same error.
+                onRetry: () => ref.invalidate(sessionsProvider),
               ),
             ),
             _ => const Center(child: CircularProgressIndicator()),

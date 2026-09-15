@@ -148,8 +148,11 @@ class PinTrainingDialog extends ConsumerWidget {
     final availableTrainings = ref.watch(allTrainingsProvider);
     return AlertDialog(
       title: Text("Favorite a training"),
+      // Matched on what the state holds: toggling a favourite invalidates the
+      // list this reads, so through AsyncData the dialog would collapse to a
+      // spinner and back on every tap.
       content: switch (availableTrainings) {
-        AsyncData(:final value) => SingleChildScrollView(
+        AsyncValue(:final value?) => SingleChildScrollView(
           child: SizedBox(
             width: 300,
             height: 300,
@@ -213,7 +216,7 @@ class PinTrainingDialog extends ConsumerWidget {
                   ),
           ),
         ),
-        AsyncError(:final error) => Center(
+        AsyncValue(:final error?) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -225,7 +228,7 @@ class PinTrainingDialog extends ConsumerWidget {
             ],
           ),
         ),
-        AsyncLoading() => const Center(child: CircularProgressIndicator()),
+        _ => const Center(child: CircularProgressIndicator()),
       },
     );
   }

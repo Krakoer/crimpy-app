@@ -37,7 +37,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // The body of each prescribed training, which the week names but does not
     // carry. Kept alive by this dashboard watching it, so nothing else ever
     // disposes it and a coach's edit to today's session would never arrive.
-    ref.invalidate(programTrainingProvider);
+    //
+    // The only one not awaited below: which trainings are prescribed is what
+    // the refreshed week answers, so there is no key to read here yet. The row
+    // reads what it holds, so it keeps the old estimate for a round trip
+    // rather than blanking.
     ref.invalidate(sessionsProvider);
     ref.invalidate(filteredSessionsProvider);
     // The one instance this dashboard reads, through assessmentResults. The
