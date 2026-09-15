@@ -15,6 +15,15 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 /// screen; only the spinner stops promising it is coming.
 const Duration _refreshPatience = Duration(seconds: 15);
 
+/// Where a failure that is worth knowing about goes. Injectable so a test can
+/// count what was reported rather than only what was shown.
+typedef RefreshFailureReporter =
+    void Function(Object error, StackTrace stackTrace);
+
+void _reportToSentry(Object error, StackTrace stackTrace) {
+  unawaited(Sentry.captureException(error, stackTrace: stackTrace));
+}
+
 /// Pull down to fetch again what the screen reads from the store.
 ///
 /// The athlete's coach writes their week, answers their notes and edits their
@@ -38,6 +47,7 @@ class PullToRefresh extends StatelessWidget {
     super.key,
     required this.onRefresh,
     required this.child,
+    this.reportFailure = _reportToSentry,
   });
 
   /// What to fetch again. Held to until it completes, so it should await the
@@ -51,6 +61,10 @@ class PullToRefresh extends StatelessWidget {
   final Future<void> Function() onRefresh;
 
   final Widget child;
+
+  /// Reports a failure the athlete cannot act on, which is every one except a
+  /// request that never left the device.
+  final RefreshFailureReporter reportFailure;
 
   Future<void> _refresh(ScaffoldMessengerState? messenger) async {
     try {
@@ -66,7 +80,7 @@ class PullToRefresh extends StatelessWidget {
       // rather than this catch's, which is the only one that says where it
       // came from.
       if (error is! ApiException || !error.isOffline) {
-        unawaited(Sentry.captureException(error, stackTrace: stackTrace));
+        reportFailure(error, stackTrace);
       }
       // Says what happened and not why: a refresh fails on a dropped
       // connection and on a server that answered 500 alike, and naming the

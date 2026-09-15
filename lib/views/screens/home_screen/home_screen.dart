@@ -34,6 +34,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Future<void> _refresh() {
     ref.invalidate(programsProvider);
     ref.invalidate(weekDetailProvider);
+    // The body of each prescribed training, which the week names but does not
+    // carry. Kept alive by this dashboard watching it, so nothing else ever
+    // disposes it and a coach's edit to today's session would never arrive.
+    ref.invalidate(programTrainingProvider);
     ref.invalidate(sessionsProvider);
     ref.invalidate(filteredSessionsProvider);
     // The one instance this dashboard reads, through assessmentResults. The

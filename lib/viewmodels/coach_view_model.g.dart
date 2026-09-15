@@ -118,4 +118,4 @@ final class CoachEnrollmentProvider
   }
 }
 
-String _$coachEnrollmentHash() => r'403cdbad39e42c30b4a825d6b0010e756620f63b';
+String _$coachEnrollmentHash() => r'09c8a2728821fc75fea8f772dbd8adc35c3270ff';

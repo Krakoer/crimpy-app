@@ -196,7 +196,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   ),
                   // Only for a coached athlete: with no coach there is nobody
                   // for the week to be sent to.
-                  if (ref.watch(coachEnrollmentProvider).asData?.value != null)
+                  if (ref.watch(coachEnrollmentProvider).value != null)
                     ListTile(
                       leading: const Icon(Icons.event_available),
                       title: const Text('Your week'),
@@ -212,8 +212,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     ),
                   // Reminders only exist for coach-assigned programs, and only
                   // on the platforms that can deliver a scheduled notification.
+                  // Read off what the state holds: a pull on another tab
+                  // reloads the program, and through asData this row, the only
+                  // way into the reminder settings, would be gone while it ran
+                  // and stay gone if it failed.
                   if (supportsTrainingReminders &&
-                      ref.watch(activeProgramProvider).asData?.value != null)
+                      ref.watch(activeProgramProvider).value != null)
                     ListTile(
                       leading: const Icon(Icons.notifications_none),
                       title: const Text('Training reminders'),

@@ -1,3 +1,4 @@
+import 'package:crimpy/models/coach_enrollment.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/cached_program_schedule.dart';
 import 'package:crimpy/models/notification_preferences.dart';
@@ -240,7 +241,15 @@ Future<CoachNotificationPrompt?> pendingCoachNotificationPrompt(Ref ref) async {
   final user = await ref.watch(authStateProvider.future);
   if (user == null) return null;
 
-  final enrollment = await ref.watch(coachEnrollmentProvider.future);
+  // Same as no coach for this question: nothing is due until the app can ask
+  // who the coach is, and answering otherwise would prompt on a dropped wifi.
+  final CoachEnrollment? enrollment;
+  try {
+    enrollment = await ref.watch(coachEnrollmentProvider.future);
+  } catch (error) {
+    AppLoggerHelper.warning('Coach enrollment fetch failed: $error');
+    return null;
+  }
   if (enrollment == null) return null;
 
   if (await notifications.hasPermission()) return null;

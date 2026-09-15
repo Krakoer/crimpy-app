@@ -258,14 +258,12 @@ class ApiClient {
 
   /// Whether the request never got an answer, as opposed to getting one that
   /// said no. A response of any status means the server was reached.
-  static bool _neverReachedTheServer(DioException e) =>
-      e.response == null &&
-      const {
-        DioExceptionType.connectionError,
-        DioExceptionType.connectionTimeout,
-        DioExceptionType.receiveTimeout,
-        DioExceptionType.sendTimeout,
-      }.contains(e.type);
+  ///
+  /// The absent response is the whole test. Naming the connection error types
+  /// as well would miss the ones dio cannot classify: a TLS handshake refused
+  /// by a captive portal, or a socket reset after the request went out, both
+  /// arrive as `unknown` with no response and are as offline as the rest.
+  static bool _neverReachedTheServer(DioException e) => e.response == null;
 
   Future<Response> get(
     String path, {

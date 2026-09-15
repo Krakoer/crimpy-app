@@ -73,6 +73,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
         child: PullToRefresh(
           onRefresh: () async {
             ref.invalidate(weekDetailProvider);
+            ref.invalidate(programTrainingProvider);
             await Future.wait([
               ref.refresh(programWeeksProvider(program.id).future),
               ref.refresh(sessionsProvider.future),

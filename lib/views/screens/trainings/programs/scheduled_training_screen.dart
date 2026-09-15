@@ -46,7 +46,12 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(session.trainingTitle)),
       body: SafeArea(
+        // Skips both arms while what is being reloaded is the training already
+        // on screen: a pull on the dashboard below reaches this, and the
+        // athlete reading their session should not lose it to a spinner.
         child: trainingAsync.when(
+          skipLoadingOnReload: true,
+          skipError: true,
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(
             child: Padding(

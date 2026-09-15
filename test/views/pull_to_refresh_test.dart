@@ -230,21 +230,45 @@ void main() {
     // An athlete pulling in a gym basement is not a defect, and one event per
     // pull would bury the failures that are. The snackbar still says so either
     // way: only the reporting is filtered, not the message.
-    testWidgets('still says so when the request never left the device', (
+    testWidgets('is not reported when the request never left the device', (
       tester,
     ) async {
+      final reported = <Object>[];
+
       await _pump(
         tester,
         PullToRefresh(
           onRefresh: () async =>
               throw ApiException('Connection error.', isOffline: true),
+          reportFailure: (error, _) => reported.add(error),
           child: const RefreshableColumn(child: Text('Nothing logged yet')),
         ),
       );
 
       await _pullDown(tester);
 
+      expect(reported, isEmpty);
       expect(tester.takeException(), isNull);
+      // Said all the same: only the reporting is filtered.
+      expect(find.textContaining('Could not refresh'), findsOneWidget);
+    });
+
+    testWidgets('is reported when the server answered badly', (tester) async {
+      final reported = <Object>[];
+
+      await _pump(
+        tester,
+        PullToRefresh(
+          onRefresh: () async =>
+              throw ApiException('Server error.', statusCode: 500),
+          reportFailure: (error, _) => reported.add(error),
+          child: const RefreshableColumn(child: Text('Nothing logged yet')),
+        ),
+      );
+
+      await _pullDown(tester);
+
+      expect(reported, hasLength(1));
       expect(find.textContaining('Could not refresh'), findsOneWidget);
     });
 
