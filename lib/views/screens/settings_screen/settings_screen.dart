@@ -244,6 +244,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               child: Text(
                 ref
                         .watch(appInfoProvider)
+                        // The version this build shipped with. Nothing invalidates it.
+                        // ignore: keep_the_held_value
                         .whenOrNull(
                           data: (info) => 'Crimpy v${info.version}',
                         ) ??

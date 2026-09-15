@@ -13,14 +13,18 @@ import 'package:custom_lint_builder/custom_lint_builder.dart';
 /// every pull to refresh, therefore empties any widget that reads it through:
 ///
 ///   - `.asData`, which is null on both;
-///   - an `AsyncData(...)` or `AsyncError(...)` pattern, which matches on the
-///     state's type rather than on what it holds;
-///   - `when(...)` or `maybeWhen(...)` without `skipLoadingOnReload: true` and
-///     `skipError: true`, which default to false.
+///   - an `AsyncData(...)`, `AsyncError(...)` or `AsyncLoading(...)` pattern,
+///     which matches on the state's type rather than on what it holds;
+///   - `when`, `maybeWhen` or `whenOrNull` without `skipLoadingOnReload: true`
+///     and `skipError: true`, which both default to false;
+///   - `map`, `maybeMap`, `mapOrNull` and `whenData`, which dispatch on the
+///     state's type and take no flag that would stop them;
+///   - `is AsyncData<T>`, which is the pattern form without the pattern.
 ///
-/// Read `value` instead, or match `AsyncValue(:final value?)`, or pass both
-/// skip flags. Where the blanking is wanted, `// ignore` it and say why: a run
-/// screen that must not show stale numbers is a real case.
+/// Read `value` instead, or match `AsyncValue(:final value?)` and
+/// `AsyncValue(:final error?)`, or pass both skip flags. Where the blanking is
+/// wanted, `// ignore` it and say why: a run screen that must not show stale
+/// numbers is a real case.
 ///
 /// The rule does not try to work out whether a given read is downstream of a
 /// pull. That question is global and the answer changes whenever a provider
@@ -35,20 +39,32 @@ class KeepTheHeldValue extends DartLintRule {
         'This drops the value the state is still holding, so the widget empties '
         'itself while the provider reloads and stays empty if the reload fails.',
     correctionMessage:
-        'Read `value`, or match `AsyncValue(:final value?)`, or pass '
-        'skipLoadingOnReload: true and skipError: true.',
+        'Read `value`, or match `AsyncValue(:final value?)` and '
+        '`AsyncValue(:final error?)`, or pass skipLoadingOnReload: true and '
+        'skipError: true.',
   );
 
-  static const _asyncValueNames = {'AsyncValue', 'AsyncData', 'AsyncError',
-    'AsyncLoading'};
+  static const _asyncValueNames = {
+    'AsyncValue',
+    'AsyncData',
+    'AsyncError',
+    'AsyncLoading',
+  };
 
   static bool _isAsyncValue(DartType? type) {
     if (type is! InterfaceType) return false;
     for (final t in [type, ...type.allSupertypes]) {
-      if (_asyncValueNames.contains(t.element.name)) return true;
+      if (_isRiverpodState(t)) return true;
     }
     return false;
   }
+
+  /// Riverpod's own, and not something else wearing the name: `dart:async` has
+  /// an `AsyncError` of its own, and destructuring one in a stream handler has
+  /// nothing to do with a widget emptying itself.
+  static bool _isRiverpodState(InterfaceType type) =>
+      _asyncValueNames.contains(type.element.name) &&
+      (type.element.library.uri.toString().startsWith('package:riverpod/'));
 
   @override
   void run(
@@ -69,26 +85,96 @@ class KeepTheHeldValue extends DartLintRule {
       reporter.atNode(node.identifier, _code);
     });
 
-    // `AsyncData(...)` / `AsyncError(...)` as a pattern, which is a test of the
-    // state's type where what was meant was a test of what it holds.
+    // A state-typed pattern, which is a test of what the state is where what
+    // was meant was a test of what it holds.
     context.registry.addObjectPattern((node) {
       final name = node.type.name.lexeme;
-      if (name != 'AsyncData' && name != 'AsyncError') return;
+      if (!_statePatterns.contains(name)) return;
       if (!_isAsyncValue(node.type.type)) return;
+      // An error arm under an arm that already took the held value only ever
+      // runs with nothing held, so it drops nothing.
+      if (name == 'AsyncError' && _underAnArmTakingTheValue(node)) return;
       reporter.atNode(node.type, _code);
     });
 
-    // `when(...)` and `maybeWhen(...)`, whose skip flags both default to false.
+    // `state is AsyncData<T>`, which tests what the state is without being a
+    // pattern at all, and is the same mistake one keystroke shorter.
+    context.registry.addIsExpression((node) {
+      final type = node.type.type;
+      if (type is! InterfaceType) return;
+      if (!_statePatterns.contains(type.element.name)) return;
+      if (!_isRiverpodState(type)) return;
+      if (!_isAsyncValue(node.expression.staticType)) return;
+      reporter.atNode(node.type, _code);
+    });
+
     context.registry.addMethodInvocation((node) {
       final name = node.methodName.name;
-      if (name != 'when' && name != 'maybeWhen') return;
+      final needsFlags = _flaggable.contains(name);
+      if (!needsFlags && !_unflaggable.contains(name)) return;
       if (!_isAsyncValue(node.realTarget?.staticType)) return;
-      if (_passesTrue(node, 'skipLoadingOnReload') &&
+      if (needsFlags &&
+          _passesTrue(node, 'skipLoadingOnReload') &&
           _passesTrue(node, 'skipError')) {
         return;
       }
       reporter.atNode(node.methodName, _code);
     });
+  }
+
+  /// The patterns that match on which state it is.
+  static const _statePatterns = {'AsyncData', 'AsyncError', 'AsyncLoading'};
+
+  /// The readers that keep the value when told to.
+  static const _flaggable = {'when', 'maybeWhen', 'whenOrNull'};
+
+  /// The readers that dispatch on the state's type and take no flag that would
+  /// stop them, so there is no spelling of these that keeps the value.
+  static const _unflaggable = {'map', 'maybeMap', 'mapOrNull', 'whenData'};
+
+  /// Whether an earlier arm of the same switch has already taken every state
+  /// that holds a value, which is what leaves this one nothing to drop.
+  ///
+  /// Read off the pattern rather than off its source. An arm only qualifies
+  /// when it matches `AsyncValue` itself, binds `value` under a null check, and
+  /// is unguarded: `AsyncData(:final value)` lets an error still holding a
+  /// value fall through to here, and so does any arm a `when` clause declines.
+  static bool _underAnArmTakingTheValue(AstNode node) {
+    final cases = switch (node.thisOrAncestorMatching(
+      (a) => a is SwitchExpression || a is SwitchStatement,
+    )) {
+      SwitchExpression(:final cases) => cases.map((c) => c.guardedPattern),
+      SwitchStatement(:final members) =>
+        members.whereType<SwitchPatternCase>().map((c) => c.guardedPattern),
+      _ => null,
+    };
+    if (cases == null) return false;
+    for (final guarded in cases) {
+      if (guarded.pattern.offset >= node.offset) break;
+      if (_takesEveryHeldValue(guarded)) return true;
+    }
+    return false;
+  }
+
+  static bool _takesEveryHeldValue(GuardedPattern guarded) {
+    if (guarded.whenClause != null) return false;
+    final pattern = guarded.pattern;
+    if (pattern is! ObjectPattern) return false;
+    if (pattern.type.name.lexeme != 'AsyncValue') return false;
+    return pattern.fields.any(
+      (field) =>
+          _fieldName(field) == 'value' && field.pattern is NullCheckPattern,
+    );
+  }
+
+  /// The property a pattern field reads, whether it was named or taken from the
+  /// variable it binds.
+  static String? _fieldName(PatternField field) {
+    final explicit = field.name?.name?.lexeme;
+    if (explicit != null) return explicit;
+    final pattern = field.pattern;
+    final bound = pattern is NullCheckPattern ? pattern.pattern : pattern;
+    return bound is DeclaredVariablePattern ? bound.name.lexeme : null;
   }
 
   static bool _passesTrue(MethodInvocation node, String name) {

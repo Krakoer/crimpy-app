@@ -223,6 +223,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     if (frozen != null) return reportedItems(session.itemResults, frozen);
     return ref
             .watch(sessionTrainingItemsProvider(session.trainingId))
+            // The live training, as below. Read only by a session carrying no frozen
+            // prescription, which is a guest run or one played before the snapshot.
+            // ignore: keep_the_held_value
             .whenData((items) => reportedItems(session.itemResults, items))
             .value ??
         const [];
@@ -255,6 +258,10 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     }
     return ref
         .watch(sessionTrainingItemsProvider(session.trainingId))
+        // The live training, read once per session opened. No pull invalidates it,
+        // and the caller tells a training still loading from one that resolved to no
+        // blocks, which is the distinction whenData is being used for here.
+        // ignore: keep_the_held_value
         .whenData((items) => groupRepsByTrainingItem(workReps, items));
   }
 

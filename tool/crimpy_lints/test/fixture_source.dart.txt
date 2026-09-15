@@ -1,5 +1,6 @@
-// Each function is named for what it does with the state, so a test can assert
-// which ones the rule flags by name.
+// Each function is named for what it does with the state. Every code line the
+// rule is expected to flag carries the marker the test reads, and the test
+// asserts it flags those lines and no others.
 import 'package:riverpod/riverpod.dart';
 
 final numbers = FutureProvider<int>((ref) async => 1);
@@ -13,10 +14,65 @@ String matchesAsyncData(Ref ref) => switch (ref.watch(numbers)) {
   _ => 'nothing',
 };
 
-String matchesAsyncError(Ref ref) => switch (ref.watch(numbers)) {
+String matchesAsyncLoadingFirst(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncLoading() => 'loading', // LINT
+  AsyncValue(:final value?) => '$value',
+  _ => 'nothing',
+};
+
+String matchesAsyncErrorAlone(Ref ref) => switch (ref.watch(numbers)) {
   AsyncError(:final error) => '$error', // LINT
   _ => 'nothing',
 };
+
+// The error arm runs only when the arm above it took nothing, so it drops
+// nothing and is not flagged.
+String matchesTheHeldValueThenError(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncValue(:final value?) => '$value',
+  AsyncError(:final error) => '$error',
+  _ => 'nothing',
+};
+
+// An AsyncData arm leaves an error still holding a value to fall through, so
+// the error arm below it does drop one and is flagged. This is the shape a
+// substring test for `value` in the arm above would wrongly let through.
+String matchesAsyncDataThenError(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncData(:final value) => '$value', // LINT
+  AsyncError(:final error) => '$error', // LINT
+  _ => 'nothing',
+};
+
+// A guarded arm can decline, so it takes nothing on its own and the error arm
+// below it is still flagged.
+String matchesGuardedThenError(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncValue(:final value?) when value > 0 => '$value',
+  AsyncError(:final error) => '$error', // LINT
+  _ => 'nothing',
+};
+
+// The same pair as a switch statement rather than an expression.
+String matchesInAStatement(Ref ref) {
+  switch (ref.watch(numbers)) {
+    case AsyncValue(:final value?):
+      return '$value';
+    case AsyncError(:final error):
+      return '$error';
+  }
+  return 'nothing';
+}
+
+String testsWithIs(Ref ref) {
+  final state = ref.watch(numbers);
+  if (state is AsyncData<int>) return '${state.value}'; // LINT
+  return 'nothing';
+}
+
+String maybeWhensWithoutTheFlags(Ref ref) => ref
+    .watch(numbers)
+    .maybeWhen( // LINT
+      data: (value) => '$value',
+      orElse: () => 'nothing',
+    );
 
 String matchesTheHeldValue(Ref ref) => switch (ref.watch(numbers)) {
   AsyncValue(:final value?) => '$value',
@@ -40,3 +96,31 @@ String whensWithTheFlags(Ref ref) => ref
       error: (_, _) => 'error',
       loading: () => 'loading',
     );
+
+String? whenOrNullsWithoutTheFlags(Ref ref) =>
+    ref.watch(numbers).whenOrNull(data: (value) => '$value'); // LINT
+
+String? whenOrNullsWithTheFlags(Ref ref) => ref
+    .watch(numbers)
+    .whenOrNull(
+      skipLoadingOnReload: true,
+      skipError: true,
+      data: (value) => '$value',
+    );
+
+String maps(Ref ref) => ref.watch(numbers).map( // LINT
+      data: (d) => '${d.value}',
+      error: (e) => 'error',
+      loading: (l) => 'loading',
+    );
+
+String maybeMaps(Ref ref) => ref.watch(numbers).maybeMap( // LINT
+      data: (d) => '${d.value}',
+      orElse: () => 'nothing',
+    );
+
+String? mapOrNulls(Ref ref) =>
+    ref.watch(numbers).mapOrNull(data: (d) => '${d.value}'); // LINT
+
+AsyncValue<String> whenDatas(Ref ref) =>
+    ref.watch(numbers).whenData((value) => '$value'); // LINT

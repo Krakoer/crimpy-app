@@ -54,8 +54,7 @@ archive/
 # Sensor data pulled off a device for debugging
 data.json
 
-# The lint package and its fixture resolve their own dependencies.
-tool/crimpy_lints/.dart_tool/
+# The lint package resolves its own dependencies, and running its tests leaves
+# build output beside them. The /build/ rule above is anchored at the repo root.
+tool/crimpy_lints/build/
 tool/crimpy_lints/pubspec.lock
-tool/crimpy_lints/test/fixture/.dart_tool/
-tool/crimpy_lints/test/fixture/pubspec.lock
