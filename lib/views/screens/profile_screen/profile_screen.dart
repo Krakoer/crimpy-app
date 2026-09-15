@@ -2,6 +2,7 @@ import 'package:crimpy/logger.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/profile_content.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/views/widgets/pull_to_refresh.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../theme/crimpy_theme.dart';
 
@@ -28,18 +29,23 @@ class _ClimbingProfileScreenState extends ConsumerState<ClimbingProfileScreen>
     final Color accentLeft = CrimpyTheme.accentOrange;
     final Color accentRight = CrimpyTheme.accentYellow;
 
-    return switch (asyncAssessments) {
-      AsyncData(:final value) => ProfileContent(
-        assessments: value,
-        accentLeft: accentLeft,
-        accentRight: accentRight,
-        goToAssessments: widget.goToAssessments,
-      ),
-      AsyncError(:final error) => () {
-        AppLoggerHelper.error('Failed to load assessments', error);
-        return Center(child: Text('Error: $error'));
-      }(),
-      AsyncLoading() => const Center(child: CircularProgressIndicator()),
-    };
+    return PullToRefresh(
+      onRefresh: () => ref.refresh(assessmentsProvider(null).future),
+      // Matched on what the state holds rather than on which state it is, so a
+      // pull leaves the profile on screen while it asks again.
+      child: switch (asyncAssessments) {
+        AsyncValue(:final value?) => ProfileContent(
+          assessments: value,
+          accentLeft: accentLeft,
+          accentRight: accentRight,
+          goToAssessments: widget.goToAssessments,
+        ),
+        AsyncValue(:final error?) => () {
+          AppLoggerHelper.error('Failed to load assessments', error);
+          return RefreshableColumn(child: Center(child: Text('Error: $error')));
+        }(),
+        _ => const Center(child: CircularProgressIndicator()),
+      },
+    );
   }
 }

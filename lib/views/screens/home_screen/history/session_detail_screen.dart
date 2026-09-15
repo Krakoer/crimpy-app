@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:crimpy/views/widgets/pull_to_refresh.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
@@ -103,18 +104,31 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
         ],
       ),
       body: SafeArea(
+        // A coach answers the notes on a session after the athlete has opened
+        // it, so the reply arrives on a screen that has already resolved. The
+        // session read from the list carries no reps, and only that one has
+        // something to ask again for.
         child: asyncFullSession != null
-            ? switch (asyncFullSession) {
-                AsyncData(:final value) =>
-                  value != null
-                      ? _buildSessionDetails(context, ref, value)
-                      : _buildNotFoundError(context),
-                AsyncError(:final error) => _buildErrorState(
-                  context,
-                  error.toString(),
-                ),
-                _ => const Center(child: CircularProgressIndicator()),
-              }
+            ? PullToRefresh(
+                onRefresh: () =>
+                    ref.refresh(sessionWithDataProvider(session.id!).future),
+                // Matched on what the state holds, so the session stays on
+                // screen while the pull asks for it again.
+                child: switch (asyncFullSession) {
+                  AsyncValue(:final value?) => _buildSessionDetails(
+                    context,
+                    ref,
+                    value,
+                  ),
+                  AsyncValue(:final error?) => RefreshableColumn(
+                    child: _buildErrorState(context, error.toString()),
+                  ),
+                  AsyncData() => RefreshableColumn(
+                    child: _buildNotFoundError(context),
+                  ),
+                  _ => const Center(child: CircularProgressIndicator()),
+                },
+              )
             : _buildSessionDetails(context, ref, session),
       ),
     );
@@ -134,6 +148,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     final poolsBlocks = resolvedBlocks.isLoading || spansMultipleBlocks(blocks);
 
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

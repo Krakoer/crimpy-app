@@ -8,6 +8,7 @@ import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/trainings/programs/scheduled_training_screen.dart';
 import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/views/widgets/pull_to_refresh.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:crimpy/views/widgets/section_widgets.dart';
@@ -63,30 +64,44 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Program')),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _header(),
-            const SizedBox(height: 14),
-            _viewToggle(),
-            const SizedBox(height: 14),
-            if (_calendar)
-              _CalendarView(
-                program: program,
-                definedWeeks: definedWeeks ?? {},
-                totalWeeks: _totalWeeks,
-                onOpen: _openSession,
-              )
-            else ...[
-              _weekSelector(definedWeeks),
+        // The coach writes this program while the athlete has it open, so a
+        // pull is the only way to see the week they just changed. The week
+        // details are a family, invalidated whole: the screen scrolls through
+        // more than one of them.
+        child: PullToRefresh(
+          onRefresh: () async {
+            ref.invalidate(weekDetailProvider);
+            await Future.wait([
+              ref.refresh(programWeeksProvider(program.id).future),
+              ref.refresh(sessionsProvider.future),
+            ]);
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            children: [
+              _header(),
               const SizedBox(height: 14),
-              _WeekStripView(
-                program: program,
-                weekNumber: _selectedWeek,
-                onOpen: _openSession,
-              ),
+              _viewToggle(),
+              const SizedBox(height: 14),
+              if (_calendar)
+                _CalendarView(
+                  program: program,
+                  definedWeeks: definedWeeks ?? {},
+                  totalWeeks: _totalWeeks,
+                  onOpen: _openSession,
+                )
+              else ...[
+                _weekSelector(definedWeeks),
+                const SizedBox(height: 14),
+                _WeekStripView(
+                  program: program,
+                  weekNumber: _selectedWeek,
+                  onOpen: _openSession,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

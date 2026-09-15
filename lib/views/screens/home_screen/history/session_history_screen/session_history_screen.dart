@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:crimpy/views/widgets/pull_to_refresh.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
@@ -66,14 +67,23 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
         ],
       ),
       body: SafeArea(
-        child: switch (asyncSessions) {
-          AsyncData(:final value) => _buildSessionList(value),
-          AsyncError(:final error) => ErrorState(
-            error: error.toString(),
-            onRetry: () => setState(() {}),
-          ),
-          _ => const Center(child: CircularProgressIndicator()),
-        },
+        child: PullToRefresh(
+          onRefresh: () =>
+              ref.refresh(filteredSessionsProvider(_currentFilter).future),
+          // Matched on what the state holds rather than on which state it is,
+          // so a pull keeps the history on screen instead of replacing it with
+          // the spinner the indicator is already showing.
+          child: switch (asyncSessions) {
+            AsyncValue(:final value?) => _buildSessionList(value),
+            AsyncValue(:final error?) => RefreshableColumn(
+              child: ErrorState(
+                error: error.toString(),
+                onRetry: () => setState(() {}),
+              ),
+            ),
+            _ => const Center(child: CircularProgressIndicator()),
+          },
+        ),
       ),
     );
   }
@@ -87,7 +97,9 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
         : sessions;
 
     if (filteredSessions.isEmpty) {
-      return Padding(
+      // Scrollable although it fits: an empty history is the state a pull is
+      // most worth making, and a column that cannot move cannot be pulled.
+      return RefreshableColumn(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
@@ -98,7 +110,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
               onClearFilter: _clearDateFilter,
               onDateTap: (date) => setState(() => _selectedDate = date),
             ),
-            Expanded(child: EmptyState(selectedDate: _selectedDate)),
+            EmptyState(selectedDate: _selectedDate),
           ],
         ),
       );
@@ -120,6 +132,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
 
     return ListView.builder(
       controller: _scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: sortedDates.length + 1,
       itemBuilder: (context, index) {
