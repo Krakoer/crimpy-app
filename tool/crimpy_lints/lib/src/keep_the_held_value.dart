@@ -91,9 +91,9 @@ class KeepTheHeldValue extends DartLintRule {
       final name = node.type.name.lexeme;
       if (!_statePatterns.contains(name)) return;
       if (!_isAsyncValue(node.type.type)) return;
-      // An error arm under an arm that already took the held value only ever
-      // runs with nothing held, so it drops nothing.
-      if (name == 'AsyncError' && _underAnArmTakingTheValue(node)) return;
+      // An error or loading arm under an arm that already took every state
+      // holding a value only ever runs with nothing held, so it drops nothing.
+      if (name != 'AsyncData' && _underAnArmTakingTheValue(node)) return;
       reporter.atNode(node.type, _code);
     });
 
@@ -106,6 +106,16 @@ class KeepTheHeldValue extends DartLintRule {
       if (!_isRiverpodState(type)) return;
       if (!_isAsyncValue(node.expression.staticType)) return;
       reporter.atNode(node.type, _code);
+    });
+
+    // `final AsyncData<T> d =>`, which is the same type test as `is`, written
+    // as a pattern that binds rather than as one that destructures.
+    context.registry.addDeclaredVariablePattern((node) {
+      final type = node.type?.type;
+      if (type is! InterfaceType) return;
+      if (!_statePatterns.contains(type.element.name)) return;
+      if (!_isRiverpodState(type)) return;
+      reporter.atNode(node.type!, _code);
     });
 
     context.registry.addMethodInvocation((node) {
@@ -130,7 +140,17 @@ class KeepTheHeldValue extends DartLintRule {
 
   /// The readers that dispatch on the state's type and take no flag that would
   /// stop them, so there is no spelling of these that keeps the value.
-  static const _unflaggable = {'map', 'maybeMap', 'mapOrNull', 'whenData'};
+  static const _unflaggable = {
+    'map',
+    'maybeMap',
+    'mapOrNull',
+    'whenData',
+    // Its documented purpose: reverting to the raw state with no information
+    // about the previous one. It is the one call whose whole job is this bug,
+    // and it poisons the reads this rule recommends, since what it hands back
+    // makes `AsyncValue(:final value?)` see nothing.
+    'unwrapPrevious',
+  };
 
   /// Whether an earlier arm of the same switch has already taken every state
   /// that holds a value, which is what leaves this one nothing to drop.
@@ -148,9 +168,37 @@ class KeepTheHeldValue extends DartLintRule {
         members.whereType<SwitchPatternCase>().map((c) => c.guardedPattern),
       _ => null,
     };
-    if (cases == null) return false;
-    for (final guarded in cases) {
-      if (guarded.pattern.offset >= node.offset) break;
+    if (cases != null) {
+      for (final guarded in cases) {
+        if (guarded.pattern.offset >= node.offset) break;
+        if (_takesEveryHeldValue(guarded)) return true;
+      }
+      return false;
+    }
+    return _underAnEarlierIfCase(node);
+  }
+
+  /// The same question for a chain of `if (x case ...)` statements, which is
+  /// ordinary Dart and reads as arms even though the language does not call
+  /// them that.
+  ///
+  /// Only an earlier test of the same expression counts, compared by source:
+  /// an arm that took the value of some other provider says nothing about what
+  /// this one is still holding.
+  static bool _underAnEarlierIfCase(AstNode node) {
+    final ifStatement = node.thisOrAncestorOfType<IfStatement>();
+    final scrutinee = ifStatement?.caseClause?.guardedPattern;
+    if (ifStatement == null || scrutinee == null) return false;
+    final block = ifStatement.parent;
+    if (block is! Block) return false;
+
+    final read = ifStatement.expression.toSource();
+    for (final statement in block.statements) {
+      if (statement.offset >= ifStatement.offset) break;
+      if (statement is! IfStatement) continue;
+      final guarded = statement.caseClause?.guardedPattern;
+      if (guarded == null) continue;
+      if (statement.expression.toSource() != read) continue;
       if (_takesEveryHeldValue(guarded)) return true;
     }
     return false;
@@ -158,13 +206,30 @@ class KeepTheHeldValue extends DartLintRule {
 
   static bool _takesEveryHeldValue(GuardedPattern guarded) {
     if (guarded.whenClause != null) return false;
-    final pattern = guarded.pattern;
-    if (pattern is! ObjectPattern) return false;
-    if (pattern.type.name.lexeme != 'AsyncValue') return false;
-    return pattern.fields.any(
-      (field) =>
-          _fieldName(field) == 'value' && field.pattern is NullCheckPattern,
-    );
+    return _patternTakesEveryHeldValue(guarded.pattern);
+  }
+
+  /// Whether a pattern matches every state that is carrying a value.
+  ///
+  /// Two spellings do: binding `value` under a null check, and asking for
+  /// `hasValue: true`, which is the one a nullable-valued provider needs since
+  /// a null check cannot tell "resolved to null" from "nothing yet".
+  static bool _patternTakesEveryHeldValue(DartPattern pattern) {
+    final bare = pattern is ParenthesizedPattern ? pattern.pattern : pattern;
+    if (bare is! ObjectPattern) return false;
+    final type = bare.type.type;
+    if (type is! InterfaceType) return false;
+    if (type.element.name != 'AsyncValue' || !_isRiverpodState(type)) {
+      return false;
+    }
+    for (final field in bare.fields) {
+      final name = _fieldName(field);
+      if (name == 'value' && field.pattern is NullCheckPattern) return true;
+      if (name == 'hasValue' && field.pattern.toSource().trim() == 'true') {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// The property a pattern field reads, whether it was named or taken from the

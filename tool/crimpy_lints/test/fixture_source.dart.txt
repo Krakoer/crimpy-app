@@ -4,6 +4,7 @@
 import 'package:riverpod/riverpod.dart';
 
 final numbers = FutureProvider<int>((ref) async => 1);
+final others = FutureProvider<int>((ref) async => 2);
 
 int? readsAsData(Ref ref) => ref.watch(numbers).asData?.value; // LINT
 
@@ -73,6 +74,52 @@ String maybeWhensWithoutTheFlags(Ref ref) => ref
       data: (value) => '$value',
       orElse: () => 'nothing',
     );
+
+// Its documented job is to throw the previous state away, so what it hands
+// back makes even the spellings this rule recommends see nothing.
+AsyncValue<int> unwrapsThePrevious(Ref ref) =>
+    ref.watch(numbers).unwrapPrevious(); // LINT
+
+// The same type test as `is`, written as a pattern that binds.
+String bindsATypedVariable(Ref ref) => switch (ref.watch(numbers)) {
+  final AsyncData<int> held => '${held.value}', // LINT
+  _ => 'nothing',
+};
+
+// hasValue: true is what a nullable-valued provider needs, since a null check
+// cannot tell "resolved to null" from "nothing yet". It takes every state
+// holding a value, so the error arm below it drops nothing.
+String matchesHasValueThenError(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncValue(:final value, hasValue: true) => '$value',
+  AsyncError(:final error) => '$error',
+  _ => 'nothing',
+};
+
+// A loading arm under an arm that took every held value runs only when there
+// is nothing to hold.
+String matchesTheHeldValueThenLoading(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncValue(:final value?) => '$value',
+  AsyncLoading() => 'loading',
+  AsyncError(:final error) => '$error',
+};
+
+// An if-case chain reads as arms even though the language does not call them
+// that, so the second test drops nothing either.
+String testsWithIfCase(Ref ref) {
+  final state = ref.watch(numbers);
+  if (state case AsyncValue(:final value?)) return '$value';
+  if (state case AsyncError(:final error)) return '$error';
+  return 'nothing';
+}
+
+// A chain over a different read says nothing about this one.
+String testsWithIfCaseOverAnother(Ref ref) {
+  final state = ref.watch(numbers);
+  final other = ref.watch(others);
+  if (other case AsyncValue(:final value?)) return '$value';
+  if (state case AsyncError(:final error)) return '$error'; // LINT
+  return 'nothing';
+}
 
 String matchesTheHeldValue(Ref ref) => switch (ref.watch(numbers)) {
   AsyncValue(:final value?) => '$value',

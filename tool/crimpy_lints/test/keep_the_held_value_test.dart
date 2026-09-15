@@ -14,6 +14,18 @@ import 'package:test/test.dart';
 ///
 /// `fixture_source.dart.txt` marks each line it expects to be flagged with
 /// `// LINT`, so adding a case to it is all it takes to cover one.
+/// The version `pubspec.lock` pins a package to, read from the app above.
+String _lockedVersion(String package) {
+  final lines = File('../../pubspec.lock').readAsLinesSync();
+  final start = lines.indexWhere((l) => l.trimRight() == '  $package:');
+  if (start < 0) throw StateError('$package is not in the app lockfile');
+  final version = lines
+      .skip(start)
+      .take(10)
+      .firstWhere((l) => l.trimLeft().startsWith('version:'));
+  return version.split('"')[1];
+}
+
 void main() {
   test(
     'flags the reads that drop a held value, and only those',
@@ -23,9 +35,14 @@ void main() {
         for (final (index, line) in source.split('\n').indexed)
           if (line.contains('// LINT')) index + 1,
       ];
-      expect(expected, hasLength(15), reason: 'the fixture lost its markers');
+      expect(expected, hasLength(18), reason: 'the fixture lost its markers');
 
       final rule = Directory.current.absolute.path;
+      // The version the app is locked to, so the rule is proved against the
+      // AsyncValue that ships rather than whatever pub.dev published last. The
+      // cost is that a release relocating AsyncValue stops announcing itself
+      // here; `flutter pub upgrade` is where that should be found anyway.
+      final riverpod = _lockedVersion('riverpod');
       final dir = Directory.systemTemp.createTempSync('crimpy_lints_');
       addTearDown(() => dir.deleteSync(recursive: true));
 
@@ -42,7 +59,7 @@ environment:
   sdk: '>=3.11.0 <4.0.0'
 
 dependencies:
-  riverpod: ^3.0.0
+  riverpod: $riverpod
 
 dev_dependencies:
   crimpy_lints:
