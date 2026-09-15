@@ -373,7 +373,11 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     // be logged. Derived from the content rather than from the label, so a coach
     // is free to put hangboard work in a session called anything.
     final logOnly = training.items.isEmpty;
-    final sessions = ref.watch(sessionsProvider).asData?.value ?? [];
+    // Read off what the state holds. This screen has no pull of its own, but it
+    // sits under the ones that do: a pull on the dashboard or the history
+    // invalidates the sessions while this is on the stack, and through asData
+    // the training it prescribes would read as never done.
+    final sessions = ref.watch(sessionsProvider).value ?? [];
     final done = isScheduledTrainingDone(
       sessions,
       program,

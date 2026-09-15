@@ -36,7 +36,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     ref.invalidate(weekDetailProvider);
     ref.invalidate(sessionsProvider);
     ref.invalidate(filteredSessionsProvider);
-    ref.invalidate(assessmentsProvider);
+    // The one instance this dashboard reads, through assessmentResults. The
+    // family holds an entry per assessment the other tabs show, and those tabs
+    // are kept alive behind this one: invalidating it whole refetches lists
+    // nothing here displays.
+    ref.invalidate(assessmentsProvider(null));
     ref.invalidate(assessmentDefinitionsProvider);
     ref.invalidate(allTrainingsProvider);
     ref.invalidate(pinnedTrainingsProvider);

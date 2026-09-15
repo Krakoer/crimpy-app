@@ -57,9 +57,11 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final weeksAsync = ref.watch(programWeeksProvider(program.id));
-    final definedWeeks = weeksAsync.asData?.value
-        .map((w) => w.weekNumber)
-        .toSet();
+    // Read off what the state holds. A pull that fails carries the summaries it
+    // already had, and reading them through asData would answer that the coach
+    // defined no week at all: every week greyed out and untappable, and a
+    // calendar drawn as an empty program, over a snackbar that has gone.
+    final definedWeeks = weeksAsync.value?.map((w) => w.weekNumber).toSet();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Program')),
@@ -74,10 +76,15 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
             await Future.wait([
               ref.refresh(programWeeksProvider(program.id).future),
               ref.refresh(sessionsProvider.future),
-              // The week body is what the pull exists to fetch, and it is
-              // slower than the summaries: without it the indicator leaves
-              // while the week the athlete is reading is still on its way.
-              ref.read(weekDetailProvider(program.id, _selectedWeek).future),
+              // The week bodies are what the pull exists to fetch and are
+              // slower than the summaries, so the indicator waits for the ones
+              // on screen: every defined week in the calendar, the selected one
+              // in the week view.
+              for (final week
+                  in _calendar
+                      ? (definedWeeks ?? {_selectedWeek})
+                      : {_selectedWeek})
+                ref.read(weekDetailProvider(program.id, week).future),
             ]);
           },
           child: ListView(
@@ -306,7 +313,13 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
       weekDetailProvider(widget.program.id, widget.weekNumber),
     );
 
+    // Skips both arms while what is being reloaded or refused is the week
+    // already on screen: a pull would otherwise replace the week the athlete is
+    // reading with a spinner, and a failed one with an error where their
+    // sessions were.
     return weekAsync.when(
+      skipLoadingOnReload: true,
+      skipError: true,
       loading: () => const Padding(
         padding: EdgeInsets.all(24),
         child: Center(child: CircularProgressIndicator()),
@@ -335,7 +348,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
         final selectedSessions = byDay[selected]!;
         final selectedDate = _dateForDay(selected);
         final timesPerWeek = week.timesPerWeekSessions;
-        final sessions = ref.watch(sessionsProvider).asData?.value ?? [];
+        final sessions = ref.watch(sessionsProvider).value ?? [];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -689,7 +702,7 @@ class _CalendarRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final week = defined
-        ? ref.watch(weekDetailProvider(program.id, weekNumber)).asData?.value
+        ? ref.watch(weekDetailProvider(program.id, weekNumber)).value
         : null;
     final byDay = {
       if (week != null)

@@ -1,3 +1,4 @@
+import 'package:crimpy/services/api_exception.dart';
 import 'package:crimpy/views/widgets/pull_to_refresh.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -129,7 +130,8 @@ void main() {
 
     await _pullDown(tester);
 
-    // Two would mean only the derived provider recomputed.
+    // One would mean only the derived provider recomputed, against a leaf that
+    // was never asked again.
     expect(_asked, 2);
   });
 
@@ -215,6 +217,27 @@ void main() {
         tester,
         PullToRefresh(
           onRefresh: () async => throw StateError('no connection'),
+          child: const RefreshableColumn(child: Text('Nothing logged yet')),
+        ),
+      );
+
+      await _pullDown(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('Could not refresh'), findsOneWidget);
+    });
+
+    // An athlete pulling in a gym basement is not a defect, and one event per
+    // pull would bury the failures that are. The snackbar still says so either
+    // way: only the reporting is filtered, not the message.
+    testWidgets('still says so when the request never left the device', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        PullToRefresh(
+          onRefresh: () async =>
+              throw ApiException('Connection error.', isOffline: true),
           child: const RefreshableColumn(child: Text('Nothing logged yet')),
         ),
       );

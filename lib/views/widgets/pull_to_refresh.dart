@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:crimpy/logger.dart';
+import 'package:crimpy/services/api_exception.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -58,9 +59,15 @@ class PullToRefresh extends StatelessWidget {
       _say(messenger, 'Still trying. This is taking longer than usual.');
     } catch (error, stackTrace) {
       AppLoggerHelper.error('Could not refresh', error);
-      // The stack of the failure rather than of this catch, which is the only
-      // one that says which call it came from.
-      unawaited(Sentry.captureException(error, stackTrace: stackTrace));
+      // Reported, since catching it here takes it off the path that would have
+      // reported it. Except when the request never reached the server: an
+      // athlete pulling in a gym basement is not a defect, and one event per
+      // pull would bury the failures that are. The stack is the failure's
+      // rather than this catch's, which is the only one that says where it
+      // came from.
+      if (error is! ApiException || !error.isOffline) {
+        unawaited(Sentry.captureException(error, stackTrace: stackTrace));
+      }
       // Says what happened and not why: a refresh fails on a dropped
       // connection and on a server that answered 500 alike, and naming the
       // first would be a diagnosis this has no way of making. The cause goes
