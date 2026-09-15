@@ -28,30 +28,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   /// shows. A pull here has to refresh all of them, or it would answer for the
   /// card that happens to be on top and leave the rest as they were.
   ///
-  /// Awaited together, so the spinner is up until the slowest card has its
-  /// answer rather than until the first one does.
-  Future<void> _refresh() => Future.wait([
-    ref.refresh(activeProgramProvider.future),
-    ref.refresh(activeProgramWeekProvider.future),
-    ref.refresh(assessmentResultsProvider.future),
-    ref.refresh(sessionsProvider.future),
-    ref.refresh(allTrainingsProvider.future),
-    ref.refresh(pinnedTrainingsProvider.future),
-    ref.refresh(coachEnrollmentProvider.future),
-    ref.refresh(myAvailabilityProvider.future),
-  ]);
+  /// What is invalidated is the providers that do the fetching, not the ones
+  /// the cards read. Riverpod invalidates a provider alone and never what it
+  /// was derived from, so refreshing `activeProgram` would re-filter the
+  /// program list already cached and hand back the same answer: the week the
+  /// coach just wrote would arrive on no pull at all.
+  ///
+  /// Awaited afterwards through the derived providers the cards actually read,
+  /// so the spinner is up until the slowest card has its answer rather than
+  /// until the first one does.
+  Future<void> _refresh() {
+    ref.invalidate(programsProvider);
+    ref.invalidate(weekDetailProvider);
+    ref.invalidate(sessionsProvider);
+    ref.invalidate(filteredSessionsProvider);
+    ref.invalidate(assessmentsProvider);
+    ref.invalidate(assessmentDefinitionsProvider);
+    ref.invalidate(allTrainingsProvider);
+    ref.invalidate(pinnedTrainingsProvider);
+    ref.invalidate(coachEnrollmentProvider);
+    ref.invalidate(myAvailabilityProvider);
+
+    return Future.wait([
+      ref.read(activeProgramProvider.future),
+      ref.read(activeProgramWeekProvider.future),
+      ref.read(assessmentResultsProvider.future),
+      ref.read(sessionsProvider.future),
+      ref.read(allTrainingsProvider.future),
+      ref.read(pinnedTrainingsProvider.future),
+      ref.read(coachEnrollmentProvider.future),
+      ref.read(myAvailabilityProvider.future),
+    ]);
+  }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    // The histogram reads a session list per week, so the family is invalidated
-    // whole: refreshing one week would leave every other one stale, and the
-    // card scrolls through them.
     return PullToRefresh(
-      onRefresh: () async {
-        ref.invalidate(filteredSessionsProvider);
-        await _refresh();
-      },
+      onRefresh: _refresh,
       child: RefreshableColumn(
         padding: const EdgeInsets.all(16),
         child: Column(

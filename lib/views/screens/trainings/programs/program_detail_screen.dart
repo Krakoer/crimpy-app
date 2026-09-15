@@ -74,6 +74,10 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
             await Future.wait([
               ref.refresh(programWeeksProvider(program.id).future),
               ref.refresh(sessionsProvider.future),
+              // The week body is what the pull exists to fetch, and it is
+              // slower than the summaries: without it the indicator leaves
+              // while the week the athlete is reading is still on its way.
+              ref.read(weekDetailProvider(program.id, _selectedWeek).future),
             ]);
           },
           child: ListView(

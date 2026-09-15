@@ -93,6 +93,82 @@ void main() {
     expect(find.text('first'), findsOneWidget);
   });
 
+  // Round 1 caught every screen refreshing the provider it reads rather than
+  // the one that fetches. Riverpod invalidates a provider alone and never what
+  // it was derived from, so the derived one recomputes against the answer
+  // already cached and the pull comes back with what was already on screen.
+  testWidgets('a pull asks the provider that does the fetching', (
+    tester,
+  ) async {
+    final filtered = FutureProvider<List<String>>(
+      (ref) async => (await ref.watch(_items.future)).take(1).toList(),
+    );
+
+    await _pump(
+      tester,
+      Consumer(
+        builder: (context, ref, _) {
+          final list = ref.watch(filtered);
+          return PullToRefresh(
+            onRefresh: () async {
+              ref.invalidate(_items);
+              await ref.read(filtered.future);
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                for (final item in list.value ?? const <String>[]) Text(item),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+
+    expect(_asked, 1);
+
+    await _pullDown(tester);
+
+    // Two would mean only the derived provider recomputed.
+    expect(_asked, 2);
+  });
+
+  group('a refresh that fails', () {
+    // RefreshIndicator drops the future it is handed, so an onRefresh that
+    // throws used to become an uncaught async error: one Sentry report per
+    // pull, and nothing at all said to the athlete.
+    testWidgets('says so rather than throwing into the framework', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        PullToRefresh(
+          onRefresh: () async => throw StateError('no connection'),
+          child: const RefreshableColumn(child: Text('Nothing logged yet')),
+        ),
+      );
+
+      await _pullDown(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(find.textContaining('Could not refresh'), findsOneWidget);
+    });
+
+    testWidgets('leaves what was on screen alone', (tester) async {
+      await _pump(
+        tester,
+        PullToRefresh(
+          onRefresh: () async => throw StateError('no connection'),
+          child: const RefreshableColumn(child: Text('Nothing logged yet')),
+        ),
+      );
+
+      await _pullDown(tester);
+
+      expect(find.text('Nothing logged yet'), findsOneWidget);
+    });
+  });
+
   group('RefreshableColumn', () {
     // An empty history is the state a pull is most worth making, and a column
     // that fits on screen sends no scroll notification for the indicator.
@@ -106,6 +182,24 @@ void main() {
         find.byType(SingleChildScrollView),
       );
       expect(scrollable.physics, isA<AlwaysScrollableScrollPhysics>());
+    });
+
+    // The padding sits outside the constrained child, so leaving it out of the
+    // minimum made every padded column taller than the viewport by exactly the
+    // padding, and the screen dragged up onto blank space.
+    testWidgets('does not scroll by its own padding alone', (tester) async {
+      await _pump(
+        tester,
+        const RefreshableColumn(
+          padding: EdgeInsets.all(16),
+          child: Text('Nothing logged yet'),
+        ),
+      );
+
+      final position = tester
+          .state<ScrollableState>(find.byType(Scrollable))
+          .position;
+      expect(position.maxScrollExtent, 0);
     });
 
     testWidgets('can be pulled when it holds nothing worth scrolling', (

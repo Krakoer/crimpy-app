@@ -56,6 +56,9 @@ class ProfileContent extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
 
     return SingleChildScrollView(
+      // Scrollable although the sections may fit: this is what the profile is
+      // pulled by, and a view that cannot move accepts no drag to pull it with.
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [

@@ -1,3 +1,4 @@
+import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:crimpy/views/widgets/pull_to_refresh.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -41,7 +42,18 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen>
     return Stack(
       children: [
         PullToRefresh(
-          onRefresh: () => ref.refresh(allTrainingsProvider.future),
+          // The list is headed by the program card, which reads the coach's
+          // program rather than the athlete's trainings, so a pull that asked
+          // only for the trainings would leave the top of the screen stale.
+          onRefresh: () async {
+            ref.invalidate(programsProvider);
+            ref.invalidate(weekDetailProvider);
+            await Future.wait([
+              ref.refresh(allTrainingsProvider.future),
+              ref.read(activeProgramProvider.future),
+              ref.read(todayTrainingProvider.future),
+            ]);
+          },
           // Matched on what the state holds rather than on which state it is:
           // a refresh is an AsyncLoading carrying the previous list, and an
           // AsyncData arm would swap the list the athlete is looking at for a

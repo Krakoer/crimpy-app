@@ -123,7 +123,11 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                   AsyncValue(:final error?) => RefreshableColumn(
                     child: _buildErrorState(context, error.toString()),
                   ),
-                  AsyncData() => RefreshableColumn(
+                  // A session the store no longer holds resolves to null, and
+                  // it stays resolved to null while a pull asks again: the
+                  // message is what the athlete is reading, so it is what they
+                  // keep reading rather than a spinner mid gesture.
+                  AsyncValue(hasValue: true) => RefreshableColumn(
                     child: _buildNotFoundError(context),
                   ),
                   _ => const Center(child: CircularProgressIndicator()),

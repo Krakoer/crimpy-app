@@ -203,20 +203,18 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
           // The results shown against each assessment are the athlete's own
           // history, which their coach can add to from the portal.
           child: PullToRefresh(
+            // Awaited for the assessments the screen actually renders, so a
+            // builtin added later is refreshed by the same pull rather than
+            // invalidated and left to resolve after the spinner has gone.
             onRefresh: () async {
               ref.invalidate(assessmentsProvider);
               await Future.wait([
-                ref.read(
-                  assessmentsProvider(BuiltinAssessmentIds.maxForce).future,
-                ),
-                ref.read(
-                  assessmentsProvider(
-                    BuiltinAssessmentIds.criticalForce,
-                  ).future,
-                ),
-                ref.read(
-                  assessmentsProvider(BuiltinAssessmentIds.endurance60).future,
-                ),
+                for (final template in assessmentTemplates)
+                  ref.read(
+                    assessmentsProvider(
+                      BuiltinAssessmentIds.idOf(template.type),
+                    ).future,
+                  ),
               ]);
             },
             child: ListView(

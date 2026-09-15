@@ -68,8 +68,13 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
       ),
       body: SafeArea(
         child: PullToRefresh(
-          onRefresh: () =>
-              ref.refresh(filteredSessionsProvider(_currentFilter).future),
+          // The filter is derived from the session list and fetches nothing of
+          // its own, so refreshing it alone would recompute it against the
+          // answer already cached and hand back what is already on screen.
+          onRefresh: () async {
+            ref.invalidate(sessionsProvider);
+            await ref.read(filteredSessionsProvider(_currentFilter).future);
+          },
           // Matched on what the state holds rather than on which state it is,
           // so a pull keeps the history on screen instead of replacing it with
           // the spinner the indicator is already showing.
