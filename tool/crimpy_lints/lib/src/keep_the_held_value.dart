@@ -1,4 +1,5 @@
 import 'package:analyzer/dart/ast/ast.dart';
+import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/error/listener.dart';
 import 'package:custom_lint_builder/custom_lint_builder.dart';
@@ -203,9 +204,17 @@ class KeepTheHeldValue extends DartLintRule {
     // takes only the states holding both, so a plain reload falls past it and
     // blanks in the arm below; `AsyncValue(:final value, hasValue: true)` binds
     // without narrowing and takes every one of them.
+    // A null check proves nothing when the value itself may be null: a state
+    // that resolved to null holds a value and still fails it, so the arm below
+    // takes a plain reload and blanks. That is the bug this whole rule was
+    // written for, so only `hasValue: true` counts there.
+    final holdsNullable =
+        type.typeArguments.isNotEmpty &&
+        type.typeArguments.first.nullabilitySuffix != NullabilitySuffix.none;
+
     var proven = false;
     for (final field in bare.fields) {
-      if (_provesAValueIsHeld(field)) {
+      if (_provesAValueIsHeld(field, holdsNullable: holdsNullable)) {
         proven = true;
         continue;
       }
@@ -214,9 +223,14 @@ class KeepTheHeldValue extends DartLintRule {
     return proven;
   }
 
-  static bool _provesAValueIsHeld(PatternField field) {
+  static bool _provesAValueIsHeld(
+    PatternField field, {
+    required bool holdsNullable,
+  }) {
     final name = _fieldName(field);
-    if (name == 'value') return field.pattern is NullCheckPattern;
+    if (name == 'value') {
+      return !holdsNullable && field.pattern is NullCheckPattern;
+    }
     return name == 'hasValue' && field.pattern.toSource().trim() == 'true';
   }
 
@@ -244,6 +258,11 @@ class KeepTheHeldValue extends DartLintRule {
     if (!_statePatterns.contains(type.element.name)) return;
     if (!_isRiverpodState(type)) return;
     if (node.thisOrAncestorOfType<GuardedPattern>() == null) return;
+    // Same question the object pattern asks: an arm under one that already took
+    // every state holding a value drops nothing, whichever way it is spelled.
+    if (type.element.name != 'AsyncData' && _underAnArmTakingTheValue(node)) {
+      return;
+    }
     reporter.atNode(annotation!, _code);
   }
 

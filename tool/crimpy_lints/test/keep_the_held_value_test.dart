@@ -23,7 +23,7 @@ void main() {
         for (final (index, line) in source.split('\n').indexed)
           if (line.contains('// LINT')) index + 1,
       ];
-      expect(expected, hasLength(21), reason: 'the fixture lost its markers');
+      expect(expected, hasLength(23), reason: 'the fixture lost its markers');
 
       final rule = Directory.current.absolute.path;
       // The version the app is locked to, so the rule is proved against the

@@ -149,6 +149,40 @@ void _detailStates() {
     expect(find.textContaining('not found'), findsNothing);
   });
 
+  // The reason the hasValue arm exists, and the one state the four below it
+  // cannot reach through overrideWith: a reload carrying the session the
+  // athlete is already reading. Spelling that arm `value?` leaves every other
+  // test here green while blanking the screen on every pull.
+  testWidgets('keeps the session on screen while it reloads', (tester) async {
+    var fetches = 0;
+    final container = ProviderContainer.test(
+      overrides: [
+        sessionTrainingItemsProvider(
+          null,
+        ).overrideWith((ref) async => const []),
+        sessionWithDataProvider('session-1').overrideWith((ref) async {
+          if (fetches++ > 0) return Completer<SessionModel?>().future;
+          return _session(reps: [_rep(0, itemId: 'a')]);
+        }),
+      ],
+    );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(home: SessionDetailScreen(session: _listed())),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(SessionOverviewCard), findsOneWidget);
+
+    container.invalidate(sessionWithDataProvider('session-1'));
+    await tester.pump();
+
+    expect(find.byType(SessionOverviewCard), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
   // A first fetch that fails has nothing held, so the error is what there is
   // to show. The arm above it only wins once something has been fetched.
   testWidgets('shows the error when the first fetch fails', (tester) async {

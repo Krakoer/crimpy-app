@@ -20,15 +20,13 @@ class NotificationSettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Training reminders')),
+      // Local reminder settings, read from the device. No pull touches them;
+      // what does is a sign out, through the auth state this controller
+      // watches, and a screen the athlete no longer owns should empty. Both
+      // arms below are ignored for that one reason.
       body: switch (preferences) {
-        // Local reminder settings, read from the device. No pull touches them;
-        // what does is a sign out, through the auth state this controller
-        // watches, and a screen the athlete no longer owns should empty.
         // ignore: keep_the_held_value
         AsyncData(:final value) => _Content(preferences: value),
-        // Local reminder settings, read from the device. No pull touches them;
-        // what does is a sign out, through the auth state this controller
-        // watches, and a screen the athlete no longer owns should empty.
         // ignore: keep_the_held_value
         AsyncError(:final error) => Center(child: Text('$error')),
         _ => const Center(child: CircularProgressIndicator()),
@@ -46,10 +44,9 @@ class _Content extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final enabled = preferences.enabled;
 
+    // The permission, asked of the device. Invalidated only after the coach
+    // dialog, which this screen cannot be on top of.
     final permissionRevoked =
-        // Local reminder settings, read from the device. No pull touches them;
-        // what does is a sign out, through the auth state this controller
-        // watches, and a screen the athlete no longer owns should empty.
         // ignore: keep_the_held_value
         enabled && ref.watch(reminderPermissionProvider).asData?.value == false;
 

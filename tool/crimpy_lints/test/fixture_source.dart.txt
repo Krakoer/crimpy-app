@@ -5,6 +5,7 @@ import 'package:riverpod/riverpod.dart';
 
 final numbers = FutureProvider<int>((ref) async => 1);
 final others = FutureProvider<int>((ref) async => 2);
+final maybeNumber = FutureProvider<int?>((ref) async => null);
 
 int? readsAsData(Ref ref) => ref.watch(numbers).asData?.value; // LINT
 
@@ -145,6 +146,30 @@ String destructuresARecord(Ref ref) {
   );
   return '${held.value} $count';
 }
+
+// A null check proves nothing when the value may itself be null: a state that
+// resolved to null holds a value and still fails it, so both arms below take a
+// plain reload and blank. This is the shape the ticket was opened for.
+String matchesANullableValue(Ref ref) => switch (ref.watch(maybeNumber)) {
+  AsyncValue(:final value?) => '$value',
+  AsyncLoading() => 'loading', // LINT
+  AsyncError(:final error) => '$error', // LINT
+};
+
+// hasValue is what proves it there, and it does suppress.
+String matchesANullableValueByHasValue(Ref ref) =>
+    switch (ref.watch(maybeNumber)) {
+      AsyncValue(:final value, hasValue: true) => '${value ?? 0}',
+      AsyncLoading() => 'loading',
+      AsyncError(:final error) => '$error',
+    };
+
+// The typed spellings of an arm answer the same as the object pattern does.
+String matchesTypedUnderAProvingArm(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncValue(:final value?) => '$value',
+  final AsyncError held => '${held.error}',
+  AsyncLoading _ => 'loading',
+};
 
 String matchesTheHeldValue(Ref ref) => switch (ref.watch(numbers)) {
   AsyncValue(:final value?) => '$value',
