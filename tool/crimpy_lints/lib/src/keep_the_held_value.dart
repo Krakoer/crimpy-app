@@ -110,13 +110,14 @@ class KeepTheHeldValue extends DartLintRule {
 
     // `final AsyncData<T> d =>`, which is the same type test as `is`, written
     // as a pattern that binds rather than as one that destructures.
-    context.registry.addDeclaredVariablePattern((node) {
-      final type = node.type?.type;
-      if (type is! InterfaceType) return;
-      if (!_statePatterns.contains(type.element.name)) return;
-      if (!_isRiverpodState(type)) return;
-      reporter.atNode(node.type!, _code);
-    });
+    context.registry.addDeclaredVariablePattern(
+      (node) => _reportTypedPattern(reporter, node, node.type),
+    );
+
+    // `case AsyncData<T> _`, the same test again with the binding left out.
+    context.registry.addWildcardPattern(
+      (node) => _reportTypedPattern(reporter, node, node.type),
+    );
 
     context.registry.addMethodInvocation((node) {
       final name = node.methodName.name;
@@ -155,51 +156,26 @@ class KeepTheHeldValue extends DartLintRule {
   /// Whether an earlier arm of the same switch has already taken every state
   /// that holds a value, which is what leaves this one nothing to drop.
   ///
-  /// Read off the pattern rather than off its source. An arm only qualifies
-  /// when it matches `AsyncValue` itself, binds `value` under a null check, and
-  /// is unguarded: `AsyncData(:final value)` lets an error still holding a
-  /// value fall through to here, and so does any arm a `when` clause declines.
+  /// Only a switch, and only an arm of it. Switch arms are exclusive, so an
+  /// earlier one really does mean this one did not run; sibling `if` statements
+  /// are not, and reading them as arms is how the rule waved through the very
+  /// bug it exists to stop. A correct if-case chain carries an ignore instead.
+  ///
+  /// The node must be the arm's own pattern, not something nested in its body:
+  /// a switch over one provider says nothing about a state read inside it.
   static bool _underAnArmTakingTheValue(AstNode node) {
-    final cases = switch (node.thisOrAncestorMatching(
-      (a) => a is SwitchExpression || a is SwitchStatement,
-    )) {
+    final guarded = node.thisOrAncestorOfType<GuardedPattern>();
+    if (guarded == null) return false;
+    final cases = switch (guarded.parent?.parent) {
       SwitchExpression(:final cases) => cases.map((c) => c.guardedPattern),
       SwitchStatement(:final members) =>
         members.whereType<SwitchPatternCase>().map((c) => c.guardedPattern),
       _ => null,
     };
-    if (cases != null) {
-      for (final guarded in cases) {
-        if (guarded.pattern.offset >= node.offset) break;
-        if (_takesEveryHeldValue(guarded)) return true;
-      }
-      return false;
-    }
-    return _underAnEarlierIfCase(node);
-  }
-
-  /// The same question for a chain of `if (x case ...)` statements, which is
-  /// ordinary Dart and reads as arms even though the language does not call
-  /// them that.
-  ///
-  /// Only an earlier test of the same expression counts, compared by source:
-  /// an arm that took the value of some other provider says nothing about what
-  /// this one is still holding.
-  static bool _underAnEarlierIfCase(AstNode node) {
-    final ifStatement = node.thisOrAncestorOfType<IfStatement>();
-    final scrutinee = ifStatement?.caseClause?.guardedPattern;
-    if (ifStatement == null || scrutinee == null) return false;
-    final block = ifStatement.parent;
-    if (block is! Block) return false;
-
-    final read = ifStatement.expression.toSource();
-    for (final statement in block.statements) {
-      if (statement.offset >= ifStatement.offset) break;
-      if (statement is! IfStatement) continue;
-      final guarded = statement.caseClause?.guardedPattern;
-      if (guarded == null) continue;
-      if (statement.expression.toSource() != read) continue;
-      if (_takesEveryHeldValue(guarded)) return true;
+    if (cases == null) return false;
+    for (final earlier in cases) {
+      if (earlier.pattern.offset >= guarded.pattern.offset) break;
+      if (_takesEveryHeldValue(earlier)) return true;
     }
     return false;
   }
@@ -222,14 +198,53 @@ class KeepTheHeldValue extends DartLintRule {
     if (type.element.name != 'AsyncValue' || !_isRiverpodState(type)) {
       return false;
     }
+    // One field has to prove it holds a value, and none of the others may
+    // narrow which states match. `AsyncValue(:final value?, :final error?)`
+    // takes only the states holding both, so a plain reload falls past it and
+    // blanks in the arm below; `AsyncValue(:final value, hasValue: true)` binds
+    // without narrowing and takes every one of them.
+    var proven = false;
     for (final field in bare.fields) {
-      final name = _fieldName(field);
-      if (name == 'value' && field.pattern is NullCheckPattern) return true;
-      if (name == 'hasValue' && field.pattern.toSource().trim() == 'true') {
-        return true;
+      if (_provesAValueIsHeld(field)) {
+        proven = true;
+        continue;
       }
+      if (!_bindsWithoutNarrowing(field.pattern)) return false;
     }
-    return false;
+    return proven;
+  }
+
+  static bool _provesAValueIsHeld(PatternField field) {
+    final name = _fieldName(field);
+    if (name == 'value') return field.pattern is NullCheckPattern;
+    return name == 'hasValue' && field.pattern.toSource().trim() == 'true';
+  }
+
+  /// Whether a field's pattern matches whatever it is given. An untyped binding
+  /// and a wildcard do; anything that can decline narrows the arm.
+  static bool _bindsWithoutNarrowing(DartPattern pattern) => switch (pattern) {
+    DeclaredVariablePattern(:final type) => type == null,
+    WildcardPattern(:final type) => type == null,
+    _ => false,
+  };
+
+  /// Reports a pattern that tests what the state is through its type
+  /// annotation, which is the `is` test written as a pattern.
+  ///
+  /// Only where the pattern is matching something. The same syntax in a
+  /// variable declaration is a destructuring, which tests nothing and drops
+  /// nothing.
+  static void _reportTypedPattern(
+    DiagnosticReporter reporter,
+    AstNode node,
+    TypeAnnotation? annotation,
+  ) {
+    final type = annotation?.type;
+    if (type is! InterfaceType) return;
+    if (!_statePatterns.contains(type.element.name)) return;
+    if (!_isRiverpodState(type)) return;
+    if (node.thisOrAncestorOfType<GuardedPattern>() == null) return;
+    reporter.atNode(annotation!, _code);
   }
 
   /// The property a pattern field reads, whether it was named or taken from the

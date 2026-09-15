@@ -103,22 +103,47 @@ String matchesTheHeldValueThenLoading(Ref ref) => switch (ref.watch(numbers)) {
   AsyncError(:final error) => '$error',
 };
 
-// An if-case chain reads as arms even though the language does not call them
-// that, so the second test drops nothing either.
+// The same type test with the binding left out.
+String matchesATypedWildcard(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncData<int> _ => 'data', // LINT
+  _ => 'nothing',
+};
+
+// An arm narrowed by a second field matches fewer states than it looks like it
+// does: a plain reload holds a value and no error, declines it, and would blank
+// in the arm below, so that arm is still flagged.
+String matchesNarrowedThenLoading(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncValue(:final value?, :final error?) => '$value $error',
+  AsyncLoading() => 'loading', // LINT
+  _ => 'nothing',
+};
+
+// Sibling ifs are not arms: both run, so the second really does drop what the
+// first was holding.
 String testsWithIfCase(Ref ref) {
   final state = ref.watch(numbers);
-  if (state case AsyncValue(:final value?)) return '$value';
-  if (state case AsyncError(:final error)) return '$error';
-  return 'nothing';
+  var out = 'nothing';
+  if (state case AsyncValue(:final value?)) out = '$value';
+  if (state case AsyncLoading()) out = 'loading'; // LINT
+  return out;
 }
 
-// A chain over a different read says nothing about this one.
-String testsWithIfCaseOverAnother(Ref ref) {
-  final state = ref.watch(numbers);
-  final other = ref.watch(others);
-  if (other case AsyncValue(:final value?)) return '$value';
-  if (state case AsyncError(:final error)) return '$error'; // LINT
-  return 'nothing';
+// A switch over one read says nothing about a state read inside its arms.
+String readsAnotherInsideAnArm(Ref ref) => switch (ref.watch(others)) {
+  AsyncValue(:final value?) => switch (ref.watch(numbers)) {
+    AsyncLoading() => 'loading $value', // LINT
+    _ => 'nothing',
+  },
+  _ => 'nothing',
+};
+
+// A destructuring tests nothing and drops nothing.
+String destructuresARecord(Ref ref) {
+  final (AsyncData<int> held, int count) = (
+    ref.watch(numbers) as AsyncData<int>,
+    1,
+  );
+  return '${held.value} $count';
 }
 
 String matchesTheHeldValue(Ref ref) => switch (ref.watch(numbers)) {
