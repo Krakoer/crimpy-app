@@ -176,6 +176,65 @@ Training _amrapEmom() => const Training(
   ],
 );
 
+/// The backend's per-item comment cap, past which a coach's note used to be
+/// silently truncated. A run has to lay out a note of exactly this length
+/// without overflowing.
+final String _longComment = List.filled(2000, 'a').join();
+
+/// A repeater and a hang rep, each carrying a comment at the new length limit,
+/// so a run of either can be checked for a layout that survives it.
+Training _hangsWithLongComments() => Training(
+  id: 't8',
+  title: 'Long comments',
+  items: [
+    TrainingItem(
+      id: 'r1',
+      type: TrainingItemType.repeater,
+      position: 0,
+      hand: 'right',
+      cycles: 1,
+      reps: 1,
+      worktimeSeconds: 7,
+      restSeconds: 0,
+      comment: _longComment,
+    ),
+    TrainingItem(
+      id: 'h1',
+      type: TrainingItemType.hangboardRep,
+      position: 1,
+      hand: 'right',
+      worktimeSeconds: 7,
+      restSeconds: 0,
+      comment: _longComment,
+    ),
+  ],
+);
+
+/// An EMOM whose own comment sits at the new length limit.
+Training _emomWithLongComment() => Training(
+  id: 't9',
+  title: 'Long EMOM comment',
+  items: [
+    TrainingItem(
+      id: 'emom-1',
+      type: TrainingItemType.emom,
+      position: 0,
+      cycles: 1,
+      intervalSeconds: 60,
+      comment: _longComment,
+      items: [
+        TrainingItem(
+          id: 'pullup-1',
+          type: TrainingItemType.exercise,
+          position: 0,
+          exerciseName: 'Pull up',
+          repsIsMax: true,
+        ),
+      ],
+    ),
+  ],
+);
+
 /// One sensor notification carrying [kilograms], in the frame layout the
 /// firmware sends: two header bytes then the reading as a little endian float.
 /// The repository is left at its default tare and coefficient, so the value
@@ -442,6 +501,27 @@ void main() {
     // Its rest leads into the commented exercise, so the comment appears.
     await _skip(tester);
     expect(find.text('Right leg'), findsOneWidget);
+  });
+
+  testWidgets(
+    'a repeater and a hang rep lay out a comment at the length limit',
+    (tester) async {
+      await _pumpRun(tester, _hangsWithLongComments());
+
+      expect(find.text(_longComment), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await _skip(tester);
+      expect(find.text(_longComment), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('an emom lays out a comment at the length limit', (tester) async {
+    await _pumpRun(tester, _emomWithLongComment());
+
+    expect(find.text(_longComment), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   // The design every user gets unless they pick the other one, wired to the
