@@ -81,6 +81,8 @@ class ChartScreen extends ConsumerWidget {
     }
 
     // If connected, show data or waiting message
+    // A BLE stream: a held value is last second's reading, not the sensor now.
+    // ignore: keep_the_held_value
     return dataStream.when(
       data: (dataPoints) {
         if (dataPoints.isEmpty) {

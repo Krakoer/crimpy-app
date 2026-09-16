@@ -62,6 +62,8 @@ class ProfileContent extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          // Auth state, as in auth_view_model.
+          // ignore: keep_the_held_value
           authState.when(
             data: (user) {
               if (user == null) {

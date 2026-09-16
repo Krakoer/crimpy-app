@@ -108,6 +108,8 @@ class _SendLogsButton extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: OutlinedButton.icon(
+        // Package info and the in-memory log, neither of which any pull touches.
+        // ignore: keep_the_held_value
         onPressed: () => _sendLogs(context, appInfo.asData?.value),
         icon: const Icon(FontAwesomeIcons.envelope, size: 14),
         label: const Text('Send debug logs'),
@@ -151,6 +153,8 @@ class _AppVersionSection extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: ref
           .watch(appInfoProvider)
+          // Package info and the in-memory log, neither of which any pull touches.
+          // ignore: keep_the_held_value
           .when(
             data: (appInfo) => Row(
               children: [

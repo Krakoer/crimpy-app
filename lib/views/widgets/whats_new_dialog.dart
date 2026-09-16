@@ -23,6 +23,8 @@ class WhatsNewDialog extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // The release notes shipped with the build, read once.
+            // ignore: keep_the_held_value
             appInfoAsync.when(
               data: (appInfo) => Text(
                 'Version ${appInfo.version}',

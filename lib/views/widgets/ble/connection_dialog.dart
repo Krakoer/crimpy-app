@@ -208,6 +208,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       child: Container(
         constraints: const BoxConstraints(maxHeight: 300),
         child: switch (scanResults) {
+          // A BLE stream: a held value is last second's reading, not the sensor now.
+          // ignore: keep_the_held_value
           AsyncData(:final value) => buildScanResults(value),
           AsyncValue(:final error?) => Center(
             child: Padding(

@@ -112,23 +112,19 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
             ? PullToRefresh(
                 onRefresh: () =>
                     ref.refresh(sessionWithDataProvider(session.id!).future),
-                // Matched on what the state holds, so the session stays on
-                // screen while the pull asks for it again.
+                // Matched on holding a value rather than on the value being
+                // non-null, since this provider resolves to null for a session
+                // the store no longer has: `value?` would read that as nothing
+                // resolved yet and show a spinner over a session that is gone.
                 child: switch (asyncFullSession) {
-                  AsyncValue(:final value?) => _buildSessionDetails(
-                    context,
-                    ref,
-                    value,
-                  ),
+                  AsyncValue(:final value, hasValue: true) =>
+                    value != null
+                        ? _buildSessionDetails(context, ref, value)
+                        : RefreshableColumn(
+                            child: _buildNotFoundError(context),
+                          ),
                   AsyncValue(:final error?) => RefreshableColumn(
                     child: _buildErrorState(context, error.toString()),
-                  ),
-                  // A session the store no longer holds resolves to null, and
-                  // it stays resolved to null while a pull asks again: the
-                  // message is what the athlete is reading, so it is what they
-                  // keep reading rather than a spinner mid gesture.
-                  AsyncValue(hasValue: true) => RefreshableColumn(
-                    child: _buildNotFoundError(context),
                   ),
                   _ => const Center(child: CircularProgressIndicator()),
                 },
@@ -227,6 +223,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     if (frozen != null) return reportedItems(session.itemResults, frozen);
     return ref
             .watch(sessionTrainingItemsProvider(session.trainingId))
+            // The live training, as below. Read only by a session carrying no frozen
+            // prescription, which is a guest run or one played before the snapshot.
+            // ignore: keep_the_held_value
             .whenData((items) => reportedItems(session.itemResults, items))
             .value ??
         const [];
@@ -259,6 +258,10 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     }
     return ref
         .watch(sessionTrainingItemsProvider(session.trainingId))
+        // The live training, read once per session opened. No pull invalidates it,
+        // and the caller tells a training still loading from one that resolved to no
+        // blocks, which is the distinction whenData is being used for here.
+        // ignore: keep_the_held_value
         .whenData((items) => groupRepsByTrainingItem(workReps, items));
   }
 

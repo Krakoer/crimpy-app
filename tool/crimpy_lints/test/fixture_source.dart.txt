@@ -1,0 +1,223 @@
+// Each function is named for what it does with the state. Every code line the
+// rule is expected to flag carries the marker the test reads, and the test
+// asserts it flags those lines and no others.
+import 'package:riverpod/riverpod.dart';
+
+final numbers = FutureProvider<int>((ref) async => 1);
+final others = FutureProvider<int>((ref) async => 2);
+final maybeNumber = FutureProvider<int?>((ref) async => null);
+
+int? readsAsData(Ref ref) => ref.watch(numbers).asData?.value; // LINT
+
+int? readsValue(Ref ref) => ref.watch(numbers).value;
+
+String matchesAsyncData(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncData(:final value) => '$value', // LINT
+  _ => 'nothing',
+};
+
+String matchesAsyncLoadingFirst(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncLoading() => 'loading', // LINT
+  AsyncValue(:final value?) => '$value',
+  _ => 'nothing',
+};
+
+String matchesAsyncErrorAlone(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncError(:final error) => '$error', // LINT
+  _ => 'nothing',
+};
+
+// The error arm runs only when the arm above it took nothing, so it drops
+// nothing and is not flagged.
+String matchesTheHeldValueThenError(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncValue(:final value?) => '$value',
+  AsyncError(:final error) => '$error',
+  _ => 'nothing',
+};
+
+// An AsyncData arm leaves an error still holding a value to fall through, so
+// the error arm below it does drop one and is flagged. This is the shape a
+// substring test for `value` in the arm above would wrongly let through.
+String matchesAsyncDataThenError(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncData(:final value) => '$value', // LINT
+  AsyncError(:final error) => '$error', // LINT
+  _ => 'nothing',
+};
+
+// A guarded arm can decline, so it takes nothing on its own and the error arm
+// below it is still flagged.
+String matchesGuardedThenError(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncValue(:final value?) when value > 0 => '$value',
+  AsyncError(:final error) => '$error', // LINT
+  _ => 'nothing',
+};
+
+// The same pair as a switch statement rather than an expression.
+String matchesInAStatement(Ref ref) {
+  switch (ref.watch(numbers)) {
+    case AsyncValue(:final value?):
+      return '$value';
+    case AsyncError(:final error):
+      return '$error';
+  }
+  return 'nothing';
+}
+
+String testsWithIs(Ref ref) {
+  final state = ref.watch(numbers);
+  if (state is AsyncData<int>) return '${state.value}'; // LINT
+  return 'nothing';
+}
+
+String maybeWhensWithoutTheFlags(Ref ref) => ref
+    .watch(numbers)
+    .maybeWhen( // LINT
+      data: (value) => '$value',
+      orElse: () => 'nothing',
+    );
+
+// Its documented job is to throw the previous state away, so what it hands
+// back makes even the spellings this rule recommends see nothing.
+AsyncValue<int> unwrapsThePrevious(Ref ref) =>
+    ref.watch(numbers).unwrapPrevious(); // LINT
+
+// The same type test as `is`, written as a pattern that binds.
+String bindsATypedVariable(Ref ref) => switch (ref.watch(numbers)) {
+  final AsyncData<int> held => '${held.value}', // LINT
+  _ => 'nothing',
+};
+
+// hasValue: true is what a nullable-valued provider needs, since a null check
+// cannot tell "resolved to null" from "nothing yet". It takes every state
+// holding a value, so the error arm below it drops nothing.
+String matchesHasValueThenError(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncValue(:final value, hasValue: true) => '$value',
+  AsyncError(:final error) => '$error',
+  _ => 'nothing',
+};
+
+// A loading arm under an arm that took every held value runs only when there
+// is nothing to hold.
+String matchesTheHeldValueThenLoading(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncValue(:final value?) => '$value',
+  AsyncLoading() => 'loading',
+  AsyncError(:final error) => '$error',
+};
+
+// The same type test with the binding left out.
+String matchesATypedWildcard(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncData<int> _ => 'data', // LINT
+  _ => 'nothing',
+};
+
+// An arm narrowed by a second field matches fewer states than it looks like it
+// does: a plain reload holds a value and no error, declines it, and would blank
+// in the arm below, so that arm is still flagged.
+String matchesNarrowedThenLoading(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncValue(:final value?, :final error?) => '$value $error',
+  AsyncLoading() => 'loading', // LINT
+  _ => 'nothing',
+};
+
+// Sibling ifs are not arms: both run, so the second really does drop what the
+// first was holding.
+String testsWithIfCase(Ref ref) {
+  final state = ref.watch(numbers);
+  var out = 'nothing';
+  if (state case AsyncValue(:final value?)) out = '$value';
+  if (state case AsyncLoading()) out = 'loading'; // LINT
+  return out;
+}
+
+// A switch over one read says nothing about a state read inside its arms.
+String readsAnotherInsideAnArm(Ref ref) => switch (ref.watch(others)) {
+  AsyncValue(:final value?) => switch (ref.watch(numbers)) {
+    AsyncLoading() => 'loading $value', // LINT
+    _ => 'nothing',
+  },
+  _ => 'nothing',
+};
+
+// A destructuring tests nothing and drops nothing.
+String destructuresARecord(Ref ref) {
+  final (AsyncData<int> held, int count) = (
+    ref.watch(numbers) as AsyncData<int>,
+    1,
+  );
+  return '${held.value} $count';
+}
+
+// A null check proves nothing when the value may itself be null: a state that
+// resolved to null holds a value and still fails it, so both arms below take a
+// plain reload and blank. This is the shape the ticket was opened for.
+String matchesANullableValue(Ref ref) => switch (ref.watch(maybeNumber)) {
+  AsyncValue(:final value?) => '$value',
+  AsyncLoading() => 'loading', // LINT
+  AsyncError(:final error) => '$error', // LINT
+};
+
+// hasValue is what proves it there, and it does suppress.
+String matchesANullableValueByHasValue(Ref ref) =>
+    switch (ref.watch(maybeNumber)) {
+      AsyncValue(:final value, hasValue: true) => '${value ?? 0}',
+      AsyncLoading() => 'loading',
+      AsyncError(:final error) => '$error',
+    };
+
+// The typed spellings of an arm answer the same as the object pattern does.
+String matchesTypedUnderAProvingArm(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncValue(:final value?) => '$value',
+  final AsyncError held => '${held.error}',
+  AsyncLoading _ => 'loading',
+};
+
+String matchesTheHeldValue(Ref ref) => switch (ref.watch(numbers)) {
+  AsyncValue(:final value?) => '$value',
+  _ => 'nothing',
+};
+
+String whensWithoutTheFlags(Ref ref) => ref
+    .watch(numbers)
+    .when( // LINT
+      data: (value) => '$value',
+      error: (_, _) => 'error',
+      loading: () => 'loading',
+    );
+
+String whensWithTheFlags(Ref ref) => ref
+    .watch(numbers)
+    .when(
+      skipLoadingOnReload: true,
+      skipError: true,
+      data: (value) => '$value',
+      error: (_, _) => 'error',
+      loading: () => 'loading',
+    );
+
+String? whenOrNullsWithoutTheFlags(Ref ref) =>
+    ref.watch(numbers).whenOrNull(data: (value) => '$value'); // LINT
+
+String? whenOrNullsWithTheFlags(Ref ref) => ref
+    .watch(numbers)
+    .whenOrNull(
+      skipLoadingOnReload: true,
+      skipError: true,
+      data: (value) => '$value',
+    );
+
+String maps(Ref ref) => ref.watch(numbers).map( // LINT
+      data: (d) => '${d.value}',
+      error: (e) => 'error',
+      loading: (l) => 'loading',
+    );
+
+String maybeMaps(Ref ref) => ref.watch(numbers).maybeMap( // LINT
+      data: (d) => '${d.value}',
+      orElse: () => 'nothing',
+    );
+
+String? mapOrNulls(Ref ref) =>
+    ref.watch(numbers).mapOrNull(data: (d) => '${d.value}'); // LINT
+
+AsyncValue<String> whenDatas(Ref ref) =>
+    ref.watch(numbers).whenData((value) => '$value'); // LINT

@@ -25,6 +25,9 @@ linter:
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
 
 analyzer:
+  exclude:
+    # Its own package, with its own analysis, its own pins and its own tests.
+    - tool/**
   plugins:
     - custom_lint
 

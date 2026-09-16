@@ -283,6 +283,8 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
             alignment: Alignment.center,
             children: [
               // Live graph with scrolling
+              // A BLE stream: a held value is last second's reading, not the sensor now.
+              // ignore: keep_the_held_value
               bleData.when(
                 data: (data) {
                   if (data.isEmpty) {

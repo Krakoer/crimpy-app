@@ -26,6 +26,9 @@ ApiClient apiClient(Ref ref) {
 /// treating that as a sign out would wipe the settings on each launch. An auth
 /// failure keeps them too: it says nothing about who owns them.
 bool isSignedOut(AsyncValue<auth_models.User?> auth) => switch (auth) {
+  // Auth state is read from the device and invalidated by signing in or out,
+  // which is a change of who is looking rather than a refresh of what they see.
+  // ignore: keep_the_held_value
   AsyncData(:final value) => value == null,
   _ => false,
 };
@@ -48,6 +51,9 @@ Future<AsyncValue<auth_models.User?>> settledAuth(Ref ref) async {
 /// profile no longer tears down and refetches every list in the app.
 @Riverpod(keepAlive: true)
 bool isAuthenticated(Ref ref) =>
+    // Auth state is read from the device and invalidated by signing in or out,
+    // which is a change of who is looking rather than a refresh of what they see.
+    // ignore: keep_the_held_value
     ref.watch(authStateProvider).asData?.value != null;
 
 /// Uploads guest-mode data to the API after a sign in.

@@ -31,6 +31,19 @@ jobs:
     - name: Analyze project source
       run: flutter analyze
 
+    # flutter analyze does not run custom_lint rules: the analyzer plugin only
+    # answers an IDE. Without this, riverpod_lint and this app's own rules have
+    # never once failed a build, which is how a warning about the code in this
+    # very commit sat unseen in an editor nobody had open.
+    - name: Analyze provider usage
+      run: dart run custom_lint
+
+    # The rules are code, and a rule that has stopped matching fails nothing on
+    # its own: it just quietly stops finding things.
+    - name: Test the lint rules
+      working-directory: tool/crimpy_lints
+      run: dart pub get && dart test
+
   test:
     runs-on: ubuntu-latest
 

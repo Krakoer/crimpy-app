@@ -79,55 +79,59 @@ class _BodyweightMeasureScreenState
     );
   }
 
+  // A BLE stream: a held value is last second's reading, not the sensor now.
   Widget _graph(
     AsyncValue<List<BleDataPoint>> bleData,
     double? lastValue,
     bool holding,
-  ) => bleData.when(
-    data: (data) {
-      if (data.isEmpty) return const SizedBox();
+  ) {
+    // ignore: keep_the_held_value
+    return bleData.when(
+      data: (data) {
+        if (data.isEmpty) return const SizedBox();
 
-      final now = data.last.timestamp;
-      const halfWindow = Duration(seconds: 8);
+        final now = data.last.timestamp;
+        const halfWindow = Duration(seconds: 8);
 
-      return SfCartesianChart(
-        margin: EdgeInsets.zero,
-        plotAreaBorderWidth: 0,
-        primaryXAxis: DateTimeAxis(
-          isVisible: false,
-          majorGridLines: const MajorGridLines(width: 0),
-          axisLine: const AxisLine(width: 0),
-          minorGridLines: const MinorGridLines(width: 0),
-          minimum: now.subtract(halfWindow),
-          maximum: now.add(halfWindow),
-        ),
-        primaryYAxis: NumericAxis(
-          isVisible: true,
-          maximum: max(100, (lastValue ?? 0) + 20),
-          minimum: -5,
-          majorGridLines: const MajorGridLines(width: 1),
-          axisLine: const AxisLine(width: 1),
-          minorGridLines: const MinorGridLines(width: 0),
-        ),
-        borderWidth: 0,
-        series: [
-          LineSeries<BleDataPoint, DateTime>(
-            dataSource: data,
-            xValueMapper: (BleDataPoint p, _) => p.timestamp,
-            yValueMapper: (BleDataPoint p, _) => p.value,
-            color: holding
-                ? CrimpyTheme.accentGreen
-                : CrimpyTheme.accentYellow.withValues(alpha: 0.8),
-            width: 3,
-            markerSettings: const MarkerSettings(isVisible: false),
-            animationDuration: 0,
+        return SfCartesianChart(
+          margin: EdgeInsets.zero,
+          plotAreaBorderWidth: 0,
+          primaryXAxis: DateTimeAxis(
+            isVisible: false,
+            majorGridLines: const MajorGridLines(width: 0),
+            axisLine: const AxisLine(width: 0),
+            minorGridLines: const MinorGridLines(width: 0),
+            minimum: now.subtract(halfWindow),
+            maximum: now.add(halfWindow),
           ),
-        ],
-      );
-    },
-    loading: () => const CircularProgressIndicator(),
-    error: (e, st) => Text('Error: $e'),
-  );
+          primaryYAxis: NumericAxis(
+            isVisible: true,
+            maximum: max(100, (lastValue ?? 0) + 20),
+            minimum: -5,
+            majorGridLines: const MajorGridLines(width: 1),
+            axisLine: const AxisLine(width: 1),
+            minorGridLines: const MinorGridLines(width: 0),
+          ),
+          borderWidth: 0,
+          series: [
+            LineSeries<BleDataPoint, DateTime>(
+              dataSource: data,
+              xValueMapper: (BleDataPoint p, _) => p.timestamp,
+              yValueMapper: (BleDataPoint p, _) => p.value,
+              color: holding
+                  ? CrimpyTheme.accentGreen
+                  : CrimpyTheme.accentYellow.withValues(alpha: 0.8),
+              width: 3,
+              markerSettings: const MarkerSettings(isVisible: false),
+              animationDuration: 0,
+            ),
+          ],
+        );
+      },
+      loading: () => const CircularProgressIndicator(),
+      error: (e, st) => Text('Error: $e'),
+    );
+  }
 
   Widget _statusBox(bool holding) => Container(
     padding: const EdgeInsets.all(16),

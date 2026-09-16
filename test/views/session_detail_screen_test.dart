@@ -7,6 +7,7 @@ import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/history/session_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:crimpy/views/screens/home_screen/history/widgets/session_overview_card.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 RepDataModel _rep(
@@ -70,7 +71,133 @@ Future<void> _pump(
   await tester.pumpAndSettle();
 }
 
+/// A session as the history list hands one over: no reps, so the screen fetches
+/// the rest and offers the pull that refetches it.
+SessionModel _listed() => SessionModel(
+  id: 'session-1',
+  name: 'Repeaters 20mm',
+  isAssessment: false,
+  origin: SessionOrigin.played,
+);
+
+Future<void> _pumpListed(
+  WidgetTester tester,
+  AsyncValue<SessionModel?> Function() state,
+) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        sessionTrainingItemsProvider(
+          null,
+        ).overrideWith((ref) async => const []),
+        sessionWithDataProvider('session-1').overrideWith((ref) async {
+          final held = state();
+          // Asks which state the test wants, which is what this helper is for:
+          // it turns one back into the provider behaviour that produces it.
+          // ignore: keep_the_held_value
+          if (held case AsyncError(:final error)) throw error;
+          return held.value;
+        }),
+      ],
+      child: MaterialApp(home: SessionDetailScreen(session: _listed())),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+// The switch these cover has been rewritten three times, twice by a review
+// round, and nothing exercised it: every other fixture here carries its reps,
+// which is the branch that never fetches.
+void _detailStates() {
+  testWidgets('shows a spinner while the session is first fetched', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sessionTrainingItemsProvider(
+            null,
+          ).overrideWith((ref) async => const []),
+          sessionWithDataProvider(
+            'session-1',
+          ).overrideWith((ref) => Completer<SessionModel?>().future),
+        ],
+        child: MaterialApp(home: SessionDetailScreen(session: _listed())),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  testWidgets('says so when the session is no longer stored', (tester) async {
+    await _pumpListed(tester, () => const AsyncData(null));
+
+    expect(find.textContaining('not found'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('shows the session once it arrives', (tester) async {
+    await _pumpListed(
+      tester,
+      () => AsyncData(_session(reps: [_rep(0, itemId: 'a')])),
+    );
+
+    // The app bar names the session from the argument whatever the switch
+    // does, so the card is what says the data arm rendered.
+    expect(find.byType(SessionOverviewCard), findsOneWidget);
+    expect(find.textContaining('not found'), findsNothing);
+  });
+
+  // The reason the hasValue arm exists, and the one state the four below it
+  // cannot reach through overrideWith: a reload carrying the session the
+  // athlete is already reading. Spelling that arm `value?` leaves every other
+  // test here green while blanking the screen on every pull.
+  testWidgets('keeps the session on screen while it reloads', (tester) async {
+    var fetches = 0;
+    final container = ProviderContainer.test(
+      overrides: [
+        sessionTrainingItemsProvider(
+          null,
+        ).overrideWith((ref) async => const []),
+        sessionWithDataProvider('session-1').overrideWith((ref) async {
+          if (fetches++ > 0) return Completer<SessionModel?>().future;
+          return _session(reps: [_rep(0, itemId: 'a')]);
+        }),
+      ],
+    );
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(home: SessionDetailScreen(session: _listed())),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(SessionOverviewCard), findsOneWidget);
+
+    container.invalidate(sessionWithDataProvider('session-1'));
+    await tester.pump();
+
+    expect(find.byType(SessionOverviewCard), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  // A first fetch that fails has nothing held, so the error is what there is
+  // to show. The arm above it only wins once something has been fetched.
+  testWidgets('shows the error when the first fetch fails', (tester) async {
+    await _pumpListed(
+      tester,
+      () => AsyncError(StateError('no connection'), StackTrace.empty),
+    );
+
+    expect(find.textContaining('no connection'), findsOneWidget);
+  });
+}
+
 void main() {
+  _detailStates();
+
   testWidgets('pools the reps when the run resolved no training', (
     tester,
   ) async {

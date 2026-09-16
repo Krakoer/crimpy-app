@@ -18,6 +18,8 @@ class _SensorSettingsListState extends ConsumerState<SensorSettingsList> {
     // Get all configs from DB.
     final configs = ref.watch(sensorPresetsProvider);
     return switch (configs) {
+      // Sensor configs are local to the device and saved from this screen.
+      // ignore: keep_the_held_value
       AsyncData(:final value) =>
         value.isEmpty
             ? Padding(
@@ -78,6 +80,8 @@ class _SensorSettingsListState extends ConsumerState<SensorSettingsList> {
                     )
                     .toList(),
               ),
+      // Sensor configs are local to the device and saved from this screen.
+      // ignore: keep_the_held_value
       AsyncError() => const Text('Oops, something unexpected happened'),
       _ => const CircularProgressIndicator(),
     };

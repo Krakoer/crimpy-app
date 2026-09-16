@@ -15,6 +15,8 @@ class MinimalistGraph extends ConsumerWidget {
     final bleData = ref.watch(bleDataStreamProvider);
     final session = ref.watch(bleSessionProvider);
 
+    // A BLE stream: a held value is last second's reading, not the sensor now.
+    // ignore: keep_the_held_value
     return bleData.when(
       data: (data) {
         return SfCartesianChart(
