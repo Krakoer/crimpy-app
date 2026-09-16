@@ -585,12 +585,19 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   );
 
   /// Coach comment shown during the run. Width-constrained so a long
-  /// instruction wraps instead of shrinking the whole block it belongs to.
+  /// instruction wraps instead of stretching the block it belongs to, and
+  /// line-capped so a note at the backend's 2000 character limit cannot grow
+  /// the block past what the screen has room for: the step this sits in is
+  /// wrapped in a FittedBox that would otherwise shrink the whole header,
+  /// title included, to fit it. The full note is still readable from the
+  /// training detail screen, which does not cap it.
   Widget _commentText(String text) => ConstrainedBox(
     constraints: const BoxConstraints(maxWidth: 320),
     child: Text(
       text,
       textAlign: TextAlign.center,
+      maxLines: 4,
+      overflow: TextOverflow.ellipsis,
       style: const TextStyle(
         fontFamily: 'JetBrainsMono',
         fontSize: 13,

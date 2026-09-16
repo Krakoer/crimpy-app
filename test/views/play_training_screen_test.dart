@@ -178,11 +178,22 @@ Training _amrapEmom() => const Training(
 
 /// The backend's per-item comment cap, past which a coach's note used to be
 /// silently truncated. A run has to lay out a note of exactly this length
-/// without overflowing.
-final String _longComment = List.filled(2000, 'a').join();
+/// without overflowing, on either run screen design. Word-based rather than
+/// one unbroken run of characters, since that is the shape a coach actually
+/// pastes in, and each item gets its own word so a test can tell which one it
+/// is reading off screen.
+String _commentOfLength(String word, int length) => List.filled(
+  (length / (word.length + 1)).ceil(),
+  word,
+).join(' ').substring(0, length);
+
+final String _repeaterComment = _commentOfLength('pause', 2000);
+final String _hangRepComment = _commentOfLength('speed', 2000);
+final String _emomComment = _commentOfLength('apnea', 2000);
 
 /// A repeater and a hang rep, each carrying a comment at the new length limit,
-/// so a run of either can be checked for a layout that survives it.
+/// so a run of either can be checked for a layout that survives it. No rest
+/// between them, so a skip lands straight on the second one.
 Training _hangsWithLongComments() => Training(
   id: 't8',
   title: 'Long comments',
@@ -196,7 +207,7 @@ Training _hangsWithLongComments() => Training(
       reps: 1,
       worktimeSeconds: 7,
       restSeconds: 0,
-      comment: _longComment,
+      comment: _repeaterComment,
     ),
     TrainingItem(
       id: 'h1',
@@ -205,12 +216,15 @@ Training _hangsWithLongComments() => Training(
       hand: 'right',
       worktimeSeconds: 7,
       restSeconds: 0,
-      comment: _longComment,
+      comment: _hangRepComment,
     ),
   ],
 );
 
-/// An EMOM whose own comment sits at the new length limit.
+/// An EMOM whose own comment sits at the new length limit, run for a single
+/// self paced round: the round itself is what has no FittedBox and no scroll
+/// around its comment, so it is the step that must be reached to prove the
+/// layout survives.
 Training _emomWithLongComment() => Training(
   id: 't9',
   title: 'Long EMOM comment',
@@ -221,7 +235,7 @@ Training _emomWithLongComment() => Training(
       position: 0,
       cycles: 1,
       intervalSeconds: 60,
-      comment: _longComment,
+      comment: _emomComment,
       items: [
         TrainingItem(
           id: 'pullup-1',
@@ -504,25 +518,76 @@ void main() {
   });
 
   testWidgets(
-    'a repeater and a hang rep lay out a comment at the length limit',
+    'a repeater and a hang rep each lay out a comment at the length limit',
     (tester) async {
       await _pumpRun(tester, _hangsWithLongComments());
 
-      expect(find.text(_longComment), findsOneWidget);
+      // Preparation rest previews the repeater's comment ahead of time.
+      expect(find.text(_repeaterComment), findsOneWidget);
       expect(tester.takeException(), isNull);
 
       await _skip(tester);
-      expect(find.text(_longComment), findsOneWidget);
+      // Running the repeater hang itself: the step whose header is wrapped
+      // in a FittedBox, which scales rather than overflows.
+      expect(find.text(_repeaterComment), findsOneWidget);
+      expect(find.text(_hangRepComment), findsNothing);
+      expect(tester.takeException(), isNull);
+
+      await _skip(tester);
+      // Running the hang rep.
+      expect(find.text(_hangRepComment), findsOneWidget);
+      expect(find.text(_repeaterComment), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
 
-  testWidgets('an emom lays out a comment at the length limit', (tester) async {
+  testWidgets('an emom round lays out a comment at the length limit', (
+    tester,
+  ) async {
     await _pumpRun(tester, _emomWithLongComment());
 
-    expect(find.text(_longComment), findsOneWidget);
+    // Preparation rest previews the round's comment ahead of time.
+    expect(find.text(_emomComment), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await _skip(tester);
+    // Running the round itself: a self paced step, whose comment sits in a
+    // plain Column with no FittedBox and no scroll around it, which is where
+    // an unbounded comment used to overflow.
+    expect(find.text(_emomComment), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  // The full tank lays every comment straight into a plain Column with no
+  // FittedBox and no scroll, so it is the design most exposed to an overflow
+  // from a long note.
+  testWidgets(
+    'the full tank lays out a comment at the length limit on a timed step',
+    (tester) async {
+      await _pumpRun(
+        tester,
+        _hangsWithLongComments(),
+        style: RunScreenStyle.fullTank,
+      );
+      await _skip(tester);
+      expect(find.text(_repeaterComment), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'the full tank lays out a comment at the length limit on a confirm step',
+    (tester) async {
+      await _pumpRun(
+        tester,
+        _emomWithLongComment(),
+        style: RunScreenStyle.fullTank,
+      );
+      await _skip(tester);
+      expect(find.text(_emomComment), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   // The design every user gets unless they pick the other one, wired to the
   // same timer, look-ahead and skip button as the ring.

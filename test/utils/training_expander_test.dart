@@ -1143,13 +1143,10 @@ void main() {
 
       final out = expandTrainingItems(training, useSensor: false);
 
-      expect(
-        out.whereType<ConfirmItem>().every(
-          (step) =>
-              step.comment == 'Shoulders engaged, arms straight, full apnea',
-        ),
-        isTrue,
-      );
+      expect(out.whereType<ConfirmItem>().map((step) => step.comment), [
+        'Shoulders engaged, arms straight, full apnea',
+        'Shoulders engaged, arms straight, full apnea',
+      ]);
     });
 
     test('takes the timed work of a round out of the rest that closes it', () {
