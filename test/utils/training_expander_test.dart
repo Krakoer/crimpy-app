@@ -1128,6 +1128,27 @@ void main() {
       expect((out[4] as ConfirmItem).subtitle, 'ROUND 3/3');
     });
 
+    test('an emom comment reaches every round of its children', () {
+      final training = _training([
+        TrainingItem(
+          id: 'emom',
+          type: TrainingItemType.emom,
+          position: 0,
+          cycles: 2,
+          intervalSeconds: 60,
+          comment: 'Shoulders engaged, arms straight, full apnea',
+          items: [pullUps()],
+        ),
+      ]);
+
+      final out = expandTrainingItems(training, useSensor: false);
+
+      expect(out.whereType<ConfirmItem>().map((step) => step.comment), [
+        'Shoulders engaged, arms straight, full apnea',
+        'Shoulders engaged, arms straight, full apnea',
+      ]);
+    });
+
     test('takes the timed work of a round out of the rest that closes it', () {
       final training = _training([
         TrainingItem(

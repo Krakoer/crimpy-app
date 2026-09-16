@@ -722,6 +722,8 @@ class _TankContent extends StatelessWidget {
         Text(
           layout.nextComment!,
           textAlign: TextAlign.center,
+          maxLines: 4,
+          overflow: TextOverflow.ellipsis,
           style: _style(13, color: palette.secondary, height: 1.4),
         ),
       ],
@@ -751,6 +753,8 @@ class _TankContent extends StatelessWidget {
         Text(
           layout.comment!,
           textAlign: TextAlign.center,
+          maxLines: 4,
+          overflow: TextOverflow.ellipsis,
           style: _style(13, color: palette.secondary, height: 1.4),
         ),
       ],
@@ -813,6 +817,8 @@ class _TankContent extends StatelessWidget {
         Text(
           layout.comment!,
           textAlign: TextAlign.center,
+          maxLines: 4,
+          overflow: TextOverflow.ellipsis,
           style: _style(13, color: palette.secondary, height: 1.4),
         ),
       ],

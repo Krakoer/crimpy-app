@@ -585,12 +585,21 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   );
 
   /// Coach comment shown during the run. Width-constrained so a long
-  /// instruction wraps instead of shrinking the whole block it belongs to.
+  /// instruction wraps instead of stretching the block it belongs to, and
+  /// line-capped so a note at the backend's 2000 character limit cannot grow
+  /// the block far past what the screen has room for: the timed step's header
+  /// sits inside a FittedBox that shrinks its whole content, title included,
+  /// to whatever this comment forces it to. Capping keeps that shrink close to
+  /// what an uncommented step already does rather than making it far worse; it
+  /// does not remove it on the smallest screens. The full note is still
+  /// readable from the training detail screen, which does not cap it.
   Widget _commentText(String text) => ConstrainedBox(
     constraints: const BoxConstraints(maxWidth: 320),
     child: Text(
       text,
       textAlign: TextAlign.center,
+      maxLines: 4,
+      overflow: TextOverflow.ellipsis,
       style: const TextStyle(
         fontFamily: 'JetBrainsMono',
         fontSize: 13,
@@ -656,7 +665,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         '${rep.reps} reps',
       if (rep.load != null) rep.load!,
     ].join('  -  ');
-    return Padding(
+    final content = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -705,6 +714,19 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             ),
           ),
         ],
+      ),
+    );
+    // The 4-line comment cap keeps this readable on most screens, but a
+    // comment at the cap together with a load and a demo video can still be
+    // taller than the smallest supported screen. Scrolling only engages once
+    // the content does not fit: the ConstrainedBox keeps it centered exactly
+    // as before everywhere it already did.
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Center(child: content),
+        ),
       ),
     );
   }
