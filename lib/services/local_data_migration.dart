@@ -149,10 +149,23 @@ class LocalDataMigration {
           return ids.items[localItemId];
         }
 
+        // A session going up with its own prescription keeps the item names it
+        // was recorded under: the server keys the reports against that copy
+        // rather than against a training it would have to resolve. Nothing to
+        // remap, and nothing lost.
+        //
+        // Asked of the session that will actually be posted, since that is what
+        // decides whether the copy is sent. A training deleted after the run
+        // lands here too, and its reports are worth as much as a builtin's.
+        final posted = row.toModel().withTrainingId(serverTrainingId);
+        final carriesOwnPrescription = posted.ownPrescription != null;
         final localReps = await _database.getRepsForSession(row.id);
         final reps = [
           for (final rep in localReps)
-            rep.withTrainingItem(serverItemId(rep.trainingItemId)),
+            if (carriesOwnPrescription)
+              rep
+            else
+              rep.withTrainingItem(serverItemId(rep.trainingItemId)),
         ];
         // Only the reps that had a link and lost it. A rest, and any rep
         // recorded outside a training, names no item to begin with.
@@ -165,6 +178,10 @@ class LocalDataMigration {
             .length;
         final itemResults = <SessionItemResultModel>[];
         for (final result in await _database.getItemResultsForSession(row.id)) {
+          if (carriesOwnPrescription) {
+            itemResults.add(result);
+            continue;
+          }
           final itemId = serverItemId(result.trainingItemId);
           if (itemId == null) {
             // The item the count answers is gone, and the server refuses a
@@ -198,7 +215,7 @@ class LocalDataMigration {
             : null;
 
         final serverSessionId = await _remoteTrainings.saveSession(
-          row.toModel().withTrainingId(serverTrainingId),
+          posted,
           reps,
           data: curve,
           itemResults: itemResults,

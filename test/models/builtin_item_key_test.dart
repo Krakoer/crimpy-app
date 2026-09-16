@@ -16,6 +16,12 @@ List<AssessmentResultModel> maxForce() => [
     ),
 ];
 
+/// The builtins that ask for a line per step. A warmup opts out: six
+/// intensities through three grips is eighteen blocks of a few seconds each,
+/// and a line per block is not what there is to say about a warmup.
+Iterable<BuiltinTrainingModel> get reviewedBuiltins =>
+    builtinTrainings.where((b) => b.reviewsEachStep);
+
 void main() {
   group('a generated builtin training', () {
     test('keys every step it prescribes', () {
@@ -81,7 +87,7 @@ void main() {
     // Whether one is collected is a separate question, and today it is not:
     // a builtin run names no prescription, so there is nowhere to store it.
     test('can be named by a report, a line per step', () {
-      for (final builtin in builtinTrainings) {
+      for (final builtin in reviewedBuiltins) {
         final items = builtin.generateNewFormatTraining(maxForce())!.items;
 
         expect(
@@ -97,13 +103,65 @@ void main() {
       }
     });
 
-    test('names its steps by a key the upload paths can spot', () {
-      final items = builtinTrainings.first
+    test('names its steps by something a stored item never holds', () {
+      final items = reviewedBuiltins.first
           .generateNewFormatTraining(maxForce())!
           .items;
 
-      expect(items.every((i) => isBuiltinItemKey(i.reportKey)), isTrue);
-      expect(isBuiltinItemKey('7f1c9b1e-0000-4000-8000-000000000000'), isFalse);
+      expect(items.every((i) => i.reportKey.startsWith('builtin:')), isTrue);
+    });
+  });
+
+  // A warmup is the one training whose steps are deliberately not worth a line.
+  // Round 1 of the review caught the first shape of that opt out leaving them
+  // unnamed too, which handed the server a prescription it refuses and lost the
+  // whole run. Naming a step and asking about it are different questions.
+  group('a builtin that reviews no step', () {
+    test('still names every step it prescribes', () {
+      final unreviewed = builtinTrainings.where((b) => !b.reviewsEachStep);
+      expect(unreviewed, isNotEmpty, reason: 'nothing exercises the opt out');
+
+      for (final builtin in unreviewed) {
+        final training = builtin.generateNewFormatTraining(maxForce())!;
+
+        expect(
+          everyItemIsNamed(training.items),
+          isTrue,
+          reason: '${builtin.name} prescribes a step nothing can name',
+        );
+        // What the screen turns on, and the only thing the opt out decides.
+        expect(training.reviewsEachStep, isFalse);
+      }
+    });
+  });
+
+  // Round 2 of the review caught the reps of a warmup grouping into eighteen
+  // blocks that all read "Hangboard 20mm": same type, same edge, and nothing
+  // else in the label. What differs is the grip and the load.
+  group('the blocks a generated run reads back as', () {
+    test('are told apart by their labels', () {
+      for (final builtin in builtinTrainings) {
+        final items = builtin.generateNewFormatTraining(maxForce())!.items;
+        final labels = items.map(sessionBlockLabel).toSet();
+
+        expect(
+          labels,
+          hasLength(items.length),
+          reason: '${builtin.name} heads two blocks with the same line',
+        );
+      }
+    });
+  });
+
+  group('a builtin that reviews every step', () {
+    test('carries that onto the training it generates', () {
+      for (final builtin in reviewedBuiltins) {
+        expect(
+          builtin.generateNewFormatTraining(maxForce())!.reviewsEachStep,
+          isTrue,
+          reason: '${builtin.name} lost its review pass',
+        );
+      }
     });
   });
 

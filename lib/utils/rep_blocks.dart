@@ -130,6 +130,16 @@ List<RepSet> groupRepsIntoSets(List<RepDataModel> reps, RepeaterConfig config) {
 /// same name. The training editor keeps its own vocabulary through
 /// [trainingItemTitle]: a block listed among the blocks of a training is named
 /// for what it is, one listed under a run is named for what was hung.
+/// The short name of a grip a block prescribes, or the stored value when it
+/// names none this app knows: a session read back is worth heading with what it
+/// says rather than with nothing.
+String _gripLabel(String stored) {
+  for (final grip in GripPosition.values) {
+    if (grip.name == stored) return grip.shortName;
+  }
+  return stored;
+}
+
 String sessionBlockLabel(TrainingItem item) {
   final named =
       (item.type == TrainingItemType.exercise
@@ -148,10 +158,26 @@ String sessionBlockLabel(TrainingItem item) {
     TrainingItemType.exercise => 'Exercise',
     TrainingItemType.free => 'Note',
   };
-  // One edge names the block; several would name only its first hang, so the
-  // block is left on its type alone.
+  // One value names the block; several would name only its first hang, so the
+  // block keeps only what holds for the whole of it. A ladder of hangs that
+  // differ in nothing else reads as one line repeated without these: a warmup
+  // works six intensities through three grips on the same edge.
   final edges = <int>{...?item.edgeSizesMm};
-  return edges.length == 1 ? '$label ${edges.first}mm' : label;
+  final grips = <String>{...?item.handPositions?.expand((hand) => hand)};
+  // Read off one hand, the way every other label that states a load does: the
+  // two hands of a split block are pulled at different numbers, and naming both
+  // would put the arithmetic of the whole block in its heading.
+  final loads = <String>{
+    for (final load in [...?item.loads])
+      if (!load.isBodyweight && !load.isAssessmentRelative) load.label(),
+  };
+
+  final parts = <String>[
+    if (edges.length == 1) '${edges.first}mm',
+    if (grips.length == 1) _gripLabel(grips.first),
+    if (loads.length == 1) 'at ${loads.first}',
+  ];
+  return parts.isEmpty ? label : '$label ${parts.join(', ')}';
 }
 
 /// One pass through a prescribed item and what the athlete reported about it:
@@ -349,27 +375,42 @@ bool isReportable(TrainingItem item) =>
 bool _carriesWork(TrainingItem item) =>
     item.type != TrainingItemType.group && item.type != TrainingItemType.free;
 
-/// Whether a run naming [trainingId] and [programSessionId] has somewhere to
-/// put what the athlete reports about its steps, for as long as the session
-/// lives. A run that names neither is every builtin, and nothing else.
+/// Whether a run has somewhere to put what the athlete reports about its steps,
+/// for as long as the session lives.
 ///
-/// The two stores fail it differently, and the gate refuses both for one
-/// behaviour rather than offering a form in one mode and not the other:
+/// A report is keyed to an item of the prescription the session was run from,
+/// so what this asks is whether the session carries one at all. There are two
+/// ways it can: the store resolves it from the training or the program slot the
+/// session names, or the run hands over the prescription it played, which is
+/// what a training generated on the device does.
 ///
-/// - the API keys a report against the prescription it froze, which it reads
-///   from the training or the program slot. It has none for a builtin, and
-///   `session_item_results.training_item_id` is a uuid column besides, which no
-///   generated key can be;
-/// - the local store would hold it today. It keys its rows on the session
-///   alone, and this file already reads them back against the snapshot frozen
-///   onto it. What it cannot survive is the athlete signing in: the import
-///   resolves no server item without a server training, so `LocalDataMigration`
-///   drops every one of those reports on the way up.
+/// Both stores hold a report either way. The local one keys its rows on the
+/// session alone, and the API takes a prescription with the session and keys
+/// membership against it, so a run that carries one also survives the athlete
+/// signing in with it.
+bool sessionKeepsItemReports({
+  String? trainingId,
+  String? programSessionId,
+  List<TrainingItem>? prescriptionItems,
+}) =>
+    trainingId != null ||
+    programSessionId != null ||
+    (prescriptionItems != null && prescriptionItems.isNotEmpty);
+
+/// Whether every item of a prescription carries a name, nested ones included.
 ///
-/// So collecting one is collecting something to throw away, in either mode.
-/// Krakoer/crimpy#111 is what removes the first bullet, and the second with it.
-bool sessionKeepsItemReports({String? trainingId, String? programSessionId}) =>
-    trainingId != null || programSessionId != null;
+/// A snapshot is only worth handing over when it does: the reps and the reports
+/// name their steps by it, and the API refuses one outright rather than storing
+/// a step nothing can point at. Sessions frozen before a generated step had a
+/// name of its own hold a blank id for every one of them, and they are already
+/// on devices waiting to be imported.
+bool everyItemIsNamed(List<TrainingItem> items) {
+  for (final item in items) {
+    if (item.reportKey.isEmpty) return false;
+    if (!everyItemIsNamed(item.items)) return false;
+  }
+  return true;
+}
 
 /// Whether a training holds work the athlete could be asked about at all,
 /// whether or not a line is actually offered for it.
@@ -424,26 +465,13 @@ List<ReviewLine> reviewLines(
   return lines;
 }
 
-/// Every item of a training by id, nested ones included, so a rep naming one
-/// can be headed with it. A rep names the row it was played from, which is why
-/// this keys on the id and not on the report key.
-Map<String, TrainingItem> trainingItemsById(List<TrainingItem> items) {
-  final byId = <String, TrainingItem>{};
-  void walk(List<TrainingItem> items) {
-    for (final item in items) {
-      byId[item.id] = item;
-      walk(item.items);
-    }
-  }
-
-  walk(items);
-  return byId;
-}
-
-/// Every item of a training by what a report names it, nested ones included.
-/// Items with no key at all are left out rather than collapsed onto one entry:
-/// no report can name them, and keeping them would have the first of them
-/// answer for the rest.
+/// Every item of a training by what names it, nested ones included, so a rep or
+/// a report naming one can be headed with it. Both name a step the same way,
+/// through the report key, which is the stored id wherever there is one.
+///
+/// Items with no name at all are left out rather than collapsed onto one entry:
+/// nothing can name them, and keeping them would have the first of them answer
+/// for the rest.
 Map<String, TrainingItem> trainingItemsByReportKey(List<TrainingItem> items) {
   final byKey = <String, TrainingItem>{};
   void walk(List<TrainingItem> items) {
@@ -591,7 +619,7 @@ List<RepBlock>? groupRepsByTrainingItem(
 ) {
   if (!reps.any((rep) => rep.trainingItemId != null)) return null;
 
-  final byId = trainingItemsById(items);
+  final byId = trainingItemsByReportKey(items);
   final blocks =
       <({String label, List<RepDataModel> reps, TrainingItem? item})>[];
   String? currentId;

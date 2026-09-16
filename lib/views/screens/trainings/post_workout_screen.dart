@@ -68,14 +68,20 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
   /// run already recorded against it. Built once, since the controllers hold
   /// what the athlete is typing.
   ///
-  /// Empty when this run has nowhere to store a report, which is a builtin:
-  /// the fields would take what the athlete wrote and drop it at save, and a
-  /// form that eats input is worse than the line that says why there is none.
+  /// Empty when the training asks for no line per step, and when this run has
+  /// nowhere to store one: the fields would take what the athlete wrote and
+  /// drop it at save, and a form that eats input is worse than the line that
+  /// says there is none. A run of a training generated on the device carries
+  /// its own prescription, so it stores them like any other.
   late final List<ItemReviewDraft> _itemReviews =
-      sessionKeepsItemReports(
-        trainingId: widget.trainingId,
-        programSessionId: widget.programSessionId,
-      )
+      widget.template.reviewsEachStep &&
+          sessionKeepsItemReports(
+            trainingId: widget.trainingId,
+            programSessionId: widget.programSessionId,
+            prescriptionItems: everyItemIsNamed(widget.template.items)
+                ? widget.template.items
+                : null,
+          )
       ? buildItemReviewDrafts(
           widget.template.items,
           widget.itemResults,
@@ -231,9 +237,8 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                           Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              'Notes cannot be kept against the steps of this '
-                              'training yet, so there is nothing to fill in '
-                              'here. Tell us how it went below.',
+                              'There is nothing to note step by step on this '
+                              'training. Tell us how it went below.',
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(color: CrimpyTheme.gray500),
                             ),

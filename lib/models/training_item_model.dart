@@ -547,10 +547,6 @@ class TrainingItem {
 
     return TrainingItem(
       id: json['id'] as String,
-      // Only a frozen prescription writes one, and only for the trainings that
-      // generate their items. Absent from every server payload, which leaves
-      // the report key on the id the row was read under.
-      stableKey: json['stable_key'] as String?,
       type: TrainingItemType.fromString(json['type'] as String),
       position: (json['position'] as num).toInt(),
       parentId: json['parent_id'] as String?,
@@ -632,11 +628,12 @@ class TrainingItem {
   /// no tree and no catalog left to ask, so it carries all three itself.
   Map<String, dynamic> toPrescriptionJson() => {
     ...toJson(includeItems: false),
-    'id': id,
-    // The reports of this session are keyed on it, so the snapshot that heads
-    // them has to carry it back. Written here and not in [toJson]: the server
-    // names its own items and has no use for a key the app generated.
-    if (stableKey != null) 'stable_key': stableKey,
+    // A snapshot names its own items: it is frozen once and read back only to
+    // head what was recorded against it, so what belongs here is the name the
+    // reports use rather than the row they may or may not have come from. For
+    // a stored item the two are the same string; for a generated one this is
+    // the only name there is.
+    'id': reportKey,
     'position': position,
     if (parentId != null) 'parent_id': parentId,
     if (exerciseName != null) 'exercise_name': exerciseName,

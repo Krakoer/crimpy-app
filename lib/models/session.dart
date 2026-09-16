@@ -1,6 +1,7 @@
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/utils/datetimes.dart';
 
 /// What the athlete reported about one pass through a prescribed item. It
@@ -194,6 +195,22 @@ class SessionModel {
     coachReplyAt: tryParseApiInstant(json['coach_reply_at'] as String?),
     coachReplyRead: json['coach_reply_read'] as bool? ?? false,
   );
+
+  /// The prescription this session has to hand over for anything to be keyed
+  /// against it, or null when it has none worth sending.
+  ///
+  /// Null when the store can resolve one for itself, which it does from the
+  /// training or the coach slot the session names. Null too when the snapshot
+  /// holds a step with no name: the API refuses the whole request over one, so
+  /// sending it would cost the run rather than the reports it could not carry.
+  /// Sessions frozen before a generated step had a name of its own are exactly
+  /// that case, and they are already on devices waiting to be imported.
+  List<TrainingItem>? get ownPrescription {
+    if (trainingId != null || programSessionId != null) return null;
+    final items = prescriptionItems;
+    if (items == null || items.isEmpty) return null;
+    return everyItemIsNamed(items) ? items : null;
+  }
 
   /// The items of a frozen prescription, or null when there is none to read.
   /// The listing endpoint leaves the prescription out, so a session read from

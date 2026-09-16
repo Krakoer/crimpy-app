@@ -1,6 +1,5 @@
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/ble_data_model.dart';
-import 'package:crimpy/models/builtin_training.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
@@ -238,11 +237,18 @@ class RemoteTrainingRepository extends TrainingRepository {
     List<BleDataPoint>? data,
     List<SessionItemResultModel> itemResults = const [],
   }) async {
-    // Spelled once: the reps and the reports below both turn on it, and #111
-    // is going to change what counts.
+    // The prescription a run played that the server cannot read for itself: a
+    // training generated on the device. Sent only then, since the server
+    // freezes its own copy from a training or a program slot and refuses a
+    // second opinion alongside either, and only when every step in it has a
+    // name, since the API refuses the whole request over one that has not.
+    final ownPrescription = session.ownPrescription;
+
+    // Spelled once: the reps and the reports below both turn on it.
     final namesAPrescription = sessionKeepsItemReports(
       trainingId: session.trainingId,
       programSessionId: session.programSessionId,
+      prescriptionItems: ownPrescription,
     );
 
     final repDatas = reps.indexed
@@ -267,14 +273,6 @@ class RemoteTrainingRepository extends TrainingRepository {
         )
         .toList();
 
-    // The reports the API can place. A generated step is named by a key minted
-    // on the device, which no server prescription holds and no uuid column
-    // takes: one of those refuses the entire session rather than the single
-    // report, which would lose the run.
-    final postableResults = itemResults
-        .where((r) => !isBuiltinItemKey(r.trainingItemId))
-        .toList();
-
     final int duration =
         session.durationInSeconds ?? reps.fold(0, (p, r) => p + r.duration);
 
@@ -294,8 +292,17 @@ class RemoteTrainingRepository extends TrainingRepository {
       'rep_datas': repDatas,
       // The server reads a count against the prescription it froze, so a run
       // that answers no prescription has nothing to key one into.
-      if (namesAPrescription && postableResults.isNotEmpty)
-        'item_results': postableResults.map((r) => r.toJson()).toList(),
+      if (namesAPrescription && itemResults.isNotEmpty)
+        'item_results': itemResults.map((r) => r.toJson()).toList(),
+      // What the run was asked to do, when the server has no training to read
+      // it from. It is what the reps and the reports above name their steps
+      // against, and what heads them when the session is read back. The same
+      // shape the local store freezes, so the two cannot answer the same
+      // session differently.
+      if (ownPrescription != null)
+        'prescription': {
+          'items': ownPrescription.map((i) => i.toPrescriptionJson()).toList(),
+        },
       // The force curve is what a critical force or an MVC result means, so it
       // goes up with the assessment that recorded it. The API takes it on an
       // assessment only: on an ordinary repeater the samples are bulk nothing
