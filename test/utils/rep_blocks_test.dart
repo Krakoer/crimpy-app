@@ -865,33 +865,53 @@ void _reviewPassTests() {
     });
   });
 
-  group('hasUnkeyableWork', () {
-    // A builtin mints its items on the fly with no id to key a report to, so
-    // the screen says so rather than simply not showing the section.
-    test('is true for a training of generated items', () {
-      const unsaved = TrainingItem(
-        id: '',
-        type: TrainingItemType.repeater,
-        position: 0,
-        worktimeSeconds: 7,
-      );
-      expect(hasUnkeyableWork(const [unsaved]), isTrue);
+  group('sessionKeepsItemReports', () {
+    // A report is stored against the prescription the session names, so a run
+    // that names none has nowhere to put one. Every builtin is such a run.
+    test('is false for a run that names no prescription', () {
+      expect(sessionKeepsItemReports(), isFalse);
     });
 
-    test('is false for a saved training', () {
-      expect(hasUnkeyableWork(const [dips]), isFalse);
+    test('is true for a run played from a training', () {
+      expect(sessionKeepsItemReports(trainingId: 't-1'), isTrue);
     });
 
-    // A group carries no work of its own, so a blank one is not the athlete
-    // being denied anything.
-    test('is false for a blank group holding saved work', () {
+    test('is true for a run played from a coach slot', () {
+      expect(sessionKeepsItemReports(programSessionId: 'ps-1'), isTrue);
+    });
+  });
+
+  group('holdsReportableWork', () {
+    test('is true for a training holding work', () {
+      expect(holdsReportableWork(const [dips]), isTrue);
+    });
+
+    // A group is a heading and a free item is the coach's own text, so a
+    // training of nothing else owes the athlete no explanation.
+    test('is false for a training of headings and notes alone', () {
       const group = TrainingItem(
-        id: '',
+        id: 'group-1',
+        type: TrainingItemType.group,
+        position: 0,
+        groupTitle: 'Warm up',
+      );
+      const note = TrainingItem(
+        id: 'free-1',
+        type: TrainingItemType.free,
+        position: 1,
+        freeText: 'Stay loose',
+      );
+      expect(holdsReportableWork(const [group, note]), isFalse);
+    });
+
+    test('finds work nested inside a heading', () {
+      const group = TrainingItem(
+        id: 'group-1',
         type: TrainingItemType.group,
         position: 0,
         items: [dips],
       );
-      expect(hasUnkeyableWork(const [group]), isFalse);
+      expect(holdsReportableWork(const [group]), isTrue);
     });
   });
 
@@ -914,10 +934,10 @@ void _reviewPassTests() {
       expect(isReportable(dips), isTrue);
     });
 
-    // A builtin training mints its items with a blank id. A line written
-    // against one is keyed to nothing, can never be read back, and collides
-    // with every other blank-keyed line of the same session.
-    test('leaves out an item that was never saved', () {
+    // A line written against an item with no key at all is keyed to nothing,
+    // can never be read back, and collides with every other nameless line of
+    // the same session.
+    test('leaves out an item with neither an id nor a key', () {
       const unsaved = TrainingItem(
         id: '',
         type: TrainingItemType.repeater,
@@ -925,6 +945,20 @@ void _reviewPassTests() {
         worktimeSeconds: 7,
       );
       expect(isReportable(unsaved), isFalse);
+    });
+
+    // What #110 was about: a builtin's steps are generated rather than stored,
+    // and used to be left out of the review pass for want of an id.
+    test('takes a generated item, which is keyed without being stored', () {
+      const generated = TrainingItem(
+        id: '',
+        stableKey: 'builtin:mvc:0',
+        type: TrainingItemType.repeater,
+        position: 0,
+        worktimeSeconds: 7,
+      );
+      expect(isReportable(generated), isTrue);
+      expect(generated.reportKey, 'builtin:mvc:0');
     });
   });
 

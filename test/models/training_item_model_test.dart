@@ -518,6 +518,105 @@ void main() {
     });
   });
 
+  group('TrainingItem.reportKey', () {
+    // The two answer different questions: where the item is stored, and what a
+    // report written against it is called. A generated step has the second and
+    // not the first, and that is the whole point of keeping them apart.
+    test('falls back to the stored id', () {
+      const stored = TrainingItem(
+        id: 'stored-item',
+        type: TrainingItemType.repeater,
+        position: 0,
+      );
+
+      expect(stored.reportKey, 'stored-item');
+    });
+
+    test('is the generated key when the item was never stored', () {
+      const generated = TrainingItem(
+        id: '',
+        stableKey: 'builtin:mvc:0',
+        type: TrainingItemType.repeater,
+        position: 0,
+      );
+
+      expect(generated.reportKey, 'builtin:mvc:0');
+      // Still unstored, which is what an insert and the backend both read.
+      expect(generated.id, isEmpty);
+    });
+
+    test('is empty on an item with neither', () {
+      const added = TrainingItem(
+        id: '',
+        type: TrainingItemType.repeater,
+        position: 0,
+      );
+
+      expect(added.reportKey, isEmpty);
+    });
+
+    // The reports of a session are keyed on it, and the frozen prescription is
+    // what heads them when they are read back, so it has to survive the round
+    // trip through the snapshot.
+    test('survives the prescription snapshot', () {
+      const generated = TrainingItem(
+        id: '',
+        stableKey: 'builtin:mvc:0',
+        type: TrainingItemType.repeater,
+        position: 0,
+        items: [
+          TrainingItem(
+            id: '',
+            stableKey: 'builtin:mvc:0.1',
+            type: TrainingItemType.hangboardRep,
+            position: 1,
+          ),
+        ],
+      );
+
+      final read = TrainingItem.fromJson(generated.toPrescriptionJson());
+
+      expect(read.reportKey, 'builtin:mvc:0');
+      expect(read.items.single.reportKey, 'builtin:mvc:0.1');
+    });
+
+    // The API names its own items and parses the field as a uuid, so a key the
+    // app generated has no business in the payload it takes.
+    test('is left out of the API payload', () {
+      const generated = TrainingItem(
+        id: '',
+        stableKey: 'builtin:mvc:0',
+        type: TrainingItemType.repeater,
+        position: 0,
+      );
+
+      expect(generated.toJson().containsKey('stable_key'), isFalse);
+    });
+
+    test('is dropped by duplicate, which is a step of nothing', () {
+      const generated = TrainingItem(
+        id: '',
+        stableKey: 'builtin:mvc:0',
+        type: TrainingItemType.repeater,
+        position: 0,
+      );
+
+      expect(generated.duplicate().reportKey, isEmpty);
+    });
+
+    // An override rewrites the prescription of a step, not which step it is.
+    test('is carried over by copyWith', () {
+      const generated = TrainingItem(
+        id: '',
+        stableKey: 'builtin:mvc:0',
+        type: TrainingItemType.repeater,
+        position: 0,
+      );
+
+      expect(generated.copyWith(position: 4).reportKey, 'builtin:mvc:0');
+    });
+  });
+
   group('TrainingItem.toJson id', () {
     test('sends the id back so an update keeps the stored row', () {
       final item = TrainingItem.fromJson({

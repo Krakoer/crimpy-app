@@ -53,6 +53,22 @@ Future<Map<String, dynamic>> _postedBody({
   return client.body!;
 }
 
+Future<Map<String, dynamic>> _postedItemResults({
+  String? trainingId,
+  required List<String> itemKeys,
+}) async {
+  final client = _CapturingApiClient();
+  await RemoteTrainingRepository(client).saveSession(
+    _session(trainingId: trainingId),
+    [_rep()],
+    itemResults: [
+      for (final key in itemKeys)
+        SessionItemResultModel(trainingItemId: key, occurrence: 0, reps: 8),
+    ],
+  );
+  return client.body!;
+}
+
 Future<Map<String, dynamic>> _postedRep({
   String? trainingId,
   String? programSessionId,
@@ -106,6 +122,54 @@ void main() {
       expect((await _postedRep(hand: HandSide.right))['hand'], 'right');
       expect((await _postedRep(hand: HandSide.left))['hand'], 'left');
       expect((await _postedRep(hand: HandSide.both))['hand'], 'both');
+    });
+  });
+
+  group('the item reports of a posted session', () {
+    test('name the items they answer', () async {
+      final body = await _postedItemResults(
+        trainingId: 't-1',
+        itemKeys: ['item-1'],
+      );
+
+      expect(
+        ((body['item_results'] as List).single
+            as Map<String, dynamic>)['training_item_id'],
+        'item-1',
+      );
+    });
+
+    // A generated step is named by a key minted on the device. The API parses
+    // the field as a uuid and refuses the whole request over one it cannot
+    // read, so sending it would cost the session, not the report.
+    test('leave out a report on a generated step', () async {
+      final body = await _postedItemResults(
+        trainingId: 't-1',
+        itemKeys: ['builtin:mvc:0'],
+      );
+
+      expect(body.containsKey('item_results'), isFalse);
+    });
+
+    test('keep the stored ones when a generated step is alongside', () async {
+      final body = await _postedItemResults(
+        trainingId: 't-1',
+        itemKeys: ['builtin:mvc:0', 'item-1'],
+      );
+
+      final posted = (body['item_results'] as List)
+          .cast<Map<String, dynamic>>();
+      expect(posted.map((r) => r['training_item_id']), ['item-1']);
+    });
+
+    // The reachable shape of the same thing: a builtin run names no training,
+    // so the server has no prescription to key a report into and none is sent.
+    // The screen no longer collects one here, and this is the layer below it
+    // holding the same line.
+    test('are left out entirely by a run that names no training', () async {
+      final body = await _postedItemResults(itemKeys: ['builtin:mvc:0']);
+
+      expect(body.containsKey('item_results'), isFalse);
     });
   });
 

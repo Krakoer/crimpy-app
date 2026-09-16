@@ -288,7 +288,22 @@ String trainingItemTitle(TrainingItem item) => switch (item.type) {
 };
 
 class TrainingItem {
+  /// Where the item is stored, and nothing else. Empty means no row holds it
+  /// yet, which is what tells an insert from an update and what has the backend
+  /// mint one. A builtin's items are generated on the fly and never stored, so
+  /// they carry no id and must not: giving them one would make a tree that was
+  /// never saved look saved to every path that branches on this.
+  ///
+  /// What a report is keyed to is [reportKey], which is a different question.
   final String id;
+
+  /// A name for the item that does not come from a stored row, set only where
+  /// one is generated: a builtin mints the same key for the same step every
+  /// time, so what the athlete writes against it can be read back.
+  ///
+  /// Null everywhere else, which leaves [reportKey] on the stored id.
+  final String? stableKey;
+
   final TrainingItemType type;
   final int position;
   final String? parentId;
@@ -370,6 +385,7 @@ class TrainingItem {
 
   const TrainingItem({
     required this.id,
+    this.stableKey,
     required this.type,
     required this.position,
     this.parentId,
@@ -399,6 +415,18 @@ class TrainingItem {
     this.groupTitle,
     this.items = const [],
   });
+
+  /// What a report written against this item is keyed to: the stored id, or
+  /// the generated key when the item comes from a builtin and has no row.
+  ///
+  /// Kept apart from [id] because the two answer different questions. An item
+  /// the editor just added has neither, and is the only thing left with nothing
+  /// to key a report to.
+  ///
+  /// The stored id wins when both are somehow set. A generated item is never
+  /// stored, so nothing produces that pair today, and having the weaker of the
+  /// two names win would be the wrong way round if anything ever did.
+  String get reportKey => id.isNotEmpty ? id : (stableKey ?? '');
 
   /// Grips as one array per hand, empty when the item prescribes none.
   List<List<String>> get handPositionsPerHand => handPositions ?? const [];
@@ -519,6 +547,10 @@ class TrainingItem {
 
     return TrainingItem(
       id: json['id'] as String,
+      // Only a frozen prescription writes one, and only for the trainings that
+      // generate their items. Absent from every server payload, which leaves
+      // the report key on the id the row was read under.
+      stableKey: json['stable_key'] as String?,
       type: TrainingItemType.fromString(json['type'] as String),
       position: (json['position'] as num).toInt(),
       parentId: json['parent_id'] as String?,
@@ -601,6 +633,10 @@ class TrainingItem {
   Map<String, dynamic> toPrescriptionJson() => {
     ...toJson(includeItems: false),
     'id': id,
+    // The reports of this session are keyed on it, so the snapshot that heads
+    // them has to carry it back. Written here and not in [toJson]: the server
+    // names its own items and has no use for a key the app generated.
+    if (stableKey != null) 'stable_key': stableKey,
     'position': position,
     if (parentId != null) 'parent_id': parentId,
     if (exerciseName != null) 'exercise_name': exerciseName,
@@ -645,6 +681,7 @@ class TrainingItem {
   }) {
     return TrainingItem(
       id: id ?? this.id,
+      stableKey: stableKey,
       type: type,
       position: position ?? this.position,
       parentId: parentId,
@@ -678,7 +715,9 @@ class TrainingItem {
 
   /// A copy that saves as a new item. Ids are assigned by the store on save, so
   /// a duplicate must not carry the one of the item it was copied from, or the
-  /// two would be the same item to everything that keys on it.
+  /// two would be the same item to everything that keys on it. The generated
+  /// key goes for the same reason: it names a step of the builtin it was
+  /// generated from, and this copy is not that step.
   TrainingItem duplicate() => TrainingItem(
     id: '',
     type: type,

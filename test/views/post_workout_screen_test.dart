@@ -277,7 +277,11 @@ void _reviewPassTests() {
   testWidgets('asks about every prescribed step', (tester) async {
     await _show(
       tester,
-      const PostWorkoutScreen(template: _reviewTraining, results: []),
+      const PostWorkoutScreen(
+        template: _reviewTraining,
+        results: [],
+        trainingId: 't-1',
+      ),
     );
 
     expect(find.text('How did each one go?'), findsOneWidget);
@@ -296,7 +300,11 @@ void _reviewPassTests() {
 
     await _pumpFor(
       tester,
-      const PostWorkoutScreen(template: _reviewTraining, results: []),
+      const PostWorkoutScreen(
+        template: _reviewTraining,
+        results: [],
+        trainingId: 't-1',
+      ),
       sessions,
     );
     await tester.enterText(
@@ -329,7 +337,11 @@ void _reviewPassTests() {
 
     await _saveFrom(
       tester,
-      const PostWorkoutScreen(template: _reviewTraining, results: []),
+      const PostWorkoutScreen(
+        template: _reviewTraining,
+        results: [],
+        trainingId: 't-1',
+      ),
       sessions,
     );
 
@@ -344,7 +356,11 @@ void _reviewPassTests() {
 
     await _pumpFor(
       tester,
-      const PostWorkoutScreen(template: _reviewTraining, results: []),
+      const PostWorkoutScreen(
+        template: _reviewTraining,
+        results: [],
+        trainingId: 't-1',
+      ),
       sessions,
     );
     await tester.enterText(
@@ -368,7 +384,11 @@ void _reviewPassTests() {
 
     await _pumpFor(
       tester,
-      const PostWorkoutScreen(template: _reviewTraining, results: []),
+      const PostWorkoutScreen(
+        template: _reviewTraining,
+        results: [],
+        trainingId: 't-1',
+      ),
       sessions,
     );
     await tester.enterText(
@@ -423,6 +443,7 @@ void _reviewPassTests() {
       PostWorkoutScreen(
         template: relative,
         results: const [],
+        trainingId: 't-1',
         assessmentResults: results,
       ),
     );
@@ -439,7 +460,11 @@ void _reviewPassTests() {
 
     await _pumpFor(
       tester,
-      const PostWorkoutScreen(template: _reviewTraining, results: []),
+      const PostWorkoutScreen(
+        template: _reviewTraining,
+        results: [],
+        trainingId: 't-1',
+      ),
       sessions,
     );
     await tester.enterText(
@@ -452,10 +477,10 @@ void _reviewPassTests() {
     expect(find.text('Check the highlighted fields above'), findsOneWidget);
   });
 
-  // A builtin generates its items with no id to key a report to. The section
-  // cannot appear, so the screen says why rather than leaving a hole where
-  // every other training shows one.
-  testWidgets('explains itself on a training it cannot annotate', (
+  // A run that names no prescription has nowhere to store a report, which is
+  // every builtin. The section cannot appear, so the screen says so rather than
+  // leaving a hole where every other training shows one.
+  testWidgets('explains itself on a run that cannot keep a report', (
     tester,
   ) async {
     const builtin = Training(
@@ -464,6 +489,7 @@ void _reviewPassTests() {
       items: [
         TrainingItem(
           id: '',
+          stableKey: 'builtin:builtin-1:0',
           type: TrainingItemType.repeater,
           position: 0,
           cycles: 4,
@@ -480,9 +506,61 @@ void _reviewPassTests() {
 
     expect(find.text('How did each one go?'), findsNothing);
     expect(
-      find.textContaining('nothing to note against its steps'),
+      find.textContaining('Notes cannot be kept against the steps'),
       findsOneWidget,
     );
+  });
+
+  // What round 1 of the review caught: the fields used to be offered here and
+  // the reports dropped at save, so the athlete typed into a form that ate it.
+  testWidgets('collects nothing on a run that cannot keep a report', (
+    tester,
+  ) async {
+    final sessions = CapturingSessions();
+    const builtin = Training(
+      id: 'builtin-1',
+      title: 'Crimpy repeaters',
+      items: [
+        TrainingItem(
+          id: '',
+          stableKey: 'builtin:builtin-1:0',
+          type: TrainingItemType.repeater,
+          position: 0,
+          cycles: 4,
+          reps: 6,
+          worktimeSeconds: 7,
+        ),
+      ],
+    );
+
+    await _pumpFor(
+      tester,
+      const PostWorkoutScreen(template: builtin, results: []),
+      sessions,
+    );
+    await tester.tap(find.text('Save training'));
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(TextFormField, 'Load kg'), findsNothing);
+    expect(sessions.savedItemResults, isEmpty);
+  });
+
+  // The other half of the gate, and the one the screen could drop on the floor:
+  // a coach slot names a prescription without naming a training, so the second
+  // argument has to be wired through or a scheduled run loses its review pass.
+  testWidgets('offers the review pass on a run played from a coach slot', (
+    tester,
+  ) async {
+    await _show(
+      tester,
+      const PostWorkoutScreen(
+        template: _reviewTraining,
+        results: [],
+        programSessionId: 'ps-1',
+      ),
+    );
+
+    expect(find.text('How did each one go?'), findsOneWidget);
   });
 
   // The count the run took mid set is seeded into the review, so the athlete
@@ -496,6 +574,7 @@ void _reviewPassTests() {
       const PostWorkoutScreen(
         template: _reviewTraining,
         results: [],
+        trainingId: 't-1',
         itemResults: [
           SessionItemResultModel(
             trainingItemId: 'pullup-1',

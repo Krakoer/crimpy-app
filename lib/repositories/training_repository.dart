@@ -1,9 +1,11 @@
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/models/builtin_training.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/services/api_client.dart';
+import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/models/session_filter.dart';
 
 abstract class TrainingRepository {
@@ -236,6 +238,13 @@ class RemoteTrainingRepository extends TrainingRepository {
     List<BleDataPoint>? data,
     List<SessionItemResultModel> itemResults = const [],
   }) async {
+    // Spelled once: the reps and the reports below both turn on it, and #111
+    // is going to change what counts.
+    final namesAPrescription = sessionKeepsItemReports(
+      trainingId: session.trainingId,
+      programSessionId: session.programSessionId,
+    );
+
     final repDatas = reps.indexed
         .map(
           (indexed) => {
@@ -251,13 +260,19 @@ class RemoteTrainingRepository extends TrainingRepository {
             // The server reads the link against the prescription it froze, which
             // it resolves from training_id or from the program session when one
             // is sent, so a run outside both has nothing to key into.
-            if ((session.trainingId != null ||
-                    session.programSessionId != null) &&
-                indexed.$2.trainingItemId != null)
+            if (namesAPrescription && indexed.$2.trainingItemId != null)
               'training_item_id': indexed.$2.trainingItemId,
             'target_unmeasured': indexed.$2.targetUnmeasured,
           },
         )
+        .toList();
+
+    // The reports the API can place. A generated step is named by a key minted
+    // on the device, which no server prescription holds and no uuid column
+    // takes: one of those refuses the entire session rather than the single
+    // report, which would lose the run.
+    final postableResults = itemResults
+        .where((r) => !isBuiltinItemKey(r.trainingItemId))
         .toList();
 
     final int duration =
@@ -279,9 +294,8 @@ class RemoteTrainingRepository extends TrainingRepository {
       'rep_datas': repDatas,
       // The server reads a count against the prescription it froze, so a run
       // that answers no prescription has nothing to key one into.
-      if ((session.trainingId != null || session.programSessionId != null) &&
-          itemResults.isNotEmpty)
-        'item_results': itemResults.map((r) => r.toJson()).toList(),
+      if (namesAPrescription && postableResults.isNotEmpty)
+        'item_results': postableResults.map((r) => r.toJson()).toList(),
       // The force curve is what a critical force or an MVC result means, so it
       // goes up with the assessment that recorded it. The API takes it on an
       // assessment only: on an ordinary repeater the samples are bulk nothing
