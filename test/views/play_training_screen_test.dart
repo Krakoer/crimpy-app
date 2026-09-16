@@ -183,7 +183,7 @@ Training _amrapEmom() => const Training(
 /// pastes in, and each item gets its own word so a test can tell which one it
 /// is reading off screen.
 String _commentOfLength(String word, int length) => List.filled(
-  (length / (word.length + 1)).ceil(),
+  (length / (word.length + 1)).ceil() + 1,
   word,
 ).join(' ').substring(0, length);
 
@@ -245,6 +245,40 @@ Training _emomWithLongComment() => Training(
           repsIsMax: true,
         ),
       ],
+    ),
+  ],
+);
+
+/// A repeater with a real rest before its hang rep, both carrying a comment
+/// at the new length limit. The full tank's rest preview reads the ahead
+/// comment through a plain, unscrolled Column the same as its timed and
+/// confirm blocks, so it needs a real rest between two long-commented steps
+/// to be reached at all: the other fixtures above use no rest between items.
+Training _hangsWithLongCommentsAndRest() => Training(
+  id: 't10',
+  title: 'Long comments with rest',
+  items: [
+    // A single-rep repeater rests only between reps, never after its last
+    // one, so it would never lead into a real rest step here. A hang rep's
+    // own rest is unconditional, which is what actually gets a rest between
+    // this item and the next.
+    TrainingItem(
+      id: 'h0',
+      type: TrainingItemType.hangboardRep,
+      position: 0,
+      hand: 'right',
+      worktimeSeconds: 7,
+      restSeconds: 30,
+      comment: _repeaterComment,
+    ),
+    TrainingItem(
+      id: 'h1',
+      type: TrainingItemType.hangboardRep,
+      position: 1,
+      hand: 'right',
+      worktimeSeconds: 7,
+      restSeconds: 0,
+      comment: _hangRepComment,
     ),
   ],
 );
@@ -527,16 +561,24 @@ void main() {
       expect(tester.takeException(), isNull);
 
       await _skip(tester);
-      // Running the repeater hang itself: the step whose header is wrapped
-      // in a FittedBox, which scales rather than overflows.
+      // Running the repeater hang itself: the step whose header is wrapped in
+      // a FittedBox, which scales rather than overflows, so a widget that
+      // finds the comment text and finds no exception cannot tell a merely
+      // wrapped comment from one that has shrunk the title to nothing. The
+      // 4-line cap is what keeps the shrink from being severe; check the
+      // title actually rendered at a legible size rather than a sliver.
       expect(find.text(_repeaterComment), findsOneWidget);
       expect(find.text(_hangRepComment), findsNothing);
+      // Reverting the 4-line cap shrinks this to well under 1px on the test
+      // surface (measured ~0.7px); capped, it holds well above that.
+      expect(tester.getRect(find.text('RIGHT HANG')).height, greaterThan(3));
       expect(tester.takeException(), isNull);
 
       await _skip(tester);
       // Running the hang rep.
       expect(find.text(_hangRepComment), findsOneWidget);
       expect(find.text(_repeaterComment), findsNothing);
+      expect(tester.getRect(find.text('HANG')).height, greaterThan(3));
       expect(tester.takeException(), isNull);
     },
   );
@@ -585,6 +627,30 @@ void main() {
       );
       await _skip(tester);
       expect(find.text(_emomComment), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'the full tank lays out a comment at the length limit on the rest preview',
+    (tester) async {
+      // The overflow this guards only shows on a small phone: the default
+      // test surface has enough room to fit it regardless of the cap.
+      tester.view.physicalSize = const Size(320, 400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await _pumpRun(
+        tester,
+        _hangsWithLongCommentsAndRest(),
+        style: RunScreenStyle.fullTank,
+      );
+      // Running the repeater hang, then its rest, which previews the hang
+      // rep's comment ahead of time: the site the ring/tank design skips
+      // over via a FittedBox that this design has no equivalent of.
+      await _skip(tester);
+      await _skip(tester);
+      expect(find.text(_hangRepComment), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
