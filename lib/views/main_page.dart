@@ -1,3 +1,5 @@
+import 'package:crimpy/models/coach_enrollment.dart';
+import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/assessments_list_screen.dart';
@@ -195,8 +197,17 @@ class _MainPageState extends ConsumerState<MainPage>
     );
     if (prompt == null || !mounted) return;
 
-    final enrollment = await ref.read(coachEnrollmentProvider.future);
-    if (enrollment == null || !mounted) return;
+    // A fetch that failed is not an answer about whether they have a coach, so
+    // the ask waits for a launch that can get one rather than being spent here.
+    CoachEnrollment? fetched;
+    try {
+      fetched = await ref.read(coachEnrollmentProvider.future);
+    } catch (error) {
+      AppLoggerHelper.warning('Coach enrollment fetch failed: $error');
+      return;
+    }
+    if (fetched == null || !mounted) return;
+    final enrollment = fetched;
 
     // The enrollment fetch and the session history can take the whole request
     // timeout, by which time the athlete may be deep in a workout. A dialog

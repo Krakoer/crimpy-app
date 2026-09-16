@@ -8,6 +8,7 @@ import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/trainings/programs/scheduled_training_screen.dart';
 import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/views/widgets/pull_to_refresh.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:crimpy/views/widgets/section_widgets.dart';
@@ -56,37 +57,63 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final weeksAsync = ref.watch(programWeeksProvider(program.id));
-    final definedWeeks = weeksAsync.asData?.value
-        .map((w) => w.weekNumber)
-        .toSet();
+    // Read off what the state holds. A pull that fails carries the summaries it
+    // already had, and reading them through asData would answer that the coach
+    // defined no week at all: every week greyed out and untappable, and a
+    // calendar drawn as an empty program, over a snackbar that has gone.
+    final definedWeeks = weeksAsync.value?.map((w) => w.weekNumber).toSet();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Program')),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _header(),
-            const SizedBox(height: 14),
-            _viewToggle(),
-            const SizedBox(height: 14),
-            if (_calendar)
-              _CalendarView(
-                program: program,
-                definedWeeks: definedWeeks ?? {},
-                totalWeeks: _totalWeeks,
-                onOpen: _openSession,
-              )
-            else ...[
-              _weekSelector(definedWeeks),
+        // The coach writes this program while the athlete has it open, so a
+        // pull is the only way to see the week they just changed. The week
+        // details are a family, invalidated whole: the screen scrolls through
+        // more than one of them.
+        child: PullToRefresh(
+          onRefresh: () async {
+            ref.invalidate(weekDetailProvider);
+            ref.invalidate(programTrainingProvider);
+            await Future.wait([
+              ref.refresh(programWeeksProvider(program.id).future),
+              ref.refresh(sessionsProvider.future),
+              // The week bodies are what the pull exists to fetch and are
+              // slower than the summaries, so the indicator waits for the ones
+              // on screen: every defined week in the calendar, the selected one
+              // in the week view.
+              for (final week
+                  in _calendar
+                      ? (definedWeeks ?? {_selectedWeek})
+                      : {_selectedWeek})
+                ref.read(weekDetailProvider(program.id, week).future),
+            ]);
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            children: [
+              _header(),
               const SizedBox(height: 14),
-              _WeekStripView(
-                program: program,
-                weekNumber: _selectedWeek,
-                onOpen: _openSession,
-              ),
+              _viewToggle(),
+              const SizedBox(height: 14),
+              if (_calendar)
+                _CalendarView(
+                  program: program,
+                  definedWeeks: definedWeeks ?? {},
+                  totalWeeks: _totalWeeks,
+                  onOpen: _openSession,
+                )
+              else ...[
+                _weekSelector(definedWeeks),
+                const SizedBox(height: 14),
+                _WeekStripView(
+                  program: program,
+                  weekNumber: _selectedWeek,
+                  onOpen: _openSession,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -287,7 +314,13 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
       weekDetailProvider(widget.program.id, widget.weekNumber),
     );
 
+    // Skips both arms while what is being reloaded or refused is the week
+    // already on screen: a pull would otherwise replace the week the athlete is
+    // reading with a spinner, and a failed one with an error where their
+    // sessions were.
     return weekAsync.when(
+      skipLoadingOnReload: true,
+      skipError: true,
       loading: () => const Padding(
         padding: EdgeInsets.all(24),
         child: Center(child: CircularProgressIndicator()),
@@ -316,7 +349,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
         final selectedSessions = byDay[selected]!;
         final selectedDate = _dateForDay(selected);
         final timesPerWeek = week.timesPerWeekSessions;
-        final sessions = ref.watch(sessionsProvider).asData?.value ?? [];
+        final sessions = ref.watch(sessionsProvider).value ?? [];
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -670,7 +703,7 @@ class _CalendarRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final week = defined
-        ? ref.watch(weekDetailProvider(program.id, weekNumber)).asData?.value
+        ? ref.watch(weekDetailProvider(program.id, weekNumber)).value
         : null;
     final byDay = {
       if (week != null)

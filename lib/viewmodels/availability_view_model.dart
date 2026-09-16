@@ -80,11 +80,10 @@ Future<CachedAvailabilityPlan?> availabilityPlanCache(Ref ref) async {
 
   try {
     // Asked straight of the reminder endpoint rather than gated on the
-    // enrollment: coachEnrollment answers null for a failed fetch as well as
-    // for no coach, so gating on it would write a transient outage into the
-    // mirror as "your coach set none" and cancel the pending nudges. The
-    // endpoint already answers 404 for both real cases, which is a null here,
-    // and a genuine failure throws into the fallback below.
+    // enrollment: the endpoint already answers 404 for both real cases, which
+    // is a null here, and a genuine failure throws into the fallback below, so
+    // an outage leaves the mirror alone instead of writing "your coach set
+    // none" into it and cancelling the pending nudges.
     final reminder = await repository.getReminder();
     final weeks = await ref.watch(myAvailabilityProvider.future);
 

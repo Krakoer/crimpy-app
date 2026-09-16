@@ -46,7 +46,12 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(session.trainingTitle)),
       body: SafeArea(
+        // Skips both arms while what is being reloaded is the training already
+        // on screen: a pull on the dashboard below reaches this, and the
+        // athlete reading their session should not lose it to a spinner.
         child: trainingAsync.when(
+          skipLoadingOnReload: true,
+          skipError: true,
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(
             child: Padding(
@@ -373,7 +378,11 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     // be logged. Derived from the content rather than from the label, so a coach
     // is free to put hangboard work in a session called anything.
     final logOnly = training.items.isEmpty;
-    final sessions = ref.watch(sessionsProvider).asData?.value ?? [];
+    // Read off what the state holds. This screen has no pull of its own, but it
+    // sits under the ones that do: a pull on the dashboard or the history
+    // invalidates the sessions while this is on the stack, and through asData
+    // the training it prescribes would read as never done.
+    final sessions = ref.watch(sessionsProvider).value ?? [];
     final done = isScheduledTrainingDone(
       sessions,
       program,

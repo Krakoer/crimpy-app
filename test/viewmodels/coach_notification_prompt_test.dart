@@ -1,3 +1,4 @@
+import 'package:crimpy/services/api_exception.dart';
 import 'package:crimpy/models/auth_models.dart' as auth_models;
 import 'package:crimpy/models/coach_enrollment.dart';
 import 'package:crimpy/models/common.dart';
@@ -80,19 +81,41 @@ ProviderContainer _containerWith({
   List<SessionModel> sessions = const [],
   bool notifiable = true,
   bool permitted = false,
+  bool enrollmentFails = false,
 }) => ProviderContainer.test(
+  // A provider that throws is retried with a backoff by default, which a test
+  // asserting the failure would sit through rather than observe.
+  retry: (retryCount, error) => null,
   overrides: [
     notificationServiceProvider.overrideWithValue(
       _FakeNotificationService(notifiable: notifiable, permitted: permitted),
     ),
     authStateProvider.overrideWith(() => _FakeAuthState(user)),
-    coachEnrollmentProvider.overrideWith((ref) async => enrollment),
+    coachEnrollmentProvider.overrideWith(
+      (ref) async => enrollmentFails
+          ? throw ApiException('Connection error.', isOffline: true)
+          : enrollment,
+    ),
     sessionsProvider.overrideWith(() => _FakeSessions(sessions)),
   ],
 );
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  // The enrollment provider answers a failed fetch by throwing rather than by
+  // saying there is no coach. Nothing is due until the app can ask who the
+  // coach is, and the ask is worth keeping for a launch that can get an answer,
+  // so the failure is caught here rather than escalating out of the post frame
+  // callback that started it.
+  test('a launch that cannot reach the enrollment is due nothing', () async {
+    final container = _containerWith(user: _user, enrollmentFails: true);
+
+    expect(
+      await container.read(pendingCoachNotificationPromptProvider.future),
+      isNull,
+    );
+  });
 
   test(
     'a coached athlete who was never asked is due the enrolled ask',

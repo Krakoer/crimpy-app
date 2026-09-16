@@ -17,11 +17,13 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Read off what the state holds rather than off AsyncData, so a refetch
+    // of what is already shown does not take the card off the dashboard.
     final enrollment = ref.watch(coachEnrollmentProvider);
-    if (enrollment.asData?.value == null) return const SizedBox.shrink();
+    if (enrollment.value == null) return const SizedBox.shrink();
 
     final nextWeek = getStartOfNextWeek(DateTime.now());
-    final weeks = ref.watch(myAvailabilityProvider).asData?.value;
+    final weeks = ref.watch(myAvailabilityProvider).value;
     if (weeks == null) return const SizedBox.shrink();
 
     final declared = weeks.any(

@@ -265,7 +265,9 @@ class _FlexibleTrainings extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final schedule = ref.watch(programScheduleCacheProvider).asData?.value;
+    // Read off what the state holds, so a pull running on another tab does not
+    // take this section away while it reloads.
+    final schedule = ref.watch(programScheduleCacheProvider).value;
     if (schedule == null) return const SizedBox.shrink();
 
     final week = schedule.weekNumbered(

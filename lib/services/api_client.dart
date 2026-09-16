@@ -256,6 +256,15 @@ class ApiClient {
     }
   }
 
+  /// Whether the request never got an answer, as opposed to getting one that
+  /// said no. A response of any status means the server was reached.
+  ///
+  /// The absent response is the whole test. Naming the connection error types
+  /// as well would miss the ones dio cannot classify: a TLS handshake refused
+  /// by a captive portal, or a socket reset after the request went out, both
+  /// arrive as `unknown` with no response and are as offline as the rest.
+  static bool _neverReachedTheServer(DioException e) => e.response == null;
+
   Future<Response> get(
     String path, {
     Map<String, dynamic>? queryParameters,
@@ -271,6 +280,7 @@ class ApiClient {
       throw ApiException(
         _extractErrorMessage(e),
         statusCode: e.response?.statusCode,
+        isOffline: _neverReachedTheServer(e),
       );
     }
   }
@@ -292,6 +302,7 @@ class ApiClient {
       throw ApiException(
         _extractErrorMessage(e),
         statusCode: e.response?.statusCode,
+        isOffline: _neverReachedTheServer(e),
       );
     }
   }
@@ -313,6 +324,7 @@ class ApiClient {
       throw ApiException(
         _extractErrorMessage(e),
         statusCode: e.response?.statusCode,
+        isOffline: _neverReachedTheServer(e),
       );
     }
   }
@@ -334,6 +346,7 @@ class ApiClient {
       throw ApiException(
         _extractErrorMessage(e),
         statusCode: e.response?.statusCode,
+        isOffline: _neverReachedTheServer(e),
       );
     }
   }

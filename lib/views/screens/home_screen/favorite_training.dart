@@ -19,8 +19,11 @@ class FavoriteTrainingList extends ConsumerWidget {
     final pinned = ref.watch(pinnedTrainingsProvider);
     return HomeCard(
       title: "Favorite Trainings",
+      // Matched on what the state holds rather than on which state it is, so a
+      // pull refetching the list leaves it on screen instead of collapsing the
+      // card to a spinner and back.
       child: switch (pinned) {
-        AsyncData(:final value) => SizedBox(
+        AsyncValue(:final value?) => SizedBox(
           height: 200,
           child: SingleChildScrollView(
             child: Column(
@@ -117,7 +120,7 @@ class FavoriteTrainingList extends ConsumerWidget {
             ),
           ),
         ),
-        AsyncError(:final error) => Center(
+        AsyncValue(:final error?) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -129,7 +132,7 @@ class FavoriteTrainingList extends ConsumerWidget {
             ],
           ),
         ),
-        AsyncLoading() => const Center(child: CircularProgressIndicator()),
+        _ => const Center(child: CircularProgressIndicator()),
       },
     );
   }
@@ -145,8 +148,11 @@ class PinTrainingDialog extends ConsumerWidget {
     final availableTrainings = ref.watch(allTrainingsProvider);
     return AlertDialog(
       title: Text("Favorite a training"),
+      // Matched on what the state holds: toggling a favourite invalidates the
+      // list this reads, so through AsyncData the dialog would collapse to a
+      // spinner and back on every tap.
       content: switch (availableTrainings) {
-        AsyncData(:final value) => SingleChildScrollView(
+        AsyncValue(:final value?) => SingleChildScrollView(
           child: SizedBox(
             width: 300,
             height: 300,
@@ -210,7 +216,7 @@ class PinTrainingDialog extends ConsumerWidget {
                   ),
           ),
         ),
-        AsyncError(:final error) => Center(
+        AsyncValue(:final error?) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -222,7 +228,7 @@ class PinTrainingDialog extends ConsumerWidget {
             ],
           ),
         ),
-        AsyncLoading() => const Center(child: CircularProgressIndicator()),
+        _ => const Center(child: CircularProgressIndicator()),
       },
     );
   }

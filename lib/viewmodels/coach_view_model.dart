@@ -1,4 +1,3 @@
-import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/coach_enrollment.dart';
 import 'package:crimpy/repositories/coach_enrollment_repository.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
@@ -23,10 +22,5 @@ CoachEnrollmentRepository? coachEnrollmentRepository(Ref ref) {
 Future<CoachEnrollment?> coachEnrollment(Ref ref) async {
   final repository = ref.watch(coachEnrollmentRepositoryProvider);
   if (repository == null) return null;
-  try {
-    return await repository.getEnrollment();
-  } catch (error) {
-    AppLoggerHelper.warning('Coach enrollment fetch failed: $error');
-    return null;
-  }
+  return repository.getEnrollment();
 }

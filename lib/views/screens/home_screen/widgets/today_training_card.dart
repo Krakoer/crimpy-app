@@ -26,7 +26,13 @@ class TodayTrainingCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final programAsync = ref.watch(activeProgramProvider);
+    // Skips both arms while what is being reloaded is what this card is
+    // already showing: a pull would otherwise take today's training off the
+    // dashboard for as long as the fetch runs, and a failed one would leave it
+    // off until some later fetch succeeded.
     return programAsync.when(
+      skipLoadingOnReload: true,
+      skipError: true,
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
       data: (program) {
@@ -136,9 +142,14 @@ class _ProgramTodayCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activeWeek = ref.watch(activeProgramWeekProvider).asData?.value;
+    // Read off what the state holds. A pull invalidates what this week is
+    // derived from, so through asData it reads as no week at all and the card
+    // the athlete is looking at empties itself for the length of the fetch.
+    final activeWeek = ref.watch(activeProgramWeekProvider).value;
     if (activeWeek == null) return const SizedBox.shrink();
-    final sessions = ref.watch(sessionsProvider).asData?.value ?? [];
+    // Same for the sessions: through asData a failed pull loses them, and
+    // every training already completed today loses its done mark.
+    final sessions = ref.watch(sessionsProvider).value ?? [];
     final offset = activeWeek.program.dayOffsetOf(
       activeWeek.weekNumber,
       DateTime.now(),
@@ -288,10 +299,11 @@ class _TodayTrainingRow extends ConsumerWidget {
       session,
       date: DateTime.now(),
     );
+    // Read off what the state holds, like everything else this card reads: a
+    // pull reloads it and the duration would otherwise fall back mid gesture.
     final training = ref
         .watch(programTrainingProvider(program.id, session.trainingId))
-        .asData
-        ?.value;
+        .value;
     // Estimated from the training as this week prescribes it, so a retimed
     // plank or a slowed emom moves the number the athlete reads here. The
     // athlete's results go in too: a week can retime a step as a percentage of

@@ -16,9 +16,12 @@ class ProgramSummaryCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final program = ref.watch(activeProgramProvider).asData?.value;
+    // Read off what the state holds rather than off AsyncData: this card and
+    // the section label above it head the trainings list, and a pull would
+    // otherwise take both off the top of the screen while it refetches.
+    final program = ref.watch(activeProgramProvider).value;
     if (program == null) return const SizedBox.shrink();
-    final today = ref.watch(todayTrainingProvider).asData?.value;
+    final today = ref.watch(todayTrainingProvider).value;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
