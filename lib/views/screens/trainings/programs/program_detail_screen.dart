@@ -365,6 +365,12 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
           children: [
             // The phase heads the week: what the block trains is the frame the
             // coach note and the days below are read in.
+            //
+            // Read off the week detail here, while the calendar reads it off
+            // the week list, and the two are not to be unified: this whole
+            // body already waits on the detail, so it has no jump to avoid,
+            // while a calendar row would grow under the athlete's finger as
+            // each week's detail landed.
             if ((week.name ?? '').isNotEmpty) ...[
               SectionLabel(week.name!),
               const SizedBox(height: 10),
