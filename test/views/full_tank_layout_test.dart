@@ -4,6 +4,7 @@ import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/layouts/full_tank_layout.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -387,6 +388,45 @@ void main() {
       expect(find.text('12 reps  -  10 kg'), findsOneWidget);
       expect(find.text('DONE'), findsOneWidget);
       expect(find.byIcon(Icons.skip_next), findsNothing);
+    });
+  });
+
+  group('a step title', () {
+    // The cap exists to stop a pathological title taking the tank over, not to
+    // shorten a name a coach actually wrote: a title has no pause to read the
+    // rest from, unlike a note's prose.
+    testWidgets('long but real is shown whole', (tester) async {
+      await _pump(
+        tester,
+        item: const ConfirmItem(
+          label: 'Bulgarian split squat with a slow eccentric',
+          reps: 8,
+        ),
+        repContext: null,
+      );
+
+      final title = tester.renderObject<RenderParagraph>(
+        find.text('BULGARIAN SPLIT SQUAT WITH A SLOW ECCENTRIC'),
+      );
+      expect(title.didExceedMaxLines, isFalse);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('long past all reason is cut short rather than overflowing', (
+      tester,
+    ) async {
+      final absurd = List.filled(40, 'overhang').join(' ');
+      await _pump(
+        tester,
+        item: ConfirmItem(label: absurd, reps: 8),
+        repContext: null,
+      );
+
+      final title = tester.renderObject<RenderParagraph>(
+        find.text(absurd.toUpperCase()),
+      );
+      expect(title.didExceedMaxLines, isTrue);
+      expect(tester.takeException(), isNull);
     });
   });
 

@@ -48,10 +48,12 @@ double tankFillFraction({
 /// What the tank draws, which is what the running step is.
 enum _TankState { preparation, sensorWork, rest, timed, confirm }
 
-/// Lines a step title may take before it is cut short. Two is enough for a long
-/// exercise name to wrap, and stops any title growing the middle of the tank
-/// past the room the screen has for it.
-const _stepTitleMaxLines = 2;
+/// Lines a step title may take before it is cut short. Generous on purpose: the
+/// cap is there to stop a pathological title growing the middle of the tank past
+/// the room the screen has for it, not to shorten a long exercise name, which
+/// has no pause to read the rest from. Four lines of title, five of a note's
+/// prose and four of a comment still leave well over half the tank free.
+const _stepTitleMaxLines = 4;
 
 /// Lines of a note's prose the running screen shows. Past this the athlete
 /// reads the rest from the paused card, which holds the whole note.
@@ -301,9 +303,8 @@ class FullTankLayout extends ConsumerWidget {
               isRunning: isRunning,
               showConfirm: state == _TankState.confirm,
               // A step the athlete ends themselves carries no play control:
-              // there is no clock on it to stop. A note whose prose the screen
-              // had to cut short is the one exception, since pausing is how the
-              // rest of it is read.
+              // there is no clock on it to stop. A note carrying prose is the
+              // one exception, since pausing is how the rest of it is read.
               showPause: _pausedNoteText() != null,
               onPlayPause: onPlayPause,
               onSkip: onSkip,
@@ -332,9 +333,9 @@ class FullTankLayout extends ConsumerWidget {
     return CrimpyTheme.primaryOrange;
   }
 
-  /// The whole note, handed to the paused card. The running screen caps the
-  /// prose at a few lines so the tank stays readable across the room, and an
-  /// athlete who wants the rest of it pauses: a note is a step they end
+  /// The whole note, handed to the paused card whenever the step carries prose.
+  /// The running screen caps that prose at a few lines so the tank stays
+  /// readable across the room, and an athlete who wants the rest of it pauses: a note is a step they end
   /// themselves, so the pause costs them nothing and they are stood in front of
   /// the phone rather than hanging off the wall.
   ///
@@ -659,6 +660,8 @@ class _TankContent extends StatelessWidget {
       Text(
         _preparationInstruction(rep),
         textAlign: TextAlign.center,
+        maxLines: _stepTitleMaxLines,
+        overflow: TextOverflow.ellipsis,
         style: _style(14, color: palette.secondary, height: 1.6),
       ),
       if (rep != null && rep.targetLoad > 0) ...[
@@ -952,19 +955,21 @@ class _PausedCard extends StatelessWidget {
   /// step, which leaves the card the two lines it has always been.
   final String? noteText;
 
+  /// Room the note is given before it scrolls. Required rather than defaulted:
+  /// a zero would render the note invisible instead of merely cramped.
   final double maxNoteHeight;
 
   const _PausedCard({
     required this.scale,
+    required this.maxNoteHeight,
     this.noteText,
-    this.maxNoteHeight = 0,
   });
 
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(20),
     constraints: BoxConstraints(
-      maxWidth: noteText == null ? double.infinity : 340,
+      maxWidth: noteText == null ? double.infinity : 340 * scale,
     ),
     decoration: const BoxDecoration(
       color: CrimpyTheme.primaryWhite,
@@ -1034,7 +1039,7 @@ class _ControlStrip extends StatelessWidget {
   final bool showConfirm;
 
   /// Whether a step ended by the athlete still offers a play control, which
-  /// only a note with more text than the screen showed does.
+  /// only a note carrying prose does.
   final bool showPause;
   final VoidCallback onPlayPause;
   final VoidCallback onSkip;

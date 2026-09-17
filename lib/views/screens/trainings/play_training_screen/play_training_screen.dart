@@ -593,6 +593,22 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// what an uncommented step already does rather than making it far worse; it
   /// does not remove it on the smallest screens. The full note is still
   /// readable from the training detail screen, which does not cap it.
+  Widget _commentText(String text) => ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: 320),
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      maxLines: 4,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(
+        fontFamily: 'JetBrainsMono',
+        fontSize: 13,
+        height: 1.4,
+        color: CrimpyTheme.textSecondary,
+      ),
+    ),
+  );
+
   /// A note's prose: what the coach wrote between the exercises, which is a
   /// whole prescription rather than a name, so it is set as prose instead of
   /// being shouted in the title.
@@ -611,22 +627,6 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         fontSize: 14,
         height: 1.45,
         color: CrimpyTheme.textPrimary,
-      ),
-    ),
-  );
-
-  Widget _commentText(String text) => ConstrainedBox(
-    constraints: const BoxConstraints(maxWidth: 320),
-    child: Text(
-      text,
-      textAlign: TextAlign.center,
-      maxLines: 4,
-      overflow: TextOverflow.ellipsis,
-      style: const TextStyle(
-        fontFamily: 'JetBrainsMono',
-        fontSize: 13,
-        height: 1.4,
-        color: CrimpyTheme.textSecondary,
       ),
     ),
   );

@@ -1410,6 +1410,31 @@ void main() {
       expect(noteStep(null).instructions, isNull);
     });
 
+    // A timed step has no prose slot, so the text goes in the title rather than
+    // nowhere: shown shouted beats not shown at all. Every line it lands in is
+    // capped, so it cannot overflow the screen.
+    test('longer than a title, on a clock, keeps its text', () {
+      const prescription =
+          'kilter volume, 40 degrees, ramp up from 6a, 2 to 3 min between '
+          'blocks, aim for 20 problems in 2h';
+      final out = expandTrainingItems(
+        _training([
+          const TrainingItem(
+            id: 'n1',
+            type: TrainingItemType.free,
+            position: 0,
+            freeText: prescription,
+            duration: 300,
+          ),
+        ]),
+        useSensor: false,
+      );
+
+      final step = out.single as TimedItem;
+      expect(step.label, prescription);
+      expect(step.durationSeconds, 300);
+    });
+
     // Nothing prescribes a duration on a note today, and a note on a clock ends
     // itself, so there is no step to read prose on: it keeps the title alone.
     test('on a clock runs as a timed step named by its title', () {

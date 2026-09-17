@@ -329,10 +329,13 @@ void _expandFree(
   if (duration != null) {
     out.add(
       TimedItem(
-        // A note on a clock runs itself down, so there is no step to end and
-        // nowhere the prose would be read: it keeps the title alone. No client
-        // prescribes a duration on a note today, and the portal offers none.
-        label: title,
+        // A note on a clock runs itself down, so there is no step to end and no
+        // prose slot on a timed step to read it from. It keeps the whole text as
+        // its title rather than dropping it: shown large and shouted is worse
+        // than shown nowhere at all is worse still. Every line it lands in is
+        // capped, so it cannot overflow. No client prescribes a duration on a
+        // note today, and the portal offers no control for one.
+        label: prose ?? title,
         durationSeconds: duration,
         targetLoad: 0,
         handSide: HandSide.both,

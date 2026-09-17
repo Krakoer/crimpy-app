@@ -40,7 +40,10 @@ class NextRepPreview extends StatelessWidget {
       padding: const EdgeInsets.only(top: 20),
       child: Text(
         'Next: ${_getDescription()}',
-        maxLines: 1,
+        // Bounded so a step whose name is a paragraph cannot push the rest of
+        // the screen off it, and not so tight that a merely long exercise name
+        // is cut short.
+        maxLines: 3,
         overflow: TextOverflow.ellipsis,
         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
           color: CrimpyTheme.primaryBlack,
