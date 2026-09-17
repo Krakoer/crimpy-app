@@ -526,6 +526,11 @@ class _TankContent extends StatelessWidget {
   /// force level, so anything in it has to be bounded. The colour comes from
   /// the palette for that same reason, or the copy drawn over the fill would
   /// paint green on the dark green and disappear.
+  ///
+  /// [align] only decides where a goal that had to be cut short sits in the
+  /// leftover pixels. It does not place the line: a goal short enough to fit
+  /// shrink-wraps to its glyphs, so the block it sits in is what puts it left
+  /// or centre.
   Widget _goalLine(String goal, {TextAlign align = TextAlign.center}) => Text(
     goal.toUpperCase(),
     textAlign: align,

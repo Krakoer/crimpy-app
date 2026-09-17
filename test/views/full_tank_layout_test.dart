@@ -1,5 +1,6 @@
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_execution_model.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/layouts/full_tank_layout.dart';
@@ -688,7 +689,16 @@ void main() {
         comment: 'Keep the shoulders engaged',
       );
 
-      expect(find.text('RESI DOIGTS'), findsWidgets);
+      // The tank draws its content twice, the second copy clipped to the fill,
+      // so the goal has to take its colour from the palette: a fixed green
+      // paints the second copy into the dark fill and the goal vanishes exactly
+      // where the athlete is hanging.
+      expect(find.text('RESI DOIGTS'), findsNWidgets(2));
+      final painted = tester
+          .widgetList<Text>(find.text('RESI DOIGTS'))
+          .map((text) => text.style?.color)
+          .toSet();
+      expect(painted, {CrimpyTheme.goalColor, CrimpyTheme.primaryWhite});
       expect(find.text('Keep the shoulders engaged'), findsWidgets);
       expect(find.text('34'), findsWidgets);
     });
