@@ -69,6 +69,8 @@ Future<void> _pump(
   bool isPreparation = false,
   bool isRunning = true,
   String? repContext = 'SET 2/4 - REP 3/6',
+  String? goal,
+  String? nextGoal,
   String? comment,
   String? videoLink,
   String? nextVideoLink,
@@ -94,6 +96,8 @@ Future<void> _pump(
             isPreparation: isPreparation,
             isRunning: isRunning,
             repContext: repContext,
+            goal: goal,
+            nextGoal: nextGoal,
             comment: comment,
             nextComment: null,
             videoLink: videoLink,
@@ -625,6 +629,56 @@ void main() {
       expect(find.text('Tap play to resume'), findsOneWidget);
       // The note is read from the tap, not from the card.
       expect(find.byType(SingleChildScrollView), findsNothing);
+    });
+  });
+
+  // The goal is why the athlete is here, so it heads the step in its own
+  // register rather than joining the numbers they are acting on.
+  group('the goal of the block', () {
+    testWidgets('heads a timed step, in capitals and on one line', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: _pullUps,
+        goal: 'resi doigts',
+        comment: 'Keep the shoulders engaged',
+      );
+
+      expect(find.text('RESI DOIGTS'), findsOneWidget);
+      expect(find.text('PULL-UPS'), findsWidgets);
+      expect(find.text('Keep the shoulders engaged'), findsWidgets);
+    });
+
+    testWidgets('heads a self paced step', (tester) async {
+      await _pump(
+        tester,
+        item: const ConfirmItem(label: 'Dips', reps: 8),
+        goal: 'explo jambes',
+      );
+
+      expect(find.text('EXPLO JAMBES'), findsOneWidget);
+      expect(find.text('DIPS'), findsWidgets);
+    });
+
+    testWidgets('a rest names the goal of the step it leads into', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 60),
+        nextItem: _pullUps,
+        nextGoal: 'capacite/endurance doigts',
+      );
+
+      expect(find.text('CAPACITE/ENDURANCE DOIGTS'), findsOneWidget);
+    });
+
+    testWidgets('a step with no goal shows none', (tester) async {
+      await _pump(tester, item: _pullUps);
+
+      expect(find.text('RESI DOIGTS'), findsNothing);
+      expect(find.text('PULL-UPS'), findsWidgets);
     });
   });
 }

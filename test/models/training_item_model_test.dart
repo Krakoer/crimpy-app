@@ -461,6 +461,67 @@ void main() {
     });
   });
 
+  group('TrainingItem.fromJson goal', () {
+    test('parses the goal apart from the comment', () {
+      final item = TrainingItem.fromJson({
+        'id': 'i6',
+        'type': 'exercise',
+        'position': 0,
+        'goal': 'resi doigts',
+        'comment': 'First rep in pronation',
+      });
+      expect(item.goal, 'resi doigts');
+      expect(item.comment, 'First rep in pronation');
+    });
+
+    test('goal is null when absent and round-trips through toJson', () {
+      final item = TrainingItem.fromJson({
+        'id': 'i7',
+        'type': 'exercise',
+        'position': 0,
+      });
+      expect(item.goal, isNull);
+      expect(item.toJson().containsKey('goal'), isFalse);
+
+      final withGoal = TrainingItem.fromJson({
+        'id': 'i8',
+        'type': 'exercise',
+        'position': 0,
+        'goal': 'explo jambes',
+      });
+      expect(withGoal.toJson()['goal'], 'explo jambes');
+    });
+
+    // The goal says why the block is in the program, so it has to survive the
+    // copies a run and an edit make of the item, and reach the frozen
+    // prescription the athlete plays.
+    test('survives copyWith, duplicate and the prescription snapshot', () {
+      const item = TrainingItem(
+        id: 'i9',
+        type: TrainingItemType.exercise,
+        position: 0,
+        goal: 'capacite/endurance doigts',
+      );
+      expect(item.copyWith(reps: 8).goal, 'capacite/endurance doigts');
+      expect(item.duplicate().goal, 'capacite/endurance doigts');
+      expect(item.toPrescriptionJson()['goal'], 'capacite/endurance doigts');
+    });
+
+    // A week retunes the numbers of a block, not what it is for, so the goal is
+    // not an override key and an override carrying one changes nothing.
+    test('is left alone by a program override', () {
+      const item = TrainingItem(
+        id: 'i10',
+        type: TrainingItemType.exercise,
+        position: 0,
+        goal: 'resi doigts',
+      );
+      final tuned = item.applyOverride({'reps': 12, 'goal': 'explo jambes'});
+      expect(tuned.reps, 12);
+      expect(tuned.goal, 'resi doigts');
+    });
+  });
+
   group('TrainingItem.copyWith group title', () {
     const group = TrainingItem(
       id: 'g',

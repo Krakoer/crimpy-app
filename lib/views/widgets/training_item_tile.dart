@@ -99,9 +99,59 @@ class TrainingItemComment extends StatelessWidget {
   }
 }
 
-/// One row of a training breakdown: position, title, its numbers and the coach
-/// comment when there is one. [extra] holds screen specific decorations such as
-/// the program override chips.
+/// What the block is for, e.g. "resi doigts". Labelled and set in the accent
+/// green rather than the comment's orange, so the two notes on a tile are told
+/// apart without reading them: this one is why the block is in the program, the
+/// other is how to run it.
+class TrainingItemGoal extends StatelessWidget {
+  final String goal;
+
+  const TrainingItemGoal(this.goal, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: CrimpyTheme.accentGreen.withValues(alpha: 0.10),
+        border: Border(
+          left: BorderSide(color: CrimpyTheme.accentGreen, width: 3),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'GOAL',
+            style: TextStyle(
+              fontFamily: 'JetBrainsMono',
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+              color: CrimpyTheme.accentGreen,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              goal,
+              style: const TextStyle(
+                fontFamily: 'JetBrainsMono',
+                fontSize: 11.5,
+                height: 1.4,
+                color: CrimpyTheme.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One row of a training breakdown: position, title, its numbers, what the
+/// block is for and the coach comment when there is one. [extra] holds screen
+/// specific decorations such as the program override chips.
 class TrainingItemTile extends StatelessWidget {
   final TrainingItem item;
   final int number;
@@ -134,6 +184,7 @@ class TrainingItemTile extends StatelessWidget {
       results: results,
     );
     final comment = item.comment?.trim() ?? '';
+    final goal = item.goal?.trim() ?? '';
     // What the coach wrote about the movement itself: what it is, then how to
     // execute it. Both come off the exercise rather than off this step, which is
     // what the item's own comment above is.
@@ -186,6 +237,10 @@ class TrainingItemTile extends StatelessWidget {
                     color: CrimpyTheme.textSecondary,
                   ),
                 ),
+              ],
+              if (goal.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                TrainingItemGoal(goal),
               ],
               for (final note in exerciseNotes) ...[
                 const SizedBox(height: 4),

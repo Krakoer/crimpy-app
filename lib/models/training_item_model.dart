@@ -362,6 +362,13 @@ class TrainingItem {
   // Optional coach comment shown to the athlete (e.g. "first rep in pronation")
   final String? comment;
 
+  // Why the block is in the program (e.g. "resi doigts", "explo jambes"). A
+  // different field from comment above: that one is how to run this instance
+  // and changes with the prescription, this one is what the block is for and
+  // holds across the weeks that retune it. Not a program override key for the
+  // same reason.
+  final String? goal;
+
   // Exercise reference
   final String? exerciseId;
 
@@ -407,6 +414,7 @@ class TrainingItem {
     this.variableTargets = const {},
     this.freeText,
     this.comment,
+    this.goal,
     this.exerciseId,
     this.exerciseName,
     this.exerciseDescription,
@@ -568,6 +576,7 @@ class TrainingItem {
       variableTargets: targets,
       freeText: json['free_text'] as String?,
       comment: json['comment'] as String?,
+      goal: json['goal'] as String?,
       exerciseId: json['exercise_id'] as String?,
       exerciseName: json['exercise_name'] as String?,
       exerciseDescription: json['exercise_description'] as String?,
@@ -613,6 +622,7 @@ class TrainingItem {
     }
     if (freeText != null) map['free_text'] = freeText;
     if (comment != null) map['comment'] = comment;
+    if (goal != null) map['goal'] = goal;
     if (exerciseId != null) map['exercise_id'] = exerciseId;
     if (groupTitle != null) map['group_title'] = groupTitle;
     if (includeItems && items.isNotEmpty) {
@@ -700,6 +710,7 @@ class TrainingItem {
       variableTargets: variableTargets ?? this.variableTargets,
       freeText: freeText,
       comment: comment,
+      goal: goal,
       exerciseId: exerciseId,
       exerciseName: exerciseName,
       exerciseDescription: exerciseDescription,
@@ -737,6 +748,7 @@ class TrainingItem {
     variableTargets: variableTargets,
     freeText: freeText,
     comment: comment,
+    goal: goal,
     exerciseId: exerciseId,
     exerciseName: exerciseName,
     exerciseDescription: exerciseDescription,

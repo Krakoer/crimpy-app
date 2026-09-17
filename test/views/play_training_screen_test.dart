@@ -316,6 +316,41 @@ Training _oneCommentedExercise() => const Training(
   ],
 );
 
+/// A block with a goal of its own, holding one exercise that names none and one
+/// that names its own, so a run shows what each step inherits and what it
+/// overrides.
+Training _goalBlock() => const Training(
+  id: 't9',
+  title: 'Goals',
+  items: [
+    TrainingItem(
+      id: 'g',
+      type: TrainingItemType.group,
+      position: 0,
+      groupTitle: 'Pull block',
+      goal: 'resi doigts',
+      items: [
+        TrainingItem(
+          id: 'e1',
+          type: TrainingItemType.exercise,
+          position: 0,
+          duration: 20,
+          restSeconds: 10,
+          exerciseName: 'Frog',
+        ),
+        TrainingItem(
+          id: 'e2',
+          type: TrainingItemType.exercise,
+          position: 1,
+          duration: 20,
+          exerciseName: 'Pigeon',
+          goal: 'explo jambes',
+        ),
+      ],
+    ),
+  ],
+);
+
 /// Reports the sensor stats a test sets rather than the ones a live sensor
 /// would build up, so a run can state what the sensor delivered while its steps
 /// ran. The run resets the session at every step boundary; the stats stand for
@@ -551,6 +586,44 @@ void main() {
 
     await _skip(tester);
     expect(find.text('Right leg'), findsOneWidget);
+  });
+
+  // The goal is why the athlete is here, so it heads the step: above the name,
+  // and above the numbers the name leads into.
+  testWidgets('the goal of a step heads it, above its name', (tester) async {
+    await _pumpRun(tester, _goalBlock());
+
+    // Preparation rest first: it leads into the first exercise, which inherits
+    // the goal of the block it sits in.
+    expect(find.text('RESI DOIGTS'), findsOneWidget);
+
+    await _skip(tester);
+
+    expect(find.text('RESI DOIGTS'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('RESI DOIGTS')).dy,
+      lessThan(tester.getTopLeft(find.text('FROG')).dy),
+    );
+    expect(
+      tester.getTopLeft(find.text('RESI DOIGTS')).dy,
+      lessThan(tester.getTopLeft(find.text('00:20')).dy),
+    );
+  });
+
+  testWidgets('a step with a goal of its own does not inherit the block one', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _goalBlock());
+
+    // Prep rest -> first exercise -> its rest, which leads into the second one.
+    await _skip(tester);
+    await _skip(tester);
+    expect(find.text('EXPLO JAMBES'), findsOneWidget);
+    expect(find.text('RESI DOIGTS'), findsNothing);
+
+    await _skip(tester);
+    expect(find.text('EXPLO JAMBES'), findsOneWidget);
+    expect(find.text('PIGEON'), findsOneWidget);
   });
 
   testWidgets('an uncommented step shows no comment of its own', (

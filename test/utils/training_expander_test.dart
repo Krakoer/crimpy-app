@@ -328,6 +328,102 @@ void main() {
     expect(out[1].comment, 'Right leg');
   });
 
+  test('item goal propagates to the execution items', () {
+    final repsExercise = TrainingItem(
+      id: 'e1',
+      type: TrainingItemType.exercise,
+      position: 0,
+      reps: 8,
+      goal: 'force/hypertrophie des muscles de poussee',
+    );
+    final timedExercise = TrainingItem(
+      id: 'e2',
+      type: TrainingItemType.exercise,
+      position: 1,
+      duration: 30,
+      goal: 'explo jambes',
+    );
+
+    final out = expandTrainingItems(
+      _training([repsExercise, timedExercise]),
+      useSensor: false,
+    );
+
+    expect(
+      (out[0] as ConfirmItem).goal,
+      'force/hypertrophie des muscles de poussee',
+    );
+    expect((out[1] as TimedItem).goal, 'explo jambes');
+  });
+
+  // A block is what the coach gave a reason, and its steps are that block, so
+  // a hang inherits the goal the way it already inherits the comment.
+  test('a block goal applies to children without their own', () {
+    final training = _training([
+      TrainingItem(
+        id: 'c',
+        type: TrainingItemType.circuit,
+        position: 0,
+        cycles: 1,
+        goal: 'capacite/endurance doigts',
+        items: [
+          TrainingItem(
+            id: 'e1',
+            type: TrainingItemType.exercise,
+            position: 0,
+            duration: 35,
+          ),
+          TrainingItem(
+            id: 'e2',
+            type: TrainingItemType.exercise,
+            position: 1,
+            duration: 35,
+            goal: 'resi doigts',
+          ),
+        ],
+      ),
+    ]);
+
+    final out = expandTrainingItems(
+      training,
+      useSensor: false,
+    ).whereType<TimedItem>().toList();
+
+    expect(out[0].goal, 'capacite/endurance doigts');
+    expect(out[1].goal, 'resi doigts');
+  });
+
+  // Two columns in the spreadsheet, two fields on the step: a block that only
+  // names one must not have the other read off it.
+  test('goal and comment are carried apart from each other', () {
+    final training = _training([
+      TrainingItem(
+        id: 'e1',
+        type: TrainingItemType.exercise,
+        position: 0,
+        duration: 30,
+        goal: 'resi doigts',
+      ),
+      TrainingItem(
+        id: 'e2',
+        type: TrainingItemType.exercise,
+        position: 1,
+        duration: 30,
+        comment: 'First rep in pronation',
+      ),
+    ]);
+
+    final out = expandTrainingItems(
+      training,
+      useSensor: false,
+    ).whereType<TimedItem>().toList();
+
+    expect(out[0].goal, 'resi doigts');
+    expect(out[0].comment, isNull);
+    expect(out[1].goal, isNull);
+    expect(out[1].comment, 'First rep in pronation');
+  });
+
   test('group comment reaches children nested in a circuit', () {
     final training = _training([
       TrainingItem(
