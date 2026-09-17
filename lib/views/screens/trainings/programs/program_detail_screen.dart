@@ -354,6 +354,12 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // The phase heads the week: what the block trains is the frame the
+            // coach note and the days below are read in.
+            if ((week.name ?? '').isNotEmpty) ...[
+              SectionLabel(week.name!),
+              const SizedBox(height: 10),
+            ],
             if ((week.notes ?? '').isNotEmpty) ...[
               _weekNote(week.notes!),
               const SizedBox(height: 14),
@@ -710,57 +716,89 @@ class _CalendarRow extends ConsumerWidget {
         for (var d = 0; d < 7; d++) d: week.sessionsOnDay(d),
     };
     final today = DateTime.now();
+    final phase = week?.name ?? '';
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: 36,
-          child: Text(
-            'W$weekNumber',
-            style: TextStyle(
-              fontFamily: 'JetBrainsMono',
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: defined ? CrimpyTheme.textPrimary : CrimpyTheme.textMuted,
-            ),
-          ),
-        ),
-        ...List.generate(7, (d) {
-          final daySessions = byDay[d] ?? const <WeekSession>[];
-          final session = daySessions.isNotEmpty ? daySessions.first : null;
-          // Columns are Monday-anchored, so offset from the week start rather
-          // than from the program start date.
-          final date = addCalendarDays(program.weekStart(weekNumber), d);
-          final isToday = isSameDay(date, today);
-          final fill = session != null
-              ? programSessionColor(session.activity)
-              : null;
-          return Expanded(
-            child: GestureDetector(
-              onTap: session != null ? () => onOpen(session, weekNumber) : null,
-              child: Container(
-                margin: const EdgeInsets.all(2),
-                height: 30,
-                decoration: BoxDecoration(
-                  color: fill?.withValues(alpha: 0.15) ?? CrimpyTheme.bgPrimary,
-                  border: Border.all(
-                    color: isToday
-                        ? CrimpyTheme.primaryOrange
-                        : defined
-                        ? CrimpyTheme.borderDefault
-                        : CrimpyTheme.textMuted,
-                    width: isToday ? 2 : 1,
-                  ),
-                ),
-                child: fill == null
-                    ? null
-                    : Center(
-                        child: Container(width: 9, height: 9, color: fill),
-                      ),
+        // Named weeks carry the phase over their own row rather than inside the
+        // 36px label column, which holds a week number and nothing more. The
+        // same name repeats down a block, which is what makes the arc of the
+        // program readable here.
+        if (phase.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 2, bottom: 2),
+            child: Text(
+              phase.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontFamily: 'JetBrainsMono',
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.4,
+                color: CrimpyTheme.textSecondary,
               ),
             ),
-          );
-        }),
+          ),
+        Row(
+          children: [
+            SizedBox(
+              width: 36,
+              child: Text(
+                'W$weekNumber',
+                style: TextStyle(
+                  fontFamily: 'JetBrainsMono',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: defined
+                      ? CrimpyTheme.textPrimary
+                      : CrimpyTheme.textMuted,
+                ),
+              ),
+            ),
+            ...List.generate(7, (d) {
+              final daySessions = byDay[d] ?? const <WeekSession>[];
+              final session = daySessions.isNotEmpty ? daySessions.first : null;
+              // Columns are Monday-anchored, so offset from the week start
+              // rather than from the program start date.
+              final date = addCalendarDays(program.weekStart(weekNumber), d);
+              final isToday = isSameDay(date, today);
+              final fill = session != null
+                  ? programSessionColor(session.activity)
+                  : null;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: session != null
+                      ? () => onOpen(session, weekNumber)
+                      : null,
+                  child: Container(
+                    margin: const EdgeInsets.all(2),
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color:
+                          fill?.withValues(alpha: 0.15) ??
+                          CrimpyTheme.bgPrimary,
+                      border: Border.all(
+                        color: isToday
+                            ? CrimpyTheme.primaryOrange
+                            : defined
+                            ? CrimpyTheme.borderDefault
+                            : CrimpyTheme.textMuted,
+                        width: isToday ? 2 : 1,
+                      ),
+                    ),
+                    child: fill == null
+                        ? null
+                        : Center(
+                            child: Container(width: 9, height: 9, color: fill),
+                          ),
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
       ],
     );
   }
