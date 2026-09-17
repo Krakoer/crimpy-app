@@ -329,12 +329,18 @@ void _expandFree(
   if (duration != null) {
     out.add(
       TimedItem(
-        // A note on a clock runs itself down, so there is no step to end and no
-        // prose slot on a timed step to read it from. It keeps the whole text as
-        // its title rather than dropping it: shown large and shouted is worse
-        // than shown nowhere at all is worse still. Every line it lands in is
-        // capped, so it cannot overflow. No client prescribes a duration on a
-        // note today, and the portal offers no control for one.
+        // A note on a clock runs itself down, so there is no step to end and
+        // no prose slot on a timed step to read it from. It keeps the whole
+        // text as its title rather than dropping it: shouted is bad, absent
+        // is worse.
+        //
+        // No client can prescribe a duration on a note today, and the portal
+        // offers no control for one, so this branch is unreachable and how it
+        // draws is unaudited: the full tank caps every line the title lands in,
+        // while the ring design scales its header inside a FittedBox instead of
+        // wrapping it, which would make a paragraph small rather than overflow.
+        // A duration control on the note card needs a prose slot on TimedItem
+        // before it ships.
         label: prose ?? title,
         durationSeconds: duration,
         targetLoad: 0,

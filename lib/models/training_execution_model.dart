@@ -162,6 +162,12 @@ final class IntervalRestItem extends RestItem {
 /// a free item without a duration). The user taps "Done" to advance.
 final class ConfirmItem extends TrainingExecutionItem {
   final String label;
+
+  /// Prose the athlete reads on this step, set by a coach note too long to be
+  /// a title and by nothing else. The run screen reads a step as a note from
+  /// it: it draws the text under the title and offers the pause that opens the
+  /// whole note. Filling it from an exercise would hand that pause to a step
+  /// that is not a note.
   final String? instructions;
   final int? reps;
   final String? load;

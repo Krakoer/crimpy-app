@@ -430,6 +430,52 @@ void main() {
     });
   });
 
+  // The rest block names the step it leads into in the largest type on the
+  // screen, so a long exercise name lands there at 30px. It is reachable
+  // without any note at all.
+  group('the rest preview', () {
+    testWidgets('cuts a long name short rather than overflowing the tank', (
+      tester,
+    ) async {
+      final longName = List.filled(20, 'overhang').join(' ');
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 3),
+        nextItem: TimedItem(
+          label: longName,
+          durationSeconds: 24,
+          targetLoad: 0,
+          handSide: HandSide.both,
+          gripPosition: GripPosition.halfCrimp,
+          collectSensorData: false,
+        ),
+        secondsRemaining: 3,
+      );
+
+      // The preview names a timed step as its label plus its length.
+      final title = tester.renderObject<RenderParagraph>(
+        find.text('${longName.toUpperCase()} 24S'),
+      );
+      expect(title.didExceedMaxLines, isTrue);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('leaves a name the block has room for whole', (tester) async {
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 3),
+        nextItem: _pullUps,
+        secondsRemaining: 3,
+      );
+
+      final title = tester.renderObject<RenderParagraph>(
+        find.text('PULL-UPS 24S'),
+      );
+      expect(title.didExceedMaxLines, isFalse);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('a note', () {
     // The whole point of the block: what the coach wrote between the exercises
     // is a prescription, so it is set as prose rather than shouted, and it fits

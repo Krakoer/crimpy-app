@@ -48,11 +48,12 @@ double tankFillFraction({
 /// What the tank draws, which is what the running step is.
 enum _TankState { preparation, sensorWork, rest, timed, confirm }
 
-/// Lines a step title may take before it is cut short. Generous on purpose: the
-/// cap is there to stop a pathological title growing the middle of the tank past
-/// the room the screen has for it, not to shorten a long exercise name, which
-/// has no pause to read the rest from. Four lines of title, five of a note's
-/// prose and four of a comment still leave well over half the tank free.
+/// Lines a step title may take before it is cut short. Generous on purpose:
+/// the cap is there to stop a pathological title growing the middle of the
+/// tank past the room the screen has for it, not to shorten a long exercise
+/// name, which has no pause to read the rest from. Four lines of title, five
+/// of a note's prose and four of a comment still leave well over half the
+/// tank free.
 const _stepTitleMaxLines = 4;
 
 /// Lines of a note's prose the running screen shows. Past this the athlete
@@ -333,9 +334,10 @@ class FullTankLayout extends ConsumerWidget {
     return CrimpyTheme.primaryOrange;
   }
 
-  /// The whole note, handed to the paused card whenever the step carries prose.
-  /// The running screen caps that prose at a few lines so the tank stays
-  /// readable across the room, and an athlete who wants the rest of it pauses: a note is a step they end
+  /// The whole note, handed to the paused card whenever the step carries
+  /// prose. The running screen caps that prose at a few lines so the tank
+  /// stays readable across the room, and an athlete who wants the rest of it
+  /// pauses: a note is a step they end
   /// themselves, so the pause costs them nothing and they are stood in front of
   /// the phone rather than hanging off the wall.
   ///
@@ -729,6 +731,11 @@ class _TankContent extends StatelessWidget {
             ? rep!.handSide.displayName
             : describeExecutionItem(next).toUpperCase(),
         textAlign: TextAlign.center,
+        // The largest type in the block, so the step it names is what needs
+        // bounding most: a long exercise name wraps into it at 30px and would
+        // otherwise push the block past the tank.
+        maxLines: _stepTitleMaxLines,
+        overflow: TextOverflow.ellipsis,
         style: _style(30, color: palette.force, weight: FontWeight.w900),
       ),
       if (rep != null) ...[
