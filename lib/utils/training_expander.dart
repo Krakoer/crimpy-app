@@ -299,17 +299,40 @@ void _expandExercise(
   }
 }
 
+/// Longest note still read as a step title. A coaching plan is split by short
+/// headers, such as "Grimpe :", and those name the part of the session the way
+/// an exercise names its step. Past this, or across more than one line, a note
+/// is prose: a whole prescription the athlete reads, which the run screen draws
+/// as such instead of shouting it in capitals.
+const noteTitleMaxLength = 32;
+
+/// What the run screen calls a note it has no title for, and a note whose text
+/// was never written.
+const noteFallbackTitle = 'Note';
+
+bool readsAsNoteTitle(String text) =>
+    text.isNotEmpty &&
+    !text.contains('\n') &&
+    text.length <= noteTitleMaxLength;
+
 void _expandFree(
   TrainingItem item,
   List<TrainingExecutionItem> out,
   _ExpandContext ctx,
   _StepPlacement at,
 ) {
+  final text = item.freeText?.trim() ?? '';
+  final isTitle = readsAsNoteTitle(text);
+  final title = isTitle ? text : noteFallbackTitle;
+  final prose = isTitle || text.isEmpty ? null : text;
   final duration = item.effectiveDuration(ctx.results);
   if (duration != null) {
     out.add(
       TimedItem(
-        label: item.freeText ?? 'Free',
+        // A note on a clock runs itself down, so there is no step to end and
+        // nowhere the prose would be read: it keeps the title alone. No client
+        // prescribes a duration on a note today, and the portal offers none.
+        label: title,
         durationSeconds: duration,
         targetLoad: 0,
         handSide: HandSide.both,
@@ -326,7 +349,8 @@ void _expandFree(
   } else {
     out.add(
       ConfirmItem(
-        label: item.freeText ?? 'Free',
+        label: title,
+        instructions: prose,
         subtitle: at.context,
         comment: at.comment,
         videoLink: item.exerciseVideoLink,

@@ -38,6 +38,14 @@ const _pullUps = TimedItem(
   subtitle: 'CIRCUIT 1/2',
 );
 
+const _prescription =
+    'kilter volume, 40 degrees, ramp up from 6a, 2 to 3 min between blocks, '
+    'aim for 20 problems in 2h';
+
+/// Longer than the running screen has lines for, so it is the case the paused
+/// card exists to answer.
+final _longNote = List.filled(12, _prescription).join(' ');
+
 const _maxHang = TimedItem(
   label: 'Max hang',
   durationSeconds: 10,
@@ -379,6 +387,136 @@ void main() {
       expect(find.text('12 reps  -  10 kg'), findsOneWidget);
       expect(find.text('DONE'), findsOneWidget);
       expect(find.byIcon(Icons.skip_next), findsNothing);
+    });
+  });
+
+  group('a note', () {
+    // The whole point of the block: what the coach wrote between the exercises
+    // is a prescription, so it is set as prose rather than shouted, and it fits
+    // whatever the phone gave.
+    testWidgets('reads as prose under its title and does not overflow', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: const ConfirmItem(label: 'Note', instructions: _prescription),
+        repContext: null,
+      );
+
+      // A note reads no sensor, so the tank stands empty and its content is
+      // drawn once: the clipped copy over the fill only exists when there is a
+      // fill to clip it to.
+      expect(find.text(_prescription), findsOneWidget);
+      expect(find.text(_prescription.toUpperCase()), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('long enough to be cut short still fits the tank', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: ConfirmItem(label: 'Note', instructions: _longNote),
+        repContext: null,
+      );
+
+      expect(tester.takeException(), isNull);
+      final prose = tester.widget<Text>(find.text(_longNote).first);
+      expect(prose.maxLines, noteProseMaxLines);
+      expect(prose.overflow, TextOverflow.ellipsis);
+    });
+
+    // A header names the part of the session the way an exercise names its
+    // step, so it keeps the treatment a step title has.
+    testWidgets('short enough to be a title keeps the title treatment', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: const ConfirmItem(label: 'Grimpe :'),
+        repContext: null,
+      );
+
+      expect(find.text('GRIMPE :'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    // An athlete who sees the ellipsis pauses to read the rest, which is the
+    // safe moment for it on a step they end themselves.
+    testWidgets('pausing gives the whole note, scrollable', (tester) async {
+      await _pump(
+        tester,
+        item: ConfirmItem(label: 'Note', instructions: _longNote),
+        isRunning: false,
+        repContext: null,
+      );
+
+      expect(find.text('PAUSED'), findsNWidgets(2));
+      // The capped copy inside the dimmed tank, and the whole note in the
+      // paused card over it.
+      expect(find.text(_longNote), findsNWidgets(2));
+      final reader = find.ancestor(
+        of: find.text(_longNote).last,
+        matching: find.byType(SingleChildScrollView),
+      );
+      expect(reader, findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    // A step the athlete ends themselves has no clock to stop, so it carries no
+    // play control. A note with more text than the screen showed is the one
+    // that needs one: pausing is how the rest of it is read.
+    testWidgets('with prose offers a pause next to DONE', (tester) async {
+      await _pump(
+        tester,
+        item: ConfirmItem(label: 'Note', instructions: _longNote),
+        repContext: null,
+      );
+
+      expect(find.text('DONE'), findsOneWidget);
+      expect(find.byIcon(Icons.pause), findsOneWidget);
+      expect(find.byIcon(Icons.skip_next), findsNothing);
+    });
+
+    testWidgets('read at a glance offers no pause, as no other step does', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: const ConfirmItem(label: 'Grimpe :'),
+        repContext: null,
+      );
+
+      expect(find.text('DONE'), findsOneWidget);
+      expect(find.byIcon(Icons.pause), findsNothing);
+    });
+
+    testWidgets('paused on prose offers the play control to resume with', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: ConfirmItem(label: 'Note', instructions: _longNote),
+        isRunning: false,
+        repContext: null,
+      );
+
+      expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+      expect(find.text('DONE'), findsOneWidget);
+    });
+
+    testWidgets('pausing any other step leaves the card as it was', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: const ConfirmItem(label: 'Core', reps: 12),
+        isRunning: false,
+      );
+
+      expect(find.text('PAUSED'), findsNWidgets(2));
+      expect(find.text('Tap play to resume'), findsOneWidget);
+      expect(find.byType(SingleChildScrollView), findsNothing);
     });
   });
 }

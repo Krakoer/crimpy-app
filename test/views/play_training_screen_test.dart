@@ -473,6 +473,26 @@ class _RefusingLauncher extends VideoLauncher {
   Future<bool> open(String? link) async => false;
 }
 
+/// A note long enough that the running screen has to cut it short, which is
+/// what the paused reading mode exists for.
+final String _longNoteText = List.filled(
+  10,
+  'kilter volume, 40 degrees, ramp up from 6a, 2 to 3 min between blocks',
+).join(' ');
+
+Training _trainingWithLongNote() => Training(
+  id: 't11',
+  title: 'Board session',
+  items: [
+    TrainingItem(
+      id: 'n1',
+      type: TrainingItemType.free,
+      position: 0,
+      freeText: _longNoteText,
+    ),
+  ],
+);
+
 Future<void> _skip(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.skip_next));
   await tester.pump();
@@ -1096,5 +1116,61 @@ void main() {
     await tester.pump();
 
     expect(find.text('Could not open the video'), findsOneWidget);
+  });
+
+  // A note is prose the athlete reads. The ring design scrolls its self paced
+  // step once the content does not fit, so the whole note is shown there rather
+  // than cut short: there is no pause on a step the athlete ends themselves, so
+  // an ellipsis would hide text with no way to reach it.
+  testWidgets('the ring design shows a long note whole and scrollable', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _trainingWithLongNote());
+    await _skip(tester);
+
+    expect(find.text('NOTE'), findsOneWidget);
+    final prose = tester.widget<Text>(find.text(_longNoteText));
+    expect(prose.maxLines, isNull);
+    expect(
+      find.ancestor(
+        of: find.text(_longNoteText),
+        matching: find.byType(SingleChildScrollView),
+      ),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  // The paused reader is only worth anything if the athlete can reach it: a
+  // note step is ended by hand, and every other self paced step carries no play
+  // control at all.
+  testWidgets('the full tank opens a long note when the athlete pauses on it', (
+    tester,
+  ) async {
+    await _pumpRun(
+      tester,
+      _trainingWithLongNote(),
+      style: RunScreenStyle.fullTank,
+    );
+    await _skip(tester);
+
+    expect(find.text('NOTE'), findsOneWidget);
+    expect(find.text(_longNoteText), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.pause));
+    await tester.pump();
+
+    // The capped copy inside the dimmed tank, and the whole note in the paused
+    // card over it.
+    expect(find.text('PAUSED'), findsNWidgets(2));
+    expect(find.text(_longNoteText), findsNWidgets(2));
+    expect(
+      find.ancestor(
+        of: find.text(_longNoteText).last,
+        matching: find.byType(SingleChildScrollView),
+      ),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
   });
 }

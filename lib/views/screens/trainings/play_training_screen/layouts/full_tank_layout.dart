@@ -48,6 +48,15 @@ double tankFillFraction({
 /// What the tank draws, which is what the running step is.
 enum _TankState { preparation, sensorWork, rest, timed, confirm }
 
+/// Lines a step title may take before it is cut short. Two is enough for a long
+/// exercise name to wrap, and stops any title growing the middle of the tank
+/// past the room the screen has for it.
+const _stepTitleMaxLines = 2;
+
+/// Lines of a note's prose the running screen shows. Past this the athlete
+/// reads the rest from the paused card, which holds the whole note.
+const noteProseMaxLines = 5;
+
 /// Colors the tank content is drawn in. The content is painted twice, once in
 /// the colors that read on the empty tank and once in the colors that read on
 /// the force level, the second clipped to the level. A number the level is
@@ -276,7 +285,11 @@ class FullTankLayout extends ConsumerWidget {
                   if (paused)
                     Align(
                       alignment: const Alignment(0, -0.08),
-                      child: _PausedCard(scale: scale),
+                      child: _PausedCard(
+                        scale: scale,
+                        noteText: _pausedNoteText(),
+                        maxNoteHeight: tankHeight * 0.45,
+                      ),
                     ),
                 ],
               ),
@@ -287,6 +300,11 @@ class FullTankLayout extends ConsumerWidget {
               detail: paused ? repContext : _nextStepLine(),
               isRunning: isRunning,
               showConfirm: state == _TankState.confirm,
+              // A step the athlete ends themselves carries no play control:
+              // there is no clock on it to stop. A note whose prose the screen
+              // had to cut short is the one exception, since pausing is how the
+              // rest of it is read.
+              showPause: _pausedNoteText() != null,
               onPlayPause: onPlayPause,
               onSkip: onSkip,
               onConfirm: onConfirm,
@@ -312,6 +330,20 @@ class FullTankLayout extends ConsumerWidget {
     if (paused) return CrimpyTheme.textMuted;
     if (item is RestItem || onTarget) return CrimpyTheme.statusSuccess;
     return CrimpyTheme.primaryOrange;
+  }
+
+  /// The whole note, handed to the paused card. The running screen caps the
+  /// prose at a few lines so the tank stays readable across the room, and an
+  /// athlete who wants the rest of it pauses: a note is a step they end
+  /// themselves, so the pause costs them nothing and they are stood in front of
+  /// the phone rather than hanging off the wall.
+  ///
+  /// It belongs here rather than in the tank content, which is built once per
+  /// palette and clipped to the fill: a scroll offset cannot live in two copies
+  /// of the same widget without them drifting apart.
+  String? _pausedNoteText() {
+    final rep = item;
+    return rep is ConfirmItem ? rep.instructions : null;
   }
 
   /// The step coming up, under the state word. A preparation and a rest fill
@@ -741,6 +773,8 @@ class _TankContent extends StatelessWidget {
       Text(
         rep.label.toUpperCase(),
         textAlign: TextAlign.center,
+        maxLines: _stepTitleMaxLines,
+        overflow: TextOverflow.ellipsis,
         style: _style(
           18,
           color: CrimpyTheme.primaryOrange,
@@ -805,6 +839,8 @@ class _TankContent extends StatelessWidget {
       Text(
         rep.label.toUpperCase(),
         textAlign: TextAlign.center,
+        maxLines: _stepTitleMaxLines,
+        overflow: TextOverflow.ellipsis,
         style: _style(
           18,
           color: CrimpyTheme.primaryOrange,
@@ -812,6 +848,19 @@ class _TankContent extends StatelessWidget {
           letterSpacing: 1,
         ),
       ),
+      // A whole prescription rather than a name, so it is set as prose: mixed
+      // case, a reading size, and line capped so the tank cannot be overflowed
+      // by it. Pausing gives the rest of it, which is what the ellipsis is for.
+      if (rep.instructions != null) ...[
+        SizedBox(height: _s(10)),
+        Text(
+          rep.instructions!,
+          textAlign: TextAlign.center,
+          maxLines: noteProseMaxLines,
+          overflow: TextOverflow.ellipsis,
+          style: _style(14, color: palette.force, height: 1.45),
+        ),
+      ],
       if (layout.comment != null) ...[
         SizedBox(height: _s(8)),
         Text(
@@ -899,11 +948,24 @@ class _RepContextPill extends StatelessWidget {
 class _PausedCard extends StatelessWidget {
   final double scale;
 
-  const _PausedCard({required this.scale});
+  /// The note of the step the run stopped on, shown whole. Null on every other
+  /// step, which leaves the card the two lines it has always been.
+  final String? noteText;
+
+  final double maxNoteHeight;
+
+  const _PausedCard({
+    required this.scale,
+    this.noteText,
+    this.maxNoteHeight = 0,
+  });
 
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(20),
+    constraints: BoxConstraints(
+      maxWidth: noteText == null ? double.infinity : 340,
+    ),
     decoration: const BoxDecoration(
       color: CrimpyTheme.primaryWhite,
       border: Border.fromBorderSide(
@@ -926,6 +988,27 @@ class _PausedCard extends StatelessWidget {
             color: CrimpyTheme.primaryBlack,
           ),
         ),
+        if (noteText != null) ...[
+          SizedBox(height: 12 * scale),
+          // Scrolls only when the note is longer than the room the card has,
+          // which is what the running screen's ellipsis sent the athlete here
+          // for.
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxNoteHeight),
+            child: SingleChildScrollView(
+              child: Text(
+                noteText!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'JetBrainsMono',
+                  fontSize: 14 * scale,
+                  height: 1.45,
+                  color: CrimpyTheme.primaryBlack,
+                ),
+              ),
+            ),
+          ),
+        ],
         SizedBox(height: 8 * scale),
         Text(
           'Tap play to resume',
@@ -949,6 +1032,10 @@ class _ControlStrip extends StatelessWidget {
   final String? detail;
   final bool isRunning;
   final bool showConfirm;
+
+  /// Whether a step ended by the athlete still offers a play control, which
+  /// only a note with more text than the screen showed does.
+  final bool showPause;
   final VoidCallback onPlayPause;
   final VoidCallback onSkip;
   final VoidCallback onConfirm;
@@ -963,6 +1050,7 @@ class _ControlStrip extends StatelessWidget {
     required this.detail,
     required this.isRunning,
     required this.showConfirm,
+    this.showPause = false,
     required this.onPlayPause,
     required this.onSkip,
     required this.onConfirm,
@@ -1031,7 +1119,15 @@ class _ControlStrip extends StatelessWidget {
             iconSize: 30,
             tooltip: 'I cannot make the next round',
           ),
-        if (showConfirm)
+        if (showConfirm) ...[
+          if (showPause) ...[
+            _icon(
+              isRunning ? Icons.pause : Icons.play_arrow,
+              CrimpyTheme.primaryOrange,
+              onPlayPause,
+            ),
+            const SizedBox(width: 12),
+          ],
           ElevatedButton.icon(
             onPressed: onConfirm,
             icon: const Icon(Icons.check),
@@ -1041,8 +1137,8 @@ class _ControlStrip extends StatelessWidget {
               foregroundColor: CrimpyTheme.primaryWhite,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             ),
-          )
-        else ...[
+          ),
+        ] else ...[
           _icon(
             isRunning ? Icons.pause : Icons.play_arrow,
             CrimpyTheme.primaryOrange,

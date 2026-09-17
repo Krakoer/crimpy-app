@@ -593,6 +593,28 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// what an uncommented step already does rather than making it far worse; it
   /// does not remove it on the smallest screens. The full note is still
   /// readable from the training detail screen, which does not cap it.
+  /// A note's prose: what the coach wrote between the exercises, which is a
+  /// whole prescription rather than a name, so it is set as prose instead of
+  /// being shouted in the title.
+  ///
+  /// Shown whole and uncapped. This step scrolls once its content does not fit,
+  /// so there is nothing to cut short here and no need for the paused reader the
+  /// full tank carries: that design draws its content twice, clipped to the
+  /// force level, and cannot scroll.
+  Widget _noteProseText(String text) => ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: 320),
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontFamily: 'JetBrainsMono',
+        fontSize: 14,
+        height: 1.45,
+        color: CrimpyTheme.textPrimary,
+      ),
+    ),
+  );
+
   Widget _commentText(String text) => ConstrainedBox(
     constraints: const BoxConstraints(maxWidth: 320),
     child: Text(
@@ -681,6 +703,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
               color: CrimpyTheme.textPrimary,
             ),
           ),
+          if (rep.instructions != null) ...[
+            const SizedBox(height: 10),
+            _noteProseText(rep.instructions!),
+          ],
           if (comment != null) ...[
             const SizedBox(height: 8),
             _commentText(comment),

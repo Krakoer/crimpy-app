@@ -40,6 +40,8 @@ class NextRepPreview extends StatelessWidget {
       padding: const EdgeInsets.only(top: 20),
       child: Text(
         'Next: ${_getDescription()}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
           color: CrimpyTheme.primaryBlack,
           fontSize: 17,
