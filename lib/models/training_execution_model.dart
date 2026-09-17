@@ -165,9 +165,9 @@ final class ConfirmItem extends TrainingExecutionItem {
 
   /// Prose the athlete reads on this step, set by a coach note too long to be
   /// a title and by nothing else. The run screen reads a step as a note from
-  /// it: it draws the text under the title and offers the pause that opens the
-  /// whole note. Filling it from an exercise would hand that pause to a step
-  /// that is not a note.
+  /// it: it draws the text under the title, cut short where the screen runs
+  /// out of room, and opens the whole of it when the note is tapped. Filling it
+  /// from an exercise would put that reader on a step that is not a note.
   final String? instructions;
   final int? reps;
   final String? load;

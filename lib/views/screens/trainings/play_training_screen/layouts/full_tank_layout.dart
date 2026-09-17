@@ -52,13 +52,13 @@ enum _TankState { preparation, sensorWork, rest, timed, confirm }
 /// Lines a step title may take before it is cut short. Generous on purpose:
 /// the cap is there to stop a pathological title growing the middle of the
 /// tank past the room the screen has for it, not to shorten a long exercise
-/// name, which has no pause to read the rest from. Four lines of title, five
-/// of a note's prose and four of a comment still leave well over half the
-/// tank free.
+/// name, which has nothing to open the rest of it with the way a note's prose
+/// does. Four lines of title, five of a note's prose and four of a comment
+/// still leave well over half the tank free.
 const _stepTitleMaxLines = 4;
 
 /// Lines of a note's prose the running screen shows. Past this the athlete
-/// reads the rest from the paused card, which holds the whole note.
+/// reads the rest from the reader a tap on the note opens.
 const noteProseMaxLines = 5;
 
 /// Colors the tank content is drawn in. The content is painted twice, once in
@@ -843,22 +843,33 @@ class _TankContent extends StatelessWidget {
         SizedBox(height: _s(10)),
         GestureDetector(
           onTap: () => showNoteDialog(context, rep.instructions!),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                rep.instructions!,
-                textAlign: TextAlign.center,
-                maxLines: noteProseMaxLines,
-                overflow: TextOverflow.ellipsis,
-                style: _style(14, color: palette.force, height: 1.45),
-              ),
-              SizedBox(height: _s(6)),
-              Text(
-                'Tap the note to read it all',
-                style: _style(11, color: palette.secondary),
-              ),
-            ],
+          // The whole block answers the tap, gaps included, rather than the
+          // glyph boxes the column would hit test on its own: the hint line is
+          // a few millimetres of text and the finger aiming at it is sweaty.
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: _s(6)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  rep.instructions!,
+                  textAlign: TextAlign.center,
+                  maxLines: noteProseMaxLines,
+                  overflow: TextOverflow.ellipsis,
+                  style: _style(14, color: palette.force, height: 1.45),
+                ),
+                SizedBox(height: _s(6)),
+                // Says what the tap does and nothing about what is on screen:
+                // whether the prose above was cut short is not measured here,
+                // so promising the rest of it would be a lie on every note the
+                // tank had room for.
+                Text(
+                  'Tap the note to open it',
+                  style: _style(11, color: palette.secondary),
+                ),
+              ],
+            ),
           ),
         ),
       ],

@@ -537,7 +537,7 @@ void main() {
         repContext: null,
       );
 
-      expect(find.text('Tap the note to read it all'), findsOneWidget);
+      expect(find.text('Tap the note to open it'), findsOneWidget);
       expect(find.text(_longNote), findsOneWidget);
 
       await tester.tap(find.text(_longNote));
@@ -568,7 +568,31 @@ void main() {
         repContext: null,
       );
 
-      expect(find.text('Tap the note to read it all'), findsNothing);
+      expect(find.text('Tap the note to open it'), findsNothing);
+    });
+
+    // The band between a title and five wrapped lines: shown in full, and the
+    // hint promises only what the tap does, since nothing here measures whether
+    // the prose was cut short.
+    testWidgets('short enough to fit is shown whole and still opens', (
+      tester,
+    ) async {
+      const twoLines = 'Warm the fingers up properly before the first block.';
+      await _pump(
+        tester,
+        item: const ConfirmItem(label: 'Note', instructions: twoLines),
+        repContext: null,
+      );
+
+      final prose = tester.renderObject<RenderParagraph>(find.text(twoLines));
+      expect(prose.didExceedMaxLines, isFalse);
+      expect(find.text('Tap the note to open it'), findsOneWidget);
+
+      await tester.tap(find.text(twoLines));
+      await tester.pumpAndSettle();
+
+      expect(find.text(twoLines), findsNWidgets(2));
+      expect(find.text('Close'), findsOneWidget);
     });
 
     // A note is ended by the athlete like every other self paced step, so it

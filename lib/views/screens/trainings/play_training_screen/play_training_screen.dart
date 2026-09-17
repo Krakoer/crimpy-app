@@ -614,9 +614,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// being shouted in the title.
   ///
   /// Shown whole and uncapped. This step scrolls once its content does not fit,
-  /// so there is nothing to cut short here and no need for the paused reader the
-  /// full tank carries: that design draws its content twice, clipped to the
-  /// force level, and cannot scroll.
+  /// so there is nothing to cut short here and nothing for a reader to open:
+  /// the full tank needs both because it draws its content twice, clipped to
+  /// the force level, and cannot scroll.
   Widget _noteProseText(String text) => ConstrainedBox(
     constraints: const BoxConstraints(maxWidth: 320),
     child: Text(
@@ -771,6 +771,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         if (res) {
           return;
         }
+        final wasRunning = timer.isRunning;
         _stop();
         final NavigatorState navigator = Navigator.of(context);
         final shouldPop = await showDialog<bool>(
@@ -795,7 +796,12 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
         if (shouldPop ?? false) {
           navigator.pop();
+          return;
         }
+        // Staying puts the run back as it was. A self paced step offers no play
+        // control, so a run left stopped on one has nothing to resume with
+        // short of declaring the step done.
+        if (wasRunning && mounted) _start();
       },
       child: style == null
           ? const Scaffold(backgroundColor: CrimpyTheme.bgPrimary)

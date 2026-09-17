@@ -747,6 +747,32 @@ void main() {
     expect(bleRepository.isStreaming, isTrue);
   });
 
+  // Backing out of the leave prompt has to put the run back the way it was. It
+  // matters most on a self paced step, which offers no play control: a run left
+  // stopped on one has nothing to resume with short of declaring it done.
+  testWidgets('answering No to the leave prompt resumes the run', (
+    tester,
+  ) async {
+    await _pumpRun(
+      tester,
+      _trainingWithLongNote(),
+      style: RunScreenStyle.fullTank,
+    );
+    await _skip(tester);
+    expect(find.text('PAUSED'), findsNothing);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Leave the workout?'), findsOneWidget);
+
+    await tester.tap(find.text('No'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Leave the workout?'), findsNothing);
+    expect(find.text('PAUSED'), findsNothing);
+    expect(find.text('DONE'), findsOneWidget);
+  });
+
   // A run started with "Run without" measures nothing, so the reps it records
   // carry no target: graded against the load they were prescribed, every one of
   // them would read as a miss.
