@@ -594,8 +594,14 @@ void main() {
     await _pumpRun(tester, _goalBlock());
 
     // Preparation rest first: it leads into the first exercise, which inherits
-    // the goal of the block it sits in.
+    // the goal of the block it sits in. The goal follows the "Next:" label
+    // rather than heading it, or it would read as a heading for the rest the
+    // athlete is currently in rather than for the step it names.
     expect(find.text('RESI DOIGTS'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('RESI DOIGTS')).dy,
+      greaterThan(tester.getTopLeft(find.textContaining('Next:')).dy),
+    );
 
     await _skip(tester);
 

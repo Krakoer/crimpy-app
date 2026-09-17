@@ -592,8 +592,8 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   ) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-      if (goal != null) ...[_goalText(goal), const SizedBox(height: 6)],
       NextRepPreview(nextRep: nextRep),
+      if (goal != null) ...[const SizedBox(height: 6), _goalText(goal)],
       if (comment != null) ...[
         const SizedBox(height: 8),
         _commentText(comment),
@@ -614,28 +614,6 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// what an uncommented step already does rather than making it far worse; it
   /// does not remove it on the smallest screens. The full note is still
   /// readable from the training detail screen, which does not cap it.
-  /// What the block is for, during the run. Set above the step in small green
-  /// capitals so it reads as the heading it is rather than competing with the
-  /// numbers below it. Capped at one line: a goal is a label, and the timed
-  /// step's header sits inside a FittedBox that shrinks the whole step, title
-  /// included, to whatever the tallest thing in it forces.
-  Widget _goalText(String text) => ConstrainedBox(
-    constraints: const BoxConstraints(maxWidth: 320),
-    child: Text(
-      text.toUpperCase(),
-      textAlign: TextAlign.center,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: const TextStyle(
-        fontFamily: 'JetBrainsMono',
-        fontSize: 10.5,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.6,
-        color: CrimpyTheme.accentGreen,
-      ),
-    ),
-  );
-
   Widget _commentText(String text) => ConstrainedBox(
     constraints: const BoxConstraints(maxWidth: 320),
     child: Text(
@@ -648,6 +626,31 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         fontSize: 13,
         height: 1.4,
         color: CrimpyTheme.textSecondary,
+      ),
+    ),
+  );
+
+  /// What the block is for, during the run. Set above the step in small green
+  /// capitals so it reads as the heading it is rather than competing with the
+  /// numbers below it. Two lines rather than the comment's four: a goal is a
+  /// label, and the timed step's header sits inside a FittedBox that shrinks
+  /// the whole step, title included, to whatever the tallest thing in it
+  /// forces. Two is enough for the longest goal the backend's 200 character cap
+  /// allows to be read rather than guessed at, and the untruncated text is on
+  /// the training detail and scheduled session tiles, which cap neither.
+  Widget _goalText(String text) => ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: 320),
+    child: Text(
+      text.toUpperCase(),
+      textAlign: TextAlign.center,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(
+        fontFamily: 'JetBrainsMono',
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.6,
+        color: CrimpyTheme.goalColor,
       ),
     ),
   );

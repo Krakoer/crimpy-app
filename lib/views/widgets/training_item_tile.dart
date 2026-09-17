@@ -99,10 +99,11 @@ class TrainingItemComment extends StatelessWidget {
   }
 }
 
-/// What the block is for, e.g. "resi doigts". Labelled and set in the accent
-/// green rather than the comment's orange, so the two notes on a tile are told
-/// apart without reading them: this one is why the block is in the program, the
-/// other is how to run it.
+/// What the block is for, e.g. "resi doigts". Labelled and set in green rather
+/// than the comment's orange, so the two notes on a tile are told apart without
+/// reading them: this one is why the block is in the program, the other is how
+/// to run it. The rule and the tint are accentGreen, the label is goalColor:
+/// accentGreen does not carry enough contrast for type this small.
 class TrainingItemGoal extends StatelessWidget {
   final String goal;
 
@@ -128,7 +129,7 @@ class TrainingItemGoal extends StatelessWidget {
               fontSize: 9.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
-              color: CrimpyTheme.accentGreen,
+              color: CrimpyTheme.goalColor,
             ),
           ),
           const SizedBox(width: 8),

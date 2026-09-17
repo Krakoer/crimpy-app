@@ -674,6 +674,25 @@ void main() {
       expect(find.text('CAPACITE/ENDURANCE DOIGTS'), findsOneWidget);
     });
 
+    // A sensor step has its middle taken by the force, so the centered block
+    // draws nothing. The goal goes where the comment already goes for that
+    // state, since a finger block is exactly what a coach writes a goal for.
+    testWidgets('a sensor step carries it beside the grip, not in the middle', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: _hang,
+        currentWeight: 34.2,
+        goal: 'resi doigts',
+        comment: 'Keep the shoulders engaged',
+      );
+
+      expect(find.text('RESI DOIGTS'), findsWidgets);
+      expect(find.text('Keep the shoulders engaged'), findsWidgets);
+      expect(find.text('34'), findsWidgets);
+    });
+
     testWidgets('a step with no goal shows none', (tester) async {
       await _pump(tester, item: _pullUps);
 

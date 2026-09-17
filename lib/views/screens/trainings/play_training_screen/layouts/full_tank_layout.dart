@@ -72,6 +72,7 @@ class _TankPalette {
   final Color muted;
   final Color detail;
   final Color notch;
+  final Color goal;
 
   const _TankPalette({
     required this.force,
@@ -80,6 +81,7 @@ class _TankPalette {
     required this.muted,
     required this.detail,
     required this.notch,
+    required this.goal,
   });
 
   static const overTank = _TankPalette(
@@ -89,6 +91,7 @@ class _TankPalette {
     muted: CrimpyTheme.textMuted,
     detail: CrimpyTheme.gray400,
     notch: CrimpyTheme.borderDefault,
+    goal: CrimpyTheme.goalColor,
   );
 
   static const overFill = _TankPalette(
@@ -98,6 +101,7 @@ class _TankPalette {
     muted: CrimpyTheme.textOnFillSecondary,
     detail: CrimpyTheme.textOnFillSecondary,
     notch: CrimpyTheme.primaryWhite,
+    goal: CrimpyTheme.primaryWhite,
   );
 }
 
@@ -497,7 +501,13 @@ class _TankContent extends StatelessWidget {
           ),
         ],
         // Only a sensor step has its middle taken by the force. Every other
-        // state carries the comment in the block it centers there.
+        // state carries the goal and the comment in the block it centers there.
+        // The hang is the step the goal matters most on, since a finger block
+        // is what the coach wrote one for, so it is not dropped here.
+        if (layout.goal != null && state == _TankState.sensorWork) ...[
+          SizedBox(height: _s(8)),
+          _goalLine(layout.goal!, align: TextAlign.start),
+        ],
         if (layout.comment != null && state == _TankState.sensorWork) ...[
           SizedBox(height: _s(6)),
           Text(
@@ -511,17 +521,19 @@ class _TankContent extends StatelessWidget {
     );
   }
 
-  /// What the block is for, heading a centered step. One line, since a goal is
-  /// a label and the tank cannot scroll: it draws its content twice, clipped to
-  /// the force level, so anything in it has to be bounded.
-  Widget _goalLine(String goal) => Text(
+  /// What the block is for, heading a step. One line, since a goal is a label
+  /// and the tank cannot scroll: it draws its content twice, clipped to the
+  /// force level, so anything in it has to be bounded. The colour comes from
+  /// the palette for that same reason, or the copy drawn over the fill would
+  /// paint green on the dark green and disappear.
+  Widget _goalLine(String goal, {TextAlign align = TextAlign.center}) => Text(
     goal.toUpperCase(),
-    textAlign: TextAlign.center,
+    textAlign: align,
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
     style: _style(
-      11,
-      color: CrimpyTheme.accentGreen,
+      12,
+      color: palette.goal,
       weight: FontWeight.w700,
       letterSpacing: 1,
     ),
