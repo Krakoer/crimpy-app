@@ -39,7 +39,14 @@ Week _week(int weekNumber, {String? name, String? notes}) => Week(
   sessions: const [],
 );
 
-Future<void> _pump(WidgetTester tester, List<Week> weeks) async {
+/// Pumps the screen with [weeks] as the week details. [summaryNames] is what
+/// the week list says each week is called, which defaults to what the details
+/// say: the two are only given apart to pin which one a view reads.
+Future<void> _pump(
+  WidgetTester tester,
+  List<Week> weeks, {
+  Map<int, String?>? summaryNames,
+}) async {
   final program = _program();
   await tester.pumpWidget(
     ProviderScope(
@@ -51,7 +58,9 @@ Future<void> _pump(WidgetTester tester, List<Week> weeks) async {
                   id: w.id,
                   programId: w.programId,
                   weekNumber: w.weekNumber,
-                  name: w.name,
+                  name: summaryNames == null
+                      ? w.name
+                      : summaryNames[w.weekNumber],
                 ),
               )
               .toList(),
@@ -104,6 +113,19 @@ void main() {
     );
   });
 
+  // The portal lets a coach type 60 characters and the API stores them, so the
+  // longest name the write path allows has to lay out rather than run off the
+  // side of a phone.
+  testWidgets('lays out the longest name the coach can save', (tester) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await _pump(tester, [_week(1, name: 'a' * 60)]);
+
+    expect(tester.takeException(), isNull);
+  });
+
   // Reading the arc of the program is the point of the calendar, so every
   // named row carries its phase rather than only the week on screen.
   testWidgets('names the phase of every row of the calendar', (tester) async {
@@ -114,6 +136,26 @@ void main() {
 
     expect(find.text('W1'), findsOneWidget);
     expect(find.text('W2'), findsOneWidget);
+    expect(find.text('CAPACITY'), findsOneWidget);
+    expect(find.text('DELOAD'), findsOneWidget);
+  });
+
+  // The calendar takes the phase off the week list, which is already loaded
+  // when a row is painted, rather than off each week's own detail, which lands
+  // one by one and would grow the rows under the athlete's finger. Reading the
+  // detail instead is what this pins: the details here are unnamed.
+  testWidgets('names the calendar rows from the week list, not the details', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      [_week(1), _week(2)],
+      summaryNames: {1: 'capacity', 2: 'deload'},
+    );
+
+    await tester.tap(find.text('CALENDAR'));
+    await tester.pumpAndSettle();
+
     expect(find.text('CAPACITY'), findsOneWidget);
     expect(find.text('DELOAD'), findsOneWidget);
   });

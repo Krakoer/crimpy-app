@@ -13,14 +13,22 @@ class SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Text(
-            label.toUpperCase(),
-            style: const TextStyle(
-              fontFamily: 'JetBrainsMono',
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
-              color: CrimpyTheme.textSecondary,
+          // Flexible because a label is not always a short constant: a program
+          // week is labelled with what the coach typed, and a Row hands a
+          // non-flexible child unbounded width, so a long one would take the
+          // rule's room and then run off the side of the phone.
+          Flexible(
+            child: Text(
+              label.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontFamily: 'JetBrainsMono',
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.8,
+                color: CrimpyTheme.textSecondary,
+              ),
             ),
           ),
           const SizedBox(width: 8),

@@ -62,6 +62,14 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
     // defined no week at all: every week greyed out and untappable, and a
     // calendar drawn as an empty program, over a snackbar that has gone.
     final definedWeeks = weeksAsync.value?.map((w) => w.weekNumber).toSet();
+    // The phase comes off the summaries rather than off each week's own detail:
+    // the summaries are already here by the time a row is painted, while the
+    // details arrive one by one, and a calendar whose rows grow as they land
+    // moves the square the athlete is reaching for.
+    final weekPhases = {
+      for (final week in weeksAsync.value ?? const <WeekSummary>[])
+        week.weekNumber: week.name,
+    };
 
     return Scaffold(
       appBar: AppBar(title: const Text('Program')),
@@ -100,6 +108,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                 _CalendarView(
                   program: program,
                   definedWeeks: definedWeeks ?? {},
+                  weekPhases: weekPhases,
                   totalWeeks: _totalWeeks,
                   onOpen: _openSession,
                 )
@@ -601,12 +610,17 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
 class _CalendarView extends StatelessWidget {
   final Program program;
   final Set<int> definedWeeks;
+
+  /// The phase each week is in, by week number, absent where the coach named
+  /// none.
+  final Map<int, String?> weekPhases;
   final int totalWeeks;
   final void Function(WeekSession, int) onOpen;
 
   const _CalendarView({
     required this.program,
     required this.definedWeeks,
+    required this.weekPhases,
     required this.totalWeeks,
     required this.onOpen,
   });
@@ -648,6 +662,7 @@ class _CalendarView extends StatelessWidget {
                 program: program,
                 weekNumber: week,
                 defined: definedWeeks.contains(week),
+                phase: weekPhases[week] ?? '',
                 onOpen: onOpen,
               ),
             );
@@ -697,12 +712,17 @@ class _CalendarRow extends ConsumerWidget {
   final Program program;
   final int weekNumber;
   final bool defined;
+
+  /// The phase this week is in, empty where the coach named none. Handed down
+  /// rather than read off the week detail, which lands a beat later.
+  final String phase;
   final void Function(WeekSession, int) onOpen;
 
   const _CalendarRow({
     required this.program,
     required this.weekNumber,
     required this.defined,
+    required this.phase,
     required this.onOpen,
   });
 
@@ -716,7 +736,6 @@ class _CalendarRow extends ConsumerWidget {
         for (var d = 0; d < 7; d++) d: week.sessionsOnDay(d),
     };
     final today = DateTime.now();
-    final phase = week?.name ?? '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
