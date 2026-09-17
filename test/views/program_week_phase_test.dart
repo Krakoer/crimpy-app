@@ -124,6 +124,14 @@ void main() {
     await _pump(tester, [_week(1, name: 'a' * 60)]);
 
     expect(tester.takeException(), isNull);
+
+    // The two views bound the name by different means, the week strip through
+    // SectionLabel and the calendar through its own maxLines, so the longest
+    // name has to be laid out by both.
+    await tester.tap(find.text('CALENDAR'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
   });
 
   // Reading the arc of the program is the point of the calendar, so every

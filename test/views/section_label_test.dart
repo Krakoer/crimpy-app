@@ -19,13 +19,18 @@ Future<void> _pump(WidgetTester tester, String label) async {
   );
 }
 
-Rect _rule(WidgetTester tester) => tester.getRect(find.byType(Container).first);
+// Everything is located inside the widget under test rather than by position in
+// the whole tree: a Scaffold that one day wraps its body in a Container or a
+// SizedBox would otherwise silently retarget every assertion here.
+Finder _inLabel(Type type) =>
+    find.descendant(of: find.byType(SectionLabel), matching: find.byType(type));
 
-Rect _line(WidgetTester tester) => tester.getRect(find.byType(SizedBox).first);
+Rect _rule(WidgetTester tester) => tester.getRect(_inLabel(Container));
 
-bool _clipped(WidgetTester tester) => tester
-    .renderObject<RenderParagraph>(find.byType(RichText).first)
-    .didExceedMaxLines;
+Rect _line(WidgetTester tester) => tester.getRect(find.byType(SectionLabel));
+
+bool _clipped(WidgetTester tester) =>
+    tester.renderObject<RenderParagraph>(_inLabel(RichText)).didExceedMaxLines;
 
 void main() {
   // What the class is: a heading with a rule filling the rest of the line. A
