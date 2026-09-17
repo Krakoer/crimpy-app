@@ -7,6 +7,7 @@ import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/utils/video_link.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
+import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/note_dialog.dart';
 import 'package:crimpy/views/widgets/exercise_video_link.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,6 +48,18 @@ double tankFillFraction({
 
 /// What the tank draws, which is what the running step is.
 enum _TankState { preparation, sensorWork, rest, timed, confirm }
+
+/// Lines a step title may take before it is cut short. Generous on purpose:
+/// the cap is there to stop a pathological title growing the middle of the
+/// tank past the room the screen has for it, not to shorten a long exercise
+/// name, which has nothing to open the rest of it with the way a note's prose
+/// does. Four lines of title, five of a note's prose and four of a comment
+/// still leave well over half the tank free.
+const _stepTitleMaxLines = 4;
+
+/// Lines of a note's prose the running screen shows. Past this the athlete
+/// reads the rest from the reader a tap on the note opens.
+const noteProseMaxLines = 5;
 
 /// Colors the tank content is drawn in. The content is painted twice, once in
 /// the colors that read on the empty tank and once in the colors that read on
@@ -443,7 +456,7 @@ class _TankContent extends StatelessWidget {
           Positioned.fill(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Center(child: _centerBlock()),
+              child: Center(child: _centerBlock(context)),
             ),
           ),
       ],
@@ -598,11 +611,11 @@ class _TankContent extends StatelessWidget {
     ];
   }
 
-  Widget _centerBlock() => switch (state) {
+  Widget _centerBlock(BuildContext context) => switch (state) {
     _TankState.preparation => _preparationBlock(),
     _TankState.rest => _nextStepBlock(),
     _TankState.timed => _timedBlock(),
-    _TankState.confirm => _confirmBlock(),
+    _TankState.confirm => _confirmBlock(context),
     _TankState.sensorWork => const SizedBox.shrink(),
   };
 
@@ -627,6 +640,8 @@ class _TankContent extends StatelessWidget {
       Text(
         _preparationInstruction(rep),
         textAlign: TextAlign.center,
+        maxLines: _stepTitleMaxLines,
+        overflow: TextOverflow.ellipsis,
         style: _style(14, color: palette.secondary, height: 1.6),
       ),
       if (rep != null && rep.targetLoad > 0) ...[
@@ -694,6 +709,11 @@ class _TankContent extends StatelessWidget {
             ? rep!.handSide.displayName
             : describeExecutionItem(next).toUpperCase(),
         textAlign: TextAlign.center,
+        // The largest type in the block, so the step it names is what needs
+        // bounding most: a long exercise name wraps into it at 30px and would
+        // otherwise push the block past the tank.
+        maxLines: _stepTitleMaxLines,
+        overflow: TextOverflow.ellipsis,
         style: _style(30, color: palette.force, weight: FontWeight.w900),
       ),
       if (rep != null) ...[
@@ -741,6 +761,8 @@ class _TankContent extends StatelessWidget {
       Text(
         rep.label.toUpperCase(),
         textAlign: TextAlign.center,
+        maxLines: _stepTitleMaxLines,
+        overflow: TextOverflow.ellipsis,
         style: _style(
           18,
           color: CrimpyTheme.primaryOrange,
@@ -791,7 +813,7 @@ class _TankContent extends StatelessWidget {
     ]);
   }
 
-  Widget _confirmBlock() {
+  Widget _confirmBlock(BuildContext context) {
     final rep = layout.item as ConfirmItem;
     final details = [
       if (rep.repsAreOpen)
@@ -805,6 +827,8 @@ class _TankContent extends StatelessWidget {
       Text(
         rep.label.toUpperCase(),
         textAlign: TextAlign.center,
+        maxLines: _stepTitleMaxLines,
+        overflow: TextOverflow.ellipsis,
         style: _style(
           18,
           color: CrimpyTheme.primaryOrange,
@@ -812,6 +836,43 @@ class _TankContent extends StatelessWidget {
           letterSpacing: 1,
         ),
       ),
+      // A whole prescription rather than a name, so it is set as prose: mixed
+      // case, a reading size, and line capped so the tank cannot be overflowed
+      // by it. A tap opens the whole of it, which is what the ellipsis is for.
+      if (rep.instructions != null) ...[
+        SizedBox(height: _s(10)),
+        GestureDetector(
+          onTap: () => showNoteDialog(context, rep.instructions!),
+          // The whole block answers the tap, gaps included, rather than the
+          // glyph boxes the column would hit test on its own: the hint line is
+          // a few millimetres of text and the finger aiming at it is sweaty.
+          behavior: HitTestBehavior.opaque,
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: _s(6)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  rep.instructions!,
+                  textAlign: TextAlign.center,
+                  maxLines: noteProseMaxLines,
+                  overflow: TextOverflow.ellipsis,
+                  style: _style(14, color: palette.force, height: 1.45),
+                ),
+                SizedBox(height: _s(6)),
+                // Says what the tap does and nothing about what is on screen:
+                // whether the prose above was cut short is not measured here,
+                // so promising the rest of it would be a lie on every note the
+                // tank had room for.
+                Text(
+                  'Tap the note to open it',
+                  style: _style(11, color: palette.secondary),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
       if (layout.comment != null) ...[
         SizedBox(height: _s(8)),
         Text(

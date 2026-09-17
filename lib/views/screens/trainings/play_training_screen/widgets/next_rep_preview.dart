@@ -40,6 +40,13 @@ class NextRepPreview extends StatelessWidget {
       padding: const EdgeInsets.only(top: 20),
       child: Text(
         'Next: ${_getDescription()}',
+        // What keeps this line inside the screen is the FittedBox the block is
+        // slotted into, which lays the text out unbounded and scales it down,
+        // so these two never fire today. They are the floor if that wrapper
+        // ever goes: three lines rather than one, since a long exercise name
+        // reads better wrapped than cut.
+        maxLines: 3,
+        overflow: TextOverflow.ellipsis,
         style: Theme.of(context).textTheme.bodyMedium!.copyWith(
           color: CrimpyTheme.primaryBlack,
           fontSize: 17,

@@ -609,6 +609,28 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     ),
   );
 
+  /// A note's prose: what the coach wrote between the exercises, which is a
+  /// whole prescription rather than a name, so it is set as prose instead of
+  /// being shouted in the title.
+  ///
+  /// Shown whole and uncapped. This step scrolls once its content does not fit,
+  /// so there is nothing to cut short here and nothing for a reader to open:
+  /// the full tank needs both because it draws its content twice, clipped to
+  /// the force level, and cannot scroll.
+  Widget _noteProseText(String text) => ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: 320),
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontFamily: 'JetBrainsMono',
+        fontSize: 14,
+        height: 1.45,
+        color: CrimpyTheme.textPrimary,
+      ),
+    ),
+  );
+
   /// Total timed length of the run, preparation included. Self-paced steps
   /// count for nothing, which is what makes the time left unknown. Read off the
   /// queue rather than fixed once, since dropping out of an emom takes the
@@ -681,6 +703,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
               color: CrimpyTheme.textPrimary,
             ),
           ),
+          if (rep.instructions != null) ...[
+            const SizedBox(height: 10),
+            _noteProseText(rep.instructions!),
+          ],
           if (comment != null) ...[
             const SizedBox(height: 8),
             _commentText(comment),
@@ -745,6 +771,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         if (res) {
           return;
         }
+        final wasRunning = timer.isRunning;
         _stop();
         final NavigatorState navigator = Navigator.of(context);
         final shouldPop = await showDialog<bool>(
@@ -769,7 +796,12 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
         if (shouldPop ?? false) {
           navigator.pop();
+          return;
         }
+        // Staying puts the run back as it was. A self paced step offers no play
+        // control, so a run left stopped on one has nothing to resume with
+        // short of declaring the step done.
+        if (wasRunning && mounted) _start();
       },
       child: style == null
           ? const Scaffold(backgroundColor: CrimpyTheme.bgPrimary)

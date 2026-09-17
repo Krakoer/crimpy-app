@@ -4,6 +4,7 @@ import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/layouts/full_tank_layout.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -37,6 +38,14 @@ const _pullUps = TimedItem(
   collectSensorData: false,
   subtitle: 'CIRCUIT 1/2',
 );
+
+const _prescription =
+    'kilter volume, 40 degrees, ramp up from 6a, 2 to 3 min between blocks, '
+    'aim for 20 problems in 2h';
+
+/// Longer than the running screen has lines for, so it is the case the paused
+/// card exists to answer.
+final _longNote = List.filled(12, _prescription).join(' ');
 
 const _maxHang = TimedItem(
   label: 'Max hang',
@@ -379,6 +388,243 @@ void main() {
       expect(find.text('12 reps  -  10 kg'), findsOneWidget);
       expect(find.text('DONE'), findsOneWidget);
       expect(find.byIcon(Icons.skip_next), findsNothing);
+    });
+  });
+
+  group('a step title', () {
+    // The cap exists to stop a pathological title taking the tank over, not to
+    // shorten a name a coach actually wrote: a title has no pause to read the
+    // rest from, unlike a note's prose.
+    testWidgets('long but real is shown whole', (tester) async {
+      await _pump(
+        tester,
+        item: const ConfirmItem(
+          label: 'Bulgarian split squat with a slow eccentric',
+          reps: 8,
+        ),
+        repContext: null,
+      );
+
+      final title = tester.renderObject<RenderParagraph>(
+        find.text('BULGARIAN SPLIT SQUAT WITH A SLOW ECCENTRIC'),
+      );
+      expect(title.didExceedMaxLines, isFalse);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('long past all reason is cut short rather than overflowing', (
+      tester,
+    ) async {
+      final absurd = List.filled(40, 'overhang').join(' ');
+      await _pump(
+        tester,
+        item: ConfirmItem(label: absurd, reps: 8),
+        repContext: null,
+      );
+
+      final title = tester.renderObject<RenderParagraph>(
+        find.text(absurd.toUpperCase()),
+      );
+      expect(title.didExceedMaxLines, isTrue);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  // The rest block names the step it leads into in the largest type on the
+  // screen, so a long exercise name lands there at 30px. It is reachable
+  // without any note at all.
+  group('the rest preview', () {
+    testWidgets('cuts a long name short rather than overflowing the tank', (
+      tester,
+    ) async {
+      final longName = List.filled(20, 'overhang').join(' ');
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 3),
+        nextItem: TimedItem(
+          label: longName,
+          durationSeconds: 24,
+          targetLoad: 0,
+          handSide: HandSide.both,
+          gripPosition: GripPosition.halfCrimp,
+          collectSensorData: false,
+        ),
+        secondsRemaining: 3,
+      );
+
+      // The preview names a timed step as its label plus its length.
+      final title = tester.renderObject<RenderParagraph>(
+        find.text('${longName.toUpperCase()} 24S'),
+      );
+      expect(title.didExceedMaxLines, isTrue);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('leaves a name the block has room for whole', (tester) async {
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 3),
+        nextItem: _pullUps,
+        secondsRemaining: 3,
+      );
+
+      final title = tester.renderObject<RenderParagraph>(
+        find.text('PULL-UPS 24S'),
+      );
+      expect(title.didExceedMaxLines, isFalse);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('a note', () {
+    // The whole point of the block: what the coach wrote between the exercises
+    // is a prescription, so it is set as prose rather than shouted, and it fits
+    // whatever the phone gave.
+    testWidgets('reads as prose under its title and does not overflow', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: const ConfirmItem(label: 'Note', instructions: _prescription),
+        repContext: null,
+      );
+
+      // A note reads no sensor, so the tank stands empty and its content is
+      // drawn once: the clipped copy over the fill only exists when there is a
+      // fill to clip it to.
+      expect(find.text(_prescription), findsOneWidget);
+      expect(find.text(_prescription.toUpperCase()), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('long enough to be cut short still fits the tank', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: ConfirmItem(label: 'Note', instructions: _longNote),
+        repContext: null,
+      );
+
+      expect(tester.takeException(), isNull);
+      final prose = tester.widget<Text>(find.text(_longNote).first);
+      expect(prose.maxLines, noteProseMaxLines);
+      expect(prose.overflow, TextOverflow.ellipsis);
+    });
+
+    // A header names the part of the session the way an exercise names its
+    // step, so it keeps the treatment a step title has.
+    testWidgets('short enough to be a title keeps the title treatment', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: const ConfirmItem(label: 'Grimpe :'),
+        repContext: null,
+      );
+
+      expect(find.text('GRIMPE :'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    // An athlete who sees the ellipsis taps the note to read the rest, which is
+    // safe on a step they end themselves: they are stood in front of the phone
+    // rather than hanging off the wall.
+    testWidgets('tapping the prose opens the whole note', (tester) async {
+      await _pump(
+        tester,
+        item: ConfirmItem(label: 'Note', instructions: _longNote),
+        repContext: null,
+      );
+
+      expect(find.text('Tap the note to open it'), findsOneWidget);
+      expect(find.text(_longNote), findsOneWidget);
+
+      await tester.tap(find.text(_longNote));
+      await tester.pumpAndSettle();
+
+      // The capped copy on the tank, and the whole note in the reader over it.
+      expect(find.text(_longNote), findsNWidgets(2));
+      expect(
+        find.ancestor(
+          of: find.text(_longNote).last,
+          matching: find.byType(SingleChildScrollView),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Close'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      expect(find.text(_longNote), findsOneWidget);
+    });
+
+    // Nothing to open, so nothing invites a tap.
+    testWidgets('read at a glance offers no reader', (tester) async {
+      await _pump(
+        tester,
+        item: const ConfirmItem(label: 'Grimpe :'),
+        repContext: null,
+      );
+
+      expect(find.text('Tap the note to open it'), findsNothing);
+    });
+
+    // The band between a title and five wrapped lines: shown in full, and the
+    // hint promises only what the tap does, since nothing here measures whether
+    // the prose was cut short.
+    testWidgets('short enough to fit is shown whole and still opens', (
+      tester,
+    ) async {
+      const twoLines = 'Warm the fingers up properly before the first block.';
+      await _pump(
+        tester,
+        item: const ConfirmItem(label: 'Note', instructions: twoLines),
+        repContext: null,
+      );
+
+      final prose = tester.renderObject<RenderParagraph>(find.text(twoLines));
+      expect(prose.didExceedMaxLines, isFalse);
+      expect(find.text('Tap the note to open it'), findsOneWidget);
+
+      await tester.tap(find.text(twoLines));
+      await tester.pumpAndSettle();
+
+      expect(find.text(twoLines), findsNWidgets(2));
+      expect(find.text('Close'), findsOneWidget);
+    });
+
+    // A note is ended by the athlete like every other self paced step, so it
+    // carries no play control of its own.
+    testWidgets('offers no pause, as no other self paced step does', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: ConfirmItem(label: 'Note', instructions: _longNote),
+        repContext: null,
+      );
+
+      expect(find.text('DONE'), findsOneWidget);
+      expect(find.byIcon(Icons.pause), findsNothing);
+      expect(find.byIcon(Icons.skip_next), findsNothing);
+    });
+
+    testWidgets('leaves the paused card the two lines it has always been', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: ConfirmItem(label: 'Note', instructions: _longNote),
+        isRunning: false,
+        repContext: null,
+      );
+
+      expect(find.text('PAUSED'), findsNWidgets(2));
+      expect(find.text('Tap play to resume'), findsOneWidget);
+      // The note is read from the tap, not from the card.
+      expect(find.byType(SingleChildScrollView), findsNothing);
     });
   });
 }

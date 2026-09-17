@@ -473,6 +473,26 @@ class _RefusingLauncher extends VideoLauncher {
   Future<bool> open(String? link) async => false;
 }
 
+/// A note long enough that the running screen has to cut it short, which is
+/// what the paused reading mode exists for.
+final String _longNoteText = List.filled(
+  10,
+  'kilter volume, 40 degrees, ramp up from 6a, 2 to 3 min between blocks',
+).join(' ');
+
+Training _trainingWithLongNote() => Training(
+  id: 't11',
+  title: 'Board session',
+  items: [
+    TrainingItem(
+      id: 'n1',
+      type: TrainingItemType.free,
+      position: 0,
+      freeText: _longNoteText,
+    ),
+  ],
+);
+
 Future<void> _skip(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.skip_next));
   await tester.pump();
@@ -725,6 +745,32 @@ void main() {
 
     await tester.pumpWidget(const SizedBox());
     expect(bleRepository.isStreaming, isTrue);
+  });
+
+  // Backing out of the leave prompt has to put the run back the way it was. It
+  // matters most on a self paced step, which offers no play control: a run left
+  // stopped on one has nothing to resume with short of declaring it done.
+  testWidgets('answering No to the leave prompt resumes the run', (
+    tester,
+  ) async {
+    await _pumpRun(
+      tester,
+      _trainingWithLongNote(),
+      style: RunScreenStyle.fullTank,
+    );
+    await _skip(tester);
+    expect(find.text('PAUSED'), findsNothing);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Leave the workout?'), findsOneWidget);
+
+    await tester.tap(find.text('No'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Leave the workout?'), findsNothing);
+    expect(find.text('PAUSED'), findsNothing);
+    expect(find.text('DONE'), findsOneWidget);
   });
 
   // A run started with "Run without" measures nothing, so the reps it records
@@ -1096,5 +1142,59 @@ void main() {
     await tester.pump();
 
     expect(find.text('Could not open the video'), findsOneWidget);
+  });
+
+  // A note is prose the athlete reads. The ring design scrolls its self paced
+  // step once the content does not fit, so the whole note is shown there rather
+  // than cut short: there is no pause on a step the athlete ends themselves, so
+  // an ellipsis would hide text with no way to reach it.
+  testWidgets('the ring design shows a long note whole and scrollable', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _trainingWithLongNote());
+    await _skip(tester);
+
+    expect(find.text('NOTE'), findsOneWidget);
+    final prose = tester.widget<Text>(find.text(_longNoteText));
+    expect(prose.maxLines, isNull);
+    expect(
+      find.ancestor(
+        of: find.text(_longNoteText),
+        matching: find.byType(SingleChildScrollView),
+      ),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  // The reader is only worth anything if the athlete can reach it, and a self
+  // paced step carries no play control to pause with: the note itself is the
+  // control.
+  testWidgets('the full tank opens a long note when the athlete taps it', (
+    tester,
+  ) async {
+    await _pumpRun(
+      tester,
+      _trainingWithLongNote(),
+      style: RunScreenStyle.fullTank,
+    );
+    await _skip(tester);
+
+    expect(find.text('NOTE'), findsOneWidget);
+    expect(find.text(_longNoteText), findsOneWidget);
+    expect(find.byIcon(Icons.pause), findsNothing);
+
+    await tester.tap(find.text(_longNoteText));
+    await tester.pumpAndSettle();
+
+    // The capped copy on the tank, and the whole note in the reader over it.
+    expect(find.text(_longNoteText), findsNWidgets(2));
+    expect(find.text('Close'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    // The run carries on behind it: the step is still there to finish.
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('DONE'), findsOneWidget);
   });
 }
