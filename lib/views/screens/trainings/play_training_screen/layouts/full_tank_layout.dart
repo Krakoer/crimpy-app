@@ -7,6 +7,7 @@ import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/utils/video_link.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
+import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/note_dialog.dart';
 import 'package:crimpy/views/widgets/exercise_video_link.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -288,11 +289,7 @@ class FullTankLayout extends ConsumerWidget {
                   if (paused)
                     Align(
                       alignment: const Alignment(0, -0.08),
-                      child: _PausedCard(
-                        scale: scale,
-                        noteText: _pausedNoteText(),
-                        maxNoteHeight: tankHeight * 0.45,
-                      ),
+                      child: _PausedCard(scale: scale),
                     ),
                 ],
               ),
@@ -303,10 +300,6 @@ class FullTankLayout extends ConsumerWidget {
               detail: paused ? repContext : _nextStepLine(),
               isRunning: isRunning,
               showConfirm: state == _TankState.confirm,
-              // A step the athlete ends themselves carries no play control:
-              // there is no clock on it to stop. A note carrying prose is the
-              // one exception, since pausing is how the rest of it is read.
-              showPause: _pausedNoteText() != null,
               onPlayPause: onPlayPause,
               onSkip: onSkip,
               onConfirm: onConfirm,
@@ -332,21 +325,6 @@ class FullTankLayout extends ConsumerWidget {
     if (paused) return CrimpyTheme.textMuted;
     if (item is RestItem || onTarget) return CrimpyTheme.statusSuccess;
     return CrimpyTheme.primaryOrange;
-  }
-
-  /// The whole note, handed to the paused card whenever the step carries
-  /// prose. The running screen caps that prose at a few lines so the tank
-  /// stays readable across the room, and an athlete who wants the rest of it
-  /// pauses: a note is a step they end
-  /// themselves, so the pause costs them nothing and they are stood in front of
-  /// the phone rather than hanging off the wall.
-  ///
-  /// It belongs here rather than in the tank content, which is built once per
-  /// palette and clipped to the fill: a scroll offset cannot live in two copies
-  /// of the same widget without them drifting apart.
-  String? _pausedNoteText() {
-    final rep = item;
-    return rep is ConfirmItem ? rep.instructions : null;
   }
 
   /// The step coming up, under the state word. A preparation and a rest fill
@@ -478,7 +456,7 @@ class _TankContent extends StatelessWidget {
           Positioned.fill(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Center(child: _centerBlock()),
+              child: Center(child: _centerBlock(context)),
             ),
           ),
       ],
@@ -633,11 +611,11 @@ class _TankContent extends StatelessWidget {
     ];
   }
 
-  Widget _centerBlock() => switch (state) {
+  Widget _centerBlock(BuildContext context) => switch (state) {
     _TankState.preparation => _preparationBlock(),
     _TankState.rest => _nextStepBlock(),
     _TankState.timed => _timedBlock(),
-    _TankState.confirm => _confirmBlock(),
+    _TankState.confirm => _confirmBlock(context),
     _TankState.sensorWork => const SizedBox.shrink(),
   };
 
@@ -835,7 +813,7 @@ class _TankContent extends StatelessWidget {
     ]);
   }
 
-  Widget _confirmBlock() {
+  Widget _confirmBlock(BuildContext context) {
     final rep = layout.item as ConfirmItem;
     final details = [
       if (rep.repsAreOpen)
@@ -860,15 +838,28 @@ class _TankContent extends StatelessWidget {
       ),
       // A whole prescription rather than a name, so it is set as prose: mixed
       // case, a reading size, and line capped so the tank cannot be overflowed
-      // by it. Pausing gives the rest of it, which is what the ellipsis is for.
+      // by it. A tap opens the whole of it, which is what the ellipsis is for.
       if (rep.instructions != null) ...[
         SizedBox(height: _s(10)),
-        Text(
-          rep.instructions!,
-          textAlign: TextAlign.center,
-          maxLines: noteProseMaxLines,
-          overflow: TextOverflow.ellipsis,
-          style: _style(14, color: palette.force, height: 1.45),
+        GestureDetector(
+          onTap: () => showNoteDialog(context, rep.instructions!),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                rep.instructions!,
+                textAlign: TextAlign.center,
+                maxLines: noteProseMaxLines,
+                overflow: TextOverflow.ellipsis,
+                style: _style(14, color: palette.force, height: 1.45),
+              ),
+              SizedBox(height: _s(6)),
+              Text(
+                'Tap the note to read it all',
+                style: _style(11, color: palette.secondary),
+              ),
+            ],
+          ),
         ),
       ],
       if (layout.comment != null) ...[
@@ -958,26 +949,11 @@ class _RepContextPill extends StatelessWidget {
 class _PausedCard extends StatelessWidget {
   final double scale;
 
-  /// The note of the step the run stopped on, shown whole. Null on every other
-  /// step, which leaves the card the two lines it has always been.
-  final String? noteText;
-
-  /// Room the note is given before it scrolls. Required rather than defaulted:
-  /// a zero would render the note invisible instead of merely cramped.
-  final double maxNoteHeight;
-
-  const _PausedCard({
-    required this.scale,
-    required this.maxNoteHeight,
-    this.noteText,
-  });
+  const _PausedCard({required this.scale});
 
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(20),
-    constraints: BoxConstraints(
-      maxWidth: noteText == null ? double.infinity : 340 * scale,
-    ),
     decoration: const BoxDecoration(
       color: CrimpyTheme.primaryWhite,
       border: Border.fromBorderSide(
@@ -1000,27 +976,6 @@ class _PausedCard extends StatelessWidget {
             color: CrimpyTheme.primaryBlack,
           ),
         ),
-        if (noteText != null) ...[
-          SizedBox(height: 12 * scale),
-          // Scrolls only when the note is longer than the room the card has,
-          // which is what the running screen's ellipsis sent the athlete here
-          // for.
-          ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxNoteHeight),
-            child: SingleChildScrollView(
-              child: Text(
-                noteText!,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'JetBrainsMono',
-                  fontSize: 14 * scale,
-                  height: 1.45,
-                  color: CrimpyTheme.primaryBlack,
-                ),
-              ),
-            ),
-          ),
-        ],
         SizedBox(height: 8 * scale),
         Text(
           'Tap play to resume',
@@ -1044,10 +999,6 @@ class _ControlStrip extends StatelessWidget {
   final String? detail;
   final bool isRunning;
   final bool showConfirm;
-
-  /// Whether a step ended by the athlete still offers a play control, which
-  /// only a note carrying prose does.
-  final bool showPause;
   final VoidCallback onPlayPause;
   final VoidCallback onSkip;
   final VoidCallback onConfirm;
@@ -1062,7 +1013,6 @@ class _ControlStrip extends StatelessWidget {
     required this.detail,
     required this.isRunning,
     required this.showConfirm,
-    this.showPause = false,
     required this.onPlayPause,
     required this.onSkip,
     required this.onConfirm,
@@ -1131,15 +1081,7 @@ class _ControlStrip extends StatelessWidget {
             iconSize: 30,
             tooltip: 'I cannot make the next round',
           ),
-        if (showConfirm) ...[
-          if (showPause) ...[
-            _icon(
-              isRunning ? Icons.pause : Icons.play_arrow,
-              CrimpyTheme.primaryOrange,
-              onPlayPause,
-            ),
-            const SizedBox(width: 12),
-          ],
+        if (showConfirm)
           ElevatedButton.icon(
             onPressed: onConfirm,
             icon: const Icon(Icons.check),
@@ -1149,8 +1091,8 @@ class _ControlStrip extends StatelessWidget {
               foregroundColor: CrimpyTheme.primaryWhite,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             ),
-          ),
-        ] else ...[
+          )
+        else ...[
           _icon(
             isRunning ? Icons.pause : Icons.play_arrow,
             CrimpyTheme.primaryOrange,

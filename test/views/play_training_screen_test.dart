@@ -1141,10 +1141,10 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  // The paused reader is only worth anything if the athlete can reach it: a
-  // note step is ended by hand, and every other self paced step carries no play
-  // control at all.
-  testWidgets('the full tank opens a long note when the athlete pauses on it', (
+  // The reader is only worth anything if the athlete can reach it, and a self
+  // paced step carries no play control to pause with: the note itself is the
+  // control.
+  testWidgets('the full tank opens a long note when the athlete taps it', (
     tester,
   ) async {
     await _pumpRun(
@@ -1156,21 +1156,19 @@ void main() {
 
     expect(find.text('NOTE'), findsOneWidget);
     expect(find.text(_longNoteText), findsOneWidget);
+    expect(find.byIcon(Icons.pause), findsNothing);
 
-    await tester.tap(find.byIcon(Icons.pause));
-    await tester.pump();
+    await tester.tap(find.text(_longNoteText));
+    await tester.pumpAndSettle();
 
-    // The capped copy inside the dimmed tank, and the whole note in the paused
-    // card over it.
-    expect(find.text('PAUSED'), findsNWidgets(2));
+    // The capped copy on the tank, and the whole note in the reader over it.
     expect(find.text(_longNoteText), findsNWidgets(2));
-    expect(
-      find.ancestor(
-        of: find.text(_longNoteText).last,
-        matching: find.byType(SingleChildScrollView),
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('Close'), findsOneWidget);
     expect(tester.takeException(), isNull);
+
+    // The run carries on behind it: the step is still there to finish.
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
+    expect(find.text('DONE'), findsOneWidget);
   });
 }

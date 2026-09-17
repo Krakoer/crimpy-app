@@ -527,57 +527,67 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    // An athlete who sees the ellipsis pauses to read the rest, which is the
-    // safe moment for it on a step they end themselves.
-    testWidgets('pausing gives the whole note, scrollable', (tester) async {
+    // An athlete who sees the ellipsis taps the note to read the rest, which is
+    // safe on a step they end themselves: they are stood in front of the phone
+    // rather than hanging off the wall.
+    testWidgets('tapping the prose opens the whole note', (tester) async {
       await _pump(
         tester,
         item: ConfirmItem(label: 'Note', instructions: _longNote),
-        isRunning: false,
         repContext: null,
       );
 
-      expect(find.text('PAUSED'), findsNWidgets(2));
-      // The capped copy inside the dimmed tank, and the whole note in the
-      // paused card over it.
+      expect(find.text('Tap the note to read it all'), findsOneWidget);
+      expect(find.text(_longNote), findsOneWidget);
+
+      await tester.tap(find.text(_longNote));
+      await tester.pumpAndSettle();
+
+      // The capped copy on the tank, and the whole note in the reader over it.
       expect(find.text(_longNote), findsNWidgets(2));
-      final reader = find.ancestor(
-        of: find.text(_longNote).last,
-        matching: find.byType(SingleChildScrollView),
+      expect(
+        find.ancestor(
+          of: find.text(_longNote).last,
+          matching: find.byType(SingleChildScrollView),
+        ),
+        findsOneWidget,
       );
-      expect(reader, findsOneWidget);
+      expect(find.text('Close'), findsOneWidget);
       expect(tester.takeException(), isNull);
+
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      expect(find.text(_longNote), findsOneWidget);
     });
 
-    // A step the athlete ends themselves has no clock to stop, so it carries no
-    // play control. A note with more text than the screen showed is the one
-    // that needs one: pausing is how the rest of it is read.
-    testWidgets('with prose offers a pause next to DONE', (tester) async {
-      await _pump(
-        tester,
-        item: ConfirmItem(label: 'Note', instructions: _longNote),
-        repContext: null,
-      );
-
-      expect(find.text('DONE'), findsOneWidget);
-      expect(find.byIcon(Icons.pause), findsOneWidget);
-      expect(find.byIcon(Icons.skip_next), findsNothing);
-    });
-
-    testWidgets('read at a glance offers no pause, as no other step does', (
-      tester,
-    ) async {
+    // Nothing to open, so nothing invites a tap.
+    testWidgets('read at a glance offers no reader', (tester) async {
       await _pump(
         tester,
         item: const ConfirmItem(label: 'Grimpe :'),
         repContext: null,
       );
 
-      expect(find.text('DONE'), findsOneWidget);
-      expect(find.byIcon(Icons.pause), findsNothing);
+      expect(find.text('Tap the note to read it all'), findsNothing);
     });
 
-    testWidgets('paused on prose offers the play control to resume with', (
+    // A note is ended by the athlete like every other self paced step, so it
+    // carries no play control of its own.
+    testWidgets('offers no pause, as no other self paced step does', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: ConfirmItem(label: 'Note', instructions: _longNote),
+        repContext: null,
+      );
+
+      expect(find.text('DONE'), findsOneWidget);
+      expect(find.byIcon(Icons.pause), findsNothing);
+      expect(find.byIcon(Icons.skip_next), findsNothing);
+    });
+
+    testWidgets('leaves the paused card the two lines it has always been', (
       tester,
     ) async {
       await _pump(
@@ -587,21 +597,9 @@ void main() {
         repContext: null,
       );
 
-      expect(find.byIcon(Icons.play_arrow), findsOneWidget);
-      expect(find.text('DONE'), findsOneWidget);
-    });
-
-    testWidgets('pausing any other step leaves the card as it was', (
-      tester,
-    ) async {
-      await _pump(
-        tester,
-        item: const ConfirmItem(label: 'Core', reps: 12),
-        isRunning: false,
-      );
-
       expect(find.text('PAUSED'), findsNWidgets(2));
       expect(find.text('Tap play to resume'), findsOneWidget);
+      // The note is read from the tap, not from the card.
       expect(find.byType(SingleChildScrollView), findsNothing);
     });
   });
