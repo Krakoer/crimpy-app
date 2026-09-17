@@ -82,6 +82,11 @@ final class TimedItem extends TrainingExecutionItem {
   /// Optional coach comment shown to the athlete during the step.
   final String? comment;
 
+  /// What the block the step came from is for, e.g. "resi doigts". Shown
+  /// quietly beside the numbers: it is why the athlete is here, not what they
+  /// are acting on right now.
+  final String? goal;
+
   /// Demo video of the movement, carried from the exercise the step came from.
   /// Only offered when the athlete is not mid set, so a link is never something
   /// they can hit while hanging.
@@ -118,6 +123,7 @@ final class TimedItem extends TrainingExecutionItem {
     this.isHang = false,
     this.subtitle,
     this.comment,
+    this.goal,
     this.videoLink,
     super.trainingItemId,
     super.occurrence,
@@ -183,6 +189,11 @@ final class ConfirmItem extends TrainingExecutionItem {
   /// Optional coach comment shown to the athlete during the step.
   final String? comment;
 
+  /// What the block the step came from is for, e.g. "resi doigts". Shown
+  /// quietly beside the numbers: it is why the athlete is here, not what they
+  /// are acting on right now.
+  final String? goal;
+
   /// Demo video of the movement, carried from the exercise the step came from.
   final String? videoLink;
 
@@ -194,6 +205,7 @@ final class ConfirmItem extends TrainingExecutionItem {
     this.repsAreOpen = false,
     this.subtitle,
     this.comment,
+    this.goal,
     this.videoLink,
     super.trainingItemId,
     super.occurrence,

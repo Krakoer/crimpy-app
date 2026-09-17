@@ -43,17 +43,19 @@ class _ExpandContext {
 }
 
 /// Where a step being laid down sits: the set or round label it shows, the
-/// coach comment it inherits, the pass through its item, and the emom round it
-/// belongs to when it is inside one.
+/// coach comment and the goal it inherits, the pass through its item, and the
+/// emom round it belongs to when it is inside one.
 class _StepPlacement {
   final String? context;
   final String? comment;
+  final String? goal;
   final int occurrence;
   final EmomPosition? emom;
 
   const _StepPlacement({
     this.context,
     this.comment,
+    this.goal,
     this.occurrence = 0,
     this.emom,
   });
@@ -106,12 +108,15 @@ void _expandItem(
   _ExpandContext ctx,
   _StepPlacement placement,
 ) {
-  // An item without a comment of its own carries the one of the circuit or
-  // group it belongs to, so a coach instruction is never lost during the run.
-  final comment = _cleanComment(item.comment) ?? placement.comment;
+  // An item without a comment or a goal of its own carries the one of the
+  // circuit or group it belongs to, so neither a coach instruction nor the
+  // reason for the block is lost during the run.
+  final comment = _cleanText(item.comment) ?? placement.comment;
+  final goal = _cleanText(item.goal) ?? placement.goal;
   final at = _StepPlacement(
     context: placement.context,
     comment: comment,
+    goal: goal,
     occurrence: ctx.nextOccurrence(item),
     emom: placement.emom,
   );
@@ -133,8 +138,8 @@ void _expandItem(
   }
 }
 
-String? _cleanComment(String? comment) {
-  final trimmed = comment?.trim() ?? '';
+String? _cleanText(String? text) {
+  final trimmed = text?.trim() ?? '';
   return trimmed.isEmpty ? null : trimmed;
 }
 
@@ -162,6 +167,7 @@ void _expandCircuit(
     final inCycle = _StepPlacement(
       context: cycles > 1 ? 'ROUND ${cycle + 1}/$cycles' : null,
       comment: at.comment,
+      goal: at.goal,
       emom: at.emom,
     );
     for (final (index, child) in item.items.indexed) {
@@ -216,6 +222,7 @@ void _expandEmom(
     final inRound = _StepPlacement(
       context: 'ROUND ${round + 1}/$rounds',
       comment: at.comment,
+      goal: at.goal,
       emom: position,
     );
     for (final child in item.items) {
@@ -259,6 +266,7 @@ void _expandExercise(
         collectSensorData: false,
         subtitle: at.context,
         comment: at.comment,
+        goal: at.goal,
         videoLink: item.exerciseVideoLink,
         trainingItemId: _linkId(item),
         occurrence: at.occurrence,
@@ -279,6 +287,7 @@ void _expandExercise(
         ),
         subtitle: at.context,
         comment: at.comment,
+        goal: at.goal,
         videoLink: item.exerciseVideoLink,
         trainingItemId: _linkId(item),
         occurrence: at.occurrence,
@@ -349,6 +358,7 @@ void _expandFree(
         collectSensorData: false,
         subtitle: at.context,
         comment: at.comment,
+        goal: at.goal,
         videoLink: item.exerciseVideoLink,
         trainingItemId: _linkId(item),
         occurrence: at.occurrence,
@@ -362,6 +372,7 @@ void _expandFree(
         instructions: prose,
         subtitle: at.context,
         comment: at.comment,
+        goal: at.goal,
         videoLink: item.exerciseVideoLink,
         trainingItemId: _linkId(item),
         occurrence: at.occurrence,
@@ -411,6 +422,7 @@ void _expandHangboardRep(
       collectSensorData: ctx.useSensor && handSide != HandSide.both,
       subtitle: at.context,
       comment: at.comment,
+      goal: at.goal,
       videoLink: item.exerciseVideoLink,
       trainingItemId: _linkId(item),
       occurrence: at.occurrence,
@@ -472,6 +484,7 @@ void _expandRepeater(
       collectSensorData: ctx.useSensor && side != HandSide.both,
       subtitle: setRep(cycle, rep),
       comment: at.comment,
+      goal: at.goal,
       videoLink: item.exerciseVideoLink,
       trainingItemId: _linkId(item),
       occurrence: at.occurrence,

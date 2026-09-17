@@ -112,6 +112,13 @@ class CrimpyTheme {
   /// Stretching/flexibility activities
   static const Color stretchingColor = accentTeal;
 
+  /// What a block is for. Green splits it from the comment's orange, but
+  /// accentGreen is about 3.9:1 on white, under the 4.5:1 floor at the label
+  /// sizes a goal is set in. This is the same hue carried far enough down to
+  /// clear it, on white and on bgSuccess alike, and it is the value the web
+  /// portal sets a goal in too.
+  static const Color goalColor = Color(0xFF4E7154);
+
   /// Success/rest states
   static const Color successColor = statusSuccess;
 

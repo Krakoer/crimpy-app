@@ -345,6 +345,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                         : null,
                     edgeSizeMm: rep?.edgeSizeMm,
                   ),
+            goal: _goalOf(item),
             comment: _commentOf(item),
           );
 
@@ -358,6 +359,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         : showNext
         ? _nextUpBlock(
             nextRep,
+            item is RestItem ? _goalOf(nextRep) : null,
             item is RestItem ? _commentOf(nextRep) : null,
             item is RestItem ? _videoOf(nextRep) : null,
           )
@@ -434,6 +436,18 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       _ => null,
     };
     final trimmed = comment?.trim() ?? '';
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
+  /// What the block the step came from is for, if it names one. A rest is not
+  /// part of a block the coach gave a reason, so it never has one of its own.
+  String? _goalOf(TrainingExecutionItem? item) {
+    final goal = switch (item) {
+      TimedItem() => item.goal,
+      ConfirmItem() => item.goal,
+      _ => null,
+    };
+    final trimmed = goal?.trim() ?? '';
     return trimmed.isEmpty ? null : trimmed;
   }
 
@@ -546,20 +560,25 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     );
   }
 
-  /// Name of the running step and the coach comment that goes with it.
-  Widget _headerBlock({required Widget title, String? comment}) => Padding(
-    padding: const EdgeInsets.only(bottom: 16),
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        title,
-        if (comment != null) ...[
-          const SizedBox(height: 8),
-          _commentText(comment),
-        ],
-      ],
-    ),
-  );
+  /// Name of the running step, what the block it belongs to is for, and the
+  /// coach comment that goes with it. The goal heads the step rather than
+  /// following it: it is why the athlete is here, so it reads as a heading and
+  /// never as one of the numbers they are acting on.
+  Widget _headerBlock({required Widget title, String? goal, String? comment}) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (goal != null) ...[_goalText(goal), const SizedBox(height: 6)],
+            title,
+            if (comment != null) ...[
+              const SizedBox(height: 8),
+              _commentText(comment),
+            ],
+          ],
+        ),
+      );
 
   /// Name of the upcoming step, the coach comment that goes with it, and the
   /// demo video of the movement. The video is offered here rather than on the
@@ -567,12 +586,14 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// so the tap cannot land while the athlete is hanging.
   Widget _nextUpBlock(
     TrainingExecutionItem nextRep,
+    String? goal,
     String? comment,
     String? videoLink,
   ) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
       NextRepPreview(nextRep: nextRep),
+      if (goal != null) ...[const SizedBox(height: 6), _goalText(goal)],
       if (comment != null) ...[
         const SizedBox(height: 8),
         _commentText(comment),
@@ -605,6 +626,31 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         fontSize: 13,
         height: 1.4,
         color: CrimpyTheme.textSecondary,
+      ),
+    ),
+  );
+
+  /// What the block is for, during the run. Set above the step in small green
+  /// capitals so it reads as the heading it is rather than competing with the
+  /// numbers below it. Two lines rather than the comment's four: a goal is a
+  /// label, and the timed step's header sits inside a FittedBox that shrinks
+  /// the whole step, title included, to whatever the tallest thing in it
+  /// forces. Two is enough for the longest goal the backend's 200 character cap
+  /// allows to be read rather than guessed at, and the untruncated text is on
+  /// the training detail and scheduled session tiles, which cap neither.
+  Widget _goalText(String text) => ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: 320),
+    child: Text(
+      text.toUpperCase(),
+      textAlign: TextAlign.center,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(
+        fontFamily: 'JetBrainsMono',
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.6,
+        color: CrimpyTheme.goalColor,
       ),
     ),
   );
@@ -659,6 +705,8 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       isPreparation: index == 0,
       isRunning: timer.isRunning,
       repContext: _currentContext(),
+      goal: _goalOf(timer.currentItem),
+      nextGoal: _goalOf(nextItem),
       comment: _commentOf(timer.currentItem),
       nextComment: _commentOf(nextItem),
       videoLink: _videoOf(timer.currentItem),
@@ -676,6 +724,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
   Widget _buildConfirmContent(double timerFontSize) {
     final rep = timer.currentItem as ConfirmItem;
+    final goal = _goalOf(rep);
     final comment = _commentOf(rep);
     // A self paced step is one the athlete ends themselves, so they are stood
     // in front of the phone rather than hanging off it: the tap is safe here.
@@ -693,6 +742,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (goal != null) ...[_goalText(goal), const SizedBox(height: 6)],
           Text(
             rep.label.toUpperCase(),
             textAlign: TextAlign.center,

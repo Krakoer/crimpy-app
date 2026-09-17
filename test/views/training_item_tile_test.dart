@@ -145,4 +145,42 @@ void main() {
 
     expect(find.text('WATCH DEMO'), findsNothing);
   });
+
+  testWidgets('the goal of an item is listed beside its comment', (
+    tester,
+  ) async {
+    await _pumpItems(tester, [
+      TrainingItem(
+        id: 'e1',
+        type: TrainingItemType.exercise,
+        position: 0,
+        reps: 10,
+        exerciseName: 'Pull up',
+        goal: 'resi doigts',
+        comment: 'First rep in pronation',
+      ),
+    ]);
+
+    expect(find.text('GOAL'), findsOneWidget);
+    expect(find.text('resi doigts'), findsOneWidget);
+    expect(find.text('First rep in pronation'), findsOneWidget);
+    expect(find.byType(TrainingItemGoal), findsOneWidget);
+    expect(find.byType(TrainingItemComment), findsOneWidget);
+  });
+
+  testWidgets('an item without a goal shows no goal block', (tester) async {
+    await _pumpItems(tester, [
+      TrainingItem(
+        id: 'e1',
+        type: TrainingItemType.exercise,
+        position: 0,
+        reps: 10,
+        exerciseName: 'Frog',
+        goal: '  ',
+      ),
+    ]);
+
+    expect(find.text('Frog'), findsOneWidget);
+    expect(find.byType(TrainingItemGoal), findsNothing);
+  });
 }

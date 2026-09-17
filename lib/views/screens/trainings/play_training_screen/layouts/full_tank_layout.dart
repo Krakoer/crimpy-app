@@ -72,6 +72,7 @@ class _TankPalette {
   final Color muted;
   final Color detail;
   final Color notch;
+  final Color goal;
 
   const _TankPalette({
     required this.force,
@@ -80,6 +81,7 @@ class _TankPalette {
     required this.muted,
     required this.detail,
     required this.notch,
+    required this.goal,
   });
 
   static const overTank = _TankPalette(
@@ -89,6 +91,7 @@ class _TankPalette {
     muted: CrimpyTheme.textMuted,
     detail: CrimpyTheme.gray400,
     notch: CrimpyTheme.borderDefault,
+    goal: CrimpyTheme.goalColor,
   );
 
   static const overFill = _TankPalette(
@@ -98,6 +101,7 @@ class _TankPalette {
     muted: CrimpyTheme.textOnFillSecondary,
     detail: CrimpyTheme.textOnFillSecondary,
     notch: CrimpyTheme.primaryWhite,
+    goal: CrimpyTheme.primaryWhite,
   );
 }
 
@@ -130,6 +134,12 @@ class FullTankLayout extends ConsumerWidget {
   /// Set and rep of the running step, shown in the pill.
   final String? repContext;
 
+  /// What the blocks the running and upcoming steps belong to are for. Set
+  /// above the step name, small and in the accent green, so it heads the step
+  /// instead of competing with the numbers the athlete is acting on.
+  final String? goal;
+  final String? nextGoal;
+
   /// Coach comments on the running and upcoming steps.
   final String? comment;
   final String? nextComment;
@@ -160,6 +170,8 @@ class FullTankLayout extends ConsumerWidget {
     required this.isPreparation,
     required this.isRunning,
     required this.repContext,
+    required this.goal,
+    required this.nextGoal,
     required this.comment,
     required this.nextComment,
     required this.videoLink,
@@ -489,7 +501,13 @@ class _TankContent extends StatelessWidget {
           ),
         ],
         // Only a sensor step has its middle taken by the force. Every other
-        // state carries the comment in the block it centers there.
+        // state carries the goal and the comment in the block it centers there.
+        // The hang is the step the goal matters most on, since a finger block
+        // is what the coach wrote one for, so it is not dropped here.
+        if (layout.goal != null && state == _TankState.sensorWork) ...[
+          SizedBox(height: _s(8)),
+          _goalLine(layout.goal!, align: TextAlign.start),
+        ],
         if (layout.comment != null && state == _TankState.sensorWork) ...[
           SizedBox(height: _s(6)),
           Text(
@@ -502,6 +520,29 @@ class _TankContent extends StatelessWidget {
       ],
     );
   }
+
+  /// What the block is for, heading a step. One line, since a goal is a label
+  /// and the tank cannot scroll: it draws its content twice, clipped to the
+  /// force level, so anything in it has to be bounded. The colour comes from
+  /// the palette for that same reason, or the copy drawn over the fill would
+  /// paint green on the dark green and disappear.
+  ///
+  /// [align] only decides where a goal that had to be cut short sits in the
+  /// leftover pixels. It does not place the line: a goal short enough to fit
+  /// shrink-wraps to its glyphs, so the block it sits in is what puts it left
+  /// or centre.
+  Widget _goalLine(String goal, {TextAlign align = TextAlign.center}) => Text(
+    goal.toUpperCase(),
+    textAlign: align,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    style: _style(
+      12,
+      color: palette.goal,
+      weight: FontWeight.w700,
+      letterSpacing: 1,
+    ),
+  );
 
   Widget _timeBlock(String label, int milliseconds, {bool alignEnd = false}) =>
       Column(
@@ -703,6 +744,10 @@ class _TankContent extends StatelessWidget {
           letterSpacing: 2,
         ),
       ),
+      if (layout.nextGoal != null) ...[
+        SizedBox(height: _s(8)),
+        _goalLine(layout.nextGoal!),
+      ],
       SizedBox(height: _s(14)),
       Text(
         sensor
@@ -758,6 +803,10 @@ class _TankContent extends StatelessWidget {
     final rep = layout.item as TimedItem;
 
     return _column([
+      if (layout.goal != null) ...[
+        _goalLine(layout.goal!),
+        SizedBox(height: _s(6)),
+      ],
       Text(
         rep.label.toUpperCase(),
         textAlign: TextAlign.center,
@@ -824,6 +873,10 @@ class _TankContent extends StatelessWidget {
     ].join('  -  ');
 
     return _column([
+      if (layout.goal != null) ...[
+        _goalLine(layout.goal!),
+        SizedBox(height: _s(6)),
+      ],
       Text(
         rep.label.toUpperCase(),
         textAlign: TextAlign.center,
