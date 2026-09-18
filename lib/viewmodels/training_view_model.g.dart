@@ -59,7 +59,7 @@ final class TrainingRepositoryProvider
 }
 
 String _$trainingRepositoryHash() =>
-    r'74d2febd12d6253a7f3c520311d696bf61253a79';
+    r'4390f41d3ed826830fd867795f5e31caa3bd74b0';
 
 /// Returns the assessment repository (local Drift in guest mode, remote API when authenticated).
 

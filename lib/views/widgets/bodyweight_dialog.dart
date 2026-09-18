@@ -94,7 +94,19 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
     // send follows on its own, and the profile card is where an athlete is told
     // their coach has not got it yet.
     setState(() => _saving = true);
-    await ref.read(bodyweightProvider.notifier).set(entered);
+    try {
+      await ref.read(bodyweightProvider.notifier).set(entered);
+    } catch (e) {
+      // Only the device write can fail here now that the send is off this path,
+      // and leaving Save disabled would strand the athlete with a number they
+      // cannot store and cannot retry.
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = 'Could not save on this device. Try again.';
+      });
+      return;
+    }
     if (!mounted) return;
     Navigator.of(context).pop(entered);
   }

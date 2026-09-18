@@ -2,6 +2,7 @@ import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/repositories/bodyweight_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -112,6 +113,11 @@ Future<Map<String, dynamic>> _postedRep({
 }
 
 void main() {
+  // Every posted session now reads the bodyweight cache, so the whole file
+  // needs a prefs mock rather than inheriting one from whichever group happens
+  // to run first.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   _bodyweightTests();
 
   group('a posted rep', () {
@@ -262,6 +268,20 @@ void main() {
   });
 }
 
+/// A repository whose session upload can be watched for the flush that should
+/// follow it.
+class _FlushCountingBodyweight extends BodyweightRepository {
+  _FlushCountingBodyweight(super.apiClient);
+
+  int flushes = 0;
+
+  @override
+  Future<void> flushPending() async {
+    flushes++;
+    return super.flushPending();
+  }
+}
+
 void _bodyweightTests() {
   // The server freezes what the run actually resolved its percent_bw loads
   // against, and only the device knows that: it may hold a measurement the
@@ -278,6 +298,23 @@ void _bodyweightTests() {
       final body = await _postedWithBodyweight(null);
 
       expect(body.containsKey('bodyweight_kg'), isFalse);
+    });
+
+    // A finished upload has just proved there is a network, which is the scarce
+    // thing a measurement recorded offline is waiting for.
+    test('flushes a waiting measurement after the session lands', () async {
+      SharedPreferences.setMockInitialValues({});
+      final client = _CapturingApiClient();
+      final bodyweight = _FlushCountingBodyweight(client);
+      await bodyweight.record(71.4);
+
+      await RemoteTrainingRepository(
+        client,
+        bodyweight: bodyweight,
+      ).saveSession(_session(), [_rep()]);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(bodyweight.flushes, greaterThan(0));
     });
   });
 }

@@ -44,13 +44,22 @@ class BodyweightRepository {
   }
 
   Future<void> _flush() async {
-    final pending = await _service.pending();
-    if (pending == null) return;
-    try {
-      await _apiClient.createBodyweight(pending.weightKg, pending.measuredAt);
-      await _service.clearPending();
-    } catch (_) {
-      // Still nothing we can do about it. It stays pending.
+    // Loops, because the slot can be replaced while a send is in flight: the
+    // athlete saves again to fix a typo. The send that finishes must clear only
+    // what it sent, and then carry on with whatever replaced it, or the second
+    // measurement is dropped without ever going up. Bounded, so a slot being
+    // rewritten faster than it sends cannot spin here; whatever is left stays
+    // pending for the next flush.
+    for (var attempt = 0; attempt < 3; attempt++) {
+      final pending = await _service.pending();
+      if (pending == null) return;
+      try {
+        await _apiClient.createBodyweight(pending.weightKg, pending.measuredAt);
+      } catch (_) {
+        // Still nothing we can do about it. It stays pending.
+        return;
+      }
+      if (await _service.clearPendingIfUnchanged(pending)) return;
     }
   }
 

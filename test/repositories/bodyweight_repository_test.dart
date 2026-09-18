@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:crimpy/repositories/bodyweight_repository.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/bodyweight_service.dart';
@@ -12,12 +14,21 @@ class _FakeApiClient extends ApiClient {
   bool offline = false;
   final List<({double weightKg, DateTime measuredAt})> created = [];
 
+  /// Completed by a test to release an in-flight POST, so a second weigh-in can
+  /// be recorded while the first is still on the wire.
+  Completer<void>? holdFirst;
+
   @override
   Future<Map<String, dynamic>> createBodyweight(
     double weightKg,
     DateTime measuredAt,
   ) async {
     if (offline) throw Exception('no network');
+    final hold = holdFirst;
+    if (hold != null) {
+      holdFirst = null;
+      await hold.future;
+    }
     created.add((weightKg: weightKg, measuredAt: measuredAt));
     return {
       'id': 'bw-${created.length}',
@@ -145,6 +156,28 @@ void main() {
     await Future.wait([repository.flushPending(), repository.flushPending()]);
 
     expect(api.created, hasLength(1));
+  });
+
+  // The race the single-flight guard made silent: a weigh-in saved while a send
+  // is on the wire must not be cleared by that send finishing. Before this, the
+  // device and the coach's series ended up disagreeing with nothing pending and
+  // nothing left to reconcile them.
+  test('keeps a weigh-in recorded while a send is in flight', () async {
+    await repository.record(68.5);
+    final hold = Completer<void>();
+    api.holdFirst = hold;
+    final firstFlush = repository.flushPending();
+
+    // The typo fix, while the first POST is still open.
+    await repository.record(78.5);
+    hold.complete();
+    await firstFlush;
+
+    // Whatever else happened, the number the device holds is the number the
+    // series ends on.
+    expect(api.created.last.weightKg, 78.5);
+    expect(await repository.cached(), 78.5);
+    expect(await repository.hasPending(), isFalse);
   });
 
   test('reads the series back newest first', () async {

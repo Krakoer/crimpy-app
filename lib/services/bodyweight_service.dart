@@ -61,6 +61,27 @@ class BodyweightService {
     await prefs.remove(_pendingMeasuredAtKey);
   }
 
+  /// Clears the slot only if it still holds [sent].
+  ///
+  /// A send takes as long as the network does, and the athlete can weigh
+  /// themselves again while it is in flight, to fix a typo on the way into a
+  /// run. Clearing whatever is in the slot by then would throw that second
+  /// measurement away without ever sending it, leaving the device and the
+  /// coach's series disagreeing with nothing left to reconcile them.
+  ///
+  /// Answers whether the slot is now empty, so a caller can tell "sent and
+  /// settled" from "sent, but something newer is waiting".
+  Future<bool> clearPendingIfUnchanged(PendingBodyweight sent) async {
+    final current = await pending();
+    if (current == null) return true;
+    if (current.weightKg != sent.weightKg ||
+        !current.measuredAt.isAtSameMomentAs(sent.measuredAt)) {
+      return false;
+    }
+    await clearPending();
+    return true;
+  }
+
   Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_bodyweightKey);
