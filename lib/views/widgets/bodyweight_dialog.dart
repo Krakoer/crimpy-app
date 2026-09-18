@@ -40,6 +40,9 @@ class BodyweightDialog extends ConsumerStatefulWidget {
 class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
   final TextEditingController _controller = TextEditingController();
   String? _error;
+  // Guards the button between the tap and the pop, so a second tap cannot
+  // record twice and pop the route behind the dialog.
+  bool _saving = false;
 
   @override
   void initState() {
@@ -85,7 +88,25 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
       );
       return;
     }
-    await ref.read(bodyweightProvider.notifier).set(entered);
+    // Only the device write is awaited. The caller is usually on its way into a
+    // run, and sending to the server here would put a network round trip, up to
+    // Dio's 30s connect timeout, between Save and the training starting. The
+    // send follows on its own, and the profile card is where an athlete is told
+    // their coach has not got it yet.
+    setState(() => _saving = true);
+    try {
+      await ref.read(bodyweightProvider.notifier).set(entered);
+    } catch (e) {
+      // Only the device write can fail here now that the send is off this path,
+      // and leaving Save disabled would strand the athlete with a number they
+      // cannot store and cannot retry.
+      if (!mounted) return;
+      setState(() {
+        _saving = false;
+        _error = 'Could not save on this device. Try again.';
+      });
+      return;
+    }
     if (!mounted) return;
     Navigator.of(context).pop(entered);
   }
@@ -141,7 +162,10 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        TextButton(onPressed: _save, child: const Text('Save')),
+        TextButton(
+          onPressed: _saving ? null : _save,
+          child: const Text('Save'),
+        ),
       ],
     );
   }

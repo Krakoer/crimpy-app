@@ -2,6 +2,7 @@ import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/auth_models.dart' as auth_models;
 import 'package:crimpy/repositories/remote_assessment_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
+import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/repositories/user_repository.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/auth_service.dart';
@@ -62,7 +63,10 @@ LocalDataMigration localDataMigration(Ref ref) {
   final apiClient = ref.watch(apiClientProvider);
   return LocalDataMigration(
     apiClient: apiClient,
-    remoteTrainings: RemoteTrainingRepository(apiClient),
+    remoteTrainings: RemoteTrainingRepository(
+      apiClient,
+      bodyweight: ref.watch(bodyweightRepositoryProvider),
+    ),
     remoteAssessments: RemoteAssessmentRepository(apiClient),
   );
 }

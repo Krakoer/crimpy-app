@@ -1,4 +1,6 @@
 import 'package:crimpy/models/auth_models.dart' as auth_models;
+import 'package:crimpy/repositories/bodyweight_repository.dart';
+import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/bodyweight_service.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
@@ -36,8 +38,41 @@ class _SlowAuthState extends AuthState {
       Future.delayed(const Duration(milliseconds: 50), () => _user);
 }
 
-ProviderContainer _containerFor(AuthState Function() auth) =>
-    ProviderContainer.test(overrides: [authStateProvider.overrideWith(auth)]);
+/// Counts what reached the server, so these tests say what they mean about the
+/// write through instead of leaning on the fact that a real Dio client cannot
+/// reach one under flutter_test.
+class _FakeApiClient extends ApiClient {
+  final List<double> created = [];
+
+  @override
+  Future<Map<String, dynamic>> createBodyweight(
+    double weightKg,
+    DateTime measuredAt,
+  ) async {
+    created.add(weightKg);
+    return {
+      'id': 'bw-1',
+      'user_id': 'u-1',
+      'weight_kg': weightKg,
+      'measured_at': measuredAt.toUtc().toIso8601String(),
+      'created_at': measuredAt.toUtc().toIso8601String(),
+    };
+  }
+}
+
+late _FakeApiClient _api;
+
+ProviderContainer _containerFor(AuthState Function() auth) {
+  _api = _FakeApiClient();
+  return ProviderContainer.test(
+    overrides: [
+      authStateProvider.overrideWith(auth),
+      bodyweightRepositoryProvider.overrideWithValue(
+        BodyweightRepository(_api),
+      ),
+    ],
+  );
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -61,6 +96,25 @@ void main() {
       expect(await BodyweightService().load(), 68.5);
     });
 
+    // The send is what makes the weight the coach's to read, and set() firing
+    // it is the only thing between "on the device" and "on the server". Not
+    // flushed by hand here: that would pass with the trigger deleted.
+    test('a saved weight is sent without being asked twice', () async {
+      SharedPreferences.setMockInitialValues({});
+      final container = _containerFor(() => _StubAuthState(_user));
+      await container.read(bodyweightProvider.future);
+
+      await container.read(bodyweightProvider.notifier).set(68.5);
+      // The send is deliberately unawaited, so let the microtasks it queues run.
+      await Future<void>.delayed(Duration.zero);
+
+      expect(_api.created, [68.5]);
+      expect(
+        await container.read(bodyweightRepositoryProvider).hasPending(),
+        isFalse,
+      );
+    });
+
     test('a stored weight is read back on the next launch', () async {
       SharedPreferences.setMockInitialValues({'bodyweight_kg': 72.0});
       final container = _containerFor(() => _StubAuthState(_user));
@@ -76,6 +130,12 @@ void main() {
 
       expect(await container.read(bodyweightProvider.future), isNull);
       expect(await BodyweightService().load(), isNull);
+      // The pending marker goes with it, or the next account files a weight
+      // that was never theirs.
+      expect(
+        await container.read(bodyweightRepositoryProvider).hasPending(),
+        isFalse,
+      );
     });
 
     test('the weight survives a cold start, and the wait for it ends', () async {

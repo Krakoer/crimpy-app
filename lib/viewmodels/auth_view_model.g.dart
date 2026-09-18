@@ -153,7 +153,7 @@ final class LocalDataMigrationProvider
 }
 
 String _$localDataMigrationHash() =>
-    r'8e57b9cecf584b03b6fe57c4b70fde782ce93b5f';
+    r'86970a2fea7b7c5285b7a5bc4cfe012020b54d9c';
 
 /// Persists the signed-in user on the device.
 
