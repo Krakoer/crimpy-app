@@ -34,12 +34,19 @@ class LogSessionScreen extends ConsumerStatefulWidget {
 class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _notesController = TextEditingController();
+
+  /// What the session is called. Seeded with what it would have been named
+  /// without asking, so leaving it alone logs exactly what it used to.
+  late final _nameController = TextEditingController(
+    text: widget.name ?? widget.activity.displayName,
+  );
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
   int _durationMinutes = 60;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -57,6 +64,46 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Session name
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.edit, color: color),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Name',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Session name',
+                        ),
+                        textCapitalization: TextCapitalization.sentences,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please enter a session name';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
               // Date picker
               Card(
                 child: ListTile(
@@ -234,7 +281,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
     );
 
     final session = SessionModel(
-      name: widget.name ?? widget.activity.displayName,
+      name: _nameController.text.trim(),
       isAssessment: false,
       activity: widget.activity,
       // Typed in rather than run, whatever the activity says.
