@@ -11,7 +11,7 @@ import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/log_session_screen.dart';
-import 'package:crimpy/views/screens/trainings/start_training_run.dart';
+import 'package:crimpy/views/widgets/start_training_run.dart';
 import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.dart';
 import 'package:crimpy/views/widgets/training_item_tile.dart';
 import 'package:flutter/material.dart';

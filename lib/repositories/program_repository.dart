@@ -51,23 +51,44 @@ class ProgramRepository {
   /// which ones exist. A training prescribed by two programs is fetched once,
   /// and a week or a training that fails to load leaves the others alone rather
   /// than emptying the list.
+  ///
+  /// Walked in phases, each bounded by [_walkConcurrency], so a season of
+  /// programs does not put dozens of requests on the wire at once.
   Future<List<Training>> getPrescribedAssessmentTrainings() async {
     final programs = await getPrograms();
-    final programOfTraining = <String, String>{};
-    await Future.wait(
-      programs.map((program) async {
-        final weeks = await _weeksOf(program.id);
-        for (final week in weeks) {
-          for (final session in week.sessions) {
-            programOfTraining.putIfAbsent(session.trainingId, () => program.id);
-          }
-        }
-      }),
-    );
 
-    final trainings = await Future.wait(
+    final weekNumbers = await _inParallel(
+      programs.map(
+        (program) =>
+            () => _weekNumbersOf(program.id),
+      ),
+    );
+    final scheduledWeeks = [
+      for (final (index, program) in programs.indexed)
+        for (final weekNumber in weekNumbers[index]) (program.id, weekNumber),
+    ];
+
+    final weeks = await _inParallel(
+      scheduledWeeks.map(
+        (scheduled) =>
+            () => _weekOrNull(scheduled.$1, scheduled.$2),
+      ),
+    );
+    final programOfTraining = <String, String>{};
+    for (final (index, week) in weeks.indexed) {
+      if (week == null) continue;
+      for (final session in week.sessions) {
+        programOfTraining.putIfAbsent(
+          session.trainingId,
+          () => scheduledWeeks[index].$1,
+        );
+      }
+    }
+
+    final trainings = await _inParallel(
       programOfTraining.entries.map(
-        (entry) => _tryGetProgramTraining(entry.value, entry.key),
+        (entry) =>
+            () => _tryGetProgramTraining(entry.value, entry.key),
       ),
     );
     return trainings
@@ -76,29 +97,55 @@ class ProgramRepository {
         .toList();
   }
 
-  /// The weeks of a program that load, with their sessions. A program whose
-  /// weeks cannot be read contributes nothing rather than failing the walk.
-  Future<List<Week>> _weeksOf(String programId) async {
-    final List<WeekSummary> summaries;
+  /// How many requests of the walk are in flight at once. A season of programs
+  /// is dozens of weeks and dozens of trainings, and firing them all together
+  /// is a burst the athlete's connection has to absorb in one go.
+  static const int _walkConcurrency = 6;
+
+  /// Runs [tasks] with at most [_walkConcurrency] of them outstanding, keeping
+  /// the results in the order the tasks were given.
+  Future<List<T>> _inParallel<T>(Iterable<Future<T> Function()> tasks) async {
+    final pending = tasks.toList();
+    final results = List<T?>.filled(pending.length, null);
+    var next = 0;
+
+    Future<void> worker() async {
+      while (true) {
+        final index = next++;
+        if (index >= pending.length) return;
+        results[index] = await pending[index]();
+      }
+    }
+
+    final workers = _walkConcurrency < pending.length
+        ? _walkConcurrency
+        : pending.length;
+    await Future.wait([for (var i = 0; i < workers; i++) worker()]);
+    return results.cast<T>();
+  }
+
+  /// The weeks a program lists. A program whose weeks cannot be read
+  /// contributes nothing rather than failing the walk.
+  Future<List<int>> _weekNumbersOf(String programId) async {
     try {
-      summaries = await getWeeks(programId);
+      return (await getWeeks(
+        programId,
+      )).map((summary) => summary.weekNumber).toList();
     } catch (e) {
       AppLoggerHelper.warning("Could not load the weeks of $programId: $e");
       return const [];
     }
-    final weeks = await Future.wait(
-      summaries.map((summary) async {
-        try {
-          return await getWeek(programId, summary.weekNumber);
-        } catch (e) {
-          AppLoggerHelper.warning(
-            "Could not load week ${summary.weekNumber} of $programId: $e",
-          );
-          return null;
-        }
-      }),
-    );
-    return weeks.whereType<Week>().toList();
+  }
+
+  Future<Week?> _weekOrNull(String programId, int weekNumber) async {
+    try {
+      return await getWeek(programId, weekNumber);
+    } catch (e) {
+      AppLoggerHelper.warning(
+        "Could not load week $weekNumber of $programId: $e",
+      );
+      return null;
+    }
   }
 
   Future<Training?> _tryGetProgramTraining(

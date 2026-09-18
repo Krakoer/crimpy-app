@@ -117,6 +117,31 @@ class Assessments extends _$Assessments {
     List<BleDataPoint>? data,
     List<SessionItemResultModel> itemResults = const [],
   }) async {
+    // Held open for the whole write. The screen that records a result reads
+    // this notifier for the assessment it measures, and nothing watches that
+    // key: without this the element is disposed at the first await, and every
+    // ref below it fails on a disposed ref, losing the measurement.
+    final keepAlive = ref.keepAlive();
+    try {
+      await _writeAssessment(
+        assessmentModel,
+        session,
+        reps,
+        data: data,
+        itemResults: itemResults,
+      );
+    } finally {
+      keepAlive.close();
+    }
+  }
+
+  Future<void> _writeAssessment(
+    AssessmentResultModel assessmentModel,
+    SessionModel session,
+    List<RepDataModel> reps, {
+    List<BleDataPoint>? data,
+    List<SessionItemResultModel> itemResults = const [],
+  }) async {
     // First, delete same-day assessment if any.
     final prevAssessmentId = await getSameDayAssessment(
       handSide: assessmentModel.hand,

@@ -62,43 +62,58 @@ class _FakeApiClient extends ApiClient {
 
   final List<String> fetchedTrainings = [];
 
+  /// How many requests were outstanding at once, over the whole walk.
+  int inFlight = 0;
+  int peakInFlight = 0;
+
+  Future<T> _tracked<T>(Future<T> Function() request) async {
+    inFlight++;
+    if (inFlight > peakInFlight) peakInFlight = inFlight;
+    try {
+      await Future<void>.delayed(Duration.zero);
+      return await request();
+    } finally {
+      inFlight--;
+    }
+  }
+
   @override
   Future<List<Map<String, dynamic>>> getMyPrograms() async => programs;
 
   @override
-  Future<List<Map<String, dynamic>>> getMyWeeks(String programId) async => [
-    for (final week in weeks[programId] ?? const <Map<String, dynamic>>[])
-      {
-        'id': week['id'],
-        'program_id': week['program_id'],
-        'week_number': week['week_number'],
-      },
-  ];
+  Future<List<Map<String, dynamic>>> getMyWeeks(String programId) => _tracked(
+    () async => [
+      for (final week in weeks[programId] ?? const <Map<String, dynamic>>[])
+        {
+          'id': week['id'],
+          'program_id': week['program_id'],
+          'week_number': week['week_number'],
+        },
+    ],
+  );
 
   @override
-  Future<Map<String, dynamic>> getMyWeek(
-    String programId,
-    int weekNumber,
-  ) async {
-    if (failingWeeks.contains(weekNumber)) {
-      throw ApiException('boom', statusCode: 500);
-    }
-    return (weeks[programId] ?? const <Map<String, dynamic>>[]).firstWhere(
-      (week) => week['week_number'] == weekNumber,
-    );
-  }
+  Future<Map<String, dynamic>> getMyWeek(String programId, int weekNumber) =>
+      _tracked(() async {
+        if (failingWeeks.contains(weekNumber)) {
+          throw ApiException('boom', statusCode: 500);
+        }
+        return (weeks[programId] ?? const <Map<String, dynamic>>[]).firstWhere(
+          (week) => week['week_number'] == weekNumber,
+        );
+      });
 
   @override
   Future<Map<String, dynamic>> getMyProgramTraining(
     String programId,
     String trainingId,
-  ) async {
+  ) => _tracked(() async {
     fetchedTrainings.add(trainingId);
     if (failingTrainings.contains(trainingId)) {
       throw ApiException('boom', statusCode: 500);
     }
     return trainings[trainingId]!;
-  }
+  });
 }
 
 void main() {
@@ -206,6 +221,30 @@ void main() {
       ).getPrescribedAssessmentTrainings();
 
       expect(found.map((t) => t.id), ['t-max-pull-ups']);
+    });
+
+    test('keeps the walk off the wire in one burst', () async {
+      // A season of programs is dozens of weeks and dozens of trainings, and
+      // firing them all at once is a burst the athlete connection absorbs in
+      // one go.
+      final client = _FakeApiClient(
+        programs: [_program('p1')],
+        weeks: {
+          'p1': [
+            for (var number = 1; number <= 20; number++)
+              _week('p1', number, ['t-$number']),
+          ],
+        },
+        trainings: {
+          for (var number = 1; number <= 20; number++)
+            't-$number': _training('t-$number'),
+        },
+      );
+
+      await ProgramRepository(client).getPrescribedAssessmentTrainings();
+
+      expect(client.fetchedTrainings, hasLength(20));
+      expect(client.peakInFlight, lessThanOrEqualTo(6));
     });
 
     test('an assessment stays listed once its week is in the past', () async {
