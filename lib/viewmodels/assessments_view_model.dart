@@ -32,14 +32,27 @@ AssessmentTrainingModel assessmentTraining(Ref ref, AssessmentType type) =>
 Future<List<AssessmentDefinition>> assessmentDefinitions(Ref ref) =>
     ref.watch(assessmentRepositoryProvider).getAssessmentDefinitions();
 
+/// The assessment trainings a coach has prescribed to the athlete, walked out
+/// of their programs.
+///
+/// Held apart from the athlete's own library so the walk, which is several
+/// requests, is not re-run every time that library changes: favouriting a
+/// training says nothing about what a coach has scheduled.
+@riverpod
+Future<List<Training>> prescribedAssessmentTrainings(Ref ref) async {
+  final programs = ref.watch(programRepositoryProvider);
+  if (programs == null) return const [];
+  return programs.getPrescribedAssessmentTrainings();
+}
+
 /// The assessments the athlete may record a result against beyond the ones
 /// Crimpy ships: their own, and a coach's whose training a program has
 /// prescribed to them. Each is measured by running the training that backs it,
 /// so the training itself is what this holds.
 ///
 /// This mirrors the rule the server enforces when a result is posted. The
-/// prescribed half is a walk over the programs, which can fail offline: when it
-/// does the athlete keeps the assessments they own rather than an empty tab.
+/// prescribed half can fail offline: when it does the athlete keeps the
+/// assessments they own rather than an empty tab.
 ///
 /// Ordered by name, which is how the history lists them once they have results.
 @riverpod
@@ -49,13 +62,10 @@ Future<List<Training>> recordableAssessmentTrainings(Ref ref) async {
   )).where((training) => training.assessment != null).toList();
 
   List<Training> prescribed = const [];
-  final programs = ref.watch(programRepositoryProvider);
-  if (programs != null) {
-    try {
-      prescribed = await programs.getPrescribedAssessmentTrainings();
-    } catch (e) {
-      AppLoggerHelper.warning("Could not load the prescribed assessments: $e");
-    }
+  try {
+    prescribed = await ref.watch(prescribedAssessmentTrainingsProvider.future);
+  } catch (e) {
+    AppLoggerHelper.warning("Could not load the prescribed assessments: $e");
   }
 
   // Keyed on the assessment rather than on the training: the athlete's own copy

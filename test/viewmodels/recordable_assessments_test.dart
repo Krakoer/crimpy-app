@@ -42,8 +42,13 @@ class _FakeApiClient extends ApiClient {
 
   final bool fails;
 
+  /// How many times the program walk was started, so a rebuild that should have
+  /// reused the previous one can be told from one that refetched.
+  int walks = 0;
+
   @override
   Future<List<Map<String, dynamic>>> getMyPrograms() async {
+    walks++;
     if (fails) throw ApiException('offline', isOffline: true);
     return [
       {
@@ -160,6 +165,33 @@ void main() {
 
     expect(recordable.map((t) => t.assessment!.id), ['a-own']);
   });
+
+  test(
+    'a change to the athlete library does not re-walk the programs',
+    () async {
+      // The tab keeps this provider alive, and favouriting a training in the
+      // trainings tab invalidates the library. Re-walking the programs then
+      // costs a request per week and per prescribed training, for a list that
+      // only changes when a coach edits a program.
+      final client = _FakeApiClient();
+      final container = _containerWith(
+        own: [_training('t-own', assessment: _ownDefinition)],
+        programs: ProgramRepository(client),
+      );
+      container.listen(
+        recordableAssessmentTrainingsProvider,
+        (_, _) {},
+        fireImmediately: true,
+      );
+      await container.read(recordableAssessmentTrainingsProvider.future);
+      expect(client.walks, 1);
+
+      container.invalidate(trainingsProvider);
+      await container.read(recordableAssessmentTrainingsProvider.future);
+
+      expect(client.walks, 1);
+    },
+  );
 
   test('has nothing to offer in guest mode beyond the builtins', () async {
     final container = _containerWith(own: const []);

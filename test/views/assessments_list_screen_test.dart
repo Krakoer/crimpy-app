@@ -53,7 +53,20 @@ class _StubBodyweight extends BodyweightController {
   Future<double?> build() async => 70;
 }
 
-/// The athlete's recorded results, served without the device database.
+const _hangTime = AssessmentDefinition(
+  id: 'a-hang',
+  label: 'Half crimp hang',
+  unit: AssessmentUnit.seconds,
+  perHand: true,
+  trainingId: 't-hang',
+);
+
+Training _perHandAssessment() =>
+    const Training(id: 't-hang', title: 'Hang test', assessment: _hangTime);
+
+/// The athlete's recorded results, served without the device database. A
+/// result that is not measured per hand carries its single number on the
+/// right, the way the post workout screen writes it.
 class _FixedAssessments extends Assessments {
   @override
   Future<List<AssessmentModel>> build(String? assessmentId) async => [
@@ -62,6 +75,13 @@ class _FixedAssessments extends Assessments {
       date: DateTime.now(),
       definition: _maxPullUps,
       rightValue: 12,
+    ),
+    AssessmentModel(
+      id: 'r2',
+      date: DateTime.now(),
+      definition: _hangTime,
+      rightValue: 22,
+      leftValue: 19,
     ),
   ];
 }
@@ -124,9 +144,20 @@ void main() {
   });
 
   testWidgets('a coach assessment reads back its last result', (tester) async {
+    // Not measured per hand, so the number reads on its own: an "R:" in front
+    // of it would claim a right hand for a test that has no sides.
     await _pump(tester, recordable: [_coachAssessment()], withResults: true);
 
-    expect(find.textContaining('R: 12 reps'), findsOneWidget);
+    expect(find.textContaining('12 reps'), findsOneWidget);
+    expect(find.textContaining('R: 12 reps'), findsNothing);
+  });
+
+  testWidgets('an assessment measured per hand reads back both', (
+    tester,
+  ) async {
+    await _pump(tester, recordable: [_perHandAssessment()], withResults: true);
+
+    expect(find.textContaining('R: 22s  L: 19s'), findsOneWidget);
   });
 
   testWidgets('tapping a coach assessment runs the training behind it', (

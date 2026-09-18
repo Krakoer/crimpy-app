@@ -76,7 +76,7 @@ class ProgramRepository {
         .toList();
   }
 
-  /// The published weeks of a program, with their sessions. A program whose
+  /// The weeks of a program that load, with their sessions. A program whose
   /// weeks cannot be read contributes nothing rather than failing the walk.
   Future<List<Week>> _weeksOf(String programId) async {
     final List<WeekSummary> summaries;
