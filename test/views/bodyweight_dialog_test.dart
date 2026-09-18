@@ -47,11 +47,7 @@ class _StubBodyweight extends BodyweightController {
   Future<double?> build() async => _stored;
 
   @override
-  Future<bool> set(double kilograms) async {
-    state = AsyncData(kilograms);
-    // The stub keeps nothing, so it answers as a send that reached the server.
-    return true;
-  }
+  Future<void> set(double kilograms) async => state = AsyncData(kilograms);
 }
 
 Training _training({required bool percentBw}) => Training(

@@ -16,44 +16,41 @@ class BodyweightRepository {
   BodyweightRepository(this._apiClient, {BodyweightService? service})
     : _service = service ?? BodyweightService();
 
+  Future<void>? _inFlight;
+
   Future<double?> cached() => _service.load();
 
-  /// Records a measurement. The cache is written first and unconditionally, so
-  /// a run can resolve against it whatever the network did, then the server is
-  /// told. A send that fails is remembered rather than lost: [flushPending]
-  /// files it the next time there is a network.
-  ///
-  /// Answers whether the server has it, so a caller can say the coach cannot
-  /// see it yet rather than implying it was filed.
-  Future<bool> record(double kilograms, {DateTime? measuredAt}) async {
-    final at = measuredAt ?? DateTime.now();
+  /// Whether a measurement is still waiting to reach the server.
+  Future<bool> hasPending() async => await _service.pending() != null;
+
+  /// Records a measurement on the device. Deliberately does not touch the
+  /// network: this is called on the way into a run, and a run must not wait on
+  /// one. [flushPending] is what sends it, and is safe to leave unawaited.
+  Future<void> record(double kilograms, {DateTime? measuredAt}) async {
     await _service.save(kilograms);
-    try {
-      await _apiClient.createBodyweight(kilograms, at);
-      await _service.clearPending();
-      return true;
-    } catch (_) {
-      await _service.markPending(at);
-      return false;
-    }
+    await _service.markPending(kilograms, measuredAt ?? DateTime.now());
   }
 
-  /// Sends a measurement taken while the device was offline, under the day it
-  /// was taken. Does nothing when there is none, and leaves it pending when the
-  /// send fails again.
-  Future<void> flushPending() async {
-    final measuredAt = await _service.pendingMeasuredAt();
-    if (measuredAt == null) return;
-    final kilograms = await _service.load();
-    if (kilograms == null) {
-      await _service.clearPending();
-      return;
-    }
+  /// Sends the measurement the server has not got, under the day it was taken.
+  /// Does nothing when there is none, and leaves it pending when the send
+  /// fails, so the next attempt has everything it needs.
+  ///
+  /// One at a time. Several things ask for a flush at once, a weigh-in and the
+  /// session upload that follows it, and two overlapping attempts would both
+  /// read the same pending record and file it twice, leaving the coach reading
+  /// the same measurement twice in one day.
+  Future<void> flushPending() {
+    return _inFlight ??= _flush().whenComplete(() => _inFlight = null);
+  }
+
+  Future<void> _flush() async {
+    final pending = await _service.pending();
+    if (pending == null) return;
     try {
-      await _apiClient.createBodyweight(kilograms, measuredAt);
+      await _apiClient.createBodyweight(pending.weightKg, pending.measuredAt);
       await _service.clearPending();
     } catch (_) {
-      // Still no network. It stays pending.
+      // Still nothing we can do about it. It stays pending.
     }
   }
 

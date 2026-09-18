@@ -1,3 +1,4 @@
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/views/widgets/bodyweight_dialog.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,10 @@ class BodyweightCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final bodyweight = ref.watch(bodyweightProvider);
     final value = bodyweight.value;
+    // A measurement the server has not got yet. The run resolves against the
+    // device copy either way, so this is not an error; it is the one thing the
+    // athlete cannot see for themselves.
+    final pending = ref.watch(bodyweightPendingProvider).value ?? false;
 
     return Card(
       child: Padding(
@@ -35,6 +40,16 @@ class BodyweightCard extends ConsumerWidget {
                         : '${value.toStringAsFixed(1)} kg',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
+                  if (value != null && pending) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Saved on this device. Your coach will see it once it '
+                      'reaches Crimpy.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: CrimpyTheme.textSecondary,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

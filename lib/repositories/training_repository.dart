@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/services/api_client.dart';
-import 'package:crimpy/services/bodyweight_service.dart';
+import 'package:crimpy/repositories/bodyweight_repository.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/models/session_filter.dart';
 
@@ -135,10 +137,12 @@ class LocalTrainingRepository extends TrainingRepository {
 
 class RemoteTrainingRepository extends TrainingRepository {
   final ApiClient _apiClient;
-  final BodyweightService _bodyweight;
+  // The bodyweight goes through its own repository rather than reaching past it
+  // into the storage it owns, so there is one owner of that key.
+  final BodyweightRepository _bodyweight;
 
-  RemoteTrainingRepository(this._apiClient, {BodyweightService? bodyweight})
-    : _bodyweight = bodyweight ?? BodyweightService();
+  RemoteTrainingRepository(this._apiClient, {BodyweightRepository? bodyweight})
+    : _bodyweight = bodyweight ?? BodyweightRepository(_apiClient);
 
   // ----- Trainings -----
 
@@ -285,7 +289,7 @@ class RemoteTrainingRepository extends TrainingRepository {
     // than left to the server to look up, because the device can hold a weight
     // the server has not been told about: a run needs no network, so an athlete
     // can weigh themselves and train before either reaches us.
-    final bodyweightKg = await _bodyweight.load();
+    final bodyweightKg = await _bodyweight.cached();
 
     final body = {
       'name': session.name,
@@ -321,6 +325,11 @@ class RemoteTrainingRepository extends TrainingRepository {
     };
 
     final created = await _apiClient.createSession(body);
+
+    // The upload just proved there is a network, which is the scarce thing a
+    // pending measurement is waiting for. Unawaited: the session is already
+    // saved and the caller must not wait on this.
+    unawaited(_bodyweight.flushPending().catchError((_) {}));
     return (created['session'] as Map<String, dynamic>?)?['id'] as String? ??
         created['id'] as String? ??
         '';

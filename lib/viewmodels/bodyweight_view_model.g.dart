@@ -104,6 +104,47 @@ final class BodyweightRepositoryProvider
 String _$bodyweightRepositoryHash() =>
     r'16dc72d752997aca36fb6cbe672fb986d0213397';
 
+/// Whether the latest measurement is still waiting to reach the server, so the
+/// athlete can be told their coach is not seeing it yet.
+
+@ProviderFor(bodyweightPending)
+const bodyweightPendingProvider = BodyweightPendingProvider._();
+
+/// Whether the latest measurement is still waiting to reach the server, so the
+/// athlete can be told their coach is not seeing it yet.
+
+final class BodyweightPendingProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
+    with $FutureModifier<bool>, $FutureProvider<bool> {
+  /// Whether the latest measurement is still waiting to reach the server, so the
+  /// athlete can be told their coach is not seeing it yet.
+  const BodyweightPendingProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'bodyweightPendingProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$bodyweightPendingHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<bool> create(Ref ref) {
+    return bodyweightPending(ref);
+  }
+}
+
+String _$bodyweightPendingHash() => r'4289cb676a30e3636941a5a3620dde3cfd2f3c34';
+
 /// The athlete bodyweight in kilograms, null until it is entered or measured.
 ///
 /// The value is cached on the device because a run must not need the network,
@@ -145,7 +186,7 @@ final class BodyweightControllerProvider
 }
 
 String _$bodyweightControllerHash() =>
-    r'00083f9a6b96347258a403e80d62a4bf6ec43ed0';
+    r'98c36e8f0700bace828716dfeb285573eabb11f8';
 
 /// The athlete bodyweight in kilograms, null until it is entered or measured.
 ///

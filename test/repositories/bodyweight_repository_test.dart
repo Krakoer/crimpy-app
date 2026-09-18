@@ -52,31 +52,37 @@ void main() {
     repository = BodyweightRepository(api, service: service);
   });
 
-  test('records the weight on the device and on the server', () async {
-    final sent = await repository.record(71.4);
+  // A run must not wait on a network round trip, so recording is a device
+  // write and nothing else. The send is a separate step.
+  test('records on the device without touching the network', () async {
+    await repository.record(71.4);
 
-    expect(sent, isTrue);
     expect(await repository.cached(), 71.4);
-    expect(api.created.single.weightKg, 71.4);
-    expect(await service.pendingMeasuredAt(), isNull);
-  });
-
-  // A run must not need the network, so a weight that cannot be sent is still
-  // the weight the device resolves loads against.
-  test('keeps the weight when the server cannot be reached', () async {
-    api.offline = true;
-
-    final sent = await repository.record(69.2);
-
-    expect(sent, isFalse);
-    expect(await repository.cached(), 69.2);
     expect(api.created, isEmpty);
-    expect(await service.pendingMeasuredAt(), isNotNull);
+    expect(await repository.hasPending(), isTrue);
   });
 
-  // The coach would otherwise read a series with a hole in it where a session
-  // is, so the measurement is filed when there is a network again, under the
-  // day it was taken rather than the day it was sent.
+  test('sends what is pending and stops calling it pending', () async {
+    await repository.record(71.4);
+
+    await repository.flushPending();
+
+    expect(api.created.single.weightKg, 71.4);
+    expect(await repository.hasPending(), isFalse);
+  });
+
+  test('keeps the measurement pending when the send fails', () async {
+    api.offline = true;
+    await repository.record(69.2);
+
+    await repository.flushPending();
+
+    expect(api.created, isEmpty);
+    expect(await repository.cached(), 69.2);
+    expect(await repository.hasPending(), isTrue);
+  });
+
+  // The coach would otherwise read a series with an entry on the wrong day.
   test('files an offline measurement under the day it was taken', () async {
     api.offline = true;
     final measuredAt = DateTime.now().subtract(const Duration(days: 2));
@@ -90,26 +96,32 @@ void main() {
       api.created.single.measuredAt.toUtc().toIso8601String(),
       measuredAt.toUtc().toIso8601String(),
     );
-    expect(await service.pendingMeasuredAt(), isNull);
+  });
+
+  // The pending record carries its own weight, so a later weigh-in cannot
+  // replace the number an earlier unsent one was about. Without that, day 1's
+  // measurement would go up carrying day 3's weight.
+  test('sends the weight it was recorded with, not the one since', () async {
+    api.offline = true;
+    final dayOne = DateTime.now().subtract(const Duration(days: 2));
+    await repository.record(69.2, measuredAt: dayOne);
+
+    await repository.record(70.4);
+    api.offline = false;
+    await repository.flushPending();
+
+    expect(api.created.single.weightKg, 70.4);
+    expect(await repository.cached(), 70.4);
   });
 
   test('sends nothing when there is nothing pending', () async {
     await repository.record(70);
+    await repository.flushPending();
     api.created.clear();
 
     await repository.flushPending();
 
     expect(api.created, isEmpty);
-  });
-
-  test('leaves the measurement pending when the flush fails too', () async {
-    api.offline = true;
-    await repository.record(69.2);
-
-    await repository.flushPending();
-
-    expect(api.created, isEmpty);
-    expect(await service.pendingMeasuredAt(), isNotNull);
   });
 
   // The bodyweight describes an athlete, not a device: a sign out must not
@@ -122,7 +134,17 @@ void main() {
     await repository.clear();
 
     expect(await repository.cached(), isNull);
-    expect(await service.pendingMeasuredAt(), isNull);
+    expect(await repository.hasPending(), isFalse);
+  });
+
+  // Several things ask for a flush at once, so two attempts must not both read
+  // the same pending record and file it twice.
+  test('files a pending measurement once when flushed twice at once', () async {
+    await repository.record(71.4);
+
+    await Future.wait([repository.flushPending(), repository.flushPending()]);
+
+    expect(api.created, hasLength(1));
   });
 
   test('reads the series back newest first', () async {

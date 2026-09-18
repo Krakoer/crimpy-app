@@ -12,6 +12,7 @@ import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training_list_item.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
+import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/repositories/builtin_training_repository.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 
@@ -21,7 +22,10 @@ part 'training_view_model.g.dart';
 @Riverpod(keepAlive: true)
 TrainingRepository trainingRepository(Ref ref) {
   if (ref.watch(isAuthenticatedProvider)) {
-    return RemoteTrainingRepository(ref.watch(apiClientProvider));
+    return RemoteTrainingRepository(
+      ref.watch(apiClientProvider),
+      bodyweight: ref.watch(bodyweightRepositoryProvider),
+    );
   }
   return LocalTrainingRepository();
 }

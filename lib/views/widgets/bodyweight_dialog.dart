@@ -40,6 +40,9 @@ class BodyweightDialog extends ConsumerStatefulWidget {
 class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
   final TextEditingController _controller = TextEditingController();
   String? _error;
+  // Guards the button between the tap and the pop, so a second tap cannot
+  // record twice and pop the route behind the dialog.
+  bool _saving = false;
 
   @override
   void initState() {
@@ -85,25 +88,15 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
       );
       return;
     }
-    // Captured before the await: the dialog is gone by the time there is
-    // something to say.
-    final messenger = ScaffoldMessenger.of(context);
-    final sent = await ref.read(bodyweightProvider.notifier).set(entered);
+    // Only the device write is awaited. The caller is usually on its way into a
+    // run, and sending to the server here would put a network round trip, up to
+    // Dio's 30s connect timeout, between Save and the training starting. The
+    // send follows on its own, and the profile card is where an athlete is told
+    // their coach has not got it yet.
+    setState(() => _saving = true);
+    await ref.read(bodyweightProvider.notifier).set(entered);
     if (!mounted) return;
     Navigator.of(context).pop(entered);
-    if (!sent) {
-      // The run resolves against it either way, so this is not a failure to
-      // report as one. What the athlete cannot know without being told is that
-      // their coach is not seeing this yet.
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Saved on this device. Your coach will see it when you are back '
-            'online.',
-          ),
-        ),
-      );
-    }
   }
 
   @override
@@ -157,7 +150,10 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        TextButton(onPressed: _save, child: const Text('Save')),
+        TextButton(
+          onPressed: _saving ? null : _save,
+          child: const Text('Save'),
+        ),
       ],
     );
   }
