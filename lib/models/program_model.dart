@@ -105,12 +105,18 @@ class WeekSummary {
   final String id;
   final String programId;
   final int weekNumber;
+
+  /// The training phase the week belongs to ("capacity", "deload"), reused
+  /// across the weeks of one block. Distinct from [notes], which is a message
+  /// the coach wrote about this one week.
+  final String? name;
   final String? notes;
 
   const WeekSummary({
     required this.id,
     required this.programId,
     required this.weekNumber,
+    this.name,
     this.notes,
   });
 
@@ -118,6 +124,7 @@ class WeekSummary {
     id: json['id'] as String,
     programId: json['program_id'] as String,
     weekNumber: (json['week_number'] as num).toInt(),
+    name: json['name'] as String?,
     notes: json['notes'] as String?,
   );
 }
@@ -127,6 +134,9 @@ class Week {
   final String id;
   final String programId;
   final int weekNumber;
+
+  /// The training phase the week belongs to. See [WeekSummary.name].
+  final String? name;
   final String? notes;
   final List<WeekSession> sessions;
 
@@ -134,6 +144,7 @@ class Week {
     required this.id,
     required this.programId,
     required this.weekNumber,
+    this.name,
     this.notes,
     this.sessions = const [],
   });
@@ -142,6 +153,7 @@ class Week {
     id: json['id'] as String,
     programId: json['program_id'] as String,
     weekNumber: (json['week_number'] as num).toInt(),
+    name: json['name'] as String?,
     notes: json['notes'] as String?,
     sessions:
         (json['sessions'] as List<dynamic>? ?? [])
@@ -154,6 +166,7 @@ class Week {
     'id': id,
     'program_id': programId,
     'week_number': weekNumber,
+    'name': name,
     'notes': notes,
     'sessions': sessions.map((s) => s.toJson()).toList(),
   };
