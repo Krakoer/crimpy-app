@@ -5,7 +5,9 @@ import 'package:crimpy/models/common.dart';
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/session.dart';
+import 'package:crimpy/models/training.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
+import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -29,6 +31,43 @@ AssessmentTrainingModel assessmentTraining(Ref ref, AssessmentType type) =>
 @riverpod
 Future<List<AssessmentDefinition>> assessmentDefinitions(Ref ref) =>
     ref.watch(assessmentRepositoryProvider).getAssessmentDefinitions();
+
+/// The assessments the athlete may record a result against beyond the ones
+/// Crimpy ships: their own, and a coach's whose training a program has
+/// prescribed to them. Each is measured by running the training that backs it,
+/// so the training itself is what this holds.
+///
+/// This mirrors the rule the server enforces when a result is posted. The
+/// prescribed half is a walk over the programs, which can fail offline: when it
+/// does the athlete keeps the assessments they own rather than an empty tab.
+///
+/// Ordered by name, which is how the history lists them once they have results.
+@riverpod
+Future<List<Training>> recordableAssessmentTrainings(Ref ref) async {
+  final own = (await ref.watch(
+    trainingsProvider.future,
+  )).where((training) => training.assessment != null).toList();
+
+  List<Training> prescribed = const [];
+  final programs = ref.watch(programRepositoryProvider);
+  if (programs != null) {
+    try {
+      prescribed = await programs.getPrescribedAssessmentTrainings();
+    } catch (e) {
+      AppLoggerHelper.warning("Could not load the prescribed assessments: $e");
+    }
+  }
+
+  // Keyed on the assessment rather than on the training: the athlete's own copy
+  // and a prescription of it are the same thing to measure, and listing it
+  // twice would offer two cards writing to one history.
+  final byAssessment = <String, Training>{};
+  for (final training in [...own, ...prescribed]) {
+    byAssessment.putIfAbsent(training.assessment!.id, () => training);
+  }
+  return byAssessment.values.toList()
+    ..sort((a, b) => a.assessment!.label.compareTo(b.assessment!.label));
+}
 
 /// The athlete latest result per assessment, used to turn the loads, durations
 /// and reps a coach set as a percentage of an assessment into numbers.
