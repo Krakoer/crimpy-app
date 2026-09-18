@@ -56,15 +56,75 @@ final class BodyweightServiceProvider
 
 String _$bodyweightServiceHash() => r'5f2abc0cd663e9ff1992e60b6d3deab73ba76ba2';
 
+@ProviderFor(bodyweightRepository)
+const bodyweightRepositoryProvider = BodyweightRepositoryProvider._();
+
+final class BodyweightRepositoryProvider
+    extends
+        $FunctionalProvider<
+          BodyweightRepository,
+          BodyweightRepository,
+          BodyweightRepository
+        >
+    with $Provider<BodyweightRepository> {
+  const BodyweightRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'bodyweightRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$bodyweightRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<BodyweightRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  BodyweightRepository create(Ref ref) {
+    return bodyweightRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(BodyweightRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<BodyweightRepository>(value),
+    );
+  }
+}
+
+String _$bodyweightRepositoryHash() =>
+    r'16dc72d752997aca36fb6cbe672fb986d0213397';
+
 /// The athlete bodyweight in kilograms, null until it is entered or measured.
+///
+/// The value is cached on the device because a run must not need the network,
+/// and written through to the server because the coach reads the series and a
+/// percent_bw prescription is frozen against it.
 
 @ProviderFor(BodyweightController)
 const bodyweightProvider = BodyweightControllerProvider._();
 
 /// The athlete bodyweight in kilograms, null until it is entered or measured.
+///
+/// The value is cached on the device because a run must not need the network,
+/// and written through to the server because the coach reads the series and a
+/// percent_bw prescription is frozen against it.
 final class BodyweightControllerProvider
     extends $AsyncNotifierProvider<BodyweightController, double?> {
   /// The athlete bodyweight in kilograms, null until it is entered or measured.
+  ///
+  /// The value is cached on the device because a run must not need the network,
+  /// and written through to the server because the coach reads the series and a
+  /// percent_bw prescription is frozen against it.
   const BodyweightControllerProvider._()
     : super(
         from: null,
@@ -85,9 +145,13 @@ final class BodyweightControllerProvider
 }
 
 String _$bodyweightControllerHash() =>
-    r'c6314c3e439c6b4718ab9e8a371a386162d880d0';
+    r'00083f9a6b96347258a403e80d62a4bf6ec43ed0';
 
 /// The athlete bodyweight in kilograms, null until it is entered or measured.
+///
+/// The value is cached on the device because a run must not need the network,
+/// and written through to the server because the coach reads the series and a
+/// percent_bw prescription is frozen against it.
 
 abstract class _$BodyweightController extends $AsyncNotifier<double?> {
   FutureOr<double?> build();

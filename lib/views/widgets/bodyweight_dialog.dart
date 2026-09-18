@@ -85,9 +85,25 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
       );
       return;
     }
-    await ref.read(bodyweightProvider.notifier).set(entered);
+    // Captured before the await: the dialog is gone by the time there is
+    // something to say.
+    final messenger = ScaffoldMessenger.of(context);
+    final sent = await ref.read(bodyweightProvider.notifier).set(entered);
     if (!mounted) return;
     Navigator.of(context).pop(entered);
+    if (!sent) {
+      // The run resolves against it either way, so this is not a failure to
+      // report as one. What the athlete cannot know without being told is that
+      // their coach is not seeing this yet.
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Saved on this device. Your coach will see it when you are back '
+            'online.',
+          ),
+        ),
+      );
+    }
   }
 
   @override

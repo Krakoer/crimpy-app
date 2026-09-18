@@ -449,6 +449,31 @@ class ApiClient {
     return res.data as Map<String, dynamic>;
   }
 
+  // ----- Bodyweight (coachee owns the series) -----
+
+  /// Appends a measurement. [measuredAt] is when the athlete weighed
+  /// themselves, which is not when this call is made: a measurement taken while
+  /// the device was offline is sent later and keeps the day it belongs to.
+  Future<Map<String, dynamic>> createBodyweight(
+    double weightKg,
+    DateTime measuredAt,
+  ) async {
+    final res = await post(
+      '/api/user/bodyweights',
+      data: {
+        'weight_kg': weightKg,
+        'measured_at': measuredAt.toUtc().toIso8601String(),
+      },
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  /// The athlete's own series, most recently measured first.
+  Future<List<Map<String, dynamic>>> getMyBodyweights() async {
+    final res = await get('/api/user/bodyweights');
+    return _asList(res.data);
+  }
+
   // ----- Programs (coachee, read-only) -----
   Future<List<Map<String, dynamic>>> getMyPrograms() async {
     final res = await get('/api/user/programs');

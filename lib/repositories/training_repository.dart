@@ -4,6 +4,7 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/services/api_client.dart';
+import 'package:crimpy/services/bodyweight_service.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/models/session_filter.dart';
 
@@ -134,8 +135,10 @@ class LocalTrainingRepository extends TrainingRepository {
 
 class RemoteTrainingRepository extends TrainingRepository {
   final ApiClient _apiClient;
+  final BodyweightService _bodyweight;
 
-  RemoteTrainingRepository(this._apiClient);
+  RemoteTrainingRepository(this._apiClient, {BodyweightService? bodyweight})
+    : _bodyweight = bodyweight ?? BodyweightService();
 
   // ----- Trainings -----
 
@@ -278,6 +281,12 @@ class RemoteTrainingRepository extends TrainingRepository {
 
     final curve = ForceCurve.toJson(data ?? const []);
 
+    // What this device resolved the run's percent_bw loads against. Sent rather
+    // than left to the server to look up, because the device can hold a weight
+    // the server has not been told about: a run needs no network, so an athlete
+    // can weigh themselves and train before either reaches us.
+    final bodyweightKg = await _bodyweight.load();
+
     final body = {
       'name': session.name,
       'notes': session.notes ?? '',
@@ -308,6 +317,7 @@ class RemoteTrainingRepository extends TrainingRepository {
       // assessment only: on an ordinary repeater the samples are bulk nothing
       // reads, and sending them anyway is refused rather than stored.
       if (session.isAssessment && curve != null) 'samples': curve,
+      if (bodyweightKg != null) 'bodyweight_kg': bodyweightKg,
     };
 
     final created = await _apiClient.createSession(body);

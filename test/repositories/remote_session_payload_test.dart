@@ -5,6 +5,7 @@ import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Captures the body a session POST would send, so the payload can be asserted
 /// without a server.
@@ -85,6 +86,17 @@ Future<Map<String, dynamic>> _postedItemResults({
   return client.body!;
 }
 
+/// The body a session POST sends when the device holds [bodyweightKg], or none
+/// when it holds nothing.
+Future<Map<String, dynamic>> _postedWithBodyweight(double? bodyweightKg) async {
+  SharedPreferences.setMockInitialValues(
+    bodyweightKg == null ? {} : {'bodyweight_kg': bodyweightKg},
+  );
+  final client = _CapturingApiClient();
+  await RemoteTrainingRepository(client).saveSession(_session(), [_rep()]);
+  return client.body!;
+}
+
 Future<Map<String, dynamic>> _postedRep({
   String? trainingId,
   String? programSessionId,
@@ -100,6 +112,8 @@ Future<Map<String, dynamic>> _postedRep({
 }
 
 void main() {
+  _bodyweightTests();
+
   group('a posted rep', () {
     test('names the item it was played from', () async {
       final rep = await _postedRep(trainingId: 't-1', trainingItemId: 'item-1');
@@ -244,6 +258,26 @@ void main() {
       final body = await _postedBody(isAssessment: true);
 
       expect(body.containsKey('samples'), isFalse);
+    });
+  });
+}
+
+void _bodyweightTests() {
+  // The server freezes what the run actually resolved its percent_bw loads
+  // against, and only the device knows that: it may hold a measurement the
+  // server has never been told about, because a run needs no network.
+  group('bodyweight', () {
+    test('sends the weight the device holds', () async {
+      final body = await _postedWithBodyweight(71.4);
+
+      expect(body['bodyweight_kg'], 71.4);
+    });
+
+    // Absent rather than zero: nothing has to read 0kg as a real weight.
+    test('sends none when the device holds none', () async {
+      final body = await _postedWithBodyweight(null);
+
+      expect(body.containsKey('bodyweight_kg'), isFalse);
     });
   });
 }
