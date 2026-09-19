@@ -51,6 +51,16 @@ String formatDurationHMS(int seconds) {
   }
 }
 
+/// A planned length given in whole minutes, e.g. "45m", "1h", "1h 30m". The
+/// same reading formatDurationHMS gives a measured one, so a week the athlete
+/// planned and a session they played compare rather than convert.
+String formatMinutesAsLength(int minutes) {
+  if (minutes < 60) return '${minutes}m';
+  final hours = minutes ~/ 60;
+  final rest = minutes % 60;
+  return rest > 0 ? '${hours}h ${rest}m' : '${hours}h';
+}
+
 /// A weight in kilograms, kept to a single decimal and only when it carries
 /// one, so a live readout does not jitter between widths for nothing.
 String formatKilograms(double kilograms) => kilograms.toStringAsFixed(

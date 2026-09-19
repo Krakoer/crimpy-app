@@ -1,5 +1,6 @@
 import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/viewmodels/availability_view_model.dart';
 import 'package:crimpy/views/screens/availability/widgets/day_schedule_card.dart';
 import 'package:flutter/material.dart';
@@ -141,9 +142,28 @@ class _WeekAvailabilityScreenState
     }
   }
 
+  /// Leaving the screen with the back button or the system gesture asks the
+  /// same question switching weeks does. A dirty week now holds several fully
+  /// typed activities rather than two text fields, so dropping it silently
+  /// costs the athlete everything they wrote.
+  Future<void> _confirmPop(bool didPop, Object? result) async {
+    if (didPop) return;
+    if (!await _confirmDiscard()) return;
+    if (!mounted) return;
+    Navigator.of(context).pop(result);
+  }
+
   @override
   Widget build(BuildContext context) {
     final week = _week;
+    return PopScope(
+      canPop: !_dirty,
+      onPopInvokedWithResult: _confirmPop,
+      child: _buildScaffold(week),
+    );
+  }
+
+  Widget _buildScaffold(WeekAvailability? week) {
     return Scaffold(
       backgroundColor: CrimpyTheme.bgSecondary,
       appBar: AppBar(title: const Text('Your week')),
@@ -165,11 +185,6 @@ class _WeekAvailabilityScreenState
                     children: [
                       for (final day in week.days)
                         DayScheduleCard(
-                          // Keyed by the week as well as the day: switching
-                          // weeks resolves from a loaded provider without ever
-                          // painting the spinner, so an unkeyed card would be
-                          // reused across two different weeks.
-                          key: ValueKey((_weekStart, day.dayOfWeek)),
                           label: _weekdayNames[day.dayOfWeek],
                           dateLabel: _dayAndMonth(
                             addCalendarDays(_weekStart, day.dayOfWeek),
@@ -245,11 +260,11 @@ class _WeekSummary extends StatelessWidget {
               ),
               if (minutes > 0)
                 Text(
-                  formatPlannedMinutes(minutes),
+                  formatMinutesAsLength(minutes),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: CrimpyTheme.accentGreen,
+                    color: CrimpyTheme.accentGreenText,
                   ),
                 ),
             ],

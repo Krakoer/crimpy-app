@@ -1,4 +1,5 @@
 import 'package:crimpy/models/week_availability.dart';
+import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/views/screens/availability/widgets/day_schedule_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -164,6 +165,38 @@ void main() {
     expect(day.activities.map((activity) => activity.label), ['Stretching']);
   });
 
+  testWidgets('a removed activity can be put back where it was', (
+    tester,
+  ) async {
+    // The remove is one tap on a control beside the row that opens the editor,
+    // and the activity holds four fields the athlete typed. Without the undo a
+    // mis-tap costs all four.
+    final day = await _pumpCard(
+      tester,
+      day: const DayAvailability(
+        dayOfWeek: 1,
+        activities: [
+          DayActivity(label: 'Bouldering'),
+          DayActivity(label: 'Stretching', durationMinutes: 20),
+          DayActivity(label: 'Long run'),
+        ],
+      ),
+      act: (tester) async {
+        await tester.tap(find.byTooltip('Remove Stretching'));
+        await tester.pumpAndSettle();
+        expect(find.text('Removed Stretching'), findsOneWidget);
+        await tester.tap(find.text('Undo'));
+      },
+    );
+
+    expect(day.activities.map((activity) => activity.label), [
+      'Bouldering',
+      'Stretching',
+      'Long run',
+    ]);
+    expect(day.activities[1].durationMinutes, 20);
+  });
+
   testWidgets('editing an activity replaces it in place', (tester) async {
     final day = await _pumpCard(
       tester,
@@ -208,10 +241,40 @@ void main() {
     expect(button.onPressed, isNull);
   });
 
-  test('a duration reads as hours once it passes one', () {
-    expect(formatPlannedMinutes(45), '45min');
-    expect(formatPlannedMinutes(60), '1h');
-    expect(formatPlannedMinutes(90), '1h30');
-    expect(formatPlannedMinutes(125), '2h05');
+  testWidgets('a field too long for the API is refused at the field', (
+    tester,
+  ) async {
+    // maxLength counts grapheme clusters and the API counts runes, so a field
+    // the box let through can still be refused by the save, which takes the
+    // whole week down with it and names no field.
+    final day = await _pumpCard(
+      tester,
+      day: emptyTuesday,
+      act: (tester) async {
+        await tester.tap(find.text('Add something'));
+        await tester.pumpAndSettle();
+        await _fill(
+          tester,
+          label: 'Bouldering',
+          where: 'e\u0301' * (maxActivityTextLength + 1),
+        );
+        await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+        await tester.pumpAndSettle();
+        expect(
+          find.textContaining('longer than $maxActivityTextLength'),
+          findsOneWidget,
+        );
+        await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      },
+    );
+
+    expect(day.activities, isEmpty);
+  });
+
+  test('a planned duration reads as hours once it passes one', () {
+    expect(formatMinutesAsLength(45), '45m');
+    expect(formatMinutesAsLength(60), '1h');
+    expect(formatMinutesAsLength(90), '1h 30m');
+    expect(formatMinutesAsLength(125), '2h 5m');
   });
 }

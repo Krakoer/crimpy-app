@@ -1,18 +1,8 @@
 import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/views/screens/availability/widgets/activity_editor_sheet.dart';
 import 'package:flutter/material.dart';
-
-/// Renders a duration the way a coach reads one: hours and minutes, never
-/// "90 min" when "1h30" says it shorter.
-String formatPlannedMinutes(int minutes) {
-  if (minutes < 60) return '${minutes}min';
-  final hours = minutes ~/ 60;
-  final rest = minutes % 60;
-  return rest == 0
-      ? '${hours}h'
-      : '${hours}h${rest.toString().padLeft(2, '0')}';
-}
 
 /// One day of the declared week: what the athlete plans on it, in the order
 /// they entered it, and the way to add more.
@@ -58,10 +48,30 @@ class DayScheduleCard extends StatelessWidget {
     onChanged(day.withActivities(activities));
   }
 
-  void _remove(int index) {
+  /// Removing is one tap with nothing to confirm, so the way back is the undo
+  /// rather than a dialog: the activity carries four fields the athlete typed,
+  /// and a mis-tap next to the row that opens the editor would cost all four.
+  void _remove(BuildContext context, int index) {
+    final removed = day.activities[index];
     final activities = [...day.activities];
     activities.removeAt(index);
     onChanged(day.withActivities(activities));
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('Removed ${removed.label}'),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () {
+              final restored = [...activities];
+              restored.insert(index.clamp(0, restored.length), removed);
+              onChanged(day.withActivities(restored));
+            },
+          ),
+        ),
+      );
   }
 
   @override
@@ -94,17 +104,17 @@ class DayScheduleCard extends StatelessWidget {
                   dateLabel,
                   style: const TextStyle(
                     fontSize: 12,
-                    color: CrimpyTheme.textMuted,
+                    color: CrimpyTheme.textSecondary,
                   ),
                 ),
               ),
               if (day.plannedMinutes > 0)
                 Text(
-                  formatPlannedMinutes(day.plannedMinutes),
+                  formatMinutesAsLength(day.plannedMinutes),
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: CrimpyTheme.accentGreen,
+                    color: CrimpyTheme.accentGreenText,
                   ),
                 ),
             ],
@@ -118,7 +128,7 @@ class DayScheduleCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontStyle: FontStyle.italic,
-                  color: CrimpyTheme.textMuted,
+                  color: CrimpyTheme.textSecondary,
                 ),
               ),
             )
@@ -128,7 +138,7 @@ class DayScheduleCard extends StatelessWidget {
                 activity: day.activities[index],
                 enabled: enabled,
                 onTap: () => _edit(context, index),
-                onRemove: () => _remove(index),
+                onRemove: () => _remove(context, index),
               ),
           Align(
             alignment: Alignment.centerLeft,
@@ -165,7 +175,7 @@ class _ActivityTile extends StatelessWidget {
 
   /// The "when" and the "where" read as one line under the name, joined only
   /// when the athlete gave both.
-  String? get _context {
+  String? get _whenAndWhere {
     final parts = [
       activity.when?.trim(),
       activity.where?.trim(),
@@ -175,71 +185,82 @@ class _ActivityTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final context_ = _context;
+    final whenAndWhere = _whenAndWhere;
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
-      decoration: const BoxDecoration(color: CrimpyTheme.bgSecondary),
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            activity.label,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: CrimpyTheme.textPrimary,
+      // The tile needs an edge of its own: its fill sits on a card that is
+      // nearly the same value, so without the border a day holding three
+      // activities reads as three unseparated lines rather than three tiles.
+      decoration: BoxDecoration(
+        border: Border.all(color: CrimpyTheme.borderDark),
+      ),
+      // Material rather than a Container fill, so the ink of the tap lands
+      // above the background instead of under it and the row does not read as
+      // dead until the sheet opens.
+      child: Material(
+        color: CrimpyTheme.bgSecondary,
+        child: InkWell(
+          onTap: enabled ? onTap : null,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 4, 0, 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              activity.label,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: CrimpyTheme.textPrimary,
+                              ),
                             ),
                           ),
-                        ),
-                        if (activity.durationMinutes != null) ...[
-                          const SizedBox(width: 8),
-                          Text(
-                            formatPlannedMinutes(activity.durationMinutes!),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: CrimpyTheme.textSecondary,
+                          if (activity.durationMinutes != null) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              formatMinutesAsLength(activity.durationMinutes!),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: CrimpyTheme.textSecondary,
+                              ),
                             ),
-                          ),
+                          ],
                         ],
-                      ],
-                    ),
-                    if (context_ != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        context_,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: CrimpyTheme.textSecondary,
-                        ),
                       ),
+                      if (whenAndWhere != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          whenAndWhere,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: CrimpyTheme.textSecondary,
+                          ),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              IconButton(
-                onPressed: enabled ? onRemove : null,
-                icon: const Icon(Icons.close, size: 18),
-                color: CrimpyTheme.textMuted,
-                visualDensity: VisualDensity.compact,
-                tooltip: 'Remove ${activity.label}',
-                constraints: const BoxConstraints(),
-                padding: const EdgeInsets.all(6),
-              ),
-            ],
+                // Default constraints rather than a stripped hit box: this one
+                // destroys what the athlete typed, and it sits at the edge of a
+                // row whose own tap opens the editor.
+                IconButton(
+                  onPressed: enabled ? onRemove : null,
+                  icon: const Icon(Icons.close, size: 18),
+                  color: CrimpyTheme.textSecondary,
+                  tooltip: 'Remove ${activity.label}',
+                ),
+              ],
+            ),
           ),
         ),
       ),

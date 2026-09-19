@@ -42,7 +42,9 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
   late final TextEditingController _durationController;
   late final TextEditingController _whenController;
   late final TextEditingController _whereController;
-  bool _labelMissing = false;
+  String? _labelError;
+  String? _whenError;
+  String? _whereError;
 
   @override
   void initState() {
@@ -69,12 +71,29 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
     return value.isEmpty ? null : value;
   }
 
+  /// maxLength counts grapheme clusters while the API counts runes, so a field
+  /// the box let through can still be too long for it. Checked here rather than
+  /// left to the save, which refuses the whole week and names no field.
+  String? _lengthError(String value) =>
+      value.runes.length > maxActivityTextLength
+      ? 'That is longer than $maxActivityTextLength characters'
+      : null;
+
   void _save() {
     final label = _labelController.text.trim();
-    if (label.isEmpty) {
-      // The API refuses a blank label, and an activity with no name says
-      // nothing to a coach either.
-      setState(() => _labelMissing = true);
+    // The API refuses a blank label, and an activity with no name says nothing
+    // to a coach either.
+    final labelError = label.isEmpty
+        ? 'This one needs a name'
+        : _lengthError(label);
+    final whenError = _lengthError(_whenController.text.trim());
+    final whereError = _lengthError(_whereController.text.trim());
+    if (labelError != null || whenError != null || whereError != null) {
+      setState(() {
+        _labelError = labelError;
+        _whenError = whenError;
+        _whereError = whereError;
+      });
       return;
     }
     final minutes = int.tryParse(_durationController.text.trim());
@@ -139,12 +158,12 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                 maxLength: maxActivityTextLength,
                 buildCounter: _noCounter,
                 onChanged: (_) {
-                  if (_labelMissing) setState(() => _labelMissing = false);
+                  if (_labelError != null) setState(() => _labelError = null);
                 },
                 decoration: InputDecoration(
                   labelText: 'What',
                   hintText: 'bouldering session',
-                  errorText: _labelMissing ? 'This one needs a name' : null,
+                  errorText: _labelError,
                   border: const OutlineInputBorder(),
                   isDense: true,
                 ),
@@ -154,6 +173,11 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                 controller: _durationController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                // Capped like the text fields are. Without it the box takes a
+                // number too big for the API's int32, which refuses the whole
+                // week and says nothing about which field did it.
+                maxLength: _durationDigits,
+                buildCounter: _noCounter,
                 decoration: const InputDecoration(
                   labelText: 'How long',
                   suffixText: 'min',
@@ -167,10 +191,14 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: maxActivityTextLength,
                 buildCounter: _noCounter,
-                decoration: const InputDecoration(
+                onChanged: (_) {
+                  if (_whenError != null) setState(() => _whenError = null);
+                },
+                decoration: InputDecoration(
                   labelText: 'When',
                   hintText: 'after work',
-                  border: OutlineInputBorder(),
+                  errorText: _whenError,
+                  border: const OutlineInputBorder(),
                   isDense: true,
                 ),
               ),
@@ -180,11 +208,15 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                 textCapitalization: TextCapitalization.sentences,
                 maxLength: maxActivityTextLength,
                 buildCounter: _noCounter,
+                onChanged: (_) {
+                  if (_whereError != null) setState(() => _whereError = null);
+                },
                 onSubmitted: (_) => _save(),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Where',
                   hintText: 'the gym',
-                  border: OutlineInputBorder(),
+                  errorText: _whereError,
+                  border: const OutlineInputBorder(),
                   isDense: true,
                 ),
               ),
@@ -213,6 +245,10 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
     );
   }
 }
+
+/// Four digits is 9999 minutes, a week and a half of continuous activity, so
+/// the cap only ever stops a number the API could not hold anyway.
+const int _durationDigits = 4;
 
 /// The length cap is there to keep the field inside what the API accepts, not
 /// to put a running count under every box.
