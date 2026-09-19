@@ -73,6 +73,7 @@ class _TankPalette {
   final Color detail;
   final Color notch;
   final Color goal;
+  final Color protocol;
 
   const _TankPalette({
     required this.force,
@@ -82,6 +83,7 @@ class _TankPalette {
     required this.detail,
     required this.notch,
     required this.goal,
+    required this.protocol,
   });
 
   static const overTank = _TankPalette(
@@ -92,6 +94,7 @@ class _TankPalette {
     detail: CrimpyTheme.gray400,
     notch: CrimpyTheme.borderDefault,
     goal: CrimpyTheme.goalColor,
+    protocol: CrimpyTheme.protocolColor,
   );
 
   static const overFill = _TankPalette(
@@ -102,6 +105,7 @@ class _TankPalette {
     detail: CrimpyTheme.textOnFillSecondary,
     notch: CrimpyTheme.primaryWhite,
     goal: CrimpyTheme.primaryWhite,
+    protocol: CrimpyTheme.primaryWhite,
   );
 }
 
@@ -144,6 +148,12 @@ class FullTankLayout extends ConsumerWidget {
   final String? comment;
   final String? nextComment;
 
+  /// The rules the running and upcoming steps are resolved by, e.g. "to
+  /// failure or 40s; past 40s add 5kg". Read by the athlete and by nothing
+  /// else: the run neither evaluates one nor adjusts the next step from it.
+  final String? protocol;
+  final String? nextProtocol;
+
   /// Demo videos of the running and upcoming steps. Only offered where the
   /// athlete is not mid set: the upcoming one during a rest, the running one on
   /// a self paced step they end themselves. A timed step shows neither, so
@@ -174,6 +184,8 @@ class FullTankLayout extends ConsumerWidget {
     required this.nextGoal,
     required this.comment,
     required this.nextComment,
+    required this.protocol,
+    required this.nextProtocol,
     required this.videoLink,
     required this.nextVideoLink,
     required this.onPlayPause,
@@ -517,6 +529,13 @@ class _TankContent extends StatelessWidget {
             style: _style(11, color: palette.secondary, height: 1.4),
           ),
         ],
+        // A hang is the step a stop rule is written for ("to failure or 40s"),
+        // so the rule is on screen while it runs. Two lines here, where the
+        // force has the middle of the tank.
+        if (layout.protocol != null && state == _TankState.sensorWork) ...[
+          SizedBox(height: _s(6)),
+          _protocolBlock(layout.protocol!, maxLines: 2),
+        ],
       ],
     );
   }
@@ -542,6 +561,38 @@ class _TankContent extends StatelessWidget {
       weight: FontWeight.w700,
       letterSpacing: 1,
     ),
+  );
+
+  /// The rule the step is resolved by, under the step it belongs to. Labelled
+  /// and line capped, since the tank draws its content twice and cannot scroll:
+  /// a coach with more to say than fits writes it where the athlete reads it
+  /// before starting, on the training breakdown, and reports against it after.
+  ///
+  /// [maxLines] is the room the block it sits in has. The colour comes from the
+  /// palette for the reason the goal's does: the copy drawn over the fill would
+  /// otherwise paint gold on gold and disappear.
+  Widget _protocolBlock(String protocol, {required int maxLines}) => Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      Text(
+        'PROTOCOL',
+        style: _style(
+          9,
+          color: palette.protocol,
+          weight: FontWeight.w700,
+          letterSpacing: 1,
+        ),
+      ),
+      SizedBox(height: _s(3)),
+      Text(
+        protocol,
+        textAlign: TextAlign.center,
+        maxLines: maxLines,
+        overflow: TextOverflow.ellipsis,
+        style: _style(13, color: palette.secondary, height: 1.4),
+      ),
+    ],
   );
 
   Widget _timeBlock(String label, int milliseconds, {bool alignEnd = false}) =>
@@ -792,6 +843,13 @@ class _TankContent extends StatelessWidget {
           style: _style(13, color: palette.secondary, height: 1.4),
         ),
       ],
+      // The rest is where the rule is acted on: it says what to do about the
+      // set just finished before the next one starts, so it is read here and
+      // not only once the step is already running.
+      if (layout.nextProtocol != null) ...[
+        SizedBox(height: _s(14)),
+        _protocolBlock(layout.nextProtocol!, maxLines: 4),
+      ],
       if (isPlayableVideoLink(layout.nextVideoLink)) ...[
         SizedBox(height: _s(10)),
         ExerciseVideoButton(layout.nextVideoLink, compact: true),
@@ -828,6 +886,10 @@ class _TankContent extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: _style(13, color: palette.secondary, height: 1.4),
         ),
+      ],
+      if (layout.protocol != null) ...[
+        SizedBox(height: _s(8)),
+        _protocolBlock(layout.protocol!, maxLines: 4),
       ],
       SizedBox(height: _s(8)),
       Text(
@@ -935,6 +997,10 @@ class _TankContent extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: _style(13, color: palette.secondary, height: 1.4),
         ),
+      ],
+      if (layout.protocol != null) ...[
+        SizedBox(height: _s(8)),
+        _protocolBlock(layout.protocol!, maxLines: 4),
       ],
       if (details.isNotEmpty) ...[
         SizedBox(height: _s(14)),

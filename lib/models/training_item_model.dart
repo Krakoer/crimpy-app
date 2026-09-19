@@ -369,6 +369,17 @@ class TrainingItem {
   // same reason.
   final String? goal;
 
+  // The rule the athlete resolves while performing the block, in the coach's
+  // own prose ("to failure or 40s; past 40s add 5kg, short of it put your feet
+  // on the ground"). A prescription is often a condition rather than a number,
+  // and the numeric fields above can only carry the number.
+  //
+  // Nothing evaluates it: the athlete reads it and reports what came out of it
+  // on the session. A different field again from comment, which says how to
+  // execute the movement, and from goal, which says what the block is for. Not
+  // a program override key, for the same reason neither of those is.
+  final String? protocol;
+
   // Exercise reference
   final String? exerciseId;
 
@@ -415,6 +426,7 @@ class TrainingItem {
     this.freeText,
     this.comment,
     this.goal,
+    this.protocol,
     this.exerciseId,
     this.exerciseName,
     this.exerciseDescription,
@@ -577,6 +589,7 @@ class TrainingItem {
       freeText: json['free_text'] as String?,
       comment: json['comment'] as String?,
       goal: json['goal'] as String?,
+      protocol: json['protocol'] as String?,
       exerciseId: json['exercise_id'] as String?,
       exerciseName: json['exercise_name'] as String?,
       exerciseDescription: json['exercise_description'] as String?,
@@ -623,6 +636,7 @@ class TrainingItem {
     if (freeText != null) map['free_text'] = freeText;
     if (comment != null) map['comment'] = comment;
     if (goal != null) map['goal'] = goal;
+    if (protocol != null) map['protocol'] = protocol;
     if (exerciseId != null) map['exercise_id'] = exerciseId;
     if (groupTitle != null) map['group_title'] = groupTitle;
     if (includeItems && items.isNotEmpty) {
@@ -711,6 +725,7 @@ class TrainingItem {
       freeText: freeText,
       comment: comment,
       goal: goal,
+      protocol: protocol,
       exerciseId: exerciseId,
       exerciseName: exerciseName,
       exerciseDescription: exerciseDescription,
@@ -749,6 +764,7 @@ class TrainingItem {
     freeText: freeText,
     comment: comment,
     goal: goal,
+    protocol: protocol,
     exerciseId: exerciseId,
     exerciseName: exerciseName,
     exerciseDescription: exerciseDescription,

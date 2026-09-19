@@ -361,6 +361,54 @@ void _reviewPassTests() {
     expect(find.text('Asked of 8 reps'), findsOneWidget);
   });
 
+  // A conditional prescription asks the athlete to decide something, and the
+  // number they report is the answer to it, so the rule is restated on the
+  // card they write it on rather than left behind in the training.
+  testWidgets('restates the protocol on the card that reports it', (
+    tester,
+  ) async {
+    const rule =
+        'Max reps on set 1, stop at 36. Then minus 25%, rounded down, on each '
+        'following set.';
+    await _show(
+      tester,
+      const PostWorkoutScreen(
+        template: Training(
+          id: 't2',
+          title: 'Strength',
+          items: [
+            TrainingItem(
+              id: 'i1',
+              type: TrainingItemType.exercise,
+              position: 0,
+              exerciseName: 'Pull up',
+              reps: 8,
+              protocol: rule,
+            ),
+          ],
+        ),
+        results: [],
+        trainingId: 't-2',
+      ),
+    );
+
+    expect(find.text('PROTOCOL'), findsOneWidget);
+    expect(find.text(rule), findsOneWidget);
+  });
+
+  testWidgets('shows no protocol block on a step without one', (tester) async {
+    await _show(
+      tester,
+      const PostWorkoutScreen(
+        template: _reviewTraining,
+        results: [],
+        trainingId: 't-1',
+      ),
+    );
+
+    expect(find.text('PROTOCOL'), findsNothing);
+  });
+
   testWidgets('records the note and the numbers the athlete filled in', (
     tester,
   ) async {

@@ -150,6 +150,58 @@ class TrainingItemGoal extends StatelessWidget {
   }
 }
 
+/// The rule the athlete resolves while performing the block, e.g. "to failure
+/// or 40s; past 40s add 5kg". Labelled and set in gold, a third colour beside
+/// the goal's green and the comment's orange, so the three notes on a tile are
+/// told apart without reading them: this one is what decides the numbers above
+/// it. The rule and the tint are accentYellow, the label is protocolColor,
+/// which is accentYellow carried down far enough to be legible at that size.
+class TrainingItemProtocol extends StatelessWidget {
+  final String protocol;
+
+  const TrainingItemProtocol(this.protocol, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: CrimpyTheme.accentYellow.withValues(alpha: 0.10),
+        border: Border(
+          left: BorderSide(color: CrimpyTheme.accentYellow, width: 3),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'PROTOCOL',
+            style: TextStyle(
+              fontFamily: 'JetBrainsMono',
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+              color: CrimpyTheme.protocolColor,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              protocol,
+              style: const TextStyle(
+                fontFamily: 'JetBrainsMono',
+                fontSize: 11.5,
+                height: 1.4,
+                color: CrimpyTheme.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// One row of a training breakdown: position, title, its numbers, what the
 /// block is for and the coach comment when there is one. [extra] holds screen
 /// specific decorations such as the program override chips.
@@ -186,6 +238,7 @@ class TrainingItemTile extends StatelessWidget {
     );
     final comment = item.comment?.trim() ?? '';
     final goal = item.goal?.trim() ?? '';
+    final protocol = item.protocol?.trim() ?? '';
     // What the coach wrote about the movement itself: what it is, then how to
     // execute it. Both come off the exercise rather than off this step, which is
     // what the item's own comment above is.
@@ -242,6 +295,10 @@ class TrainingItemTile extends StatelessWidget {
               if (goal.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 TrainingItemGoal(goal),
+              ],
+              if (protocol.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                TrainingItemProtocol(protocol),
               ],
               for (final note in exerciseNotes) ...[
                 const SizedBox(height: 4),

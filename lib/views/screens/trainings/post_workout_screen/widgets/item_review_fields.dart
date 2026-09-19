@@ -4,6 +4,7 @@ import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen/widgets/assessment_answer_fields.dart';
+import 'package:crimpy/views/widgets/training_item_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -217,6 +218,11 @@ class ItemReviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prescribed = draft.prescribed;
+    // The rule the pass was resolved by, restated where its result is written
+    // down. A conditional prescription asks the athlete to decide something,
+    // and the number they report is the answer to it: reading the two apart
+    // costs them a trip back to the training to remember what was asked.
+    final protocol = draft.item.protocol?.trim() ?? '';
     final numbers = [
       if (draft.fields.reps) _number(controller: draft.reps, label: 'Reps'),
       if (draft.fields.cycles)
@@ -264,6 +270,10 @@ class ItemReviewCard extends StatelessWidget {
                   color: CrimpyTheme.textSecondary,
                 ),
               ),
+            ],
+            if (protocol.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              TrainingItemProtocol(protocol),
             ],
             const SizedBox(height: 10),
             if (numbers.isNotEmpty) ...[
