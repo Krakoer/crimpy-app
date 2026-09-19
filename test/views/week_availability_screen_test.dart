@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/viewmodels/availability_view_model.dart';
 import 'package:crimpy/views/screens/availability/week_availability_screen.dart';
@@ -6,12 +8,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _StubMyAvailability extends MyAvailability {
-  _StubMyAvailability(this._weeks);
+  _StubMyAvailability(this._weeks, {this.saveGate, this.onSave});
 
   final List<WeekAvailability> _weeks;
 
+  /// Held open by a test that wants to look at the screen while the send is in
+  /// flight. Left null, a save completes immediately.
+  final Completer<void>? saveGate;
+
+  /// Handed what the screen sent, so a test can look at it without the stub
+  /// holding state of its own.
+  final void Function(WeekAvailability week)? onSave;
+
   @override
   Future<List<WeekAvailability>> build() async => _weeks;
+
+  @override
+  Future<void> saveWeek(WeekAvailability week) async {
+    onSave?.call(week);
+    if (saveGate != null) await saveGate!.future;
+  }
 }
 
 final _monday = DateTime(2026, 6, 8);
@@ -43,16 +59,19 @@ Future<void> _pumpScreen(
 Future<void> _pumpPushedScreen(
   WidgetTester tester, {
   required List<WeekAvailability> declared,
+  Completer<void>? saveGate,
+  void Function(WeekAvailability week)? onSave,
 }) async {
+  final stub = _StubMyAvailability(
+    declared,
+    saveGate: saveGate,
+    onSave: onSave,
+  );
   await tester.binding.setSurfaceSize(const Size(800, 2000));
   addTearDown(() => tester.binding.setSurfaceSize(null));
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [
-        myAvailabilityProvider.overrideWith(
-          () => _StubMyAvailability(declared),
-        ),
-      ],
+      overrides: [myAvailabilityProvider.overrideWith(() => stub)],
       child: MaterialApp(
         home: Builder(
           builder: (context) => Scaffold(
@@ -227,6 +246,126 @@ void main() {
 
     expect(find.text('Undo'), findsNothing);
     expect(find.text('Bouldering'), findsNothing);
+  });
+
+  testWidgets('sending retires the undo before the request goes out', (
+    tester,
+  ) async {
+    // Every other control goes dead while the send is in flight. An undo left
+    // tappable would restore into a week whose body is already on the wire, and
+    // the restore would be thrown away without a word.
+    final gate = Completer<void>();
+    WeekAvailability? sent;
+    await _pumpPushedScreen(
+      tester,
+      declared: [
+        _weekWith({
+          1: const [DayActivity(label: 'Bouldering')],
+        }),
+      ],
+      saveGate: gate,
+      onSave: (week) => sent = week,
+    );
+
+    await tester.tap(find.byTooltip('Remove Bouldering'));
+    await tester.pumpAndSettle();
+    expect(find.text('Undo'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Send to my coach'));
+    // Two frames plus the snack bar's exit animation: clearSnackBars runs the
+    // normal dismiss rather than removing the widget outright.
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('Undo'), findsNothing);
+
+    gate.complete();
+    await tester.pumpAndSettle();
+    expect(sent!.days[1].activities, isEmpty);
+  });
+
+  testWidgets('a back taken during the send does not pop twice', (
+    tester,
+  ) async {
+    // Navigator.pop resolves to the topmost present route, and a route already
+    // popping is not one. A second pop would take the route underneath, which
+    // from the home card is the root.
+    final gate = Completer<void>();
+    await _pumpPushedScreen(
+      tester,
+      declared: [
+        _weekWith({
+          1: const [DayActivity(label: 'Bouldering')],
+        }),
+      ],
+      saveGate: gate,
+    );
+
+    await tester.tap(find.byTooltip('Remove Bouldering'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Send to my coach'));
+    await tester.pump();
+
+    // The response has to land while the route is still transitioning out:
+    // that is the window where the State is mounted but the route is no longer
+    // the present one, so a second pop reaches past it.
+    unawaited(tester.state<NavigatorState>(find.byType(Navigator)).maybePop());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    gate.complete();
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    // Back on the route the week was opened from, rather than out of it.
+    expect(find.text('open the week'), findsOneWidget);
+  });
+
+  testWidgets('removing an activity and undoing leaves nothing to send', (
+    tester,
+  ) async {
+    // The week is byte identical to the one on the server again, so there is
+    // nothing to say. Re-sending would re-date the declaration and put the week
+    // at the top of the coach's feed as an answer that was never changed.
+    await _pumpPushedScreen(
+      tester,
+      declared: [
+        _weekWith({
+          1: const [DayActivity(label: 'Bouldering', durationMinutes: 90)],
+        }),
+      ],
+    );
+
+    await tester.tap(find.byTooltip('Remove Bouldering'));
+    await tester.pumpAndSettle();
+    expect(_sendButton(tester).onPressed, isNotNull);
+
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bouldering'), findsOneWidget);
+    expect(_sendButton(tester).onPressed, isNull);
+  });
+
+  testWidgets('opening the editor retires a pending undo', (tester) async {
+    // The undo carries the day as it stood before the removal. Left standing,
+    // it could put that snapshot back over an activity added after it.
+    await _pumpPushedScreen(
+      tester,
+      declared: [
+        _weekWith({
+          1: const [DayActivity(label: 'Bouldering')],
+        }),
+      ],
+    );
+
+    await tester.tap(find.byTooltip('Remove Bouldering'));
+    await tester.pumpAndSettle();
+    expect(find.text('Undo'), findsOneWidget);
+
+    await tester.tap(find.text('Add something').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Undo'), findsNothing);
   });
 
   testWidgets('every day of the week gets a card', (tester) async {

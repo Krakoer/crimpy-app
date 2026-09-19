@@ -30,13 +30,23 @@ class DayScheduleCard extends StatelessWidget {
 
   bool get _isFull => day.activities.length >= maxActivitiesPerDay;
 
+  /// Retires the pending undo before the sheet opens.
+  ///
+  /// The undo carries the day as it stood when the activity was removed. Adding
+  /// or editing while it is still up would leave it able to put that snapshot
+  /// back over the newer one, taking whatever was just written with it.
+  void _retirePendingUndo(BuildContext context) =>
+      ScaffoldMessenger.of(context).clearSnackBars();
+
   Future<void> _add(BuildContext context) async {
+    _retirePendingUndo(context);
     final activity = await ActivityEditorSheet.show(context, dayLabel: label);
     if (activity == null) return;
     onChanged(day.withActivities([...day.activities, activity]));
   }
 
   Future<void> _edit(BuildContext context, int index) async {
+    _retirePendingUndo(context);
     final activity = await ActivityEditorSheet.show(
       context,
       activity: day.activities[index],

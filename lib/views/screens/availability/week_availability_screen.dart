@@ -36,10 +36,19 @@ class _WeekAvailabilityScreenState
     extends ConsumerState<WeekAvailabilityScreen> {
   late DateTime _weekStart;
   WeekAvailability? _week;
+
+  /// The week as it was last read from, or last written to, the server.
+  ///
+  /// "Has this been edited" is this comparison rather than a flag set on every
+  /// change: a flag cannot tell an edit from an edit that was undone, and a
+  /// week re-sent unchanged re-dates the declaration, which reaches the coach's
+  /// feed as a fresh answer the athlete did not give.
+  WeekAvailability? _loadedWeek;
   Object? _loadError;
   bool _saving = false;
-  bool _dirty = false;
   bool _declared = true;
+
+  bool get _dirty => _week != null && _week != _loadedWeek;
 
   @override
   void initState() {
@@ -56,9 +65,9 @@ class _WeekAvailabilityScreenState
       if (!mounted) return;
       setState(() {
         _week = loaded.week;
+        _loadedWeek = loaded.week;
         _declared = loaded.declared;
         _loadError = null;
-        _dirty = false;
       });
     } catch (error) {
       // The provider keeps its error, so a silent spinner here would never
@@ -66,6 +75,7 @@ class _WeekAvailabilityScreenState
       if (!mounted) return;
       setState(() {
         _week = null;
+        _loadedWeek = null;
         _loadError = error;
       });
     }
@@ -89,6 +99,7 @@ class _WeekAvailabilityScreenState
     setState(() {
       _weekStart = weekStart;
       _week = null;
+      _loadedWeek = null;
       _loadError = null;
     });
     await _loadWeek();
@@ -120,28 +131,37 @@ class _WeekAvailabilityScreenState
     // outlives the route. Every path that leaves retires it first, so this is
     // the backstop rather than the guard.
     if (!mounted) return;
-    setState(() {
-      _week = _week?.withDay(day);
-      _dirty = true;
-    });
+    setState(() => _week = _week?.withDay(day));
   }
 
   Future<void> _save() async {
     final week = _week;
     if (week == null) return;
+    // Retired before the request goes out, not after it comes back. Sending is
+    // a commitment, and every other control on the screen goes dead while it is
+    // in flight. An undo left tappable would restore into a week whose body is
+    // already on the wire, and the restore would then be thrown away silently.
+    // It also means a failure message is shown rather than queued behind it.
+    _clearPendingUndo();
     setState(() => _saving = true);
     try {
       await ref.read(myAvailabilityProvider.notifier).saveWeek(week);
       if (!mounted) return;
-      setState(() => _dirty = false);
-      // Retired before the confirmation replaces it, and before the route
-      // pops: an undo left standing over the screen underneath would write
-      // into a week nobody is looking at any more.
-      _clearPendingUndo();
+      setState(() {
+        _loadedWeek = week;
+        _declared = true;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Your coach can see your week')),
       );
-      Navigator.of(context).pop();
+      // Only this screen's own route may be popped. A back taken while the
+      // request was in flight has already popped it, and Navigator.pop resolves
+      // to the topmost present route, so popping again here would take the one
+      // underneath: from the home card that is the root, and the app is left
+      // with an empty navigator.
+      if (ModalRoute.of(context)?.isCurrent ?? false) {
+        Navigator.of(context).pop();
+      }
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -167,12 +187,13 @@ class _WeekAvailabilityScreenState
     Navigator.of(context).pop(result);
   }
 
-  /// Takes down the "Removed X" snack bar and the undo it carries.
+  /// Takes down the "Removed X" snack bar and the undo it carries, along with
+  /// anything else queued behind it.
   ///
   /// The snack bar is presented by the app level ScaffoldMessenger above the
   /// navigator, so it keeps showing across a pop and across a week switch, and
   /// its action still fires. What it would write is the day of the week that is
-  /// no longer on screen.
+  /// no longer on screen, or of a week already sent.
   void _clearPendingUndo() => ScaffoldMessenger.of(context).clearSnackBars();
 
   @override
@@ -220,16 +241,22 @@ class _WeekAvailabilityScreenState
                     ],
                   ),
                 ),
-                _SendBar(
-                  // A week never declared sends as it stands, untouched: an
-                  // athlete with nothing on is answering, and the API reads a
-                  // missing week as silence and keeps nudging for it.
-                  onSend: _saving || (_declared && !_dirty) ? null : _save,
-                  saving: _saving,
-                  dirty: _dirty,
-                  declared: _declared,
-                ),
               ],
+            ),
+      // In bottomNavigationBar rather than at the foot of the body, because
+      // that is the slot ScaffoldMessenger positions a snack bar above. Inside
+      // the body the "Removed X" snack bar lands squarely on top of the send
+      // button and the screen's one action cannot be reached while it is up.
+      bottomNavigationBar: week == null || _loadError != null
+          ? null
+          : _SendBar(
+              // A week never declared sends as it stands, untouched: an
+              // athlete with nothing on is answering, and the API reads a
+              // missing week as silence and keeps nudging for it.
+              onSend: _saving || (_declared && !_dirty) ? null : _save,
+              saving: _saving,
+              dirty: _dirty,
+              declared: _declared,
             ),
     );
   }

@@ -88,6 +88,24 @@ class DayAvailability {
 
   DayAvailability withActivities(List<DayActivity> activities) =>
       DayAvailability(dayOfWeek: dayOfWeek, activities: activities);
+
+  @override
+  bool operator ==(Object other) =>
+      other is DayAvailability &&
+      other.dayOfWeek == dayOfWeek &&
+      _sameList(other.activities, activities);
+
+  @override
+  int get hashCode => Object.hash(dayOfWeek, Object.hashAll(activities));
+}
+
+bool _sameList<T>(List<T> a, List<T> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var index = 0; index < a.length; index++) {
+    if (a[index] != b[index]) return false;
+  }
+  return true;
 }
 
 /// One declared calendar week, keyed by its Monday. Not a program week: an
@@ -133,6 +151,20 @@ class WeekAvailability {
         existing.dayOfWeek == day.dayOfWeek ? day : existing,
     ],
   );
+
+  // Compared by value so a screen can ask whether the week still says what it
+  // was loaded saying, rather than remembering that something was touched. A
+  // flag cannot tell an edit from an edit that was undone, and re-sending an
+  // unchanged week re-dates the declaration, which reaches the coach's feed as
+  // an answer the athlete did not give.
+  @override
+  bool operator ==(Object other) =>
+      other is WeekAvailability &&
+      other.weekStart == weekStart &&
+      _sameList(other.days, days);
+
+  @override
+  int get hashCode => Object.hash(weekStart, Object.hashAll(days));
 
   int get plannedActivityCount =>
       days.fold(0, (total, day) => total + day.activities.length);
