@@ -9,6 +9,7 @@ import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen/widgets/assessment_answer_fields.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen/widgets/item_review_fields.dart';
+import 'package:crimpy/views/widgets/session_rpe_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:crimpy/theme.dart';
 
@@ -89,6 +90,11 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
           widget.bodyweightKg,
         )
       : const [];
+
+  /// How much the run cost the athlete. Unanswered until they say so, and left
+  /// that way if they skip it: the prompt is not a gate on saving, and the edit
+  /// screen takes the answer later.
+  SessionRpeAnswer _rpe = SessionRpeAnswer.none;
 
   /// The assessment this run answers, when the training played is one.
   AssessmentDefinition? get _assessment => widget.template.assessment;
@@ -245,6 +251,11 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                           ),
                           const SizedBox(height: 16),
                         ],
+                        SessionRpePicker(
+                          answer: _rpe,
+                          onChanged: (answer) => setState(() => _rpe = answer),
+                        ),
+                        const SizedBox(height: 16),
                         TextField(
                           controller: _noteController,
                           decoration: const InputDecoration(
@@ -302,6 +313,8 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
               // deleted. The template played is the copy taken, not the one the
               // library holds now, since only the first is what ran.
               prescriptionItems: widget.template.items,
+              rpe: _rpe.rpe,
+              rpeFailed: _rpe.failed,
             );
             try {
               if (assessment == null) {

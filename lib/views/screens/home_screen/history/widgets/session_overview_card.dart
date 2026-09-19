@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
+import 'package:crimpy/models/session_rpe.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:intl/intl.dart';
 
@@ -14,6 +15,12 @@ class SessionOverviewCard extends StatelessWidget {
     final duration = Duration(seconds: session.duration);
     final sessionColor = CrimpyTheme.activityColor(session.activity);
     final sessionIcon = _getSessionIcon(session.activity);
+    // What the athlete answered, read back with its anchor: the number alone
+    // would not say which of the two RPE scales it sits on.
+    final rpe = sessionRpeOptionOf(
+      rpe: session.rpe,
+      rpeFailed: session.rpeFailed,
+    );
 
     return Card(
       child: Padding(
@@ -101,6 +108,15 @@ class SessionOverviewCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (rpe != null) ...[
+              const SizedBox(height: 12),
+              _buildStatItem(
+                context,
+                'Session RPE ${rpe.label}',
+                rpe.anchor,
+                Icons.battery_charging_full,
+              ),
+            ],
           ],
         ),
       ),

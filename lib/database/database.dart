@@ -10,6 +10,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/session.dart';
+import 'package:crimpy/models/session_rpe.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:path_provider/path_provider.dart';
@@ -54,6 +55,21 @@ class Sessions extends Table {
   /// run that failed partway can be retried without uploading, and duplicating,
   /// everything that already went up.
   late final TextColumn serverId = text().nullable()();
+
+  /// How much recovery the session cost, on the session RPE scale. Null while
+  /// the athlete has reported nothing, which stays the normal case. Held to the
+  /// same range the API enforces, so a value written offline is one the server
+  /// will take when it syncs.
+  late final IntColumn rpe = integer().nullable().check(
+    rpe.isBetweenValues(minSessionRpe, maxSessionRpe),
+  )();
+
+  /// The scale's ECHEC, a session the athlete could not carry through. A flag
+  /// rather than a sentinel inside the column above, which would have to sit
+  /// outside the range that check exists to hold.
+  late final BoolColumn rpeFailed = boolean().withDefault(
+    const Constant(false),
+  )();
 
   late final DateTimeColumn updatedAt = dateTime().withDefault(
     currentDateAndTime,
@@ -517,6 +533,8 @@ class AppDatabase extends _$AppDatabase {
         programSessionId: Value(session.programSessionId),
         duration: Value(sessionDuration),
         prescriptionJson: _encodePrescription(session.prescriptionItems),
+        rpe: Value(session.rpe),
+        rpeFailed: Value(session.rpeFailed),
         updatedAt: Value(DateTime.now()),
       ),
     );
@@ -578,6 +596,10 @@ class AppDatabase extends _$AppDatabase {
   /// A played session owns its date and its duration, since the run measured
   /// them, so an edit leaves both columns as they are and touches the fields a
   /// user can actually type. The remote repository holds the same line.
+  ///
+  /// The RPE is written whatever the origin: it is what the athlete reported
+  /// about the session, not something the run measured, and the athlete who
+  /// forgot the prompt is exactly who this path is for.
   Future<void> updateSession(SessionModel session) async {
     if (session.id == null) {
       throw ArgumentError('Session ID is required for update');
@@ -593,6 +615,8 @@ class AppDatabase extends _$AppDatabase {
         duration: keepsRunTimings
             ? const Value.absent()
             : Value(session.duration),
+        rpe: Value(session.rpe),
+        rpeFailed: Value(session.rpeFailed),
         updatedAt: Value(DateTime.now()),
       ),
     );
@@ -1314,7 +1338,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1323,6 +1347,13 @@ class AppDatabase extends _$AppDatabase {
       await seedBuiltinAssessmentDefinitions(m.database);
     },
     onUpgrade: stepByStep(
+      from15To16: (m, schema) async {
+        // The athlete now reports how much a session cost them. Every session
+        // already stored reported nothing, which is exactly what a null column
+        // and an unset flag say, so there is nothing to backfill.
+        await m.addColumn(schema.sessions, schema.sessions.rpe);
+        await m.addColumn(schema.sessions, schema.sessions.rpeFailed);
+      },
       from1To2: (m, schema) async {
         // Rebuild trainings from the legacy repeaters / rep_templates
         // tables into the unified training_items schema. Raw SQL is used
@@ -1834,6 +1865,8 @@ extension SessionRowToModel on Session {
     durationInSeconds: duration,
     prescriptionItems: _decodePrescription(prescriptionJson),
     itemResults: itemResults,
+    rpe: rpe,
+    rpeFailed: rpeFailed,
   );
 }
 
