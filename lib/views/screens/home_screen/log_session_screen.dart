@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/models/session_rpe.dart';
 import 'package:crimpy/views/widgets/session_rpe_picker.dart';
 
 class LogSessionScreen extends ConsumerStatefulWidget {

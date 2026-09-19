@@ -9,6 +9,7 @@ import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen/widgets/assessment_answer_fields.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen/widgets/item_review_fields.dart';
+import 'package:crimpy/models/session_rpe.dart';
 import 'package:crimpy/views/widgets/session_rpe_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:crimpy/theme.dart';

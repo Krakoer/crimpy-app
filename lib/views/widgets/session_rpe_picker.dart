@@ -2,29 +2,6 @@ import 'package:crimpy/models/session_rpe.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
 
-/// What the athlete answers for a session, as one value. The two fields are one
-/// answer, so they travel together rather than as an int and a bool a caller
-/// could set into disagreement.
-class SessionRpeAnswer {
-  final int? rpe;
-  final bool failed;
-
-  const SessionRpeAnswer({this.rpe, this.failed = false});
-
-  static const SessionRpeAnswer none = SessionRpeAnswer();
-
-  /// What a stored session already answered, which is what the edit screens
-  /// seed the picker with.
-  factory SessionRpeAnswer.of({int? rpe, bool rpeFailed = false}) => rpeFailed
-      ? const SessionRpeAnswer(failed: true)
-      : SessionRpeAnswer(rpe: rpe);
-
-  bool get isAnswered => failed || rpe != null;
-
-  bool matches(SessionRpeOption option) =>
-      option.isFailure ? failed : (!failed && rpe == option.value);
-}
-
 /// Asks how much a session cost, on the session RPE scale, with every written
 /// anchor on screen.
 ///

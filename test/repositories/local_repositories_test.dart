@@ -172,6 +172,83 @@ void main() {
       },
     );
 
+    // The guest-mode store, which is also what local_data_migration uploads
+    // when a guest signs up, so an answer lost here is lost silently.
+    test('a session keeps the RPE it was saved with', () async {
+      await trainings.saveSession(
+        SessionModel(
+          name: 'Board',
+          isAssessment: false,
+          origin: SessionOrigin.logged,
+          durationInSeconds: 3600,
+          date: DateTime(2026, 3, 1),
+          rpe: 8,
+        ),
+        [],
+      );
+
+      final saved = (await trainings.getAllSessionsWithReps()).single;
+      expect(saved.rpe, 8);
+      expect(saved.rpeFailed, isFalse);
+    });
+
+    test('a failed session is stored as ECHEC and not as a number', () async {
+      await trainings.saveSession(
+        SessionModel(
+          name: 'Board',
+          isAssessment: false,
+          origin: SessionOrigin.logged,
+          durationInSeconds: 3600,
+          date: DateTime(2026, 3, 1),
+          rpeFailed: true,
+        ),
+        [],
+      );
+
+      final saved = (await trainings.getAllSessionsWithReps()).single;
+      expect(saved.rpe, isNull);
+      expect(saved.rpeFailed, isTrue);
+    });
+
+    test('an RPE given after the fact reaches the local store', () async {
+      await trainings.saveSession(
+        SessionModel(
+          name: 'Board',
+          isAssessment: false,
+          origin: SessionOrigin.played,
+          durationInSeconds: 187,
+          date: DateTime(2026, 3, 1),
+        ),
+        [],
+      );
+
+      final played = (await trainings.getAllSessionsWithReps()).single;
+      await trainings.updateSession(played.withSessionRpe(rpe: 9));
+
+      expect((await trainings.getAllSessionsWithReps()).single.rpe, 9);
+    });
+
+    test('an answer taken back leaves the session unrated', () async {
+      await trainings.saveSession(
+        SessionModel(
+          name: 'Board',
+          isAssessment: false,
+          origin: SessionOrigin.logged,
+          durationInSeconds: 3600,
+          date: DateTime(2026, 3, 1),
+          rpe: 7,
+        ),
+        [],
+      );
+
+      final rated = (await trainings.getAllSessionsWithReps()).single;
+      await trainings.updateSession(rated.withSessionRpe());
+
+      final cleared = (await trainings.getAllSessionsWithReps()).single;
+      expect(cleared.rpe, isNull);
+      expect(cleared.rpeFailed, isFalse);
+    });
+
     test('a deleted session is gone', () async {
       final id = await trainings.saveSession(
         SessionModel(

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/models/session_rpe.dart';
 import 'package:crimpy/views/widgets/session_rpe_picker.dart';
 
 class EditSessionScreen extends ConsumerStatefulWidget {
@@ -190,7 +191,9 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
               SessionRpePicker(
                 answer: _rpe,
                 onChanged: (answer) => setState(() => _rpe = answer),
-                subtitle: 'How much recovery did this session cost you?',
+                subtitle:
+                    'How much recovery did this session cost you? '
+                    'You can answer now even if you skipped it at the time.',
               ),
               const SizedBox(height: 16),
 

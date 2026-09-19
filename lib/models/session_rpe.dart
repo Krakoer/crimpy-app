@@ -56,6 +56,34 @@ const List<SessionRpeOption> sessionRpeOptions = [
   ),
 ];
 
+/// What the athlete answered for a session, as one value. The two fields are
+/// one answer, so they travel together rather than as an int and a bool a
+/// caller could set into disagreement, and the assert is what makes the
+/// disagreement unrepresentable rather than merely unproduced.
+class SessionRpeAnswer {
+  final int? rpe;
+  final bool failed;
+
+  const SessionRpeAnswer({this.rpe, this.failed = false})
+    : assert(
+        !failed || rpe == null,
+        'ECHEC is a value of the scale, so it cannot sit beside a number',
+      );
+
+  static const SessionRpeAnswer none = SessionRpeAnswer();
+
+  /// What a stored session already answered, which is what the edit screens
+  /// seed the picker with.
+  factory SessionRpeAnswer.of({int? rpe, bool rpeFailed = false}) => rpeFailed
+      ? const SessionRpeAnswer(failed: true)
+      : SessionRpeAnswer(rpe: rpe);
+
+  bool get isAnswered => failed || rpe != null;
+
+  bool matches(SessionRpeOption option) =>
+      option.isFailure ? failed : (!failed && rpe == option.value);
+}
+
 /// The option a session's stored answer reads as, or null when the athlete has
 /// reported nothing. A value the app does not know, from a server that widened
 /// the scale, reads as nothing rather than as a wrong anchor.

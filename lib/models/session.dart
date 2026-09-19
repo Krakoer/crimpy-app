@@ -140,8 +140,9 @@ class SessionModel {
   final DateTime? coachReplyAt;
   final bool coachReplyRead;
 
-  /// How much recovery the session cost, on the session RPE scale in
-  /// [sessionRpeOptions]. Null while the athlete has reported nothing, which
+  /// How much recovery the session cost, on the session RPE scale that
+  /// models/session_rpe.dart spells out. Null while the athlete has reported
+  /// nothing, which
   /// stays the normal case: the prompt is skippable and the answer can be given
   /// long afterwards from the edit screen.
   final int? rpe;
@@ -172,7 +173,11 @@ class SessionModel {
     this.rpe,
     this.rpeFailed = false,
     date,
-  }) : date = date ?? DateTime.now();
+  }) : assert(
+         !rpeFailed || rpe == null,
+         'ECHEC is a value of the scale, so it cannot sit beside a number',
+       ),
+       date = date ?? DateTime.now();
 
   /// Whether the coach has answered and the athlete has not opened it yet.
   bool get hasUnreadCoachReply => coachReply != null && !coachReplyRead;
