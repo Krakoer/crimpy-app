@@ -1,3 +1,4 @@
+import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/services/api_client.dart';
@@ -40,5 +41,122 @@ class ProgramRepository {
     return Training.fromJson(
       await _apiClient.getMyProgramTraining(programId, trainingId),
     );
+  }
+
+  /// Every assessment training a program has ever prescribed to the athlete.
+  ///
+  /// This is the half of the recordable set the athlete cannot fetch as a
+  /// catalog: an assessment their coach owns is only readable through the
+  /// program that prescribed its training, so the prescriptions are what says
+  /// which ones exist. A training prescribed by two programs is fetched once,
+  /// and a week or a training that fails to load leaves the others alone rather
+  /// than emptying the list.
+  ///
+  /// Walked in phases, each bounded by [_walkConcurrency], so a season of
+  /// programs does not put dozens of requests on the wire at once.
+  Future<List<Training>> getPrescribedAssessmentTrainings() async {
+    final programs = await getPrograms();
+
+    final weekNumbers = await _inParallel(
+      programs.map(
+        (program) =>
+            () => _weekNumbersOf(program.id),
+      ),
+    );
+    final scheduledWeeks = [
+      for (final (index, program) in programs.indexed)
+        for (final weekNumber in weekNumbers[index]) (program.id, weekNumber),
+    ];
+
+    final weeks = await _inParallel(
+      scheduledWeeks.map(
+        (scheduled) =>
+            () => _weekOrNull(scheduled.$1, scheduled.$2),
+      ),
+    );
+    final programOfTraining = <String, String>{};
+    for (final (index, week) in weeks.indexed) {
+      if (week == null) continue;
+      for (final session in week.sessions) {
+        programOfTraining.putIfAbsent(
+          session.trainingId,
+          () => scheduledWeeks[index].$1,
+        );
+      }
+    }
+
+    final trainings = await _inParallel(
+      programOfTraining.entries.map(
+        (entry) =>
+            () => _tryGetProgramTraining(entry.value, entry.key),
+      ),
+    );
+    return trainings
+        .whereType<Training>()
+        .where((training) => training.assessment != null)
+        .toList();
+  }
+
+  /// How many requests of the walk are in flight at once. A season of programs
+  /// is dozens of weeks and dozens of trainings, and firing them all together
+  /// is a burst the athlete's connection has to absorb in one go.
+  static const int _walkConcurrency = 6;
+
+  /// Runs [tasks] with at most [_walkConcurrency] of them outstanding, keeping
+  /// the results in the order the tasks were given.
+  Future<List<T>> _inParallel<T>(Iterable<Future<T> Function()> tasks) async {
+    final pending = tasks.toList();
+    final results = List<T?>.filled(pending.length, null);
+    var next = 0;
+
+    Future<void> worker() async {
+      while (true) {
+        final index = next++;
+        if (index >= pending.length) return;
+        results[index] = await pending[index]();
+      }
+    }
+
+    final workers = _walkConcurrency < pending.length
+        ? _walkConcurrency
+        : pending.length;
+    await Future.wait([for (var i = 0; i < workers; i++) worker()]);
+    return results.cast<T>();
+  }
+
+  /// The weeks a program lists. A program whose weeks cannot be read
+  /// contributes nothing rather than failing the walk.
+  Future<List<int>> _weekNumbersOf(String programId) async {
+    try {
+      return (await getWeeks(
+        programId,
+      )).map((summary) => summary.weekNumber).toList();
+    } catch (e) {
+      AppLoggerHelper.warning("Could not load the weeks of $programId: $e");
+      return const [];
+    }
+  }
+
+  Future<Week?> _weekOrNull(String programId, int weekNumber) async {
+    try {
+      return await getWeek(programId, weekNumber);
+    } catch (e) {
+      AppLoggerHelper.warning(
+        "Could not load week $weekNumber of $programId: $e",
+      );
+      return null;
+    }
+  }
+
+  Future<Training?> _tryGetProgramTraining(
+    String programId,
+    String trainingId,
+  ) async {
+    try {
+      return await getProgramTraining(programId, trainingId);
+    } catch (e) {
+      AppLoggerHelper.warning("Could not load training $trainingId: $e");
+      return null;
+    }
   }
 }

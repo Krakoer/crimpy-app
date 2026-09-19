@@ -117,7 +117,7 @@ class SessionCard extends StatelessWidget {
 
   IconData _getSessionIcon(SessionActivity activity) {
     return switch (activity) {
-      SessionActivity.hangboard => Icons.fitness_center,
+      SessionActivity.hangboard => Icons.back_hand,
       SessionActivity.climbing => Icons.terrain,
       SessionActivity.stretching => Icons.self_improvement,
       SessionActivity.workout => Icons.fitness_center,

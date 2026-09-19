@@ -15,8 +15,12 @@ import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:flutter/material.dart';
 import 'package:crimpy/views/widgets/pull_to_refresh.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:crimpy/models/assessment_history.dart';
 import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/training.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
+import 'package:crimpy/viewmodels/training_view_model.dart';
+import 'package:crimpy/views/widgets/start_training_run.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/screens/assessments/mvc_run_screen.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -114,43 +118,53 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
 
     final isConnected =
         ref.watch(connectionStateProvider) == BleConnectionState.connected;
-    final mvcAssessments = ref.watch(
-      assessmentsProvider(BuiltinAssessmentIds.maxForce),
-    );
-    final cfAssessments = ref.watch(
-      assessmentsProvider(BuiltinAssessmentIds.criticalForce),
-    );
-    final e60Assessments = ref.watch(
-      assessmentsProvider(BuiltinAssessmentIds.endurance60),
+
+    // Everything the athlete may record against beyond the three protocols the
+    // app implements: their own assessments, and a coach's whose training a
+    // program prescribed to them. Read off what the state holds, so a failed
+    // refresh keeps the cards rather than emptying the tab.
+    final recordableTrainings =
+        ref.watch(recordableAssessmentTrainingsProvider).value ??
+        const <Training>[];
+
+    // One history for every card, grouped the way the profile groups it. The
+    // definitions of the cards on screen are passed as always shown, so an
+    // assessment that has never been measured still resolves its unit from the
+    // definition rather than from the kilograms fallback a result carries.
+    final history = groupAssessmentHistory(
+      ref.watch(assessmentsProvider(null)).value ?? const [],
+      alwaysShown: [
+        for (final template in assessmentTemplates)
+          BuiltinAssessmentIds.definitionOf(template.type),
+        for (final training in recordableTrainings) training.assessment!,
+      ],
     );
 
-    String? lastResultFor(AssessmentType type) {
-      // Read off what the state holds: a pull refetches all three, and a
-      // failure keeps the last result rather than blanking the line that says
-      // when the athlete last measured it.
-      final data = switch (type) {
-        AssessmentType.mvc => mvcAssessments.value,
-        AssessmentType.criticalForce => cfAssessments.value,
-        AssessmentType.endurance60 => e60Assessments.value,
-      };
-      if (data == null || data.isEmpty) return null;
-      final last = data.reduce((a, b) => a.date.isAfter(b.date) ? a : b);
+    String? lastResultFor(String assessmentId) {
+      final assessed = history[assessmentId];
+      final last = assessed?.records.lastOrNull;
+      if (assessed == null || last == null) return null;
       final diff = DateTime.now().difference(last.date);
       final timeAgo = diff.inDays == 0
           ? 'today'
           : diff.inDays == 1
           ? '1d ago'
           : '${diff.inDays}d ago';
-      // The unit comes from the assessment the card is for, not from the row:
-      // an endurance result reads in seconds, and a result whose definition has
-      // not synced carries a kilograms fallback that would say otherwise.
-      final unit = BuiltinAssessmentIds.definitionOf(type).unit;
-      final parts = <String>[
-        if (last.rightValue != null)
-          'R: ${formatAssessmentValue(last.rightValue!, unit)}',
-        if (last.leftValue != null)
-          'L: ${formatAssessmentValue(last.leftValue!, unit)}',
-      ];
+      final unit = assessed.definition.unit;
+      // An assessment that is not measured per hand stores its single number on
+      // the right, so it reads back without a hand in front of it: "R: 12 reps"
+      // would claim a right hand for a test that has no sides.
+      final parts = assessed.definition.perHand
+          ? <String>[
+              if (last.rightValue != null)
+                'R: ${formatAssessmentValue(last.rightValue!, unit)}',
+              if (last.leftValue != null)
+                'L: ${formatAssessmentValue(last.leftValue!, unit)}',
+            ]
+          : <String>[
+              if (last.rightValue != null)
+                formatAssessmentValue(last.rightValue!, unit),
+            ];
       return parts.isEmpty ? timeAgo : '${parts.join('  ')}  $timeAgo';
     }
 
@@ -206,18 +220,17 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
           // The results shown against each assessment are the athlete's own
           // history, which their coach can add to from the portal.
           child: PullToRefresh(
-            // Awaited for the assessments the screen actually renders, so a
-            // builtin added later is refreshed by the same pull rather than
-            // invalidated and left to resolve after the spinner has gone.
+            // Awaited for everything the screen renders: the history behind
+            // every card, and the list of what the athlete may record against,
+            // so an assessment their coach scheduled since the last pull shows
+            // up rather than resolving after the spinner has gone.
             onRefresh: () async {
               ref.invalidate(assessmentsProvider);
+              ref.invalidate(trainingsProvider);
+              ref.invalidate(prescribedAssessmentTrainingsProvider);
               await Future.wait([
-                for (final template in assessmentTemplates)
-                  ref.read(
-                    assessmentsProvider(
-                      BuiltinAssessmentIds.idOf(template.type),
-                    ).future,
-                  ),
+                ref.read(assessmentsProvider(null).future),
+                ref.read(recordableAssessmentTrainingsProvider.future),
               ]);
             },
             child: ListView(
@@ -229,7 +242,9 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
                     title: template.training.name,
                     icon: template.icon,
                     description: template.description,
-                    lastResult: lastResultFor(template.type),
+                    lastResult: lastResultFor(
+                      BuiltinAssessmentIds.idOf(template.type),
+                    ),
                     onTap: !isConnected
                         ? null
                         : () async {
@@ -392,6 +407,28 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
                           },
                   ),
                 ),
+                // A coach's assessment, or one the athlete wrote: there is no
+                // protocol screen for it, it is measured by running the
+                // training it hangs off and answering its question at the end.
+                ...recordableTrainings.map(
+                  (training) => AssessmentCard(
+                    title: training.assessment!.label,
+                    icon: Icons.assessment,
+                    description: _describe(training),
+                    lastResult: lastResultFor(training.assessment!.id),
+                    onTap: () => startTrainingRun(
+                      context,
+                      ref,
+                      training,
+                      // The activity a training is logged under travels with
+                      // the prescription, not with the training itself, so a
+                      // run started here takes the same default every run
+                      // outside a program takes.
+                      activity: SessionActivity.hangboard,
+                      trainingId: training.id,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -399,4 +436,12 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
       ],
     );
   }
+}
+
+/// What a recordable assessment card says under its name: the question the
+/// coach asks at the end of the run when there is one, and otherwise the
+/// training the result is measured by.
+String _describe(Training training) {
+  final prompt = training.assessment?.prompt?.trim() ?? '';
+  return prompt.isEmpty ? training.title : prompt;
 }

@@ -215,6 +215,140 @@ final class AssessmentDefinitionsProvider
 String _$assessmentDefinitionsHash() =>
     r'7d4d30ef23b076c30381d1d822feda7cbe1e8336';
 
+/// The assessment trainings a coach has prescribed to the athlete, walked out
+/// of their programs.
+///
+/// Held apart from the athlete's own library so the walk, which is several
+/// requests, is not re-run every time that library changes: favouriting a
+/// training says nothing about what a coach has scheduled.
+
+@ProviderFor(prescribedAssessmentTrainings)
+const prescribedAssessmentTrainingsProvider =
+    PrescribedAssessmentTrainingsProvider._();
+
+/// The assessment trainings a coach has prescribed to the athlete, walked out
+/// of their programs.
+///
+/// Held apart from the athlete's own library so the walk, which is several
+/// requests, is not re-run every time that library changes: favouriting a
+/// training says nothing about what a coach has scheduled.
+
+final class PrescribedAssessmentTrainingsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Training>>,
+          List<Training>,
+          FutureOr<List<Training>>
+        >
+    with $FutureModifier<List<Training>>, $FutureProvider<List<Training>> {
+  /// The assessment trainings a coach has prescribed to the athlete, walked out
+  /// of their programs.
+  ///
+  /// Held apart from the athlete's own library so the walk, which is several
+  /// requests, is not re-run every time that library changes: favouriting a
+  /// training says nothing about what a coach has scheduled.
+  const PrescribedAssessmentTrainingsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'prescribedAssessmentTrainingsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$prescribedAssessmentTrainingsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Training>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Training>> create(Ref ref) {
+    return prescribedAssessmentTrainings(ref);
+  }
+}
+
+String _$prescribedAssessmentTrainingsHash() =>
+    r'ec56f39d53a489e44514c8f269cdb2fdd3f2df76';
+
+/// The assessments the athlete may record a result against beyond the ones
+/// Crimpy ships: their own, and a coach's whose training a program has
+/// prescribed to them. Each is measured by running the training that backs it,
+/// so the training itself is what this holds.
+///
+/// This mirrors the rule the server enforces when a result is posted. The
+/// prescribed half can fail offline: when it does the athlete keeps the
+/// assessments they own rather than an empty tab.
+///
+/// Ordered by name, which is how the history lists them once they have results.
+
+@ProviderFor(recordableAssessmentTrainings)
+const recordableAssessmentTrainingsProvider =
+    RecordableAssessmentTrainingsProvider._();
+
+/// The assessments the athlete may record a result against beyond the ones
+/// Crimpy ships: their own, and a coach's whose training a program has
+/// prescribed to them. Each is measured by running the training that backs it,
+/// so the training itself is what this holds.
+///
+/// This mirrors the rule the server enforces when a result is posted. The
+/// prescribed half can fail offline: when it does the athlete keeps the
+/// assessments they own rather than an empty tab.
+///
+/// Ordered by name, which is how the history lists them once they have results.
+
+final class RecordableAssessmentTrainingsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Training>>,
+          List<Training>,
+          FutureOr<List<Training>>
+        >
+    with $FutureModifier<List<Training>>, $FutureProvider<List<Training>> {
+  /// The assessments the athlete may record a result against beyond the ones
+  /// Crimpy ships: their own, and a coach's whose training a program has
+  /// prescribed to them. Each is measured by running the training that backs it,
+  /// so the training itself is what this holds.
+  ///
+  /// This mirrors the rule the server enforces when a result is posted. The
+  /// prescribed half can fail offline: when it does the athlete keeps the
+  /// assessments they own rather than an empty tab.
+  ///
+  /// Ordered by name, which is how the history lists them once they have results.
+  const RecordableAssessmentTrainingsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'recordableAssessmentTrainingsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$recordableAssessmentTrainingsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Training>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Training>> create(Ref ref) {
+    return recordableAssessmentTrainings(ref);
+  }
+}
+
+String _$recordableAssessmentTrainingsHash() =>
+    r'06ac3582c9548579c33cce419e5f18c0734c7946';
+
 /// The athlete latest result per assessment, used to turn the loads, durations
 /// and reps a coach set as a percentage of an assessment into numbers.
 ///
@@ -324,7 +458,7 @@ final class AssessmentsProvider
   }
 }
 
-String _$assessmentsHash() => r'28e7016f832e4f805495a94f9b6d7aca5d6c30fd';
+String _$assessmentsHash() => r'bc08825cd54507416495e7407811aa39cb75d5c3';
 
 /// Returns the list of assessments.
 /// Allow to filter on the assessment measured.
