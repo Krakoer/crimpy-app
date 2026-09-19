@@ -1071,6 +1071,64 @@ void _reviewPassTests() {
       expect(lines[1].protocol, 'Stop at 24 reps.');
     });
 
+    // A circuit gets a card of its own, so it states its rule there once. The
+    // run repeats it on every step because it shows one at a time; the review
+    // is a single scroll, and four copies of the same prose is noise.
+    test('does not restate the rule of a block that gets its own line', () {
+      const circuit = TrainingItem(
+        id: 'circuit-1',
+        type: TrainingItemType.circuit,
+        position: 0,
+        cycles: 2,
+        protocol: 'Aim for 24 reps. Past 24, stop and add 5kg.',
+        items: [
+          TrainingItem(
+            id: 'child-1',
+            type: TrainingItemType.exercise,
+            position: 0,
+            reps: 24,
+          ),
+          TrainingItem(
+            id: 'child-2',
+            type: TrainingItemType.exercise,
+            position: 1,
+            reps: 24,
+          ),
+        ],
+      );
+
+      final lines = reviewLines(const [circuit], const []);
+
+      expect(lines.map((l) => l.item.id), ['circuit-1', 'child-1', 'child-2']);
+      expect(lines[0].protocol, 'Aim for 24 reps. Past 24, stop and add 5kg.');
+      expect(lines[1].protocol, isNull);
+      expect(lines[2].protocol, isNull);
+    });
+
+    // A child that names its own rule keeps it wherever it sits.
+    test('keeps the rule a child names under a block that has its own', () {
+      const circuit = TrainingItem(
+        id: 'circuit-2',
+        type: TrainingItemType.circuit,
+        position: 0,
+        cycles: 2,
+        protocol: 'Aim for 24 reps.',
+        items: [
+          TrainingItem(
+            id: 'child-3',
+            type: TrainingItemType.exercise,
+            position: 0,
+            reps: 24,
+            protocol: 'Stop at the first slow rep.',
+          ),
+        ],
+      );
+
+      final lines = reviewLines(const [circuit], const []);
+
+      expect(lines[1].protocol, 'Stop at the first slow rep.');
+    });
+
     test('carries no protocol where nothing above the step names one', () {
       final lines = reviewLines(const [dips], const []);
       expect(lines.single.protocol, isNull);

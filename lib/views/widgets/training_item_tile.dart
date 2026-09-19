@@ -99,43 +99,52 @@ class TrainingItemComment extends StatelessWidget {
   }
 }
 
-/// What the block is for, e.g. "resi doigts". Labelled and set in green rather
-/// than the comment's orange, so the two notes on a tile are told apart without
-/// reading them: this one is why the block is in the program, the other is how
-/// to run it. The rule and the tint are accentGreen, the label is goalColor:
-/// accentGreen does not carry enough contrast for type this small.
-class TrainingItemGoal extends StatelessWidget {
-  final String goal;
+/// A note on a tile that names itself: a short label in the note's own colour,
+/// then the prose. Spelled once so the shape of the band cannot drift between
+/// the notes that use it, since what tells them apart is meant to be the label
+/// and the colour and nothing else.
+///
+/// [accent] is the rule and the tint; [labelColor] is the label, which is the
+/// accent carried down far enough to be legible at this size. The two are apart
+/// because no accent in the palette clears the contrast floor at 9.5px.
+class _LabelledNote extends StatelessWidget {
+  final String label;
+  final Color accent;
+  final Color labelColor;
+  final String text;
 
-  const TrainingItemGoal(this.goal, {super.key});
+  const _LabelledNote({
+    required this.label,
+    required this.accent,
+    required this.labelColor,
+    required this.text,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
-        color: CrimpyTheme.accentGreen.withValues(alpha: 0.10),
-        border: Border(
-          left: BorderSide(color: CrimpyTheme.accentGreen, width: 3),
-        ),
+        color: accent.withValues(alpha: 0.10),
+        border: Border(left: BorderSide(color: accent, width: 3)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'GOAL',
+          Text(
+            label,
             style: TextStyle(
               fontFamily: 'JetBrainsMono',
               fontSize: 9.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
-              color: CrimpyTheme.goalColor,
+              color: labelColor,
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              goal,
+              text,
               style: const TextStyle(
                 fontFamily: 'JetBrainsMono',
                 fontSize: 11.5,
@@ -150,6 +159,25 @@ class TrainingItemGoal extends StatelessWidget {
   }
 }
 
+/// What the block is for, e.g. "resi doigts". Labelled and set in green rather
+/// than the comment's orange, so the two notes on a tile are told apart without
+/// reading them: this one is why the block is in the program, the other is how
+/// to run it. The rule and the tint are accentGreen, the label is goalColor:
+/// accentGreen does not carry enough contrast for type this small.
+class TrainingItemGoal extends StatelessWidget {
+  final String goal;
+
+  const TrainingItemGoal(this.goal, {super.key});
+
+  @override
+  Widget build(BuildContext context) => _LabelledNote(
+    label: 'GOAL',
+    accent: CrimpyTheme.accentGreen,
+    labelColor: CrimpyTheme.goalColor,
+    text: goal,
+  );
+}
+
 /// The rule the athlete resolves while performing the block, e.g. "to failure
 /// or 40s; past 40s add 5kg". Labelled and set in gold, a third colour beside
 /// the goal's green and the comment's orange, so the three notes on a tile are
@@ -162,44 +190,12 @@ class TrainingItemProtocol extends StatelessWidget {
   const TrainingItemProtocol(this.protocol, {super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-      decoration: BoxDecoration(
-        color: CrimpyTheme.accentYellow.withValues(alpha: 0.10),
-        border: Border(
-          left: BorderSide(color: CrimpyTheme.accentYellow, width: 3),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'PROTOCOL',
-            style: TextStyle(
-              fontFamily: 'JetBrainsMono',
-              fontSize: 9.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-              color: CrimpyTheme.protocolColor,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              protocol,
-              style: const TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 11.5,
-                height: 1.4,
-                color: CrimpyTheme.textPrimary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => _LabelledNote(
+    label: 'PROTOCOL',
+    accent: CrimpyTheme.accentYellow,
+    labelColor: CrimpyTheme.protocolColor,
+    text: protocol,
+  );
 }
 
 /// One row of a training breakdown: position, title, its numbers, what the

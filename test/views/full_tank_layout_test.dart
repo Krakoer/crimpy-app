@@ -73,6 +73,7 @@ Future<void> _pump(
   String? goal,
   String? nextGoal,
   String? comment,
+  String? nextComment,
   String? protocol,
   String? nextProtocol,
   String? videoLink,
@@ -102,7 +103,7 @@ Future<void> _pump(
             goal: goal,
             nextGoal: nextGoal,
             comment: comment,
-            nextComment: null,
+            nextComment: nextComment,
             protocol: protocol,
             nextProtocol: nextProtocol,
             videoLink: videoLink,
@@ -773,6 +774,48 @@ void main() {
       await _pump(tester, item: _pullUps);
 
       expect(find.text('PROTOCOL'), findsNothing);
+    });
+
+    // The tank draws its content twice and cannot scroll, so everything in it
+    // is bounded by a line cap. A step carrying a rule and a comment at the
+    // server's limit together is the worst case of that, and it is the one the
+    // caps exist for.
+    testWidgets('lays out a protocol and a comment both at the limit', (
+      tester,
+    ) async {
+      final long = List.filled(401, 'ceilings').join(' ').substring(0, 2000);
+      final other = List.filled(401, 'rampup').join(' ').substring(0, 2000);
+
+      await _pump(
+        tester,
+        item: _pullUps,
+        protocol: long,
+        comment: other,
+        goal: 'resi doigts',
+      );
+
+      expect(find.text(long), findsOneWidget);
+      expect(find.text(other), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('lays out a rest preview carrying both at the limit', (
+      tester,
+    ) async {
+      final long = List.filled(401, 'ceilings').join(' ').substring(0, 2000);
+      final other = List.filled(401, 'rampup').join(' ').substring(0, 2000);
+
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 60),
+        nextItem: _pullUps,
+        nextProtocol: long,
+        nextComment: other,
+      );
+
+      expect(find.text(long), findsOneWidget);
+      expect(find.text(other), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 }
