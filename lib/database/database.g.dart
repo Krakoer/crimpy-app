@@ -150,6 +150,32 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _rpeMeta = const VerificationMeta('rpe');
+  @override
+  late final GeneratedColumn<int> rpe = GeneratedColumn<int>(
+    'rpe',
+    aliasedName,
+    true,
+    check: () =>
+        ComparableExpr(rpe).isBetweenValues(minSessionRpe, maxSessionRpe),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _rpeFailedMeta = const VerificationMeta(
+    'rpeFailed',
+  );
+  @override
+  late final GeneratedColumn<bool> rpeFailed = GeneratedColumn<bool>(
+    'rpe_failed',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("rpe_failed" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -177,6 +203,8 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
     duration,
     prescriptionJson,
     serverId,
+    rpe,
+    rpeFailed,
     updatedAt,
   ];
   @override
@@ -281,6 +309,18 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta),
       );
     }
+    if (data.containsKey('rpe')) {
+      context.handle(
+        _rpeMeta,
+        rpe.isAcceptableOrUnknown(data['rpe']!, _rpeMeta),
+      );
+    }
+    if (data.containsKey('rpe_failed')) {
+      context.handle(
+        _rpeFailedMeta,
+        rpeFailed.isAcceptableOrUnknown(data['rpe_failed']!, _rpeFailedMeta),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -348,6 +388,14 @@ class $SessionsTable extends Sessions with TableInfo<$SessionsTable, Session> {
         DriftSqlType.string,
         data['${effectivePrefix}server_id'],
       ),
+      rpe: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rpe'],
+      ),
+      rpeFailed: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}rpe_failed'],
+      )!,
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -380,6 +428,17 @@ class Session extends DataClass implements Insertable<Session> {
   /// run that failed partway can be retried without uploading, and duplicating,
   /// everything that already went up.
   final String? serverId;
+
+  /// How much recovery the session cost, on the session RPE scale. Null while
+  /// the athlete has reported nothing, which stays the normal case. Held to the
+  /// same range the API enforces, so a value written offline is one the server
+  /// will take when it syncs.
+  final int? rpe;
+
+  /// The scale's ECHEC, a session the athlete could not carry through. A flag
+  /// rather than a sentinel inside the column above, which would have to sit
+  /// outside the range that check exists to hold.
+  final bool rpeFailed;
   final DateTime updatedAt;
   const Session({
     required this.id,
@@ -395,6 +454,8 @@ class Session extends DataClass implements Insertable<Session> {
     required this.duration,
     this.prescriptionJson,
     this.serverId,
+    this.rpe,
+    required this.rpeFailed,
     required this.updatedAt,
   });
   @override
@@ -421,6 +482,10 @@ class Session extends DataClass implements Insertable<Session> {
     if (!nullToAbsent || serverId != null) {
       map['server_id'] = Variable<String>(serverId);
     }
+    if (!nullToAbsent || rpe != null) {
+      map['rpe'] = Variable<int>(rpe);
+    }
+    map['rpe_failed'] = Variable<bool>(rpeFailed);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -448,6 +513,8 @@ class Session extends DataClass implements Insertable<Session> {
       serverId: serverId == null && nullToAbsent
           ? const Value.absent()
           : Value(serverId),
+      rpe: rpe == null && nullToAbsent ? const Value.absent() : Value(rpe),
+      rpeFailed: Value(rpeFailed),
       updatedAt: Value(updatedAt),
     );
   }
@@ -471,6 +538,8 @@ class Session extends DataClass implements Insertable<Session> {
       duration: serializer.fromJson<int>(json['duration']),
       prescriptionJson: serializer.fromJson<String?>(json['prescriptionJson']),
       serverId: serializer.fromJson<String?>(json['serverId']),
+      rpe: serializer.fromJson<int?>(json['rpe']),
+      rpeFailed: serializer.fromJson<bool>(json['rpeFailed']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -491,6 +560,8 @@ class Session extends DataClass implements Insertable<Session> {
       'duration': serializer.toJson<int>(duration),
       'prescriptionJson': serializer.toJson<String?>(prescriptionJson),
       'serverId': serializer.toJson<String?>(serverId),
+      'rpe': serializer.toJson<int?>(rpe),
+      'rpeFailed': serializer.toJson<bool>(rpeFailed),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -509,6 +580,8 @@ class Session extends DataClass implements Insertable<Session> {
     int? duration,
     Value<String?> prescriptionJson = const Value.absent(),
     Value<String?> serverId = const Value.absent(),
+    Value<int?> rpe = const Value.absent(),
+    bool? rpeFailed,
     DateTime? updatedAt,
   }) => Session(
     id: id ?? this.id,
@@ -528,6 +601,8 @@ class Session extends DataClass implements Insertable<Session> {
         ? prescriptionJson.value
         : this.prescriptionJson,
     serverId: serverId.present ? serverId.value : this.serverId,
+    rpe: rpe.present ? rpe.value : this.rpe,
+    rpeFailed: rpeFailed ?? this.rpeFailed,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   Session copyWithCompanion(SessionsCompanion data) {
@@ -553,6 +628,8 @@ class Session extends DataClass implements Insertable<Session> {
           ? data.prescriptionJson.value
           : this.prescriptionJson,
       serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      rpe: data.rpe.present ? data.rpe.value : this.rpe,
+      rpeFailed: data.rpeFailed.present ? data.rpeFailed.value : this.rpeFailed,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -573,6 +650,8 @@ class Session extends DataClass implements Insertable<Session> {
           ..write('duration: $duration, ')
           ..write('prescriptionJson: $prescriptionJson, ')
           ..write('serverId: $serverId, ')
+          ..write('rpe: $rpe, ')
+          ..write('rpeFailed: $rpeFailed, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -593,6 +672,8 @@ class Session extends DataClass implements Insertable<Session> {
     duration,
     prescriptionJson,
     serverId,
+    rpe,
+    rpeFailed,
     updatedAt,
   );
   @override
@@ -612,6 +693,8 @@ class Session extends DataClass implements Insertable<Session> {
           other.duration == this.duration &&
           other.prescriptionJson == this.prescriptionJson &&
           other.serverId == this.serverId &&
+          other.rpe == this.rpe &&
+          other.rpeFailed == this.rpeFailed &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -629,6 +712,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
   final Value<int> duration;
   final Value<String?> prescriptionJson;
   final Value<String?> serverId;
+  final Value<int?> rpe;
+  final Value<bool> rpeFailed;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const SessionsCompanion({
@@ -645,6 +730,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.duration = const Value.absent(),
     this.prescriptionJson = const Value.absent(),
     this.serverId = const Value.absent(),
+    this.rpe = const Value.absent(),
+    this.rpeFailed = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -662,6 +749,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     this.duration = const Value.absent(),
     this.prescriptionJson = const Value.absent(),
     this.serverId = const Value.absent(),
+    this.rpe = const Value.absent(),
+    this.rpeFailed = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : name = Value(name),
@@ -681,6 +770,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Expression<int>? duration,
     Expression<String>? prescriptionJson,
     Expression<String>? serverId,
+    Expression<int>? rpe,
+    Expression<bool>? rpeFailed,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -698,6 +789,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       if (duration != null) 'duration': duration,
       if (prescriptionJson != null) 'prescription_json': prescriptionJson,
       if (serverId != null) 'server_id': serverId,
+      if (rpe != null) 'rpe': rpe,
+      if (rpeFailed != null) 'rpe_failed': rpeFailed,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -717,6 +810,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     Value<int>? duration,
     Value<String?>? prescriptionJson,
     Value<String?>? serverId,
+    Value<int?>? rpe,
+    Value<bool>? rpeFailed,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -734,6 +829,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
       duration: duration ?? this.duration,
       prescriptionJson: prescriptionJson ?? this.prescriptionJson,
       serverId: serverId ?? this.serverId,
+      rpe: rpe ?? this.rpe,
+      rpeFailed: rpeFailed ?? this.rpeFailed,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -781,6 +878,12 @@ class SessionsCompanion extends UpdateCompanion<Session> {
     if (serverId.present) {
       map['server_id'] = Variable<String>(serverId.value);
     }
+    if (rpe.present) {
+      map['rpe'] = Variable<int>(rpe.value);
+    }
+    if (rpeFailed.present) {
+      map['rpe_failed'] = Variable<bool>(rpeFailed.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -806,6 +909,8 @@ class SessionsCompanion extends UpdateCompanion<Session> {
           ..write('duration: $duration, ')
           ..write('prescriptionJson: $prescriptionJson, ')
           ..write('serverId: $serverId, ')
+          ..write('rpe: $rpe, ')
+          ..write('rpeFailed: $rpeFailed, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -6980,6 +7085,8 @@ typedef $$SessionsTableCreateCompanionBuilder =
       Value<int> duration,
       Value<String?> prescriptionJson,
       Value<String?> serverId,
+      Value<int?> rpe,
+      Value<bool> rpeFailed,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -6998,6 +7105,8 @@ typedef $$SessionsTableUpdateCompanionBuilder =
       Value<int> duration,
       Value<String?> prescriptionJson,
       Value<String?> serverId,
+      Value<int?> rpe,
+      Value<bool> rpeFailed,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -7073,6 +7182,16 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<String> get serverId => $composableBuilder(
     column: $table.serverId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rpe => $composableBuilder(
+    column: $table.rpe,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get rpeFailed => $composableBuilder(
+    column: $table.rpeFailed,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7156,6 +7275,16 @@ class $$SessionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get rpe => $composableBuilder(
+    column: $table.rpe,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get rpeFailed => $composableBuilder(
+    column: $table.rpeFailed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -7218,6 +7347,12 @@ class $$SessionsTableAnnotationComposer
   GeneratedColumn<String> get serverId =>
       $composableBuilder(column: $table.serverId, builder: (column) => column);
 
+  GeneratedColumn<int> get rpe =>
+      $composableBuilder(column: $table.rpe, builder: (column) => column);
+
+  GeneratedColumn<bool> get rpeFailed =>
+      $composableBuilder(column: $table.rpeFailed, builder: (column) => column);
+
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -7263,6 +7398,8 @@ class $$SessionsTableTableManager
                 Value<int> duration = const Value.absent(),
                 Value<String?> prescriptionJson = const Value.absent(),
                 Value<String?> serverId = const Value.absent(),
+                Value<int?> rpe = const Value.absent(),
+                Value<bool> rpeFailed = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion(
@@ -7279,6 +7416,8 @@ class $$SessionsTableTableManager
                 duration: duration,
                 prescriptionJson: prescriptionJson,
                 serverId: serverId,
+                rpe: rpe,
+                rpeFailed: rpeFailed,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -7297,6 +7436,8 @@ class $$SessionsTableTableManager
                 Value<int> duration = const Value.absent(),
                 Value<String?> prescriptionJson = const Value.absent(),
                 Value<String?> serverId = const Value.absent(),
+                Value<int?> rpe = const Value.absent(),
+                Value<bool> rpeFailed = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion.insert(
@@ -7313,6 +7454,8 @@ class $$SessionsTableTableManager
                 duration: duration,
                 prescriptionJson: prescriptionJson,
                 serverId: serverId,
+                rpe: rpe,
+                rpeFailed: rpeFailed,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),

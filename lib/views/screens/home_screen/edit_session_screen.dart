@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/models/session_rpe.dart';
+import 'package:crimpy/views/widgets/session_rpe_picker.dart';
 
 class EditSessionScreen extends ConsumerStatefulWidget {
   final SessionModel session;
@@ -22,6 +24,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
   late DateTime _selectedDate;
   late TimeOfDay _selectedTime;
   late int _durationMinutes;
+  late SessionRpeAnswer _rpe;
 
   @override
   void initState() {
@@ -30,6 +33,10 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
     _selectedDate = widget.session.date;
     _selectedTime = TimeOfDay.fromDateTime(widget.session.date);
     _durationMinutes = widget.session.duration ~/ 60;
+    _rpe = SessionRpeAnswer.of(
+      rpe: widget.session.rpe,
+      rpeFailed: widget.session.rpeFailed,
+    );
   }
 
   @override
@@ -48,11 +55,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          isPlayedSession
-              ? 'Edit Notes'
-              : 'Edit ${widget.session.activity.displayName}',
-        ),
+        title: Text('Edit ${widget.session.activity.displayName}'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -73,7 +76,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Only notes can be edited for a session played in the app',
+                            'Only the notes and the RPE can be edited for a session played in the app',
                             style: TextStyle(fontSize: 13, color: color),
                           ),
                         ),
@@ -181,6 +184,19 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
               ),
               const SizedBox(height: 16),
 
+              // Offered whatever the origin: the RPE is what the athlete
+              // reported about the session, not something the run measured, and
+              // forgetting it at the end of a run is the normal case this
+              // screen exists to fix.
+              SessionRpePicker(
+                answer: _rpe,
+                onChanged: (answer) => setState(() => _rpe = answer),
+                subtitle:
+                    'How much recovery did this session cost you? '
+                    'You can answer now even if you skipped it at the time.',
+              ),
+              const SizedBox(height: 16),
+
               // Notes input
               Card(
                 child: Padding(
@@ -224,12 +240,9 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   backgroundColor: color,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: Text(
-                  isPlayedSession ? 'Update Notes' : 'Update Session',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: const Text(
+                  'Update Session',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -282,7 +295,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
     // read only, so the edit carries the notes and nothing else. Leaving the
     // other fields out of copyWith keeps the values the run measured, down to
     // the seconds the pickers would have dropped.
-    final updatedSession = widget.session.origin.isPlayed
+    final edited = widget.session.origin.isPlayed
         ? widget.session.copyWith(notes: notes)
         : widget.session.copyWith(
             durationInSeconds: _durationMinutes * 60,
@@ -295,6 +308,13 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
             ),
             notes: notes,
           );
+
+    // Applied apart from copyWith, which carries a field over when it is given
+    // none and so cannot take an answer back.
+    final updatedSession = edited.withSessionRpe(
+      rpe: _rpe.rpe,
+      rpeFailed: _rpe.failed,
+    );
 
     try {
       // Update session in database

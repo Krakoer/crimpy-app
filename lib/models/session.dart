@@ -140,6 +140,17 @@ class SessionModel {
   final DateTime? coachReplyAt;
   final bool coachReplyRead;
 
+  /// How much recovery the session cost, on the session RPE scale that
+  /// models/session_rpe.dart spells out. Null while the athlete has reported
+  /// nothing, which stays the normal case: the prompt is skippable and the
+  /// answer can be given long afterwards from the edit screen.
+  final int? rpe;
+
+  /// The scale's ECHEC, a session the athlete could not carry through. It
+  /// replaces the number rather than grading it, so it is never true beside
+  /// one.
+  final bool rpeFailed;
+
   SessionModel({
     this.id,
     this.notes,
@@ -158,8 +169,14 @@ class SessionModel {
     this.coachReply,
     this.coachReplyAt,
     this.coachReplyRead = false,
+    this.rpe,
+    this.rpeFailed = false,
     date,
-  }) : date = date ?? DateTime.now();
+  }) : assert(
+         !rpeFailed || rpe == null,
+         'ECHEC is a value of the scale, so it cannot sit beside a number',
+       ),
+       date = date ?? DateTime.now();
 
   /// Whether the coach has answered and the athlete has not opened it yet.
   bool get hasUnreadCoachReply => coachReply != null && !coachReplyRead;
@@ -194,6 +211,13 @@ class SessionModel {
     coachReply: json['coach_reply'] as String?,
     coachReplyAt: tryParseApiInstant(json['coach_reply_at'] as String?),
     coachReplyRead: json['coach_reply_read'] as bool? ?? false,
+    // Normalized rather than asserted: this is a boundary, and a server that
+    // ever sent both should cost the reader the number, not the whole history
+    // screen it was being parsed for.
+    rpe: (json['rpe_failed'] as bool? ?? false)
+        ? null
+        : (json['rpe'] as num?)?.toInt(),
+    rpeFailed: json['rpe_failed'] as bool? ?? false,
   );
 
   /// The prescription this session has to hand over for anything to be keyed
@@ -255,6 +279,8 @@ class SessionModel {
     coachReply: coachReply,
     coachReplyAt: coachReplyAt,
     coachReplyRead: coachReplyRead,
+    rpe: rpe,
+    rpeFailed: rpeFailed,
   );
 
   /// The same session played from [trainingId], or from no training when it is
@@ -281,7 +307,37 @@ class SessionModel {
     coachReply: coachReply,
     coachReplyAt: coachReplyAt,
     coachReplyRead: coachReplyRead,
+    rpe: rpe,
+    rpeFailed: rpeFailed,
   );
+
+  /// The same session carrying [rpe], or the scale's ECHEC, or no answer at
+  /// all. Separate from [copyWith], which carries a field over when it is given
+  /// none and so cannot take an answer back: an athlete who picked the wrong
+  /// value has to be able to clear it, not only to change it.
+  SessionModel withSessionRpe({int? rpe, bool rpeFailed = false}) =>
+      SessionModel(
+        id: id,
+        name: name,
+        notes: notes,
+        date: date,
+        dataPoints: dataPoints,
+        reps: reps,
+        isAssessment: isAssessment,
+        activity: activity,
+        origin: origin,
+        trainingId: trainingId,
+        programSessionId: programSessionId,
+        durationInSeconds: durationInSeconds,
+        reportedRepCount: reportedRepCount,
+        prescriptionItems: prescriptionItems,
+        itemResults: itemResults,
+        coachReply: coachReply,
+        coachReplyAt: coachReplyAt,
+        coachReplyRead: coachReplyRead,
+        rpe: rpeFailed ? null : rpe,
+        rpeFailed: rpeFailed,
+      );
 
   /// The same session with the coach's answer marked as seen, so the list can
   /// drop its badge without refetching every session.
@@ -304,6 +360,8 @@ class SessionModel {
     coachReply: coachReply,
     coachReplyAt: coachReplyAt,
     coachReplyRead: true,
+    rpe: rpe,
+    rpeFailed: rpeFailed,
   );
 
   int get duration =>

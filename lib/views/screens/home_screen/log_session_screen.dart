@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/models/session_rpe.dart';
+import 'package:crimpy/views/widgets/session_rpe_picker.dart';
 
 class LogSessionScreen extends ConsumerStatefulWidget {
   final SessionActivity activity;
@@ -43,6 +45,10 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
   int _durationMinutes = 60;
+
+  /// How much the session cost the athlete. A climbing session logged by hand
+  /// carries an RPE exactly as a played one does.
+  SessionRpeAnswer _rpe = SessionRpeAnswer.none;
 
   @override
   void dispose() {
@@ -181,6 +187,12 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
               ),
               const SizedBox(height: 16),
 
+              SessionRpePicker(
+                answer: _rpe,
+                onChanged: (answer) => setState(() => _rpe = answer),
+              ),
+              const SizedBox(height: 16),
+
               // Notes input
               Card(
                 child: Padding(
@@ -291,6 +303,8 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
       durationInSeconds: _durationMinutes * 60,
       date: sessionDateTime,
       notes: _notesController.text.isEmpty ? null : _notesController.text,
+      rpe: _rpe.rpe,
+      rpeFailed: _rpe.failed,
     );
 
     try {

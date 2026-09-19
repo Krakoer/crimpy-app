@@ -322,6 +322,13 @@ class RemoteTrainingRepository extends TrainingRepository {
       // reads, and sending them anyway is refused rather than stored.
       if (session.isAssessment && curve != null) 'samples': curve,
       if (bodyweightKg != null) 'bodyweight_kg': bodyweightKg,
+      // How much recovery the session cost the athlete. Both fields are sent
+      // only when there is an answer: the API refuses a number beside a
+      // failure, and takes an absent pair as a session nobody rated yet.
+      if (session.rpeFailed)
+        'rpe_failed': true
+      else if (session.rpe != null)
+        'rpe': session.rpe,
     };
 
     final created = await _apiClient.createSession(body);
@@ -349,6 +356,13 @@ class RemoteTrainingRepository extends TrainingRepository {
       // sends one. Omitted, the server leaves the stored date alone.
       if (!session.origin.isPlayed)
         'date': session.date.toUtc().toIso8601String(),
+      // Always sent, and always as a pair, because this is the path an RPE is
+      // given or taken back on: the server leaves the stored answer alone only
+      // when a request mentions neither field, which would make clearing one
+      // impossible. Sent on a played session too, since the RPE is what the
+      // athlete reported and not what the run measured.
+      'rpe_failed': session.rpeFailed,
+      if (!session.rpeFailed && session.rpe != null) 'rpe': session.rpe,
     });
   }
 

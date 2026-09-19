@@ -114,6 +114,70 @@ void main() {
     expect(saved.origin, SessionOrigin.played);
   });
 
+  // The prompt this screen exists to carry: the anchor the athlete taps has to
+  // reach the saved session, and skipping it has to leave the session unrated
+  // rather than rated zero.
+  testWidgets('carries the RPE anchor the athlete picked', (tester) async {
+    final sessions = CapturingSessions();
+
+    await _pumpFor(
+      tester,
+      const PostWorkoutScreen(template: _training, results: []),
+      sessions,
+    );
+
+    await tester.ensureVisible(find.text('Needs two full rest days'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Needs two full rest days'));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Save training'));
+    await tester.tap(find.text('Save training'));
+    await tester.pumpAndSettle();
+
+    expect(sessions.saved!.rpe, 9);
+    expect(sessions.saved!.rpeFailed, isFalse);
+  });
+
+  testWidgets('carries the scale ECHEC as a failure, not as a number', (
+    tester,
+  ) async {
+    final sessions = CapturingSessions();
+
+    await _pumpFor(
+      tester,
+      const PostWorkoutScreen(template: _training, results: []),
+      sessions,
+    );
+
+    await tester.ensureVisible(find.text('Could not be carried through'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Could not be carried through'));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Save training'));
+    await tester.tap(find.text('Save training'));
+    await tester.pumpAndSettle();
+
+    expect(sessions.saved!.rpe, isNull);
+    expect(sessions.saved!.rpeFailed, isTrue);
+  });
+
+  testWidgets('leaves a skipped prompt unrated rather than rated', (
+    tester,
+  ) async {
+    final sessions = CapturingSessions();
+
+    final saved = await _saveFrom(
+      tester,
+      const PostWorkoutScreen(template: _training, results: []),
+      sessions,
+    );
+
+    expect(saved.rpe, isNull);
+    expect(saved.rpeFailed, isFalse);
+  });
+
   testWidgets('freezes the template it played onto the session', (
     tester,
   ) async {
