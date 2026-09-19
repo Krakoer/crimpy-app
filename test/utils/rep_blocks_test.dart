@@ -1037,6 +1037,45 @@ void _reviewPassTests() {
       expect(lines.map((l) => l.occurrence), [0, 2]);
     });
 
+    // The run inherits a block's rule down to its steps, and a group gets no
+    // line of its own, so the line carries the rule in force rather than the
+    // item's own field.
+    test('carries the protocol of the block a step sits in', () {
+      const block = TrainingItem(
+        id: 'group-1',
+        type: TrainingItemType.group,
+        position: 0,
+        groupTitle: 'Max hangs',
+        protocol: 'To failure or 40s.',
+        items: [
+          TrainingItem(
+            id: 'inherits-1',
+            type: TrainingItemType.exercise,
+            position: 0,
+            reps: 8,
+          ),
+          TrainingItem(
+            id: 'own-1',
+            type: TrainingItemType.exercise,
+            position: 1,
+            reps: 8,
+            protocol: 'Stop at 24 reps.',
+          ),
+        ],
+      );
+
+      final lines = reviewLines(const [block], const []);
+
+      expect(lines.map((l) => l.item.id), ['inherits-1', 'own-1']);
+      expect(lines[0].protocol, 'To failure or 40s.');
+      expect(lines[1].protocol, 'Stop at 24 reps.');
+    });
+
+    test('carries no protocol where nothing above the step names one', () {
+      final lines = reviewLines(const [dips], const []);
+      expect(lines.single.protocol, isNull);
+    });
+
     test('gives an item the run answered nothing for a single line', () {
       final lines = reviewLines(const [dips], const []);
       expect(lines, hasLength(1));

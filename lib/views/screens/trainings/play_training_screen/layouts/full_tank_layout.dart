@@ -520,6 +520,13 @@ class _TankContent extends StatelessWidget {
           SizedBox(height: _s(8)),
           _goalLine(layout.goal!, align: TextAlign.start),
         ],
+        // A hang is the step a stop rule is written for ("to failure or 40s"),
+        // so the rule is on screen while it runs. Two lines here, where the
+        // force has the middle of the tank.
+        if (layout.protocol != null && state == _TankState.sensorWork) ...[
+          SizedBox(height: _s(6)),
+          _protocolBlock(layout.protocol!, maxLines: 2, align: TextAlign.start),
+        ],
         if (layout.comment != null && state == _TankState.sensorWork) ...[
           SizedBox(height: _s(6)),
           Text(
@@ -528,13 +535,6 @@ class _TankContent extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: _style(11, color: palette.secondary, height: 1.4),
           ),
-        ],
-        // A hang is the step a stop rule is written for ("to failure or 40s"),
-        // so the rule is on screen while it runs. Two lines here, where the
-        // force has the middle of the tank.
-        if (layout.protocol != null && state == _TankState.sensorWork) ...[
-          SizedBox(height: _s(6)),
-          _protocolBlock(layout.protocol!, maxLines: 2),
         ],
       ],
     );
@@ -568,12 +568,22 @@ class _TankContent extends StatelessWidget {
   /// a coach with more to say than fits writes it where the athlete reads it
   /// before starting, on the training breakdown, and reports against it after.
   ///
-  /// [maxLines] is the room the block it sits in has. The colour comes from the
-  /// palette for the reason the goal's does: the copy drawn over the fill would
-  /// otherwise paint gold on gold and disappear.
-  Widget _protocolBlock(String protocol, {required int maxLines}) => Column(
+  /// [maxLines] is the room the block it sits in has. [align] follows the block
+  /// it sits in, the way _goalLine's does: the corner block sets its content
+  /// from the left, and a rule long enough to wrap would otherwise centre its
+  /// label and its last line against left aligned copy above it.
+  ///
+  /// The colour comes from the palette for the reason the goal's does: the copy
+  /// drawn over the fill would otherwise paint gold on gold and disappear.
+  Widget _protocolBlock(
+    String protocol, {
+    required int maxLines,
+    TextAlign align = TextAlign.center,
+  }) => Column(
     mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.center,
+    crossAxisAlignment: align == TextAlign.start
+        ? CrossAxisAlignment.start
+        : CrossAxisAlignment.center,
     children: [
       Text(
         'PROTOCOL',
@@ -587,7 +597,7 @@ class _TankContent extends StatelessWidget {
       SizedBox(height: _s(3)),
       Text(
         protocol,
-        textAlign: TextAlign.center,
+        textAlign: align,
         maxLines: maxLines,
         overflow: TextOverflow.ellipsis,
         style: _style(13, color: palette.secondary, height: 1.4),
@@ -833,6 +843,13 @@ class _TankContent extends StatelessWidget {
           ),
         ],
       ],
+      // The rest is where the rule is acted on: it says what to do about the
+      // set just finished before the next one starts, so it is read here and
+      // not only once the step is already running.
+      if (layout.nextProtocol != null) ...[
+        SizedBox(height: _s(14)),
+        _protocolBlock(layout.nextProtocol!, maxLines: 4),
+      ],
       if (layout.nextComment != null) ...[
         SizedBox(height: _s(14)),
         Text(
@@ -842,13 +859,6 @@ class _TankContent extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: _style(13, color: palette.secondary, height: 1.4),
         ),
-      ],
-      // The rest is where the rule is acted on: it says what to do about the
-      // set just finished before the next one starts, so it is read here and
-      // not only once the step is already running.
-      if (layout.nextProtocol != null) ...[
-        SizedBox(height: _s(14)),
-        _protocolBlock(layout.nextProtocol!, maxLines: 4),
       ],
       if (isPlayableVideoLink(layout.nextVideoLink)) ...[
         SizedBox(height: _s(10)),
@@ -877,6 +887,10 @@ class _TankContent extends StatelessWidget {
           letterSpacing: 1,
         ),
       ),
+      if (layout.protocol != null) ...[
+        SizedBox(height: _s(8)),
+        _protocolBlock(layout.protocol!, maxLines: 4),
+      ],
       if (layout.comment != null) ...[
         SizedBox(height: _s(8)),
         Text(
@@ -886,10 +900,6 @@ class _TankContent extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: _style(13, color: palette.secondary, height: 1.4),
         ),
-      ],
-      if (layout.protocol != null) ...[
-        SizedBox(height: _s(8)),
-        _protocolBlock(layout.protocol!, maxLines: 4),
       ],
       SizedBox(height: _s(8)),
       Text(
@@ -988,6 +998,10 @@ class _TankContent extends StatelessWidget {
           ),
         ),
       ],
+      if (layout.protocol != null) ...[
+        SizedBox(height: _s(8)),
+        _protocolBlock(layout.protocol!, maxLines: 4),
+      ],
       if (layout.comment != null) ...[
         SizedBox(height: _s(8)),
         Text(
@@ -997,10 +1011,6 @@ class _TankContent extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: _style(13, color: palette.secondary, height: 1.4),
         ),
-      ],
-      if (layout.protocol != null) ...[
-        SizedBox(height: _s(8)),
-        _protocolBlock(layout.protocol!, maxLines: 4),
       ],
       if (details.isNotEmpty) ...[
         SizedBox(height: _s(14)),

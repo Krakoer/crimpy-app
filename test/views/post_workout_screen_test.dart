@@ -396,6 +396,57 @@ void _reviewPassTests() {
     expect(find.text(rule), findsOneWidget);
   });
 
+  // A rule written on a block is inherited by its steps during the run, and a
+  // group gets no card of its own, so without the inheritance the rule would be
+  // on screen while the athlete performs it and nowhere when they write down
+  // what it resolved to.
+  testWidgets('restates a protocol inherited from the block', (tester) async {
+    const rule = 'To failure or 40s. Past 40s add 5kg.';
+    await _show(
+      tester,
+      const PostWorkoutScreen(
+        template: Training(
+          id: 't3',
+          title: 'Max hangs',
+          items: [
+            TrainingItem(
+              id: 'g1',
+              type: TrainingItemType.group,
+              position: 0,
+              groupTitle: 'Max hangs',
+              protocol: rule,
+              items: [
+                TrainingItem(
+                  id: 'i1',
+                  type: TrainingItemType.exercise,
+                  position: 0,
+                  exerciseName: 'Pull up',
+                  reps: 8,
+                ),
+                TrainingItem(
+                  id: 'i2',
+                  type: TrainingItemType.exercise,
+                  position: 1,
+                  exerciseName: 'Dip',
+                  reps: 8,
+                  protocol: 'Stop at 24 reps.',
+                ),
+              ],
+            ),
+          ],
+        ),
+        results: [],
+        trainingId: 't-3',
+      ),
+    );
+
+    // The first child names none of its own and takes the block's rule; the
+    // second names one and keeps it.
+    expect(find.text(rule), findsOneWidget);
+    expect(find.text('Stop at 24 reps.'), findsOneWidget);
+    expect(find.text('PROTOCOL'), findsNWidgets(2));
+  });
+
   testWidgets('shows no protocol block on a step without one', (tester) async {
     await _show(
       tester,

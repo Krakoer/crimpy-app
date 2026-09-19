@@ -591,13 +591,13 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       children: [
         if (goal != null) ...[_goalText(goal), const SizedBox(height: 6)],
         title,
-        if (comment != null) ...[
-          const SizedBox(height: 8),
-          _commentText(comment),
-        ],
         if (protocol != null) ...[
           const SizedBox(height: 8),
           _protocolText(protocol),
+        ],
+        if (comment != null) ...[
+          const SizedBox(height: 8),
+          _commentText(comment),
         ],
       ],
     ),
@@ -618,15 +618,15 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     children: [
       NextRepPreview(nextRep: nextRep),
       if (goal != null) ...[const SizedBox(height: 6), _goalText(goal)],
-      if (comment != null) ...[
-        const SizedBox(height: 8),
-        _commentText(comment),
-      ],
       // The rest is where the rule is acted on: it says what to do about the
       // set just finished before the next one starts.
       if (protocol != null) ...[
         const SizedBox(height: 8),
         _protocolText(protocol),
+      ],
+      if (comment != null) ...[
+        const SizedBox(height: 8),
+        _commentText(comment),
       ],
       if (videoLink != null) ...[
         const SizedBox(height: 4),
@@ -831,13 +831,13 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             const SizedBox(height: 10),
             _noteProseText(rep.instructions!),
           ],
-          if (comment != null) ...[
-            const SizedBox(height: 8),
-            _commentText(comment),
-          ],
           if (protocol != null) ...[
             const SizedBox(height: 8),
             _protocolText(protocol),
+          ],
+          if (comment != null) ...[
+            const SizedBox(height: 8),
+            _commentText(comment),
           ],
           if (details.isNotEmpty) ...[
             const SizedBox(height: 12),

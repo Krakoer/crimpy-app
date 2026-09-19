@@ -38,6 +38,12 @@ class ItemReviewDraft {
   /// on the draft is what makes it unbreakable rather than merely intended.
   final String? prescribed;
 
+  /// The rule the pass was resolved by, the item's own or the one of the block
+  /// it sits in. Carried on the draft rather than read off [item] so a rule
+  /// written on a group, which gets no card of its own, still reaches the card
+  /// where its result is written down.
+  final String? protocol;
+
   final TextEditingController reps;
   final TextEditingController cycles;
   final TextEditingController loadKg;
@@ -49,6 +55,7 @@ class ItemReviewDraft {
     required this.occurrence,
     required this.fields,
     required this.prescribed,
+    required this.protocol,
     required this.reps,
     required this.cycles,
     required this.loadKg,
@@ -69,6 +76,7 @@ class ItemReviewDraft {
     occurrence: line.occurrence,
     fields: reportableFields(line.item, results),
     prescribed: prescribedSummary(line.item, results, bodyweightKg),
+    protocol: line.protocol,
     reps: TextEditingController(text: recorded?.reps?.toString() ?? ''),
     cycles: TextEditingController(text: recorded?.cycles?.toString() ?? ''),
     loadKg: TextEditingController(text: recorded?.loadKg?.toString() ?? ''),
@@ -222,7 +230,7 @@ class ItemReviewCard extends StatelessWidget {
     // down. A conditional prescription asks the athlete to decide something,
     // and the number they report is the answer to it: reading the two apart
     // costs them a trip back to the training to remember what was asked.
-    final protocol = draft.item.protocol?.trim() ?? '';
+    final protocol = draft.protocol?.trim() ?? '';
     final numbers = [
       if (draft.fields.reps) _number(controller: draft.reps, label: 'Reps'),
       if (draft.fields.cycles)

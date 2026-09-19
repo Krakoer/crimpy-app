@@ -427,8 +427,15 @@ bool holdsReportableWork(List<TrainingItem> items) {
 }
 
 /// One line of the post workout review: a prescribed item and which pass of it
-/// the line answers.
-typedef ReviewLine = ({TrainingItem item, int occurrence});
+/// the line answers, and the rule in force on it.
+///
+/// [protocol] is the item's own protocol, or the one of the nearest block above
+/// it that names one, which is the same inheritance the run reads a step by
+/// (see the expander's _StepPlacement). It is carried on the line rather than
+/// read off the item because a group carries no line of its own: a rule written
+/// on the block would otherwise be on screen during the run and nowhere on the
+/// card where the athlete writes down what it resolved to.
+typedef ReviewLine = ({TrainingItem item, int occurrence, String? protocol});
 
 /// The lines the athlete goes back over once the run is done, in the order the
 /// prescription lays them out, nested items included.
@@ -448,20 +455,22 @@ List<ReviewLine> reviewLines(
   }
 
   final lines = <ReviewLine>[];
-  void walk(List<TrainingItem> items) {
+  void walk(List<TrainingItem> items, String? inheritedProtocol) {
     for (final item in items) {
+      final own = item.protocol?.trim() ?? '';
+      final protocol = own.isEmpty ? inheritedProtocol : own;
       if (isReportable(item)) {
         final occurrences = (occurrencesByItem[item.reportKey]?.toList() ?? [0])
           ..sort();
         for (final occurrence in occurrences) {
-          lines.add((item: item, occurrence: occurrence));
+          lines.add((item: item, occurrence: occurrence, protocol: protocol));
         }
       }
-      walk(item.items);
+      walk(item.items, protocol);
     }
   }
 
-  walk(items);
+  walk(items, null);
   return lines;
 }
 

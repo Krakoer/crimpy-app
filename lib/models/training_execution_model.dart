@@ -209,6 +209,7 @@ final class ConfirmItem extends TrainingExecutionItem {
 
   /// Demo video of the movement, carried from the exercise the step came from.
   final String? videoLink;
+
   const ConfirmItem({
     required this.label,
     this.instructions,
