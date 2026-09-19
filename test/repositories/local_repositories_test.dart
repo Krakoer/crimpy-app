@@ -249,6 +249,29 @@ void main() {
       expect(cleared.rpeFailed, isFalse);
     });
 
+    test('a row holding both reads back as a failure alone', () async {
+      await trainings.saveSession(
+        SessionModel(
+          name: 'Board',
+          isAssessment: false,
+          origin: SessionOrigin.logged,
+          durationInSeconds: 3600,
+          date: DateTime(2026, 3, 1),
+          rpe: 8,
+        ),
+        [],
+      );
+
+      // Written past the model, since the model refuses the pair: the column
+      // pair carries no cross-column constraint, so the reader is what has to
+      // hold the invariant.
+      await db.customStatement('UPDATE sessions SET rpe_failed = 1');
+
+      final read = (await trainings.getAllSessionsWithReps()).single;
+      expect(read.rpe, isNull);
+      expect(read.rpeFailed, isTrue);
+    });
+
     test('a deleted session is gone', () async {
       final id = await trainings.saveSession(
         SessionModel(

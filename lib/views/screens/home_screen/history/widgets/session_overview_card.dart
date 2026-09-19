@@ -67,7 +67,11 @@ class SessionOverviewCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
+            // Top aligned, like the item internals: once a value can wrap, the
+            // two halves of a pair are no longer the same height, and centring
+            // them staggers the one that did not wrap.
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: _buildStatItem(
@@ -89,6 +93,7 @@ class SessionOverviewCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
                   child: _buildStatItem(
@@ -110,10 +115,11 @@ class SessionOverviewCard extends StatelessWidget {
             ),
             if (rpe != null) ...[
               const SizedBox(height: 12),
-              // In a Row with an Expanded child, like every other stat here: a
-              // non-flex child of a Row is laid out unbounded, and the anchor is
-              // a sentence rather than a figure, so it would run off the card
-              // instead of wrapping.
+              // In a Row with an Expanded child for symmetry with the four
+              // stats above, which are laid out in pairs. It is not what makes
+              // the anchor wrap: a child of the surrounding Column already has
+              // a bounded width, and the wrapping comes from the Flexible
+              // inside _buildStatItem.
               Row(
                 children: [
                   Expanded(

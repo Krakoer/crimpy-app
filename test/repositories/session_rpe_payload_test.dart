@@ -141,6 +141,26 @@ void main() {
       expect(session.rpeFailed, isFalse);
     });
 
+    // Normalized rather than asserted at this boundary: a server that regressed
+    // should cost the reader the number, not the history screen it was parsing.
+    test('drops a number a server sent beside a failure', () {
+      final session = SessionModel.fromJson({
+        'id': 's-1',
+        'name': 'Session',
+        'notes': '',
+        'date': '2026-08-21T10:00:00Z',
+        'is_assessment': false,
+        'activity': 1,
+        'origin': 'logged',
+        'duration': 3600,
+        'rpe': 8,
+        'rpe_failed': true,
+      });
+
+      expect(session.rpe, isNull);
+      expect(session.rpeFailed, isTrue);
+    });
+
     test('takes an answer back, which copyWith cannot', () {
       final rated = _session(id: 's-1', rpe: 10);
 
