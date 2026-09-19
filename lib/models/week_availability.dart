@@ -1,4 +1,5 @@
 import 'package:crimpy/models/notification_preferences.dart';
+import 'package:flutter/foundation.dart';
 
 /// Longest free text the API accepts on any one field of an activity, counted
 /// in runes.
@@ -93,19 +94,10 @@ class DayAvailability {
   bool operator ==(Object other) =>
       other is DayAvailability &&
       other.dayOfWeek == dayOfWeek &&
-      _sameList(other.activities, activities);
+      listEquals(other.activities, activities);
 
   @override
   int get hashCode => Object.hash(dayOfWeek, Object.hashAll(activities));
-}
-
-bool _sameList<T>(List<T> a, List<T> b) {
-  if (identical(a, b)) return true;
-  if (a.length != b.length) return false;
-  for (var index = 0; index < a.length; index++) {
-    if (a[index] != b[index]) return false;
-  }
-  return true;
 }
 
 /// One declared calendar week, keyed by its Monday. Not a program week: an
@@ -161,7 +153,7 @@ class WeekAvailability {
   bool operator ==(Object other) =>
       other is WeekAvailability &&
       other.weekStart == weekStart &&
-      _sameList(other.days, days);
+      listEquals(other.days, days);
 
   @override
   int get hashCode => Object.hash(weekStart, Object.hashAll(days));

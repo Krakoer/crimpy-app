@@ -48,7 +48,17 @@ class _WeekAvailabilityScreenState
   bool _saving = false;
   bool _declared = true;
 
+  /// The "Removed X" offer currently on screen, held so it can be taken down
+  /// on the way out rather than left standing over whatever comes next.
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? _pendingUndo;
+
   bool get _dirty => _week != null && _week != _loadedWeek;
+
+  @override
+  void dispose() {
+    _clearPendingUndo();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -137,23 +147,26 @@ class _WeekAvailabilityScreenState
   Future<void> _save() async {
     final week = _week;
     if (week == null) return;
+    // Held rather than looked up after the await, so what happened to the week
+    // is reported whether or not this screen is still on screen to report it.
+    // A failure that says nothing leaves the athlete believing they answered.
+    final messenger = ScaffoldMessenger.of(context);
     // Retired before the request goes out, not after it comes back. Sending is
     // a commitment, and every other control on the screen goes dead while it is
     // in flight. An undo left tappable would restore into a week whose body is
     // already on the wire, and the restore would then be thrown away silently.
-    // It also means a failure message is shown rather than queued behind it.
     _clearPendingUndo();
     setState(() => _saving = true);
     try {
       await ref.read(myAvailabilityProvider.notifier).saveWeek(week);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Your coach can see your week')),
+      );
       if (!mounted) return;
       setState(() {
         _loadedWeek = week;
         _declared = true;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Your coach can see your week')),
-      );
       // Only this screen's own route may be popped. A back taken while the
       // request was in flight has already popped it, and Navigator.pop resolves
       // to the topmost present route, so popping again here would take the one
@@ -163,8 +176,7 @@ class _WeekAvailabilityScreenState
         Navigator.of(context).pop();
       }
     } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text('Could not save your week: $error'),
           backgroundColor: CrimpyTheme.statusError,
@@ -180,29 +192,56 @@ class _WeekAvailabilityScreenState
   /// typed activities rather than two text fields, so dropping it silently
   /// costs the athlete everything they wrote.
   Future<void> _confirmPop(bool didPop, Object? result) async {
+    // Cleared before the didPop branch, because a pop that went through is
+    // exactly the case where the offer would be left standing over the screen
+    // underneath. Closing this one offer rather than the queue is what lets it
+    // run on the send path too, where a confirmation is already showing.
+    _clearPendingUndo();
     if (didPop) return;
+    // A send already on the wire is not unsaved work, and cancelling it is not
+    // on offer. The screen pops itself when the request lands, so the back is
+    // ignored rather than answered with a dialog about discarding.
+    if (_saving) return;
     if (!await _confirmDiscard()) return;
     if (!mounted) return;
-    _clearPendingUndo();
     Navigator.of(context).pop(result);
   }
 
-  /// Takes down the "Removed X" snack bar and the undo it carries, along with
-  /// anything else queued behind it.
+  /// Takes down the "Removed X" offer and the undo it carries.
   ///
   /// The snack bar is presented by the app level ScaffoldMessenger above the
   /// navigator, so it keeps showing across a pop and across a week switch, and
   /// its action still fires. What it would write is the day of the week that is
-  /// no longer on screen, or of a week already sent.
-  void _clearPendingUndo() => ScaffoldMessenger.of(context).clearSnackBars();
+  /// no longer on screen, or of a week already sent, and the athlete is told it
+  /// worked either way.
+  ///
+  /// Only that one offer is closed rather than the whole queue, so the send
+  /// confirmation shown beside it is left alone.
+  void _clearPendingUndo() {
+    _pendingUndo?.close();
+    _pendingUndo = null;
+  }
+
+  /// Holds the offer the day card just made, and lets it go again the moment it
+  /// closes on its own. Closing a snack bar that has already left throws, and
+  /// this one outlives the four seconds only when nobody touches it.
+  void _holdUndoOffer(
+    ScaffoldFeatureController<SnackBar, SnackBarClosedReason> offer,
+  ) {
+    _pendingUndo = offer;
+    offer.closed.whenComplete(() {
+      if (identical(_pendingUndo, offer)) _pendingUndo = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final week = _week;
     return PopScope(
-      // A send already in flight is not unsaved work, and the dialog would
-      // offer to discard a week that is on its way to the server anyway.
-      canPop: !_dirty || _saving,
+      // Held while a send is in flight. Letting the route go there means a
+      // request that then fails has no screen left to report on and no week
+      // left to retry from, and the athlete walks away believing it was sent.
+      canPop: !_dirty && !_saving,
       onPopInvokedWithResult: _confirmPop,
       child: _buildScaffold(week),
     );
@@ -237,6 +276,7 @@ class _WeekAvailabilityScreenState
                           day: day,
                           enabled: !_saving,
                           onChanged: _updateDay,
+                          onUndoOffered: _holdUndoOffer,
                         ),
                     ],
                   ),

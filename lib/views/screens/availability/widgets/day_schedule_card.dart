@@ -19,6 +19,14 @@ class DayScheduleCard extends StatelessWidget {
   final bool enabled;
   final ValueChanged<DayAvailability> onChanged;
 
+  /// Handed the undo offer so the screen can take it down when it leaves.
+  ///
+  /// The snack bar is presented above the navigator and outlives this card, and
+  /// an undo standing over another screen acknowledges a tap it cannot act on.
+  /// Only this one is closed, so a confirmation shown beside it survives.
+  final ValueChanged<ScaffoldFeatureController<SnackBar, SnackBarClosedReason>>?
+  onUndoOffered;
+
   const DayScheduleCard({
     super.key,
     required this.label,
@@ -26,6 +34,7 @@ class DayScheduleCard extends StatelessWidget {
     required this.day,
     required this.enabled,
     required this.onChanged,
+    this.onUndoOffered,
   });
 
   bool get _isFull => day.activities.length >= maxActivitiesPerDay;
@@ -71,21 +80,21 @@ class DayScheduleCard extends StatelessWidget {
     activities.removeAt(index);
     onChanged(day.withActivities(activities));
 
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text('Removed ${removed.label}'),
-          action: SnackBarAction(
-            label: 'Undo',
-            onPressed: () {
-              final restored = [...activities];
-              restored.insert(index.clamp(0, restored.length), removed);
-              onChanged(day.withActivities(restored));
-            },
-          ),
+    final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
+    final offer = messenger.showSnackBar(
+      SnackBar(
+        content: Text('Removed ${removed.label}'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            final restored = [...activities];
+            restored.insert(index.clamp(0, restored.length), removed);
+            onChanged(day.withActivities(restored));
+          },
         ),
-      );
+      ),
+    );
+    onUndoOffered?.call(offer);
   }
 
   @override

@@ -284,12 +284,12 @@ void main() {
     expect(sent!.days[1].activities, isEmpty);
   });
 
-  testWidgets('a back taken during the send does not pop twice', (
+  testWidgets('a back taken during the send is ignored until it lands', (
     tester,
   ) async {
-    // Navigator.pop resolves to the topmost present route, and a route already
-    // popping is not one. A second pop would take the route underneath, which
-    // from the home card is the root.
+    // Letting the route go here loses the typed week if the request then
+    // fails, and leaves nothing on screen to say so. The screen pops itself
+    // when the request lands, so holding it costs one request.
     final gate = Completer<void>();
     await _pumpPushedScreen(
       tester,
@@ -306,18 +306,83 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Send to my coach'));
     await tester.pump();
 
-    // The response has to land while the route is still transitioning out:
-    // that is the window where the State is mounted but the route is no longer
-    // the present one, so a second pop reaches past it.
-    unawaited(tester.state<NavigatorState>(find.byType(Navigator)).maybePop());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await _invokeBack(tester);
+
+    // Still here, and not asked whether to discard a week already on the wire.
+    expect(find.byType(WeekAvailabilityScreen), findsOneWidget);
+    expect(find.text('Leave this week?'), findsNothing);
+
     gate.complete();
-    await tester.pump();
     await tester.pumpAndSettle();
 
-    // Back on the route the week was opened from, rather than out of it.
+    // Popped by the send itself, once, landing on the route it came from.
     expect(find.text('open the week'), findsOneWidget);
+  });
+
+  testWidgets('a send that fails says so and leaves the week to retry', (
+    tester,
+  ) async {
+    // The athlete has to learn the week did not go, and get it back to send
+    // again. The message goes through a messenger captured before the request
+    // rather than one looked up after it, so it does not depend on the screen
+    // having survived the wait.
+    final gate = Completer<void>();
+    await _pumpPushedScreen(
+      tester,
+      declared: [
+        _weekWith({
+          1: const [DayActivity(label: 'Bouldering')],
+        }),
+      ],
+      saveGate: gate,
+    );
+
+    await tester.tap(find.byTooltip('Remove Bouldering'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Send to my coach'));
+    await tester.pump();
+
+    gate.completeError(Exception('offline'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Could not save your week'), findsOneWidget);
+    // Still on the week, with what was typed, so it can be sent again.
+    expect(find.byType(WeekAvailabilityScreen), findsOneWidget);
+    expect(_sendButton(tester).onPressed, isNotNull);
+  });
+
+  testWidgets('leaving takes the undo offer down with the screen', (
+    tester,
+  ) async {
+    // An undo left standing over the screen underneath accepts the tap and
+    // does nothing with it, which is worse than not offering one.
+    await _pumpPushedScreen(
+      tester,
+      declared: [
+        _weekWith({
+          1: const [DayActivity(label: 'Bouldering')],
+        }),
+      ],
+    );
+
+    // Added then removed, so the week is back to what was loaded and the
+    // screen pops without asking.
+    await tester.tap(find.text('Add something').first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextField, 'What'), 'Yoga');
+    await tester.tap(find.widgetWithText(FilledButton, 'Add'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Remove Yoga'));
+    await tester.pumpAndSettle();
+    expect(find.text('Undo'), findsOneWidget);
+
+    await _invokeBack(tester);
+
+    // The offer is closed on the way out rather than left to run its four
+    // seconds over the screen underneath, where the tap would be accepted and
+    // do nothing.
+    expect(find.text('open the week'), findsOneWidget);
+    expect(find.text('Undo'), findsNothing);
   });
 
   testWidgets('removing an activity and undoing leaves nothing to send', (
