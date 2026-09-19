@@ -282,6 +282,42 @@ void main() {
     gate.complete();
     await tester.pumpAndSettle();
     expect(sent!.days[1].activities, isEmpty);
+    // The confirmation is the reason the undo is closed by its own handle
+    // rather than by clearing the queue: clearing would take this with it.
+    expect(find.text('Your coach can see your week'), findsOneWidget);
+  });
+
+  testWidgets('several removals in a row still leave the screen leavable', (
+    tester,
+  ) async {
+    // Each removal offers its own undo, and the screen only ever holds the
+    // latest. Clearing three in a row and then leaving has to answer the back
+    // normally rather than getting stuck on an offer it cannot take down.
+    await _pumpPushedScreen(
+      tester,
+      declared: [
+        _weekWith({
+          1: const [
+            DayActivity(label: 'Bouldering'),
+            DayActivity(label: 'Stretching'),
+            DayActivity(label: 'Long run'),
+          ],
+        }),
+      ],
+    );
+
+    for (final label in ['Bouldering', 'Stretching', 'Long run']) {
+      await tester.tap(find.byTooltip('Remove $label'));
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+
+    await _invokeBack(tester);
+
+    // The back was answered: the week is dirty, so it asks rather than leaving.
+    expect(find.text('Leave this week?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(TextButton, 'Discard'));
+    await tester.pumpAndSettle();
+    expect(find.text('open the week'), findsOneWidget);
   });
 
   testWidgets('a back taken during the send is ignored until it lands', (
@@ -306,11 +342,17 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Send to my coach'));
     await tester.pump();
 
-    await _invokeBack(tester);
+    // Pumped rather than settled: the send bar spins while the request is in
+    // flight, so there is deliberately nothing to settle to.
+    unawaited(tester.state<NavigatorState>(find.byType(Navigator)).maybePop());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
 
     // Still here, and not asked whether to discard a week already on the wire.
     expect(find.byType(WeekAvailabilityScreen), findsOneWidget);
     expect(find.text('Leave this week?'), findsNothing);
+    // And visibly busy, so a back that does nothing does not read as a freeze.
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     gate.complete();
     await tester.pumpAndSettle();

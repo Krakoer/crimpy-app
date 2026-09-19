@@ -55,16 +55,16 @@ class _WeekAvailabilityScreenState
   bool get _dirty => _week != null && _week != _loadedWeek;
 
   @override
-  void dispose() {
-    _clearPendingUndo();
-    super.dispose();
-  }
-
-  @override
   void initState() {
     super.initState();
     _weekStart = widget.weekStart ?? getStartOfNextWeek(DateTime.now());
     _loadWeek();
+  }
+
+  @override
+  void dispose() {
+    _clearPendingUndo();
+    super.dispose();
   }
 
   Future<void> _loadWeek() async {
@@ -157,24 +157,10 @@ class _WeekAvailabilityScreenState
     // already on the wire, and the restore would then be thrown away silently.
     _clearPendingUndo();
     setState(() => _saving = true);
+    var saved = false;
     try {
       await ref.read(myAvailabilityProvider.notifier).saveWeek(week);
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Your coach can see your week')),
-      );
-      if (!mounted) return;
-      setState(() {
-        _loadedWeek = week;
-        _declared = true;
-      });
-      // Only this screen's own route may be popped. A back taken while the
-      // request was in flight has already popped it, and Navigator.pop resolves
-      // to the topmost present route, so popping again here would take the one
-      // underneath: from the home card that is the root, and the app is left
-      // with an empty navigator.
-      if (ModalRoute.of(context)?.isCurrent ?? false) {
-        Navigator.of(context).pop();
-      }
+      saved = true;
     } catch (error) {
       messenger.showSnackBar(
         SnackBar(
@@ -184,6 +170,25 @@ class _WeekAvailabilityScreenState
       );
     } finally {
       if (mounted) setState(() => _saving = false);
+    }
+    if (!saved) return;
+
+    // Outside the try, so nothing it raises is read back as a failed send and
+    // reported to the athlete as a week that did not go.
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Your coach can see your week')),
+    );
+    if (!mounted) return;
+    setState(() {
+      _loadedWeek = week;
+      _declared = true;
+    });
+    // Only this screen's own route may be popped. Navigator.pop resolves to the
+    // topmost present route, so popping one this screen no longer owns would
+    // take the route underneath: from the home card that is the root, and the
+    // app is left with an empty navigator.
+    if (ModalRoute.of(context)?.isCurrent ?? false) {
+      Navigator.of(context).pop();
     }
   }
 
@@ -218,8 +223,11 @@ class _WeekAvailabilityScreenState
   /// Only that one offer is closed rather than the whole queue, so the send
   /// confirmation shown beside it is left alone.
   void _clearPendingUndo() {
-    _pendingUndo?.close();
+    // Taken before it is closed, so a close that throws cannot leave the field
+    // set and repeat itself on every later exit.
+    final offer = _pendingUndo;
     _pendingUndo = null;
+    offer?.close();
   }
 
   /// Holds the offer the day card just made, and lets it go again the moment it
@@ -408,7 +416,30 @@ class _SendBar extends StatelessWidget {
         top: false,
         child: SizedBox(
           width: double.infinity,
-          child: FilledButton(onPressed: onSend, child: Text(_label)),
+          child: FilledButton(
+            onPressed: onSend,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (saving) ...[
+                  // The screen holds itself until the request lands, so it has
+                  // to look busy rather than merely disabled: a back that does
+                  // nothing on a still screen reads as a frozen app.
+                  const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: CrimpyTheme.textOnFillSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Text(_label),
+              ],
+            ),
+          ),
         ),
       ),
     );

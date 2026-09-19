@@ -44,8 +44,12 @@ class DayScheduleCard extends StatelessWidget {
   /// The undo carries the day as it stood when the activity was removed. Adding
   /// or editing while it is still up would leave it able to put that snapshot
   /// back over the newer one, taking whatever was just written with it.
+  ///
+  /// Removed rather than cleared: clearSnackBars drops a queued offer without
+  /// completing it, which would leave the screen holding a controller that
+  /// never reports itself closed.
   void _retirePendingUndo(BuildContext context) =>
-      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
 
   Future<void> _add(BuildContext context) async {
     _retirePendingUndo(context);
@@ -80,7 +84,12 @@ class DayScheduleCard extends StatelessWidget {
     activities.removeAt(index);
     onChanged(day.withActivities(activities));
 
-    final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
+    // Removed rather than hidden, because a hidden snack bar stays in the queue
+    // for its exit animation and the next offer would queue behind it. Only the
+    // front of the queue can be closed by its own controller, so a second
+    // removal inside that window would hand the screen an offer it cannot take
+    // down, and the assertion that guards it fires on the way out.
+    final messenger = ScaffoldMessenger.of(context)..removeCurrentSnackBar();
     final offer = messenger.showSnackBar(
       SnackBar(
         content: Text('Removed ${removed.label}'),
