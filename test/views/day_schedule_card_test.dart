@@ -260,15 +260,50 @@ void main() {
         );
         await tester.tap(find.widgetWithText(FilledButton, 'Add'));
         await tester.pumpAndSettle();
-        expect(
-          find.textContaining('longer than $maxActivityTextLength'),
-          findsOneWidget,
-        );
+        expect(find.text('Shorten this a little'), findsOneWidget);
         await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
       },
     );
 
     expect(day.activities, isEmpty);
+  });
+
+  testWidgets('an edit that changed nothing is not reported as one', (
+    tester,
+  ) async {
+    // Reporting it would mark the week dirty, and sending it re-dates the
+    // declaration, which puts the week back at the top of the coach's feed as
+    // an answer the athlete did not give.
+    var reported = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DayScheduleCard(
+            label: 'Tuesday',
+            dateLabel: '9/6',
+            day: const DayAvailability(
+              dayOfWeek: 1,
+              activities: [
+                DayActivity(
+                  label: 'Bouldering',
+                  durationMinutes: 90,
+                  when: 'after work',
+                ),
+              ],
+            ),
+            enabled: true,
+            onChanged: (_) => reported++,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Bouldering'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.pumpAndSettle();
+
+    expect(reported, 0);
   });
 
   test('a planned duration reads as hours once it passes one', () {

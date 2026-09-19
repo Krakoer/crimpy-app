@@ -37,6 +37,48 @@ Future<void> _pumpScreen(
   await tester.pumpAndSettle();
 }
 
+/// Opens the screen on top of another route, so a back that is allowed through
+/// has somewhere to land. On the root route the navigator has nothing to pop
+/// and the gesture is a no-op whatever PopScope says.
+Future<void> _pumpPushedScreen(
+  WidgetTester tester, {
+  required List<WeekAvailability> declared,
+}) async {
+  await tester.binding.setSurfaceSize(const Size(800, 2000));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        myAvailabilityProvider.overrideWith(
+          () => _StubMyAvailability(declared),
+        ),
+      ],
+      child: MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => WeekAvailabilityScreen(weekStart: _monday),
+                ),
+              ),
+              child: const Text('open the week'),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.tap(find.text('open the week'));
+  await tester.pumpAndSettle();
+}
+
+/// Raises the system back gesture at the route, the way the platform does.
+Future<void> _invokeBack(WidgetTester tester) async {
+  await tester.state<NavigatorState>(find.byType(Navigator)).maybePop();
+  await tester.pumpAndSettle();
+}
+
 FilledButton _sendButton(WidgetTester tester) => tester.widget<FilledButton>(
   find.ancestor(
     of: find.textContaining('coach'),
@@ -113,6 +155,78 @@ void main() {
 
     expect(find.text('3 things across 2 days'), findsOneWidget);
     expect(find.text('3h'), findsOneWidget);
+  });
+
+  testWidgets('leaving a dirty week with the back button asks first', (
+    tester,
+  ) async {
+    await _pumpPushedScreen(
+      tester,
+      declared: [
+        _weekWith({
+          1: const [DayActivity(label: 'Bouldering')],
+        }),
+      ],
+    );
+
+    await tester.tap(find.byTooltip('Remove Bouldering'));
+    await tester.pumpAndSettle();
+
+    // A back that popped straight out would take the edit with it, and the
+    // week now holds typed activities rather than two text fields.
+    await _invokeBack(tester);
+    expect(find.text('Leave this week?'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(TextButton, 'Stay'));
+    await tester.pumpAndSettle();
+    expect(find.byType(WeekAvailabilityScreen), findsOneWidget);
+    expect(_sendButton(tester).onPressed, isNotNull);
+  });
+
+  testWidgets('leaving an untouched week does not ask', (tester) async {
+    await _pumpPushedScreen(
+      tester,
+      declared: [
+        _weekWith({
+          1: const [DayActivity(label: 'Bouldering')],
+        }),
+      ],
+    );
+
+    await _invokeBack(tester);
+
+    expect(find.text('Leave this week?'), findsNothing);
+    expect(find.byType(WeekAvailabilityScreen), findsNothing);
+    expect(find.text('open the week'), findsOneWidget);
+  });
+
+  testWidgets('the undo of a removed activity does not follow the week', (
+    tester,
+  ) async {
+    // The snack bar is presented above the navigator, so it survives the week
+    // switch on its own. Its action would put Tuesday's activity back into
+    // whatever week is on screen, since a day is matched by index and carries
+    // no week of its own.
+    await _pumpScreen(
+      tester,
+      declared: [
+        _weekWith({
+          1: const [DayActivity(label: 'Bouldering')],
+        }),
+      ],
+    );
+
+    await tester.tap(find.byTooltip('Remove Bouldering'));
+    await tester.pumpAndSettle();
+    expect(find.text('Undo'), findsOneWidget);
+
+    await tester.tap(find.textContaining('In 2 weeks'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Discard'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Undo'), findsNothing);
+    expect(find.text('Bouldering'), findsNothing);
   });
 
   testWidgets('every day of the week gets a card', (tester) async {

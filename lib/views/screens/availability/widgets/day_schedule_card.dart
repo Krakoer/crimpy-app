@@ -43,6 +43,10 @@ class DayScheduleCard extends StatelessWidget {
       dayLabel: label,
     );
     if (activity == null) return;
+    // An edit that changed nothing is not an edit. Reporting it would mark the
+    // week dirty and let it be re-sent, which re-dates the declaration and
+    // surfaces it in the coach's feed as an answer the athlete did not give.
+    if (activity == day.activities[index]) return;
     final activities = [...day.activities];
     activities[index] = activity;
     onChanged(day.withActivities(activities));

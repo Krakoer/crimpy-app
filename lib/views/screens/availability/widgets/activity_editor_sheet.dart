@@ -74,9 +74,14 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
   /// maxLength counts grapheme clusters while the API counts runes, so a field
   /// the box let through can still be too long for it. Checked here rather than
   /// left to the save, which refuses the whole week and names no field.
+  /// The message names no number on purpose: the box counts characters the way
+  /// a keyboard does and the API counts runes, so a field that has just stopped
+  /// accepting input at its own limit can still be over this one, and quoting
+  /// the limit back would be quoting a number the athlete can see they are
+  /// under.
   String? _lengthError(String value) =>
       value.runes.length > maxActivityTextLength
-      ? 'That is longer than $maxActivityTextLength characters'
+      ? 'Shorten this a little'
       : null;
 
   void _save() {

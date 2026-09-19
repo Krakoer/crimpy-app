@@ -81,6 +81,11 @@ class _WeekAvailabilityScreenState
     if (weekStart == _weekStart) return;
     if (_dirty && !await _confirmDiscard()) return;
     if (!mounted) return;
+    // The undo of a removed activity belongs to the week it was removed from.
+    // The snack bar lives above the navigator and would otherwise still be on
+    // screen here, one tap away from putting that activity into a different
+    // week, which matches days by index and would take it silently.
+    _clearPendingUndo();
     setState(() {
       _weekStart = weekStart;
       _week = null;
@@ -111,6 +116,10 @@ class _WeekAvailabilityScreenState
   }
 
   void _updateDay(DayAvailability day) {
+    // An undo can be tapped after this screen is gone, since the snack bar
+    // outlives the route. Every path that leaves retires it first, so this is
+    // the backstop rather than the guard.
+    if (!mounted) return;
     setState(() {
       _week = _week?.withDay(day);
       _dirty = true;
@@ -125,6 +134,10 @@ class _WeekAvailabilityScreenState
       await ref.read(myAvailabilityProvider.notifier).saveWeek(week);
       if (!mounted) return;
       setState(() => _dirty = false);
+      // Retired before the confirmation replaces it, and before the route
+      // pops: an undo left standing over the screen underneath would write
+      // into a week nobody is looking at any more.
+      _clearPendingUndo();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Your coach can see your week')),
       );
@@ -150,14 +163,25 @@ class _WeekAvailabilityScreenState
     if (didPop) return;
     if (!await _confirmDiscard()) return;
     if (!mounted) return;
+    _clearPendingUndo();
     Navigator.of(context).pop(result);
   }
+
+  /// Takes down the "Removed X" snack bar and the undo it carries.
+  ///
+  /// The snack bar is presented by the app level ScaffoldMessenger above the
+  /// navigator, so it keeps showing across a pop and across a week switch, and
+  /// its action still fires. What it would write is the day of the week that is
+  /// no longer on screen.
+  void _clearPendingUndo() => ScaffoldMessenger.of(context).clearSnackBars();
 
   @override
   Widget build(BuildContext context) {
     final week = _week;
     return PopScope(
-      canPop: !_dirty,
+      // A send already in flight is not unsaved work, and the dialog would
+      // offer to discard a week that is on its way to the server anyway.
+      canPop: !_dirty || _saving,
       onPopInvokedWithResult: _confirmPop,
       child: _buildScaffold(week),
     );

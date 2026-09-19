@@ -40,6 +40,21 @@ class DayActivity {
     'when': when,
     'where': where,
   };
+
+  // Compared by value so an edit that changed nothing is not treated as one.
+  // Re-declaring a week moves its updated_at, which puts it back at the top of
+  // the coach's feed as a fresh answer, so "the athlete opened it and pressed
+  // save" would read to them as "the athlete changed their week".
+  @override
+  bool operator ==(Object other) =>
+      other is DayActivity &&
+      other.label == label &&
+      other.durationMinutes == durationMinutes &&
+      other.when == when &&
+      other.where == where;
+
+  @override
+  int get hashCode => Object.hash(label, durationMinutes, when, where);
 }
 
 /// What the athlete plans on one day, 0=Mon..6=Sun.
