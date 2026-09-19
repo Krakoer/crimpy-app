@@ -1,8 +1,7 @@
 import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/availability_view_model.dart';
-import 'package:crimpy/views/screens/availability/widgets/day_availability_row.dart';
-import 'package:crimpy/views/widgets/section_widgets.dart';
+import 'package:crimpy/views/screens/availability/widgets/day_schedule_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/utils/datetimes.dart';
@@ -17,8 +16,9 @@ const List<String> _weekdayNames = [
   'Sunday',
 ];
 
-/// Where the athlete tells their coach when they can train, one calendar week
-/// at a time. Permissive on purpose: a day may be nothing but a sentence.
+/// Where the athlete tells their coach what their week looks like, one calendar
+/// week at a time. Permissive on purpose: a day holds as many activities as
+/// they want, or none at all, and none at all is still an answer.
 class WeekAvailabilityScreen extends ConsumerStatefulWidget {
   /// The Monday to open on. Defaults to next week, which is the one a coach
   /// writing a program on Saturday is asking about.
@@ -77,6 +77,7 @@ class _WeekAvailabilityScreenState
   }
 
   Future<void> _showWeek(DateTime weekStart) async {
+    if (weekStart == _weekStart) return;
     if (_dirty && !await _confirmDiscard()) return;
     if (!mounted) return;
     setState(() {
@@ -144,53 +145,166 @@ class _WeekAvailabilityScreenState
   Widget build(BuildContext context) {
     final week = _week;
     return Scaffold(
+      backgroundColor: CrimpyTheme.bgSecondary,
       appBar: AppBar(title: const Text('Your week')),
       body: _loadError != null
           ? _LoadFailure(onRetry: _retry)
           : week == null
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
+          : Column(
               children: [
                 _WeekSwitcher(
                   weekStart: _weekStart,
                   onPick: _showWeek,
                   enabled: !_saving,
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Say what you can do on each day. A rough duration and a word '
-                  'about it is enough: your coach builds the week around it.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: CrimpyTheme.textSecondary,
+                _WeekSummary(week: week, declared: _declared),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                    children: [
+                      for (final day in week.days)
+                        DayScheduleCard(
+                          // Keyed by the week as well as the day: switching
+                          // weeks resolves from a loaded provider without ever
+                          // painting the spinner, so an unkeyed card would be
+                          // reused across two different weeks.
+                          key: ValueKey((_weekStart, day.dayOfWeek)),
+                          label: _weekdayNames[day.dayOfWeek],
+                          dateLabel: _dayAndMonth(
+                            addCalendarDays(_weekStart, day.dayOfWeek),
+                          ),
+                          day: day,
+                          enabled: !_saving,
+                          onChanged: _updateDay,
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                const SectionLabel('Days'),
-                const SizedBox(height: 8),
-                for (final day in week.days)
-                  DayAvailabilityRow(
-                    // Keyed by the week as well as the day: switching weeks
-                    // resolves from a loaded provider without ever painting the
-                    // spinner, so an unkeyed row would be reused and keep the
-                    // previous week's text in its controllers.
-                    key: ValueKey((_weekStart, day.dayOfWeek)),
-                    label: _weekdayNames[day.dayOfWeek],
-                    day: day,
-                    enabled: !_saving,
-                    onChanged: _updateDay,
-                  ),
-                const SizedBox(height: 20),
-                FilledButton(
+                _SendBar(
                   // A week never declared sends as it stands, untouched: an
-                  // athlete who cannot train at all is answering, and the API
-                  // reads a missing week as silence and keeps nudging for it.
-                  onPressed: _saving || (_declared && !_dirty) ? null : _save,
-                  child: Text(_saving ? 'Saving' : 'Send to my coach'),
+                  // athlete with nothing on is answering, and the API reads a
+                  // missing week as silence and keeps nudging for it.
+                  onSend: _saving || (_declared && !_dirty) ? null : _save,
+                  saving: _saving,
+                  dirty: _dirty,
+                  declared: _declared,
                 ),
               ],
             ),
+    );
+  }
+}
+
+String _dayAndMonth(DateTime day) => '${day.day}/${day.month}';
+
+/// What the week adds up to, so the athlete sees their answer before sending it
+/// and a week left empty reads as deliberate rather than as unfinished.
+class _WeekSummary extends StatelessWidget {
+  final WeekAvailability week;
+  final bool declared;
+
+  const _WeekSummary({required this.week, required this.declared});
+
+  String get _headline {
+    if (week.plannedActivityCount == 0) {
+      return declared ? 'Nothing on this week' : 'Nothing on this week yet';
+    }
+    final days = week.plannedDayCount;
+    return '${week.plannedActivityCount} '
+        '${week.plannedActivityCount == 1 ? 'thing' : 'things'} '
+        'across $days ${days == 1 ? 'day' : 'days'}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final minutes = week.plannedMinutes;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      decoration: const BoxDecoration(
+        color: CrimpyTheme.bgPrimary,
+        border: Border(
+          bottom: BorderSide(color: CrimpyTheme.borderDefault, width: 2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _headline,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: CrimpyTheme.textPrimary,
+                  ),
+                ),
+              ),
+              if (minutes > 0)
+                Text(
+                  formatPlannedMinutes(minutes),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: CrimpyTheme.accentGreen,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Add whatever fills your days, training or not. Your coach builds '
+            'the week around what is already in it.',
+            style: TextStyle(fontSize: 12, color: CrimpyTheme.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The send button, pinned under the list rather than scrolled to the bottom of
+/// it: with seven day cards and their activities the old inline button sat a
+/// long way down a page the athlete had no reason to scroll to.
+class _SendBar extends StatelessWidget {
+  final VoidCallback? onSend;
+  final bool saving;
+  final bool dirty;
+  final bool declared;
+
+  const _SendBar({
+    required this.onSend,
+    required this.saving,
+    required this.dirty,
+    required this.declared,
+  });
+
+  String get _label {
+    if (saving) return 'Sending';
+    if (declared && !dirty) return 'Sent to your coach';
+    return 'Send to my coach';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      decoration: const BoxDecoration(
+        color: CrimpyTheme.bgPrimary,
+        border: Border(
+          top: BorderSide(color: CrimpyTheme.borderDefault, width: 2),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          width: double.infinity,
+          child: FilledButton(onPressed: onSend, child: Text(_label)),
+        ),
+      ),
     );
   }
 }
@@ -216,16 +330,22 @@ class _WeekSwitcher extends StatelessWidget {
       addCalendarDays(thisWeek, 7),
       addCalendarDays(thisWeek, 14),
     ];
-    return Wrap(
-      spacing: 8,
-      children: [
-        for (var index = 0; index < options.length; index++)
-          ChoiceChip(
-            label: Text(_optionLabel(index, options[index])),
-            selected: options[index] == weekStart,
-            onSelected: enabled ? (_) => onPick(options[index]) : null,
-          ),
-      ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      color: CrimpyTheme.bgPrimary,
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (var index = 0; index < options.length; index++)
+            ChoiceChip(
+              label: Text(_optionLabel(index, options[index])),
+              selected: options[index] == weekStart,
+              onSelected: enabled ? (_) => onPick(options[index]) : null,
+            ),
+        ],
+      ),
     );
   }
 
@@ -235,7 +355,7 @@ class _WeekSwitcher extends StatelessWidget {
       1 => 'Next week',
       _ => 'In 2 weeks',
     };
-    return '$name (${monday.day}/${monday.month})';
+    return '$name (${_dayAndMonth(monday)})';
   }
 }
 
