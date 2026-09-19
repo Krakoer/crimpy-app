@@ -347,6 +347,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                   ),
             goal: _goalOf(item),
             comment: _commentOf(item),
+            protocol: _protocolOf(item),
           );
 
     // Content below the circle: preview the next step during a rest, or while
@@ -361,6 +362,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             nextRep,
             item is RestItem ? _goalOf(nextRep) : null,
             item is RestItem ? _commentOf(nextRep) : null,
+            item is RestItem ? _protocolOf(nextRep) : null,
             item is RestItem ? _videoOf(nextRep) : null,
           )
         : const SizedBox.shrink();
@@ -448,6 +450,19 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       _ => null,
     };
     final trimmed = goal?.trim() ?? '';
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
+  /// The rule the step is resolved by, if the block it came from names one. A
+  /// rest is not a step a coach writes a rule for, so it never has one of its
+  /// own.
+  String? _protocolOf(TrainingExecutionItem? item) {
+    final protocol = switch (item) {
+      TimedItem() => item.protocol,
+      ConfirmItem() => item.protocol,
+      _ => null,
+    };
+    final trimmed = protocol?.trim() ?? '';
     return trimmed.isEmpty ? null : trimmed;
   }
 
@@ -564,21 +579,29 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// coach comment that goes with it. The goal heads the step rather than
   /// following it: it is why the athlete is here, so it reads as a heading and
   /// never as one of the numbers they are acting on.
-  Widget _headerBlock({required Widget title, String? goal, String? comment}) =>
-      Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (goal != null) ...[_goalText(goal), const SizedBox(height: 6)],
-            title,
-            if (comment != null) ...[
-              const SizedBox(height: 8),
-              _commentText(comment),
-            ],
-          ],
-        ),
-      );
+  Widget _headerBlock({
+    required Widget title,
+    String? goal,
+    String? comment,
+    String? protocol,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (goal != null) ...[_goalText(goal), const SizedBox(height: 6)],
+        title,
+        if (protocol != null) ...[
+          const SizedBox(height: 8),
+          _protocolText(protocol),
+        ],
+        if (comment != null) ...[
+          const SizedBox(height: 8),
+          _commentText(comment),
+        ],
+      ],
+    ),
+  );
 
   /// Name of the upcoming step, the coach comment that goes with it, and the
   /// demo video of the movement. The video is offered here rather than on the
@@ -588,12 +611,19 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     TrainingExecutionItem nextRep,
     String? goal,
     String? comment,
+    String? protocol,
     String? videoLink,
   ) => Column(
     mainAxisSize: MainAxisSize.min,
     children: [
       NextRepPreview(nextRep: nextRep),
       if (goal != null) ...[const SizedBox(height: 6), _goalText(goal)],
+      // The rest is where the rule is acted on: it says what to do about the
+      // set just finished before the next one starts.
+      if (protocol != null) ...[
+        const SizedBox(height: 8),
+        _protocolText(protocol),
+      ],
       if (comment != null) ...[
         const SizedBox(height: 8),
         _commentText(comment),
@@ -655,6 +685,47 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     ),
   );
 
+  /// The rule the step is resolved by, during the run, e.g. "to failure or
+  /// 40s; past 40s add 5kg". Labelled, since the athlete has to tell it from
+  /// the comment above it: that one says how to execute the movement, this one
+  /// decides what the numbers become. Width-constrained and line-capped for the
+  /// reason the comment is, and the whole of it is on the training detail
+  /// screen, which caps neither.
+  ///
+  /// Read and nothing more: the run does not evaluate a rule, and what it
+  /// resolved to is reported on the review pass at the end of the session.
+  Widget _protocolText(String text) => ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: 320),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'PROTOCOL',
+          style: TextStyle(
+            fontFamily: 'JetBrainsMono',
+            fontSize: 9.5,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.6,
+            color: CrimpyTheme.protocolColor,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          text,
+          textAlign: TextAlign.center,
+          maxLines: 4,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            fontFamily: 'JetBrainsMono',
+            fontSize: 13,
+            height: 1.4,
+            color: CrimpyTheme.textSecondary,
+          ),
+        ),
+      ],
+    ),
+  );
+
   /// A note's prose: what the coach wrote between the exercises, which is a
   /// whole prescription rather than a name, so it is set as prose instead of
   /// being shouted in the title.
@@ -709,6 +780,8 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       nextGoal: _goalOf(nextItem),
       comment: _commentOf(timer.currentItem),
       nextComment: _commentOf(nextItem),
+      protocol: _protocolOf(timer.currentItem),
+      nextProtocol: _protocolOf(nextItem),
       videoLink: _videoOf(timer.currentItem),
       nextVideoLink: _videoOf(nextItem),
       onPlayPause: timer.isRunning ? _stop : _start,
@@ -726,6 +799,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     final rep = timer.currentItem as ConfirmItem;
     final goal = _goalOf(rep);
     final comment = _commentOf(rep);
+    final protocol = _protocolOf(rep);
     // A self paced step is one the athlete ends themselves, so they are stood
     // in front of the phone rather than hanging off it: the tap is safe here.
     final video = _videoOf(rep);
@@ -756,6 +830,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
           if (rep.instructions != null) ...[
             const SizedBox(height: 10),
             _noteProseText(rep.instructions!),
+          ],
+          if (protocol != null) ...[
+            const SizedBox(height: 8),
+            _protocolText(protocol),
           ],
           if (comment != null) ...[
             const SizedBox(height: 8),

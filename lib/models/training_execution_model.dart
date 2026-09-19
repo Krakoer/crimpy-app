@@ -87,6 +87,12 @@ final class TimedItem extends TrainingExecutionItem {
   /// are acting on right now.
   final String? goal;
 
+  /// The rule the athlete resolves while performing the block, e.g. "to failure
+  /// or 40s; past 40s add 5kg". Carried from the item the step came from, and
+  /// read rather than acted on by the run: nothing here evaluates it, and what
+  /// it resolved to is reported at the end of the session.
+  final String? protocol;
+
   /// Demo video of the movement, carried from the exercise the step came from.
   /// Only offered when the athlete is not mid set, so a link is never something
   /// they can hit while hanging.
@@ -124,6 +130,7 @@ final class TimedItem extends TrainingExecutionItem {
     this.subtitle,
     this.comment,
     this.goal,
+    this.protocol,
     this.videoLink,
     super.trainingItemId,
     super.occurrence,
@@ -194,6 +201,12 @@ final class ConfirmItem extends TrainingExecutionItem {
   /// are acting on right now.
   final String? goal;
 
+  /// The rule the athlete resolves while performing the block, e.g. "to failure
+  /// or 40s; past 40s add 5kg". Carried from the item the step came from, and
+  /// read rather than acted on by the run: nothing here evaluates it, and what
+  /// it resolved to is reported at the end of the session.
+  final String? protocol;
+
   /// Demo video of the movement, carried from the exercise the step came from.
   final String? videoLink;
 
@@ -206,6 +219,7 @@ final class ConfirmItem extends TrainingExecutionItem {
     this.subtitle,
     this.comment,
     this.goal,
+    this.protocol,
     this.videoLink,
     super.trainingItemId,
     super.occurrence,

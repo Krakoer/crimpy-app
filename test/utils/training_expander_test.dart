@@ -424,6 +424,113 @@ void main() {
     expect(out[1].comment, 'First rep in pronation');
   });
 
+  test('item protocol propagates to the execution items', () {
+    const rampToALimit =
+        'Ramp up in 5kg steps, then 2.5kg once you are near the limit. If you '
+        'hold more than 5 sec, stop the set and add load.';
+    const stopRuleOnATest =
+        'Aim for 24 reps. If you get past 24, stop, rest 10 min, then add 5kg '
+        'and go again.';
+    final repsExercise = TrainingItem(
+      id: 'e1',
+      type: TrainingItemType.exercise,
+      position: 0,
+      reps: 24,
+      protocol: stopRuleOnATest,
+    );
+    final timedExercise = TrainingItem(
+      id: 'e2',
+      type: TrainingItemType.exercise,
+      position: 1,
+      duration: 30,
+      protocol: rampToALimit,
+    );
+
+    final out = expandTrainingItems(
+      _training([repsExercise, timedExercise]),
+      useSensor: false,
+    );
+
+    expect((out[0] as ConfirmItem).protocol, stopRuleOnATest);
+    expect((out[1] as TimedItem).protocol, rampToALimit);
+  });
+
+  // A rule is written on the block, and its steps are that block, so a hang
+  // inherits it the way it already inherits the comment and the goal.
+  test('a block protocol applies to children without their own', () {
+    final training = _training([
+      TrainingItem(
+        id: 'c',
+        type: TrainingItemType.circuit,
+        position: 0,
+        cycles: 1,
+        protocol: 'Stop the round once a rep slows down.',
+        items: [
+          TrainingItem(
+            id: 'e1',
+            type: TrainingItemType.exercise,
+            position: 0,
+            duration: 35,
+          ),
+          TrainingItem(
+            id: 'e2',
+            type: TrainingItemType.exercise,
+            position: 1,
+            duration: 35,
+            protocol: 'Feet on the ground if you fall short.',
+          ),
+        ],
+      ),
+    ]);
+
+    final out = expandTrainingItems(
+      training,
+      useSensor: false,
+    ).whereType<TimedItem>().toList();
+
+    expect(out[0].protocol, 'Stop the round once a rep slows down.');
+    expect(out[1].protocol, 'Feet on the ground if you fall short.');
+  });
+
+  // Three fields on the step answering three questions: a block that only
+  // names one must not have the others read off it.
+  test('goal, comment and protocol are carried apart from each other', () {
+    final training = _training([
+      TrainingItem(
+        id: 'e1',
+        type: TrainingItemType.exercise,
+        position: 0,
+        duration: 30,
+        goal: 'resi doigts',
+      ),
+      TrainingItem(
+        id: 'e2',
+        type: TrainingItemType.exercise,
+        position: 1,
+        duration: 30,
+        comment: 'First rep in pronation',
+      ),
+      TrainingItem(
+        id: 'e3',
+        type: TrainingItemType.exercise,
+        position: 2,
+        duration: 30,
+        protocol: 'To failure or 40s.',
+      ),
+    ]);
+
+    final out = expandTrainingItems(
+      training,
+      useSensor: false,
+    ).whereType<TimedItem>().toList();
+
+    expect(out[0].protocol, isNull);
+    expect(out[1].protocol, isNull);
+    expect(out[2].protocol, 'To failure or 40s.');
+    expect(out[2].goal, isNull);
+    expect(out[2].comment, isNull);
+  });
+
   test('group comment reaches children nested in a circuit', () {
     final training = _training([
       TrainingItem(

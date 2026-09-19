@@ -427,8 +427,21 @@ bool holdsReportableWork(List<TrainingItem> items) {
 }
 
 /// One line of the post workout review: a prescribed item and which pass of it
-/// the line answers.
-typedef ReviewLine = ({TrainingItem item, int occurrence});
+/// the line answers, and the rule in force on it.
+///
+/// [protocol] is the item's own protocol, or the one of the nearest block above
+/// it that gets no line of its own. It is carried on the line rather than read
+/// off the item because a group carries no line: a rule written on the block
+/// would otherwise be on screen during the run and nowhere on the card where
+/// the athlete writes down what it resolved to.
+///
+/// This is where it parts company with the run, which inherits a rule down to
+/// every step (see the expander's _StepPlacement). A run shows one step at a
+/// time, so repeating the rule on each is what keeps it in front of the
+/// athlete; the review is a single scroll, so a circuit restating its rule on
+/// its own card and on each of its children would be four copies of the same
+/// prose in one screen.
+typedef ReviewLine = ({TrainingItem item, int occurrence, String? protocol});
 
 /// The lines the athlete goes back over once the run is done, in the order the
 /// prescription lays them out, nested items included.
@@ -448,20 +461,27 @@ List<ReviewLine> reviewLines(
   }
 
   final lines = <ReviewLine>[];
-  void walk(List<TrainingItem> items) {
+  void walk(List<TrainingItem> items, String? inheritedProtocol) {
     for (final item in items) {
+      final own = item.protocol?.trim() ?? '';
+      final protocol = own.isEmpty ? inheritedProtocol : own;
       if (isReportable(item)) {
         final occurrences = (occurrencesByItem[item.reportKey]?.toList() ?? [0])
           ..sort();
         for (final occurrence in occurrences) {
-          lines.add((item: item, occurrence: occurrence));
+          lines.add((item: item, occurrence: occurrence, protocol: protocol));
         }
       }
-      walk(item.items);
+      // A block that gets a card of its own has already stated its rule there,
+      // so its children do not restate it: a circuit and its three exercises
+      // would otherwise stack four copies of the same prose down one screen.
+      // A group gets no card, which is the case the inheritance exists for, so
+      // it passes its rule down.
+      walk(item.items, isReportable(item) ? null : protocol);
     }
   }
 
-  walk(items);
+  walk(items, null);
   return lines;
 }
 

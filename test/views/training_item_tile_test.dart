@@ -183,4 +183,50 @@ void main() {
     expect(find.text('Frog'), findsOneWidget);
     expect(find.byType(TrainingItemGoal), findsNothing);
   });
+
+  // The breakdown is where the athlete reads the whole rule, uncapped, before
+  // they start: the run screen line caps it and the tank cannot scroll.
+  testWidgets('the protocol of an item is listed beside its goal and comment', (
+    tester,
+  ) async {
+    const rule =
+        'Hang to failure or 40s. If you go past 40s add 5kg; if you fall '
+        'short, put your feet on the ground.';
+    await _pumpItems(tester, [
+      const TrainingItem(
+        id: 'e1',
+        type: TrainingItemType.exercise,
+        position: 0,
+        reps: 10,
+        exerciseName: 'Pull up',
+        goal: 'resi doigts',
+        comment: 'First rep in pronation',
+        protocol: rule,
+      ),
+    ]);
+
+    expect(find.text('PROTOCOL'), findsOneWidget);
+    expect(find.text(rule), findsOneWidget);
+    expect(find.byType(TrainingItemProtocol), findsOneWidget);
+    expect(find.byType(TrainingItemGoal), findsOneWidget);
+    expect(find.byType(TrainingItemComment), findsOneWidget);
+  });
+
+  testWidgets('an item without a protocol shows no protocol block', (
+    tester,
+  ) async {
+    await _pumpItems(tester, [
+      const TrainingItem(
+        id: 'e1',
+        type: TrainingItemType.exercise,
+        position: 0,
+        reps: 10,
+        exerciseName: 'Frog',
+        protocol: '  ',
+      ),
+    ]);
+
+    expect(find.text('Frog'), findsOneWidget);
+    expect(find.byType(TrainingItemProtocol), findsNothing);
+  });
 }
