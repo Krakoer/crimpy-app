@@ -88,7 +88,9 @@ class SessionRpeAnswer {
 /// reported nothing. A value the app does not know, from a server that widened
 /// the scale, reads as nothing rather than as a wrong anchor.
 SessionRpeOption? sessionRpeOptionOf({int? rpe, bool rpeFailed = false}) {
-  if (rpeFailed) return sessionRpeOptions.last;
+  if (rpeFailed) {
+    return sessionRpeOptions.firstWhere((option) => option.isFailure);
+  }
   if (rpe == null) return null;
   for (final option in sessionRpeOptions) {
     if (option.value == rpe) return option;

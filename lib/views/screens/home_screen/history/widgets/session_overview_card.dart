@@ -110,11 +110,21 @@ class SessionOverviewCard extends StatelessWidget {
             ),
             if (rpe != null) ...[
               const SizedBox(height: 12),
-              _buildStatItem(
-                context,
-                'Session RPE ${rpe.label}',
-                rpe.anchor,
-                Icons.battery_charging_full,
+              // In a Row with an Expanded child, like every other stat here: a
+              // non-flex child of a Row is laid out unbounded, and the anchor is
+              // a sentence rather than a figure, so it would run off the card
+              // instead of wrapping.
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatItem(
+                      context,
+                      'Session RPE ${rpe.label}',
+                      rpe.anchor,
+                      Icons.battery_charging_full,
+                    ),
+                  ),
+                ],
               ),
             ],
           ],
@@ -140,21 +150,30 @@ class SessionOverviewCard extends StatelessWidget {
     IconData icon,
   ) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 16, color: CrimpyTheme.gray600),
         const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(color: CrimpyTheme.gray600, fontSize: 12),
-            ),
-            Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-          ],
+        // Flexible rather than bare: the RPE anchor is a sentence where every
+        // other stat is a figure, and an unbounded Column would lay it out on
+        // one line however wide that came out.
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(color: CrimpyTheme.gray600, fontSize: 12),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

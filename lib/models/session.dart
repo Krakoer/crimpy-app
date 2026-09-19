@@ -142,9 +142,8 @@ class SessionModel {
 
   /// How much recovery the session cost, on the session RPE scale that
   /// models/session_rpe.dart spells out. Null while the athlete has reported
-  /// nothing, which
-  /// stays the normal case: the prompt is skippable and the answer can be given
-  /// long afterwards from the edit screen.
+  /// nothing, which stays the normal case: the prompt is skippable and the
+  /// answer can be given long afterwards from the edit screen.
   final int? rpe;
 
   /// The scale's ECHEC, a session the athlete could not carry through. It
@@ -212,7 +211,12 @@ class SessionModel {
     coachReply: json['coach_reply'] as String?,
     coachReplyAt: tryParseApiInstant(json['coach_reply_at'] as String?),
     coachReplyRead: json['coach_reply_read'] as bool? ?? false,
-    rpe: (json['rpe'] as num?)?.toInt(),
+    // Normalized rather than asserted: this is a boundary, and a server that
+    // ever sent both should cost the reader the number, not the whole history
+    // screen it was being parsed for.
+    rpe: (json['rpe_failed'] as bool? ?? false)
+        ? null
+        : (json['rpe'] as num?)?.toInt(),
     rpeFailed: json['rpe_failed'] as bool? ?? false,
   );
 

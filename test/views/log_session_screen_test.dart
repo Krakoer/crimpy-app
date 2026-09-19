@@ -85,6 +85,38 @@ void main() {
     expect(_CapturingSessions.saved!.name, 'Climbing');
   });
 
+  // A session logged by hand carries an RPE exactly as a played one does, which
+  // is the case the issue names for this screen.
+  testWidgets('a logged session carries the RPE anchor that was picked', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      const LogSessionScreen(activity: SessionActivity.climbing),
+    );
+
+    await tester.tap(find.text('Easy but productive'));
+    await tester.pumpAndSettle();
+    await _save(tester);
+
+    expect(_CapturingSessions.saved!.rpe, 6);
+    expect(_CapturingSessions.saved!.rpeFailed, isFalse);
+  });
+
+  testWidgets('a logged session leaves a skipped prompt unrated', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      const LogSessionScreen(activity: SessionActivity.climbing),
+    );
+
+    await _save(tester);
+
+    expect(_CapturingSessions.saved!.rpe, isNull);
+    expect(_CapturingSessions.saved!.rpeFailed, isFalse);
+  });
+
   testWidgets('a scheduled training keeps its title as the default name', (
     tester,
   ) async {

@@ -1865,7 +1865,10 @@ extension SessionRowToModel on Session {
     durationInSeconds: duration,
     prescriptionItems: _decodePrescription(prescriptionJson),
     itemResults: itemResults,
-    rpe: rpe,
+    // Normalized rather than asserted, the way the API shape is: the column
+    // pair carries no cross-column constraint, so a row that somehow held both
+    // should cost the reader the number, not the whole history screen.
+    rpe: rpeFailed ? null : rpe,
     rpeFailed: rpeFailed,
   );
 }
