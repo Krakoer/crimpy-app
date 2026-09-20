@@ -36,56 +36,29 @@ class _OwnTrainings extends Trainings {
   Future<List<Training>> build() async => _trainings;
 }
 
-/// Serves one program prescribing one assessment training, or fails outright.
+/// Serves a recordable listing naming one prescribed assessment training, or
+/// fails outright.
 class _FakeApiClient extends ApiClient {
   _FakeApiClient({this.fails = false});
 
   final bool fails;
 
-  /// How many times the program walk was started, so a rebuild that should have
-  /// reused the previous one can be told from one that refetched.
-  int walks = 0;
+  /// How many times the prescribed assessments were read, so a rebuild that
+  /// should have reused the previous answer can be told from one that refetched.
+  int listings = 0;
 
   @override
-  Future<List<Map<String, dynamic>>> getMyPrograms() async {
-    walks++;
+  Future<List<Map<String, dynamic>>>
+  getRecordableAssessmentDefinitionsApi() async {
+    listings++;
     if (fails) throw ApiException('offline', isOffline: true);
     return [
-      {
-        'id': 'p1',
-        'coach_id': 'coach',
-        'user_id': 'athlete',
-        'name': 'Base',
-        'start_date': '2026-01-05',
-        'created_at': '2026-01-01T00:00:00Z',
-        'updated_at': '2026-01-01T00:00:00Z',
-      },
+      // The athlete's own, which names no program: nothing prescribes it and
+      // their library already holds it.
+      _ownDefinition.toJson(),
+      {..._coachDefinition.toJson(), 'program_id': 'p1'},
     ];
   }
-
-  @override
-  Future<List<Map<String, dynamic>>> getMyWeeks(String programId) async => [
-    {'id': 'w1', 'program_id': programId, 'week_number': 1},
-  ];
-
-  @override
-  Future<Map<String, dynamic>> getMyWeek(
-    String programId,
-    int weekNumber,
-  ) async => {
-    'id': 'w1',
-    'program_id': programId,
-    'week_number': weekNumber,
-    'sessions': [
-      {
-        'id': 's1',
-        'training_id': 't-coach',
-        'training_title': 'Max pull ups',
-        'training_type': 'workout',
-        'position': 0,
-      },
-    ],
-  };
 
   @override
   Future<Map<String, dynamic>> getMyProgramTraining(
@@ -153,26 +126,29 @@ void main() {
     expect(recordable.map((t) => t.assessment!.id), ['a-coach']);
   });
 
-  test('keeps the athlete own assessments when the programs fail', () async {
-    final container = _containerWith(
-      own: [_training('t-own', assessment: _ownDefinition)],
-      programs: ProgramRepository(_FakeApiClient(fails: true)),
-    );
+  test(
+    'keeps the athlete own assessments when the prescriptions fail',
+    () async {
+      final container = _containerWith(
+        own: [_training('t-own', assessment: _ownDefinition)],
+        programs: ProgramRepository(_FakeApiClient(fails: true)),
+      );
 
-    final recordable = await container.read(
-      recordableAssessmentTrainingsProvider.future,
-    );
+      final recordable = await container.read(
+        recordableAssessmentTrainingsProvider.future,
+      );
 
-    expect(recordable.map((t) => t.assessment!.id), ['a-own']);
-  });
+      expect(recordable.map((t) => t.assessment!.id), ['a-own']);
+    },
+  );
 
   test(
-    'a change to the athlete library does not re-walk the programs',
+    'a change to the athlete library does not re-read the prescriptions',
     () async {
       // The tab keeps this provider alive, and favouriting a training in the
-      // trainings tab invalidates the library. Re-walking the programs then
-      // costs a request per week and per prescribed training, for a list that
-      // only changes when a coach edits a program.
+      // trainings tab invalidates the library. Re-reading the prescriptions
+      // then costs a request per prescribed training, for a list that only
+      // changes when a coach edits a program.
       final client = _FakeApiClient();
       final container = _containerWith(
         own: [_training('t-own', assessment: _ownDefinition)],
@@ -184,12 +160,12 @@ void main() {
         fireImmediately: true,
       );
       await container.read(recordableAssessmentTrainingsProvider.future);
-      expect(client.walks, 1);
+      expect(client.listings, 1);
 
       container.invalidate(trainingsProvider);
       await container.read(recordableAssessmentTrainingsProvider.future);
 
-      expect(client.walks, 1);
+      expect(client.listings, 1);
     },
   );
 

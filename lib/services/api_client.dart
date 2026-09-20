@@ -620,10 +620,24 @@ class ApiClient {
     await delete('/api/assessments/$id');
   }
 
-  /// The assessments the athlete may reference: the ones Crimpy ships and the
-  /// ones their coach wrote.
+  /// The assessments the athlete may reference: the ones Crimpy ships and their
+  /// own.
   Future<List<Map<String, dynamic>>> getAssessmentDefinitionsApi() async {
     final res = await get('/api/assessment-definitions');
+    return _asList(res.data);
+  }
+
+  /// The assessments the athlete may record a result against, which widens the
+  /// listing above with the ones a coach prescribed them.
+  ///
+  /// A prescribed row carries the program_id that reads its training, since a
+  /// coach's training is not served on its own.
+  Future<List<Map<String, dynamic>>>
+  getRecordableAssessmentDefinitionsApi() async {
+    final res = await get(
+      '/api/assessment-definitions',
+      queryParameters: {'recordable': 'true'},
+    );
     return _asList(res.data);
   }
 

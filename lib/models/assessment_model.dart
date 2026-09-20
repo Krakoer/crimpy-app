@@ -120,6 +120,26 @@ class AssessmentDefinition {
   };
 }
 
+/// One row of the recordable listing: an assessment the athlete may record a
+/// result against, with the program that reads the training behind it.
+///
+/// The program is set only when a prescription is what puts the assessment
+/// within reach, since a coach's training is not readable on its own. The ones
+/// Crimpy ships and the athlete's own name none: nothing prescribes them and
+/// the app already holds them.
+class RecordableAssessment {
+  final AssessmentDefinition definition;
+  final String? programId;
+
+  const RecordableAssessment({required this.definition, this.programId});
+
+  factory RecordableAssessment.fromJson(Map<String, dynamic> json) =>
+      RecordableAssessment(
+        definition: AssessmentDefinition.fromJson(json),
+        programId: json['program_id'] as String?,
+      );
+}
+
 /// Names an assessment without a catalog to hand. Only the ones Crimpy ships
 /// are known this way: a coach assessment is always read from its definition.
 String builtinAssessmentLabel(String assessmentId) {

@@ -1,8 +1,8 @@
 /// How many tasks a repository fan-out keeps outstanding at once.
 ///
-/// A library of fifty trainings or a season of programs is dozens of requests,
-/// and firing them all together is a burst the athlete's connection has to
-/// absorb in one go.
+/// A library of fifty trainings, or every assessment a coach has prescribed,
+/// is dozens of requests, and firing them all together is a burst the athlete's
+/// connection has to absorb in one go.
 const int defaultFanOutConcurrency = 6;
 
 /// Runs [tasks] with at most [concurrency] of them outstanding, keeping the
@@ -14,8 +14,8 @@ const int defaultFanOutConcurrency = 6;
 /// run before the first error raised is rethrown. On a long list that makes the
 /// failure surface a good deal later than it would have without the bound. A
 /// caller that wants one failure to leave the rest of the fan-out alone catches
-/// inside its own task and answers with a placeholder, the way the program walk
-/// does.
+/// inside its own task and answers with a placeholder, the way the prescribed
+/// assessment fetch does.
 Future<List<T>> inParallel<T>(
   Iterable<Future<T> Function()> tasks, {
   int concurrency = defaultFanOutConcurrency,
