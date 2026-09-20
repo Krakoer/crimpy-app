@@ -91,20 +91,23 @@ void main() {
       expect(finished, [1, 2, 3, 4]);
     });
 
-    test('keeps at most six tasks outstanding by default', () async {
-      final witness = _ConcurrencyWitness();
+    test(
+      'keeps six tasks outstanding by default, no more and no fewer',
+      () async {
+        final witness = _ConcurrencyWitness();
 
-      final results = await inParallel([
-        for (var index = 0; index < 30; index++)
-          witness.task(index, () => index),
-      ]);
+        final results = await inParallel([
+          for (var index = 0; index < 30; index++)
+            witness.task(index, () => index),
+        ]);
 
-      expect(results, [for (var index = 0; index < 30; index++) index]);
-      expect(witness.peakInFlight, 6);
-      // The pool takes the tasks from the front, so the first batch is the
-      // first six and nothing further starts before one of them is done.
-      expect(witness.startOrder.take(6), [0, 1, 2, 3, 4, 5]);
-    });
+        expect(results, [for (var index = 0; index < 30; index++) index]);
+        expect(witness.peakInFlight, 6);
+        // The pool takes the tasks from the front, so the first batch is the
+        // first six and nothing further starts before one of them is done.
+        expect(witness.startOrder.take(6), [0, 1, 2, 3, 4, 5]);
+      },
+    );
 
     test('honours a concurrency the caller asks for', () async {
       final witness = _ConcurrencyWitness();
