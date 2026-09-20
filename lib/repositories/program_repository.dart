@@ -53,8 +53,9 @@ class ProgramRepository {
   /// and a week or a training that fails to load leaves the others alone rather
   /// than emptying the list.
   ///
-  /// Walked in phases, each bounded by [inParallel], so a season of programs
-  /// does not put dozens of requests on the wire at once.
+  /// Walked in phases, each run through [inParallel] and so bounded by
+  /// [defaultFanOutConcurrency], to keep a season of programs from putting
+  /// dozens of requests on the wire at once.
   Future<List<Training>> getPrescribedAssessmentTrainings() async {
     final programs = await getPrograms();
 

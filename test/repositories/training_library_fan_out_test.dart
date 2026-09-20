@@ -41,7 +41,7 @@ class _FakeApiClient extends ApiClient {
 
 void main() {
   group('the training library fan-out', () {
-    test('keeps at most six detail reads on the wire', () async {
+    test('keeps six detail reads on the wire, no more and no fewer', () async {
       final client = _FakeApiClient([
         for (var index = 0; index < 50; index++) 't-$index',
       ]);
@@ -51,7 +51,9 @@ void main() {
       ).getAllTrainings();
 
       expect(trainings, hasLength(50));
-      expect(client.peakInFlight, lessThanOrEqualTo(6));
+      // Six exactly, not just no more than six: a library read that quietly
+      // narrowed to one in flight would be fifty sequential round trips.
+      expect(client.peakInFlight, 6);
     });
 
     test('hands the library back in the order the list gave it', () async {

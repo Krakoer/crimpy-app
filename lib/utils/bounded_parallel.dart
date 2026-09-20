@@ -9,16 +9,24 @@ const int defaultFanOutConcurrency = 6;
 /// results in the order the tasks were given.
 ///
 /// A task that throws takes the whole call down with it, the way an unbounded
-/// `Future.wait` would: the call waits for the tasks already running before it
-/// rethrows the first error raised, and it is the worker that hit the failure
-/// which stops taking work, not the others. A caller that wants one failure to
-/// leave the rest of the fan-out alone catches inside its own task and answers
-/// with a placeholder.
+/// `Future.wait` would, but it does not stop the fan-out: only the worker that
+/// hit the failure stops taking work, so every task left in the queue is still
+/// run before the first error raised is rethrown. On a long list that makes the
+/// failure surface a good deal later than it would have without the bound. A
+/// caller that wants one failure to leave the rest of the fan-out alone catches
+/// inside its own task and answers with a placeholder, the way the program walk
+/// does.
 Future<List<T>> inParallel<T>(
   Iterable<Future<T> Function()> tasks, {
   int concurrency = defaultFanOutConcurrency,
 }) async {
-  assert(concurrency > 0, 'inParallel needs at least one worker');
+  if (concurrency < 1) {
+    throw ArgumentError.value(
+      concurrency,
+      'concurrency',
+      'inParallel needs at least one worker',
+    );
+  }
 
   final pending = tasks.toList();
   final results = List<T?>.filled(pending.length, null);

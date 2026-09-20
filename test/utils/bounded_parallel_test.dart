@@ -117,6 +117,15 @@ void main() {
       expect(witness.peakInFlight, 3);
     });
 
+    test('refuses a concurrency below one', () async {
+      // An assert would be stripped out of a release build and the run would
+      // answer a list of nulls instead of naming what was wrong.
+      await expectLater(
+        inParallel([() async => 1], concurrency: 0),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
     test('runs fewer workers than the bound when there is less work', () async {
       final witness = _ConcurrencyWitness();
 
