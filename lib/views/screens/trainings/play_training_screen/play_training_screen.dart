@@ -512,18 +512,18 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     margin: const EdgeInsets.only(bottom: 8),
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
     decoration: BoxDecoration(
-      color: CrimpyTheme.primaryOrange.withValues(alpha: 0.12),
+      color: CrimpyTheme.tintOf(CrimpyTheme.primaryOrange),
       border: Border.all(color: CrimpyTheme.primaryOrange, width: 1.5),
       borderRadius: BorderRadius.circular(4),
     ),
     child: Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily: 'JetBrainsMono',
         fontSize: 13,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.5,
-        color: CrimpyTheme.primaryOrange,
+        color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
       ),
     ),
   );

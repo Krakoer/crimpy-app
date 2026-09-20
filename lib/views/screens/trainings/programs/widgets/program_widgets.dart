@@ -64,7 +64,11 @@ class SessionActivityTile extends StatelessWidget {
         color: color.withValues(alpha: 0.1),
         border: Border.all(color: color, width: 2),
       ),
-      child: Icon(programSessionIcon(type), color: color, size: size * 0.45),
+      child: Icon(
+        programSessionIcon(type),
+        color: CrimpyTheme.textOn(color),
+        size: size * 0.45,
+      ),
     );
   }
 }
@@ -218,7 +222,7 @@ class ScheduledTrainingRow extends StatelessWidget {
                         fontFamily: 'JetBrainsMono',
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
-                        color: color,
+                        color: CrimpyTheme.textOn(color),
                       ),
                     ),
                   ],
@@ -301,7 +305,7 @@ class FlexTrainingRow extends StatelessWidget {
                         fontFamily: 'JetBrainsMono',
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
-                        color: color,
+                        color: CrimpyTheme.textOn(color),
                       ),
                     ),
                   ],
@@ -317,7 +321,9 @@ class FlexTrainingRow extends StatelessWidget {
                       fontFamily: 'JetBrainsMono',
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: complete ? CrimpyTheme.statusSuccess : color,
+                      color: complete
+                          ? CrimpyTheme.textOn(CrimpyTheme.statusSuccess)
+                          : CrimpyTheme.textOn(color),
                     ),
                   ),
                   const SizedBox(height: 5),

@@ -103,7 +103,7 @@ class RepItemWidget extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: sessionColor.withValues(alpha: 0.2),
+                  color: CrimpyTheme.tintOf(sessionColor),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Center(
@@ -112,7 +112,7 @@ class RepItemWidget extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: sessionColor,
+                      color: CrimpyTheme.textOn(sessionColor),
                     ),
                   ),
                 ),

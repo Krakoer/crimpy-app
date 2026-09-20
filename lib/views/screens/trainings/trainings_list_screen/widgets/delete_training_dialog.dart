@@ -49,7 +49,7 @@ class DeleteTrainingDialog extends ConsumerWidget {
           child: Text(
             'Delete',
             style: TextStyle(
-              color: CrimpyTheme.statusError,
+              color: CrimpyTheme.textOn(CrimpyTheme.statusError),
               fontWeight: FontWeight.w600,
             ),
           ),

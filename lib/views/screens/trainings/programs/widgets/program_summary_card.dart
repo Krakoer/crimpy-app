@@ -112,14 +112,14 @@ class ProgramSummaryCard extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'TODAY',
                         style: TextStyle(
                           fontFamily: 'JetBrainsMono',
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.6,
-                          color: CrimpyTheme.primaryOrange,
+                          color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
                         ),
                       ),
                       Text(

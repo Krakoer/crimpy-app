@@ -234,13 +234,17 @@ class ResultCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: percentageColor,
+                          color: CrimpyTheme.textOn(percentageColor),
                         ),
                       ),
                     ),
                     const SizedBox(height: 12),
                     // Arrow
-                    Icon(Icons.arrow_forward, size: 36, color: percentageColor),
+                    Icon(
+                      Icons.arrow_forward,
+                      size: 36,
+                      color: CrimpyTheme.textOn(percentageColor),
+                    ),
                   ],
                 ),
 
