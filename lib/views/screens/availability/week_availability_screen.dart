@@ -1,8 +1,8 @@
 import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/viewmodels/availability_view_model.dart';
-import 'package:crimpy/views/screens/availability/widgets/day_availability_row.dart';
-import 'package:crimpy/views/widgets/section_widgets.dart';
+import 'package:crimpy/views/screens/availability/widgets/day_schedule_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/utils/datetimes.dart';
@@ -17,8 +17,9 @@ const List<String> _weekdayNames = [
   'Sunday',
 ];
 
-/// Where the athlete tells their coach when they can train, one calendar week
-/// at a time. Permissive on purpose: a day may be nothing but a sentence.
+/// Where the athlete tells their coach what their week looks like, one calendar
+/// week at a time. Permissive on purpose: a day holds as many activities as
+/// they want, or none at all, and none at all is still an answer.
 class WeekAvailabilityScreen extends ConsumerStatefulWidget {
   /// The Monday to open on. Defaults to next week, which is the one a coach
   /// writing a program on Saturday is asking about.
@@ -35,16 +36,35 @@ class _WeekAvailabilityScreenState
     extends ConsumerState<WeekAvailabilityScreen> {
   late DateTime _weekStart;
   WeekAvailability? _week;
+
+  /// The week as it was last read from, or last written to, the server.
+  ///
+  /// "Has this been edited" is this comparison rather than a flag set on every
+  /// change: a flag cannot tell an edit from an edit that was undone, and a
+  /// week re-sent unchanged re-dates the declaration, which reaches the coach's
+  /// feed as a fresh answer the athlete did not give.
+  WeekAvailability? _loadedWeek;
   Object? _loadError;
   bool _saving = false;
-  bool _dirty = false;
   bool _declared = true;
+
+  /// The "Removed X" offer currently on screen, held so it can be taken down
+  /// on the way out rather than left standing over whatever comes next.
+  ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? _pendingUndo;
+
+  bool get _dirty => _week != null && _week != _loadedWeek;
 
   @override
   void initState() {
     super.initState();
     _weekStart = widget.weekStart ?? getStartOfNextWeek(DateTime.now());
     _loadWeek();
+  }
+
+  @override
+  void dispose() {
+    _clearPendingUndo();
+    super.dispose();
   }
 
   Future<void> _loadWeek() async {
@@ -55,9 +75,9 @@ class _WeekAvailabilityScreenState
       if (!mounted) return;
       setState(() {
         _week = loaded.week;
+        _loadedWeek = loaded.week;
         _declared = loaded.declared;
         _loadError = null;
-        _dirty = false;
       });
     } catch (error) {
       // The provider keeps its error, so a silent spinner here would never
@@ -65,6 +85,7 @@ class _WeekAvailabilityScreenState
       if (!mounted) return;
       setState(() {
         _week = null;
+        _loadedWeek = null;
         _loadError = error;
       });
     }
@@ -77,11 +98,18 @@ class _WeekAvailabilityScreenState
   }
 
   Future<void> _showWeek(DateTime weekStart) async {
+    if (weekStart == _weekStart) return;
     if (_dirty && !await _confirmDiscard()) return;
     if (!mounted) return;
+    // The undo of a removed activity belongs to the week it was removed from.
+    // The snack bar lives above the navigator and would otherwise still be on
+    // screen here, one tap away from putting that activity into a different
+    // week, which matches days by index and would take it silently.
+    _clearPendingUndo();
     setState(() {
       _weekStart = weekStart;
       _week = null;
+      _loadedWeek = null;
       _loadError = null;
     });
     await _loadWeek();
@@ -109,27 +137,32 @@ class _WeekAvailabilityScreenState
   }
 
   void _updateDay(DayAvailability day) {
-    setState(() {
-      _week = _week?.withDay(day);
-      _dirty = true;
-    });
+    // An undo can be tapped after this screen is gone, since the snack bar
+    // outlives the route. Every path that leaves retires it first, so this is
+    // the backstop rather than the guard.
+    if (!mounted) return;
+    setState(() => _week = _week?.withDay(day));
   }
 
   Future<void> _save() async {
     final week = _week;
     if (week == null) return;
+    // Held rather than looked up after the await, so what happened to the week
+    // is reported whether or not this screen is still on screen to report it.
+    // A failure that says nothing leaves the athlete believing they answered.
+    final messenger = ScaffoldMessenger.of(context);
+    // Retired before the request goes out, not after it comes back. Sending is
+    // a commitment, and every other control on the screen goes dead while it is
+    // in flight. An undo left tappable would restore into a week whose body is
+    // already on the wire, and the restore would then be thrown away silently.
+    _clearPendingUndo();
     setState(() => _saving = true);
+    var saved = false;
     try {
       await ref.read(myAvailabilityProvider.notifier).saveWeek(week);
-      if (!mounted) return;
-      setState(() => _dirty = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Your coach can see your week')),
-      );
-      Navigator.of(context).pop();
+      saved = true;
     } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(
           content: Text('Could not save your week: $error'),
           backgroundColor: CrimpyTheme.statusError,
@@ -138,59 +171,277 @@ class _WeekAvailabilityScreenState
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+    if (!saved) return;
+
+    // Outside the try, so nothing it raises is read back as a failed send and
+    // reported to the athlete as a week that did not go.
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Your coach can see your week')),
+    );
+    if (!mounted) return;
+    setState(() {
+      _loadedWeek = week;
+      _declared = true;
+    });
+    // Only this screen's own route may be popped. Navigator.pop resolves to the
+    // topmost present route, so popping one this screen no longer owns would
+    // take the route underneath: from the home card that is the root, and the
+    // app is left with an empty navigator.
+    if (ModalRoute.of(context)?.isCurrent ?? false) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  /// Leaving the screen with the back button or the system gesture asks the
+  /// same question switching weeks does. A dirty week now holds several fully
+  /// typed activities rather than two text fields, so dropping it silently
+  /// costs the athlete everything they wrote.
+  Future<void> _confirmPop(bool didPop, Object? result) async {
+    // Cleared before the didPop branch, because a pop that went through is
+    // exactly the case where the offer would be left standing over the screen
+    // underneath. Closing this one offer rather than the queue is what lets it
+    // run on the send path too, where a confirmation is already showing.
+    _clearPendingUndo();
+    if (didPop) return;
+    // A send already on the wire is not unsaved work, and cancelling it is not
+    // on offer. The screen pops itself when the request lands, so the back is
+    // ignored rather than answered with a dialog about discarding.
+    if (_saving) return;
+    if (!await _confirmDiscard()) return;
+    if (!mounted) return;
+    Navigator.of(context).pop(result);
+  }
+
+  /// Takes down the "Removed X" offer and the undo it carries.
+  ///
+  /// The snack bar is presented by the app level ScaffoldMessenger above the
+  /// navigator, so it keeps showing across a pop and across a week switch, and
+  /// its action still fires. What it would write is the day of the week that is
+  /// no longer on screen, or of a week already sent, and the athlete is told it
+  /// worked either way.
+  ///
+  /// Only that one offer is closed rather than the whole queue, so the send
+  /// confirmation shown beside it is left alone.
+  void _clearPendingUndo() {
+    // Taken before it is closed, so a close that throws cannot leave the field
+    // set and repeat itself on every later exit.
+    final offer = _pendingUndo;
+    _pendingUndo = null;
+    offer?.close();
+  }
+
+  /// Holds the offer the day card just made, and lets it go again the moment it
+  /// closes on its own. Closing a snack bar that has already left throws, and
+  /// this one outlives the four seconds only when nobody touches it.
+  void _holdUndoOffer(
+    ScaffoldFeatureController<SnackBar, SnackBarClosedReason> offer,
+  ) {
+    _pendingUndo = offer;
+    offer.closed.whenComplete(() {
+      if (identical(_pendingUndo, offer)) _pendingUndo = null;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final week = _week;
+    return PopScope(
+      // Held while a send is in flight. Letting the route go there means a
+      // request that then fails has no screen left to report on and no week
+      // left to retry from, and the athlete walks away believing it was sent.
+      canPop: !_dirty && !_saving,
+      onPopInvokedWithResult: _confirmPop,
+      child: _buildScaffold(week),
+    );
+  }
+
+  Widget _buildScaffold(WeekAvailability? week) {
     return Scaffold(
+      backgroundColor: CrimpyTheme.bgSecondary,
       appBar: AppBar(title: const Text('Your week')),
       body: _loadError != null
           ? _LoadFailure(onRetry: _retry)
           : week == null
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
+          : Column(
               children: [
                 _WeekSwitcher(
                   weekStart: _weekStart,
                   onPick: _showWeek,
                   enabled: !_saving,
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Say what you can do on each day. A rough duration and a word '
-                  'about it is enough: your coach builds the week around it.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: CrimpyTheme.textSecondary,
+                _WeekSummary(week: week, declared: _declared),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                    children: [
+                      for (final day in week.days)
+                        DayScheduleCard(
+                          label: _weekdayNames[day.dayOfWeek],
+                          dateLabel: _dayAndMonth(
+                            addCalendarDays(_weekStart, day.dayOfWeek),
+                          ),
+                          day: day,
+                          enabled: !_saving,
+                          onChanged: _updateDay,
+                          onUndoOffered: _holdUndoOffer,
+                        ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                const SectionLabel('Days'),
-                const SizedBox(height: 8),
-                for (final day in week.days)
-                  DayAvailabilityRow(
-                    // Keyed by the week as well as the day: switching weeks
-                    // resolves from a loaded provider without ever painting the
-                    // spinner, so an unkeyed row would be reused and keep the
-                    // previous week's text in its controllers.
-                    key: ValueKey((_weekStart, day.dayOfWeek)),
-                    label: _weekdayNames[day.dayOfWeek],
-                    day: day,
-                    enabled: !_saving,
-                    onChanged: _updateDay,
-                  ),
-                const SizedBox(height: 20),
-                FilledButton(
-                  // A week never declared sends as it stands, untouched: an
-                  // athlete who cannot train at all is answering, and the API
-                  // reads a missing week as silence and keeps nudging for it.
-                  onPressed: _saving || (_declared && !_dirty) ? null : _save,
-                  child: Text(_saving ? 'Saving' : 'Send to my coach'),
                 ),
               ],
             ),
+      // In bottomNavigationBar rather than at the foot of the body, because
+      // that is the slot ScaffoldMessenger positions a snack bar above. Inside
+      // the body the "Removed X" snack bar lands squarely on top of the send
+      // button and the screen's one action cannot be reached while it is up.
+      bottomNavigationBar: week == null || _loadError != null
+          ? null
+          : _SendBar(
+              // A week never declared sends as it stands, untouched: an
+              // athlete with nothing on is answering, and the API reads a
+              // missing week as silence and keeps nudging for it.
+              onSend: _saving || (_declared && !_dirty) ? null : _save,
+              saving: _saving,
+              dirty: _dirty,
+              declared: _declared,
+            ),
+    );
+  }
+}
+
+String _dayAndMonth(DateTime day) => '${day.day}/${day.month}';
+
+/// What the week adds up to, so the athlete sees their answer before sending it
+/// and a week left empty reads as deliberate rather than as unfinished.
+class _WeekSummary extends StatelessWidget {
+  final WeekAvailability week;
+  final bool declared;
+
+  const _WeekSummary({required this.week, required this.declared});
+
+  String get _headline {
+    if (week.plannedActivityCount == 0) {
+      return declared ? 'Nothing on this week' : 'Nothing on this week yet';
+    }
+    final days = week.plannedDayCount;
+    return '${week.plannedActivityCount} '
+        '${week.plannedActivityCount == 1 ? 'thing' : 'things'} '
+        'across $days ${days == 1 ? 'day' : 'days'}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final minutes = week.plannedMinutes;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      decoration: const BoxDecoration(
+        color: CrimpyTheme.bgPrimary,
+        border: Border(
+          bottom: BorderSide(color: CrimpyTheme.borderDefault, width: 2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _headline,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: CrimpyTheme.textPrimary,
+                  ),
+                ),
+              ),
+              if (minutes > 0)
+                Text(
+                  formatMinutesAsLength(minutes),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: CrimpyTheme.accentGreenText,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Add whatever fills your days, training or not. Your coach builds '
+            'the week around what is already in it.',
+            style: TextStyle(fontSize: 12, color: CrimpyTheme.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The send button, pinned under the list rather than scrolled to the bottom of
+/// it: with seven day cards and their activities the old inline button sat a
+/// long way down a page the athlete had no reason to scroll to.
+class _SendBar extends StatelessWidget {
+  final VoidCallback? onSend;
+  final bool saving;
+  final bool dirty;
+  final bool declared;
+
+  const _SendBar({
+    required this.onSend,
+    required this.saving,
+    required this.dirty,
+    required this.declared,
+  });
+
+  String get _label {
+    if (saving) return 'Sending';
+    if (declared && !dirty) return 'Sent to your coach';
+    return 'Send to my coach';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      decoration: const BoxDecoration(
+        color: CrimpyTheme.bgPrimary,
+        border: Border(
+          top: BorderSide(color: CrimpyTheme.borderDefault, width: 2),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: onSend,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (saving) ...[
+                  // The screen holds itself until the request lands, so it has
+                  // to look busy rather than merely disabled: a back that does
+                  // nothing on a still screen reads as a frozen app.
+                  const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: CrimpyTheme.textOnFillSecondary,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Text(_label),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -216,16 +467,22 @@ class _WeekSwitcher extends StatelessWidget {
       addCalendarDays(thisWeek, 7),
       addCalendarDays(thisWeek, 14),
     ];
-    return Wrap(
-      spacing: 8,
-      children: [
-        for (var index = 0; index < options.length; index++)
-          ChoiceChip(
-            label: Text(_optionLabel(index, options[index])),
-            selected: options[index] == weekStart,
-            onSelected: enabled ? (_) => onPick(options[index]) : null,
-          ),
-      ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      color: CrimpyTheme.bgPrimary,
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (var index = 0; index < options.length; index++)
+            ChoiceChip(
+              label: Text(_optionLabel(index, options[index])),
+              selected: options[index] == weekStart,
+              onSelected: enabled ? (_) => onPick(options[index]) : null,
+            ),
+        ],
+      ),
     );
   }
 
@@ -235,7 +492,7 @@ class _WeekSwitcher extends StatelessWidget {
       1 => 'Next week',
       _ => 'In 2 weeks',
     };
-    return '$name (${monday.day}/${monday.month})';
+    return '$name (${_dayAndMonth(monday)})';
   }
 }
 
