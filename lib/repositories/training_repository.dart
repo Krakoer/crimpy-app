@@ -7,6 +7,7 @@ import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/repositories/bodyweight_repository.dart';
+import 'package:crimpy/utils/bounded_parallel.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/models/session_filter.dart';
 
@@ -146,6 +147,11 @@ class RemoteTrainingRepository extends TrainingRepository {
 
   // ----- Trainings -----
 
+  /// The athlete's library, each training read in full.
+  ///
+  /// The details are fetched through [inParallel] rather than all at once: a
+  /// library of fifty trainings would otherwise put fifty requests on the wire
+  /// every time a tab reloads it.
   @override
   Future<List<Training>> getAllTrainings({bool onlyFavs = false}) async {
     final list = await _apiClient.getTrainings();
@@ -153,8 +159,11 @@ class RemoteTrainingRepository extends TrainingRepository {
         .where((t) => !onlyFavs || (t['is_favorite'] as bool? ?? false))
         .toList();
 
-    final results = await Future.wait(
-      trainings.map((t) => _fetchTraining(t['id'] as String)),
+    final results = await inParallel(
+      trainings.map(
+        (t) =>
+            () => _fetchTraining(t['id'] as String),
+      ),
     );
     return results.whereType<Training>().toList();
   }
