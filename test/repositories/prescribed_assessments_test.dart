@@ -3,34 +3,20 @@ import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/api_exception.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-Map<String, dynamic> _program(String id) => {
+/// A row of the recordable listing. The builtins and the athlete's own carry no
+/// program, which is what tells them apart from a prescribed one.
+Map<String, dynamic> _definition(
+  String id, {
+  String? trainingId,
+  String? programId,
+}) => {
   'id': id,
-  'coach_id': 'coach',
-  'user_id': 'athlete',
-  'name': 'Program $id',
-  'start_date': '2026-01-05',
-  'created_at': '2026-01-01T00:00:00Z',
-  'updated_at': '2026-01-01T00:00:00Z',
-};
-
-Map<String, dynamic> _week(
-  String programId,
-  int number,
-  List<String> trainingIds,
-) => {
-  'id': '$programId-w$number',
-  'program_id': programId,
-  'week_number': number,
-  'sessions': [
-    for (final (index, trainingId) in trainingIds.indexed)
-      {
-        'id': '$programId-w$number-s$index',
-        'training_id': trainingId,
-        'training_title': trainingId,
-        'training_type': 'hangboard',
-        'position': index,
-      },
-  ],
+  'label': 'Assessment $id',
+  'unit': 'repetitions',
+  'per_hand': false,
+  'is_builtin': trainingId == null,
+  if (trainingId != null) 'training_id': trainingId,
+  if (programId != null) 'program_id': programId,
 };
 
 Map<String, dynamic> _training(String id, {Map<String, dynamic>? assessment}) =>
@@ -41,124 +27,150 @@ Map<String, dynamic> _training(String id, {Map<String, dynamic>? assessment}) =>
       if (assessment != null) 'assessment': assessment,
     };
 
-/// Serves a fixed program tree, counting what was asked for so the walk can be
-/// checked for fetching a shared training once.
+Map<String, dynamic> _assessment(String id, String trainingId) => {
+  'id': id,
+  'label': 'Assessment $id',
+  'unit': 'repetitions',
+  'per_hand': false,
+  'training_id': trainingId,
+};
+
+/// Serves a fixed recordable listing and the trainings it names, recording what
+/// was asked for so the fetching can be checked.
 class _FakeApiClient extends ApiClient {
   _FakeApiClient({
-    required this.programs,
-    required this.weeks,
+    required this.definitions,
     required this.trainings,
-    this.failingWeeks = const {},
     this.failingTrainings = const {},
   });
 
-  final List<Map<String, dynamic>> programs;
-
-  /// Weeks per program id.
-  final Map<String, List<Map<String, dynamic>>> weeks;
+  final List<Map<String, dynamic>> definitions;
   final Map<String, Map<String, dynamic>> trainings;
-  final Set<int> failingWeeks;
   final Set<String> failingTrainings;
 
   final List<String> fetchedTrainings = [];
+  final List<(String, String)> fetchedUnder = [];
 
-  /// How many requests were outstanding at once, over the whole walk.
+  /// How many requests were outstanding at once, over the whole fetch.
   int inFlight = 0;
   int peakInFlight = 0;
 
-  Future<T> _tracked<T>(Future<T> Function() request) async {
-    inFlight++;
-    if (inFlight > peakInFlight) peakInFlight = inFlight;
-    try {
-      await Future<void>.delayed(Duration.zero);
-      return await request();
-    } finally {
-      inFlight--;
-    }
+  @override
+  Future<List<Map<String, dynamic>>>
+  getRecordableAssessmentDefinitionsApi() async => definitions;
+
+  @override
+  Future<List<Map<String, dynamic>>> getMyPrograms() async {
+    throw StateError('the prescribed assessments must not walk the programs');
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getMyPrograms() async => programs;
+  Future<List<Map<String, dynamic>>> getMyWeeks(String programId) async {
+    throw StateError('the prescribed assessments must not walk the programs');
+  }
 
   @override
-  Future<List<Map<String, dynamic>>> getMyWeeks(String programId) => _tracked(
-    () async => [
-      for (final week in weeks[programId] ?? const <Map<String, dynamic>>[])
-        {
-          'id': week['id'],
-          'program_id': week['program_id'],
-          'week_number': week['week_number'],
-        },
-    ],
-  );
-
-  @override
-  Future<Map<String, dynamic>> getMyWeek(String programId, int weekNumber) =>
-      _tracked(() async {
-        if (failingWeeks.contains(weekNumber)) {
-          throw ApiException('boom', statusCode: 500);
-        }
-        return (weeks[programId] ?? const <Map<String, dynamic>>[]).firstWhere(
-          (week) => week['week_number'] == weekNumber,
-        );
-      });
+  Future<Map<String, dynamic>> getMyWeek(
+    String programId,
+    int weekNumber,
+  ) async {
+    throw StateError('the prescribed assessments must not walk the programs');
+  }
 
   @override
   Future<Map<String, dynamic>> getMyProgramTraining(
     String programId,
     String trainingId,
-  ) => _tracked(() async {
-    fetchedTrainings.add(trainingId);
-    if (failingTrainings.contains(trainingId)) {
-      throw ApiException('boom', statusCode: 500);
+  ) async {
+    inFlight++;
+    if (inFlight > peakInFlight) peakInFlight = inFlight;
+    try {
+      await Future<void>.delayed(Duration.zero);
+      fetchedTrainings.add(trainingId);
+      fetchedUnder.add((programId, trainingId));
+      if (failingTrainings.contains(trainingId)) {
+        throw ApiException('boom', statusCode: 500);
+      }
+      return trainings[trainingId]!;
+    } finally {
+      inFlight--;
     }
-    return trainings[trainingId]!;
-  });
+  }
 }
 
 void main() {
   group('prescribed assessments', () {
-    test('keeps the prescribed trainings that are assessments', () async {
-      final client = _FakeApiClient(
-        programs: [_program('p1')],
-        weeks: {
-          'p1': [
-            _week('p1', 1, ['t-strength', 't-max-pull-ups']),
+    test(
+      'fetches the trainings the server names, under their program',
+      () async {
+        final client = _FakeApiClient(
+          definitions: [
+            _definition('a-builtin'),
+            _definition('a-own', trainingId: 't-own'),
+            _definition(
+              'a-pull-ups',
+              trainingId: 't-max-pull-ups',
+              programId: 'p1',
+            ),
           ],
-        },
-        trainings: {
-          't-strength': _training('t-strength'),
-          't-max-pull-ups': _training(
-            't-max-pull-ups',
-            assessment: {
-              'id': 'a-pull-ups',
-              'label': 'Max pull ups',
-              'unit': 'repetitions',
-              'per_hand': false,
-              'training_id': 't-max-pull-ups',
-            },
-          ),
-        },
+          trainings: {
+            't-max-pull-ups': _training(
+              't-max-pull-ups',
+              assessment: _assessment('a-pull-ups', 't-max-pull-ups'),
+            ),
+          },
+        );
+
+        final found = await ProgramRepository(
+          client,
+        ).getPrescribedAssessmentTrainings();
+
+        expect(found.map((t) => t.id), ['t-max-pull-ups']);
+        expect(found.single.assessment!.id, 'a-pull-ups');
+        expect(client.fetchedUnder, [('p1', 't-max-pull-ups')]);
+      },
+    );
+
+    test('leaves the builtins and the athlete own assessments alone', () async {
+      // They name no program because nothing prescribes them, and the app
+      // already holds them: the builtins are compiled in and the athlete's own
+      // come with their library.
+      final client = _FakeApiClient(
+        definitions: [
+          _definition('a-builtin'),
+          _definition('a-own', trainingId: 't-own'),
+        ],
+        trainings: {'t-own': _training('t-own')},
       );
 
       final found = await ProgramRepository(
         client,
       ).getPrescribedAssessmentTrainings();
 
-      expect(found.map((t) => t.id), ['t-max-pull-ups']);
-      expect(found.single.assessment!.label, 'Max pull ups');
+      expect(found, isEmpty);
+      expect(client.fetchedTrainings, isEmpty);
     });
 
-    test('fetches a training prescribed by several weeks once', () async {
+    test('fetches a training named by two prescriptions once', () async {
       final client = _FakeApiClient(
-        programs: [_program('p1')],
-        weeks: {
-          'p1': [
-            _week('p1', 1, ['t-max-pull-ups']),
-            _week('p1', 2, ['t-max-pull-ups']),
-          ],
+        definitions: [
+          _definition(
+            'a-pull-ups',
+            trainingId: 't-max-pull-ups',
+            programId: 'p1',
+          ),
+          _definition(
+            'a-pull-ups-again',
+            trainingId: 't-max-pull-ups',
+            programId: 'p2',
+          ),
+        ],
+        trainings: {
+          't-max-pull-ups': _training(
+            't-max-pull-ups',
+            assessment: _assessment('a-pull-ups', 't-max-pull-ups'),
+          ),
         },
-        trainings: {'t-max-pull-ups': _training('t-max-pull-ups')},
       );
 
       await ProgramRepository(client).getPrescribedAssessmentTrainings();
@@ -166,51 +178,20 @@ void main() {
       expect(client.fetchedTrainings, ['t-max-pull-ups']);
     });
 
-    test('a week that cannot be read leaves the others alone', () async {
-      final client = _FakeApiClient(
-        programs: [_program('p1')],
-        weeks: {
-          'p1': [
-            _week('p1', 1, ['t-broken']),
-            _week('p1', 2, ['t-max-pull-ups']),
-          ],
-        },
-        trainings: {
-          't-max-pull-ups': _training(
-            't-max-pull-ups',
-            assessment: {
-              'id': 'a-pull-ups',
-              'label': 'Max pull ups',
-              'unit': 'repetitions',
-            },
-          ),
-        },
-        failingWeeks: {1},
-      );
-
-      final found = await ProgramRepository(
-        client,
-      ).getPrescribedAssessmentTrainings();
-
-      expect(found.map((t) => t.id), ['t-max-pull-ups']);
-    });
-
     test('a training that cannot be read leaves the others alone', () async {
       final client = _FakeApiClient(
-        programs: [_program('p1')],
-        weeks: {
-          'p1': [
-            _week('p1', 1, ['t-broken', 't-max-pull-ups']),
-          ],
-        },
+        definitions: [
+          _definition('a-broken', trainingId: 't-broken', programId: 'p1'),
+          _definition(
+            'a-pull-ups',
+            trainingId: 't-max-pull-ups',
+            programId: 'p1',
+          ),
+        ],
         trainings: {
           't-max-pull-ups': _training(
             't-max-pull-ups',
-            assessment: {
-              'id': 'a-pull-ups',
-              'label': 'Max pull ups',
-              'unit': 'repetitions',
-            },
+            assessment: _assessment('a-pull-ups', 't-max-pull-ups'),
           ),
         },
         failingTrainings: {'t-broken'},
@@ -223,21 +204,41 @@ void main() {
       expect(found.map((t) => t.id), ['t-max-pull-ups']);
     });
 
-    test('keeps the walk off the wire in one burst', () async {
-      // A season of programs is dozens of weeks and dozens of trainings, and
-      // firing them all at once is a burst the athlete connection absorbs in
-      // one go.
-      final client = _FakeApiClient(
-        programs: [_program('p1')],
-        weeks: {
-          'p1': [
-            for (var number = 1; number <= 20; number++)
-              _week('p1', number, ['t-$number']),
+    test(
+      'a training the server called an assessment but that comes back without one is dropped',
+      () async {
+        // Nothing should produce this, and what reads the list dereferences the
+        // assessment, so a disagreement must not reach it.
+        final client = _FakeApiClient(
+          definitions: [
+            _definition('a-pull-ups', trainingId: 't-plain', programId: 'p1'),
           ],
-        },
+          trainings: {'t-plain': _training('t-plain')},
+        );
+
+        final found = await ProgramRepository(
+          client,
+        ).getPrescribedAssessmentTrainings();
+
+        expect(found, isEmpty);
+      },
+    );
+
+    test('keeps the fetching off the wire in one burst', () async {
+      // An athlete on several programs can be prescribed more assessments than
+      // the pool is wide, and firing them all at once is a burst their
+      // connection absorbs in one go.
+      final client = _FakeApiClient(
+        definitions: [
+          for (var number = 1; number <= 20; number++)
+            _definition('a-$number', trainingId: 't-$number', programId: 'p1'),
+        ],
         trainings: {
           for (var number = 1; number <= 20; number++)
-            't-$number': _training('t-$number'),
+            't-$number': _training(
+              't-$number',
+              assessment: _assessment('a-$number', 't-$number'),
+            ),
         },
       );
 
@@ -245,34 +246,6 @@ void main() {
 
       expect(client.fetchedTrainings, hasLength(20));
       expect(client.peakInFlight, lessThanOrEqualTo(6));
-    });
-
-    test('an assessment stays listed once its week is in the past', () async {
-      final client = _FakeApiClient(
-        programs: [_program('p1')],
-        weeks: {
-          'p1': [
-            _week('p1', 1, ['t-max-pull-ups']),
-            _week('p1', 2, const []),
-          ],
-        },
-        trainings: {
-          't-max-pull-ups': _training(
-            't-max-pull-ups',
-            assessment: {
-              'id': 'a-pull-ups',
-              'label': 'Max pull ups',
-              'unit': 'repetitions',
-            },
-          ),
-        },
-      );
-
-      final found = await ProgramRepository(
-        client,
-      ).getPrescribedAssessmentTrainings();
-
-      expect(found.map((t) => t.id), ['t-max-pull-ups']);
     });
   });
 }

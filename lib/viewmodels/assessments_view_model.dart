@@ -32,12 +32,12 @@ AssessmentTrainingModel assessmentTraining(Ref ref, AssessmentType type) =>
 Future<List<AssessmentDefinition>> assessmentDefinitions(Ref ref) =>
     ref.watch(assessmentRepositoryProvider).getAssessmentDefinitions();
 
-/// The assessment trainings a coach has prescribed to the athlete, walked out
-/// of their programs.
+/// The assessment trainings a coach has prescribed to the athlete, as the
+/// server lists them.
 ///
-/// Held apart from the athlete's own library so the walk, which is several
-/// requests, is not re-run every time that library changes: favouriting a
-/// training says nothing about what a coach has scheduled.
+/// Held apart from the athlete's own library so it is not re-read every time
+/// that library changes: favouriting a training says nothing about what a coach
+/// has scheduled.
 @riverpod
 Future<List<Training>> prescribedAssessmentTrainings(Ref ref) async {
   final programs = ref.watch(programRepositoryProvider);

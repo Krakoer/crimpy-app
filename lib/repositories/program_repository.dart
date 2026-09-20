@@ -44,47 +44,29 @@ class ProgramRepository {
     );
   }
 
-  /// Every assessment training a program has ever prescribed to the athlete.
+  /// Every assessment training a program has prescribed to the athlete.
   ///
   /// This is the half of the recordable set the athlete cannot fetch as a
   /// catalog: an assessment their coach owns is only readable through the
-  /// program that prescribed its training, so the prescriptions are what says
-  /// which ones exist. A training prescribed by two programs is fetched once,
-  /// and a week or a training that fails to load leaves the others alone rather
-  /// than emptying the list.
+  /// program that prescribed its training. The server answers which ones those
+  /// are in one request, so only the trainings it names are fetched, and those
+  /// through [inParallel] since the athlete may be running several programs.
   ///
-  /// Walked in phases, each run through [inParallel] and so bounded by
-  /// [defaultFanOutConcurrency], to keep a season of programs from putting
-  /// dozens of requests on the wire at once.
+  /// A training named by two prescriptions is fetched once, and one that fails
+  /// to load leaves the others alone rather than emptying the list.
   Future<List<Training>> getPrescribedAssessmentTrainings() async {
-    final programs = await getPrograms();
+    final definitions = await _apiClient
+        .getRecordableAssessmentDefinitionsApi();
 
-    final weekNumbers = await inParallel(
-      programs.map(
-        (program) =>
-            () => _weekNumbersOf(program.id),
-      ),
-    );
-    final scheduledWeeks = [
-      for (final (index, program) in programs.indexed)
-        for (final weekNumber in weekNumbers[index]) (program.id, weekNumber),
-    ];
-
-    final weeks = await inParallel(
-      scheduledWeeks.map(
-        (scheduled) =>
-            () => _weekOrNull(scheduled.$1, scheduled.$2),
-      ),
-    );
+    // The recordable set also holds the assessments Crimpy ships and the
+    // athlete's own, which name no program and are already on hand from the
+    // builtins and the training library. What is left is the prescribed half.
     final programOfTraining = <String, String>{};
-    for (final (index, week) in weeks.indexed) {
-      if (week == null) continue;
-      for (final session in week.sessions) {
-        programOfTraining.putIfAbsent(
-          session.trainingId,
-          () => scheduledWeeks[index].$1,
-        );
-      }
+    for (final definition in definitions) {
+      final trainingId = definition['training_id'] as String?;
+      final programId = definition['program_id'] as String?;
+      if (trainingId == null || programId == null) continue;
+      programOfTraining.putIfAbsent(trainingId, () => programId);
     }
 
     final trainings = await inParallel(
@@ -93,34 +75,13 @@ class ProgramRepository {
             () => _tryGetProgramTraining(entry.value, entry.key),
       ),
     );
+    // The server said these are assessments, so a training that comes back
+    // without one is a disagreement rather than a filter. Dropped rather than
+    // handed on: what reads this list dereferences the assessment.
     return trainings
         .whereType<Training>()
         .where((training) => training.assessment != null)
         .toList();
-  }
-
-  /// The weeks a program lists. A program whose weeks cannot be read
-  /// contributes nothing rather than failing the walk.
-  Future<List<int>> _weekNumbersOf(String programId) async {
-    try {
-      return (await getWeeks(
-        programId,
-      )).map((summary) => summary.weekNumber).toList();
-    } catch (e) {
-      AppLoggerHelper.warning("Could not load the weeks of $programId: $e");
-      return const [];
-    }
-  }
-
-  Future<Week?> _weekOrNull(String programId, int weekNumber) async {
-    try {
-      return await getWeek(programId, weekNumber);
-    } catch (e) {
-      AppLoggerHelper.warning(
-        "Could not load week $weekNumber of $programId: $e",
-      );
-      return null;
-    }
   }
 
   Future<Training?> _tryGetProgramTraining(
