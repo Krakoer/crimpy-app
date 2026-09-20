@@ -215,23 +215,23 @@ final class AssessmentDefinitionsProvider
 String _$assessmentDefinitionsHash() =>
     r'7d4d30ef23b076c30381d1d822feda7cbe1e8336';
 
-/// The assessment trainings a coach has prescribed to the athlete, walked out
-/// of their programs.
+/// The assessment trainings a coach has prescribed to the athlete, as the
+/// server lists them.
 ///
-/// Held apart from the athlete's own library so the walk, which is several
-/// requests, is not re-run every time that library changes: favouriting a
-/// training says nothing about what a coach has scheduled.
+/// Held apart from the athlete's own library so it is not re-read every time
+/// that library changes: favouriting a training says nothing about what a coach
+/// has scheduled.
 
 @ProviderFor(prescribedAssessmentTrainings)
 const prescribedAssessmentTrainingsProvider =
     PrescribedAssessmentTrainingsProvider._();
 
-/// The assessment trainings a coach has prescribed to the athlete, walked out
-/// of their programs.
+/// The assessment trainings a coach has prescribed to the athlete, as the
+/// server lists them.
 ///
-/// Held apart from the athlete's own library so the walk, which is several
-/// requests, is not re-run every time that library changes: favouriting a
-/// training says nothing about what a coach has scheduled.
+/// Held apart from the athlete's own library so it is not re-read every time
+/// that library changes: favouriting a training says nothing about what a coach
+/// has scheduled.
 
 final class PrescribedAssessmentTrainingsProvider
     extends
@@ -241,12 +241,12 @@ final class PrescribedAssessmentTrainingsProvider
           FutureOr<List<Training>>
         >
     with $FutureModifier<List<Training>>, $FutureProvider<List<Training>> {
-  /// The assessment trainings a coach has prescribed to the athlete, walked out
-  /// of their programs.
+  /// The assessment trainings a coach has prescribed to the athlete, as the
+  /// server lists them.
   ///
-  /// Held apart from the athlete's own library so the walk, which is several
-  /// requests, is not re-run every time that library changes: favouriting a
-  /// training says nothing about what a coach has scheduled.
+  /// Held apart from the athlete's own library so it is not re-read every time
+  /// that library changes: favouriting a training says nothing about what a coach
+  /// has scheduled.
   const PrescribedAssessmentTrainingsProvider._()
     : super(
         from: null,

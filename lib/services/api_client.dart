@@ -620,8 +620,8 @@ class ApiClient {
     await delete('/api/assessments/$id');
   }
 
-  /// The assessments the athlete may reference: the ones Crimpy ships and the
-  /// ones their coach wrote.
+  /// The assessments the athlete may reference: the ones Crimpy ships and their
+  /// own.
   Future<List<Map<String, dynamic>>> getAssessmentDefinitionsApi() async {
     final res = await get('/api/assessment-definitions');
     return _asList(res.data);
