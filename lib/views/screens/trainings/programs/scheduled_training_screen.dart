@@ -254,7 +254,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
       decoration: BoxDecoration(
-        color: CrimpyTheme.accentYellow.withValues(alpha: 0.12),
+        color: CrimpyTheme.tintOf(CrimpyTheme.accentYellow),
         border: Border.all(color: CrimpyTheme.accentYellow, width: 2),
       ),
       child: Row(
@@ -410,7 +410,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 14),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: CrimpyTheme.statusSuccess.withValues(alpha: 0.12),
+        color: CrimpyTheme.tintOf(CrimpyTheme.statusSuccess),
         border: Border.all(color: CrimpyTheme.statusSuccess, width: 2),
       ),
       child: Row(

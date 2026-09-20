@@ -86,6 +86,11 @@ const List<(String, Color)> tintedAccents = [
 /// older grounds still in the tree.
 const List<double> tintAlphas = [0.06, 0.1, CrimpyTheme.tintAlpha];
 
+/// What the session cards of the history screens tint themselves at, under the
+/// badges that tint again from the same accent. Kept beside the alphas rather
+/// than in the theme because it is one screen's layering, not a palette rule.
+const double historyCardAlpha = 0.05;
+
 void main() {
   group('accent text on a tint of its own accent', () {
     for (final (label, accent) in tintedAccents) {
@@ -108,6 +113,29 @@ void main() {
           activity.name,
           CrimpyTheme.activityTextColor(activity),
           tintOver(accent, CrimpyTheme.tintAlpha, CrimpyTheme.primaryWhite),
+        );
+      }
+    });
+
+    // The history widgets nest one tint inside another: the rep badge of
+    // rep_item_widget and the set chip of sets_view_widget are tinted at
+    // [CrimpyTheme.tintAlpha] on a card already tinted at [historyCardAlpha]
+    // from the same accent, so the ground they actually sit on is darker than
+    // either alpha alone. Measured flat on white the pair looks safer than it
+    // is, which is how a change to tintAlpha could pass this suite and still
+    // put those badges under the floor.
+    test('a tint nested in the history card still holds the floor', () {
+      for (final activity in SessionActivity.values) {
+        final accent = CrimpyTheme.activityColor(activity);
+        final card = tintOver(
+          accent,
+          historyCardAlpha,
+          CrimpyTheme.primaryWhite,
+        );
+        expectClearsFloor(
+          '${activity.name} badge on the history card',
+          CrimpyTheme.activityTextColor(activity),
+          tintOver(accent, CrimpyTheme.tintAlpha, card),
         );
       }
     });

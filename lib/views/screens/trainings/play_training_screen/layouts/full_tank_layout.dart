@@ -1070,7 +1070,7 @@ class _RepContextPill extends StatelessWidget {
     decoration: BoxDecoration(
       color: overFill
           ? CrimpyTheme.primaryWhite
-          : CrimpyTheme.primaryOrange.withValues(alpha: 0.12),
+          : CrimpyTheme.tintOf(CrimpyTheme.primaryOrange),
       border: Border.all(color: CrimpyTheme.primaryOrange, width: 1.5),
     ),
     child: Text(
