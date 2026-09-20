@@ -1,4 +1,5 @@
 import 'package:crimpy/logger.dart';
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/services/api_client.dart';
@@ -55,16 +56,18 @@ class ProgramRepository {
   /// A training named by two prescriptions is fetched once, and one that fails
   /// to load leaves the others alone rather than emptying the list.
   Future<List<Training>> getPrescribedAssessmentTrainings() async {
-    final definitions = await _apiClient
-        .getRecordableAssessmentDefinitionsApi();
+    final recordable =
+        (await _apiClient.getRecordableAssessmentDefinitionsApi()).map(
+          RecordableAssessment.fromJson,
+        );
 
     // The recordable set also holds the assessments Crimpy ships and the
     // athlete's own, which name no program and are already on hand from the
     // builtins and the training library. What is left is the prescribed half.
     final programOfTraining = <String, String>{};
-    for (final definition in definitions) {
-      final trainingId = definition['training_id'] as String?;
-      final programId = definition['program_id'] as String?;
+    for (final assessment in recordable) {
+      final trainingId = assessment.definition.trainingId;
+      final programId = assessment.programId;
       if (trainingId == null || programId == null) continue;
       programOfTraining.putIfAbsent(trainingId, () => programId);
     }
