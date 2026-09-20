@@ -49,6 +49,7 @@ class _StepPlacement {
   final String? context;
   final String? comment;
   final String? goal;
+  final String? protocol;
   final int occurrence;
   final EmomPosition? emom;
 
@@ -56,6 +57,7 @@ class _StepPlacement {
     this.context,
     this.comment,
     this.goal,
+    this.protocol,
     this.occurrence = 0,
     this.emom,
   });
@@ -108,15 +110,17 @@ void _expandItem(
   _ExpandContext ctx,
   _StepPlacement placement,
 ) {
-  // An item without a comment or a goal of its own carries the one of the
-  // circuit or group it belongs to, so neither a coach instruction nor the
-  // reason for the block is lost during the run.
+  // An item without a comment, a goal or a protocol of its own carries the one
+  // of the circuit or group it belongs to, so neither a coach instruction, the
+  // reason for the block nor the rule that resolves it is lost during the run.
   final comment = _cleanText(item.comment) ?? placement.comment;
   final goal = _cleanText(item.goal) ?? placement.goal;
+  final protocol = _cleanText(item.protocol) ?? placement.protocol;
   final at = _StepPlacement(
     context: placement.context,
     comment: comment,
     goal: goal,
+    protocol: protocol,
     occurrence: ctx.nextOccurrence(item),
     emom: placement.emom,
   );
@@ -168,6 +172,7 @@ void _expandCircuit(
       context: cycles > 1 ? 'ROUND ${cycle + 1}/$cycles' : null,
       comment: at.comment,
       goal: at.goal,
+      protocol: at.protocol,
       emom: at.emom,
     );
     for (final (index, child) in item.items.indexed) {
@@ -223,6 +228,7 @@ void _expandEmom(
       context: 'ROUND ${round + 1}/$rounds',
       comment: at.comment,
       goal: at.goal,
+      protocol: at.protocol,
       emom: position,
     );
     for (final child in item.items) {
@@ -267,6 +273,7 @@ void _expandExercise(
         subtitle: at.context,
         comment: at.comment,
         goal: at.goal,
+        protocol: at.protocol,
         videoLink: item.exerciseVideoLink,
         trainingItemId: _linkId(item),
         occurrence: at.occurrence,
@@ -288,6 +295,7 @@ void _expandExercise(
         subtitle: at.context,
         comment: at.comment,
         goal: at.goal,
+        protocol: at.protocol,
         videoLink: item.exerciseVideoLink,
         trainingItemId: _linkId(item),
         occurrence: at.occurrence,
@@ -359,6 +367,7 @@ void _expandFree(
         subtitle: at.context,
         comment: at.comment,
         goal: at.goal,
+        protocol: at.protocol,
         videoLink: item.exerciseVideoLink,
         trainingItemId: _linkId(item),
         occurrence: at.occurrence,
@@ -373,6 +382,7 @@ void _expandFree(
         subtitle: at.context,
         comment: at.comment,
         goal: at.goal,
+        protocol: at.protocol,
         videoLink: item.exerciseVideoLink,
         trainingItemId: _linkId(item),
         occurrence: at.occurrence,
@@ -423,6 +433,7 @@ void _expandHangboardRep(
       subtitle: at.context,
       comment: at.comment,
       goal: at.goal,
+      protocol: at.protocol,
       videoLink: item.exerciseVideoLink,
       trainingItemId: _linkId(item),
       occurrence: at.occurrence,
@@ -485,6 +496,7 @@ void _expandRepeater(
       subtitle: setRep(cycle, rep),
       comment: at.comment,
       goal: at.goal,
+      protocol: at.protocol,
       videoLink: item.exerciseVideoLink,
       trainingItemId: _linkId(item),
       occurrence: at.occurrence,

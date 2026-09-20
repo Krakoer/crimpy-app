@@ -191,6 +191,82 @@ final String _repeaterComment = _commentOfLength('pause', 2000);
 final String _hangRepComment = _commentOfLength('speed', 2000);
 final String _emomComment = _commentOfLength('apnea', 2000);
 
+/// A protocol at the same 2000 character cap the comment has, since the backend
+/// gives the two columns the same room and the run screen has to lay either of
+/// them out without overflowing.
+///
+/// The words are chosen so that 2000 characters does not land on a space: the
+/// run trims what it shows, so a filler whose word length divides 2000 would be
+/// looked for at 2000 characters and rendered at 1999.
+final String _repeaterProtocol = _commentOfLength('rampup', 2000);
+final String _hangRepProtocol = _commentOfLength('ceilings', 2000);
+
+/// A block with a protocol of its own, holding one step that names none and one
+/// that names its own, so a run shows what each step inherits and what it
+/// overrides. The rule is what the athlete resolves the step by, so it has to
+/// be on screen while the step runs and during the rest that leads into it.
+Training _protocolBlock() => const Training(
+  id: 't10',
+  title: 'Protocols',
+  items: [
+    TrainingItem(
+      id: 'g',
+      type: TrainingItemType.group,
+      position: 0,
+      groupTitle: 'Max hangs',
+      protocol: 'To failure or 40s. Past 40s add 5kg.',
+      items: [
+        TrainingItem(
+          id: 'e1',
+          type: TrainingItemType.exercise,
+          position: 0,
+          duration: 20,
+          restSeconds: 10,
+          exerciseName: 'Frog',
+        ),
+        TrainingItem(
+          id: 'e2',
+          type: TrainingItemType.exercise,
+          position: 1,
+          duration: 20,
+          exerciseName: 'Pigeon',
+          protocol: 'Stop at 24 reps.',
+        ),
+      ],
+    ),
+  ],
+);
+
+/// A repeater and a hang rep, each carrying a protocol at the length limit, so
+/// either run design can be checked for a layout that survives one. No rest
+/// between them, so a skip lands straight on the second.
+Training _hangsWithLongProtocols() => Training(
+  id: 't11',
+  title: 'Long protocols',
+  items: [
+    TrainingItem(
+      id: 'r1',
+      type: TrainingItemType.repeater,
+      position: 0,
+      hand: 'right',
+      cycles: 1,
+      reps: 1,
+      worktimeSeconds: 7,
+      restSeconds: 0,
+      protocol: _repeaterProtocol,
+    ),
+    TrainingItem(
+      id: 'h1',
+      type: TrainingItemType.hangboardRep,
+      position: 1,
+      hand: 'right',
+      worktimeSeconds: 7,
+      restSeconds: 0,
+      protocol: _hangRepProtocol,
+    ),
+  ],
+);
+
 /// A repeater and a hang rep, each carrying a comment at the new length limit,
 /// so a run of either can be checked for a layout that survives it. No rest
 /// between them, so a skip lands straight on the second one.
@@ -750,6 +826,82 @@ void main() {
       await _skip(tester);
       await _skip(tester);
       expect(find.text(_hangRepComment), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  // The rule is what the athlete resolves the step by, so it is read on the
+  // rest that leads into the step and again while the step runs.
+  testWidgets('the protocol of a step is shown during the run', (tester) async {
+    await _pumpRun(tester, _protocolBlock());
+
+    // Preparation rest previews the first step, which inherits the rule of the
+    // block it sits in.
+    expect(find.text('PROTOCOL'), findsOneWidget);
+    expect(find.text('To failure or 40s. Past 40s add 5kg.'), findsOneWidget);
+
+    await _skip(tester);
+    expect(find.text('To failure or 40s. Past 40s add 5kg.'), findsOneWidget);
+  });
+
+  testWidgets(
+    'a step with a protocol of its own does not inherit the block one',
+    (tester) async {
+      await _pumpRun(tester, _protocolBlock());
+
+      // Prep rest, first step, its rest, which leads into the second step.
+      await _skip(tester);
+      await _skip(tester);
+      expect(find.text('Stop at 24 reps.'), findsOneWidget);
+      expect(find.text('To failure or 40s. Past 40s add 5kg.'), findsNothing);
+
+      await _skip(tester);
+      expect(find.text('Stop at 24 reps.'), findsOneWidget);
+      expect(find.text('PIGEON'), findsOneWidget);
+    },
+  );
+
+  testWidgets('a step with no protocol shows no protocol block', (
+    tester,
+  ) async {
+    await _pumpRun(tester, _oneCommentedExercise());
+
+    expect(find.text('PROTOCOL'), findsNothing);
+  });
+
+  // The protocol gets the comment's 2000 characters, so it gets the comment's
+  // overflow check too, on the design whose header is wrapped in a FittedBox.
+  testWidgets(
+    'a repeater and a hang rep each lay out a protocol at the length limit',
+    (tester) async {
+      await _pumpRun(tester, _hangsWithLongProtocols());
+
+      expect(find.text(_repeaterProtocol), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      await _skip(tester);
+      expect(find.text(_repeaterProtocol), findsOneWidget);
+      expect(find.text(_hangRepProtocol), findsNothing);
+      expect(tester.getRect(find.text('RIGHT HANG')).height, greaterThan(3));
+      expect(tester.takeException(), isNull);
+
+      await _skip(tester);
+      expect(find.text(_hangRepProtocol), findsOneWidget);
+      expect(tester.getRect(find.text('HANG')).height, greaterThan(3));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'the full tank lays out a protocol at the length limit on a timed step',
+    (tester) async {
+      await _pumpRun(
+        tester,
+        _hangsWithLongProtocols(),
+        style: RunScreenStyle.fullTank,
+      );
+      await _skip(tester);
+      expect(find.text(_repeaterProtocol), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );

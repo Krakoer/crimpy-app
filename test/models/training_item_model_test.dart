@@ -522,6 +522,96 @@ void main() {
     });
   });
 
+  // The four prescriptions the ticket is measured against. Used verbatim so the
+  // test fails if the field ever stops carrying one of them whole.
+  group('TrainingItem.fromJson protocol', () {
+    const branchOnTheResult =
+        'Hang on 20mm, 3 fingers extended, to failure or 40s, 3 sets, 2 min '
+        'rest. If you go past 40s add 5kg; if you fall short, put your feet on '
+        'the ground.';
+    const deriveLaterSets =
+        '5 on / 5 off on 20mm. Max reps on set 1, but stop at 36 if you have '
+        'not failed by then. Then minus 25% of that, rounded down, on each '
+        'following set.';
+    const rampToALimit =
+        'Ramp up in 5kg steps, then 2.5kg once you are near the limit. If you '
+        'hold more than 5 sec, stop the set and add load.';
+    const stopRuleOnATest =
+        'Aim for 24 reps. If you get past 24, stop, rest 10 min, then add 5kg '
+        'and go again.';
+
+    test('parses the protocol apart from the goal and the comment', () {
+      final item = TrainingItem.fromJson({
+        'id': 'p1',
+        'type': 'exercise',
+        'position': 0,
+        'goal': 'resi doigts',
+        'comment': 'First rep in pronation',
+        'protocol': branchOnTheResult,
+      });
+      expect(item.goal, 'resi doigts');
+      expect(item.comment, 'First rep in pronation');
+      expect(item.protocol, branchOnTheResult);
+    });
+
+    test('carries every worked example whole', () {
+      for (final protocol in [
+        branchOnTheResult,
+        deriveLaterSets,
+        rampToALimit,
+        stopRuleOnATest,
+      ]) {
+        final item = TrainingItem.fromJson({
+          'id': 'p2',
+          'type': 'exercise',
+          'position': 0,
+          'protocol': protocol,
+        });
+        expect(item.protocol, protocol);
+        expect(item.toJson()['protocol'], protocol);
+      }
+    });
+
+    test('protocol is null when absent and round-trips through toJson', () {
+      final item = TrainingItem.fromJson({
+        'id': 'p3',
+        'type': 'exercise',
+        'position': 0,
+      });
+      expect(item.protocol, isNull);
+      expect(item.toJson().containsKey('protocol'), isFalse);
+    });
+
+    // The rule is what the athlete resolves the block by, so it has to survive
+    // the copies a run and an edit make of the item, and reach the frozen
+    // prescription they play.
+    test('survives copyWith, duplicate and the prescription snapshot', () {
+      const item = TrainingItem(
+        id: 'p4',
+        type: TrainingItemType.exercise,
+        position: 0,
+        protocol: stopRuleOnATest,
+      );
+      expect(item.copyWith(reps: 8).protocol, stopRuleOnATest);
+      expect(item.duplicate().protocol, stopRuleOnATest);
+      expect(item.toPrescriptionJson()['protocol'], stopRuleOnATest);
+    });
+
+    // A week retunes the numbers the rule reads, not the rule, so the protocol
+    // is not an override key and an override carrying one changes nothing.
+    test('is left alone by a program override', () {
+      const item = TrainingItem(
+        id: 'p5',
+        type: TrainingItemType.exercise,
+        position: 0,
+        protocol: rampToALimit,
+      );
+      final tuned = item.applyOverride({'reps': 12, 'protocol': 'stop at 20'});
+      expect(tuned.reps, 12);
+      expect(tuned.protocol, rampToALimit);
+    });
+  });
+
   group('TrainingItem.copyWith group title', () {
     const group = TrainingItem(
       id: 'g',

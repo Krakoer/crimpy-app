@@ -73,6 +73,9 @@ Future<void> _pump(
   String? goal,
   String? nextGoal,
   String? comment,
+  String? nextComment,
+  String? protocol,
+  String? nextProtocol,
   String? videoLink,
   String? nextVideoLink,
   TargetPlatform platform = TargetPlatform.android,
@@ -100,7 +103,9 @@ Future<void> _pump(
             goal: goal,
             nextGoal: nextGoal,
             comment: comment,
-            nextComment: null,
+            nextComment: nextComment,
+            protocol: protocol,
+            nextProtocol: nextProtocol,
             videoLink: videoLink,
             nextVideoLink: nextVideoLink,
             onPlayPause: () {},
@@ -708,6 +713,109 @@ void main() {
 
       expect(find.text('RESI DOIGTS'), findsNothing);
       expect(find.text('PULL-UPS'), findsWidgets);
+    });
+  });
+
+  // The rule is what the athlete resolves the step by, so it is on screen
+  // while the step runs and again during the rest before the next one, which
+  // is where it is acted on.
+  group('the protocol of the block', () {
+    const rule = 'To failure or 40s. Past 40s add 5kg.';
+
+    testWidgets('is labelled under a timed step', (tester) async {
+      await _pump(tester, item: _pullUps, protocol: rule);
+
+      expect(find.text('PROTOCOL'), findsOneWidget);
+      expect(find.text(rule), findsOneWidget);
+    });
+
+    testWidgets('is labelled under a self paced step', (tester) async {
+      await _pump(
+        tester,
+        item: const ConfirmItem(label: 'Dips', reps: 8),
+        protocol: rule,
+      );
+
+      expect(find.text('PROTOCOL'), findsOneWidget);
+      expect(find.text(rule), findsOneWidget);
+    });
+
+    testWidgets('a rest carries the rule of the step it leads into', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 60),
+        nextItem: _pullUps,
+        nextProtocol: rule,
+      );
+
+      expect(find.text(rule), findsOneWidget);
+    });
+
+    // The tank draws its content twice, the second copy clipped to the fill,
+    // so the label has to take its colour from the palette or the copy over
+    // the fill paints gold on gold and disappears where the athlete is hanging.
+    testWidgets('a sensor step carries it, coloured from the palette', (
+      tester,
+    ) async {
+      await _pump(tester, item: _hang, currentWeight: 34.2, protocol: rule);
+
+      expect(find.text('PROTOCOL'), findsNWidgets(2));
+      final painted = tester
+          .widgetList<Text>(find.text('PROTOCOL'))
+          .map((text) => text.style?.color)
+          .toSet();
+      expect(painted, {CrimpyTheme.protocolColor, CrimpyTheme.primaryWhite});
+      expect(find.text(rule), findsNWidgets(2));
+    });
+
+    testWidgets('a step with no protocol shows none', (tester) async {
+      await _pump(tester, item: _pullUps);
+
+      expect(find.text('PROTOCOL'), findsNothing);
+    });
+
+    // The tank draws its content twice and cannot scroll, so everything in it
+    // is bounded by a line cap. A step carrying a rule and a comment at the
+    // server's limit together is the worst case of that, and it is the one the
+    // caps exist for.
+    testWidgets('lays out a protocol and a comment both at the limit', (
+      tester,
+    ) async {
+      final long = List.filled(401, 'ceilings').join(' ').substring(0, 2000);
+      final other = List.filled(401, 'rampup').join(' ').substring(0, 2000);
+
+      await _pump(
+        tester,
+        item: _pullUps,
+        protocol: long,
+        comment: other,
+        goal: 'resi doigts',
+      );
+
+      expect(find.text(long), findsOneWidget);
+      expect(find.text(other), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('lays out a rest preview carrying both at the limit', (
+      tester,
+    ) async {
+      final long = List.filled(401, 'ceilings').join(' ').substring(0, 2000);
+      final other = List.filled(401, 'rampup').join(' ').substring(0, 2000);
+
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 60),
+        nextItem: _pullUps,
+        nextProtocol: long,
+        nextComment: other,
+      );
+
+      expect(find.text(long), findsOneWidget);
+      expect(find.text(other), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 }

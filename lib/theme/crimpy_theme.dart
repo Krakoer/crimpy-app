@@ -123,6 +123,14 @@ class CrimpyTheme {
   /// bgSuccess alike at the label sizes a goal uses.
   static const Color goalColor = accentGreenText;
 
+  /// The rule the athlete resolves while performing a block. Gold, a third
+  /// colour beside the goal's green and the comment's orange, so the three
+  /// notes on a card are told apart without reading them. accentYellow is about
+  /// 2.3:1 on white, so the label takes this hue carried far enough down to
+  /// clear the 4.5:1 floor, on white and on bgWarning alike. It is --gd-tx in
+  /// crimpy-frontend/src/routes/layout.css.
+  static const Color protocolColor = Color(0xFF8A6220);
+
   /// Success/rest states
   static const Color successColor = statusSuccess;
 
