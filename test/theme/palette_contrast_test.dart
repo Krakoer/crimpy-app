@@ -148,8 +148,12 @@ void main() {
       }
     });
 
-    // The four named status grounds are fixed hexes rather than alpha tints,
-    // and are the app's own counterpart to the --*-lt tokens of the portal.
+    // Three named status grounds, fixed hexes rather than alpha tints, the
+    // app's own counterpart to the --*-lt tokens of the portal. bgInfo is the
+    // fourth and is deliberately absent: its accent is teal, which has no text
+    // token because the portal palette has no teal to mirror, so textOn answers
+    // with the accent itself and the pair reads 3.50:1. Nothing writes text on
+    // bgInfo today; if anything ever does, teal needs a text form first.
     test('the named status grounds hold the floor', () {
       expectClearsFloor(
         'statusError on bgError',
