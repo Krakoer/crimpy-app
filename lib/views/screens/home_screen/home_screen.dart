@@ -54,6 +54,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     ref.invalidate(pinnedTrainingsProvider);
     ref.invalidate(coachEnrollmentProvider);
     ref.invalidate(myAvailabilityProvider);
+    ref.invalidate(declaredWeekStartsProvider);
 
     return Future.wait([
       ref.read(activeProgramProvider.future),

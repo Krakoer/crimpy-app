@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:crimpy/models/week_availability.dart';
+import 'package:crimpy/utils/availability_window.dart';
 import 'package:crimpy/viewmodels/availability_view_model.dart';
 import 'package:crimpy/views/screens/availability/week_availability_screen.dart';
 import 'package:flutter/material.dart';
@@ -21,7 +22,12 @@ class _StubMyAvailability extends MyAvailability {
   final void Function(WeekAvailability week)? onSave;
 
   @override
-  Future<List<WeekAvailability>> build() async => _weeks;
+  Future<AvailabilityWeeks> build() async => (
+    weeks: _weeks,
+    // The week under test, so the screen reads its answer off the list the way
+    // it does for a week inside the editable window.
+    window: AvailabilityWindow.single(_monday),
+  );
 
   @override
   Future<void> saveWeek(WeekAvailability week) async {

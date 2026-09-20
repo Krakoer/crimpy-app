@@ -2,6 +2,7 @@ import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/repositories/availability_repository.dart';
 import 'package:crimpy/utils/availability_reminder_plan.dart';
+import 'package:crimpy/utils/availability_window.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/viewmodels/notification_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -17,15 +18,35 @@ AvailabilityRepository? availabilityRepository(Ref ref) {
   return AvailabilityRepository(ref.watch(apiClientProvider));
 }
 
-/// Every calendar week the athlete has declared. Empty when they are not
-/// signed in.
+/// Declared weeks, with the window they were read for.
+///
+/// The window travels with the weeks rather than sitting beside them, so
+/// nothing can read an answer out of the list without knowing which weeks that
+/// list could have carried. A week the window does not cover is a week this
+/// read says nothing about, which is not a week the athlete never declared.
+typedef AvailabilityWeeks = ({
+  List<WeekAvailability> weeks,
+  AvailabilityWindow window,
+});
+
+/// The calendar weeks the athlete can edit, with what they planned in them:
+/// this week and the next two, which is what the week switcher offers. Empty
+/// when they are not signed in.
+///
+/// Windowed rather than the whole history, because a week now carries up to
+/// 140 activities and the screen renders one week at a time. Which weeks the
+/// athlete has ever declared is a different question, answered by
+/// [declaredWeekStarts]: do not derive it from this list.
 @Riverpod(keepAlive: true)
 class MyAvailability extends _$MyAvailability {
   @override
-  Future<List<WeekAvailability>> build() async {
+  Future<AvailabilityWeeks> build() async {
     final repository = ref.watch(availabilityRepositoryProvider);
-    if (repository == null) return [];
-    return repository.getWeeks();
+    final window = AvailabilityWindow.editable(DateTime.now());
+    if (repository == null) {
+      return (weeks: const <WeekAvailability>[], window: window);
+    }
+    return (weeks: await repository.getWeeks(window: window), window: window);
   }
 
   /// The week starting on that Monday, or a blank one when it was never
@@ -34,11 +55,33 @@ class MyAvailability extends _$MyAvailability {
   /// Whether it was declared comes back with it: a blank week is a week the
   /// athlete has yet to answer, and an untouched one is still worth sending,
   /// since every day off is an answer the coach acts on.
+  ///
+  /// A week outside the window the list was read for is fetched on its own
+  /// rather than reported undeclared. The window is pinned to the day the list
+  /// was read, so an app left open across a Sunday midnight is asked for a week
+  /// it never fetched, and answering "not declared" there would offer the
+  /// athlete a blank week to overwrite what they had already sent.
   Future<({WeekAvailability week, bool declared})> weekOf(
     DateTime monday,
   ) async {
-    final weeks = await future;
     final start = getStartOfWeek(monday);
+    final held = await future;
+    if (held.window.covers(start)) return _readWeek(held.weeks, start);
+
+    final repository = ref.read(availabilityRepositoryProvider);
+    if (repository == null) {
+      return (week: WeekAvailability.empty(start), declared: false);
+    }
+    return _readWeek(
+      await repository.getWeeks(window: AvailabilityWindow.single(start)),
+      start,
+    );
+  }
+
+  ({WeekAvailability week, bool declared}) _readWeek(
+    List<WeekAvailability> weeks,
+    DateTime start,
+  ) {
     for (final week in weeks) {
       if (getStartOfWeek(week.weekStart) == start) {
         return (week: week, declared: true);
@@ -52,8 +95,26 @@ class MyAvailability extends _$MyAvailability {
     if (repository == null) return;
     await repository.saveWeek(week);
     ref.invalidateSelf();
+    // The week just answered is one the planner must stop nudging about, and
+    // it is a different read from the windowed list above.
+    ref.invalidate(declaredWeekStartsProvider);
     if (ref.mounted) await future;
   }
+}
+
+/// Every calendar week the athlete has declared, dates alone and never
+/// windowed.
+///
+/// Its own provider off its own endpoint, because the reminder planner drops a
+/// nudge for a week that was already answered. Fed from the windowed list
+/// instead, it would forget the weeks outside the window and nudge the athlete
+/// about weeks they have already sent, which is the regression bounding the
+/// list could otherwise introduce silently.
+@Riverpod(keepAlive: true)
+Future<Set<DateTime>> declaredWeekStarts(Ref ref) async {
+  final repository = ref.watch(availabilityRepositoryProvider);
+  if (repository == null) return {};
+  return repository.getDeclaredWeekStarts();
 }
 
 /// The reminder the coach set, with the weeks already declared, mirrored to the
@@ -85,11 +146,15 @@ Future<CachedAvailabilityPlan?> availabilityPlanCache(Ref ref) async {
     // an outage leaves the mirror alone instead of writing "your coach set
     // none" into it and cancelling the pending nudges.
     final reminder = await repository.getReminder();
-    final weeks = await ref.watch(myAvailabilityProvider.future);
+    // Taken from the unwindowed provider and never from myAvailabilityProvider,
+    // which only holds the three weeks the screen edits. A plan built from
+    // those would treat every week outside them as unanswered and nudge the
+    // athlete for weeks they already sent.
+    final declared = await ref.watch(declaredWeekStartsProvider.future);
 
     final plan = CachedAvailabilityPlan(
       reminder: reminder,
-      declaredWeekStarts: weeks.map((week) => week.weekStart).toSet(),
+      declaredWeekStarts: declared,
     );
     await service.saveAvailabilityPlan(plan);
     return plan;

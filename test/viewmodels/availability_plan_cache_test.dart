@@ -50,8 +50,58 @@ class _OfflineApiClient extends ApiClient {
       throw Exception('offline');
 
   @override
-  Future<List<Map<String, dynamic>>> getMyAvailability() async =>
-      throw Exception('offline');
+  Future<List<Map<String, dynamic>>> getMyAvailability({
+    String? from,
+    String? to,
+  }) async => throw Exception('offline');
+
+  @override
+  Future<List<String>> getMyDeclaredWeeks() async => throw Exception('offline');
+}
+
+/// An API that answers the way the real one does now: the week list is bounded
+/// to the window it was asked for, the declared weeks are not bounded at all.
+///
+/// The week it returns is built at the window's own near bound, so the test
+/// does not have to know which week it is running in.
+class _WindowedApiClient extends ApiClient {
+  /// A declared week far enough back that no editable window reaches it.
+  static final oldDeclaredWeek = DateTime(2026, 1, 5);
+
+  String? lastFrom;
+
+  @override
+  Future<Map<String, dynamic>> getAvailabilityReminder() async => {
+    'enabled': true,
+    'day_of_week': 4,
+    'hour': 21,
+    'minute': 0,
+  };
+
+  @override
+  Future<List<Map<String, dynamic>>> getMyAvailability({
+    String? from,
+    String? to,
+  }) async {
+    lastFrom = from;
+    return [
+      {
+        'user_id': 'user-1',
+        'week_start': from,
+        'updated_at': '2026-01-01T00:00:00Z',
+        'days': [
+          for (var day = 0; day < 7; day++)
+            {'day_of_week': day, 'activities': <Map<String, dynamic>>[]},
+        ],
+      },
+    ];
+  }
+
+  @override
+  Future<List<String>> getMyDeclaredWeeks() async => [
+    formatWeekStart(oldDeclaredWeek),
+    if (lastFrom != null) lastFrom!,
+  ];
 }
 
 final _storedPlan = CachedAvailabilityPlan(
@@ -99,6 +149,52 @@ void main() {
               .hour,
           21,
         );
+      },
+    );
+
+    // The regression bounding the week list could introduce silently: the
+    // planner drops a nudge for a week already answered, so a set of declared
+    // weeks taken from the windowed list forgets every week outside the window
+    // and nudges the athlete about weeks they have already sent.
+    //
+    // Point availabilityPlanCache at myAvailabilityProvider again and this
+    // fails: the windowed list never carries oldDeclaredWeek.
+    test(
+      'the plan holds a declared week the windowed list never carried',
+      () async {
+        SharedPreferences.setMockInitialValues(const <String, Object>{});
+        final api = _WindowedApiClient();
+        final container = ProviderContainer.test(
+          overrides: [
+            authStateProvider.overrideWith(() => _StubAuthState(_user)),
+            apiClientProvider.overrideWithValue(api),
+          ],
+        );
+
+        // Waited on first, so the repository exists by the time the plan is
+        // built: isAuthenticated reads the resolved auth state, and the plan
+        // would otherwise answer from the mirror on its first pass.
+        await container.read(authStateProvider.future);
+
+        final plan = await container
+            .read(availabilityPlanCacheProvider.future)
+            .timeout(const Duration(seconds: 5));
+
+        expect(
+          plan?.declaredWeekStarts,
+          contains(_WindowedApiClient.oldDeclaredWeek),
+        );
+
+        // The premise the assertion above rests on: the week list really is
+        // windowed and really does not carry that week, so the plan can only
+        // have learned it from the unwindowed read.
+        final held = await container.read(myAvailabilityProvider.future);
+        expect(
+          held.weeks.map((week) => week.weekStart),
+          isNot(contains(_WindowedApiClient.oldDeclaredWeek)),
+        );
+        expect(held.weeks, hasLength(1));
+        expect(held.window.covers(_WindowedApiClient.oldDeclaredWeek), isFalse);
       },
     );
 

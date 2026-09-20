@@ -120,6 +120,7 @@ class _MainPageState extends ConsumerState<MainPage>
       // declared weeks themselves can see: the provider is keepAlive and would
       // otherwise hand the cache back unchanged.
       ref.invalidate(myAvailabilityProvider);
+      ref.invalidate(declaredWeekStartsProvider);
       ref.invalidate(availabilityPlanCacheProvider);
       ref.invalidate(availabilityReminderSyncProvider);
       // A reply written while the app was in the background only shows up on
