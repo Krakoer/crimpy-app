@@ -217,7 +217,11 @@ class _BlockCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: CrimpyTheme.bgSecondary,
+        // White rather than bgSecondary: the rep badge and the set chip inside
+        // this card tint twice from the session accent, and on the grey the
+        // stretching badge composites to 4.40:1, under the floor. The border is
+        // what separates the card from the page.
+        color: CrimpyTheme.bgPrimary,
         border: Border.all(color: CrimpyTheme.borderDefault),
         borderRadius: BorderRadius.circular(CrimpyTheme.radiusSmall),
       ),

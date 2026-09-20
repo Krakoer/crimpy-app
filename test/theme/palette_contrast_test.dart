@@ -86,6 +86,12 @@ const List<(String, Color)> tintedAccents = [
 /// older grounds still in the tree.
 const List<double> tintAlphas = [0.06, 0.1, CrimpyTheme.tintAlpha];
 
+/// The surface the history cards are drawn on. White rather than bgSecondary
+/// since session_reps_card.dart moved its block card there, and stated here
+/// because a nested tint composited over the wrong base reads better than it
+/// paints: over bgSecondary the same stretching badge is 4.40:1, not 4.57:1.
+const Color historyCardBase = CrimpyTheme.bgPrimary;
+
 /// What the session cards of the history screens tint themselves at, under the
 /// badges that tint again from the same accent.
 ///
@@ -133,11 +139,7 @@ void main() {
     test('a tint nested in the history card still holds the floor', () {
       for (final activity in SessionActivity.values) {
         final accent = CrimpyTheme.activityColor(activity);
-        final card = tintOver(
-          accent,
-          historyCardAlpha,
-          CrimpyTheme.primaryWhite,
-        );
+        final card = tintOver(accent, historyCardAlpha, historyCardBase);
         expectClearsFloor(
           '${activity.name} badge on the history card',
           CrimpyTheme.activityTextColor(activity),
