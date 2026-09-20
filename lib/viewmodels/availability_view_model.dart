@@ -68,7 +68,12 @@ class MyAvailability extends _$MyAvailability {
     final held = await future;
     if (held.window.covers(start)) return _readWeek(held.weeks, start);
 
-    final repository = ref.read(availabilityRepositoryProvider);
+    // Guarded like saveWeek below: reading a ref that was disposed during the
+    // await throws, and it would reach the screen as a failed week rather than
+    // as the blank one a week nobody declared is.
+    final repository = ref.mounted
+        ? ref.read(availabilityRepositoryProvider)
+        : null;
     if (repository == null) {
       return (week: WeekAvailability.empty(start), declared: false);
     }
@@ -98,7 +103,11 @@ class MyAvailability extends _$MyAvailability {
     // The week just answered is one the planner must stop nudging about, and
     // it is a different read from the windowed list above.
     ref.invalidate(declaredWeekStartsProvider);
-    if (ref.mounted) await future;
+    if (!ref.mounted) return;
+    // Both are waited on, because the screen pops when this returns: the home
+    // card reads the declared weeks, so returning before they land puts the
+    // athlete back on a dashboard still asking for the week they just sent.
+    await Future.wait([future, ref.read(declaredWeekStartsProvider.future)]);
   }
 }
 

@@ -466,9 +466,11 @@ class _WeekSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Read off the window the weeks were fetched for rather than listed again
-    // here: a switcher offering a week the list was never asked for pays a
-    // second round trip every time that chip is tapped.
+    // Derived from the same editable window the list is read for, rather than
+    // listed again here, so widening one widens the other. It is recomputed
+    // rather than read off the held list: across a Sunday midnight the list is
+    // still pinned to yesterday's window, and the chip past it is then a week
+    // the list was never asked for, which weekOf fetches on its own.
     final window = AvailabilityWindow.editable(DateTime.now());
     final options = [
       for (var index = 0; index < editableAvailabilityWeeks; index++)
