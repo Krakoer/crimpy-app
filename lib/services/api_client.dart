@@ -451,11 +451,13 @@ class ApiClient {
   /// Deliberately its own endpoint rather than a read of the list above: the
   /// reminder planner drops a nudge for a week already answered, so it needs
   /// every declared week and not the window a screen happens to be showing.
+  ///
+  /// A body that is not a list throws, the way [_asList] does, rather than
+  /// reading as an athlete who has never declared anything: the planner would
+  /// take that answer at face value and nudge them for every week.
   Future<List<String>> getMyDeclaredWeeks() async {
     final res = await get('/api/user/availability/declared-weeks');
-    final data = res.data;
-    if (data is! List) return const [];
-    return data.map((week) => week.toString()).toList();
+    return (res.data as List<dynamic>? ?? const []).cast<String>();
   }
 
   /// Declares one week. The body carries all seven days: the API only holds a

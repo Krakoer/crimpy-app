@@ -1,5 +1,6 @@
 import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/availability_window.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/viewmodels/availability_view_model.dart';
 import 'package:crimpy/views/screens/availability/widgets/day_schedule_card.dart';
@@ -94,6 +95,10 @@ class _WeekAvailabilityScreenState
   Future<void> _retry() async {
     setState(() => _loadError = null);
     ref.invalidate(myAvailabilityProvider);
+    // Both, because both are kept alive and both hold their error. Leaving the
+    // declared weeks on a cached failure keeps the home card hidden and the
+    // reminders planned off the device mirror until the app is resumed.
+    ref.invalidate(declaredWeekStartsProvider);
     await _loadWeek();
   }
 
@@ -461,11 +466,13 @@ class _WeekSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final thisWeek = getStartOfWeek(DateTime.now());
+    // Read off the window the weeks were fetched for rather than listed again
+    // here: a switcher offering a week the list was never asked for pays a
+    // second round trip every time that chip is tapped.
+    final window = AvailabilityWindow.editable(DateTime.now());
     final options = [
-      thisWeek,
-      addCalendarDays(thisWeek, 7),
-      addCalendarDays(thisWeek, 14),
+      for (var index = 0; index < editableAvailabilityWeeks; index++)
+        addCalendarDays(window.from, index * 7),
     ];
     return Container(
       width: double.infinity,
@@ -490,7 +497,7 @@ class _WeekSwitcher extends StatelessWidget {
     final name = switch (index) {
       0 => 'This week',
       1 => 'Next week',
-      _ => 'In 2 weeks',
+      _ => 'In $index weeks',
     };
     return '$name (${_dayAndMonth(monday)})';
   }

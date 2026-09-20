@@ -46,7 +46,7 @@ class MyAvailability extends _$MyAvailability {
     if (repository == null) {
       return (weeks: const <WeekAvailability>[], window: window);
     }
-    return (weeks: await repository.getWeeks(window: window), window: window);
+    return (weeks: await repository.getWeeks(window), window: window);
   }
 
   /// The week starting on that Monday, or a blank one when it was never
@@ -73,7 +73,7 @@ class MyAvailability extends _$MyAvailability {
       return (week: WeekAvailability.empty(start), declared: false);
     }
     return _readWeek(
-      await repository.getWeeks(window: AvailabilityWindow.single(start)),
+      await repository.getWeeks(AvailabilityWindow.single(start)),
       start,
     );
   }

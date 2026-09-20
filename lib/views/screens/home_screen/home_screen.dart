@@ -65,6 +65,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ref.read(pinnedTrainingsProvider.future),
       ref.read(coachEnrollmentProvider.future),
       ref.read(myAvailabilityProvider.future),
+      ref.read(declaredWeekStartsProvider.future),
     ]);
   }
 

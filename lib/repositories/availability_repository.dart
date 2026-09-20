@@ -11,13 +11,17 @@ class AvailabilityRepository {
 
   AvailabilityRepository(this._apiClient);
 
-  /// The declared weeks inside [window], with what was planned in them. A null
-  /// window reads every week the athlete ever declared, which is only worth
-  /// asking for when nothing narrower is known.
-  Future<List<WeekAvailability>> getWeeks({AvailabilityWindow? window}) async {
+  /// The declared weeks inside [window], with what was planned in them.
+  ///
+  /// The window is required rather than optional: the endpoint answers every
+  /// week ever declared when it is left out, each carrying up to 140
+  /// activities, and there is no screen in the app that wants that. Which weeks
+  /// the athlete has declared is a different question, and
+  /// [getDeclaredWeekStarts] is the one that answers it.
+  Future<List<WeekAvailability>> getWeeks(AvailabilityWindow window) async {
     final list = await _apiClient.getMyAvailability(
-      from: window == null ? null : formatWeekStart(window.from),
-      to: window == null ? null : formatWeekStart(window.to),
+      from: formatWeekStart(window.from),
+      to: formatWeekStart(window.to),
     );
     return list.map(WeekAvailability.fromJson).toList();
   }

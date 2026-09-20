@@ -43,4 +43,38 @@ void main() {
     expect(client.requestedPath, '/api/assessment-definitions');
     expect(client.requestedQuery, {'recordable': 'true'});
   });
+
+  // The window is the whole point of the call, and the server only applies it
+  // under these two names. A key renamed here answers the athlete's entire
+  // history instead, which is what this endpoint was bounded to stop, and no
+  // viewmodel test would notice because they all stub this method.
+  test('the availability window is asked for as from and to', () async {
+    final client = _RecordingApiClient();
+
+    await client.getMyAvailability(from: '2026-01-05', to: '2026-01-19');
+
+    expect(client.requestedPath, '/api/user/availability');
+    expect(client.requestedQuery, {'from': '2026-01-05', 'to': '2026-01-19'});
+  });
+
+  // An absent bound is left out rather than sent as null, which the server
+  // reads as unbounded on that side.
+  test('an absent bound is not sent at all', () async {
+    final client = _RecordingApiClient();
+
+    await client.getMyAvailability();
+
+    expect(client.requestedQuery, isEmpty);
+  });
+
+  // The reminder planner reads this path and nothing else. A typo answers 404,
+  // the plan falls back to the device mirror, and the athlete is nudged about
+  // weeks they already declared.
+  test('the declared weeks are read off their own endpoint', () async {
+    final client = _RecordingApiClient();
+
+    await client.getMyDeclaredWeeks();
+
+    expect(client.requestedPath, '/api/user/availability/declared-weeks');
+  });
 }
