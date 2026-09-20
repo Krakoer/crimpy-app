@@ -357,7 +357,7 @@ class _TodayTrainingRow extends ConsumerWidget {
                           fontFamily: 'JetBrainsMono',
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
-                          color: programSessionColor(type),
+                          color: CrimpyTheme.textOn(programSessionColor(type)),
                         ),
                       ),
                       if (seconds > 0) ...[
@@ -459,8 +459,8 @@ class _FlexTrainingRow extends ConsumerWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: done >= target
-                    ? CrimpyTheme.statusSuccess
-                    : programSessionColor(type),
+                    ? CrimpyTheme.textOn(CrimpyTheme.statusSuccess)
+                    : CrimpyTheme.textOn(programSessionColor(type)),
               ),
             ),
             const SizedBox(width: 10),
