@@ -240,7 +240,11 @@ class ResultCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     // Arrow
-                    Icon(Icons.arrow_forward, size: 36, color: percentageColor),
+                    Icon(
+                      Icons.arrow_forward,
+                      size: 36,
+                      color: CrimpyTheme.textOn(percentageColor),
+                    ),
                   ],
                 ),
 

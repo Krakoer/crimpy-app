@@ -87,8 +87,14 @@ const List<(String, Color)> tintedAccents = [
 const List<double> tintAlphas = [0.06, 0.1, CrimpyTheme.tintAlpha];
 
 /// What the session cards of the history screens tint themselves at, under the
-/// badges that tint again from the same accent. Kept beside the alphas rather
-/// than in the theme because it is one screen's layering, not a palette rule.
+/// badges that tint again from the same accent.
+///
+/// This is a hand copy of the literal at rep_item_widget.dart and
+/// sets_view_widget.dart, not a reference to it, and nothing makes it follow
+/// them: raise theirs to 0.10 and this file keeps measuring 0.05 while the
+/// stretching badge on that card drops to 4.36:1. It is kept here rather than
+/// in CrimpyTheme because it is one screen's layering, not a palette rule, so
+/// the cost of that copy is a line in this comment.
 const double historyCardAlpha = 0.05;
 
 void main() {

@@ -321,7 +321,9 @@ class FlexTrainingRow extends StatelessWidget {
                       fontFamily: 'JetBrainsMono',
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: complete ? CrimpyTheme.statusSuccess : color,
+                      color: complete
+                          ? CrimpyTheme.textOn(CrimpyTheme.statusSuccess)
+                          : CrimpyTheme.textOn(color),
                     ),
                   ),
                   const SizedBox(height: 5),
