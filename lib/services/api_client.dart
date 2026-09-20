@@ -425,10 +425,39 @@ class ApiClient {
 
   // ----- Availability (coachee) -----
 
-  /// Every calendar week the athlete has declared, keyed by its Monday.
-  Future<List<Map<String, dynamic>>> getMyAvailability() async {
-    final res = await get('/api/user/availability');
+  /// The calendar weeks the athlete has declared, keyed by their Monday.
+  ///
+  /// [from] and [to] are Mondays in YYYY-MM-DD and bound the answer to that
+  /// range of weeks, both ends included. Sending neither reads every week ever
+  /// declared, which a week holding up to 140 activities makes far too large to
+  /// ask for on a screen showing one week.
+  Future<List<Map<String, dynamic>>> getMyAvailability({
+    String? from,
+    String? to,
+  }) async {
+    final res = await get(
+      '/api/user/availability',
+      queryParameters: {
+        if (from != null) 'from': from,
+        if (to != null) 'to': to,
+      },
+    );
     return _asList(res.data);
+  }
+
+  /// Every Monday the athlete has declared, as YYYY-MM-DD and with no
+  /// activities on them.
+  ///
+  /// Deliberately its own endpoint rather than a read of the list above: the
+  /// reminder planner drops a nudge for a week already answered, so it needs
+  /// every declared week and not the window a screen happens to be showing.
+  ///
+  /// A body that is not a list throws, the way [_asList] does, rather than
+  /// reading as an athlete who has never declared anything: the planner would
+  /// take that answer at face value and nudge them for every week.
+  Future<List<String>> getMyDeclaredWeeks() async {
+    final res = await get('/api/user/availability/declared-weeks');
+    return (res.data as List<dynamic>? ?? const []).cast<String>();
   }
 
   /// Declares one week. The body carries all seven days: the API only holds a

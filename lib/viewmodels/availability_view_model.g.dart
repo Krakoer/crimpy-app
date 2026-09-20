@@ -64,18 +64,36 @@ final class AvailabilityRepositoryProvider
 String _$availabilityRepositoryHash() =>
     r'472056971a777f263cea03d180e93bda0a5321bf';
 
-/// Every calendar week the athlete has declared. Empty when they are not
-/// signed in.
+/// The calendar weeks the athlete can edit, with what they planned in them:
+/// this week and the next two, which is what the week switcher offers. Empty
+/// when they are not signed in.
+///
+/// Windowed rather than the whole history, because a week now carries up to
+/// 140 activities and the screen renders one week at a time. Which weeks the
+/// athlete has ever declared is a different question, answered by
+/// [declaredWeekStarts]: do not derive it from this list.
 
 @ProviderFor(MyAvailability)
 const myAvailabilityProvider = MyAvailabilityProvider._();
 
-/// Every calendar week the athlete has declared. Empty when they are not
-/// signed in.
+/// The calendar weeks the athlete can edit, with what they planned in them:
+/// this week and the next two, which is what the week switcher offers. Empty
+/// when they are not signed in.
+///
+/// Windowed rather than the whole history, because a week now carries up to
+/// 140 activities and the screen renders one week at a time. Which weeks the
+/// athlete has ever declared is a different question, answered by
+/// [declaredWeekStarts]: do not derive it from this list.
 final class MyAvailabilityProvider
-    extends $AsyncNotifierProvider<MyAvailability, List<WeekAvailability>> {
-  /// Every calendar week the athlete has declared. Empty when they are not
-  /// signed in.
+    extends $AsyncNotifierProvider<MyAvailability, AvailabilityWeeks> {
+  /// The calendar weeks the athlete can edit, with what they planned in them:
+  /// this week and the next two, which is what the week switcher offers. Empty
+  /// when they are not signed in.
+  ///
+  /// Windowed rather than the whole history, because a week now carries up to
+  /// 140 activities and the screen renders one week at a time. Which weeks the
+  /// athlete has ever declared is a different question, answered by
+  /// [declaredWeekStarts]: do not derive it from this list.
   const MyAvailabilityProvider._()
     : super(
         from: null,
@@ -95,34 +113,102 @@ final class MyAvailabilityProvider
   MyAvailability create() => MyAvailability();
 }
 
-String _$myAvailabilityHash() => r'62eb5ec7658da62809642b77edf2ff109b154236';
+String _$myAvailabilityHash() => r'c9687bb679b212bf29b045be943e26b9564cc62a';
 
-/// Every calendar week the athlete has declared. Empty when they are not
-/// signed in.
+/// The calendar weeks the athlete can edit, with what they planned in them:
+/// this week and the next two, which is what the week switcher offers. Empty
+/// when they are not signed in.
+///
+/// Windowed rather than the whole history, because a week now carries up to
+/// 140 activities and the screen renders one week at a time. Which weeks the
+/// athlete has ever declared is a different question, answered by
+/// [declaredWeekStarts]: do not derive it from this list.
 
-abstract class _$MyAvailability extends $AsyncNotifier<List<WeekAvailability>> {
-  FutureOr<List<WeekAvailability>> build();
+abstract class _$MyAvailability extends $AsyncNotifier<AvailabilityWeeks> {
+  FutureOr<AvailabilityWeeks> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
     final ref =
-        this.ref
-            as $Ref<AsyncValue<List<WeekAvailability>>, List<WeekAvailability>>;
+        this.ref as $Ref<AsyncValue<AvailabilityWeeks>, AvailabilityWeeks>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<
-                AsyncValue<List<WeekAvailability>>,
-                List<WeekAvailability>
-              >,
-              AsyncValue<List<WeekAvailability>>,
+              AnyNotifier<AsyncValue<AvailabilityWeeks>, AvailabilityWeeks>,
+              AsyncValue<AvailabilityWeeks>,
               Object?,
               Object?
             >;
     element.handleValue(ref, created);
   }
 }
+
+/// Every calendar week the athlete has declared, dates alone and never
+/// windowed.
+///
+/// Its own provider off its own endpoint, because the reminder planner drops a
+/// nudge for a week that was already answered. Fed from the windowed list
+/// instead, it would forget the weeks outside the window and nudge the athlete
+/// about weeks they have already sent, which is the regression bounding the
+/// list could otherwise introduce silently.
+
+@ProviderFor(declaredWeekStarts)
+const declaredWeekStartsProvider = DeclaredWeekStartsProvider._();
+
+/// Every calendar week the athlete has declared, dates alone and never
+/// windowed.
+///
+/// Its own provider off its own endpoint, because the reminder planner drops a
+/// nudge for a week that was already answered. Fed from the windowed list
+/// instead, it would forget the weeks outside the window and nudge the athlete
+/// about weeks they have already sent, which is the regression bounding the
+/// list could otherwise introduce silently.
+
+final class DeclaredWeekStartsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Set<DateTime>>,
+          Set<DateTime>,
+          FutureOr<Set<DateTime>>
+        >
+    with $FutureModifier<Set<DateTime>>, $FutureProvider<Set<DateTime>> {
+  /// Every calendar week the athlete has declared, dates alone and never
+  /// windowed.
+  ///
+  /// Its own provider off its own endpoint, because the reminder planner drops a
+  /// nudge for a week that was already answered. Fed from the windowed list
+  /// instead, it would forget the weeks outside the window and nudge the athlete
+  /// about weeks they have already sent, which is the regression bounding the
+  /// list could otherwise introduce silently.
+  const DeclaredWeekStartsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'declaredWeekStartsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$declaredWeekStartsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<Set<DateTime>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Set<DateTime>> create(Ref ref) {
+    return declaredWeekStarts(ref);
+  }
+}
+
+String _$declaredWeekStartsHash() =>
+    r'7ac8868ce1694dc6484596c2e7b77f45d928a55c';
 
 /// The reminder the coach set, with the weeks already declared, mirrored to the
 /// device so the nudge survives an offline launch. Dropped once the athlete is
@@ -178,7 +264,7 @@ final class AvailabilityPlanCacheProvider
 }
 
 String _$availabilityPlanCacheHash() =>
-    r'54c61660ba5dba11ed34eab81ee82824eedf2c7f';
+    r'1db246719b26e8074a5211fc51dd7a3282b2a5e4';
 
 /// Rewrites the pending availability reminders whenever the coach setting or
 /// the declared weeks change. Watched by the app shell so it stays alive.

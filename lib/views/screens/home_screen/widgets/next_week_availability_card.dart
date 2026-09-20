@@ -23,15 +23,16 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
     if (enrollment.value == null) return const SizedBox.shrink();
 
     final nextWeek = getStartOfNextWeek(DateTime.now());
-    final weeks = ref.watch(myAvailabilityProvider).value;
-    if (weeks == null) return const SizedBox.shrink();
+    // The declared dates rather than the editable weeks: this card only asks
+    // whether next week was answered, and the week list is windowed, so a week
+    // it did not fetch would read here as never declared.
+    final declared = ref.watch(declaredWeekStartsProvider).value;
+    if (declared == null) return const SizedBox.shrink();
 
-    final declared = weeks.any(
-      (week) => getStartOfWeek(week.weekStart) == nextWeek,
-    );
+    final isDeclared = declared.map(getStartOfWeek).contains(nextWeek);
 
     return CrimpyCard.category(
-      accentColor: declared
+      accentColor: isDeclared
           ? CrimpyTheme.accentGreen
           : CrimpyTheme.primaryOrange,
       margin: const EdgeInsets.only(bottom: 16),
@@ -43,11 +44,11 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
       child: Row(
         children: [
           FaIcon(
-            declared
+            isDeclared
                 ? FontAwesomeIcons.circleCheck
                 : FontAwesomeIcons.calendarDay,
             size: 18,
-            color: declared
+            color: isDeclared
                 ? CrimpyTheme.accentGreen
                 : CrimpyTheme.primaryOrange,
           ),
@@ -57,7 +58,7 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  declared ? 'NEXT WEEK SENT' : 'NEXT WEEK',
+                  isDeclared ? 'NEXT WEEK SENT' : 'NEXT WEEK',
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -67,7 +68,7 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  declared
+                  isDeclared
                       ? 'Your coach knows when you can train'
                       : 'Tell your coach when you can train',
                   style: const TextStyle(

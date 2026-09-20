@@ -54,6 +54,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     ref.invalidate(pinnedTrainingsProvider);
     ref.invalidate(coachEnrollmentProvider);
     ref.invalidate(myAvailabilityProvider);
+    ref.invalidate(declaredWeekStartsProvider);
 
     return Future.wait([
       ref.read(activeProgramProvider.future),
@@ -64,6 +65,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ref.read(pinnedTrainingsProvider.future),
       ref.read(coachEnrollmentProvider.future),
       ref.read(myAvailabilityProvider.future),
+      ref.read(declaredWeekStartsProvider.future),
     ]);
   }
 
