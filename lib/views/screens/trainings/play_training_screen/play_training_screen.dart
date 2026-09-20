@@ -518,12 +518,12 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     ),
     child: Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily: 'JetBrainsMono',
         fontSize: 13,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.5,
-        color: CrimpyTheme.primaryOrange,
+        color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
       ),
     ),
   );

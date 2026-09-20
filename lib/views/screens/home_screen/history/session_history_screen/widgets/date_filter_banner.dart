@@ -24,19 +24,19 @@ class DateFilterBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.filter_alt,
             size: 16,
-            color: CrimpyTheme.primaryOrange,
+            color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Showing: ${DateFormat('EEEE, MMMM d, y').format(selectedDate)}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: CrimpyTheme.primaryOrange,
+                color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
               ),
             ),
           ),

@@ -72,6 +72,7 @@ class _SessionActivityButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = CrimpyTheme.activityColor(activity);
+    final textColor = CrimpyTheme.activityTextColor(activity);
 
     return InkWell(
       onTap: () {
@@ -90,12 +91,12 @@ class _SessionActivityButton extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 28),
+            Icon(icon, color: textColor, size: 28),
             const SizedBox(height: 8),
             Text(
               activity.displayName,
               style: TextStyle(
-                color: color,
+                color: textColor,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),

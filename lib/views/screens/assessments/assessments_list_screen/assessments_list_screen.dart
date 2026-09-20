@@ -202,13 +202,13 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
                   FaIcon(
                     FontAwesomeIcons.triangleExclamation,
                     size: 12,
-                    color: CrimpyTheme.statusWarning,
+                    color: CrimpyTheme.textOn(CrimpyTheme.statusWarning),
                   ),
                   const SizedBox(width: 8),
                   Text(
                     'No sensor connected - tap to connect',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: CrimpyTheme.statusWarning,
+                      color: CrimpyTheme.textOn(CrimpyTheme.statusWarning),
                       fontWeight: FontWeight.w500,
                     ),
                   ),

@@ -56,7 +56,7 @@ class AnalysisErrorScreen extends StatelessWidget {
                   child: Text(
                     "Error details: $errorMessage",
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: CrimpyTheme.statusError,
+                      color: CrimpyTheme.textOn(CrimpyTheme.statusError),
                     ),
                   ),
                 ),

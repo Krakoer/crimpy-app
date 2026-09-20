@@ -496,7 +496,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
                       color: isSelected
                           ? CrimpyTheme.bgPrimary
                           : isToday
-                          ? CrimpyTheme.primaryOrange
+                          ? CrimpyTheme.textOn(CrimpyTheme.primaryOrange)
                           : CrimpyTheme.textPrimary,
                     ),
                   ),

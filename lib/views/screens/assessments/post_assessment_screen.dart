@@ -234,7 +234,7 @@ class ResultCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
-                          color: percentageColor,
+                          color: CrimpyTheme.textOn(percentageColor),
                         ),
                       ),
                     ),

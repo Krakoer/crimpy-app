@@ -31,19 +31,43 @@ class CrimpyTheme {
   /// so it is a mark rather than a typeface. This is the same hue carried far
   /// enough down to clear it, for the places the accent has to be read as text.
   /// It is also the green the web portal writes in.
+  ///
+  /// It is --gn-tx in crimpy-frontend/src/routes/layout.css. Every accent has
+  /// one of these now; [textOn] is how a widget asks for the right one.
   static const Color accentGreenText = Color(0xFF4E7154);
 
   /// Power training - Warm golden yellow
   static const Color accentYellow = Color(0xFFD4A644);
 
+  /// accentYellow is about 2.3:1 on white and about 2.1:1 on a tint of itself,
+  /// far under the floor either way. This is the same hue carried down to
+  /// 4.8:1 there. It is --gd-tx in crimpy-frontend/src/routes/layout.css, and
+  /// it is what [protocolColor] has always been.
+  static const Color accentYellowText = Color(0xFF8A6220);
+
   /// Technique training - Soft purple
   static const Color accentPurple = Color(0xFF8B6B9E);
+
+  /// accentPurple is about 3.2:1 on a tint of itself, under the floor. This is
+  /// the same hue carried down to 4.8:1 there. It is --pl-tx in
+  /// crimpy-frontend/src/routes/layout.css.
+  static const Color accentPurpleText = Color(0xFF735F7B);
 
   /// Flexibility training - Dusty teal
   static const Color accentTeal = Color(0xFF5A8C8C);
 
   /// Everything that fits no other category - Slate blue
   static const Color accentBlue = Color(0xFF5B7FA6);
+
+  /// accentBlue is about 3.5:1 on a tint of itself, under the floor. This is
+  /// the same hue carried down to 4.8:1 there. It is --bl-tx in
+  /// crimpy-frontend/src/routes/layout.css.
+  static const Color accentBlueText = Color(0xFF4B698A);
+
+  /// accentOrange is about 2.9:1 on a tint of itself, under the floor. This is
+  /// the same hue carried down to 4.8:1 there. It is --pr-tx in
+  /// crimpy-frontend/src/routes/layout.css.
+  static const Color accentOrangeText = Color(0xFF965134);
 
   // ==================== STATUS COLORS ====================
 
@@ -52,6 +76,12 @@ class CrimpyTheme {
 
   /// Error state - Muted red
   static const Color statusError = Color(0xFFB85450);
+
+  /// statusError is 4.42:1 on [bgError], which is under the 4.5:1 floor rather
+  /// than at it, so an error line set in it is not quite readable. This is the
+  /// same red carried down to 5.2:1 there, and to 4.8:1 on the stronger tint
+  /// [tintOf] builds. It is --rd-tx in crimpy-frontend/src/routes/layout.css.
+  static const Color statusErrorText = Color(0xFFAC4747);
 
   /// Warning state - Same as accent yellow
   static const Color statusWarning = Color(0xFFD4A644);
@@ -129,7 +159,7 @@ class CrimpyTheme {
   /// 2.3:1 on white, so the label takes this hue carried far enough down to
   /// clear the 4.5:1 floor, on white and on bgWarning alike. It is --gd-tx in
   /// crimpy-frontend/src/routes/layout.css.
-  static const Color protocolColor = Color(0xFF8A6220);
+  static const Color protocolColor = accentYellowText;
 
   /// Success/rest states
   static const Color successColor = statusSuccess;
@@ -584,6 +614,47 @@ class CrimpyTheme {
     SessionActivity.workout => accentPurple,
     SessionActivity.other => accentBlue,
   };
+
+  /// The text form of a session's accent, for a label set on a tint of that
+  /// same accent. Mirrors [activityColor] one to one, and the `text` field of
+  /// SESSION_ACTIVITIES in crimpy-frontend/src/lib/sessions.ts.
+  static Color activityTextColor(SessionActivity activity) =>
+      textOn(activityColor(activity));
+
+  /// Every accent that has a darker form to be read as text in, keyed by the
+  /// accent itself so a widget holding only a [Color] can ask for it.
+  ///
+  /// The accents are marks: each one is under the 4.5:1 floor on a light tint
+  /// of itself, which is what Krakoer/crimpy#119 measured. accentTeal and
+  /// statusInfo are absent on purpose: the web portal has no teal accent, so
+  /// giving one a text token here would put the two palettes out of step.
+  static final Map<Color, Color> _accentTextColors = Map.unmodifiable({
+    // accentOrange and primaryOrange hold the same value, as do accentYellow
+    // and statusWarning, so one entry answers both names.
+    accentOrange: accentOrangeText,
+    accentYellow: accentYellowText,
+    accentGreen: accentGreenText,
+    statusSuccess: accentGreenText,
+    accentPurple: accentPurpleText,
+    accentBlue: accentBlueText,
+    statusError: statusErrorText,
+  });
+
+  /// The strength a ground is tinted at when it is built from the accent that
+  /// is also written on it. One value across the app, because the text form of
+  /// an accent is only guaranteed to clear the 4.5:1 floor up to this strength:
+  /// a stronger tint darkens the ground past what the shared token was chosen
+  /// for, and the label stops being readable again.
+  static const double tintAlpha = 0.12;
+
+  /// A light ground of [accent], the app's counterpart to the --*-lt tokens of
+  /// crimpy-frontend/src/routes/layout.css.
+  static Color tintOf(Color accent) => accent.withValues(alpha: tintAlpha);
+
+  /// The colour a label is written in when it sits on a tint of [accent].
+  /// An accent with no darker form of its own is answered with itself, so a
+  /// caller is never handed a colour from another hue.
+  static Color textOn(Color accent) => _accentTextColors[accent] ?? accent;
 
   /// Get category color for training types
   static Color getCategoryColor(String category) {

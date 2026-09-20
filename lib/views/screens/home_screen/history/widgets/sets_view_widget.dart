@@ -116,7 +116,7 @@ class SetCardWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: sessionColor.withValues(alpha: 0.2),
+                  color: CrimpyTheme.tintOf(sessionColor),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -124,7 +124,7 @@ class SetCardWidget extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: sessionColor,
+                    color: CrimpyTheme.textOn(sessionColor),
                   ),
                 ),
               ),

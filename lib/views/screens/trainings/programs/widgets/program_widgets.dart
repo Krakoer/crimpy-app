@@ -64,7 +64,11 @@ class SessionActivityTile extends StatelessWidget {
         color: color.withValues(alpha: 0.1),
         border: Border.all(color: color, width: 2),
       ),
-      child: Icon(programSessionIcon(type), color: color, size: size * 0.45),
+      child: Icon(
+        programSessionIcon(type),
+        color: CrimpyTheme.textOn(color),
+        size: size * 0.45,
+      ),
     );
   }
 }

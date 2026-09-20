@@ -48,7 +48,7 @@ class TrainingListItemWidget extends ConsumerWidget {
               ),
               child: Icon(
                 FontAwesomeIcons.bolt,
-                color: CrimpyTheme.trainingColor,
+                color: CrimpyTheme.textOn(CrimpyTheme.trainingColor),
                 size: 16,
               ),
             ),

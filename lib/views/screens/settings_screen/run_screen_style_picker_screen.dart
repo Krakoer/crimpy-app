@@ -91,7 +91,7 @@ class _StyleCard extends StatelessWidget {
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: isSelected
-                          ? CrimpyTheme.primaryOrange
+                          ? CrimpyTheme.textOn(CrimpyTheme.primaryOrange)
                           : CrimpyTheme.textPrimary,
                     ),
                   ),

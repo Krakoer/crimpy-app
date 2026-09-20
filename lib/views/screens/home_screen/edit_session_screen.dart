@@ -48,6 +48,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
   @override
   Widget build(BuildContext context) {
     final color = CrimpyTheme.activityColor(widget.session.activity);
+    final textColor = CrimpyTheme.activityTextColor(widget.session.activity);
     // A played session owns its date, duration and reps: they are what the run
     // measured, so only the notes are open for editing. What was trained has no
     // say in it, which is why this reads the origin and not the activity.
@@ -72,12 +73,12 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                     padding: const EdgeInsets.all(12),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline, color: color, size: 20),
+                        Icon(Icons.info_outline, color: textColor, size: 20),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'Only the notes and the RPE can be edited for a session played in the app',
-                            style: TextStyle(fontSize: 13, color: color),
+                            style: TextStyle(fontSize: 13, color: textColor),
                           ),
                         ),
                       ],
