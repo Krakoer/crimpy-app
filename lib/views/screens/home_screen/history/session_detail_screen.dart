@@ -9,6 +9,7 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_overview_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_performance_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_reps_card.dart';
+import 'package:crimpy/views/screens/home_screen/history/widgets/session_data_unavailable_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_reported_items_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_feedback_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_raw_data_card.dart';
@@ -141,6 +142,14 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   ) {
     final sessionColor = CrimpyTheme.activityColor(session.activity);
     final reported = _resolveReportedItems(ref, session);
+    // A report answers a prescribed item, so a session that named no prescription
+    // and no training could never have carried one. Saying its reports could not
+    // be read would be noise on the sessions least able to explain it, on every
+    // logged climb the athlete opens while the read is failing.
+    final couldHaveReports =
+        session.prescriptionItems != null ||
+        session.trainingId != null ||
+        session.programSessionId != null;
     final resolvedBlocks = _resolveBlocks(ref, session);
     final blocks = resolvedBlocks.value;
     // A session whose blocks are still resolving has no answer to give yet, and
@@ -156,6 +165,16 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
           // Session overview card
           SessionOverviewCard(session: session),
           const SizedBox(height: 16),
+
+          // A read that failed says so, in place of the two cards that would
+          // have drawn what it held. Drawing nothing would read as a session
+          // the sensor measured nothing in, which is a different answer.
+          if (session.repsUnavailable) ...[
+            const SessionDataUnavailableCard(
+              what: 'The rep data for this session',
+            ),
+            const SizedBox(height: 16),
+          ],
 
           // Performance stats (if available)
           if (session.hasReps) ...[
@@ -179,7 +198,12 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
 
           // What the athlete reported on the prescribed items. No rep carries
           // any of it, so this is the only place it shows up.
-          if (reported.isNotEmpty) ...[
+          if (session.itemResultsUnavailable && couldHaveReports) ...[
+            const SessionDataUnavailableCard(
+              what: 'What you reported on this session',
+            ),
+            const SizedBox(height: 16),
+          ] else if (reported.isNotEmpty) ...[
             SessionReportedItemsCard(items: reported),
             const SizedBox(height: 16),
           ],

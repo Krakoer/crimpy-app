@@ -7,7 +7,11 @@ import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/history/session_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:crimpy/views/screens/home_screen/history/widgets/session_data_unavailable_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_overview_card.dart';
+import 'package:crimpy/views/screens/home_screen/history/widgets/session_performance_card.dart';
+import 'package:crimpy/views/screens/home_screen/history/widgets/session_reported_items_card.dart';
+import 'package:crimpy/views/screens/home_screen/history/widgets/session_reps_card.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 RepDataModel _rep(
@@ -197,6 +201,7 @@ void _detailStates() {
 
 void main() {
   _detailStates();
+  _absentCollections();
 
   testWidgets('pools the reps when the run resolved no training', (
     tester,
@@ -564,5 +569,78 @@ void main() {
 
     expect(find.text('0/2'), findsNothing);
     expect(find.text('Avg Weight'), findsOneWidget);
+  });
+}
+
+// Krakoer/crimpy#130. A collection the server could not read is left out of the
+// answer rather than sent empty, and the screen has to say so rather than draw
+// the session as one that holds none of it.
+void _absentCollections() {
+  SessionModel unavailable({
+    bool reps = false,
+    bool itemResults = false,
+    List<RepDataModel> loaded = const [],
+    String? trainingId = 'training-1',
+  }) => SessionModel(
+    id: 'session-1',
+    name: 'Repeaters 20mm',
+    isAssessment: false,
+    origin: SessionOrigin.played,
+    trainingId: trainingId,
+    reps: loaded,
+    repsUnavailable: reps,
+    itemResultsUnavailable: itemResults,
+  );
+
+  testWidgets('says the rep data could not be loaded', (tester) async {
+    await _pump(tester, unavailable(reps: true));
+
+    expect(
+      find.textContaining('The rep data for this session could not be loaded'),
+      findsOneWidget,
+    );
+    expect(find.byType(SessionPerformanceCard), findsNothing);
+    expect(find.byType(SessionRepsCard), findsNothing);
+    // The rest of the session is still drawn beside the notice.
+    expect(find.byType(SessionOverviewCard), findsOneWidget);
+    // And the overview does not answer the count the notice just said could not
+    // be read: zero is the number a reader cannot tell from a session the
+    // sensor measured nothing in.
+    expect(find.text('N/A'), findsOneWidget);
+    expect(find.text('0'), findsNothing);
+  });
+
+  testWidgets('says the reported items could not be loaded', (tester) async {
+    await _pump(tester, unavailable(itemResults: true));
+
+    expect(
+      find.textContaining(
+        'What you reported on this session could not be loaded',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(SessionReportedItemsCard), findsNothing);
+  });
+
+  // A session that named no prescription and no training was never asked to
+  // report anything, so there is nothing for a failed report read to be about.
+  testWidgets('says nothing about reports a session could never have carried', (
+    tester,
+  ) async {
+    await _pump(tester, unavailable(itemResults: true, trainingId: null));
+
+    expect(find.byType(SessionDataUnavailableCard), findsNothing);
+    expect(find.byType(SessionOverviewCard), findsOneWidget);
+  });
+
+  // The other half of the contract: a session that genuinely holds none of them
+  // still draws as empty, and an empty collection is not a failure to report.
+  testWidgets('says nothing about a session that simply holds none', (
+    tester,
+  ) async {
+    await _pump(tester, unavailable());
+
+    expect(find.byType(SessionDataUnavailableCard), findsNothing);
+    expect(find.byType(SessionOverviewCard), findsOneWidget);
   });
 }

@@ -131,6 +131,19 @@ class SessionModel {
   /// it had none. Only the detail endpoint carries them.
   final List<SessionItemResultModel> itemResults;
 
+  /// Whether the server could not read the reps of this session, which it says
+  /// by leaving rep_datas out of the detail rather than sending it empty. The
+  /// two are different answers and have to be drawn differently: empty is a
+  /// session the sensor measured nothing in, missing is a collection nobody
+  /// could read. Krakoer/crimpy#130.
+  ///
+  /// False everywhere the answer is known, the local store included, so only
+  /// the API read ever sets it.
+  final bool repsUnavailable;
+
+  /// The same, for what the athlete reported about the prescribed items.
+  final bool itemResultsUnavailable;
+
   /// What the coach answered the [notes] with, null while they have not.
   /// [coachReplyAt] dates that answer and [coachReplyRead] says whether it has
   /// been opened since it was last written, which is what the unread badge and
@@ -166,6 +179,8 @@ class SessionModel {
     this.reportedRepCount,
     this.prescriptionItems,
     this.itemResults = const [],
+    this.repsUnavailable = false,
+    this.itemResultsUnavailable = false,
     this.coachReply,
     this.coachReplyAt,
     this.coachReplyRead = false,
@@ -188,6 +203,8 @@ class SessionModel {
     List<RepDataModel>? reps,
     List<SessionItemResultModel> itemResults = const [],
     List<BleDataPoint>? dataPoints,
+    bool repsUnavailable = false,
+    bool itemResultsUnavailable = false,
   }) => SessionModel(
     id: json['id'] as String,
     name: json['name'] as String,
@@ -208,6 +225,8 @@ class SessionModel {
     reportedRepCount: (json['rep_count'] as num?)?.toInt(),
     prescriptionItems: prescriptionItemsOf(json['prescription']),
     itemResults: itemResults,
+    repsUnavailable: repsUnavailable,
+    itemResultsUnavailable: itemResultsUnavailable,
     coachReply: json['coach_reply'] as String?,
     coachReplyAt: tryParseApiInstant(json['coach_reply_at'] as String?),
     coachReplyRead: json['coach_reply_read'] as bool? ?? false,
@@ -276,6 +295,8 @@ class SessionModel {
     reportedRepCount: reportedRepCount,
     prescriptionItems: prescriptionItems,
     itemResults: itemResults,
+    repsUnavailable: repsUnavailable,
+    itemResultsUnavailable: itemResultsUnavailable,
     coachReply: coachReply,
     coachReplyAt: coachReplyAt,
     coachReplyRead: coachReplyRead,
@@ -304,6 +325,8 @@ class SessionModel {
     reportedRepCount: reportedRepCount,
     prescriptionItems: prescriptionItems,
     itemResults: itemResults,
+    repsUnavailable: repsUnavailable,
+    itemResultsUnavailable: itemResultsUnavailable,
     coachReply: coachReply,
     coachReplyAt: coachReplyAt,
     coachReplyRead: coachReplyRead,
@@ -332,6 +355,8 @@ class SessionModel {
         reportedRepCount: reportedRepCount,
         prescriptionItems: prescriptionItems,
         itemResults: itemResults,
+        repsUnavailable: repsUnavailable,
+        itemResultsUnavailable: itemResultsUnavailable,
         coachReply: coachReply,
         coachReplyAt: coachReplyAt,
         coachReplyRead: coachReplyRead,
@@ -357,6 +382,8 @@ class SessionModel {
     reportedRepCount: reportedRepCount,
     prescriptionItems: prescriptionItems,
     itemResults: itemResults,
+    repsUnavailable: repsUnavailable,
+    itemResultsUnavailable: itemResultsUnavailable,
     coachReply: coachReply,
     coachReplyAt: coachReplyAt,
     coachReplyRead: true,
@@ -374,8 +401,14 @@ class SessionModel {
   bool get hasReps => reps != null && reps!.isNotEmpty;
 
   /// How many reps the session holds, from the reps themselves once loaded and
-  /// from the listing otherwise. Null only when neither is available.
-  int? get repCount => reps?.length ?? reportedRepCount;
+  /// from the listing otherwise. Null when neither is available.
+  ///
+  /// A session whose reps could not be read is counted from the listing alone:
+  /// the empty list standing in for them would otherwise answer zero, which is
+  /// the number a reader cannot tell from a session the sensor measured nothing
+  /// in. That is the answer Krakoer/crimpy#130 exists to stop giving.
+  int? get repCount =>
+      (repsUnavailable ? null : reps?.length) ?? reportedRepCount;
 }
 
 class RepDataModel {
