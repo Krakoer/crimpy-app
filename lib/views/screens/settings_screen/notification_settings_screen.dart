@@ -151,9 +151,9 @@ class _PermissionWarning extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-    leading: const Icon(
+    leading: Icon(
       Icons.notifications_off,
-      color: CrimpyTheme.warningColor,
+      color: CrimpyTheme.markOn(CrimpyTheme.warningColor),
     ),
     title: const Text('Notifications are blocked'),
     subtitle: const Text(

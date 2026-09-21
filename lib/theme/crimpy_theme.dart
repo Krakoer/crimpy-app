@@ -643,6 +643,29 @@ class CrimpyTheme {
     statusError: statusErrorText,
   });
 
+  /// Every accent too pale to stand as a mark on a neutral ground, keyed by the
+  /// accent itself the way [_accentTextColors] is.
+  ///
+  /// An icon, a rule or a figure large enough for the WCAG large text exemption
+  /// answers to 3:1 rather than 4.5:1, and every accent in this palette clears
+  /// that on white except gold, which reads 2.25:1. The accents are the brand
+  /// marks, so the ones that clear it keep their colour and only gold moves.
+  /// See Krakoer/crimpy#128.
+  static final Map<Color, Color> _accentMarkColors = Map.unmodifiable({
+    // accentYellow and statusWarning hold the same value, so one entry answers
+    // both names, the way [_accentTextColors] answers accentOrange and
+    // primaryOrange with one.
+    accentYellow: accentYellowText,
+  });
+
+  /// The colour a mark is drawn in when it sits on a neutral ground: an icon,
+  /// or text large enough to answer to the 3:1 floor. Mirrors the `mark` field
+  /// of SESSION_ACTIVITIES in crimpy-frontend/src/lib/sessions.ts. An accent
+  /// that already clears the mark floor is answered with itself, so a caller
+  /// asking for a mark is never handed the text form of an accent that did not
+  /// need one.
+  static Color markOn(Color accent) => _accentMarkColors[accent] ?? accent;
+
   /// The strongest an accent ground may be tinted when the same accent is
   /// written on it. It is a ceiling rather than the only value in the app: a
   /// handful of surfaces tint at 0.10 or 0.06 on purpose and are lighter still,

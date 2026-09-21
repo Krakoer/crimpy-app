@@ -134,9 +134,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.bluetooth_connected,
-                color: CrimpyTheme.accentYellow,
+                color: CrimpyTheme.markOn(CrimpyTheme.accentYellow),
                 size: 24,
               ),
               const SizedBox(width: 8),

@@ -540,12 +540,12 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         Text(
           (label ?? 'WORK').toUpperCase(),
           textAlign: TextAlign.center,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: 'JetBrainsMono',
             fontSize: 18,
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
-            color: CrimpyTheme.primaryOrange,
+            color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
           ),
         ),
         if (gripPosition != null)

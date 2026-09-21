@@ -179,10 +179,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                           (ref.watch(runScreenStyleProvider).value ??
                                   RunScreenStyle.fallback)
                               .displayName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: CrimpyTheme.primaryOrange,
+                            color: CrimpyTheme.textOn(
+                              CrimpyTheme.primaryOrange,
+                            ),
                           ),
                         ),
                         const Icon(Icons.chevron_right),

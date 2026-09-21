@@ -104,19 +104,18 @@ class TrainingItemComment extends StatelessWidget {
 /// the notes that use it, since what tells them apart is meant to be the label
 /// and the colour and nothing else.
 ///
-/// [accent] is the rule and the tint; [labelColor] is the label, which is the
-/// accent carried down far enough to be legible at this size. The two are apart
-/// because no accent in the palette clears the contrast floor at 9.5px.
+/// [accent] is the rule and the tint; the label is [CrimpyTheme.textOn] of it,
+/// which is the accent carried down far enough to be legible at this size, and
+/// is asked for rather than passed in so an accent added to the theme's text
+/// map reaches this widget with it.
 class _LabelledNote extends StatelessWidget {
   final String label;
   final Color accent;
-  final Color labelColor;
   final String text;
 
   const _LabelledNote({
     required this.label,
     required this.accent,
-    required this.labelColor,
     required this.text,
   });
 
@@ -138,7 +137,7 @@ class _LabelledNote extends StatelessWidget {
               fontSize: 9.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
-              color: labelColor,
+              color: CrimpyTheme.textOn(accent),
             ),
           ),
           const SizedBox(width: 8),
@@ -170,12 +169,8 @@ class TrainingItemGoal extends StatelessWidget {
   const TrainingItemGoal(this.goal, {super.key});
 
   @override
-  Widget build(BuildContext context) => _LabelledNote(
-    label: 'GOAL',
-    accent: CrimpyTheme.accentGreen,
-    labelColor: CrimpyTheme.goalColor,
-    text: goal,
-  );
+  Widget build(BuildContext context) =>
+      _LabelledNote(label: 'GOAL', accent: CrimpyTheme.accentGreen, text: goal);
 }
 
 /// The rule the athlete resolves while performing the block, e.g. "to failure
@@ -193,7 +188,6 @@ class TrainingItemProtocol extends StatelessWidget {
   Widget build(BuildContext context) => _LabelledNote(
     label: 'PROTOCOL',
     accent: CrimpyTheme.accentYellow,
-    labelColor: CrimpyTheme.protocolColor,
     text: protocol,
   );
 }

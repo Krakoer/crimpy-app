@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -102,6 +103,195 @@ const Color historyCardBase = CrimpyTheme.bgPrimary;
 /// in CrimpyTheme because it is one screen's layering, not a palette rule, so
 /// the cost of that copy is a line in this comment.
 const double historyCardAlpha = 0.05;
+
+/// The floor an accent answers to when it is not small text: an icon, a rule,
+/// or type at or above 18.66px bold, which WCAG 1.4.3 exempts from the 4.5:1
+/// floor and 1.4.11 holds to the same 3:1 as any other non text content.
+const double markFloor = 3.0;
+
+/// Large text in WCAG terms, which is what lets a 32px figure keep its accent.
+bool isLargeText(double sizePx, bool bold) =>
+    sizePx >= 24 || (sizePx >= 18.66 && bold);
+
+/// The neutral grounds this app paints an accent on: the white of a card, a
+/// dialog and every Scaffold, plus the two greys a list row settles to.
+const Map<String, Color> neutralGrounds = {
+  'bgPrimary': CrimpyTheme.bgPrimary,
+  'bgSecondary': CrimpyTheme.bgSecondary,
+  'bgHover': CrimpyTheme.bgHover,
+};
+
+void expectClearsMarkFloor(String label, Color foreground, Color background) {
+  final ratio = contrastRatio(foreground, background);
+  expect(
+    ratio,
+    greaterThanOrEqualTo(markFloor),
+    reason:
+        '$label: ${_hex(foreground)} on ${_hex(background)} reads '
+        '${ratio.toStringAsFixed(2)}:1, under the '
+        '${markFloor.toStringAsFixed(1)}:1 mark floor',
+  );
+}
+
+/// Where the sweep of Krakoer/crimpy#128 looks for an accent written on a
+/// neutral ground. Generated Drift and Riverpod output paints nothing.
+final Directory libRoot = Directory('lib');
+
+const Set<String> generatedSuffixes = {'.g.dart', '.freezed.dart'};
+
+/// The accent names a widget can write, with the value each one holds. Spelled
+/// out rather than reflected, because a Flutter test has no mirrors; a name
+/// missing from here is a pairing the scan cannot see rather than one it passes.
+final Map<String, Color> scannedAccents = {
+  'accentOrange': CrimpyTheme.accentOrange,
+  'primaryOrange': CrimpyTheme.primaryOrange,
+  'accentGreen': CrimpyTheme.accentGreen,
+  'accentYellow': CrimpyTheme.accentYellow,
+  'accentPurple': CrimpyTheme.accentPurple,
+  'accentBlue': CrimpyTheme.accentBlue,
+  'accentTeal': CrimpyTheme.accentTeal,
+  'statusSuccess': CrimpyTheme.statusSuccess,
+  'statusError': CrimpyTheme.statusError,
+  'statusWarning': CrimpyTheme.statusWarning,
+  'statusInfo': CrimpyTheme.statusInfo,
+  'assessmentColor': CrimpyTheme.assessmentColor,
+  'trainingColor': CrimpyTheme.trainingColor,
+  'stretchingColor': CrimpyTheme.stretchingColor,
+  'successColor': CrimpyTheme.successColor,
+  'errorColor': CrimpyTheme.errorColor,
+  'warningColor': CrimpyTheme.warningColor,
+};
+
+/// A colour already asked for through the theme's own helpers is this scan's
+/// answer rather than its question, and one faded by an alpha is not the token
+/// it names any more.
+final RegExp resolvedByTheme = RegExp(
+  r'textOn\(|markOn\(|tintOf\(|withValues\(|withOpacity\(',
+);
+
+final RegExp styleOpeners = RegExp(r'\b(TextStyle|Icon|FaIcon)\(');
+
+/// The value of a `color:` argument, up to the comma that ends it. Spelled
+/// across newlines and one level of nesting rather than to the end of the line,
+/// because `dart format` wraps a long value onto its own line and a scan that
+/// stops at the newline reads `CrimpyTheme.textOn(` as the whole answer.
+final RegExp colourArgument = RegExp(
+  r'\bcolor:\s*((?:[^,()]|\((?:[^()]|\([^()]*\))*\))*)',
+);
+final RegExp fontSizeArgument = RegExp(r'fontSize:\s*([^\n,]*)');
+final RegExp numberLiteral = RegExp(r'\d+(?:\.\d+)?');
+final RegExp boldWeight = RegExp(r'FontWeight\.(?:bold|w700|w800|w900)');
+
+/// The text of the call that starts at [start], up to its matching bracket.
+String? callBody(String source, int start) {
+  var depth = 0;
+  for (var i = source.indexOf('(', start); i >= 0 && i < source.length; i++) {
+    if (source[i] == '(') depth++;
+    if (source[i] == ')') {
+      depth--;
+      if (depth == 0) return source.substring(start, i + 1);
+    }
+  }
+  return null;
+}
+
+class NeutralOffence {
+  final String file;
+  final int line;
+  final String kind;
+  final String accent;
+  final double ratio;
+  final double floor;
+
+  NeutralOffence(
+    this.file,
+    this.line,
+    this.kind,
+    this.accent,
+    this.ratio,
+    this.floor,
+  );
+
+  @override
+  String toString() =>
+      '$file:$line writes $accent as $kind on bgPrimary, '
+      '${ratio.toStringAsFixed(2)}:1 against a '
+      '${floor.toStringAsFixed(1)}:1 floor';
+}
+
+/// Every accent written into a `TextStyle`, an `Icon` or a `FaIcon` without
+/// going through the theme's helpers, measured against white.
+///
+/// The ground is taken to be white rather than looked up. A Flutter ground is a
+/// decoration on some ancestor Container and cannot be read from the call site,
+/// and every tint in this app is lighter than no tint at all, so assuming white
+/// never overstates a defect: a pairing this reports reads at least as badly as
+/// it says. An accent written on its own tint already goes through
+/// [CrimpyTheme.textOn] and is skipped because of it.
+///
+/// What it cannot see, stated so its silence is not read as proof: a colour
+/// held in a variable or taken from a parameter, which is most of the session
+/// history; a style built by a helper, the way full_tank_layout builds one; and
+/// a size computed at build time, which is held to the mark floor alone since
+/// the scan has no number to judge it by.
+List<NeutralOffence> neutralOffences() {
+  final offences = <NeutralOffence>[];
+  for (final entity in libRoot.listSync(recursive: true)) {
+    if (entity is! File || !entity.path.endsWith('.dart')) continue;
+    if (generatedSuffixes.any(entity.path.endsWith)) continue;
+    final source = entity.readAsStringSync();
+    for (final opener in styleOpeners.allMatches(source)) {
+      final body = callBody(source, opener.start);
+      if (body == null) continue;
+      final colour = colourArgument.firstMatch(body);
+      if (colour == null) continue;
+      final value = colour.group(1)!;
+      if (resolvedByTheme.hasMatch(value)) continue;
+      final named = scannedAccents.keys.where(
+        (name) => RegExp('\\b$name\\b').hasMatch(value),
+      );
+      if (named.isEmpty) continue;
+
+      final isText = opener.group(1) == 'TextStyle';
+      final size = fontSizeArgument.firstMatch(body);
+      final written = size == null
+          ? const <double>[]
+          : numberLiteral
+                .allMatches(size.group(1)!)
+                .map((match) => double.parse(match.group(0)!))
+                .toList();
+      final smallest = written.isEmpty
+          ? null
+          : written.reduce((a, b) => a < b ? a : b);
+      final small =
+          isText &&
+          smallest != null &&
+          !isLargeText(smallest, boldWeight.hasMatch(body));
+      final floor = small ? contrastFloor : markFloor;
+      final line =
+          '\n'.allMatches(source.substring(0, opener.start)).length + 1;
+      for (final name in named) {
+        final ratio = contrastRatio(
+          scannedAccents[name]!,
+          CrimpyTheme.bgPrimary,
+        );
+        if (ratio >= floor) continue;
+        offences.add(
+          NeutralOffence(
+            entity.path,
+            line,
+            isText ? (small ? 'text' : 'large or unsized text') : 'mark',
+            name,
+            ratio,
+            floor,
+          ),
+        );
+      }
+    }
+  }
+  offences.sort((a, b) => a.toString().compareTo(b.toString()));
+  return offences;
+}
 
 void main() {
   group('accent text on a tint of its own accent', () {
@@ -217,6 +407,115 @@ void main() {
     test('protocolColor and goalColor are the shared text tokens', () {
       expect(CrimpyTheme.protocolColor, CrimpyTheme.accentYellowText);
       expect(CrimpyTheme.goalColor, CrimpyTheme.accentGreenText);
+    });
+  });
+
+  group('accent on a neutral ground', () {
+    // The text form is what a label takes on white, which is the sweep of
+    // Krakoer/crimpy#128. Measured on all three neutrals, since a list row
+    // settles to bgHover under a finger and that is the darkest of them.
+    for (final (label, accent) in tintedAccents) {
+      for (final entry in neutralGrounds.entries) {
+        test('$label reads as text on ${entry.key}', () {
+          expectClearsFloor(
+            '$label text on ${entry.key}',
+            CrimpyTheme.textOn(accent),
+            entry.value,
+          );
+        });
+      }
+    }
+
+    // The accents are the marks, and all but gold clear the mark floor on
+    // white. That is the whole of why the sweep is not uniform: an icon keeps
+    // its accent where a 10px label beside it cannot.
+    test('gold is the only accent under the mark floor on white', () {
+      final failing = [
+        for (final (label, accent) in tintedAccents)
+          if (contrastRatio(accent, CrimpyTheme.bgPrimary) < markFloor) label,
+      ];
+      expect(failing, ['climbing gold', 'warning gold']);
+    });
+
+    test('markOn moves an accent exactly when the accent fails', () {
+      for (final (label, accent) in tintedAccents) {
+        final clears =
+            contrastRatio(accent, CrimpyTheme.bgPrimary) >= markFloor;
+        expect(
+          CrimpyTheme.markOn(accent),
+          clears ? accent : CrimpyTheme.textOn(accent),
+          reason: clears
+              ? '$label was moved off its accent although the accent clears '
+                    'the mark floor'
+              : '$label was left on an accent that misses the mark floor',
+        );
+        expectClearsMarkFloor(
+          '$label mark',
+          CrimpyTheme.markOn(accent),
+          CrimpyTheme.bgPrimary,
+        );
+      }
+    });
+
+    test('an accent with no mark form answers with itself', () {
+      expect(
+        CrimpyTheme.markOn(CrimpyTheme.accentTeal),
+        CrimpyTheme.accentTeal,
+      );
+    });
+
+    // The session labels of the program rows and the home card, which read
+    // 2.25:1 in bare gold before Krakoer/crimpy#119 swept them.
+    test('every session activity label holds the floor on a white card', () {
+      for (final activity in SessionActivity.values) {
+        expectClearsFloor(
+          '${activity.name} label',
+          CrimpyTheme.activityTextColor(activity),
+          CrimpyTheme.bgPrimary,
+        );
+      }
+    });
+
+    test('every session activity mark holds its floor on a white card', () {
+      for (final activity in SessionActivity.values) {
+        expectClearsMarkFloor(
+          '${activity.name} mark',
+          CrimpyTheme.markOn(CrimpyTheme.activityColor(activity)),
+          CrimpyTheme.bgPrimary,
+        );
+      }
+    });
+  });
+
+  group('surfaces that write an accent on a neutral ground', () {
+    // Checked against shapes it has to read, so an empty offence list is
+    // evidence of something rather than of a scan that reads nothing.
+    test('reads a call body up to its own closing bracket', () {
+      const source = 'Icon(Icons.x, color: CrimpyTheme.accentYellow, size: 24)';
+      expect(callBody(source, 0), source);
+      expect(
+        callBody('Icon(Icons.x, color: red)  rest', 0),
+        'Icon(Icons.x, color: red)',
+      );
+    });
+
+    test('separates the two floors', () {
+      expect(isLargeText(32, true), isTrue);
+      expect(isLargeText(20, true), isTrue);
+      expect(isLargeText(18, true), isFalse);
+      expect(isLargeText(24, false), isTrue);
+      expect(isLargeText(20, false), isFalse);
+    });
+
+    test('finds no accent under its floor on a neutral ground', () {
+      final offences = neutralOffences();
+      expect(
+        offences.map((offence) => offence.toString()).toList(),
+        isEmpty,
+        reason:
+            'an accent under its floor on a neutral ground:\n'
+            '${offences.join('\n')}',
+      );
     });
   });
 }
