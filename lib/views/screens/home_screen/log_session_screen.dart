@@ -60,6 +60,10 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
   @override
   Widget build(BuildContext context) {
     final color = CrimpyTheme.activityColor(widget.activity);
+    // The icons sit on a white Card, where climbing's gold reads 2.25:1 and
+    // misses the 3:1 mark floor. The fill below keeps the accent, since a
+    // ground is not a mark. See Krakoer/crimpy#128.
+    final markColor = CrimpyTheme.markOn(color);
 
     return Scaffold(
       appBar: AppBar(title: Text('Log ${widget.activity.displayName}')),
@@ -79,7 +83,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.edit, color: color),
+                          Icon(Icons.edit, color: markColor),
                           const SizedBox(width: 8),
                           const Text(
                             'Name',
@@ -113,7 +117,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
               // Date picker
               Card(
                 child: ListTile(
-                  leading: Icon(Icons.calendar_today, color: color),
+                  leading: Icon(Icons.calendar_today, color: markColor),
                   title: const Text('Date'),
                   subtitle: Text(
                     DateFormat('EEEE, MMMM d, y').format(_selectedDate),
@@ -127,7 +131,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
               // Time picker
               Card(
                 child: ListTile(
-                  leading: Icon(Icons.access_time, color: color),
+                  leading: Icon(Icons.access_time, color: markColor),
                   title: const Text('Time'),
                   subtitle: Text(_selectedTime.format(context)),
                   trailing: const Icon(Icons.chevron_right),
@@ -145,7 +149,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.timer, color: color),
+                          Icon(Icons.timer, color: markColor),
                           const SizedBox(width: 8),
                           const Text(
                             'Duration',
@@ -202,7 +206,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.notes, color: color),
+                          Icon(Icons.notes, color: markColor),
                           const SizedBox(width: 8),
                           const Text(
                             'Notes',

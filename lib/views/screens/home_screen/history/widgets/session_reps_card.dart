@@ -175,7 +175,12 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
         _repsExpanded ? 'Show less' : 'Show all $total reps',
         style: const TextStyle(fontSize: 14),
       ),
-      style: TextButton.styleFrom(foregroundColor: widget.sessionColor),
+      // foregroundColor paints the 14px label and the 20px icon together, so
+      // the label's 4.5:1 floor decides for both. A climbing session's gold
+      // reads 2.25:1 on this white card. See Krakoer/crimpy#128.
+      style: TextButton.styleFrom(
+        foregroundColor: CrimpyTheme.textOn(widget.sessionColor),
+      ),
     );
   }
 }

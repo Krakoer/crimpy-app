@@ -161,8 +161,9 @@ class _LabelledNote extends StatelessWidget {
 /// What the block is for, e.g. "resi doigts". Labelled and set in green rather
 /// than the comment's orange, so the two notes on a tile are told apart without
 /// reading them: this one is why the block is in the program, the other is how
-/// to run it. The rule and the tint are accentGreen, the label is goalColor:
-/// accentGreen does not carry enough contrast for type this small.
+/// to run it. The rule and the tint are accentGreen, and the label is whatever
+/// [CrimpyTheme.textOn] answers for it: accentGreen does not carry enough
+/// contrast for type this small.
 class TrainingItemGoal extends StatelessWidget {
   final String goal;
 
@@ -177,8 +178,9 @@ class TrainingItemGoal extends StatelessWidget {
 /// or 40s; past 40s add 5kg". Labelled and set in gold, a third colour beside
 /// the goal's green and the comment's orange, so the three notes on a tile are
 /// told apart without reading them: this one is what decides the numbers above
-/// it. The rule and the tint are accentYellow, the label is protocolColor,
-/// which is accentYellow carried down far enough to be legible at that size.
+/// it. The rule and the tint are accentYellow, and the label is whatever
+/// [CrimpyTheme.textOn] answers for it, which is accentYellow carried down far
+/// enough to be legible at that size.
 class TrainingItemProtocol extends StatelessWidget {
   final String protocol;
 

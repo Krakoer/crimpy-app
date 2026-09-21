@@ -86,10 +86,13 @@ class _TankPalette {
     required this.protocol,
   });
 
+  /// What the tank is painted in over the unfilled part, which is plain white.
+  /// The accent is written as 16px bold text there, so it takes the text form:
+  /// the bare accent reads 4.05:1, under the 4.5:1 floor. Krakoer/crimpy#128.
   static const overTank = _TankPalette(
     force: CrimpyTheme.primaryBlack,
     secondary: CrimpyTheme.textSecondary,
-    accent: CrimpyTheme.primaryOrange,
+    accent: CrimpyTheme.accentOrangeText,
     muted: CrimpyTheme.textMuted,
     detail: CrimpyTheme.gray400,
     notch: CrimpyTheme.borderDefault,
@@ -344,11 +347,14 @@ class FullTankLayout extends ConsumerWidget {
     return 'WORK';
   }
 
+  /// The state word is 18px bold on the white control strip, under the
+  /// 18.66px large text threshold, so it answers to 4.5:1 and the accent's
+  /// 4.05:1 does not reach it. See Krakoer/crimpy#128.
   Color _stateColor({required bool paused, required bool onTarget}) {
-    if (isPreparation) return CrimpyTheme.primaryOrange;
+    if (isPreparation) return CrimpyTheme.textOn(CrimpyTheme.primaryOrange);
     if (paused) return CrimpyTheme.textMuted;
     if (item is RestItem || onTarget) return CrimpyTheme.statusSuccess;
-    return CrimpyTheme.primaryOrange;
+    return CrimpyTheme.textOn(CrimpyTheme.primaryOrange);
   }
 
   /// The step coming up, under the state word. A preparation and a rest fill

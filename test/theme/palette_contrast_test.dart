@@ -139,6 +139,14 @@ final Directory libRoot = Directory('lib');
 
 const Set<String> generatedSuffixes = {'.g.dart', '.freezed.dart'};
 
+/// lib/theme.dart declares a second class named CrimpyTheme with a palette of
+/// its own (`accentOrange` #C4653A rather than #C6613F), so a name read there
+/// would be measured against the wrong hex. Its `lightTheme` is unreferenced,
+/// main.dart building the one in lib/theme/crimpy_theme.dart, and the single
+/// screen that imports it reads only a grey. Skipped rather than mismeasured;
+/// removing the duplicate is its own ticket.
+const Set<String> foreignPalettes = {'lib/theme.dart'};
+
 /// The accent names a widget can write, with the value each one holds. Spelled
 /// out rather than reflected, because a Flutter test has no mirrors; a name
 /// missing from here is a pairing the scan cannot see rather than one it passes.
@@ -169,14 +177,21 @@ final RegExp resolvedByTheme = RegExp(
   r'textOn\(|markOn\(|tintOf\(|withValues\(|withOpacity\(',
 );
 
-final RegExp styleOpeners = RegExp(r'\b(TextStyle|Icon|FaIcon)\(');
+/// Where a colour that is painted on something can be written. `copyWith` is
+/// here because a run screen header spent a whole review round at 4.05:1 inside
+/// `textTheme.headlineMedium!.copyWith(color: ...)`, which is not a TextStyle
+/// constructor to anything reading the source.
+final RegExp styleOpeners = RegExp(
+  r'\b(TextStyle|Icon|FaIcon|copyWith|styleFrom)\(',
+);
 
 /// The value of a `color:` argument, up to the comma that ends it. Spelled
 /// across newlines and one level of nesting rather than to the end of the line,
 /// because `dart format` wraps a long value onto its own line and a scan that
 /// stops at the newline reads `CrimpyTheme.textOn(` as the whole answer.
 final RegExp colourArgument = RegExp(
-  r'\bcolor:\s*((?:[^,()]|\((?:[^()]|\([^()]*\))*\))*)',
+  r'\b(color|foregroundColor|labelColor):'
+  r'\s*((?:[^,()]|\((?:[^()]|\([^()]*\))*\))*)',
 );
 final RegExp fontSizeArgument = RegExp(r'fontSize:\s*([^\n,]*)');
 final RegExp numberLiteral = RegExp(r'\d+(?:\.\d+)?');
@@ -194,6 +209,30 @@ String? callBody(String source, int start) {
   }
   return null;
 }
+
+/// The colour arguments of [body] that belong to the call itself rather than to
+/// something nested inside it. `OutlinedButton.styleFrom` carries both a
+/// `foregroundColor` and a `BorderSide(color: ...)`, and reading the border's
+/// as the label's would hold a border to the text floor.
+List<(String, String)> topLevelColours(String body) {
+  final found = <(String, String)>[];
+  for (final match in colourArgument.allMatches(body)) {
+    var depth = 0;
+    for (var i = 0; i < match.start; i++) {
+      if (body[i] == '(') depth++;
+      if (body[i] == ')') depth--;
+    }
+    if (depth == 1) found.add((match.group(1)!, match.group(2)!));
+  }
+  return found;
+}
+
+/// Whether a colour argument paints type. An `Icon` or a `FaIcon` paints a
+/// stroke and answers to the mark floor; everything else here paints a label,
+/// including `foregroundColor` on a button style, which colours the label and
+/// its icon together and so takes the label's floor for both.
+bool paintsText(String opener, String argument) =>
+    opener != 'Icon' && opener != 'FaIcon' || argument != 'color';
 
 class NeutralOffence {
   final String file;
@@ -224,35 +263,55 @@ class NeutralOffence {
 ///
 /// The ground is taken to be white rather than looked up. A Flutter ground is a
 /// decoration on some ancestor Container and cannot be read from the call site,
-/// and every tint in this app is lighter than no tint at all, so assuming white
-/// never overstates a defect: a pairing this reports reads at least as badly as
-/// it says. An accent written on its own tint already goes through
-/// [CrimpyTheme.textOn] and is skipped because of it.
+/// and every ground in this app is white or a tint over white, so it is never
+/// lighter than white: assuming white therefore understates rather than
+/// overstates, and a pairing this reports reads at least as badly as it says.
+/// An accent written on its own tint already goes through [CrimpyTheme.textOn]
+/// and is skipped because of it.
 ///
-/// What it cannot see, stated so its silence is not read as proof: a colour
-/// held in a variable or taken from a parameter, which is most of the session
-/// history; a style built by a helper, the way full_tank_layout builds one; and
-/// a size computed at build time, which is held to the mark floor alone since
-/// the scan has no number to judge it by.
+/// What it cannot see, stated so its silence is not read as proof:
+///
+///   - a colour held in a variable or taken from a parameter, which is most of
+///     the session history. `sessionColor` and the `color` local of the log and
+///     edit screens are that shape, and were swept by hand.
+///   - a style built by a helper, the way full_tank_layout builds one, and a
+///     palette record such as its `_TankPalette`.
+///   - a size computed at build time, held to the mark floor alone since there
+///     is no number to judge it by.
+///   - the ground, again: this measures against white only. An accent that
+///     clears 4.5:1 on white but not on bgHover, which statusError at 4.75 and
+///     4.36 and statusSuccess at 4.91 and 4.51 both do, passes here while the
+///     real row fails. The token level group above measures all three grounds,
+///     which is what covers it.
+///   - which class an accent name belongs to. lib/theme.dart declares a second
+///     CrimpyTheme with its own palette, and post_workout_screen.dart imports
+///     that one; a name is resolved against lib/theme/crimpy_theme.dart
+///     whichever is in scope. Nothing in that file paints an accent today.
 List<NeutralOffence> neutralOffences() {
   final offences = <NeutralOffence>[];
   for (final entity in libRoot.listSync(recursive: true)) {
     if (entity is! File || !entity.path.endsWith('.dart')) continue;
     if (generatedSuffixes.any(entity.path.endsWith)) continue;
+    if (foreignPalettes.contains(entity.path)) continue;
     final source = entity.readAsStringSync();
     for (final opener in styleOpeners.allMatches(source)) {
       final body = callBody(source, opener.start);
       if (body == null) continue;
-      final colour = colourArgument.firstMatch(body);
-      if (colour == null) continue;
-      final value = colour.group(1)!;
-      if (resolvedByTheme.hasMatch(value)) continue;
-      final named = scannedAccents.keys.where(
-        (name) => RegExp('\\b$name\\b').hasMatch(value),
-      );
+      final colours = topLevelColours(body);
+      if (colours.isEmpty) continue;
+      final named = <String>{};
+      var isText = false;
+      for (final (argument, value) in colours) {
+        if (resolvedByTheme.hasMatch(value)) continue;
+        final accents = scannedAccents.keys.where(
+          (name) => RegExp('\\b$name\\b').hasMatch(value),
+        );
+        if (accents.isEmpty) continue;
+        named.addAll(accents);
+        isText = isText || paintsText(opener.group(1)!, argument);
+      }
       if (named.isEmpty) continue;
 
-      final isText = opener.group(1) == 'TextStyle';
       final size = fontSizeArgument.firstMatch(body);
       final written = size == null
           ? const <double>[]
