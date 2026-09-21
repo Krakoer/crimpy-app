@@ -50,8 +50,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // nothing here displays.
     ref.invalidate(assessmentsProvider(null));
     ref.invalidate(assessmentDefinitionsProvider);
-    ref.invalidate(allTrainingsProvider);
-    ref.invalidate(pinnedTrainingsProvider);
+    // The library both training cards are built from. They hold different
+    // content, all builtins against pinned builtins, but they filter one read:
+    // invalidating them one by one would ask for that read once each, and
+    // invalidating only one of them would leave the other showing the library
+    // as it was.
+    ref.invalidate(trainingLibraryProvider);
     ref.invalidate(coachEnrollmentProvider);
     ref.invalidate(myAvailabilityProvider);
     ref.invalidate(declaredWeekStartsProvider);

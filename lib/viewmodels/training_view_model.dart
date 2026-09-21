@@ -59,22 +59,40 @@ BuiltinTrainingRepository builtinTrainingRepository(Ref ref) {
   );
 }
 
+/// The athlete's training library, read once and shared by everything that
+/// lists trainings.
+///
+/// The library comes back in a single request carrying every training in full,
+/// so the favourites are a filter over what is already in hand rather than a
+/// narrower read. Four providers used to call the repository themselves and
+/// each one put the byte identical request on the wire: a home screen pull sent
+/// two at the same time. They all derive from this now, and the fetch happens
+/// once.
+///
+/// This is the provider to invalidate to fetch the library again. Invalidating
+/// one of the lists below rebuilds it from the library already held and never
+/// reaches the server, which is what makes a pinned or builtin change free.
+@Riverpod(keepAlive: true)
+Future<List<Training>> trainingLibrary(Ref ref) =>
+    ref.watch(trainingRepositoryProvider).getAllTrainings();
+
 /// Returns favorite trainings.
 @Riverpod(keepAlive: true)
 class FavTrainings extends _$FavTrainings {
-  late TrainingRepository _trainingRepository;
-
   @override
-  FutureOr<List<Training>> build() {
-    _trainingRepository = ref.watch(trainingRepositoryProvider);
-    return _trainingRepository.getAllTrainings(onlyFavs: true);
+  Future<List<Training>> build() async {
+    final library = await ref.watch(trainingLibraryProvider.future);
+    return library.where((training) => training.isFavorite).toList();
   }
 
   /// Toggle the favorite status for a given training.
+  ///
+  /// The flag lives on the training, so the library is what went out of date:
+  /// invalidating it refreshes this list and every other view of the library
+  /// with one read.
   Future<void> toggleFav(String trainingId) async {
-    await _trainingRepository.toggleFav(trainingId);
-    ref.invalidate(trainingsProvider);
-    ref.invalidateSelf();
+    await ref.read(trainingRepositoryProvider).toggleFav(trainingId);
+    ref.invalidate(trainingLibraryProvider);
   }
 }
 
@@ -86,16 +104,17 @@ class Trainings extends _$Trainings {
   @override
   Future<List<Training>> build() {
     _trainingRepository = ref.watch(trainingRepositoryProvider);
-    return _trainingRepository.getAllTrainings();
+    return ref.watch(trainingLibraryProvider.future);
   }
 
-  /// Runs a repository mutation and reloads the list. `invalidateSelf` re-emits
-  /// the previous value as loading, so the list keeps its content on screen
-  /// instead of flashing empty for the duration of the write.
+  /// Runs a repository mutation and reloads the library. Invalidating it
+  /// re-emits the previous value as loading here, so the list keeps its content
+  /// on screen instead of flashing empty for the duration of the write, and the
+  /// favourites and the home screen lists pick the write up from the same read.
   Future<void> _mutate(Future<void> Function() mutation) async {
     try {
       await mutation();
-      ref.invalidateSelf();
+      ref.invalidate(trainingLibraryProvider);
       if (ref.mounted) await future;
     } catch (e, stackTrace) {
       if (ref.mounted) {
@@ -105,24 +124,16 @@ class Trainings extends _$Trainings {
   }
 
   /// Save a new training.
-  Future<void> saveTraining(Training training) => _mutate(() async {
-    await _trainingRepository.saveTraining(training);
-    ref.invalidate(favTrainingsProvider);
-    ref.invalidate(allTrainingsProvider);
-  });
+  Future<void> saveTraining(Training training) =>
+      _mutate(() => _trainingRepository.saveTraining(training));
 
   /// Update an existing training.
-  Future<void> updateTraining(Training training) => _mutate(() async {
-    await _trainingRepository.updateTraining(training);
-    ref.invalidate(favTrainingsProvider);
-    ref.invalidate(allTrainingsProvider);
-  });
+  Future<void> updateTraining(Training training) =>
+      _mutate(() => _trainingRepository.updateTraining(training));
 
   /// Delete a training.
-  Future<void> deleteTraining(String trainingId) => _mutate(() async {
-    await _trainingRepository.deleteTraining(trainingId);
-    ref.invalidate(favTrainingsProvider);
-  });
+  Future<void> deleteTraining(String trainingId) =>
+      _mutate(() => _trainingRepository.deleteTraining(trainingId));
 }
 
 /// Returns the list of all sessions, and allows the creation of new sessions.
@@ -272,12 +283,18 @@ Future<List<SessionModel>> filteredSessions(
 ///
 /// The pinned list and the full list differ only in how much they keep, so they
 /// share this and cannot drift apart.
+///
+/// Takes the library rather than the repository: both lists are built from the
+/// same read, and the pinned one narrows it to the favourites here instead of
+/// asking the server for a narrower answer it does not have.
 Future<List<TrainingListItem>> _buildTrainingList({
-  required TrainingRepository trainings,
+  required List<Training> library,
   required BuiltinTrainingRepository builtins,
   required bool onlyPinned,
 }) async {
-  final regular = await trainings.getAllTrainings(onlyFavs: onlyPinned);
+  final regular = onlyPinned
+      ? library.where((training) => training.isFavorite).toList()
+      : library;
   final regularItems = regular.map(TrainingListItem.regular).toList();
 
   final allBuiltins = await builtins.getBuiltinTrainings();
@@ -318,15 +335,22 @@ class PinnedTrainings extends _$PinnedTrainings {
   late BuiltinTrainingRepository _builtinTrainingRepository;
 
   @override
-  Future<List<TrainingListItem>> build() {
+  Future<List<TrainingListItem>> build() async {
     _builtinTrainingRepository = ref.watch(builtinTrainingRepositoryProvider);
+    final library = await ref.watch(trainingLibraryProvider.future);
     return _buildTrainingList(
-      trainings: ref.watch(trainingRepositoryProvider),
+      library: library,
       builtins: _builtinTrainingRepository,
       onlyPinned: true,
     );
   }
 
+  /// Pins or unpins a builtin training.
+  ///
+  /// A pin lives outside the library, so neither list needs fetching again:
+  /// both rebuild from the library they already hold. The full list carries the
+  /// same heart against every builtin, which is why it is invalidated here
+  /// rather than left to the caller.
   Future<void> togglePin(String builtinTrainingId) async {
     final isPinned = await _builtinTrainingRepository.isBuiltinTrainingPinned(
       builtinTrainingId,
@@ -337,6 +361,7 @@ class PinnedTrainings extends _$PinnedTrainings {
       await _builtinTrainingRepository.pinBuiltinTraining(builtinTrainingId);
     }
     ref.invalidateSelf();
+    ref.invalidate(allTrainingsProvider);
   }
 }
 
@@ -344,14 +369,13 @@ class PinnedTrainings extends _$PinnedTrainings {
 @Riverpod(keepAlive: true)
 class AllTrainings extends _$AllTrainings {
   @override
-  Future<List<TrainingListItem>> build() => _buildTrainingList(
-    trainings: ref.watch(trainingRepositoryProvider),
-    builtins: ref.watch(builtinTrainingRepositoryProvider),
-    onlyPinned: false,
-  );
-
-  Future<void> refreshBuiltinAvailability() async {
-    ref.invalidateSelf();
-    await future;
+  Future<List<TrainingListItem>> build() async {
+    final builtins = ref.watch(builtinTrainingRepositoryProvider);
+    final library = await ref.watch(trainingLibraryProvider.future);
+    return _buildTrainingList(
+      library: library,
+      builtins: builtins,
+      onlyPinned: false,
+    );
   }
 }

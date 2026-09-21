@@ -221,6 +221,86 @@ final class BuiltinTrainingRepositoryProvider
 String _$builtinTrainingRepositoryHash() =>
     r'3129edbdb68f0acafe4db2b37483944432d7e7af';
 
+/// The athlete's training library, read once and shared by everything that
+/// lists trainings.
+///
+/// The library comes back in a single request carrying every training in full,
+/// so the favourites are a filter over what is already in hand rather than a
+/// narrower read. Four providers used to call the repository themselves and
+/// each one put the byte identical request on the wire: a home screen pull sent
+/// two at the same time. They all derive from this now, and the fetch happens
+/// once.
+///
+/// This is the provider to invalidate to fetch the library again. Invalidating
+/// one of the lists below rebuilds it from the library already held and never
+/// reaches the server, which is what makes a pinned or builtin change free.
+
+@ProviderFor(trainingLibrary)
+const trainingLibraryProvider = TrainingLibraryProvider._();
+
+/// The athlete's training library, read once and shared by everything that
+/// lists trainings.
+///
+/// The library comes back in a single request carrying every training in full,
+/// so the favourites are a filter over what is already in hand rather than a
+/// narrower read. Four providers used to call the repository themselves and
+/// each one put the byte identical request on the wire: a home screen pull sent
+/// two at the same time. They all derive from this now, and the fetch happens
+/// once.
+///
+/// This is the provider to invalidate to fetch the library again. Invalidating
+/// one of the lists below rebuilds it from the library already held and never
+/// reaches the server, which is what makes a pinned or builtin change free.
+
+final class TrainingLibraryProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Training>>,
+          List<Training>,
+          FutureOr<List<Training>>
+        >
+    with $FutureModifier<List<Training>>, $FutureProvider<List<Training>> {
+  /// The athlete's training library, read once and shared by everything that
+  /// lists trainings.
+  ///
+  /// The library comes back in a single request carrying every training in full,
+  /// so the favourites are a filter over what is already in hand rather than a
+  /// narrower read. Four providers used to call the repository themselves and
+  /// each one put the byte identical request on the wire: a home screen pull sent
+  /// two at the same time. They all derive from this now, and the fetch happens
+  /// once.
+  ///
+  /// This is the provider to invalidate to fetch the library again. Invalidating
+  /// one of the lists below rebuilds it from the library already held and never
+  /// reaches the server, which is what makes a pinned or builtin change free.
+  const TrainingLibraryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'trainingLibraryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$trainingLibraryHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Training>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Training>> create(Ref ref) {
+    return trainingLibrary(ref);
+  }
+}
+
+String _$trainingLibraryHash() => r'682832b945d463a239c802bba42d197a7bd28153';
+
 /// Returns favorite trainings.
 
 @ProviderFor(FavTrainings)
@@ -249,7 +329,7 @@ final class FavTrainingsProvider
   FavTrainings create() => FavTrainings();
 }
 
-String _$favTrainingsHash() => r'ddbb4caa73c0b74005a2d732af763bd4353f241a';
+String _$favTrainingsHash() => r'9252c05e9626563b1ff40c82a5afb59adbe1f50e';
 
 /// Returns favorite trainings.
 
@@ -300,7 +380,7 @@ final class TrainingsProvider
   Trainings create() => Trainings();
 }
 
-String _$trainingsHash() => r'3dacd25a1d5852b99536da3ecc4757300963b71d';
+String _$trainingsHash() => r'6ece01f4daab055d6ff890811a4e08054c250b1a';
 
 /// Returns all trainings and allows creating, updating, and deleting them.
 
@@ -714,7 +794,7 @@ final class PinnedTrainingsProvider
   PinnedTrainings create() => PinnedTrainings();
 }
 
-String _$pinnedTrainingsHash() => r'340e0adc411e5fa2d647013997a27ce8ab1a750d';
+String _$pinnedTrainingsHash() => r'ceee47790f20d551427d55a09516dea0bb78e4d4';
 
 /// Provider for pinned builtin trainings (with favorites).
 
@@ -771,7 +851,7 @@ final class AllTrainingsProvider
   AllTrainings create() => AllTrainings();
 }
 
-String _$allTrainingsHash() => r'839d0c316ec92344cf3af4f415aa62093b76aed0';
+String _$allTrainingsHash() => r'9d8b89635f3dd7326fd5869b02ae7152fb14418e';
 
 /// Provider for combined training list (regular + builtin trainings).
 

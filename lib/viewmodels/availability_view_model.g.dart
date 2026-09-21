@@ -113,7 +113,7 @@ final class MyAvailabilityProvider
   MyAvailability create() => MyAvailability();
 }
 
-String _$myAvailabilityHash() => r'c9687bb679b212bf29b045be943e26b9564cc62a';
+String _$myAvailabilityHash() => r'006aafa03086914e92cf07497b4401ac79cba290';
 
 /// The calendar weeks the athlete can edit, with what they planned in them:
 /// this week and the next two, which is what the week switcher offers. Empty

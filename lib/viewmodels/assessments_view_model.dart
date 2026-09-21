@@ -165,8 +165,12 @@ class Assessments extends _$Assessments {
       // What the next percentage driven run reads, so a training prescribed
       // against this assessment resolves against the number just measured.
       ref.invalidate(assessmentResultsProvider);
-      // Refresh builtin trainings availability since we have new assessment data
+      // Refresh builtin trainings availability since we have new assessment
+      // data. Both lists show builtins, and neither reads the library to
+      // rebuild, so the home screen card is refreshed here too rather than
+      // waiting for a pull.
       ref.invalidate(allTrainingsProvider);
+      ref.invalidate(pinnedTrainingsProvider);
     }
   }
 
