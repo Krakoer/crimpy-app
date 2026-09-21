@@ -728,10 +728,8 @@ class AppDatabase extends _$AppDatabase {
       list == null ? null : jsonEncode(list);
 
   /// Get all trainings for the current user.
-  Future<List<Training>> getAllTrainings({bool onlyFavs = false}) async {
-    final rows = await (select(
-      trainings,
-    )..where((t) => onlyFavs ? t.isFavorite : const Constant(true))).get();
+  Future<List<Training>> getAllTrainings() async {
+    final rows = await select(trainings).get();
 
     final result = <Training>[];
     for (final row in rows) {

@@ -90,6 +90,10 @@ class _NoAssessments extends AssessmentRepository {
   /// both training lists used to ask for one each.
   int reads = 0;
 
+  /// Fails the read, after a turn of the event loop so it settles behind a
+  /// read that failed first.
+  bool failing = false;
+
   @override
   Future<List<AssessmentModel>> getAssessments({
     String? assessmentId,
@@ -97,6 +101,10 @@ class _NoAssessments extends AssessmentRepository {
     GripPosition? gripPosition,
   }) async {
     reads++;
+    if (failing) {
+      await Future<void>.delayed(Duration.zero);
+      throw ApiException('offline', isOffline: true);
+    }
     return const [];
   }
 
@@ -125,9 +133,14 @@ class _InMemoryPreferences extends BuiltinPreferencesRepository {
   /// Reads of the pinned ids, counted for the same reason as the assessments.
   int reads = 0;
 
+  /// Fails the read straight away, so it is the first of the catalog's reads
+  /// to answer.
+  bool failing = false;
+
   @override
   Future<List<String>> getPinnedBuiltinTrainingIds() async {
     reads++;
+    if (failing) throw ApiException('offline', isOffline: true);
     return _pinned.toList();
   }
 
@@ -414,6 +427,7 @@ void main() {
       await _homeScreenLoad(setUp.container);
       client.libraryReads = 0;
       setUp.preferences.reads = 0;
+      setUp.assessments.reads = 0;
 
       await setUp.container
           .read(assessmentsProvider('a-1').notifier)
@@ -434,8 +448,35 @@ void main() {
       // is what the write made stale. Invalidating a list instead would fetch
       // nothing and leave both showing the old evaluation, and the library is
       // not involved either way.
+      //
+      // The pinned ids are the literal here because the catalog is the only
+      // reader of them. Three providers re-read the assessments on this path
+      // and only one of them is the catalog, so that count says the history
+      // was refreshed rather than which reader refreshed it.
+      expect(setUp.assessments.reads, greaterThanOrEqualTo(1));
       expect(setUp.preferences.reads, 1);
       expect(client.libraryReads, 0);
+    });
+
+    test('a failed catalog read does not orphan the reads beside it', () async {
+      final client = _CountingApiClient(const ['t-0']);
+      final setUp = _setUp(client);
+      setUp.preferences.failing = true;
+      setUp.assessments.failing = true;
+
+      await expectLater(
+        setUp.container.read(pinnedTrainingsProvider.future),
+        throwsA(isA<ApiException>()),
+      );
+      // Long enough for the slower read to answer. Awaited one after another,
+      // its failure would land with nobody listening and reach the zone as an
+      // unhandled error, which is a crash under Sentry and three more of them
+      // once the provider retries. What fails this test is that error, which
+      // the test zone reports whatever the assertions say: the count below is
+      // only here so the test cannot pass by never issuing the read at all.
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      expect(setUp.assessments.reads, 1);
     });
 
     test('an update costs one library read', () async {

@@ -155,7 +155,7 @@ void main() {
       ]);
     });
 
-    test('narrows to the favourites without a second request', () async {
+    test('carries the favourite flag the lists narrow on', () async {
       final client = _CountingApiClient(
         const ['t-0', 't-1', 't-2'],
         favourites: const {'t-1'},
@@ -163,10 +163,15 @@ void main() {
 
       final trainings = await RemoteTrainingRepository(
         client,
-      ).getAllTrainings(onlyFavs: true);
+      ).getAllTrainings();
 
-      expect(trainings.map((training) => training.id), ['t-1']);
-      expect(trainings.single.items.single.comment, 'from the list');
+      // The repository has no narrower read since Krakoer/crimpy#132: the
+      // favourites are filtered off this flag by the provider that holds the
+      // library, so the flag has to survive the one request.
+      expect(
+        {for (final training in trainings) training.id: training.isFavorite},
+        {'t-0': false, 't-1': true, 't-2': false},
+      );
       expect(client.listCalls, 1);
       expect(client.detailCalls, 0);
     });

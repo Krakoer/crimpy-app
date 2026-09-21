@@ -94,10 +94,10 @@ typedef BuiltinTrainingCatalog = ({
 /// down. None of it belongs to the library, so a pin change drops this and
 /// leaves the library alone, and a pull drops both.
 ///
-/// The three reads are independent and go out together, so the catalog costs
-/// one round trip rather than three. It reads the assessments and the weights
-/// even when the athlete has pinned nothing, where the pinned list alone used
-/// to stop at the pins: making them conditional would mean a list that watches
+/// The reads are independent and go out together, so the catalog costs one
+/// round trip rather than three. It reads the assessments and the weights even
+/// when the athlete has pinned nothing, where the pinned list alone used to
+/// stop at the pins: making them conditional would mean a list that watches
 /// them only sometimes, which is the staleness the shared provider exists to
 /// remove. It is two small requests on a cold start, against a list that
 /// evaluates a builtin the moment one is pinned.
@@ -108,6 +108,15 @@ Future<BuiltinTrainingCatalog> builtinTrainingCatalog(Ref ref) async {
   final pinnedIds = builtins.getPinnedBuiltinTrainingIds();
   final assessments = builtins.fetchAllAssessments();
   final customWeights = builtins.fetchAllCustomWeights();
+
+  // Waited on together rather than awaited one after another. Awaiting them in
+  // order means the first failure leaves the reads behind it running with
+  // nobody listening, and an offline device answers each of those with an error
+  // that reaches the zone as a crash instead of the one error the screen shows.
+  // Future.wait listens to all four and rethrows the first, which keeps the
+  // ApiException the offline handling reads.
+  await Future.wait([trainings, pinnedIds, assessments, customWeights]);
+
   return (
     trainings: await trainings,
     pinnedIds: await pinnedIds,

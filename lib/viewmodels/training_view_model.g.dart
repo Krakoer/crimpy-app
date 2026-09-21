@@ -310,10 +310,10 @@ String _$trainingLibraryHash() => r'682832b945d463a239c802bba42d197a7bd28153';
 /// down. None of it belongs to the library, so a pin change drops this and
 /// leaves the library alone, and a pull drops both.
 ///
-/// The three reads are independent and go out together, so the catalog costs
-/// one round trip rather than three. It reads the assessments and the weights
-/// even when the athlete has pinned nothing, where the pinned list alone used
-/// to stop at the pins: making them conditional would mean a list that watches
+/// The reads are independent and go out together, so the catalog costs one
+/// round trip rather than three. It reads the assessments and the weights even
+/// when the athlete has pinned nothing, where the pinned list alone used to
+/// stop at the pins: making them conditional would mean a list that watches
 /// them only sometimes, which is the staleness the shared provider exists to
 /// remove. It is two small requests on a cold start, against a list that
 /// evaluates a builtin the moment one is pinned.
@@ -330,10 +330,10 @@ const builtinTrainingCatalogProvider = BuiltinTrainingCatalogProvider._();
 /// down. None of it belongs to the library, so a pin change drops this and
 /// leaves the library alone, and a pull drops both.
 ///
-/// The three reads are independent and go out together, so the catalog costs
-/// one round trip rather than three. It reads the assessments and the weights
-/// even when the athlete has pinned nothing, where the pinned list alone used
-/// to stop at the pins: making them conditional would mean a list that watches
+/// The reads are independent and go out together, so the catalog costs one
+/// round trip rather than three. It reads the assessments and the weights even
+/// when the athlete has pinned nothing, where the pinned list alone used to
+/// stop at the pins: making them conditional would mean a list that watches
 /// them only sometimes, which is the staleness the shared provider exists to
 /// remove. It is two small requests on a cold start, against a list that
 /// evaluates a builtin the moment one is pinned.
@@ -357,10 +357,10 @@ final class BuiltinTrainingCatalogProvider
   /// down. None of it belongs to the library, so a pin change drops this and
   /// leaves the library alone, and a pull drops both.
   ///
-  /// The three reads are independent and go out together, so the catalog costs
-  /// one round trip rather than three. It reads the assessments and the weights
-  /// even when the athlete has pinned nothing, where the pinned list alone used
-  /// to stop at the pins: making them conditional would mean a list that watches
+  /// The reads are independent and go out together, so the catalog costs one
+  /// round trip rather than three. It reads the assessments and the weights even
+  /// when the athlete has pinned nothing, where the pinned list alone used to
+  /// stop at the pins: making them conditional would mean a list that watches
   /// them only sometimes, which is the staleness the shared provider exists to
   /// remove. It is two small requests on a cold start, against a list that
   /// evaluates a builtin the moment one is pinned.
@@ -391,7 +391,7 @@ final class BuiltinTrainingCatalogProvider
 }
 
 String _$builtinTrainingCatalogHash() =>
-    r'8dae1aabd749fbd33b15785beed4bf934c176f22';
+    r'73304f1d3fa613b190d6cfe61a02a51bdaa42d86';
 
 /// Returns favorite trainings.
 
