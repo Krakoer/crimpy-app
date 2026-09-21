@@ -132,6 +132,23 @@ void main() {
       expect(client.detailCalls, 0);
     });
 
+    test('falls back to detail reads against a server that ignores the '
+        'parameter', () async {
+      final client = _DeafApiClient([
+        for (var index = 0; index < 8; index++) 't-$index',
+      ]);
+
+      final trainings = await RemoteTrainingRepository(
+        client,
+      ).getAllTrainings();
+
+      // Today's behaviour rather than a library of trainings with no steps in
+      // them, which is what reading the cheap rows straight through would give.
+      expect(trainings, hasLength(8));
+      expect(trainings.first.items.single.comment, 'from the detail read');
+      expect(client.detailCalls, 8);
+    });
+
     test('answers with nothing for an empty library', () async {
       final client = _CountingApiClient(const []);
 
@@ -139,4 +156,19 @@ void main() {
       expect(client.detailCalls, 0);
     });
   });
+}
+
+/// A server that predates the items on the list: it ignores the parameter and
+/// answers the cheap rows, which carry no items key.
+class _DeafApiClient extends _CountingApiClient {
+  _DeafApiClient(super.ids);
+
+  @override
+  Future<List<Map<String, dynamic>>> getTrainings({
+    bool includeItems = false,
+  }) async {
+    listCalls++;
+    listedWithItems.add(includeItems);
+    return [for (final id in ids) row(id)];
+  }
 }

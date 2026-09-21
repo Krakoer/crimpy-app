@@ -6,6 +6,7 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/services/api_client.dart';
+import 'package:crimpy/utils/bounded_parallel.dart';
 import 'package:crimpy/repositories/bodyweight_repository.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/models/session_filter.dart';
@@ -155,10 +156,27 @@ class RemoteTrainingRepository extends TrainingRepository {
   @override
   Future<List<Training>> getAllTrainings({bool onlyFavs = false}) async {
     final list = await _apiClient.getTrainings(includeItems: true);
-    return list
+    final rows = list
         .where((t) => !onlyFavs || (t['is_favorite'] as bool? ?? false))
-        .map(Training.fromJson)
         .toList();
+
+    // A server that predates the items on the list ignores the parameter and
+    // answers the cheap rows, which carry no items key at all. Reading those
+    // as trainings would hand the athlete a library where nothing has any
+    // steps, with no error to say why, so they are read one at a time instead,
+    // the way the whole library used to be. A training that really holds no
+    // items answers with an empty array and is not fetched again.
+    if (rows.every((row) => row.containsKey('items'))) {
+      return rows.map(Training.fromJson).toList();
+    }
+
+    final fetched = await inParallel(
+      rows.map(
+        (row) =>
+            () => _fetchTraining(row['id'] as String),
+      ),
+    );
+    return fetched.whereType<Training>().toList();
   }
 
   @override
