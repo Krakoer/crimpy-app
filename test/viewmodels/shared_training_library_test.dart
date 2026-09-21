@@ -83,12 +83,19 @@ class _CountingApiClient extends ApiClient {
 /// No assessment has been recorded, which is all the builtin evaluation needs
 /// to answer. It never reaches the library.
 class _NoAssessments extends AssessmentRepository {
+  /// Reads of the assessment history, which the builtin evaluation needs and
+  /// both training lists used to ask for one each.
+  int reads = 0;
+
   @override
   Future<List<AssessmentModel>> getAssessments({
     String? assessmentId,
     HandSide? handSide,
     GripPosition? gripPosition,
-  }) async => const [];
+  }) async {
+    reads++;
+    return const [];
+  }
 
   @override
   Future<List<AssessmentDefinition>> getAssessmentDefinitions() async =>
@@ -112,8 +119,14 @@ class _InMemoryPreferences extends BuiltinPreferencesRepository {
 
   final Set<String> _pinned;
 
+  /// Reads of the pinned ids, counted for the same reason as the assessments.
+  int reads = 0;
+
   @override
-  Future<List<String>> getPinnedBuiltinTrainingIds() async => _pinned.toList();
+  Future<List<String>> getPinnedBuiltinTrainingIds() async {
+    reads++;
+    return _pinned.toList();
+  }
 
   @override
   Future<void> pinBuiltinTraining(String builtinTrainingId) async =>
@@ -135,28 +148,46 @@ class _InMemoryPreferences extends BuiltinPreferencesRepository {
   }) async {}
 }
 
+({
+  ProviderContainer container,
+  _NoAssessments assessments,
+  _InMemoryPreferences preferences,
+})
+_setUp(
+  _CountingApiClient client, {
+  Iterable<String> pinnedBuiltins = const [],
+}) {
+  final assessments = _NoAssessments();
+  final preferences = _InMemoryPreferences(pinnedBuiltins);
+  return (
+    container: ProviderContainer.test(
+      // A failed read is answered once here. The app retries four times with a
+      // backoff, which would leave a test asserting on a failure waiting for
+      // it.
+      retry: (retryCount, error) => null,
+      overrides: [
+        trainingRepositoryProvider.overrideWith(
+          (ref) => RemoteTrainingRepository(client),
+        ),
+        assessmentRepositoryProvider.overrideWith((ref) => assessments),
+        builtinPreferencesRepositoryProvider.overrideWith((ref) => preferences),
+      ],
+    ),
+    assessments: assessments,
+    preferences: preferences,
+  );
+}
+
 ProviderContainer _containerFor(
   _CountingApiClient client, {
   Iterable<String> pinnedBuiltins = const [],
-}) => ProviderContainer.test(
-  // A failed read is answered once here. The app retries four times with a
-  // backoff, which would leave a test asserting on a failure waiting for it.
-  retry: (retryCount, error) => null,
-  overrides: [
-    trainingRepositoryProvider.overrideWith(
-      (ref) => RemoteTrainingRepository(client),
-    ),
-    assessmentRepositoryProvider.overrideWith((ref) => _NoAssessments()),
-    builtinPreferencesRepositoryProvider.overrideWith(
-      (ref) => _InMemoryPreferences(pinnedBuiltins),
-    ),
-  ],
-);
+}) => _setUp(client, pinnedBuiltins: pinnedBuiltins).container;
 
 /// What `home_screen.dart` does for the two training cards on a pull: drop the
-/// library, then wait for both lists.
+/// two reads behind them, then wait for both lists.
 Future<void> _homeScreenRefresh(ProviderContainer container) {
   container.invalidate(trainingLibraryProvider);
+  container.invalidate(builtinTrainingCatalogProvider);
   return Future.wait([
     container.read(allTrainingsProvider.future),
     container.read(pinnedTrainingsProvider.future),
@@ -196,6 +227,22 @@ void main() {
       await _homeScreenRefresh(container);
 
       expect(client.libraryReads, 1);
+    });
+
+    test('reads the builtin catalog once on a pull to refresh', () async {
+      final client = _CountingApiClient(const ['t-0']);
+      final setUp = _setUp(client);
+      await _homeScreenLoad(setUp.container);
+      setUp.assessments.reads = 0;
+      setUp.preferences.reads = 0;
+
+      await _homeScreenRefresh(setUp.container);
+
+      // One each, spelled out: the full list and the pinned list evaluate the
+      // same builtins against the same pins and the same assessments, and used
+      // to ask for all of it once per list.
+      expect(setUp.assessments.reads, 1);
+      expect(setUp.preferences.reads, 1);
     });
 
     test('shows what a pull fetched rather than what it held', () async {
@@ -300,24 +347,61 @@ void main() {
     test('a pin change costs no library read at all', () async {
       final builtinId = builtinTrainings.first.id;
       final client = _CountingApiClient(const ['t-0']);
+      final setUp = _setUp(client);
+      await _homeScreenLoad(setUp.container);
+      client.libraryReads = 0;
+      setUp.assessments.reads = 0;
+
+      await setUp.container
+          .read(pinnedTrainingsProvider.notifier)
+          .togglePin(builtinId);
+
+      final pinned = await setUp.container.read(pinnedTrainingsProvider.future);
+      final all = await setUp.container.read(allTrainingsProvider.future);
+
+      // A pin belongs to the catalog, so the library is never asked for, and
+      // the catalog is asked for once for both lists rather than once each.
+      expect(client.libraryReads, 0);
+      expect(setUp.assessments.reads, 1);
+      expect(
+        pinned.where((item) => item.isBuiltin).map((item) => item.id),
+        contains(builtinId),
+      );
+      expect(all.firstWhere((item) => item.id == builtinId).isPinned, isTrue);
+    });
+
+    test('a library refresh leaves the builtin catalog alone', () async {
+      final client = _CountingApiClient(const ['t-0']);
+      final setUp = _setUp(client);
+      await _homeScreenLoad(setUp.container);
+      client.libraryReads = 0;
+      setUp.assessments.reads = 0;
+      setUp.preferences.reads = 0;
+
+      // What the assessments tab pull does: it shows the athlete's own
+      // trainings and nothing builtin, so it drops the library only.
+      setUp.container.invalidate(trainingLibraryProvider);
+      await _homeScreenLoad(setUp.container);
+
+      expect(client.libraryReads, 1);
+      expect(setUp.assessments.reads, 0);
+      expect(setUp.preferences.reads, 0);
+    });
+
+    test('an update costs one library read', () async {
+      final client = _CountingApiClient(const ['t-0']);
       final container = _containerFor(client);
       await _homeScreenLoad(container);
       client.libraryReads = 0;
 
       await container
-          .read(pinnedTrainingsProvider.notifier)
-          .togglePin(builtinId);
+          .read(trainingsProvider.notifier)
+          .updateTraining(_training('t-0'));
 
-      // A pin lives outside the library, so both lists rebuild from the one
-      // they already hold.
-      expect(client.libraryReads, 0);
-      final pinned = await container.read(pinnedTrainingsProvider.future);
-      expect(
-        pinned.where((item) => item.isBuiltin).map((item) => item.id),
-        contains(builtinId),
-      );
-      final all = await container.read(allTrainingsProvider.future);
-      expect(all.firstWhere((item) => item.id == builtinId).isPinned, isTrue);
+      expect(client.libraryReads, 1);
+      expect(_regularIds(await container.read(allTrainingsProvider.future)), [
+        't-0',
+      ]);
     });
 
     test('a save costs one library read', () async {

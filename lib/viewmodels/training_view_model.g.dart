@@ -301,6 +301,48 @@ final class TrainingLibraryProvider
 
 String _$trainingLibraryHash() => r'682832b945d463a239c802bba42d197a7bd28153';
 
+@ProviderFor(builtinTrainingCatalog)
+const builtinTrainingCatalogProvider = BuiltinTrainingCatalogProvider._();
+
+final class BuiltinTrainingCatalogProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<BuiltinTrainingCatalog>,
+          BuiltinTrainingCatalog,
+          FutureOr<BuiltinTrainingCatalog>
+        >
+    with
+        $FutureModifier<BuiltinTrainingCatalog>,
+        $FutureProvider<BuiltinTrainingCatalog> {
+  const BuiltinTrainingCatalogProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'builtinTrainingCatalogProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$builtinTrainingCatalogHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<BuiltinTrainingCatalog> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<BuiltinTrainingCatalog> create(Ref ref) {
+    return builtinTrainingCatalog(ref);
+  }
+}
+
+String _$builtinTrainingCatalogHash() =>
+    r'eeda8e65e1783812208fc1eb512f9f9900b3b8c5';
+
 /// Returns favorite trainings.
 
 @ProviderFor(FavTrainings)
@@ -794,7 +836,7 @@ final class PinnedTrainingsProvider
   PinnedTrainings create() => PinnedTrainings();
 }
 
-String _$pinnedTrainingsHash() => r'ceee47790f20d551427d55a09516dea0bb78e4d4';
+String _$pinnedTrainingsHash() => r'2ad10dcc135f6ef0aa5de6b11be9ba4c5b05e1bb';
 
 /// Provider for pinned builtin trainings (with favorites).
 
@@ -823,15 +865,27 @@ abstract class _$PinnedTrainings
   }
 }
 
-/// Provider for combined training list (regular + builtin trainings).
+/// Every training the athlete can start: their own library followed by the
+/// builtins, each evaluated against the latest assessments.
 
-@ProviderFor(AllTrainings)
+@ProviderFor(allTrainings)
 const allTrainingsProvider = AllTrainingsProvider._();
 
-/// Provider for combined training list (regular + builtin trainings).
+/// Every training the athlete can start: their own library followed by the
+/// builtins, each evaluated against the latest assessments.
+
 final class AllTrainingsProvider
-    extends $AsyncNotifierProvider<AllTrainings, List<TrainingListItem>> {
-  /// Provider for combined training list (regular + builtin trainings).
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<TrainingListItem>>,
+          List<TrainingListItem>,
+          FutureOr<List<TrainingListItem>>
+        >
+    with
+        $FutureModifier<List<TrainingListItem>>,
+        $FutureProvider<List<TrainingListItem>> {
+  /// Every training the athlete can start: their own library followed by the
+  /// builtins, each evaluated against the latest assessments.
   const AllTrainingsProvider._()
     : super(
         from: null,
@@ -848,33 +902,14 @@ final class AllTrainingsProvider
 
   @$internal
   @override
-  AllTrainings create() => AllTrainings();
-}
+  $FutureProviderElement<List<TrainingListItem>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
-String _$allTrainingsHash() => r'9d8b89635f3dd7326fd5869b02ae7152fb14418e';
-
-/// Provider for combined training list (regular + builtin trainings).
-
-abstract class _$AllTrainings extends $AsyncNotifier<List<TrainingListItem>> {
-  FutureOr<List<TrainingListItem>> build();
-  @$mustCallSuper
   @override
-  void runBuild() {
-    final created = build();
-    final ref =
-        this.ref
-            as $Ref<AsyncValue<List<TrainingListItem>>, List<TrainingListItem>>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<
-                AsyncValue<List<TrainingListItem>>,
-                List<TrainingListItem>
-              >,
-              AsyncValue<List<TrainingListItem>>,
-              Object?,
-              Object?
-            >;
-    element.handleValue(ref, created);
+  FutureOr<List<TrainingListItem>> create(Ref ref) {
+    return allTrainings(ref);
   }
 }
+
+String _$allTrainingsHash() => r'ad73fa21459d371b86930c1cc07169eb1b0e577d';

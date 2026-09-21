@@ -165,12 +165,10 @@ class Assessments extends _$Assessments {
       // What the next percentage driven run reads, so a training prescribed
       // against this assessment resolves against the number just measured.
       ref.invalidate(assessmentResultsProvider);
-      // Refresh builtin trainings availability since we have new assessment
-      // data. Both lists show builtins, and neither reads the library to
-      // rebuild, so the home screen card is refreshed here too rather than
-      // waiting for a pull.
-      ref.invalidate(allTrainingsProvider);
-      ref.invalidate(pinnedTrainingsProvider);
+      // A builtin's availability is read off the assessments, so the catalog
+      // is what this write made stale. Dropping it rebuilds both training
+      // lists, the home screen card included, and leaves the library alone.
+      ref.invalidate(builtinTrainingCatalogProvider);
     }
   }
 

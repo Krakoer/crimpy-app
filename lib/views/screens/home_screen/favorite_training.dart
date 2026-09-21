@@ -126,10 +126,13 @@ class FavoriteTrainingList extends ConsumerWidget {
             children: [
               Text('Error: $error'),
               ElevatedButton(
-                // The read that failed was the library's. Invalidating this
-                // list alone would rebuild it from the same failed future and
-                // never ask again.
-                onPressed: () => ref.invalidate(trainingLibraryProvider),
+                // The read that failed was one of the two this list is built
+                // from. Invalidating the list alone would rebuild it from the
+                // same failed future and never ask again.
+                onPressed: () {
+                  ref.invalidate(trainingLibraryProvider);
+                  ref.invalidate(builtinTrainingCatalogProvider);
+                },
                 child: const Text('Retry'),
               ),
             ],
@@ -226,9 +229,12 @@ class PinTrainingDialog extends ConsumerWidget {
             children: [
               Text('Error: $error'),
               ElevatedButton(
-                // As above: the failure came from the library read behind
-                // this list, so that is what has to be dropped.
-                onPressed: () => ref.invalidate(trainingLibraryProvider),
+                // As above: the failure came from a read behind this list,
+                // so that is what has to be dropped.
+                onPressed: () {
+                  ref.invalidate(trainingLibraryProvider);
+                  ref.invalidate(builtinTrainingCatalogProvider);
+                },
                 child: const Text('Retry'),
               ),
             ],
