@@ -1,5 +1,7 @@
 import 'package:crimpy/database/builtins.dart';
 import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_list_item.dart';
@@ -8,6 +10,7 @@ import 'package:crimpy/repositories/builtin_preferences_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/api_exception.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -171,11 +174,28 @@ _setUp(
         ),
         assessmentRepositoryProvider.overrideWith((ref) => assessments),
         builtinPreferencesRepositoryProvider.overrideWith((ref) => preferences),
+        // Only the assessment save path reaches this, and it writes nowhere.
+        sessionsProvider.overrideWith(_CapturingSessions.new),
       ],
     ),
     assessments: assessments,
     preferences: preferences,
   );
+}
+
+/// Saves without a store behind it, so recording a result can be driven
+/// without a session repository.
+class _CapturingSessions extends Sessions {
+  @override
+  Future<List<SessionModel>> build() async => const [];
+
+  @override
+  Future<String> saveSession(
+    SessionModel session,
+    List<RepDataModel> reps, {
+    List<BleDataPoint>? data,
+    List<SessionItemResultModel> itemResults = const [],
+  }) async => 's-1';
 }
 
 ProviderContainer _containerFor(
@@ -386,6 +406,36 @@ void main() {
       expect(client.libraryReads, 1);
       expect(setUp.assessments.reads, 0);
       expect(setUp.preferences.reads, 0);
+    });
+
+    test('recording a result re-evaluates the builtins', () async {
+      final client = _CountingApiClient(const ['t-0']);
+      final setUp = _setUp(client);
+      await _homeScreenLoad(setUp.container);
+      client.libraryReads = 0;
+      setUp.preferences.reads = 0;
+
+      await setUp.container
+          .read(assessmentsProvider('a-1').notifier)
+          .saveAssessment(
+            AssessmentResultModel(assessmentId: 'a-1', rightValue: 12),
+            SessionModel(
+              name: 'Max pull ups',
+              date: DateTime(2026, 9, 21),
+              isAssessment: true,
+              activity: SessionActivity.hangboard,
+              origin: SessionOrigin.played,
+            ),
+            const [],
+          );
+      await _homeScreenLoad(setUp.container);
+
+      // A builtin's availability is read off the assessments, so the catalog
+      // is what the write made stale. Invalidating a list instead would fetch
+      // nothing and leave both showing the old evaluation, and the library is
+      // not involved either way.
+      expect(setUp.preferences.reads, 1);
+      expect(client.libraryReads, 0);
     });
 
     test('an update costs one library read', () async {

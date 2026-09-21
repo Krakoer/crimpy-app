@@ -40,7 +40,11 @@ class BuiltinTrainingRepository {
   ///
   /// Always pass [allAssessments] from [fetchAllAssessments] to avoid one
   /// API call per builtin.
-  ({bool isAvailable, List<AssessmentRequirement> missing, Training? training})
+  static ({
+    bool isAvailable,
+    List<AssessmentRequirement> missing,
+    Training? training,
+  })
   evaluateBuiltinSync(
     BuiltinTrainingModel builtin,
     List<AssessmentModel> allAssessments, {

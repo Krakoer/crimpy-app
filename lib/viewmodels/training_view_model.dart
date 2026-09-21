@@ -78,6 +78,13 @@ BuiltinTrainingRepository builtinTrainingRepository(Ref ref) {
 Future<List<Training>> trainingLibrary(Ref ref) =>
     ref.watch(trainingRepositoryProvider).getAllTrainings();
 
+typedef BuiltinTrainingCatalog = ({
+  List<BuiltinTrainingModel> trainings,
+  List<String> pinnedIds,
+  List<AssessmentModel> assessments,
+  Map<String, ({double? weightRight, double? weightLeft})> customWeights,
+});
+
 /// Everything the builtin half of a training list is built from, read once and
 /// shared the way the library is.
 ///
@@ -86,21 +93,26 @@ Future<List<Training>> trainingLibrary(Ref ref) =>
 /// three requests on the wire twice, which is the library duplication one layer
 /// down. None of it belongs to the library, so a pin change drops this and
 /// leaves the library alone, and a pull drops both.
-typedef BuiltinTrainingCatalog = ({
-  List<BuiltinTrainingModel> trainings,
-  List<String> pinnedIds,
-  List<AssessmentModel> assessments,
-  Map<String, ({double? weightRight, double? weightLeft})> customWeights,
-});
-
+///
+/// The three reads are independent and go out together, so the catalog costs
+/// one round trip rather than three. It reads the assessments and the weights
+/// even when the athlete has pinned nothing, where the pinned list alone used
+/// to stop at the pins: making them conditional would mean a list that watches
+/// them only sometimes, which is the staleness the shared provider exists to
+/// remove. It is two small requests on a cold start, against a list that
+/// evaluates a builtin the moment one is pinned.
 @Riverpod(keepAlive: true)
 Future<BuiltinTrainingCatalog> builtinTrainingCatalog(Ref ref) async {
   final builtins = ref.watch(builtinTrainingRepositoryProvider);
+  final trainings = builtins.getBuiltinTrainings();
+  final pinnedIds = builtins.getPinnedBuiltinTrainingIds();
+  final assessments = builtins.fetchAllAssessments();
+  final customWeights = builtins.fetchAllCustomWeights();
   return (
-    trainings: await builtins.getBuiltinTrainings(),
-    pinnedIds: await builtins.getPinnedBuiltinTrainingIds(),
-    assessments: await builtins.fetchAllAssessments(),
-    customWeights: await builtins.fetchAllCustomWeights(),
+    trainings: await trainings,
+    pinnedIds: await pinnedIds,
+    assessments: await assessments,
+    customWeights: await customWeights,
   );
 }
 
@@ -317,7 +329,6 @@ Future<List<SessionModel>> filteredSessions(
 /// instead of asking the server for narrower answers it does not have.
 List<TrainingListItem> _buildTrainingList({
   required List<Training> library,
-  required BuiltinTrainingRepository builtins,
   required BuiltinTrainingCatalog catalog,
   required bool onlyPinned,
 }) {
@@ -334,7 +345,7 @@ List<TrainingListItem> _buildTrainingList({
 
   final builtinItems = selected.map((builtin) {
     final weights = catalog.customWeights[builtin.id];
-    final result = builtins.evaluateBuiltinSync(
+    final result = BuiltinTrainingRepository.evaluateBuiltinSync(
       builtin,
       catalog.assessments,
       customWeightRight: weights?.weightRight,
@@ -355,16 +366,12 @@ List<TrainingListItem> _buildTrainingList({
 /// Provider for pinned builtin trainings (with favorites).
 @Riverpod(keepAlive: true)
 class PinnedTrainings extends _$PinnedTrainings {
-  late BuiltinTrainingRepository _builtinTrainingRepository;
-
   @override
   Future<List<TrainingListItem>> build() async {
-    _builtinTrainingRepository = ref.watch(builtinTrainingRepositoryProvider);
     final library = ref.watch(trainingLibraryProvider.future);
     final catalog = ref.watch(builtinTrainingCatalogProvider.future);
     return _buildTrainingList(
       library: await library,
-      builtins: _builtinTrainingRepository,
       catalog: await catalog,
       onlyPinned: true,
     );
@@ -376,13 +383,11 @@ class PinnedTrainings extends _$PinnedTrainings {
   /// the catalog refreshes both lists, which show the same heart against the
   /// same builtins, without asking for the library again.
   Future<void> togglePin(String builtinTrainingId) async {
-    final isPinned = await _builtinTrainingRepository.isBuiltinTrainingPinned(
-      builtinTrainingId,
-    );
-    if (isPinned) {
-      await _builtinTrainingRepository.unpinBuiltinTraining(builtinTrainingId);
+    final builtins = ref.read(builtinTrainingRepositoryProvider);
+    if (await builtins.isBuiltinTrainingPinned(builtinTrainingId)) {
+      await builtins.unpinBuiltinTraining(builtinTrainingId);
     } else {
-      await _builtinTrainingRepository.pinBuiltinTraining(builtinTrainingId);
+      await builtins.pinBuiltinTraining(builtinTrainingId);
     }
     ref.invalidate(builtinTrainingCatalogProvider);
   }
@@ -392,12 +397,10 @@ class PinnedTrainings extends _$PinnedTrainings {
 /// builtins, each evaluated against the latest assessments.
 @Riverpod(keepAlive: true)
 Future<List<TrainingListItem>> allTrainings(Ref ref) async {
-  final builtins = ref.watch(builtinTrainingRepositoryProvider);
   final library = ref.watch(trainingLibraryProvider.future);
   final catalog = ref.watch(builtinTrainingCatalogProvider.future);
   return _buildTrainingList(
     library: await library,
-    builtins: builtins,
     catalog: await catalog,
     onlyPinned: false,
   );
