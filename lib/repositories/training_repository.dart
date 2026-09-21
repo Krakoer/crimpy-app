@@ -240,11 +240,21 @@ class RemoteTrainingRepository extends TrainingRepository {
   Future<SessionModel?> getSessionWithData(String sessionId) async {
     final data = await _apiClient.getSession(sessionId);
     final s = data['session'] as Map<String, dynamic>? ?? data;
-    final repDatas = (data['rep_datas'] as List<dynamic>? ?? [])
-        .cast<Map<String, dynamic>>();
 
-    final reps = repDatas.map(RepDataModel.fromJson).toList();
-    final itemResults = (data['item_results'] as List<dynamic>? ?? [])
+    // A collection the server could not read is left out of the answer rather
+    // than sent empty, so absent and empty are different states and are kept
+    // apart here. Reading the first as the second is what would tell the
+    // athlete the sensor measured nothing when nothing could be read at all.
+    // An absent key stays a missing collection rather than a crash: the cast
+    // below is on a nullable list on purpose. Krakoer/crimpy#130.
+    final rawRepDatas = data['rep_datas'] as List<dynamic>?;
+    final rawItemResults = data['item_results'] as List<dynamic>?;
+
+    final reps = (rawRepDatas ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(RepDataModel.fromJson)
+        .toList();
+    final itemResults = (rawItemResults ?? const [])
         .cast<Map<String, dynamic>>()
         .map(SessionItemResultModel.fromJson)
         .toList();
@@ -252,6 +262,8 @@ class RemoteTrainingRepository extends TrainingRepository {
       s,
       reps: reps,
       itemResults: itemResults,
+      repsUnavailable: rawRepDatas == null,
+      itemResultsUnavailable: rawItemResults == null,
       dataPoints: ForceCurve.fromJson(s['samples'] as Map<String, dynamic>?),
     );
   }

@@ -9,6 +9,7 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_overview_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_performance_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_reps_card.dart';
+import 'package:crimpy/views/screens/home_screen/history/widgets/session_data_unavailable_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_reported_items_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_feedback_card.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/session_raw_data_card.dart';
@@ -157,6 +158,16 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
           SessionOverviewCard(session: session),
           const SizedBox(height: 16),
 
+          // A read that failed says so, in place of the two cards that would
+          // have drawn what it held. Drawing nothing would read as a session
+          // the sensor measured nothing in, which is a different answer.
+          if (session.repsUnavailable) ...[
+            const SessionDataUnavailableCard(
+              what: 'The rep data for this session',
+            ),
+            const SizedBox(height: 16),
+          ],
+
           // Performance stats (if available)
           if (session.hasReps) ...[
             SessionPerformanceCard(
@@ -179,7 +190,12 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
 
           // What the athlete reported on the prescribed items. No rep carries
           // any of it, so this is the only place it shows up.
-          if (reported.isNotEmpty) ...[
+          if (session.itemResultsUnavailable) ...[
+            const SessionDataUnavailableCard(
+              what: 'What you reported on the prescribed items',
+            ),
+            const SizedBox(height: 16),
+          ] else if (reported.isNotEmpty) ...[
             SessionReportedItemsCard(items: reported),
             const SizedBox(height: 16),
           ],
