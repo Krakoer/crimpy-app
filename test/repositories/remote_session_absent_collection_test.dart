@@ -70,6 +70,10 @@ void main() {
       // server not answering 500 over one collection.
       expect(session.name, 'Repeaters 20mm');
       expect(session.durationInSeconds, 1800);
+      // The count is not answered either: the empty list standing in for the
+      // reps would otherwise be counted as none.
+      expect(session.repCount, isNull);
+      expect(session.hasReps, isFalse);
     },
   );
 
@@ -90,6 +94,9 @@ void main() {
       expect(session.itemResultsUnavailable, isFalse);
       expect(session.reps, isEmpty);
       expect(session.itemResults, isEmpty);
+      // A session that holds none of them still answers zero, which is a true
+      // count and the state absence has to stay distinct from.
+      expect(session.repCount, 0);
     },
   );
 

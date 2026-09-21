@@ -601,6 +601,11 @@ void _absentCollections() {
     expect(find.byType(SessionRepsCard), findsNothing);
     // The rest of the session is still drawn beside the notice.
     expect(find.byType(SessionOverviewCard), findsOneWidget);
+    // And the overview does not answer the count the notice just said could not
+    // be read: zero is the number a reader cannot tell from a session the
+    // sensor measured nothing in.
+    expect(find.text('N/A'), findsOneWidget);
+    expect(find.text('0'), findsNothing);
   });
 
   testWidgets('says the reported items could not be loaded', (tester) async {
@@ -608,7 +613,7 @@ void _absentCollections() {
 
     expect(
       find.textContaining(
-        'What you reported on the prescribed items could not be loaded',
+        'What you reported on this session could not be loaded',
       ),
       findsOneWidget,
     );

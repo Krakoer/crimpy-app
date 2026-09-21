@@ -401,8 +401,14 @@ class SessionModel {
   bool get hasReps => reps != null && reps!.isNotEmpty;
 
   /// How many reps the session holds, from the reps themselves once loaded and
-  /// from the listing otherwise. Null only when neither is available.
-  int? get repCount => reps?.length ?? reportedRepCount;
+  /// from the listing otherwise. Null when neither is available.
+  ///
+  /// A session whose reps could not be read is counted from the listing alone:
+  /// the empty list standing in for them would otherwise answer zero, which is
+  /// the number a reader cannot tell from a session the sensor measured nothing
+  /// in. That is the answer Krakoer/crimpy#130 exists to stop giving.
+  int? get repCount =>
+      (repsUnavailable ? null : reps?.length) ?? reportedRepCount;
 }
 
 class RepDataModel {

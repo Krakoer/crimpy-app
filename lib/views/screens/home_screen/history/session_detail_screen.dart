@@ -192,7 +192,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
           // any of it, so this is the only place it shows up.
           if (session.itemResultsUnavailable) ...[
             const SessionDataUnavailableCard(
-              what: 'What you reported on the prescribed items',
+              what: 'What you reported on this session',
             ),
             const SizedBox(height: 16),
           ] else if (reported.isNotEmpty) ...[
