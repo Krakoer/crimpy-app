@@ -5,10 +5,19 @@ import 'package:flutter_test/flutter_test.dart';
 /// Serves a library and counts every request the repository makes, so the round
 /// trips a library read costs can be asserted rather than reasoned about.
 class _CountingApiClient extends ApiClient {
-  _CountingApiClient(this.ids, {this.favourites = const <String>{}});
+  _CountingApiClient(
+    this.ids, {
+    this.favourites = const <String>{},
+    this.empty = const <String>{},
+  });
 
   final List<String> ids;
   final Set<String> favourites;
+
+  /// The trainings that really hold no items. The server answers those with an
+  /// empty array rather than leaving the key off, which is the distinction the
+  /// fallback turns on.
+  final Set<String> empty;
 
   int listCalls = 0;
   int detailCalls = 0;
@@ -46,12 +55,13 @@ class _CountingApiClient extends ApiClient {
               },
             ],
             'items': [
-              {
-                'id': '$id-item',
-                'type': 'free',
-                'position': 0,
-                'comment': 'from the list',
-              },
+              if (!empty.contains(id))
+                {
+                  'id': '$id-item',
+                  'type': 'free',
+                  'position': 0,
+                  'comment': 'from the list',
+                },
             ],
           }
         else
@@ -161,6 +171,24 @@ void main() {
       expect(client.detailCalls, 0);
     });
 
+    test('does not refetch a training that really holds no items', () async {
+      final client = _CountingApiClient(
+        const ['t-0', 't-1'],
+        empty: const {'t-1'},
+      );
+
+      final trainings = await RemoteTrainingRepository(
+        client,
+      ).getAllTrainings();
+
+      // An empty array is not an absent key. Reading the two as the same thing
+      // would send a library with one freshly created training straight back to
+      // a detail read per training.
+      expect(trainings.last.items, isEmpty);
+      expect(trainings.first.items, hasLength(1));
+      expect(client.detailCalls, 0);
+    });
+
     test('falls back to detail reads against a server that ignores the '
         'parameter', () async {
       final client = _DeafApiClient([
@@ -198,6 +226,16 @@ class _DeafApiClient extends _CountingApiClient {
   }) async {
     listCalls++;
     listedWithItems.add(includeItems);
-    return [for (final id in ids) row(id)];
+    return [
+      for (final id in ids)
+        {
+          ...row(id),
+          // The cheap row a server of that vintage builds carries the shallow
+          // assessment snapshot, with no training_id on it. Answering one here
+          // would make the fake a better server than the one it stands for.
+          'assessment': {...row(id)['assessment'] as Map<String, dynamic>}
+            ..remove('training_id'),
+        },
+    ];
   }
 }
