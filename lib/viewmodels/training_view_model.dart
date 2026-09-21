@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/builtin_training.dart';
 import 'package:crimpy/models/session_filter.dart';
 import 'package:crimpy/repositories/builtin_preferences_repository.dart';
 import 'package:crimpy/repositories/remote_assessment_repository.dart';
@@ -59,22 +61,87 @@ BuiltinTrainingRepository builtinTrainingRepository(Ref ref) {
   );
 }
 
+/// The athlete's training library, read once and shared by everything that
+/// lists trainings.
+///
+/// The library comes back in a single request carrying every training in full,
+/// so the favourites are a filter over what is already in hand rather than a
+/// narrower read. Four providers used to call the repository themselves and
+/// each one put the byte identical request on the wire: a home screen pull sent
+/// two at the same time. They all derive from this now, and the fetch happens
+/// once.
+///
+/// This is the provider to invalidate to fetch the library again. Invalidating
+/// one of the lists below rebuilds it from the library already held and never
+/// reaches the server, which is what makes a pinned or builtin change free.
+@Riverpod(keepAlive: true)
+Future<List<Training>> trainingLibrary(Ref ref) =>
+    ref.watch(trainingRepositoryProvider).getAllTrainings();
+
+typedef BuiltinTrainingCatalog = ({
+  List<BuiltinTrainingModel> trainings,
+  List<String> pinnedIds,
+  List<AssessmentModel> assessments,
+  Map<String, ({double? weightRight, double? weightLeft})> customWeights,
+});
+
+/// Everything the builtin half of a training list is built from, read once and
+/// shared the way the library is.
+///
+/// The pinned list and the full list show the same builtins against the same
+/// pins, assessments and custom weights. Reading those per list put the same
+/// three requests on the wire twice, which is the library duplication one layer
+/// down. None of it belongs to the library, so a pin change drops this and
+/// leaves the library alone, and a pull drops both.
+///
+/// The reads are independent and go out together, so the catalog costs one
+/// round trip rather than three. It reads the assessments and the weights even
+/// when the athlete has pinned nothing, where the pinned list alone used to
+/// stop at the pins: making them conditional would mean a list that watches
+/// them only sometimes, which is the staleness the shared provider exists to
+/// remove. It is two small requests on a cold start, against a list that
+/// evaluates a builtin the moment one is pinned.
+@Riverpod(keepAlive: true)
+Future<BuiltinTrainingCatalog> builtinTrainingCatalog(Ref ref) async {
+  final builtins = ref.watch(builtinTrainingRepositoryProvider);
+  final trainings = builtins.getBuiltinTrainings();
+  final pinnedIds = builtins.getPinnedBuiltinTrainingIds();
+  final assessments = builtins.fetchAllAssessments();
+  final customWeights = builtins.fetchAllCustomWeights();
+
+  // Waited on together rather than awaited one after another. Awaiting them in
+  // order means the first failure leaves the reads behind it running with
+  // nobody listening, and an offline device answers each of those with an error
+  // that reaches the zone as a crash instead of the one error the screen shows.
+  // Future.wait listens to all four and rethrows the first, which keeps the
+  // ApiException the offline handling reads.
+  await Future.wait([trainings, pinnedIds, assessments, customWeights]);
+
+  return (
+    trainings: await trainings,
+    pinnedIds: await pinnedIds,
+    assessments: await assessments,
+    customWeights: await customWeights,
+  );
+}
+
 /// Returns favorite trainings.
 @Riverpod(keepAlive: true)
 class FavTrainings extends _$FavTrainings {
-  late TrainingRepository _trainingRepository;
-
   @override
-  FutureOr<List<Training>> build() {
-    _trainingRepository = ref.watch(trainingRepositoryProvider);
-    return _trainingRepository.getAllTrainings(onlyFavs: true);
+  Future<List<Training>> build() async {
+    final library = await ref.watch(trainingLibraryProvider.future);
+    return library.where((training) => training.isFavorite).toList();
   }
 
   /// Toggle the favorite status for a given training.
+  ///
+  /// The flag lives on the training, so the library is what went out of date:
+  /// invalidating it refreshes this list and every other view of the library
+  /// with one read.
   Future<void> toggleFav(String trainingId) async {
-    await _trainingRepository.toggleFav(trainingId);
-    ref.invalidate(trainingsProvider);
-    ref.invalidateSelf();
+    await ref.read(trainingRepositoryProvider).toggleFav(trainingId);
+    ref.invalidate(trainingLibraryProvider);
   }
 }
 
@@ -86,16 +153,17 @@ class Trainings extends _$Trainings {
   @override
   Future<List<Training>> build() {
     _trainingRepository = ref.watch(trainingRepositoryProvider);
-    return _trainingRepository.getAllTrainings();
+    return ref.watch(trainingLibraryProvider.future);
   }
 
-  /// Runs a repository mutation and reloads the list. `invalidateSelf` re-emits
-  /// the previous value as loading, so the list keeps its content on screen
-  /// instead of flashing empty for the duration of the write.
+  /// Runs a repository mutation and reloads the library. Invalidating it
+  /// re-emits the previous value as loading here, so the list keeps its content
+  /// on screen instead of flashing empty for the duration of the write, and the
+  /// favourites and the home screen lists pick the write up from the same read.
   Future<void> _mutate(Future<void> Function() mutation) async {
     try {
       await mutation();
-      ref.invalidateSelf();
+      ref.invalidate(trainingLibraryProvider);
       if (ref.mounted) await future;
     } catch (e, stackTrace) {
       if (ref.mounted) {
@@ -105,24 +173,16 @@ class Trainings extends _$Trainings {
   }
 
   /// Save a new training.
-  Future<void> saveTraining(Training training) => _mutate(() async {
-    await _trainingRepository.saveTraining(training);
-    ref.invalidate(favTrainingsProvider);
-    ref.invalidate(allTrainingsProvider);
-  });
+  Future<void> saveTraining(Training training) =>
+      _mutate(() => _trainingRepository.saveTraining(training));
 
   /// Update an existing training.
-  Future<void> updateTraining(Training training) => _mutate(() async {
-    await _trainingRepository.updateTraining(training);
-    ref.invalidate(favTrainingsProvider);
-    ref.invalidate(allTrainingsProvider);
-  });
+  Future<void> updateTraining(Training training) =>
+      _mutate(() => _trainingRepository.updateTraining(training));
 
   /// Delete a training.
-  Future<void> deleteTraining(String trainingId) => _mutate(() async {
-    await _trainingRepository.deleteTraining(trainingId);
-    ref.invalidate(favTrainingsProvider);
-  });
+  Future<void> deleteTraining(String trainingId) =>
+      _mutate(() => _trainingRepository.deleteTraining(trainingId));
 }
 
 /// Returns the list of all sessions, and allows the creation of new sessions.
@@ -272,40 +332,40 @@ Future<List<SessionModel>> filteredSessions(
 ///
 /// The pinned list and the full list differ only in how much they keep, so they
 /// share this and cannot drift apart.
-Future<List<TrainingListItem>> _buildTrainingList({
-  required TrainingRepository trainings,
-  required BuiltinTrainingRepository builtins,
+///
+/// Takes the library and the catalog rather than the repositories: both lists
+/// are built from the same two reads, and the pinned one narrows them here
+/// instead of asking the server for narrower answers it does not have.
+List<TrainingListItem> _buildTrainingList({
+  required List<Training> library,
+  required BuiltinTrainingCatalog catalog,
   required bool onlyPinned,
-}) async {
-  final regular = await trainings.getAllTrainings(onlyFavs: onlyPinned);
+}) {
+  final regular = onlyPinned
+      ? library.where((training) => training.isFavorite).toList()
+      : library;
   final regularItems = regular.map(TrainingListItem.regular).toList();
 
-  final allBuiltins = await builtins.getBuiltinTrainings();
-  final pinnedIds = await builtins.getPinnedBuiltinTrainingIds();
   final selected = onlyPinned
-      ? allBuiltins.where((b) => pinnedIds.contains(b.id)).toList()
-      : allBuiltins;
-
-  if (selected.isEmpty) return regularItems;
-
-  // Fetch all shared data once to avoid N+1 API calls.
-  final allAssessments = await builtins.fetchAllAssessments();
-  final allWeights = await builtins.fetchAllCustomWeights();
+      ? catalog.trainings
+            .where((builtin) => catalog.pinnedIds.contains(builtin.id))
+            .toList()
+      : catalog.trainings;
 
   final builtinItems = selected.map((builtin) {
-    final w = allWeights[builtin.id];
-    final result = builtins.evaluateBuiltinSync(
+    final weights = catalog.customWeights[builtin.id];
+    final result = BuiltinTrainingRepository.evaluateBuiltinSync(
       builtin,
-      allAssessments,
-      customWeightRight: w?.weightRight,
-      customWeightLeft: w?.weightLeft,
+      catalog.assessments,
+      customWeightRight: weights?.weightRight,
+      customWeightLeft: weights?.weightLeft,
     );
     return TrainingListItem.builtin(
       builtin,
       result.isAvailable,
       result.missing,
       result.training,
-      pinnedIds.contains(builtin.id),
+      catalog.pinnedIds.contains(builtin.id),
     );
   }).toList();
 
@@ -315,43 +375,42 @@ Future<List<TrainingListItem>> _buildTrainingList({
 /// Provider for pinned builtin trainings (with favorites).
 @Riverpod(keepAlive: true)
 class PinnedTrainings extends _$PinnedTrainings {
-  late BuiltinTrainingRepository _builtinTrainingRepository;
-
   @override
-  Future<List<TrainingListItem>> build() {
-    _builtinTrainingRepository = ref.watch(builtinTrainingRepositoryProvider);
+  Future<List<TrainingListItem>> build() async {
+    final library = ref.watch(trainingLibraryProvider.future);
+    final catalog = ref.watch(builtinTrainingCatalogProvider.future);
     return _buildTrainingList(
-      trainings: ref.watch(trainingRepositoryProvider),
-      builtins: _builtinTrainingRepository,
+      library: await library,
+      catalog: await catalog,
       onlyPinned: true,
     );
   }
 
+  /// Pins or unpins a builtin training.
+  ///
+  /// A pin belongs to the builtin catalog and not to the library, so dropping
+  /// the catalog refreshes both lists, which show the same heart against the
+  /// same builtins, without asking for the library again.
   Future<void> togglePin(String builtinTrainingId) async {
-    final isPinned = await _builtinTrainingRepository.isBuiltinTrainingPinned(
-      builtinTrainingId,
-    );
-    if (isPinned) {
-      await _builtinTrainingRepository.unpinBuiltinTraining(builtinTrainingId);
+    final builtins = ref.read(builtinTrainingRepositoryProvider);
+    if (await builtins.isBuiltinTrainingPinned(builtinTrainingId)) {
+      await builtins.unpinBuiltinTraining(builtinTrainingId);
     } else {
-      await _builtinTrainingRepository.pinBuiltinTraining(builtinTrainingId);
+      await builtins.pinBuiltinTraining(builtinTrainingId);
     }
-    ref.invalidateSelf();
+    ref.invalidate(builtinTrainingCatalogProvider);
   }
 }
 
-/// Provider for combined training list (regular + builtin trainings).
+/// Every training the athlete can start: their own library followed by the
+/// builtins, each evaluated against the latest assessments.
 @Riverpod(keepAlive: true)
-class AllTrainings extends _$AllTrainings {
-  @override
-  Future<List<TrainingListItem>> build() => _buildTrainingList(
-    trainings: ref.watch(trainingRepositoryProvider),
-    builtins: ref.watch(builtinTrainingRepositoryProvider),
+Future<List<TrainingListItem>> allTrainings(Ref ref) async {
+  final library = ref.watch(trainingLibraryProvider.future);
+  final catalog = ref.watch(builtinTrainingCatalogProvider.future);
+  return _buildTrainingList(
+    library: await library,
+    catalog: await catalog,
     onlyPinned: false,
   );
-
-  Future<void> refreshBuiltinAvailability() async {
-    ref.invalidateSelf();
-    await future;
-  }
 }

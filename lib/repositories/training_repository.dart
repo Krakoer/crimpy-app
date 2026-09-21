@@ -12,7 +12,9 @@ import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/models/session_filter.dart';
 
 abstract class TrainingRepository {
-  Future<List<Training>> getAllTrainings({bool onlyFavs = false});
+  /// The athlete's whole library. There is no narrower read: the favourites
+  /// are a filter over this, applied by the provider that holds it.
+  Future<List<Training>> getAllTrainings();
 
   /// One training by id, or null when it no longer exists. Used to read a
   /// played session against the items it was run from.
@@ -55,8 +57,7 @@ class LocalTrainingRepository extends TrainingRepository {
     : _database = database ?? gDatabase;
 
   @override
-  Future<List<Training>> getAllTrainings({bool onlyFavs = false}) =>
-      _database.getAllTrainings(onlyFavs: onlyFavs);
+  Future<List<Training>> getAllTrainings() => _database.getAllTrainings();
 
   @override
   Future<Training?> getTraining(String trainingId) =>
@@ -155,11 +156,8 @@ class RemoteTrainingRepository extends TrainingRepository {
   /// falls back to reading them one at a time, which is what the whole library
   /// used to cost.
   @override
-  Future<List<Training>> getAllTrainings({bool onlyFavs = false}) async {
-    final list = await _apiClient.getTrainings(includeItems: true);
-    final rows = list
-        .where((t) => !onlyFavs || (t['is_favorite'] as bool? ?? false))
-        .toList();
+  Future<List<Training>> getAllTrainings() async {
+    final rows = await _apiClient.getTrainings(includeItems: true);
 
     // A server that predates the items on the list ignores the parameter and
     // answers the cheap rows, which carry no items key at all. Reading those

@@ -47,8 +47,13 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen>
           onRefresh: () async {
             ref.invalidate(programsProvider);
             ref.invalidate(weekDetailProvider);
+            // The two reads behind the list. Refreshing the list itself would
+            // rebuild it from what it already holds and never ask the server,
+            // which is the whole point of a pull.
+            ref.invalidate(trainingLibraryProvider);
+            ref.invalidate(builtinTrainingCatalogProvider);
             await Future.wait([
-              ref.refresh(allTrainingsProvider.future),
+              ref.read(allTrainingsProvider.future),
               ref.read(activeProgramProvider.future),
               ref.read(todayTrainingProvider.future),
             ]);

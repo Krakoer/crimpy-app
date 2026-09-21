@@ -126,7 +126,13 @@ class FavoriteTrainingList extends ConsumerWidget {
             children: [
               Text('Error: $error'),
               ElevatedButton(
-                onPressed: () => ref.invalidate(pinnedTrainingsProvider),
+                // The read that failed was one of the two this list is built
+                // from. Invalidating the list alone would rebuild it from the
+                // same failed future and never ask again.
+                onPressed: () {
+                  ref.invalidate(trainingLibraryProvider);
+                  ref.invalidate(builtinTrainingCatalogProvider);
+                },
                 child: const Text('Retry'),
               ),
             ],
@@ -190,9 +196,10 @@ class PinTrainingDialog extends ConsumerWidget {
                                 .read(favTrainingsProvider.notifier)
                                 .toggleFav(item.id);
                           }
-                          // Invalidate both providers to refresh the dialog and home screen
-                          ref.invalidate(allTrainingsProvider);
-                          ref.invalidate(pinnedTrainingsProvider);
+                          // Nothing to invalidate here: a favourite is a field
+                          // on the training and a pin is not, so each toggle
+                          // drops exactly what it changed and both lists are
+                          // rebuilt from it.
                         },
                         title: Text(
                           item.name,
@@ -222,7 +229,12 @@ class PinTrainingDialog extends ConsumerWidget {
             children: [
               Text('Error: $error'),
               ElevatedButton(
-                onPressed: () => ref.invalidate(allTrainingsProvider),
+                // As above: the failure came from a read behind this list,
+                // so that is what has to be dropped.
+                onPressed: () {
+                  ref.invalidate(trainingLibraryProvider);
+                  ref.invalidate(builtinTrainingCatalogProvider);
+                },
                 child: const Text('Retry'),
               ),
             ],

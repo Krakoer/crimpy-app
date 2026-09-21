@@ -458,7 +458,7 @@ final class AssessmentsProvider
   }
 }
 
-String _$assessmentsHash() => r'bc08825cd54507416495e7407811aa39cb75d5c3';
+String _$assessmentsHash() => r'98ba7417e4cda6708783346f6729bf247ff28ee7';
 
 /// Returns the list of assessments.
 /// Allow to filter on the assessment measured.

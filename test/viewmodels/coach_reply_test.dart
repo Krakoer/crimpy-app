@@ -29,8 +29,7 @@ class _FakeRepository extends TrainingRepository {
   }
 
   @override
-  Future<List<Training>> getAllTrainings({bool onlyFavs = false}) =>
-      throw UnimplementedError();
+  Future<List<Training>> getAllTrainings() => throw UnimplementedError();
 
   @override
   Future<Training?> getTraining(String trainingId) =>

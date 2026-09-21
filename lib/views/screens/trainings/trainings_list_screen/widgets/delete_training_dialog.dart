@@ -33,10 +33,9 @@ class DeleteTrainingDialog extends ConsumerWidget {
         ),
         TextButton(
           onPressed: () {
+            // The delete drops the library, and the full list is built from
+            // it, so it re-evaluates the builtins on its own.
             ref.read(trainingsProvider.notifier).deleteTraining(trainingId);
-            ref
-                .read(allTrainingsProvider.notifier)
-                .refreshBuiltinAvailability();
             Navigator.of(context).pop();
           },
           style: TextButton.styleFrom(

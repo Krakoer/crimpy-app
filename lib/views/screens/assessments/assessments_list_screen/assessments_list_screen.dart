@@ -226,7 +226,7 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
             // up rather than resolving after the spinner has gone.
             onRefresh: () async {
               ref.invalidate(assessmentsProvider);
-              ref.invalidate(trainingsProvider);
+              ref.invalidate(trainingLibraryProvider);
               ref.invalidate(prescribedAssessmentTrainingsProvider);
               await Future.wait([
                 ref.read(assessmentsProvider(null).future),

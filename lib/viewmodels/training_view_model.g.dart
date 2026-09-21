@@ -221,6 +221,178 @@ final class BuiltinTrainingRepositoryProvider
 String _$builtinTrainingRepositoryHash() =>
     r'3129edbdb68f0acafe4db2b37483944432d7e7af';
 
+/// The athlete's training library, read once and shared by everything that
+/// lists trainings.
+///
+/// The library comes back in a single request carrying every training in full,
+/// so the favourites are a filter over what is already in hand rather than a
+/// narrower read. Four providers used to call the repository themselves and
+/// each one put the byte identical request on the wire: a home screen pull sent
+/// two at the same time. They all derive from this now, and the fetch happens
+/// once.
+///
+/// This is the provider to invalidate to fetch the library again. Invalidating
+/// one of the lists below rebuilds it from the library already held and never
+/// reaches the server, which is what makes a pinned or builtin change free.
+
+@ProviderFor(trainingLibrary)
+const trainingLibraryProvider = TrainingLibraryProvider._();
+
+/// The athlete's training library, read once and shared by everything that
+/// lists trainings.
+///
+/// The library comes back in a single request carrying every training in full,
+/// so the favourites are a filter over what is already in hand rather than a
+/// narrower read. Four providers used to call the repository themselves and
+/// each one put the byte identical request on the wire: a home screen pull sent
+/// two at the same time. They all derive from this now, and the fetch happens
+/// once.
+///
+/// This is the provider to invalidate to fetch the library again. Invalidating
+/// one of the lists below rebuilds it from the library already held and never
+/// reaches the server, which is what makes a pinned or builtin change free.
+
+final class TrainingLibraryProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Training>>,
+          List<Training>,
+          FutureOr<List<Training>>
+        >
+    with $FutureModifier<List<Training>>, $FutureProvider<List<Training>> {
+  /// The athlete's training library, read once and shared by everything that
+  /// lists trainings.
+  ///
+  /// The library comes back in a single request carrying every training in full,
+  /// so the favourites are a filter over what is already in hand rather than a
+  /// narrower read. Four providers used to call the repository themselves and
+  /// each one put the byte identical request on the wire: a home screen pull sent
+  /// two at the same time. They all derive from this now, and the fetch happens
+  /// once.
+  ///
+  /// This is the provider to invalidate to fetch the library again. Invalidating
+  /// one of the lists below rebuilds it from the library already held and never
+  /// reaches the server, which is what makes a pinned or builtin change free.
+  const TrainingLibraryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'trainingLibraryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$trainingLibraryHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Training>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Training>> create(Ref ref) {
+    return trainingLibrary(ref);
+  }
+}
+
+String _$trainingLibraryHash() => r'682832b945d463a239c802bba42d197a7bd28153';
+
+/// Everything the builtin half of a training list is built from, read once and
+/// shared the way the library is.
+///
+/// The pinned list and the full list show the same builtins against the same
+/// pins, assessments and custom weights. Reading those per list put the same
+/// three requests on the wire twice, which is the library duplication one layer
+/// down. None of it belongs to the library, so a pin change drops this and
+/// leaves the library alone, and a pull drops both.
+///
+/// The reads are independent and go out together, so the catalog costs one
+/// round trip rather than three. It reads the assessments and the weights even
+/// when the athlete has pinned nothing, where the pinned list alone used to
+/// stop at the pins: making them conditional would mean a list that watches
+/// them only sometimes, which is the staleness the shared provider exists to
+/// remove. It is two small requests on a cold start, against a list that
+/// evaluates a builtin the moment one is pinned.
+
+@ProviderFor(builtinTrainingCatalog)
+const builtinTrainingCatalogProvider = BuiltinTrainingCatalogProvider._();
+
+/// Everything the builtin half of a training list is built from, read once and
+/// shared the way the library is.
+///
+/// The pinned list and the full list show the same builtins against the same
+/// pins, assessments and custom weights. Reading those per list put the same
+/// three requests on the wire twice, which is the library duplication one layer
+/// down. None of it belongs to the library, so a pin change drops this and
+/// leaves the library alone, and a pull drops both.
+///
+/// The reads are independent and go out together, so the catalog costs one
+/// round trip rather than three. It reads the assessments and the weights even
+/// when the athlete has pinned nothing, where the pinned list alone used to
+/// stop at the pins: making them conditional would mean a list that watches
+/// them only sometimes, which is the staleness the shared provider exists to
+/// remove. It is two small requests on a cold start, against a list that
+/// evaluates a builtin the moment one is pinned.
+
+final class BuiltinTrainingCatalogProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<BuiltinTrainingCatalog>,
+          BuiltinTrainingCatalog,
+          FutureOr<BuiltinTrainingCatalog>
+        >
+    with
+        $FutureModifier<BuiltinTrainingCatalog>,
+        $FutureProvider<BuiltinTrainingCatalog> {
+  /// Everything the builtin half of a training list is built from, read once and
+  /// shared the way the library is.
+  ///
+  /// The pinned list and the full list show the same builtins against the same
+  /// pins, assessments and custom weights. Reading those per list put the same
+  /// three requests on the wire twice, which is the library duplication one layer
+  /// down. None of it belongs to the library, so a pin change drops this and
+  /// leaves the library alone, and a pull drops both.
+  ///
+  /// The reads are independent and go out together, so the catalog costs one
+  /// round trip rather than three. It reads the assessments and the weights even
+  /// when the athlete has pinned nothing, where the pinned list alone used to
+  /// stop at the pins: making them conditional would mean a list that watches
+  /// them only sometimes, which is the staleness the shared provider exists to
+  /// remove. It is two small requests on a cold start, against a list that
+  /// evaluates a builtin the moment one is pinned.
+  const BuiltinTrainingCatalogProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'builtinTrainingCatalogProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$builtinTrainingCatalogHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<BuiltinTrainingCatalog> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<BuiltinTrainingCatalog> create(Ref ref) {
+    return builtinTrainingCatalog(ref);
+  }
+}
+
+String _$builtinTrainingCatalogHash() =>
+    r'73304f1d3fa613b190d6cfe61a02a51bdaa42d86';
+
 /// Returns favorite trainings.
 
 @ProviderFor(FavTrainings)
@@ -249,7 +421,7 @@ final class FavTrainingsProvider
   FavTrainings create() => FavTrainings();
 }
 
-String _$favTrainingsHash() => r'ddbb4caa73c0b74005a2d732af763bd4353f241a';
+String _$favTrainingsHash() => r'9252c05e9626563b1ff40c82a5afb59adbe1f50e';
 
 /// Returns favorite trainings.
 
@@ -300,7 +472,7 @@ final class TrainingsProvider
   Trainings create() => Trainings();
 }
 
-String _$trainingsHash() => r'3dacd25a1d5852b99536da3ecc4757300963b71d';
+String _$trainingsHash() => r'6ece01f4daab055d6ff890811a4e08054c250b1a';
 
 /// Returns all trainings and allows creating, updating, and deleting them.
 
@@ -714,7 +886,7 @@ final class PinnedTrainingsProvider
   PinnedTrainings create() => PinnedTrainings();
 }
 
-String _$pinnedTrainingsHash() => r'340e0adc411e5fa2d647013997a27ce8ab1a750d';
+String _$pinnedTrainingsHash() => r'b4bbc566fcc320c240ffa417fd602f9f8a1177c2';
 
 /// Provider for pinned builtin trainings (with favorites).
 
@@ -743,15 +915,27 @@ abstract class _$PinnedTrainings
   }
 }
 
-/// Provider for combined training list (regular + builtin trainings).
+/// Every training the athlete can start: their own library followed by the
+/// builtins, each evaluated against the latest assessments.
 
-@ProviderFor(AllTrainings)
+@ProviderFor(allTrainings)
 const allTrainingsProvider = AllTrainingsProvider._();
 
-/// Provider for combined training list (regular + builtin trainings).
+/// Every training the athlete can start: their own library followed by the
+/// builtins, each evaluated against the latest assessments.
+
 final class AllTrainingsProvider
-    extends $AsyncNotifierProvider<AllTrainings, List<TrainingListItem>> {
-  /// Provider for combined training list (regular + builtin trainings).
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<TrainingListItem>>,
+          List<TrainingListItem>,
+          FutureOr<List<TrainingListItem>>
+        >
+    with
+        $FutureModifier<List<TrainingListItem>>,
+        $FutureProvider<List<TrainingListItem>> {
+  /// Every training the athlete can start: their own library followed by the
+  /// builtins, each evaluated against the latest assessments.
   const AllTrainingsProvider._()
     : super(
         from: null,
@@ -768,33 +952,14 @@ final class AllTrainingsProvider
 
   @$internal
   @override
-  AllTrainings create() => AllTrainings();
-}
+  $FutureProviderElement<List<TrainingListItem>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
-String _$allTrainingsHash() => r'839d0c316ec92344cf3af4f415aa62093b76aed0';
-
-/// Provider for combined training list (regular + builtin trainings).
-
-abstract class _$AllTrainings extends $AsyncNotifier<List<TrainingListItem>> {
-  FutureOr<List<TrainingListItem>> build();
-  @$mustCallSuper
   @override
-  void runBuild() {
-    final created = build();
-    final ref =
-        this.ref
-            as $Ref<AsyncValue<List<TrainingListItem>>, List<TrainingListItem>>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<
-                AsyncValue<List<TrainingListItem>>,
-                List<TrainingListItem>
-              >,
-              AsyncValue<List<TrainingListItem>>,
-              Object?,
-              Object?
-            >;
-    element.handleValue(ref, created);
+  FutureOr<List<TrainingListItem>> create(Ref ref) {
+    return allTrainings(ref);
   }
 }
+
+String _$allTrainingsHash() => r'a412e15260a6cd0c32d79d7805af98d6266bd264';
