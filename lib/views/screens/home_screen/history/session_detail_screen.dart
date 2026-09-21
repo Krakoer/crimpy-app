@@ -142,6 +142,14 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   ) {
     final sessionColor = CrimpyTheme.activityColor(session.activity);
     final reported = _resolveReportedItems(ref, session);
+    // A report answers a prescribed item, so a session that named no prescription
+    // and no training could never have carried one. Saying its reports could not
+    // be read would be noise on the sessions least able to explain it, on every
+    // logged climb the athlete opens while the read is failing.
+    final couldHaveReports =
+        session.prescriptionItems != null ||
+        session.trainingId != null ||
+        session.programSessionId != null;
     final resolvedBlocks = _resolveBlocks(ref, session);
     final blocks = resolvedBlocks.value;
     // A session whose blocks are still resolving has no answer to give yet, and
@@ -190,7 +198,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
 
           // What the athlete reported on the prescribed items. No rep carries
           // any of it, so this is the only place it shows up.
-          if (session.itemResultsUnavailable) ...[
+          if (session.itemResultsUnavailable && couldHaveReports) ...[
             const SessionDataUnavailableCard(
               what: 'What you reported on this session',
             ),

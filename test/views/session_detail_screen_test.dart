@@ -580,11 +580,13 @@ void _absentCollections() {
     bool reps = false,
     bool itemResults = false,
     List<RepDataModel> loaded = const [],
+    String? trainingId = 'training-1',
   }) => SessionModel(
     id: 'session-1',
     name: 'Repeaters 20mm',
     isAssessment: false,
     origin: SessionOrigin.played,
+    trainingId: trainingId,
     reps: loaded,
     repsUnavailable: reps,
     itemResultsUnavailable: itemResults,
@@ -618,6 +620,17 @@ void _absentCollections() {
       findsOneWidget,
     );
     expect(find.byType(SessionReportedItemsCard), findsNothing);
+  });
+
+  // A session that named no prescription and no training was never asked to
+  // report anything, so there is nothing for a failed report read to be about.
+  testWidgets('says nothing about reports a session could never have carried', (
+    tester,
+  ) async {
+    await _pump(tester, unavailable(itemResults: true, trainingId: null));
+
+    expect(find.byType(SessionDataUnavailableCard), findsNothing);
+    expect(find.byType(SessionOverviewCard), findsOneWidget);
   });
 
   // The other half of the contract: a session that genuinely holds none of them
