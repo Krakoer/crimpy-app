@@ -149,23 +149,35 @@ class RemoteTrainingRepository extends TrainingRepository {
 
   /// The athlete's library, each training read in full.
   ///
-  /// The details are fetched through [inParallel] rather than all at once: a
-  /// library of fifty trainings would otherwise put fifty requests on the wire
-  /// every time a tab reloads it.
+  /// One request against a server that knows how to put the items on the list,
+  /// so a library of fifty trainings costs a single round trip rather than the
+  /// list followed by a detail read per training. Against one that does not it
+  /// falls back to reading them one at a time, which is what the whole library
+  /// used to cost.
   @override
   Future<List<Training>> getAllTrainings({bool onlyFavs = false}) async {
-    final list = await _apiClient.getTrainings();
-    final trainings = list
+    final list = await _apiClient.getTrainings(includeItems: true);
+    final rows = list
         .where((t) => !onlyFavs || (t['is_favorite'] as bool? ?? false))
         .toList();
 
-    final results = await inParallel(
-      trainings.map(
-        (t) =>
-            () => _fetchTraining(t['id'] as String),
+    // A server that predates the items on the list ignores the parameter and
+    // answers the cheap rows, which carry no items key at all. Reading those
+    // as trainings would hand the athlete a library where nothing has any
+    // steps, with no error to say why, so they are read one at a time instead,
+    // the way the whole library used to be. A training that really holds no
+    // items answers with an empty array and is not fetched again.
+    if (rows.every((row) => row.containsKey('items'))) {
+      return rows.map(Training.fromJson).toList();
+    }
+
+    final fetched = await inParallel(
+      rows.map(
+        (row) =>
+            () => _fetchTraining(row['id'] as String),
       ),
     );
-    return results.whereType<Training>().toList();
+    return fetched.whereType<Training>().toList();
   }
 
   @override
