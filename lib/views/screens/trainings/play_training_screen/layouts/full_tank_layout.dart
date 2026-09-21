@@ -888,7 +888,7 @@ class _TankContent extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: _style(
           18,
-          color: CrimpyTheme.primaryOrange,
+          color: palette.accent,
           weight: FontWeight.w700,
           letterSpacing: 1,
         ),
@@ -962,7 +962,7 @@ class _TankContent extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: _style(
           18,
-          color: CrimpyTheme.primaryOrange,
+          color: palette.accent,
           weight: FontWeight.w700,
           letterSpacing: 1,
         ),

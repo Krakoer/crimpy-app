@@ -24,9 +24,6 @@ Future<void> showNoteDialog(BuildContext context, String text) =>
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            style: TextButton.styleFrom(
-              foregroundColor: CrimpyTheme.primaryOrange,
-            ),
             child: const Text('Close'),
           ),
         ],

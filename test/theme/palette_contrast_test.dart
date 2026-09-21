@@ -174,15 +174,27 @@ final Map<String, Color> scannedAccents = {
 /// answer rather than its question, and one faded by an alpha is not the token
 /// it names any more.
 final RegExp resolvedByTheme = RegExp(
-  r'textOn\(|markOn\(|tintOf\(|withValues\(|withOpacity\(',
+  r'(?:textOn|markOn|tintOf|withValues|withOpacity)\('
+  r'(?:[^()]|\([^()]*\))*\)',
 );
+
+/// [value] with every sub-expression the theme has already answered removed, so
+/// what is left is whatever the widget still writes bare.
+///
+/// Cut out rather than skipped over: a ternary with one resolved branch used to
+/// take the whole argument out of the scan, which is how
+/// `isRest ? statusSuccess : textOn(primaryOrange)` hid its first branch.
+String withoutResolved(String value) => value.replaceAll(resolvedByTheme, '');
 
 /// Where a colour that is painted on something can be written. `copyWith` is
 /// here because a run screen header spent a whole review round at 4.05:1 inside
 /// `textTheme.headlineMedium!.copyWith(color: ...)`, which is not a TextStyle
-/// constructor to anything reading the source.
+/// constructor to anything reading the source. Anything ending in `style` is
+/// here for the same reason: full_tank_layout builds every one of its labels
+/// through a local `_style(size, color: ...)`, and two step titles sat at
+/// 4.05:1 inside it.
 final RegExp styleOpeners = RegExp(
-  r'\b(TextStyle|Icon|FaIcon|copyWith|styleFrom)\(',
+  r'\b(\w*[Ss]tyle|Icon|FaIcon|copyWith|styleFrom)\(',
 );
 
 /// The value of a `color:` argument, up to the comma that ends it. Spelled
@@ -194,7 +206,50 @@ final RegExp colourArgument = RegExp(
   r'\s*((?:[^,()]|\((?:[^()]|\([^()]*\))*\))*)',
 );
 final RegExp fontSizeArgument = RegExp(r'fontSize:\s*([^\n,]*)');
+
+/// A size given as the first positional argument rather than as `fontSize:`,
+/// which is how full_tank_layout's `_style(22, color: ...)` states it.
+final RegExp positionalSize = RegExp(r'^\w+\(\s*(\d+(?:\.\d+)?)\s*,');
 final RegExp numberLiteral = RegExp(r'\d+(?:\.\d+)?');
+
+/// A type size computed from the screen and bounded, which is the one shape in
+/// this app where the size is not written at the call: the run screen's timer
+/// is `(availableHeight * 0.06).clamp(32.0, 48.0)`. The lower bound is the size
+/// to judge it by, since that is the smallest it can ever render.
+final RegExp clampedSize = RegExp(r'\.clamp\(\s*(\d+(?:\.\d+)?)');
+
+/// Where a name used as a `fontSize` was bound, one hop, in the same file.
+final RegExp localBinding = RegExp(
+  r'(?:final|var|double)\s+(\w+)\s*=\s*([^;]*);',
+);
+
+/// The smallest size [expression] can render at, or null when the scan cannot
+/// tell. A literal in the expression answers directly; a bare name is resolved
+/// one hop to its binding in the same file, preferring the lower bound of a
+/// `clamp` over the arithmetic that feeds it.
+double? smallestSize(String expression, Map<String, String> bindings) {
+  double? smallestIn(String text) {
+    final clamped = clampedSize.firstMatch(text);
+    if (clamped != null) return double.parse(clamped.group(1)!);
+    final written = numberLiteral
+        .allMatches(text)
+        .map((match) => double.parse(match.group(0)!))
+        .toList();
+    return written.isEmpty ? null : written.reduce((a, b) => a < b ? a : b);
+  }
+
+  final direct = smallestIn(expression);
+  if (direct != null) return direct;
+  for (final name in RegExp(r'\b[A-Za-z_]\w*').allMatches(expression)) {
+    final bound = bindings[name.group(0)!];
+    if (bound != null) {
+      final resolved = smallestIn(bound);
+      if (resolved != null) return resolved;
+    }
+  }
+  return null;
+}
+
 final RegExp boldWeight = RegExp(r'FontWeight\.(?:bold|w700|w800|w900)');
 
 /// The text of the call that starts at [start], up to its matching bracket.
@@ -276,8 +331,10 @@ class NeutralOffence {
 ///     edit screens are that shape, and were swept by hand.
 ///   - a style built by a helper, the way full_tank_layout builds one, and a
 ///     palette record such as its `_TankPalette`.
-///   - a size computed at build time, held to the mark floor alone since there
-///     is no number to judge it by.
+///   - a size it cannot read. A computed size, and a call that states no size at
+///     all because the size lives in the theme, are both taken to be small text
+///     and held to 4.5:1, which is the safe direction: a large figure that wants
+///     the 3:1 exemption has to say how large it is.
 ///   - the ground, again: this measures against white only. An accent that
 ///     clears 4.5:1 on white but not on bgHover, which statusError at 4.75 and
 ///     4.36 and statusSuccess at 4.91 and 4.51 both do, passes here while the
@@ -294,6 +351,10 @@ List<NeutralOffence> neutralOffences() {
     if (generatedSuffixes.any(entity.path.endsWith)) continue;
     if (foreignPalettes.contains(entity.path)) continue;
     final source = entity.readAsStringSync();
+    final bindings = {
+      for (final match in localBinding.allMatches(source))
+        match.group(1)!: match.group(2)!,
+    };
     for (final opener in styleOpeners.allMatches(source)) {
       final body = callBody(source, opener.start);
       if (body == null) continue;
@@ -302,9 +363,9 @@ List<NeutralOffence> neutralOffences() {
       final named = <String>{};
       var isText = false;
       for (final (argument, value) in colours) {
-        if (resolvedByTheme.hasMatch(value)) continue;
+        final bare = withoutResolved(value);
         final accents = scannedAccents.keys.where(
-          (name) => RegExp('\\b$name\\b').hasMatch(value),
+          (name) => RegExp('\\b$name\\b').hasMatch(bare),
         );
         if (accents.isEmpty) continue;
         named.addAll(accents);
@@ -312,20 +373,22 @@ List<NeutralOffence> neutralOffences() {
       }
       if (named.isEmpty) continue;
 
-      final size = fontSizeArgument.firstMatch(body);
-      final written = size == null
-          ? const <double>[]
-          : numberLiteral
-                .allMatches(size.group(1)!)
-                .map((match) => double.parse(match.group(0)!))
-                .toList();
-      final smallest = written.isEmpty
+      final size =
+          fontSizeArgument.firstMatch(body) ?? positionalSize.firstMatch(body);
+      final smallest = size == null
           ? null
-          : written.reduce((a, b) => a < b ? a : b);
+          : smallestSize(size.group(1)!, bindings);
+      // A label whose call states no size is small until proven otherwise. The
+      // opposite, dropping it to the mark floor, is what a `styleFrom` body
+      // always is: `TextButton.styleFrom(foregroundColor: ...)` carries no
+      // fontSize, the theme's 13px lives elsewhere, and holding it to 3:1 let
+      // every accent but gold through the family the openers were widened for.
+      // A large figure that wants the mark floor says its size, which is the
+      // right way round: the exemption is the thing that has to be earned.
       final small =
           isText &&
-          smallest != null &&
-          !isLargeText(smallest, boldWeight.hasMatch(body));
+          (smallest == null ||
+              !isLargeText(smallest, boldWeight.hasMatch(body)));
       final floor = small ? contrastFloor : markFloor;
       final line =
           '\n'.allMatches(source.substring(0, opener.start)).length + 1;
@@ -556,6 +619,40 @@ void main() {
         callBody('Icon(Icons.x, color: red)  rest', 0),
         'Icon(Icons.x, color: red)',
       );
+    });
+
+    // The three things round 2 found wrong in the scan, pinned so they cannot
+    // come back: an unsized label held to the mark floor, a resolved ternary
+    // branch masking a bare one, and a clamped size read as its arithmetic.
+    test('holds an unsized label to the text floor', () {
+      expect(smallestSize('13', const {}), 13);
+      expect(smallestSize('someName', const {}), isNull);
+      expect(isLargeText(13, true), isFalse);
+    });
+
+    test('reads a size given as the first positional argument', () {
+      final match = positionalSize.firstMatch(
+        '_style(22, color: x, weight: y)',
+      );
+      expect(match?.group(1), '22');
+      expect(positionalSize.firstMatch('Icon(Icons.timer, color: x)'), isNull);
+      expect(positionalSize.firstMatch('TextStyle(color: x)'), isNull);
+    });
+
+    test('reads a clamped size as its lower bound', () {
+      expect(
+        smallestSize('timerFontSize', const {
+          'timerFontSize': '(availableHeight * 0.06).clamp(32.0, 48.0)',
+        }),
+        32.0,
+      );
+    });
+
+    test('keeps a bare accent visible beside a resolved one', () {
+      const argument =
+          'isRest ? CrimpyTheme.statusSuccess : CrimpyTheme.textOn(CrimpyTheme.primaryOrange)';
+      expect(withoutResolved(argument), contains('statusSuccess'));
+      expect(withoutResolved(argument), isNot(contains('primaryOrange')));
     });
 
     test('separates the two floors', () {
