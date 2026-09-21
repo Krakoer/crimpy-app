@@ -7,7 +7,6 @@ import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/repositories/bodyweight_repository.dart';
-import 'package:crimpy/utils/bounded_parallel.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/models/session_filter.dart';
 
@@ -149,23 +148,17 @@ class RemoteTrainingRepository extends TrainingRepository {
 
   /// The athlete's library, each training read in full.
   ///
-  /// The details are fetched through [inParallel] rather than all at once: a
-  /// library of fifty trainings would otherwise put fifty requests on the wire
-  /// every time a tab reloads it.
+  /// One request: the list is asked to answer with the items, so a library of
+  /// fifty trainings costs a single round trip rather than the list followed by
+  /// a detail read per training. Every tab that reloads the library pays that
+  /// once now.
   @override
   Future<List<Training>> getAllTrainings({bool onlyFavs = false}) async {
-    final list = await _apiClient.getTrainings();
-    final trainings = list
+    final list = await _apiClient.getTrainings(includeItems: true);
+    return list
         .where((t) => !onlyFavs || (t['is_favorite'] as bool? ?? false))
+        .map(Training.fromJson)
         .toList();
-
-    final results = await inParallel(
-      trainings.map(
-        (t) =>
-            () => _fetchTraining(t['id'] as String),
-      ),
-    );
-    return results.whereType<Training>().toList();
   }
 
   @override

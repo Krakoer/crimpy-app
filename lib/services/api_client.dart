@@ -386,8 +386,17 @@ class ApiClient {
   }
 
   // ----- Trainings -----
-  Future<List<Map<String, dynamic>>> getTrainings() async {
-    final res = await get('/api/trainings');
+  /// The library. With [includeItems] the server puts each training's item tree
+  /// and the assessment definitions it references on its row, which is what
+  /// spares a caller a detail read per training. The coach facing portal leaves
+  /// it off and keeps the cheap list it has always read.
+  Future<List<Map<String, dynamic>>> getTrainings({
+    bool includeItems = false,
+  }) async {
+    final res = await get(
+      '/api/trainings',
+      queryParameters: includeItems ? const {'include': 'items'} : null,
+    );
     return _asList(res.data);
   }
 

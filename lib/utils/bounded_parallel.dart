@@ -1,8 +1,9 @@
 /// How many tasks a repository fan-out keeps outstanding at once.
 ///
-/// A library of fifty trainings, or every assessment a coach has prescribed,
-/// is dozens of requests, and firing them all together is a burst the athlete's
-/// connection has to absorb in one go.
+/// Every assessment a coach has prescribed is dozens of requests, and firing
+/// them all together is a burst the athlete's connection has to absorb in one
+/// go. The program walk has no list endpoint to read them off, which the
+/// training library does.
 const int defaultFanOutConcurrency = 6;
 
 /// Runs [tasks] with at most [concurrency] of them outstanding, keeping the
