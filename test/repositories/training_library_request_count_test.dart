@@ -18,6 +18,12 @@ class _CountingApiClient extends ApiClient {
     'id': id,
     'title': 'Training $id',
     'is_favorite': favourites.contains(id),
+    'assessment': {
+      'id': '$id-assessment',
+      'label': 'Max pull ups',
+      'unit': 'repetitions',
+      'training_id': id,
+    },
   };
 
   @override
@@ -31,6 +37,14 @@ class _CountingApiClient extends ApiClient {
         if (includeItems)
           {
             ...row(id),
+            'referenced_assessments': [
+              {
+                'id': '$id-referenced',
+                'label': 'Weighted hang',
+                'unit': 'kilograms',
+                'training_id': '$id-other',
+              },
+            ],
             'items': [
               {
                 'id': '$id-item',
@@ -101,6 +115,21 @@ void main() {
         expect(training.items.single.comment, 'from the list');
       },
     );
+
+    test('keeps the assessment fields the detail read used to carry', () async {
+      final client = _CountingApiClient(const ['t-0']);
+
+      final training = (await RemoteTrainingRepository(
+        client,
+      ).getAllTrainings()).single;
+
+      // training_id is what makes an assessment the athlete's own rather than
+      // one Crimpy ships, and it only reaches the app if the list row carries
+      // it. This is the field that went missing the first time.
+      expect(training.assessment!.trainingId, 't-0');
+      expect(training.assessment!.isBuiltin, isFalse);
+      expect(training.referencedAssessments.single.id, 't-0-referenced');
+    });
 
     test('hands the library back in the order the list gave it', () async {
       final client = _CountingApiClient([

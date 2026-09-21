@@ -6,8 +6,8 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/services/api_client.dart';
-import 'package:crimpy/utils/bounded_parallel.dart';
 import 'package:crimpy/repositories/bodyweight_repository.dart';
+import 'package:crimpy/utils/bounded_parallel.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/models/session_filter.dart';
 
@@ -149,10 +149,11 @@ class RemoteTrainingRepository extends TrainingRepository {
 
   /// The athlete's library, each training read in full.
   ///
-  /// One request: the list is asked to answer with the items, so a library of
-  /// fifty trainings costs a single round trip rather than the list followed by
-  /// a detail read per training. Every tab that reloads the library pays that
-  /// once now.
+  /// One request against a server that knows how to put the items on the list,
+  /// so a library of fifty trainings costs a single round trip rather than the
+  /// list followed by a detail read per training. Against one that does not it
+  /// falls back to reading them one at a time, which is what the whole library
+  /// used to cost.
   @override
   Future<List<Training>> getAllTrainings({bool onlyFavs = false}) async {
     final list = await _apiClient.getTrainings(includeItems: true);
