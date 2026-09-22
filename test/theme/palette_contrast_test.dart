@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -102,6 +103,371 @@ const Color historyCardBase = CrimpyTheme.bgPrimary;
 /// in CrimpyTheme because it is one screen's layering, not a palette rule, so
 /// the cost of that copy is a line in this comment.
 const double historyCardAlpha = 0.05;
+
+/// The floor an accent answers to when it is not small text: an icon, a rule,
+/// or type at or above 18.66px bold, which WCAG 1.4.3 exempts from the 4.5:1
+/// floor and 1.4.11 holds to the same 3:1 as any other non text content.
+const double markFloor = 3.0;
+
+/// Large text in WCAG terms, which is what lets a 32px figure keep its accent.
+bool isLargeText(double sizePx, bool bold) =>
+    sizePx >= 24 || (sizePx >= 18.66 && bold);
+
+/// The neutral grounds this app paints an accent on: the white of a card, a
+/// dialog and every Scaffold, plus the two greys a list row settles to.
+const Map<String, Color> neutralGrounds = {
+  'bgPrimary': CrimpyTheme.bgPrimary,
+  'bgSecondary': CrimpyTheme.bgSecondary,
+  'bgHover': CrimpyTheme.bgHover,
+};
+
+void expectClearsMarkFloor(String label, Color foreground, Color background) {
+  final ratio = contrastRatio(foreground, background);
+  expect(
+    ratio,
+    greaterThanOrEqualTo(markFloor),
+    reason:
+        '$label: ${_hex(foreground)} on ${_hex(background)} reads '
+        '${ratio.toStringAsFixed(2)}:1, under the '
+        '${markFloor.toStringAsFixed(1)}:1 mark floor',
+  );
+}
+
+/// Where the sweep of Krakoer/crimpy#128 looks for an accent written on a
+/// neutral ground. Generated Drift and Riverpod output paints nothing.
+final Directory libRoot = Directory('lib');
+
+const Set<String> generatedSuffixes = {'.g.dart', '.freezed.dart'};
+
+/// lib/theme.dart declares a second class named CrimpyTheme with a palette of
+/// its own (`accentOrange` #C4653A rather than #C6613F), so a name read there
+/// would be measured against the wrong hex. Its `lightTheme` is unreferenced,
+/// main.dart building the one in lib/theme/crimpy_theme.dart, and the single
+/// screen that imports it reads only a grey. Skipped rather than mismeasured;
+/// removing the duplicate is its own ticket.
+const Set<String> foreignPalettes = {'lib/theme.dart'};
+
+/// The accent names a widget can write, with the value each one holds. Spelled
+/// out rather than reflected, because a Flutter test has no mirrors; a name
+/// missing from here is a pairing the scan cannot see rather than one it passes.
+final Map<String, Color> scannedAccents = {
+  'accentOrange': CrimpyTheme.accentOrange,
+  'primaryOrange': CrimpyTheme.primaryOrange,
+  'accentGreen': CrimpyTheme.accentGreen,
+  'accentYellow': CrimpyTheme.accentYellow,
+  'accentPurple': CrimpyTheme.accentPurple,
+  'accentBlue': CrimpyTheme.accentBlue,
+  'accentTeal': CrimpyTheme.accentTeal,
+  'statusSuccess': CrimpyTheme.statusSuccess,
+  'statusError': CrimpyTheme.statusError,
+  'statusWarning': CrimpyTheme.statusWarning,
+  'statusInfo': CrimpyTheme.statusInfo,
+  'assessmentColor': CrimpyTheme.assessmentColor,
+  'trainingColor': CrimpyTheme.trainingColor,
+  'stretchingColor': CrimpyTheme.stretchingColor,
+  'successColor': CrimpyTheme.successColor,
+  'errorColor': CrimpyTheme.errorColor,
+  'warningColor': CrimpyTheme.warningColor,
+};
+
+/// A colour already asked for through the theme's own helpers is this scan's
+/// answer rather than its question. Only the helpers that answer with a whole
+/// colour are here; an alpha is not one of them and is handled below, because
+/// cutting `withValues(...)` out of an argument leaves the accent's name behind
+/// and measures it at full strength.
+final RegExp resolvedByTheme = RegExp(
+  r'(?:textOn|markOn|tintOf)\((?:[^()]|\([^()]*\))*\)',
+);
+
+/// An accent faded by an alpha. It is not the token it names any more and
+/// cannot be measured without compositing it, so the whole argument is skipped
+/// rather than cut the way an answered one is: cutting would leave the accent's
+/// name behind and measure it at full strength.
+final RegExp fadedByAlpha = RegExp(r'\.with(?:Values|Opacity)\(');
+
+/// [value] with every sub-expression the theme has already answered removed, so
+/// what is left is whatever the widget still writes bare.
+///
+/// Cut out rather than skipped over: a ternary with one resolved branch used to
+/// take the whole argument out of the scan, which is how
+/// `isRest ? statusSuccess : textOn(primaryOrange)` hid its first branch.
+String withoutResolved(String value) => value.replaceAll(resolvedByTheme, '');
+
+/// Where a colour that is painted on something can be written. `copyWith` is
+/// here because a run screen header spent a whole review round at 4.05:1 inside
+/// `textTheme.headlineMedium!.copyWith(color: ...)`, which is not a TextStyle
+/// constructor to anything reading the source. Anything ending in `style` is
+/// here for the same reason: full_tank_layout builds every one of its labels
+/// through a local `_style(size, color: ...)`, and two step titles sat at
+/// 4.05:1 inside it.
+final RegExp styleOpeners = RegExp(
+  r'\b(\w*[Ss]tyle|Icon|FaIcon|copyWith|styleFrom)\(',
+);
+
+/// The value of a `color:` argument, up to the comma that ends it. Spelled
+/// across newlines and one level of nesting rather than to the end of the line,
+/// because `dart format` wraps a long value onto its own line and a scan that
+/// stops at the newline reads `CrimpyTheme.textOn(` as the whole answer.
+final RegExp colourArgument = RegExp(
+  r'\b(color|foregroundColor|labelColor):'
+  r'\s*((?:[^,()]|\((?:[^()]|\([^()]*\))*\))*)',
+);
+final RegExp fontSizeArgument = RegExp(r'fontSize:\s*([^\n,]*)');
+
+/// A size given as the first positional argument rather than as `fontSize:`,
+/// which is how full_tank_layout's `_style(22, color: ...)` states it.
+final RegExp positionalSize = RegExp(r'^\w+\(\s*(\d+(?:\.\d+)?)\s*,');
+
+/// A button style that paints no label, so its `foregroundColor` is a mark.
+/// Matched on what comes before the opener, since the opener itself captures
+/// only `styleFrom`.
+final RegExp iconOnlyButton = RegExp(r'IconButton\.$');
+
+final RegExp numberLiteral = RegExp(r'\d+(?:\.\d+)?');
+
+/// A type size computed from the screen and bounded, which is the one shape in
+/// this app where the size is not written at the call: the run screen's timer
+/// is `(availableHeight * 0.06).clamp(32.0, 48.0)`. The lower bound is the size
+/// to judge it by, since that is the smallest it can ever render.
+final RegExp clampedSize = RegExp(r'\.clamp\(\s*(\d+(?:\.\d+)?)');
+
+/// Where a name used as a `fontSize` was bound, one hop, in the same file.
+final RegExp localBinding = RegExp(
+  r'(?:final|var|double)\s+(\w+)\s*=\s*([^;]*);',
+);
+
+/// The bindings of [source] a call site can be resolved against, which is the
+/// ones bound exactly once. A name bound twice in a file has no single answer
+/// without scopes, and taking the last would let a later `final x = 30.0` clear
+/// a real 11px offence. Dropping it leaves the size unreadable instead, which
+/// the floor rule already treats as small text.
+Map<String, String> resolvableBindings(String source) {
+  final bound = <String, String>{};
+  final duplicated = <String>{};
+  for (final match in localBinding.allMatches(source)) {
+    final name = match.group(1)!;
+    if (bound.containsKey(name)) {
+      duplicated.add(name);
+    } else {
+      bound[name] = match.group(2)!;
+    }
+  }
+  for (final name in duplicated) {
+    bound.remove(name);
+  }
+  return bound;
+}
+
+/// The smallest size [expression] can render at, or null when the scan cannot
+/// tell. A literal in the expression answers directly; a bare name is resolved
+/// one hop to its binding in the same file, preferring the lower bound of a
+/// `clamp` over the arithmetic that feeds it.
+double? smallestSize(String expression, Map<String, String> bindings) {
+  double? smallestIn(String text) {
+    final clamped = clampedSize.firstMatch(text);
+    if (clamped != null) return double.parse(clamped.group(1)!);
+    final written = numberLiteral
+        .allMatches(text)
+        .map((match) => double.parse(match.group(0)!))
+        .toList();
+    return written.isEmpty ? null : written.reduce((a, b) => a < b ? a : b);
+  }
+
+  final direct = smallestIn(expression);
+  if (direct != null) return direct;
+  for (final name in RegExp(r'\b[A-Za-z_]\w*').allMatches(expression)) {
+    final bound = bindings[name.group(0)!];
+    if (bound != null) {
+      final resolved = smallestIn(bound);
+      if (resolved != null) return resolved;
+    }
+  }
+  return null;
+}
+
+final RegExp boldWeight = RegExp(r'FontWeight\.(?:bold|w700|w800|w900)');
+
+/// The text of the call that starts at [start], up to its matching bracket.
+String? callBody(String source, int start) {
+  var depth = 0;
+  for (var i = source.indexOf('(', start); i >= 0 && i < source.length; i++) {
+    if (source[i] == '(') depth++;
+    if (source[i] == ')') {
+      depth--;
+      if (depth == 0) return source.substring(start, i + 1);
+    }
+  }
+  return null;
+}
+
+/// The colour arguments of [body] that belong to the call itself rather than to
+/// something nested inside it. `OutlinedButton.styleFrom` carries both a
+/// `foregroundColor` and a `BorderSide(color: ...)`, and reading the border's
+/// as the label's would hold a border to the text floor.
+List<(String, String)> topLevelColours(String body) {
+  final found = <(String, String)>[];
+  for (final match in colourArgument.allMatches(body)) {
+    var depth = 0;
+    for (var i = 0; i < match.start; i++) {
+      if (body[i] == '(') depth++;
+      if (body[i] == ')') depth--;
+    }
+    if (depth == 1) found.add((match.group(1)!, match.group(2)!));
+  }
+  return found;
+}
+
+/// Whether a colour argument paints type. An `Icon` or a `FaIcon` paints a
+/// stroke and answers to the mark floor; everything else here paints a label,
+/// including `foregroundColor` on a button style, which colours the label and
+/// its icon together and so takes the label's floor for both.
+///
+/// [iconOnly] is the exception among those: an `IconButton` has no label, so
+/// its `foregroundColor` reaches a stroke and nothing else. Holding it to the
+/// text floor would fail a 3:1 element, which is as wrong as passing a 4.5:1
+/// one.
+bool paintsText(String opener, String argument, {required bool iconOnly}) {
+  if (opener == 'Icon' || opener == 'FaIcon') return argument != 'color';
+  return !iconOnly;
+}
+
+class NeutralOffence {
+  final String file;
+  final int line;
+  final String kind;
+  final String accent;
+  final double ratio;
+  final double floor;
+
+  NeutralOffence(
+    this.file,
+    this.line,
+    this.kind,
+    this.accent,
+    this.ratio,
+    this.floor,
+  );
+
+  @override
+  String toString() =>
+      '$file:$line writes $accent as $kind on bgPrimary, '
+      '${ratio.toStringAsFixed(2)}:1 against a '
+      '${floor.toStringAsFixed(1)}:1 floor';
+}
+
+/// Every accent written into a `TextStyle`, an `Icon` or a `FaIcon` without
+/// going through the theme's helpers, measured against white.
+///
+/// The ground is taken to be white rather than looked up. A Flutter ground is a
+/// decoration on some ancestor Container and cannot be read from the call site,
+/// and every ground in this app is white or a tint over white, so it is never
+/// lighter than white: assuming white therefore understates rather than
+/// overstates, and a pairing this reports reads at least as badly as it says.
+/// An accent written on its own tint already goes through [CrimpyTheme.textOn]
+/// and is skipped because of it.
+///
+/// What it cannot see, stated so its silence is not read as proof:
+///
+///   - a colour held in a variable or taken from a parameter, which is most of
+///     the session history. `sessionColor` and the `color` local of the log and
+///     edit screens are that shape, and were swept by hand.
+///   - a style built by a helper, the way full_tank_layout builds one, and a
+///     palette record such as its `_TankPalette`.
+///   - a size it cannot read. A computed size, and a call that states no size at
+///     all because the size lives in the theme, are both taken to be small text
+///     and held to 4.5:1, which is the safe direction: a large figure that wants
+///     the 3:1 exemption has to say how large it is.
+///   - the ground, again: this measures against white only. An accent that
+///     clears 4.5:1 on white but not on bgHover, which statusError at 4.75 and
+///     4.36 and statusSuccess at 4.91 and 4.51 both do, passes here while the
+///     real row fails. The token level group above measures all three grounds,
+///     which is what covers it.
+///   - a colour reached through `Theme.of(context).colorScheme`, which is how
+///     the bottom nav writes the accent. Every one of those was walked by hand
+///     and clears its floor, but the scan does not read them.
+///   - a call whose name merely ends in `style`, which is read as a style
+///     builder. Over-reporting rather than under, and nothing in lib/ is
+///     mis-read today.
+///   - which class an accent name belongs to. lib/theme.dart declares a second
+///     CrimpyTheme with its own palette, and post_workout_screen.dart imports
+///     that one; a name is resolved against lib/theme/crimpy_theme.dart
+///     whichever is in scope. Nothing in that file paints an accent today.
+List<NeutralOffence> neutralOffences() {
+  final offences = <NeutralOffence>[];
+  for (final entity in libRoot.listSync(recursive: true)) {
+    if (entity is! File || !entity.path.endsWith('.dart')) continue;
+    if (generatedSuffixes.any(entity.path.endsWith)) continue;
+    if (foreignPalettes.contains(entity.path)) continue;
+    final source = entity.readAsStringSync();
+    final bindings = resolvableBindings(source);
+    for (final opener in styleOpeners.allMatches(source)) {
+      final body = callBody(source, opener.start);
+      if (body == null) continue;
+      final colours = topLevelColours(body);
+      if (colours.isEmpty) continue;
+      final named = <String>{};
+      var isText = false;
+      for (final (argument, value) in colours) {
+        if (fadedByAlpha.hasMatch(value)) continue;
+        final bare = withoutResolved(value);
+        final accents = scannedAccents.keys.where(
+          (name) => RegExp('\\b$name\\b').hasMatch(bare),
+        );
+        if (accents.isEmpty) continue;
+        named.addAll(accents);
+        isText =
+            isText ||
+            paintsText(
+              opener.group(1)!,
+              argument,
+              iconOnly: iconOnlyButton.hasMatch(
+                source.substring(0, opener.start),
+              ),
+            );
+      }
+      if (named.isEmpty) continue;
+
+      final size =
+          fontSizeArgument.firstMatch(body) ?? positionalSize.firstMatch(body);
+      final smallest = size == null
+          ? null
+          : smallestSize(size.group(1)!, bindings);
+      // A label whose call states no size is small until proven otherwise. The
+      // opposite, dropping it to the mark floor, is what a `styleFrom` body
+      // always is: `TextButton.styleFrom(foregroundColor: ...)` carries no
+      // fontSize, the theme's 13px lives elsewhere, and holding it to 3:1 let
+      // every accent but gold through the family the openers were widened for.
+      // A large figure that wants the mark floor says its size, which is the
+      // right way round: the exemption is the thing that has to be earned.
+      final small =
+          isText &&
+          (smallest == null ||
+              !isLargeText(smallest, boldWeight.hasMatch(body)));
+      final floor = small ? contrastFloor : markFloor;
+      final line =
+          '\n'.allMatches(source.substring(0, opener.start)).length + 1;
+      for (final name in named) {
+        final ratio = contrastRatio(
+          scannedAccents[name]!,
+          CrimpyTheme.bgPrimary,
+        );
+        if (ratio >= floor) continue;
+        offences.add(
+          NeutralOffence(
+            entity.path,
+            line,
+            isText ? (small ? 'text' : 'large or unsized text') : 'mark',
+            name,
+            ratio,
+            floor,
+          ),
+        );
+      }
+    }
+  }
+  offences.sort((a, b) => a.toString().compareTo(b.toString()));
+  return offences;
+}
 
 void main() {
   group('accent text on a tint of its own accent', () {
@@ -217,6 +583,192 @@ void main() {
     test('protocolColor and goalColor are the shared text tokens', () {
       expect(CrimpyTheme.protocolColor, CrimpyTheme.accentYellowText);
       expect(CrimpyTheme.goalColor, CrimpyTheme.accentGreenText);
+    });
+  });
+
+  group('accent on a neutral ground', () {
+    // The text form is what a label takes on white, which is the sweep of
+    // Krakoer/crimpy#128. Measured on all three neutrals, since a list row
+    // settles to bgHover under a finger and that is the darkest of them.
+    for (final (label, accent) in tintedAccents) {
+      for (final entry in neutralGrounds.entries) {
+        test('$label reads as text on ${entry.key}', () {
+          expectClearsFloor(
+            '$label text on ${entry.key}',
+            CrimpyTheme.textOn(accent),
+            entry.value,
+          );
+        });
+      }
+    }
+
+    // The accents are the marks, and all but gold clear the mark floor on
+    // white. That is the whole of why the sweep is not uniform: an icon keeps
+    // its accent where a 10px label beside it cannot.
+    test('gold is the only accent under the mark floor on white', () {
+      final failing = [
+        for (final (label, accent) in tintedAccents)
+          if (contrastRatio(accent, CrimpyTheme.bgPrimary) < markFloor) label,
+      ];
+      expect(failing, ['climbing gold', 'warning gold']);
+    });
+
+    test('markOn moves an accent exactly when the accent fails', () {
+      for (final (label, accent) in tintedAccents) {
+        final clears =
+            contrastRatio(accent, CrimpyTheme.bgPrimary) >= markFloor;
+        expect(
+          CrimpyTheme.markOn(accent),
+          clears ? accent : CrimpyTheme.textOn(accent),
+          reason: clears
+              ? '$label was moved off its accent although the accent clears '
+                    'the mark floor'
+              : '$label was left on an accent that misses the mark floor',
+        );
+        expectClearsMarkFloor(
+          '$label mark',
+          CrimpyTheme.markOn(accent),
+          CrimpyTheme.bgPrimary,
+        );
+      }
+    });
+
+    test('an accent with no mark form answers with itself', () {
+      expect(
+        CrimpyTheme.markOn(CrimpyTheme.accentTeal),
+        CrimpyTheme.accentTeal,
+      );
+    });
+
+    // The session labels of the program rows and the home card, which read
+    // 2.25:1 in bare gold before Krakoer/crimpy#119 swept them.
+    test('every session activity label holds the floor on a white card', () {
+      for (final activity in SessionActivity.values) {
+        expectClearsFloor(
+          '${activity.name} label',
+          CrimpyTheme.activityTextColor(activity),
+          CrimpyTheme.bgPrimary,
+        );
+      }
+    });
+
+    test('every session activity mark holds its floor on a white card', () {
+      for (final activity in SessionActivity.values) {
+        expectClearsMarkFloor(
+          '${activity.name} mark',
+          CrimpyTheme.markOn(CrimpyTheme.activityColor(activity)),
+          CrimpyTheme.bgPrimary,
+        );
+      }
+    });
+  });
+
+  group('surfaces that write an accent on a neutral ground', () {
+    // Checked against shapes it has to read, so an empty offence list is
+    // evidence of something rather than of a scan that reads nothing.
+    test('reads a call body up to its own closing bracket', () {
+      const source = 'Icon(Icons.x, color: CrimpyTheme.accentYellow, size: 24)';
+      expect(callBody(source, 0), source);
+      expect(
+        callBody('Icon(Icons.x, color: red)  rest', 0),
+        'Icon(Icons.x, color: red)',
+      );
+    });
+
+    // The three things round 2 found wrong in the scan, pinned so they cannot
+    // come back: an unsized label held to the mark floor, a resolved ternary
+    // branch masking a bare one, and a clamped size read as its arithmetic.
+    test('holds an unsized label to the text floor', () {
+      expect(smallestSize('13', const {}), 13);
+      expect(smallestSize('someName', const {}), isNull);
+      expect(isLargeText(13, true), isFalse);
+    });
+
+    // The three things round 3 found wrong in the scan, pinned: a name bound
+    // twice resolved to the last binding, an alpha-faded accent measured at
+    // full strength, and an icon-only button's label colour held to the text
+    // floor although it paints no label.
+    test('refuses to resolve a name bound more than once', () {
+      const twice =
+          'final headline = 11.0;\nfinal x = 1;\nfinal headline = 30.0;';
+      expect(resolvableBindings(twice).containsKey('headline'), isFalse);
+      expect(resolvableBindings(twice)['x'], '1');
+      expect(smallestSize('headline', resolvableBindings(twice)), isNull);
+    });
+
+    test('skips an accent faded by an alpha rather than measuring it', () {
+      expect(
+        fadedByAlpha.hasMatch(
+          'CrimpyTheme.primaryOrange.withValues(alpha: 0.4)',
+        ),
+        isTrue,
+      );
+      expect(fadedByAlpha.hasMatch('CrimpyTheme.primaryOrange'), isFalse);
+      // Cutting rather than skipping would leave the name behind, which is
+      // what makes the skip the right answer for an alpha.
+      expect(
+        withoutResolved('CrimpyTheme.primaryOrange.withValues(alpha: 0.4)'),
+        contains('primaryOrange'),
+      );
+    });
+
+    test('leaves an icon only button to the mark floor', () {
+      expect(iconOnlyButton.hasMatch('  style: IconButton.'), isTrue);
+      expect(iconOnlyButton.hasMatch('  style: TextButton.'), isFalse);
+      expect(
+        paintsText('styleFrom', 'foregroundColor', iconOnly: true),
+        isFalse,
+      );
+      expect(
+        paintsText('styleFrom', 'foregroundColor', iconOnly: false),
+        isTrue,
+      );
+      expect(paintsText('Icon', 'color', iconOnly: false), isFalse);
+      expect(paintsText('TextStyle', 'color', iconOnly: false), isTrue);
+    });
+
+    test('reads a size given as the first positional argument', () {
+      final match = positionalSize.firstMatch(
+        '_style(22, color: x, weight: y)',
+      );
+      expect(match?.group(1), '22');
+      expect(positionalSize.firstMatch('Icon(Icons.timer, color: x)'), isNull);
+      expect(positionalSize.firstMatch('TextStyle(color: x)'), isNull);
+    });
+
+    test('reads a clamped size as its lower bound', () {
+      expect(
+        smallestSize('timerFontSize', const {
+          'timerFontSize': '(availableHeight * 0.06).clamp(32.0, 48.0)',
+        }),
+        32.0,
+      );
+    });
+
+    test('keeps a bare accent visible beside a resolved one', () {
+      const argument =
+          'isRest ? CrimpyTheme.statusSuccess : CrimpyTheme.textOn(CrimpyTheme.primaryOrange)';
+      expect(withoutResolved(argument), contains('statusSuccess'));
+      expect(withoutResolved(argument), isNot(contains('primaryOrange')));
+    });
+
+    test('separates the two floors', () {
+      expect(isLargeText(32, true), isTrue);
+      expect(isLargeText(20, true), isTrue);
+      expect(isLargeText(18, true), isFalse);
+      expect(isLargeText(24, false), isTrue);
+      expect(isLargeText(20, false), isFalse);
+    });
+
+    test('finds no accent under its floor on a neutral ground', () {
+      final offences = neutralOffences();
+      expect(
+        offences.map((offence) => offence.toString()).toList(),
+        isEmpty,
+        reason:
+            'an accent under its floor on a neutral ground:\n'
+            '${offences.join('\n')}',
+      );
     });
   });
 }

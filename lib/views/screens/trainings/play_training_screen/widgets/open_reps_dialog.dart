@@ -65,11 +65,7 @@ class _OpenRepsDialogState extends State<_OpenRepsDialog> {
         onPressed: () => Navigator.of(context).pop(),
         child: const Text('Cancel'),
       ),
-      TextButton(
-        onPressed: _submit,
-        style: TextButton.styleFrom(foregroundColor: CrimpyTheme.primaryOrange),
-        child: const Text('Save'),
-      ),
+      TextButton(onPressed: _submit, child: const Text('Save')),
     ],
   );
 }

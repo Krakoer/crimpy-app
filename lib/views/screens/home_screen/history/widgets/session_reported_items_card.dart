@@ -70,10 +70,10 @@ class _ReportedItemRow extends StatelessWidget {
                 children: [
                   Text(
                     achieved.join(', '),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: CrimpyTheme.primaryOrange,
+                      color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
                     ),
                   ),
                   if (item.prescribed case final prescribed?)

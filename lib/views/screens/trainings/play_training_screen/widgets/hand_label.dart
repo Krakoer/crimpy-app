@@ -21,8 +21,11 @@ class HandLabel extends StatelessWidget {
       children: [
         Text(
           handSide.displayName,
+          // 18px bold is under the 18.66px large text threshold, so this
+          // answers to 4.5:1 like the non sensor branch in
+          // play_training_screen. See Krakoer/crimpy#128.
           style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-            color: CrimpyTheme.primaryOrange,
+            color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
             fontWeight: FontWeight.bold,
             letterSpacing: 2,
             fontSize: 18,

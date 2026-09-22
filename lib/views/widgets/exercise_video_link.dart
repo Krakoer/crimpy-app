@@ -36,7 +36,7 @@ class ExerciseVideoButton extends StatelessWidget {
           fontFamily: 'JetBrainsMono',
           fontSize: compact ? 10.5 : 11.5,
           fontWeight: FontWeight.w700,
-          color: CrimpyTheme.primaryOrange,
+          color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
         ),
       ),
       style: TextButton.styleFrom(

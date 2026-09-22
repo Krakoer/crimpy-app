@@ -264,10 +264,13 @@ class CrimpyTheme {
       ),
     ),
 
-    // Outlined button - Orange border
+    // Outlined button - Orange border, with the label in the text form: at
+    // 13px on the white surface every dialog and sheet uses, primaryOrange
+    // reads 4.05:1, under the 4.5:1 floor. The border stays on the accent,
+    // since a border is not text. See Krakoer/crimpy#128.
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: primaryOrange,
+        foregroundColor: accentOrangeText,
         backgroundColor: bgPrimary,
         side: const BorderSide(color: primaryOrange, width: 1),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -280,10 +283,13 @@ class CrimpyTheme {
       ),
     ),
 
-    // Text button
+    // Text button. Its 13px label is the largest population of accent on white
+    // in the app, sixty odd call sites inheriting this one entry, so the text
+    // form belongs here rather than at each of them. foregroundColor paints a
+    // TextButton.icon's icon too, which only helps it. See Krakoer/crimpy#128.
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: primaryOrange,
+        foregroundColor: accentOrangeText,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         textStyle: const TextStyle(
           fontSize: 13,
@@ -642,6 +648,32 @@ class CrimpyTheme {
     accentBlue: accentBlueText,
     statusError: statusErrorText,
   });
+
+  /// Every accent too pale to stand as a mark on a neutral ground, keyed by the
+  /// accent itself the way [_accentTextColors] is.
+  ///
+  /// An icon, or a figure large enough for the WCAG large text exemption,
+  /// answers to 3:1 rather than 4.5:1, and every accent in this palette clears
+  /// that on white except gold, which reads 2.25:1. The accents are the brand
+  /// marks, so the ones that clear it keep their colour and only gold moves.
+  ///
+  /// A border, a fill and a decorative rule are none of this widget's business
+  /// and stay on the accent: they carry no information a label beside them does
+  /// not already carry. See Krakoer/crimpy#128.
+  static final Map<Color, Color> _accentMarkColors = Map.unmodifiable({
+    // accentYellow and statusWarning hold the same value, so one entry answers
+    // both names, the way [_accentTextColors] answers accentOrange and
+    // primaryOrange with one.
+    accentYellow: accentYellowText,
+  });
+
+  /// The colour a mark is drawn in when it sits on a neutral ground: an icon,
+  /// or text large enough to answer to the 3:1 floor. Mirrors the `mark` field
+  /// of SESSION_ACTIVITIES in crimpy-frontend/src/lib/sessions.ts. An accent
+  /// that already clears the mark floor is answered with itself, so a caller
+  /// asking for a mark is never handed the text form of an accent that did not
+  /// need one.
+  static Color markOn(Color accent) => _accentMarkColors[accent] ?? accent;
 
   /// The strongest an accent ground may be tinted when the same accent is
   /// written on it. It is a ceiling rather than the only value in the app: a

@@ -37,10 +37,13 @@ class TrainingTimerDisplay extends StatelessWidget {
               : isRest
               ? 'REST'
               : 'WORK',
+          // 16px bold on the white run screen, so the 4.5:1 text floor: the bare
+          // accent reads 4.05:1 there. statusSuccess clears it at 4.91:1 and
+          // stays. See Krakoer/crimpy#128.
           style: Theme.of(context).textTheme.headlineSmall!.copyWith(
             color: isRest
                 ? CrimpyTheme.statusSuccess
-                : CrimpyTheme.primaryOrange,
+                : CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
             fontWeight: FontWeight.bold,
             letterSpacing: 4,
             fontSize: 16,

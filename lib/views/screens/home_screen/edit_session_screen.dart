@@ -48,6 +48,10 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
   @override
   Widget build(BuildContext context) {
     final color = CrimpyTheme.activityColor(widget.session.activity);
+    // The icons sit on a white Card, where climbing's gold reads 2.25:1 and
+    // misses the 3:1 mark floor. The tint and the fill below keep the accent,
+    // since a ground is not a mark. See Krakoer/crimpy#128.
+    final markColor = CrimpyTheme.markOn(color);
     final textColor = CrimpyTheme.activityTextColor(widget.session.activity);
     // A played session owns its date, duration and reps: they are what the run
     // measured, so only the notes are open for editing. What was trained has no
@@ -94,7 +98,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   enabled: !isPlayedSession,
                   leading: Icon(
                     Icons.calendar_today,
-                    color: isPlayedSession ? Colors.grey : color,
+                    color: isPlayedSession ? CrimpyTheme.textMuted : markColor,
                   ),
                   title: const Text('Date'),
                   subtitle: Text(
@@ -114,7 +118,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   enabled: !isPlayedSession,
                   leading: Icon(
                     Icons.access_time,
-                    color: isPlayedSession ? Colors.grey : color,
+                    color: isPlayedSession ? CrimpyTheme.textMuted : markColor,
                   ),
                   title: const Text('Time'),
                   subtitle: Text(_selectedTime.format(context)),
@@ -137,7 +141,9 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                         children: [
                           Icon(
                             Icons.timer,
-                            color: isPlayedSession ? Colors.grey : color,
+                            color: isPlayedSession
+                                ? CrimpyTheme.textMuted
+                                : markColor,
                           ),
                           const SizedBox(width: 8),
                           const Text(
@@ -207,7 +213,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.notes, color: color),
+                          Icon(Icons.notes, color: markColor),
                           const SizedBox(width: 8),
                           const Text(
                             'Notes',

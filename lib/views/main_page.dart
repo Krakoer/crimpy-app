@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/views/screens/home_screen/home_screen.dart';
 import 'package:crimpy/views/screens/settings_screen/settings_screen.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../theme/crimpy_theme.dart';
 import '../viewmodels/ble_view_model.dart';
 import '../viewmodels/app_info_view_model.dart';
 import '../viewmodels/auth_view_model.dart';
@@ -42,6 +43,10 @@ class _NavItem extends StatelessWidget {
     final color = isSelected
         ? primary
         : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35);
+    // The 18px icon is a mark and clears the 3:1 floor on the white bar at
+    // 4.05:1, so it keeps the accent. The 9px label does not clear 4.5:1 and
+    // takes the darker form. See Krakoer/crimpy#128.
+    final labelColor = isSelected ? CrimpyTheme.textOn(primary) : color;
 
     return Expanded(
       child: InkWell(
@@ -62,7 +67,7 @@ class _NavItem extends StatelessWidget {
                 fontFamily: 'JetBrainsMono',
                 fontSize: 9,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: color,
+                color: labelColor,
                 letterSpacing: 0.3,
               ),
             ),
