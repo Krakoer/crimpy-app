@@ -739,7 +739,7 @@ class _TankContent extends StatelessWidget {
         'PREPARATION',
         style: _style(
           22,
-          color: CrimpyTheme.primaryOrange,
+          color: palette.accent,
           weight: FontWeight.w700,
           letterSpacing: 4,
         ),
@@ -835,11 +835,7 @@ class _TankContent extends StatelessWidget {
             if (rep.targetLoad > 0) '${formatKilograms(rep.targetLoad)} kg',
             '${rep.durationSeconds}s',
           ].join(' - '),
-          style: _style(
-            20,
-            color: CrimpyTheme.primaryOrange,
-            weight: FontWeight.w700,
-          ),
+          style: _style(20, color: palette.accent, weight: FontWeight.w700),
         ),
         if (sensor) ...[
           SizedBox(height: _s(14)),

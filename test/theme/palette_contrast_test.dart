@@ -171,12 +171,19 @@ final Map<String, Color> scannedAccents = {
 };
 
 /// A colour already asked for through the theme's own helpers is this scan's
-/// answer rather than its question, and one faded by an alpha is not the token
-/// it names any more.
+/// answer rather than its question. Only the helpers that answer with a whole
+/// colour are here; an alpha is not one of them and is handled below, because
+/// cutting `withValues(...)` out of an argument leaves the accent's name behind
+/// and measures it at full strength.
 final RegExp resolvedByTheme = RegExp(
-  r'(?:textOn|markOn|tintOf|withValues|withOpacity)\('
-  r'(?:[^()]|\([^()]*\))*\)',
+  r'(?:textOn|markOn|tintOf)\((?:[^()]|\([^()]*\))*\)',
 );
+
+/// An accent faded by an alpha. It is not the token it names any more and
+/// cannot be measured without compositing it, so the whole argument is skipped
+/// rather than cut the way an answered one is: cutting would leave the accent's
+/// name behind and measure it at full strength.
+final RegExp fadedByAlpha = RegExp(r'\.with(?:Values|Opacity)\(');
 
 /// [value] with every sub-expression the theme has already answered removed, so
 /// what is left is whatever the widget still writes bare.
@@ -210,6 +217,12 @@ final RegExp fontSizeArgument = RegExp(r'fontSize:\s*([^\n,]*)');
 /// A size given as the first positional argument rather than as `fontSize:`,
 /// which is how full_tank_layout's `_style(22, color: ...)` states it.
 final RegExp positionalSize = RegExp(r'^\w+\(\s*(\d+(?:\.\d+)?)\s*,');
+
+/// A button style that paints no label, so its `foregroundColor` is a mark.
+/// Matched on what comes before the opener, since the opener itself captures
+/// only `styleFrom`.
+final RegExp iconOnlyButton = RegExp(r'IconButton\.$');
+
 final RegExp numberLiteral = RegExp(r'\d+(?:\.\d+)?');
 
 /// A type size computed from the screen and bounded, which is the one shape in
@@ -222,6 +235,28 @@ final RegExp clampedSize = RegExp(r'\.clamp\(\s*(\d+(?:\.\d+)?)');
 final RegExp localBinding = RegExp(
   r'(?:final|var|double)\s+(\w+)\s*=\s*([^;]*);',
 );
+
+/// The bindings of [source] a call site can be resolved against, which is the
+/// ones bound exactly once. A name bound twice in a file has no single answer
+/// without scopes, and taking the last would let a later `final x = 30.0` clear
+/// a real 11px offence. Dropping it leaves the size unreadable instead, which
+/// the floor rule already treats as small text.
+Map<String, String> resolvableBindings(String source) {
+  final bound = <String, String>{};
+  final duplicated = <String>{};
+  for (final match in localBinding.allMatches(source)) {
+    final name = match.group(1)!;
+    if (bound.containsKey(name)) {
+      duplicated.add(name);
+    } else {
+      bound[name] = match.group(2)!;
+    }
+  }
+  for (final name in duplicated) {
+    bound.remove(name);
+  }
+  return bound;
+}
 
 /// The smallest size [expression] can render at, or null when the scan cannot
 /// tell. A literal in the expression answers directly; a bare name is resolved
@@ -286,8 +321,15 @@ List<(String, String)> topLevelColours(String body) {
 /// stroke and answers to the mark floor; everything else here paints a label,
 /// including `foregroundColor` on a button style, which colours the label and
 /// its icon together and so takes the label's floor for both.
-bool paintsText(String opener, String argument) =>
-    opener != 'Icon' && opener != 'FaIcon' || argument != 'color';
+///
+/// [iconOnly] is the exception among those: an `IconButton` has no label, so
+/// its `foregroundColor` reaches a stroke and nothing else. Holding it to the
+/// text floor would fail a 3:1 element, which is as wrong as passing a 4.5:1
+/// one.
+bool paintsText(String opener, String argument, {required bool iconOnly}) {
+  if (opener == 'Icon' || opener == 'FaIcon') return argument != 'color';
+  return !iconOnly;
+}
 
 class NeutralOffence {
   final String file;
@@ -340,6 +382,12 @@ class NeutralOffence {
 ///     4.36 and statusSuccess at 4.91 and 4.51 both do, passes here while the
 ///     real row fails. The token level group above measures all three grounds,
 ///     which is what covers it.
+///   - a colour reached through `Theme.of(context).colorScheme`, which is how
+///     the bottom nav writes the accent. Every one of those was walked by hand
+///     and clears its floor, but the scan does not read them.
+///   - a call whose name merely ends in `style`, which is read as a style
+///     builder. Over-reporting rather than under, and nothing in lib/ is
+///     mis-read today.
 ///   - which class an accent name belongs to. lib/theme.dart declares a second
 ///     CrimpyTheme with its own palette, and post_workout_screen.dart imports
 ///     that one; a name is resolved against lib/theme/crimpy_theme.dart
@@ -351,10 +399,7 @@ List<NeutralOffence> neutralOffences() {
     if (generatedSuffixes.any(entity.path.endsWith)) continue;
     if (foreignPalettes.contains(entity.path)) continue;
     final source = entity.readAsStringSync();
-    final bindings = {
-      for (final match in localBinding.allMatches(source))
-        match.group(1)!: match.group(2)!,
-    };
+    final bindings = resolvableBindings(source);
     for (final opener in styleOpeners.allMatches(source)) {
       final body = callBody(source, opener.start);
       if (body == null) continue;
@@ -363,13 +408,22 @@ List<NeutralOffence> neutralOffences() {
       final named = <String>{};
       var isText = false;
       for (final (argument, value) in colours) {
+        if (fadedByAlpha.hasMatch(value)) continue;
         final bare = withoutResolved(value);
         final accents = scannedAccents.keys.where(
           (name) => RegExp('\\b$name\\b').hasMatch(bare),
         );
         if (accents.isEmpty) continue;
         named.addAll(accents);
-        isText = isText || paintsText(opener.group(1)!, argument);
+        isText =
+            isText ||
+            paintsText(
+              opener.group(1)!,
+              argument,
+              iconOnly: iconOnlyButton.hasMatch(
+                source.substring(0, opener.start),
+              ),
+            );
       }
       if (named.isEmpty) continue;
 
@@ -628,6 +682,49 @@ void main() {
       expect(smallestSize('13', const {}), 13);
       expect(smallestSize('someName', const {}), isNull);
       expect(isLargeText(13, true), isFalse);
+    });
+
+    // The three things round 3 found wrong in the scan, pinned: a name bound
+    // twice resolved to the last binding, an alpha-faded accent measured at
+    // full strength, and an icon-only button's label colour held to the text
+    // floor although it paints no label.
+    test('refuses to resolve a name bound more than once', () {
+      const twice =
+          'final headline = 11.0;\nfinal x = 1;\nfinal headline = 30.0;';
+      expect(resolvableBindings(twice).containsKey('headline'), isFalse);
+      expect(resolvableBindings(twice)['x'], '1');
+      expect(smallestSize('headline', resolvableBindings(twice)), isNull);
+    });
+
+    test('skips an accent faded by an alpha rather than measuring it', () {
+      expect(
+        fadedByAlpha.hasMatch(
+          'CrimpyTheme.primaryOrange.withValues(alpha: 0.4)',
+        ),
+        isTrue,
+      );
+      expect(fadedByAlpha.hasMatch('CrimpyTheme.primaryOrange'), isFalse);
+      // Cutting rather than skipping would leave the name behind, which is
+      // what makes the skip the right answer for an alpha.
+      expect(
+        withoutResolved('CrimpyTheme.primaryOrange.withValues(alpha: 0.4)'),
+        contains('primaryOrange'),
+      );
+    });
+
+    test('leaves an icon only button to the mark floor', () {
+      expect(iconOnlyButton.hasMatch('  style: IconButton.'), isTrue);
+      expect(iconOnlyButton.hasMatch('  style: TextButton.'), isFalse);
+      expect(
+        paintsText('styleFrom', 'foregroundColor', iconOnly: true),
+        isFalse,
+      );
+      expect(
+        paintsText('styleFrom', 'foregroundColor', iconOnly: false),
+        isTrue,
+      );
+      expect(paintsText('Icon', 'color', iconOnly: false), isFalse);
+      expect(paintsText('TextStyle', 'color', iconOnly: false), isTrue);
     });
 
     test('reads a size given as the first positional argument', () {

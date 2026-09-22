@@ -98,7 +98,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   enabled: !isPlayedSession,
                   leading: Icon(
                     Icons.calendar_today,
-                    color: isPlayedSession ? Colors.grey : markColor,
+                    color: isPlayedSession ? CrimpyTheme.textMuted : markColor,
                   ),
                   title: const Text('Date'),
                   subtitle: Text(
@@ -118,7 +118,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   enabled: !isPlayedSession,
                   leading: Icon(
                     Icons.access_time,
-                    color: isPlayedSession ? Colors.grey : markColor,
+                    color: isPlayedSession ? CrimpyTheme.textMuted : markColor,
                   ),
                   title: const Text('Time'),
                   subtitle: Text(_selectedTime.format(context)),
@@ -141,7 +141,9 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                         children: [
                           Icon(
                             Icons.timer,
-                            color: isPlayedSession ? Colors.grey : markColor,
+                            color: isPlayedSession
+                                ? CrimpyTheme.textMuted
+                                : markColor,
                           ),
                           const SizedBox(width: 8),
                           const Text(
