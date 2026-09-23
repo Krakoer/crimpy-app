@@ -30,7 +30,9 @@ class _ClimbingProfileScreenState extends ConsumerState<ClimbingProfileScreen>
     final Color accentRight = CrimpyTheme.accentYellow;
 
     return PullToRefresh(
-      onRefresh: () => ref.refresh(assessmentsProvider(null).future),
+      // The root, not the view of it this screen watches: refreshing the view
+      // would rebuild it from the history already in hand and never ask again.
+      onRefresh: () => ref.refresh(assessmentHistoryProvider.future),
       // Matched on what the state holds rather than on which state it is, so a
       // pull leaves the profile on screen while it asks again.
       child: switch (asyncAssessments) {

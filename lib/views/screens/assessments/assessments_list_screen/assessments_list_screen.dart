@@ -225,7 +225,7 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
             // so an assessment their coach scheduled since the last pull shows
             // up rather than resolving after the spinner has gone.
             onRefresh: () async {
-              ref.invalidate(assessmentsProvider);
+              ref.invalidate(assessmentHistoryProvider);
               ref.invalidate(trainingLibraryProvider);
               ref.invalidate(prescribedAssessmentTrainingsProvider);
               await Future.wait([

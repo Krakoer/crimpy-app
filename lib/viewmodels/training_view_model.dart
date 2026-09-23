@@ -16,6 +16,7 @@ import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/repositories/builtin_training_repository.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 
 part 'training_view_model.g.dart';
@@ -106,7 +107,11 @@ Future<BuiltinTrainingCatalog> builtinTrainingCatalog(Ref ref) async {
   final builtins = ref.watch(builtinTrainingRepositoryProvider);
   final trainings = builtins.getBuiltinTrainings();
   final pinnedIds = builtins.getPinnedBuiltinTrainingIds();
-  final assessments = builtins.fetchAllAssessments();
+  // Off the shared history rather than a read of its own. The endpoint behind
+  // it takes no parameters and always answers everything, so the catalog asking
+  // the repository directly put the same request on the wire as the dashboard,
+  // at the same time, on every cold load and every pull.
+  final assessments = ref.watch(assessmentHistoryProvider.future);
   final customWeights = builtins.fetchAllCustomWeights();
 
   // Waited on together rather than awaited one after another. Awaiting them in

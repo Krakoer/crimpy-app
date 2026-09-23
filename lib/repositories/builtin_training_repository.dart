@@ -25,10 +25,6 @@ class BuiltinTrainingRepository {
 
   // --- Batch helpers (call once, pass results into evaluateBuiltin) -----------
 
-  /// Fetch all assessments in a single call for use across multiple builtins.
-  Future<List<AssessmentModel>> fetchAllAssessments() =>
-      _assessmentRepository.getAssessments();
-
   /// Fetch all custom weights in a single call.
   Future<Map<String, ({double? weightRight, double? weightLeft})>>
   fetchAllCustomWeights() => _preferences.getAllCustomWeights();

@@ -217,10 +217,14 @@ ProviderContainer _containerFor(
 }) => _setUp(client, pinnedBuiltins: pinnedBuiltins).container;
 
 /// What `home_screen.dart` does for the two training cards on a pull: drop the
-/// two reads behind them, then wait for both lists.
+/// reads behind them, then wait for both lists.
 Future<void> _homeScreenRefresh(ProviderContainer container) {
   container.invalidate(trainingLibraryProvider);
   container.invalidate(builtinTrainingCatalogProvider);
+  // The history is its own root since Krakoer/crimpy#135, and the catalog
+  // derives it rather than reading it, so this is what makes a pull ask the
+  // server for the assessments again. The screen drops all three.
+  container.invalidate(assessmentHistoryProvider);
   return Future.wait([
     container.read(allTrainingsProvider.future),
     container.read(pinnedTrainingsProvider.future),
@@ -277,6 +281,56 @@ void main() {
       expect(setUp.assessments.reads, 1);
       expect(setUp.preferences.reads, 1);
     });
+
+    // The point of Krakoer/crimpy#135. The dashboard reads the history through
+    // assessmentResults and the builtin catalog reads it for availability, and
+    // both used to ask the repository themselves: one home screen load sent the
+    // byte identical request twice, at the same time. Spelled out as one rather
+    // than derived, since the number is the whole assertion.
+    test('reads the assessment history once on a cold load', () async {
+      final client = _CountingApiClient(const ['t-0']);
+      final setUp = _setUp(client);
+
+      await _homeScreenLoad(setUp.container);
+      await setUp.container.read(assessmentResultsProvider.future);
+
+      expect(setUp.assessments.reads, 1);
+    });
+
+    test('reads the assessment history once on a pull to refresh', () async {
+      final client = _CountingApiClient(const ['t-0']);
+      final setUp = _setUp(client);
+      await _homeScreenLoad(setUp.container);
+      await setUp.container.read(assessmentResultsProvider.future);
+      setUp.assessments.reads = 0;
+
+      await _homeScreenRefresh(setUp.container);
+      await setUp.container.read(assessmentResultsProvider.future);
+
+      expect(setUp.assessments.reads, 1);
+    });
+
+    // The two sides of the duplication, asserted against each other rather than
+    // against a count: a dashboard reading a different history from the one the
+    // builtin availability was evaluated against is the bug the single read
+    // exists to make impossible.
+    test(
+      'evaluates builtins against the history the dashboard shows',
+      () async {
+        final client = _CountingApiClient(const ['t-0']);
+        final setUp = _setUp(client);
+
+        final catalog = await setUp.container.read(
+          builtinTrainingCatalogProvider.future,
+        );
+        final history = await setUp.container.read(
+          assessmentHistoryProvider.future,
+        );
+
+        expect(identical(catalog.assessments, history), isTrue);
+        expect(setUp.assessments.reads, 1);
+      },
+    );
 
     test('shows what a pull fetched rather than what it held', () async {
       final client = _CountingApiClient(const ['t-0']);
@@ -394,8 +448,15 @@ void main() {
 
       // A pin belongs to the catalog, so the library is never asked for, and
       // the catalog is asked for once for both lists rather than once each.
+      //
+      // The assessments are not asked for at all. They used to be, because the
+      // catalog read them itself and a pin change dropped the catalog. They are
+      // a root of their own now, so a pin refreshes the pins and leaves the
+      // history alone: a heart tap says nothing about what the athlete has
+      // measured. This assertion moved from 1 to 0 because the behaviour got
+      // better, not because the test was relaxed.
       expect(client.libraryReads, 0);
-      expect(setUp.assessments.reads, 1);
+      expect(setUp.assessments.reads, 0);
       expect(
         pinned.where((item) => item.isBuiltin).map((item) => item.id),
         contains(builtinId),

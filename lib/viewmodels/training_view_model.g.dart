@@ -391,7 +391,7 @@ final class BuiltinTrainingCatalogProvider
 }
 
 String _$builtinTrainingCatalogHash() =>
-    r'73304f1d3fa613b190d6cfe61a02a51bdaa42d86';
+    r'45d183fc67eb5e5ed9de55629c10d7f2425c7548';
 
 /// Returns favorite trainings.
 
