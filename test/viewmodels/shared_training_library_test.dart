@@ -216,6 +216,16 @@ ProviderContainer _containerFor(
   Iterable<String> pinnedBuiltins = const [],
 }) => _setUp(client, pinnedBuiltins: pinnedBuiltins).container;
 
+/// What `trainings_list_screen.dart` does on a pull. It drops the history as
+/// well as the library and the catalog, because builtin availability is read
+/// off the history and the catalog derives it rather than fetching it.
+Future<void> _trainingsTabRefresh(ProviderContainer container) {
+  container.invalidate(trainingLibraryProvider);
+  container.invalidate(builtinTrainingCatalogProvider);
+  container.invalidate(assessmentHistoryProvider);
+  return container.read(allTrainingsProvider.future);
+}
+
 /// What `home_screen.dart` does for the two training cards on a pull: drop the
 /// reads behind them, then wait for both lists.
 Future<void> _homeScreenRefresh(ProviderContainer container) {
@@ -323,8 +333,11 @@ void main() {
         final catalog = await setUp.container.read(
           builtinTrainingCatalogProvider.future,
         );
+        // Read through the dashboard's own path rather than the root, so this
+        // covers the null key passing the history straight through as well as
+        // the catalog deriving it.
         final history = await setUp.container.read(
-          assessmentHistoryProvider.future,
+          assessmentsProvider(null).future,
         );
 
         expect(identical(catalog.assessments, history), isTrue);
@@ -604,6 +617,55 @@ void main() {
 
       expect(await container.read(pinnedTrainingsProvider.future), isNotNull);
       expect(client.libraryReads, 1);
+    });
+
+    // The trainings tab shows builtin availability, which is evaluated against
+    // the assessment history. The catalog derives that history now instead of
+    // fetching it, so dropping the catalog alone rebuilds availability from the
+    // list already held and a pull would never refresh it. This is the row the
+    // invalidation audit found that names no assessment provider.
+    test('a trainings tab pull refreshes the builtin availability', () async {
+      final client = _CountingApiClient(const ['t-0']);
+      final setUp = _setUp(client);
+      await setUp.container.read(allTrainingsProvider.future);
+      setUp.assessments.reads = 0;
+
+      await _trainingsTabRefresh(setUp.container);
+
+      expect(setUp.assessments.reads, 1);
+    });
+
+    // And the same shape on the error path, which is worse: a keepAlive root in
+    // error state hands the same failed future back to a rebuilt catalog, so a
+    // retry that drops only the catalog asks the server nothing and shows the
+    // athlete the same error forever.
+    test('a retry after a failed history read asks the server again', () async {
+      final client = _CountingApiClient(const ['t-0']);
+      final setUp = _setUp(client);
+      setUp.assessments.failing = true;
+      await expectLater(
+        setUp.container.read(pinnedTrainingsProvider.future),
+        throwsA(isA<ApiException>()),
+      );
+      setUp.assessments.failing = false;
+      setUp.assessments.reads = 0;
+
+      // What the Retry buttons on the favourite card used to do on their own.
+      setUp.container.invalidate(builtinTrainingCatalogProvider);
+      await expectLater(
+        setUp.container.read(pinnedTrainingsProvider.future),
+        throwsA(isA<ApiException>()),
+      );
+      expect(setUp.assessments.reads, 0);
+
+      // And what they do now.
+      setUp.container.invalidate(assessmentHistoryProvider);
+
+      expect(
+        await setUp.container.read(pinnedTrainingsProvider.future),
+        isNotNull,
+      );
+      expect(setUp.assessments.reads, 1);
     });
 
     test('invalidating a derived list does not reach the server', () async {

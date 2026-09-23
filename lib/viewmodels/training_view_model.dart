@@ -54,12 +54,8 @@ BuiltinPreferencesRepository builtinPreferencesRepository(Ref ref) {
 /// Returns the builtin trainings repository, injecting the appropriate dependencies.
 @Riverpod(keepAlive: true)
 BuiltinTrainingRepository builtinTrainingRepository(Ref ref) {
-  final assessmentRepo = ref.watch(assessmentRepositoryProvider);
   final preferencesRepo = ref.watch(builtinPreferencesRepositoryProvider);
-  return BuiltinTrainingRepository(
-    assessmentRepository: assessmentRepo,
-    preferencesRepository: preferencesRepo,
-  );
+  return BuiltinTrainingRepository(preferencesRepository: preferencesRepo);
 }
 
 /// The athlete's training library, read once and shared by everything that

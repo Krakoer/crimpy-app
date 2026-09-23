@@ -4,20 +4,20 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/builtin_training.dart';
 import 'package:crimpy/models/training.dart';
-import 'package:crimpy/repositories/assessment_repository.dart';
 import 'package:crimpy/repositories/builtin_preferences_repository.dart';
 
 class BuiltinTrainingRepository {
-  final AssessmentRepository _assessmentRepository;
   final BuiltinPreferencesRepository _preferences;
 
-  /// Both collaborators are required: defaulting them to the local backends
-  /// would silently serve guest data to a signed-in user.
+  /// The collaborator is required: defaulting it to the local backend would
+  /// silently serve guest data to a signed-in user.
+  ///
+  /// It no longer holds an AssessmentRepository. Nothing here fetches a
+  /// history any more, and not being able to is the point: every way back into
+  /// reading it once per builtin went through that field.
   BuiltinTrainingRepository({
-    required AssessmentRepository assessmentRepository,
     required BuiltinPreferencesRepository preferencesRepository,
-  }) : _assessmentRepository = assessmentRepository,
-       _preferences = preferencesRepository;
+  }) : _preferences = preferencesRepository;
 
   Future<List<BuiltinTrainingModel>> getBuiltinTrainings() async {
     return builtinTrainings;
@@ -34,8 +34,10 @@ class BuiltinTrainingRepository {
   /// Evaluate a builtin training's availability, missing assessments, and
   /// generated training in a single pass over [allAssessments].
   ///
-  /// Always pass [allAssessments] from [fetchAllAssessments] to avoid one
-  /// API call per builtin.
+  /// [allAssessments] is the whole history, read once by the caller and passed
+  /// in. Evaluating a builtin never fetches: reading per builtin is what sends
+  /// the same request once per card. Its one caller watches
+  /// assessmentHistoryProvider, the single read everything derives from.
   static ({
     bool isAvailable,
     List<AssessmentRequirement> missing,
@@ -106,38 +108,14 @@ class BuiltinTrainingRepository {
     return hand.isRightHand ? last?.rightValue : last?.leftValue;
   }
 
-  // --- Availability and assessment checking ---------------------------------
-
-  Future<bool> isTrainingAvailable(BuiltinTrainingModel training) async {
-    final assessments = await _assessmentRepository.getAssessments();
-    return evaluateBuiltinSync(training, assessments).isAvailable;
-  }
-
-  Future<List<AssessmentRequirement>> getMissingAssessments(
-    BuiltinTrainingModel training,
-  ) async {
-    final assessments = await _assessmentRepository.getAssessments();
-    return evaluateBuiltinSync(training, assessments).missing;
-  }
-
-  Future<Training?> generateTraining(
-    BuiltinTrainingModel training, {
-    double? customLoadRight,
-    double? customLoadLeft,
-  }) async {
-    if (customLoadRight == null || customLoadLeft == null) {
-      final w = await _preferences.getCustomWeights(training.id);
-      customLoadRight ??= w.weightRight;
-      customLoadLeft ??= w.weightLeft;
-    }
-    final assessments = await _assessmentRepository.getAssessments();
-    return evaluateBuiltinSync(
-      training,
-      assessments,
-      customWeightRight: customLoadRight,
-      customWeightLeft: customLoadLeft,
-    ).training;
-  }
+  // Three per call readers used to live here: isTrainingAvailable,
+  // getMissingAssessments and generateTraining. Each fetched the whole
+  // assessment history for one builtin, and all three had been without a caller
+  // since before Krakoer/crimpy#135. They are gone rather than left dead,
+  // because the next caller of one of them would reintroduce exactly the
+  // duplication this removed, one request per card instead of one per screen.
+  // evaluateBuiltinSync is what to use, against the history the caller already
+  // holds.
 
   // --- Preferences delegation -----------------------------------------------
 

@@ -219,7 +219,7 @@ final class BuiltinTrainingRepositoryProvider
 }
 
 String _$builtinTrainingRepositoryHash() =>
-    r'3129edbdb68f0acafe4db2b37483944432d7e7af';
+    r'2def12f7278fec286a0596c4f17b0db9ba533abf';
 
 /// The athlete's training library, read once and shared by everything that
 /// lists trainings.
