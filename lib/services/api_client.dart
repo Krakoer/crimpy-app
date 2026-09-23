@@ -5,6 +5,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/services/api_exception.dart';
 
+/// A library listing: the rows the server answered, and whether it had to cut
+/// them short to stay under its ceiling.
+///
+/// Named rather than spelled out at each use, so a third field is one edit
+/// instead of one per fake, the way TrainingLibrary names the repository's
+/// answer built from this.
+typedef TrainingsPage = ({List<Map<String, dynamic>> rows, bool truncated});
+
 class ApiClient {
   /// Set to reach a local stack, or preprod, or production, from a run started
   /// in the editor, without editing this file:
@@ -401,17 +409,23 @@ class ApiClient {
   /// reads exactly like a small one, and an athlete shown the first part of
   /// their library with nothing to say so is the one answer this must not give.
   /// The cheap list has no ceiling and always answers false.
-  Future<({List<Map<String, dynamic>> rows, bool truncated})> getTrainings({
-    bool includeItems = false,
-  }) async {
+  Future<TrainingsPage> getTrainings({bool includeItems = false}) async {
     final res = await get(
       '/api/trainings',
       queryParameters: includeItems ? const {'include': 'items'} : null,
     );
+    // Read off the list rather than through Headers.value, which throws when a
+    // header arrives twice. A proxy that duplicated this one would turn the
+    // whole library read into an error, and losing the rows to report a banner
+    // about them is worse than any answer the banner could give.
+    //
     // A server that predates the cap sets no header at all, which reads as a
     // whole library, which is what it answers.
-    final flag = res.headers.value(trainingsTruncatedHeader);
-    return (rows: _asList(res.data), truncated: flag?.toLowerCase() == 'true');
+    final flags = res.headers[trainingsTruncatedHeader];
+    final truncated =
+        flags != null &&
+        flags.any((value) => value.trim().toLowerCase() == 'true');
+    return (rows: _asList(res.data), truncated: truncated);
   }
 
   Future<Map<String, dynamic>> getTraining(String id) async {

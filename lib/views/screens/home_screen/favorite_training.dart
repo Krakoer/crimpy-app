@@ -1,4 +1,5 @@
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/views/widgets/truncated_library_notice.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/home_card.dart';
@@ -162,65 +163,76 @@ class PinTrainingDialog extends ConsumerWidget {
           child: SizedBox(
             width: 300,
             height: 300,
-            child: value.isEmpty
-                ? Center(
-                    child: Text(
-                      "You don't have any training available yet.\n\nDo an assessment to unlock personalised trainings, or create your own trainings in the trainings page!",
-                      textAlign: TextAlign.center,
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: value.length,
-                    itemBuilder: (contex, index) {
-                      final item = value[index];
+            child: Column(
+              children: [
+                // The list is the capped library, so a training past the
+                // ceiling cannot be favourited from here at all.
+                const TruncatedLibraryNotice(),
+                Expanded(
+                  child: value.isEmpty
+                      ? Center(
+                          child: Text(
+                            "You don't have any training available yet.\n\nDo an assessment to unlock personalised trainings, or create your own trainings in the trainings page!",
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: value.length,
+                          itemBuilder: (contex, index) {
+                            final item = value[index];
 
-                      // Skip unavailable builtin trainings in pin dialog
-                      if (!item.isAvailable) return SizedBox.shrink();
+                            // Skip unavailable builtin trainings in pin dialog
+                            if (!item.isAvailable) return SizedBox.shrink();
 
-                      return ListTile(
-                        // Heart icon to represent the favorite status.
-                        trailing: Icon(
-                          item.isPinned
-                              ? FontAwesomeIcons.solidHeart
-                              : FontAwesomeIcons.heart,
-                          color: Theme.of(context).colorScheme.error,
+                            return ListTile(
+                              // Heart icon to represent the favorite status.
+                              trailing: Icon(
+                                item.isPinned
+                                    ? FontAwesomeIcons.solidHeart
+                                    : FontAwesomeIcons.heart,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                              // On tap, toggle the status.
+                              onTap: () async {
+                                if (item.isBuiltin) {
+                                  await ref
+                                      .read(pinnedTrainingsProvider.notifier)
+                                      .togglePin(item.id);
+                                } else {
+                                  await ref
+                                      .read(favTrainingsProvider.notifier)
+                                      .toggleFav(item.id);
+                                }
+                                // Nothing to invalidate here: a favourite is a field
+                                // on the training and a pin is not, so each toggle
+                                // drops exactly what it changed and both lists are
+                                // rebuilt from it.
+                              },
+                              title: Text(
+                                item.name,
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    FontAwesomeIcons.stopwatch,
+                                    color: CrimpyTheme.gray400,
+                                    size: 17,
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    formatDurationMinSec(item.totalDuration),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
-                        // On tap, toggle the status.
-                        onTap: () async {
-                          if (item.isBuiltin) {
-                            await ref
-                                .read(pinnedTrainingsProvider.notifier)
-                                .togglePin(item.id);
-                          } else {
-                            await ref
-                                .read(favTrainingsProvider.notifier)
-                                .toggleFav(item.id);
-                          }
-                          // Nothing to invalidate here: a favourite is a field
-                          // on the training and a pin is not, so each toggle
-                          // drops exactly what it changed and both lists are
-                          // rebuilt from it.
-                        },
-                        title: Text(
-                          item.name,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Icon(
-                              FontAwesomeIcons.stopwatch,
-                              color: CrimpyTheme.gray400,
-                              size: 17,
-                            ),
-                            SizedBox(width: 6),
-                            Text(formatDurationMinSec(item.totalDuration)),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                ),
+              ],
+            ),
           ),
         ),
         AsyncValue(:final error?) => Center(

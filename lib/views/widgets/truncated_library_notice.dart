@@ -4,18 +4,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 
-/// Says that the list below is the start of the athlete's library rather than
-/// all of it.
+/// Says that the library behind the screen is the start of the athlete's
+/// library rather than all of it.
 ///
 /// The server caps a library read, so a cut answer and a small one are the same
 /// rows. Without this an athlete past the ceiling sees trainings they own
 /// simply missing, with nothing to say they still exist, which reads as data
 /// loss rather than as a limit.
 ///
+/// It lives here rather than beside one screen because every screen built on
+/// the library has the same hole: the trainings list, the assessments the
+/// athlete can record, and the dialog that picks a training to favourite all
+/// read the capped list, and a training past the ceiling is unreachable from
+/// each of them.
+///
 /// Renders nothing at all until the library is both read and cut. A banner that
 /// appeared while the library loaded would flash on every pull to refresh, and
-/// an error reaching here would be the second report of a failure the list
+/// an error reaching here would be the second report of a failure the screen
 /// itself already shows.
+///
+/// Watching [trainingLibraryTruncatedProvider] rather than the library means it
+/// costs no request of its own and does not rebuild when the trainings change.
 class TruncatedLibraryNotice extends ConsumerWidget {
   const TruncatedLibraryNotice({super.key});
 
@@ -45,8 +54,12 @@ class TruncatedLibraryNotice extends ConsumerWidget {
           const SizedBox(width: 8.0),
           Expanded(
             child: Text(
-              'Showing the first part of your library. Some trainings are not '
-              'listed here. Open one from the web app to reach the rest.',
+              // The cut is alphabetical, which is the one fact that lets an
+              // athlete work out which of their trainings are missing rather
+              // than wondering whether they were deleted.
+              'This is the start of your library, listed by name. Trainings '
+              'later in the alphabet are not shown here. Open your library in '
+              'the web app to reach them.',
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.textSecondary),

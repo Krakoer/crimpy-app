@@ -35,9 +35,7 @@ class _CountingApiClient extends ApiClient {
   bool truncated = false;
 
   @override
-  Future<({List<Map<String, dynamic>> rows, bool truncated})> getTrainings({
-    bool includeItems = false,
-  }) async {
+  Future<TrainingsPage> getTrainings({bool includeItems = false}) async {
     libraryReads++;
     if (failing) throw ApiException('offline', isOffline: true);
     return (

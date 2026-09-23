@@ -161,9 +161,10 @@ class Trainings extends _$Trainings {
   late TrainingRepository _trainingRepository;
 
   @override
-  Future<List<Training>> build() {
+  Future<List<Training>> build() async {
     _trainingRepository = ref.watch(trainingRepositoryProvider);
-    return ref.watch(trainingLibraryProvider.future).then((l) => l.trainings);
+    final library = await ref.watch(trainingLibraryProvider.future);
+    return library.trainings;
   }
 
   /// Runs a repository mutation and reloads the library. Invalidating it

@@ -39,9 +39,7 @@ class _CountingApiClient extends ApiClient {
   bool truncated = false;
 
   @override
-  Future<({List<Map<String, dynamic>> rows, bool truncated})> getTrainings({
-    bool includeItems = false,
-  }) async {
+  Future<TrainingsPage> getTrainings({bool includeItems = false}) async {
     listCalls++;
     listedWithItems.add(includeItems);
     final rows = [
@@ -263,9 +261,7 @@ class _DeafApiClient extends _CountingApiClient {
   _DeafApiClient(super.ids);
 
   @override
-  Future<({List<Map<String, dynamic>> rows, bool truncated})> getTrainings({
-    bool includeItems = false,
-  }) async {
+  Future<TrainingsPage> getTrainings({bool includeItems = false}) async {
     listCalls++;
     listedWithItems.add(includeItems);
     final rows = [
