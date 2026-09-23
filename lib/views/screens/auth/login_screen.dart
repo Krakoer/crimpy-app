@@ -2,7 +2,9 @@ import 'package:crimpy/services/local_data_migration.dart';
 import 'package:crimpy/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
+import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/auth/registration_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -103,6 +105,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           setState(() => _isLoading = true);
           final failures = await authNotifier.importLocalDataToApi();
           if (!mounted) return;
+          // The import wrote to the account through the API, behind the
+          // providers that had already read it: signing in flips
+          // isAuthenticated, which rebuilds the repositories and lets the
+          // screens fetch, and that happens before the upload rather than
+          // after. Whatever went up is invisible until these are dropped.
+          //
+          // Dropped on both branches. A partial failure still imported the
+          // rows that did not fail, and it is the branch that never reaches
+          // clearLocalDataAfterLogin, so it is the one where nothing else
+          // cycles the graph.
+          ref.invalidate(assessmentHistoryProvider);
+          ref.invalidate(trainingLibraryProvider);
+          ref.invalidate(builtinTrainingCatalogProvider);
+          ref.invalidate(sessionsProvider);
           if (failures == 0) {
             await authNotifier.clearLocalDataAfterLogin();
           } else {

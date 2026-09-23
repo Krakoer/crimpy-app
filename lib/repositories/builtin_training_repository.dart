@@ -11,10 +11,6 @@ class BuiltinTrainingRepository {
 
   /// The collaborator is required: defaulting it to the local backend would
   /// silently serve guest data to a signed-in user.
-  ///
-  /// It no longer holds an AssessmentRepository. Nothing here fetches a
-  /// history any more, and not being able to is the point: every way back into
-  /// reading it once per builtin went through that field.
   BuiltinTrainingRepository({
     required BuiltinPreferencesRepository preferencesRepository,
   }) : _preferences = preferencesRepository;
@@ -107,15 +103,6 @@ class BuiltinTrainingRepository {
     final last = filtered.lastOrNull;
     return hand.isRightHand ? last?.rightValue : last?.leftValue;
   }
-
-  // Three per call readers used to live here: isTrainingAvailable,
-  // getMissingAssessments and generateTraining. Each fetched the whole
-  // assessment history for one builtin, and all three had been without a caller
-  // since before Krakoer/crimpy#135. They are gone rather than left dead,
-  // because the next caller of one of them would reintroduce exactly the
-  // duplication this removed, one request per card instead of one per screen.
-  // evaluateBuiltinSync is what to use, against the history the caller already
-  // holds.
 
   // --- Preferences delegation -----------------------------------------------
 

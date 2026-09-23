@@ -105,7 +105,11 @@ class _NoAssessments extends AssessmentRepository {
       await Future<void>.delayed(Duration.zero);
       throw ApiException('offline', isOffline: true);
     }
-    return const [];
+    // A fresh list per read, not `const []`. Dart canonicalises const empty
+    // lists, so two independent reads of one would answer the same instance and
+    // every assertion that two consumers share one read would pass without
+    // being true.
+    return <AssessmentModel>[];
   }
 
   @override
