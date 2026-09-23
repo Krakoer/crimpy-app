@@ -26,7 +26,31 @@ import 'package:crimpy/viewmodels/training_view_model.dart';
 /// Watching [trainingLibraryTruncatedProvider] rather than the library means it
 /// costs no request of its own and does not rebuild when the trainings change.
 class TruncatedLibraryNotice extends ConsumerWidget {
-  const TruncatedLibraryNotice({super.key});
+  /// Shortens the message to a single line, for somewhere the full paragraph
+  /// would cost more room than it is worth. The pin dialog is a fixed 300dp
+  /// box: the paragraph wrapped to six lines there and left under one row of
+  /// the training list visible, which took the screen away from the only
+  /// athlete who would ever see the notice on it.
+  final bool compact;
+
+  const TruncatedLibraryNotice({super.key, this.compact = false});
+
+  /// What the notice says.
+  ///
+  /// It states what happened and stops. An earlier version told the athlete to
+  /// open their library in the web app, which is false for everyone who reads
+  /// it: the portal is coach facing, and its trainings page sends anyone who is
+  /// not a validated coach to the dashboard. A notice whose advice cannot be
+  /// followed is worse than one that gives none.
+  ///
+  /// It names the order rather than the screen, because the same library backs
+  /// the trainings list, the recordable assessments, the favourites and the pin
+  /// dialog, and the alphabetical cut is the one fact that lets an athlete work
+  /// out what is missing from any of them.
+  static const _full =
+      'Only the start of your library is loaded, ordered by training name. '
+      'Anything later in the alphabet is not shown here.';
+  static const _short = 'Only the start of your library is loaded.';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -54,12 +78,7 @@ class TruncatedLibraryNotice extends ConsumerWidget {
           const SizedBox(width: 8.0),
           Expanded(
             child: Text(
-              // The cut is alphabetical, which is the one fact that lets an
-              // athlete work out which of their trainings are missing rather
-              // than wondering whether they were deleted.
-              'This is the start of your library, listed by name. Trainings '
-              'later in the alphabet are not shown here. Open your library in '
-              'the web app to reach them.',
+              compact ? _short : _full,
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.textSecondary),
