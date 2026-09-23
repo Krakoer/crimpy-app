@@ -35,13 +35,16 @@ class _CountingApiClient extends ApiClient {
     },
   };
 
+  /// Set so a caller can be handed a library the server says it cut short.
+  bool truncated = false;
+
   @override
-  Future<List<Map<String, dynamic>>> getTrainings({
+  Future<({List<Map<String, dynamic>> rows, bool truncated})> getTrainings({
     bool includeItems = false,
   }) async {
     listCalls++;
     listedWithItems.add(includeItems);
-    return [
+    final rows = [
       for (final id in ids)
         if (includeItems)
           {
@@ -67,6 +70,7 @@ class _CountingApiClient extends ApiClient {
         else
           row(id),
     ];
+    return (rows: rows, truncated: truncated);
   }
 
   @override
@@ -94,11 +98,9 @@ void main() {
         for (var index = 0; index < 50; index++) 't-$index',
       ]);
 
-      final trainings = await RemoteTrainingRepository(
-        client,
-      ).getAllTrainings();
+      final library = await RemoteTrainingRepository(client).getAllTrainings();
 
-      expect(trainings, hasLength(50));
+      expect(library.trainings, hasLength(50));
       // One, spelled out rather than derived: fifty trainings used to cost the
       // list plus nine more round trips, six detail reads at a time.
       expect(client.listCalls, 1);
@@ -120,7 +122,7 @@ void main() {
 
         final training = (await RemoteTrainingRepository(
           client,
-        ).getAllTrainings()).single;
+        ).getAllTrainings()).trainings.single;
 
         expect(training.items.single.comment, 'from the list');
       },
@@ -131,7 +133,7 @@ void main() {
 
       final training = (await RemoteTrainingRepository(
         client,
-      ).getAllTrainings()).single;
+      ).getAllTrainings()).trainings.single;
 
       // training_id is what makes an assessment the athlete's own rather than
       // one Crimpy ships, and it only reaches the app if the list row carries
@@ -146,11 +148,9 @@ void main() {
         for (var index = 0; index < 20; index++) 't-$index',
       ]);
 
-      final trainings = await RemoteTrainingRepository(
-        client,
-      ).getAllTrainings();
+      final library = await RemoteTrainingRepository(client).getAllTrainings();
 
-      expect(trainings.map((training) => training.id), [
+      expect(library.trainings.map((training) => training.id), [
         for (var index = 0; index < 20; index++) 't-$index',
       ]);
     });
@@ -161,15 +161,16 @@ void main() {
         favourites: const {'t-1'},
       );
 
-      final trainings = await RemoteTrainingRepository(
-        client,
-      ).getAllTrainings();
+      final library = await RemoteTrainingRepository(client).getAllTrainings();
 
       // The repository has no narrower read since Krakoer/crimpy#132: the
       // favourites are filtered off this flag by the provider that holds the
       // library, so the flag has to survive the one request.
       expect(
-        {for (final training in trainings) training.id: training.isFavorite},
+        {
+          for (final training in library.trainings)
+            training.id: training.isFavorite,
+        },
         {'t-0': false, 't-1': true, 't-2': false},
       );
       expect(client.listCalls, 1);
@@ -182,15 +183,13 @@ void main() {
         empty: const {'t-1'},
       );
 
-      final trainings = await RemoteTrainingRepository(
-        client,
-      ).getAllTrainings();
+      final library = await RemoteTrainingRepository(client).getAllTrainings();
 
       // An empty array is not an absent key. Reading the two as the same thing
       // would send a library with one freshly created training straight back to
       // a detail read per training.
-      expect(trainings.last.items, isEmpty);
-      expect(trainings.first.items, hasLength(1));
+      expect(library.trainings.last.items, isEmpty);
+      expect(library.trainings.first.items, hasLength(1));
       expect(client.detailCalls, 0);
     });
 
@@ -200,22 +199,60 @@ void main() {
         for (var index = 0; index < 8; index++) 't-$index',
       ]);
 
-      final trainings = await RemoteTrainingRepository(
-        client,
-      ).getAllTrainings();
+      final library = await RemoteTrainingRepository(client).getAllTrainings();
 
       // Today's behaviour rather than a library of trainings with no steps in
       // them, which is what reading the cheap rows straight through would give.
-      expect(trainings, hasLength(8));
-      expect(trainings.first.items.single.comment, 'from the detail read');
+      expect(library.trainings, hasLength(8));
+      expect(
+        library.trainings.first.items.single.comment,
+        'from the detail read',
+      );
       expect(client.detailCalls, 8);
     });
 
     test('answers with nothing for an empty library', () async {
       final client = _CountingApiClient(const []);
 
-      expect(await RemoteTrainingRepository(client).getAllTrainings(), isEmpty);
+      expect(
+        (await RemoteTrainingRepository(client).getAllTrainings()).trainings,
+        isEmpty,
+      );
       expect(client.detailCalls, 0);
+    });
+
+    test('reads a whole library as a whole one', () async {
+      final client = _CountingApiClient(const ['t-0', 't-1']);
+
+      final library = await RemoteTrainingRepository(client).getAllTrainings();
+
+      // The flag has to default to false rather than to unknown: every caller
+      // reads it as a question about whether to warn the athlete, and a true
+      // that leaks out of an untruncated read is a warning about nothing.
+      expect(library.truncated, isFalse);
+    });
+
+    test('carries a cut library through as a cut one', () async {
+      final client = _CountingApiClient(const ['t-0', 't-1'])..truncated = true;
+
+      final library = await RemoteTrainingRepository(client).getAllTrainings();
+
+      expect(library.truncated, isTrue);
+      expect(library.trainings, hasLength(2));
+    });
+
+    test('keeps the cut flag when it falls back to detail reads', () async {
+      final client = _DeafApiClient(const ['t-0', 't-1'])..truncated = true;
+
+      final library = await RemoteTrainingRepository(client).getAllTrainings();
+
+      // The fallback reads the detail of each row the listing answered, and it
+      // is the listing that was cut. Rebuilding the library one training at a
+      // time does not make it a whole library, so the flag survives the arm
+      // that never looks at the list rows again.
+      expect(library.truncated, isTrue);
+      expect(library.trainings, hasLength(2));
+      expect(client.detailCalls, 2);
     });
   });
 }
@@ -226,12 +263,12 @@ class _DeafApiClient extends _CountingApiClient {
   _DeafApiClient(super.ids);
 
   @override
-  Future<List<Map<String, dynamic>>> getTrainings({
+  Future<({List<Map<String, dynamic>> rows, bool truncated})> getTrainings({
     bool includeItems = false,
   }) async {
     listCalls++;
     listedWithItems.add(includeItems);
-    return [
+    final rows = [
       for (final id in ids)
         {
           ...row(id),
@@ -242,5 +279,8 @@ class _DeafApiClient extends _CountingApiClient {
             ..remove('training_id'),
         },
     ];
+    // A server old enough to ignore include is old enough to have no cap, so
+    // it sets no header and the flag it is read as stays where the fake put it.
+    return (rows: rows, truncated: truncated);
   }
 }

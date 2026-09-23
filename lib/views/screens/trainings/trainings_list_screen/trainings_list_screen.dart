@@ -7,6 +7,7 @@ import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/missing_assessments_dialog.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/training_list_item.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/create_training_fab.dart';
+import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/truncated_library_notice.dart';
 import 'package:crimpy/views/screens/trainings/programs/widgets/program_summary_card.dart';
 
 class TrainingScreen extends ConsumerStatefulWidget {
@@ -73,6 +74,7 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen>
               ),
               children: [
                 const ProgramSummaryCard(),
+                const TruncatedLibraryNotice(),
                 ...value.map(
                   (item) => TrainingListItemWidget(
                     item: item,

@@ -255,11 +255,11 @@ const trainingLibraryProvider = TrainingLibraryProvider._();
 final class TrainingLibraryProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<Training>>,
-          List<Training>,
-          FutureOr<List<Training>>
+          AsyncValue<TrainingLibrary>,
+          TrainingLibrary,
+          FutureOr<TrainingLibrary>
         >
-    with $FutureModifier<List<Training>>, $FutureProvider<List<Training>> {
+    with $FutureModifier<TrainingLibrary>, $FutureProvider<TrainingLibrary> {
   /// The athlete's training library, read once and shared by everything that
   /// lists trainings.
   ///
@@ -289,17 +289,71 @@ final class TrainingLibraryProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<Training>> $createElement(
+  $FutureProviderElement<TrainingLibrary> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<Training>> create(Ref ref) {
+  FutureOr<TrainingLibrary> create(Ref ref) {
     return trainingLibrary(ref);
   }
 }
 
-String _$trainingLibraryHash() => r'682832b945d463a239c802bba42d197a7bd28153';
+String _$trainingLibraryHash() => r'f26e2480f6e8696b5c88b9f1dae88de316d5bfee';
+
+/// Whether the library on screen is the start of the athlete's library rather
+/// than all of it.
+///
+/// Its own provider so a banner can watch the one fact it needs without
+/// rebuilding on every change to the trainings themselves, and so the screens
+/// that show the library do not each have to unpack the record.
+
+@ProviderFor(trainingLibraryTruncated)
+const trainingLibraryTruncatedProvider = TrainingLibraryTruncatedProvider._();
+
+/// Whether the library on screen is the start of the athlete's library rather
+/// than all of it.
+///
+/// Its own provider so a banner can watch the one fact it needs without
+/// rebuilding on every change to the trainings themselves, and so the screens
+/// that show the library do not each have to unpack the record.
+
+final class TrainingLibraryTruncatedProvider
+    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
+    with $FutureModifier<bool>, $FutureProvider<bool> {
+  /// Whether the library on screen is the start of the athlete's library rather
+  /// than all of it.
+  ///
+  /// Its own provider so a banner can watch the one fact it needs without
+  /// rebuilding on every change to the trainings themselves, and so the screens
+  /// that show the library do not each have to unpack the record.
+  const TrainingLibraryTruncatedProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'trainingLibraryTruncatedProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$trainingLibraryTruncatedHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<bool> create(Ref ref) {
+    return trainingLibraryTruncated(ref);
+  }
+}
+
+String _$trainingLibraryTruncatedHash() =>
+    r'1d5a4f80b41d7e533c1a5c9fd1bb4f1d9594c352';
 
 /// Everything the builtin half of a training list is built from, read once and
 /// shared the way the library is.
@@ -421,7 +475,7 @@ final class FavTrainingsProvider
   FavTrainings create() => FavTrainings();
 }
 
-String _$favTrainingsHash() => r'9252c05e9626563b1ff40c82a5afb59adbe1f50e';
+String _$favTrainingsHash() => r'ec3b42df3b0c646ff0b1579a70d576592ad38532';
 
 /// Returns favorite trainings.
 
@@ -472,7 +526,7 @@ final class TrainingsProvider
   Trainings create() => Trainings();
 }
 
-String _$trainingsHash() => r'6ece01f4daab055d6ff890811a4e08054c250b1a';
+String _$trainingsHash() => r'd07b09d05f074a122a489d51268a653ab4f26cea';
 
 /// Returns all trainings and allows creating, updating, and deleting them.
 
@@ -886,7 +940,7 @@ final class PinnedTrainingsProvider
   PinnedTrainings create() => PinnedTrainings();
 }
 
-String _$pinnedTrainingsHash() => r'b4bbc566fcc320c240ffa417fd602f9f8a1177c2';
+String _$pinnedTrainingsHash() => r'908bb00473aecee7f7fc5544cc4aa6467e2bf129';
 
 /// Provider for pinned builtin trainings (with favorites).
 
@@ -962,4 +1016,4 @@ final class AllTrainingsProvider
   }
 }
 
-String _$allTrainingsHash() => r'a412e15260a6cd0c32d79d7805af98d6266bd264';
+String _$allTrainingsHash() => r'fc2fda492f0b80f5ff117926a6a5e43f07d10b47';
