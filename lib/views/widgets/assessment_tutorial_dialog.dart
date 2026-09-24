@@ -217,7 +217,7 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               side: BorderSide(
-                                color: CrimpyTheme.textMuted,
+                                color: CrimpyTheme.textMutedSmall,
                                 width: 1,
                               ),
                               shape: RoundedRectangleBorder(

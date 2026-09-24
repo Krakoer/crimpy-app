@@ -483,7 +483,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
                       fontWeight: FontWeight.w700,
                       color: isSelected
                           ? CrimpyTheme.bgPrimary
-                          : CrimpyTheme.textMuted,
+                          : CrimpyTheme.textMutedSmall,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -575,7 +575,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
           fontFamily: 'JetBrainsMono',
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: CrimpyTheme.textMuted,
+          color: CrimpyTheme.textMutedSmall,
         ),
       ),
     );
@@ -603,7 +603,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
             style: TextStyle(
               fontFamily: 'JetBrainsMono',
               fontSize: 11,
-              color: CrimpyTheme.textMuted,
+              color: CrimpyTheme.textMutedSmall,
             ),
           ),
         ],
@@ -651,7 +651,7 @@ class _CalendarView extends StatelessWidget {
                         fontFamily: 'JetBrainsMono',
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
-                        color: CrimpyTheme.textMuted,
+                        color: CrimpyTheme.textMutedSmall,
                       ),
                     ),
                   ),
@@ -778,7 +778,7 @@ class _CalendarRow extends ConsumerWidget {
                   fontWeight: FontWeight.w700,
                   color: defined
                       ? CrimpyTheme.textPrimary
-                      : CrimpyTheme.textMuted,
+                      : CrimpyTheme.textMutedSmall,
                 ),
               ),
             ),

@@ -1,3 +1,4 @@
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/models/assessment_history.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
@@ -149,7 +150,11 @@ class ProfileContent extends ConsumerWidget {
                                 Text(
                                   'Email not verified',
                                   style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(color: Colors.orange),
+                                      ?.copyWith(
+                                        color: CrimpyTheme.textOn(
+                                          CrimpyTheme.statusWarning,
+                                        ),
+                                      ),
                                 ),
                             ],
                           ),

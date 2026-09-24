@@ -83,7 +83,7 @@ class ExerciseDescription extends StatelessWidget {
         fontFamily: 'JetBrainsMono',
         fontSize: 11,
         height: 1.4,
-        color: CrimpyTheme.textMuted,
+        color: CrimpyTheme.textMutedSmall,
       ),
     );
   }

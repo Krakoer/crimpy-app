@@ -76,9 +76,11 @@ class RepItemWidget extends StatelessWidget {
         ? rep.averageWeight / rep.targetWeight
         : 0;
     final bool isSuccess = successRate >= 0.9;
+    // Theme accents, not raw Material ones: Colors.orange.shade600 is unreadable
+    // at the sizes the labels below use. See Krakoer/crimpy#137.
     final Color statusColor = isSuccess
-        ? Colors.green.shade600
-        : Colors.orange.shade600;
+        ? CrimpyTheme.statusSuccess
+        : CrimpyTheme.statusWarning;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -178,7 +180,7 @@ class RepItemWidget extends StatelessWidget {
                       Icon(
                         isSuccess ? Icons.check_circle : Icons.warning,
                         size: 14,
-                        color: statusColor,
+                        color: CrimpyTheme.markOn(statusColor),
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -186,7 +188,7 @@ class RepItemWidget extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: statusColor,
+                          color: CrimpyTheme.textOn(statusColor),
                         ),
                       ),
                     ],
@@ -259,7 +261,7 @@ class RepItemWidget extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: statusColor,
+                            color: CrimpyTheme.textOn(statusColor),
                           ),
                         ),
                       ],

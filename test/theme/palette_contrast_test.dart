@@ -139,13 +139,17 @@ final Directory libRoot = Directory('lib');
 
 const Set<String> generatedSuffixes = {'.g.dart', '.freezed.dart'};
 
-/// lib/theme.dart declares a second class named CrimpyTheme with a palette of
-/// its own (`accentOrange` #C4653A rather than #C6613F), so a name read there
-/// would be measured against the wrong hex. Its `lightTheme` is unreferenced,
-/// main.dart building the one in lib/theme/crimpy_theme.dart, and the single
-/// screen that imports it reads only a grey. Skipped rather than mismeasured;
-/// removing the duplicate is its own ticket.
-const Set<String> foreignPalettes = {'lib/theme.dart'};
+/// Files whose accent names belong to some palette other than
+/// lib/theme/crimpy_theme.dart, and so cannot be measured against it.
+///
+/// Empty since Krakoer/crimpy#137. It held lib/theme.dart, a second class also
+/// called CrimpyTheme with a palette of its own (`accentOrange` #C4653A rather
+/// than #C6613F), which the scan had to skip by name because a name read there
+/// resolved to the wrong hex. That file is deleted and the one screen importing
+/// it now reads the real theme, so nothing is skipped and the scan covers all
+/// of lib/. Kept rather than removed because a second palette is the kind of
+/// thing that comes back, and this is where it would have to be declared.
+const Set<String> foreignPalettes = <String>{};
 
 /// The accent names a widget can write, with the value each one holds. Spelled
 /// out rather than reflected, because a Flutter test has no mirrors; a name
@@ -388,10 +392,12 @@ class NeutralOffence {
 ///   - a call whose name merely ends in `style`, which is read as a style
 ///     builder. Over-reporting rather than under, and nothing in lib/ is
 ///     mis-read today.
-///   - which class an accent name belongs to. lib/theme.dart declares a second
-///     CrimpyTheme with its own palette, and post_workout_screen.dart imports
-///     that one; a name is resolved against lib/theme/crimpy_theme.dart
-///     whichever is in scope. Nothing in that file paints an accent today.
+///   - which class an accent name belongs to. There is only one CrimpyTheme
+///     since Krakoer/crimpy#137, so every name in lib/ resolves against
+///     lib/theme/crimpy_theme.dart and the question does not arise. A second
+///     palette would have to be declared in [foreignPalettes] to be skipped,
+///     and a name read from one that is not would be measured against the
+///     wrong hex.
 List<NeutralOffence> neutralOffences() {
   final offences = <NeutralOffence>[];
   for (final entity in libRoot.listSync(recursive: true)) {

@@ -76,7 +76,7 @@ class SessionFeedbackCard extends StatelessWidget {
                       DateFormat('MMM d, yyyy').format(answeredAt),
                       style: const TextStyle(
                         fontSize: 12,
-                        color: CrimpyTheme.textMuted,
+                        color: CrimpyTheme.textMutedSmall,
                       ),
                     ),
                   ],

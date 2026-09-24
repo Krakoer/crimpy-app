@@ -568,7 +568,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
               fontFamily: 'JetBrainsMono',
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: CrimpyTheme.textMuted,
+              color: CrimpyTheme.textMutedSmall,
             ),
           ),
       ],

@@ -126,7 +126,25 @@ class CrimpyTheme {
   static const Color textSecondary = Color(0xFF666666);
 
   /// Muted text - Light gray
+  ///
+  /// 2.85:1 on white. Fine for a rule or a large figure, unreadable as the
+  /// small print the app writes it as, which is what [textMutedSmall] is for.
   static const Color textMuted = Color(0xFF999999);
+
+  /// The muted voice at a size that has to clear the 4.5:1 text floor.
+  ///
+  /// 4.74:1 on white and 4.54:1 on [bgSecondary]. It cannot be lighter: 4.5:1
+  /// on a near white card admits nothing paler, which is why it lands close to
+  /// [textSecondary] at 5.74:1. At these sizes the muted voice and the
+  /// secondary one cannot be told apart by lightness and stay readable, so the
+  /// difference between them has to be carried by size and weight. That is a
+  /// real cost of the split rather than an oversight, and the portal's
+  /// --tx3-sm in crimpy-frontend/src/routes/layout.css records the same one.
+  ///
+  /// It does not clear the floor on [bgHover] at 4.35:1. Nothing writes small
+  /// muted text on a hover ground today; a caller that wants to takes
+  /// [textSecondary]. See Krakoer/crimpy#137.
+  static const Color textMutedSmall = Color(0xFF737373);
 
   /// Secondary text drawn over a filled surface - Translucent white
   static const Color textOnFillSecondary = Color(0xB3FFFFFF);
@@ -647,6 +665,11 @@ class CrimpyTheme {
     accentPurple: accentPurpleText,
     accentBlue: accentBlueText,
     statusError: statusErrorText,
+    // Not an accent, and the reason it is here anyway: callers already route
+    // the muted voice through textOn, and without an entry it was handed back
+    // unchanged at 2.85:1. ScheduleStatusTag writes it as a 10px w700 label
+    // that way. See Krakoer/crimpy#137.
+    textMuted: textMutedSmall,
   });
 
   /// Every accent too pale to stand as a mark on a neutral ground, keyed by the
@@ -665,7 +688,49 @@ class CrimpyTheme {
     // both names, the way [_accentTextColors] answers accentOrange and
     // primaryOrange with one.
     accentYellow: accentYellowText,
+    // textMuted misses the mark floor too, at 2.85:1 against 3:1. Marginal, but
+    // an icon drawn in it is as unreadable as the label beside it was.
+    textMuted: textMutedSmall,
   });
+
+  /// Every accent darkened far enough to carry a white label, keyed by the
+  /// accent itself the way [_accentTextColors] is.
+  ///
+  /// The mirror of that map. [textOn] answers "what do I write on a tint of this
+  /// accent"; this answers "what do I fill with when the label on top is white".
+  /// Every accent in this palette is under the 4.5:1 floor beneath white except
+  /// statusError and statusSuccess, and gold is at 2.25:1, which fails even the
+  /// 3:1 floor a large label would answer to. A 16px w600 label is not large by
+  /// WCAG, which asks 18.66px of a bold one, so the session buttons that fill
+  /// with an activity colour were unreadable at every size they are used.
+  ///
+  /// These are the accents themselves darkened, not new hues, so a filled button
+  /// still reads as its activity. It is --pr-dk and --rd-dk in
+  /// crimpy-frontend/src/routes/layout.css, which took the same decision for the
+  /// portal's primary and destructive buttons. See Krakoer/crimpy#137.
+  static const Color accentOrangeFill = Color(0xFFB25739);
+  static const Color accentYellowFill = Color(0xFF8A6C2C);
+  static const Color accentGreenFill = Color(0xFF4F7B4F);
+  static const Color accentPurpleFill = Color(0xFF846696);
+  static const Color accentBlueFill = Color(0xFF537497);
+  static const Color statusInfoFill = Color(0xFF4D7878);
+
+  static final Map<Color, Color> _accentFillColors = Map.unmodifiable({
+    accentOrange: accentOrangeFill,
+    accentYellow: accentYellowFill,
+    accentGreen: accentGreenFill,
+    accentPurple: accentPurpleFill,
+    accentBlue: accentBlueFill,
+    statusInfo: statusInfoFill,
+  });
+
+  /// The colour a surface is filled with when a white label sits on it. An
+  /// accent that already carries white at 4.5:1 is answered with itself, so a
+  /// caller is never handed a darker form of something that did not need one.
+  ///
+  /// Only for a ground under a neutral label. A border, a rule or an icon fill
+  /// carries no text and keeps the accent.
+  static Color fillOn(Color accent) => _accentFillColors[accent] ?? accent;
 
   /// The colour a mark is drawn in when it sits on a neutral ground: an icon,
   /// or text large enough to answer to the 3:1 floor. Mirrors the `mark` field

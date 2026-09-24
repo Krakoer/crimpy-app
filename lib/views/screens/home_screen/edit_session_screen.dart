@@ -244,7 +244,10 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
               ElevatedButton(
                 onPressed: _updateSession,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: color,
+                  // Darkened to carry the white label the theme puts on an
+                  // ElevatedButton. The activity colours are under the 4.5:1
+                  // floor beneath white, and gold is at 2.25:1.
+                  backgroundColor: CrimpyTheme.fillOn(color),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: const Text(

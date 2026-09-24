@@ -120,7 +120,10 @@ class _BodyweightMeasureScreenState
               yValueMapper: (BleDataPoint p, _) => p.value,
               color: holding
                   ? CrimpyTheme.accentGreen
-                  : CrimpyTheme.accentYellow.withValues(alpha: 0.8),
+                  // The same series, held to the same 3:1 non-text floor.
+                  : CrimpyTheme.markOn(
+                      CrimpyTheme.accentYellow,
+                    ).withValues(alpha: 0.8),
               width: 3,
               markerSettings: const MarkerSettings(isVisible: false),
               animationDuration: 0,

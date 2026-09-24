@@ -497,7 +497,10 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       icon: const Icon(Icons.check),
       label: Text(label),
       style: ElevatedButton.styleFrom(
-        backgroundColor: color,
+        // Darkened to carry the white label the theme puts on an
+        // ElevatedButton. The activity colours are under the 4.5:1
+        // floor beneath white, and gold is at 2.25:1.
+        backgroundColor: CrimpyTheme.fillOn(color),
         foregroundColor: CrimpyTheme.bgPrimary,
         padding: const EdgeInsets.symmetric(vertical: 14),
       ),

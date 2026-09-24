@@ -42,7 +42,13 @@ class MinimalistGraph extends ConsumerWidget {
               dataSource: data,
               xValueMapper: (BleDataPoint p, _) => p.timestamp,
               yValueMapper: (BleDataPoint p, _) => p.value,
-              color: CrimpyTheme.accentYellow.withValues(alpha: 0.8),
+              // A data line is meaningful non-text content under WCAG 1.4.11,
+              // so it answers to 3:1. The gold series composited to 1.89:1
+              // against the white card; the mark form reads 3.64:1 at this
+              // alpha. See Krakoer/crimpy#137.
+              color: CrimpyTheme.markOn(
+                CrimpyTheme.accentYellow,
+              ).withValues(alpha: 0.8),
               width: 3,
               markerSettings: const MarkerSettings(isVisible: false),
               animationDuration: 0,

@@ -343,7 +343,7 @@ class _TodayTrainingRow extends ConsumerWidget {
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: done
-                          ? CrimpyTheme.textMuted
+                          ? CrimpyTheme.textMutedSmall
                           : CrimpyTheme.textPrimary,
                       decoration: done ? TextDecoration.lineThrough : null,
                     ),

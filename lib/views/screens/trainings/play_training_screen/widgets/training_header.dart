@@ -28,7 +28,7 @@ class TrainingHeader extends StatelessWidget {
             fontSize: 9,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.6,
-            color: CrimpyTheme.textMuted,
+            color: CrimpyTheme.textMutedSmall,
           ),
         ),
         Text(

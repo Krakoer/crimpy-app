@@ -344,8 +344,11 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                         xValueMapper: (BleDataPoint p, _) => p.timestamp,
                         yValueMapper: (BleDataPoint p, _) => p.value,
                         color: _isInTargetZone
-                            ? Colors.green
-                            : CrimpyTheme.accentYellow.withValues(alpha: 0.8),
+                            ? CrimpyTheme.markOn(CrimpyTheme.accentGreen)
+                            // The same series, held to the same 3:1 floor.
+                            : CrimpyTheme.markOn(
+                                CrimpyTheme.accentYellow,
+                              ).withValues(alpha: 0.8),
                         width: 3,
                         markerSettings: const MarkerSettings(isVisible: false),
                         animationDuration: 0,
@@ -364,7 +367,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: _assessmentStarted
-                        ? Colors.green.withValues(alpha: 0.9)
+                        ? CrimpyTheme.accentGreen.withValues(alpha: 0.9)
                         : CrimpyTheme.accentYellow.withValues(alpha: 0.9),
                     border: Border.all(
                       color: CrimpyTheme.borderDefault,
