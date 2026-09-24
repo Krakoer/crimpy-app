@@ -31,21 +31,25 @@ class _CountingApiClient extends ApiClient {
   /// hands back the failure already in hand.
   bool failing = false;
 
+  /// Set so a read can hand back a library the server says it cut short.
+  bool truncated = false;
+
   @override
-  Future<List<Map<String, dynamic>>> getTrainings({
-    bool includeItems = false,
-  }) async {
+  Future<TrainingsPage> getTrainings({bool includeItems = false}) async {
     libraryReads++;
     if (failing) throw ApiException('offline', isOffline: true);
-    return [
-      for (final id in ids)
-        {
-          'id': id,
-          'title': 'Training $id',
-          'is_favorite': favourites.contains(id),
-          'items': <Map<String, dynamic>>[],
-        },
-    ];
+    return (
+      rows: [
+        for (final id in ids)
+          {
+            'id': id,
+            'title': 'Training $id',
+            'is_favorite': favourites.contains(id),
+            'items': <Map<String, dynamic>>[],
+          },
+      ],
+      truncated: truncated,
+    );
   }
 
   @override
@@ -391,6 +395,33 @@ void main() {
       expect(_regularIds(all), ['t-2', 't-0', 't-1']);
     });
 
+    test('say nothing about a whole library', () async {
+      final client = _CountingApiClient(const ['t-0', 't-1']);
+      final container = _containerFor(client);
+
+      expect(
+        await container.read(trainingLibraryTruncatedProvider.future),
+        isFalse,
+      );
+    });
+
+    test('report a cut library off the same read', () async {
+      final client = _CountingApiClient(const ['t-0', 't-1'])..truncated = true;
+      final container = _containerFor(client);
+
+      final truncated = await container.read(
+        trainingLibraryTruncatedProvider.future,
+      );
+      final all = await container.read(allTrainingsProvider.future);
+
+      expect(truncated, isTrue);
+      // The notice derives from the library rather than fetching for itself.
+      // A banner that cost a second library read would reintroduce exactly the
+      // duplication Krakoer/crimpy#132 removed, one provider further out.
+      expect(client.libraryReads, 1);
+      expect(all, isNotEmpty);
+    });
+
     test('carry the same trainings the library itself does', () async {
       final client = _CountingApiClient(
         const ['t-0', 't-1'],
@@ -402,7 +433,7 @@ void main() {
       final trainings = await container.read(trainingsProvider.future);
 
       expect(trainings.map((training) => training.id), ['t-0', 't-1']);
-      expect(library.map((training) => training.id), ['t-0', 't-1']);
+      expect(library.trainings.map((training) => training.id), ['t-0', 't-1']);
       expect(client.libraryReads, 1);
     });
 

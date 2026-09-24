@@ -316,7 +316,8 @@ void main() {
           ),
         );
 
-        final item = (await trainings.getAllTrainings()).single.items.single;
+        final item =
+            (await trainings.getAllTrainings()).trainings.single.items.single;
 
         expect(item.hand, HangboardHand.split);
         expect(item.granularity, HangboardGranularity.perSet);
@@ -361,7 +362,8 @@ void main() {
         ),
       );
 
-      final item = (await trainings.getAllTrainings()).single.items.single;
+      final item =
+          (await trainings.getAllTrainings()).trainings.single.items.single;
 
       expect(
         item.variableTargets['reps']!.assessmentId,
@@ -396,7 +398,8 @@ void main() {
         ),
       );
 
-      final item = (await trainings.getAllTrainings()).single.items.single;
+      final item =
+          (await trainings.getAllTrainings()).trainings.single.items.single;
 
       expect(item.handPositions, [
         ['HC', 'FC'],

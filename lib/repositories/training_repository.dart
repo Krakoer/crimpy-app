@@ -11,10 +11,19 @@ import 'package:crimpy/utils/bounded_parallel.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/models/session_filter.dart';
 
+/// A library read, and whether it is the whole one.
+///
+/// The server caps an include=items listing, so a short answer and a cut one
+/// look identical in the rows alone. The flag travels beside them so the screen
+/// that lists the library can say it is showing the start of it, rather than
+/// letting an athlete believe the trainings past the ceiling are gone.
+typedef TrainingLibrary = ({List<Training> trainings, bool truncated});
+
 abstract class TrainingRepository {
-  /// The athlete's whole library. There is no narrower read: the favourites
-  /// are a filter over this, applied by the provider that holds it.
-  Future<List<Training>> getAllTrainings();
+  /// The athlete's whole library, and whether the store was able to answer with
+  /// all of it. There is no narrower read: the favourites are a filter over
+  /// this, applied by the provider that holds it.
+  Future<TrainingLibrary> getAllTrainings();
 
   /// One training by id, or null when it no longer exists. Used to read a
   /// played session against the items it was run from.
@@ -56,8 +65,11 @@ class LocalTrainingRepository extends TrainingRepository {
   LocalTrainingRepository({AppDatabase? database})
     : _database = database ?? gDatabase;
 
+  /// The local store answers the whole library every time. It has no ceiling
+  /// to hit, so the flag is false rather than unknown.
   @override
-  Future<List<Training>> getAllTrainings() => _database.getAllTrainings();
+  Future<TrainingLibrary> getAllTrainings() async =>
+      (trainings: await _database.getAllTrainings(), truncated: false);
 
   @override
   Future<Training?> getTraining(String trainingId) =>
@@ -156,8 +168,9 @@ class RemoteTrainingRepository extends TrainingRepository {
   /// falls back to reading them one at a time, which is what the whole library
   /// used to cost.
   @override
-  Future<List<Training>> getAllTrainings() async {
-    final rows = await _apiClient.getTrainings(includeItems: true);
+  Future<TrainingLibrary> getAllTrainings() async {
+    final page = await _apiClient.getTrainings(includeItems: true);
+    final rows = page.rows;
 
     // A server that predates the items on the list ignores the parameter and
     // answers the cheap rows, which carry no items key at all. Reading those
@@ -165,8 +178,16 @@ class RemoteTrainingRepository extends TrainingRepository {
     // steps, with no error to say why, so they are read one at a time instead,
     // the way the whole library used to be. A training that really holds no
     // items answers with an empty array and is not fetched again.
+    //
+    // The cut flag is carried through both arms. The fallback reads the detail
+    // of every row the listing answered, and the listing is the thing that was
+    // cut, so a library truncated on the way out stays truncated however its
+    // items were read.
     if (rows.every((row) => row.containsKey('items'))) {
-      return rows.map(Training.fromJson).toList();
+      return (
+        trainings: rows.map(Training.fromJson).toList(),
+        truncated: page.truncated,
+      );
     }
 
     final fetched = await inParallel(
@@ -175,7 +196,10 @@ class RemoteTrainingRepository extends TrainingRepository {
             () => _fetchTraining(row['id'] as String),
       ),
     );
-    return fetched.whereType<Training>().toList();
+    return (
+      trainings: fetched.whereType<Training>().toList(),
+      truncated: page.truncated,
+    );
   }
 
   @override

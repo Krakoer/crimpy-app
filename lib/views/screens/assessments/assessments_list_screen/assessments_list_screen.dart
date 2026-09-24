@@ -1,6 +1,7 @@
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/views/widgets/truncated_library_notice.dart';
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/widgets/assessment_card.dart';
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/widgets/select_hand_dialog.dart';
 import 'package:crimpy/views/screens/assessments/assessments_list_screen/widgets/select_grip_position_dialog.dart';
@@ -237,6 +238,11 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               children: [
+                // The athlete's own recordable assessments come off the same
+                // capped library read as the trainings list, so one that sorts
+                // past the ceiling loses its card here and with it the only way
+                // to measure it.
+                const TruncatedLibraryNotice(),
                 ...assessmentTemplates.map(
                   (template) => AssessmentCard(
                     title: template.training.name,

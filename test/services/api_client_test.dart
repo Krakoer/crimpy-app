@@ -8,6 +8,13 @@ class _RecordingApiClient extends ApiClient {
   String? requestedPath;
   Map<String, dynamic>? requestedQuery;
 
+  /// The headers the answer carries back, so the parsing that reads them can be
+  /// driven. Every other test in the app fakes getTrainings whole, which leaves
+  /// the header reading itself running in nothing.
+  final Map<String, List<String>> responseHeaders;
+
+  _RecordingApiClient({this.responseHeaders = const {}});
+
   @override
   Future<Response> get(
     String path, {
@@ -19,6 +26,7 @@ class _RecordingApiClient extends ApiClient {
     return Response<dynamic>(
       requestOptions: RequestOptions(path: path),
       data: <dynamic>[],
+      headers: Headers.fromMap(responseHeaders),
     );
   }
 }
@@ -76,5 +84,77 @@ void main() {
     await client.getMyDeclaredWeeks();
 
     expect(client.requestedPath, '/api/user/availability/declared-weeks');
+  });
+
+  // The header is the app's half of a contract owned by crimpy-backend, and it
+  // is the one line in the library read that no other test touches: every
+  // viewmodel and repository test fakes getTrainings whole. Misspell the
+  // constant and the whole suite still passes while the notice silently never
+  // appears again.
+  group('the truncated library header', () {
+    test('is absent on a whole library', () async {
+      final client = _RecordingApiClient();
+
+      final page = await client.getTrainings(includeItems: true);
+
+      expect(page.truncated, isFalse);
+    });
+
+    test('is read when the server cut the library', () async {
+      final client = _RecordingApiClient(
+        responseHeaders: {
+          'X-Trainings-Truncated': ['true'],
+        },
+      );
+
+      final page = await client.getTrainings(includeItems: true);
+
+      expect(page.truncated, isTrue);
+    });
+
+    // Dio lowercases the keys it stores, and HTTP header values are not case
+    // sensitive by convention, so neither spelling may be the one that decides
+    // whether an athlete is told their library was cut.
+    test('is read whatever case it arrives in', () async {
+      final client = _RecordingApiClient(
+        responseHeaders: {
+          'x-trainings-truncated': ['True'],
+        },
+      );
+
+      final page = await client.getTrainings(includeItems: true);
+
+      expect(page.truncated, isTrue);
+    });
+
+    // A proxy that duplicates the header used to throw out of Headers.value and
+    // take the whole library with it. Losing the rows to report a banner about
+    // them is worse than any answer the banner could give.
+    test('survives a header that arrives twice', () async {
+      final client = _RecordingApiClient(
+        responseHeaders: {
+          'X-Trainings-Truncated': ['true', 'true'],
+        },
+      );
+
+      final page = await client.getTrainings(includeItems: true);
+
+      expect(page.truncated, isTrue);
+      expect(page.rows, isEmpty);
+    });
+
+    // Anything that is not true is a whole library. A server that grew a second
+    // value for this header must not be read as having cut anything.
+    test('reads an unrecognised value as a whole library', () async {
+      final client = _RecordingApiClient(
+        responseHeaders: {
+          'X-Trainings-Truncated': ['partial'],
+        },
+      );
+
+      final page = await client.getTrainings(includeItems: true);
+
+      expect(page.truncated, isFalse);
+    });
   });
 }

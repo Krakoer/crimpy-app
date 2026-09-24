@@ -72,8 +72,18 @@ BuiltinTrainingRepository builtinTrainingRepository(Ref ref) {
 /// one of the lists below rebuilds it from the library already held and never
 /// reaches the server, which is what makes a pinned or builtin change free.
 @Riverpod(keepAlive: true)
-Future<List<Training>> trainingLibrary(Ref ref) =>
+Future<TrainingLibrary> trainingLibrary(Ref ref) =>
     ref.watch(trainingRepositoryProvider).getAllTrainings();
+
+/// Whether the library on screen is the start of the athlete's library rather
+/// than all of it.
+///
+/// Its own provider so a banner can watch the one fact it needs without
+/// rebuilding on every change to the trainings themselves, and so the screens
+/// that show the library do not each have to unpack the record.
+@Riverpod(keepAlive: true)
+Future<bool> trainingLibraryTruncated(Ref ref) async =>
+    (await ref.watch(trainingLibraryProvider.future)).truncated;
 
 typedef BuiltinTrainingCatalog = ({
   List<BuiltinTrainingModel> trainings,
@@ -132,7 +142,7 @@ class FavTrainings extends _$FavTrainings {
   @override
   Future<List<Training>> build() async {
     final library = await ref.watch(trainingLibraryProvider.future);
-    return library.where((training) => training.isFavorite).toList();
+    return library.trainings.where((training) => training.isFavorite).toList();
   }
 
   /// Toggle the favorite status for a given training.
@@ -152,9 +162,10 @@ class Trainings extends _$Trainings {
   late TrainingRepository _trainingRepository;
 
   @override
-  Future<List<Training>> build() {
+  Future<List<Training>> build() async {
     _trainingRepository = ref.watch(trainingRepositoryProvider);
-    return ref.watch(trainingLibraryProvider.future);
+    final library = await ref.watch(trainingLibraryProvider.future);
+    return library.trainings;
   }
 
   /// Runs a repository mutation and reloads the library. Invalidating it
@@ -381,7 +392,7 @@ class PinnedTrainings extends _$PinnedTrainings {
     final library = ref.watch(trainingLibraryProvider.future);
     final catalog = ref.watch(builtinTrainingCatalogProvider.future);
     return _buildTrainingList(
-      library: await library,
+      library: (await library).trainings,
       catalog: await catalog,
       onlyPinned: true,
     );
@@ -410,7 +421,7 @@ Future<List<TrainingListItem>> allTrainings(Ref ref) async {
   final library = ref.watch(trainingLibraryProvider.future);
   final catalog = ref.watch(builtinTrainingCatalogProvider.future);
   return _buildTrainingList(
-    library: await library,
+    library: (await library).trainings,
     catalog: await catalog,
     onlyPinned: false,
   );
