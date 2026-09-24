@@ -150,7 +150,9 @@ class ProgramSummaryCard extends ConsumerWidget {
                   icon: const Icon(FontAwesomeIcons.play, size: 12),
                   label: const Text('START'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: CrimpyTheme.primaryOrange,
+                    backgroundColor: CrimpyTheme.fillOn(
+                      CrimpyTheme.primaryOrange,
+                    ),
                     foregroundColor: CrimpyTheme.bgPrimary,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,

@@ -322,7 +322,12 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${widget.activity.displayName} session logged!'),
-            backgroundColor: CrimpyTheme.activityColor(widget.activity),
+            // snackBarTheme writes its label in primaryWhite, so this ground
+            // carries a white label without a line here saying so. Gold is
+            // 2.25:1 under white, so it takes the darkened fill.
+            backgroundColor: CrimpyTheme.fillOn(
+              CrimpyTheme.activityColor(widget.activity),
+            ),
           ),
         );
         Navigator.of(context).pop();

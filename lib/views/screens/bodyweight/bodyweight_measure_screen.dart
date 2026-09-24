@@ -119,7 +119,7 @@ class _BodyweightMeasureScreenState
               xValueMapper: (BleDataPoint p, _) => p.timestamp,
               yValueMapper: (BleDataPoint p, _) => p.value,
               color: holding
-                  ? CrimpyTheme.accentGreen
+                  ? CrimpyTheme.markOn(CrimpyTheme.accentGreen)
                   // The same series, held to the same 3:1 non-text floor.
                   : CrimpyTheme.markOn(
                       CrimpyTheme.accentYellow,
@@ -139,9 +139,12 @@ class _BodyweightMeasureScreenState
   Widget _statusBox(bool holding) => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
+      // The label on this box is white. The alpha is gone as well as the
+      // hue darkened: at 0.9 even the darkened gold only reaches 4.03:1,
+      // and the bare accents read 2.06:1 and 3.33:1 under white.
       color: holding
-          ? CrimpyTheme.accentGreen.withValues(alpha: 0.9)
-          : CrimpyTheme.accentYellow.withValues(alpha: 0.9),
+          ? CrimpyTheme.fillOn(CrimpyTheme.accentGreen)
+          : CrimpyTheme.fillOn(CrimpyTheme.accentYellow),
       border: Border.all(color: CrimpyTheme.borderDefault, width: 2),
       boxShadow: const [
         BoxShadow(

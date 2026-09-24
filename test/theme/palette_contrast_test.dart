@@ -172,6 +172,12 @@ final Map<String, Color> scannedAccents = {
   'successColor': CrimpyTheme.successColor,
   'errorColor': CrimpyTheme.errorColor,
   'warningColor': CrimpyTheme.warningColor,
+  // Not an accent, and scanned anyway. textMuted is the app's muted voice at
+  // 2.85:1 on white, under both floors, and Krakoer/crimpy#137 split it into
+  // textMutedSmall for the sizes that have to clear 4.5:1. Without an entry
+  // here the sweep that did that was by hand, and a hand sweep leaves
+  // hand-sized gaps: five text sites and eleven icons survived it.
+  'textMuted': CrimpyTheme.textMuted,
 };
 
 /// A colour already asked for through the theme's own helpers is this scan's
@@ -180,7 +186,7 @@ final Map<String, Color> scannedAccents = {
 /// cutting `withValues(...)` out of an argument leaves the accent's name behind
 /// and measures it at full strength.
 final RegExp resolvedByTheme = RegExp(
-  r'(?:textOn|markOn|tintOf)\((?:[^()]|\([^()]*\))*\)',
+  r'(?:textOn|markOn|tintOf|fillOn)\((?:[^()]|\([^()]*\))*\)',
 );
 
 /// An accent faded by an alpha. It is not the token it names any more and
@@ -398,6 +404,122 @@ class NeutralOffence {
 ///     palette would have to be declared in [foreignPalettes] to be skipped,
 ///     and a name read from one that is not would be measured against the
 ///     wrong hex.
+/// The neutral a label can be written in on top of an accent ground, with the
+/// value each name holds. `primaryWhite` is the one that matters: it is what
+/// the theme gives an ElevatedButton and a SnackBar, so a filled surface gets
+/// it without naming it.
+final Map<String, Color> scannedNeutralForegrounds = {
+  'primaryWhite': CrimpyTheme.primaryWhite,
+  'bgPrimary': CrimpyTheme.bgPrimary,
+  'Colors.white': const Color(0xFFFFFFFF),
+  'textPrimary': CrimpyTheme.textPrimary,
+  'textSecondary': CrimpyTheme.textSecondary,
+  'textMuted': CrimpyTheme.textMuted,
+  'textMutedSmall': CrimpyTheme.textMutedSmall,
+};
+
+/// What the theme writes on a filled surface when the call names no label
+/// colour. ElevatedButton takes `foregroundColor: primaryWhite` and SnackBar
+/// takes `contentTextStyle` in the same white, so a `backgroundColor:` on
+/// either carries a white label whether or not the call says so. That is what
+/// made the log-session SnackBar 2.25:1 without a single line naming white.
+const Color impliedForeground = CrimpyTheme.primaryWhite;
+
+/// The openers the ground scan walks, which is a wider set than the label scan
+/// needs. A filled surface is not always a style: a SnackBar takes its own
+/// backgroundColor and its label colour from snackBarTheme, and that is how the
+/// log-session confirmation sat at 2.25:1 without a line naming white.
+final RegExp groundOpeners = RegExp(
+  r'\b(\w*[Ss]tyle|styleFrom|copyWith|SnackBar|Chip|Card|Material)\(',
+);
+
+final RegExp groundArgument = RegExp(
+  r'\bbackgroundColor:'
+  r'\s*((?:[^,()]|\((?:[^()]|\([^()]*\))*\))*)',
+);
+
+/// The mirror of [neutralOffences]: that one asks what an accent reads like on
+/// a neutral ground, this one what a neutral reads like on an accent ground.
+///
+/// Krakoer/crimpy#137's family. Nothing measured it before, which is why three
+/// session buttons sat at 2.25:1 and the app-wide ElevatedButton theme at
+/// 4.05:1. It reads the ground and takes the label from the call when one is
+/// named and from [impliedForeground] when none is, because the commonest
+/// shape in this app names no label at all.
+///
+/// Blind spots, named rather than left for a reader to find:
+///
+///   - a ground and a label in different calls, a Container painted here and a
+///     Text built there. Only a ground and a label in one call are paired.
+///   - a ground faded by an alpha, which composites lighter than the token and
+///     is skipped rather than mismeasured, the way the scan above skips one.
+///   - a ground built by a helper this file cannot resolve.
+List<NeutralOffence> accentGroundOffences() {
+  final offences = <NeutralOffence>[];
+  for (final entity in libRoot.listSync(recursive: true)) {
+    if (entity is! File || !entity.path.endsWith('.dart')) continue;
+    if (generatedSuffixes.any(entity.path.endsWith)) continue;
+    if (foreignPalettes.contains(entity.path)) continue;
+    final source = entity.readAsStringSync();
+    final bindings = resolvableBindings(source);
+    for (final opener in groundOpeners.allMatches(source)) {
+      final body = callBody(source, opener.start);
+      if (body == null) continue;
+      final ground = groundArgument.firstMatch(body);
+      if (ground == null) continue;
+      final groundValue = ground.group(1)!;
+      if (fadedByAlpha.hasMatch(groundValue)) continue;
+      final bareGround = withoutResolved(groundValue);
+      final grounds = scannedAccents.keys
+          .where((name) => RegExp('\\b$name\\b').hasMatch(bareGround))
+          .toList();
+      if (grounds.isEmpty) continue;
+
+      // The label named in the same call, or the white the theme supplies.
+      Color foreground = impliedForeground;
+      var foregroundName = 'the theme default';
+      for (final (argument, value) in topLevelColours(body)) {
+        if (argument != 'foregroundColor' && argument != 'color') continue;
+        if (fadedByAlpha.hasMatch(value)) continue;
+        final bare = withoutResolved(value);
+        final named = scannedNeutralForegrounds.keys.firstWhere(
+          (name) => RegExp(RegExp.escape(name)).hasMatch(bare),
+          orElse: () => '',
+        );
+        if (named.isEmpty) continue;
+        foreground = scannedNeutralForegrounds[named]!;
+        foregroundName = named;
+      }
+
+      final size =
+          fontSizeArgument.firstMatch(body) ?? positionalSize.firstMatch(body);
+      final smallest = size == null
+          ? null
+          : smallestSize(size.group(1)!, bindings);
+      final small =
+          smallest == null || !isLargeText(smallest, boldWeight.hasMatch(body));
+      final floor = small ? contrastFloor : markFloor;
+      final line =
+          '\n'.allMatches(source.substring(0, opener.start)).length + 1;
+      for (final name in grounds) {
+        final ratio = contrastRatio(foreground, scannedAccents[name]!);
+        if (ratio >= floor) continue;
+        offences.add(
+          NeutralOffence(
+            entity.path,
+            line,
+            '$foregroundName on a $name ground',
+            name,
+            ratio,
+            floor,
+          ),
+        );
+      }
+    }
+  }
+  return offences;
+}
+
 List<NeutralOffence> neutralOffences() {
   final offences = <NeutralOffence>[];
   for (final entity in libRoot.listSync(recursive: true)) {
@@ -773,6 +895,104 @@ void main() {
         isEmpty,
         reason:
             'an accent under its floor on a neutral ground:\n'
+            '${offences.join('\n')}',
+      );
+    });
+  });
+
+  group('surfaces that write a neutral on an accent ground', () {
+    // The mirror of the group above, and Krakoer/crimpy#137's family. An
+    // accent used as a ground with a white label on it was measured by nothing
+    // before this, which is how the app-wide ElevatedButton theme sat at
+    // 4.05:1 and three session buttons at 2.25:1.
+    test('fills that carry white clear the text floor', () {
+      for (final entry in {
+        'accentOrangeFill': CrimpyTheme.accentOrangeFill,
+        'accentYellowFill': CrimpyTheme.accentYellowFill,
+        'accentGreenFill': CrimpyTheme.accentGreenFill,
+        'accentPurpleFill': CrimpyTheme.accentPurpleFill,
+        'accentBlueFill': CrimpyTheme.accentBlueFill,
+        'statusInfoFill': CrimpyTheme.statusInfoFill,
+      }.entries) {
+        final ratio = contrastRatio(CrimpyTheme.primaryWhite, entry.value);
+        expect(
+          ratio,
+          greaterThanOrEqualTo(contrastFloor),
+          reason:
+              '${entry.key} reads ${ratio.toStringAsFixed(2)}:1 under white, '
+              'under the ${contrastFloor.toStringAsFixed(1)}:1 text floor',
+        );
+      }
+    });
+
+    test('fillOn moves an accent exactly when the accent fails', () {
+      for (final entry in scannedAccents.entries) {
+        // textMuted is in scannedAccents so the foreground scan measures it,
+        // not because it is an accent. It is decoration, never a ground under a
+        // label, and fillOn has no entry for it on purpose. A surface filled
+        // with it under white is still caught, by the ground scan below, which
+        // reads it at 2.85:1 straight out of the same table.
+        if (entry.key == 'textMuted') continue;
+        final fill = CrimpyTheme.fillOn(entry.value);
+        final bare = contrastRatio(CrimpyTheme.primaryWhite, entry.value);
+        if (bare >= contrastFloor) {
+          expect(
+            fill,
+            entry.value,
+            reason:
+                '${entry.key} already carries white at '
+                '${bare.toStringAsFixed(2)}:1 and must be answered with itself',
+          );
+        } else {
+          expect(
+            contrastRatio(CrimpyTheme.primaryWhite, fill),
+            greaterThanOrEqualTo(contrastFloor),
+            reason: 'fillOn(${entry.key}) must carry white',
+          );
+        }
+      }
+    });
+
+    test('an accent with no fill entry answers with itself', () {
+      // textPrimary is not an accent and has no entry, so it comes back
+      // unchanged rather than being handed some other hue.
+      expect(
+        CrimpyTheme.fillOn(CrimpyTheme.textPrimary),
+        CrimpyTheme.textPrimary,
+      );
+    });
+
+    test('textMutedSmall clears the text floor on every neutral ground', () {
+      for (final entry in neutralGrounds.entries) {
+        final ratio = contrastRatio(CrimpyTheme.textMutedSmall, entry.value);
+        expect(
+          ratio,
+          greaterThanOrEqualTo(
+            entry.key == 'bgHover' ? markFloor : contrastFloor,
+          ),
+          reason:
+              'textMutedSmall reads ${ratio.toStringAsFixed(2)}:1 on '
+              '${entry.key}',
+        );
+      }
+    });
+
+    test('textMuted is never written as a foreground', () {
+      // It is under both floors on every neutral ground, so it can only be
+      // decoration. The scan enforces it; this states why.
+      expect(
+        contrastRatio(CrimpyTheme.textMuted, CrimpyTheme.bgPrimary),
+        lessThan(markFloor),
+      );
+    });
+
+    test('finds no neutral under its floor on an accent ground', () {
+      final offences = accentGroundOffences();
+      expect(
+        offences.map((offence) => offence.toString()).toList(),
+        isEmpty,
+        reason:
+            'neutral under its floor on an accent ground:\n'
             '${offences.join('\n')}',
       );
     });

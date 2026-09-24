@@ -366,9 +366,12 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                 child: Container(
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
+                    // The label on this box is white. The alpha is gone as well as the
+                    // hue darkened: at 0.9 even the darkened gold only reaches 4.03:1,
+                    // and the bare accents read 2.06:1 and 3.33:1 under white.
                     color: _assessmentStarted
-                        ? CrimpyTheme.accentGreen.withValues(alpha: 0.9)
-                        : CrimpyTheme.accentYellow.withValues(alpha: 0.9),
+                        ? CrimpyTheme.fillOn(CrimpyTheme.accentGreen)
+                        : CrimpyTheme.fillOn(CrimpyTheme.accentYellow),
                     border: Border.all(
                       color: CrimpyTheme.borderDefault,
                       width: 2,

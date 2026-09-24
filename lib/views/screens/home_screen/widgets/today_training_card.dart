@@ -468,7 +468,7 @@ class _FlexTrainingRow extends ConsumerWidget {
               FontAwesomeIcons.play,
               size: 13,
               color: done >= target
-                  ? CrimpyTheme.textMuted
+                  ? CrimpyTheme.textMutedSmall
                   : CrimpyTheme.primaryOrange,
             ),
           ],

@@ -175,7 +175,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                         Icon(
                           FontAwesomeIcons.calendar,
                           size: 12,
-                          color: CrimpyTheme.textMuted,
+                          color: CrimpyTheme.textMutedSmall,
                         ),
                         const SizedBox(width: 6),
                         Text(
@@ -447,7 +447,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       icon: const Icon(Icons.play_arrow),
       label: const Text('START TRAINING'),
       style: ElevatedButton.styleFrom(
-        backgroundColor: CrimpyTheme.primaryOrange,
+        backgroundColor: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
         foregroundColor: CrimpyTheme.bgPrimary,
         padding: const EdgeInsets.symmetric(vertical: 14),
       ),

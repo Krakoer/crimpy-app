@@ -246,7 +246,9 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                                 }
                               : _nextSection,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: CrimpyTheme.assessmentColor,
+                            backgroundColor: CrimpyTheme.fillOn(
+                              CrimpyTheme.assessmentColor,
+                            ),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(

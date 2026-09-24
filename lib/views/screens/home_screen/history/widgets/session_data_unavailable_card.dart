@@ -21,7 +21,11 @@ class SessionDataUnavailableCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.cloud_off, size: 20, color: CrimpyTheme.textMuted),
+          const Icon(
+            Icons.cloud_off,
+            size: 20,
+            color: CrimpyTheme.textMutedSmall,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(

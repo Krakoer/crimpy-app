@@ -74,7 +74,7 @@ class TrainingListItemWidget extends ConsumerWidget {
                   children: [
                     Icon(
                       FontAwesomeIcons.stopwatch,
-                      color: CrimpyTheme.textMuted,
+                      color: CrimpyTheme.textMutedSmall,
                       size: 16,
                     ),
                     const SizedBox(width: 6),
@@ -85,7 +85,7 @@ class TrainingListItemWidget extends ConsumerWidget {
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: item.isAvailable
                             ? CrimpyTheme.textSecondary
-                            : CrimpyTheme.textMuted,
+                            : CrimpyTheme.textMutedSmall,
                       ),
                     ),
                   ],

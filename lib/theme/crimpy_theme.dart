@@ -125,10 +125,17 @@ class CrimpyTheme {
   /// Secondary text - Medium gray
   static const Color textSecondary = Color(0xFF666666);
 
-  /// Muted text - Light gray
+  /// Muted grey. **Not a foreground.**
   ///
-  /// 2.85:1 on white. Fine for a rule or a large figure, unreadable as the
-  /// small print the app writes it as, which is what [textMutedSmall] is for.
+  /// 2.85:1 on white, which is under the 4.5:1 text floor and also under the
+  /// 3:1 floor a mark answers to, so it cannot be written as a label or drawn
+  /// as an icon on any ground this app paints. What is left is decoration that
+  /// carries no information and is exempt under WCAG 1.4.11: a divider rule, a
+  /// faded step dot. Two uses in lib/ and nothing else.
+  ///
+  /// Anything a reader has to read takes [textMutedSmall]. The palette guard
+  /// scans this name for exactly that reason; Krakoer/crimpy#137 moved 22 uses
+  /// off it, of which a hand sweep had found 13.
   static const Color textMuted = Color(0xFF999999);
 
   /// The muted voice at a size that has to clear the 4.5:1 text floor.
@@ -269,7 +276,10 @@ class CrimpyTheme {
     // Primary button - Orange with sharp edges
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: primaryOrange,
+        // Darkened so the white label the line below sets clears 4.5:1.
+        // primaryOrange itself reads 4.05:1 under white, and this theme is
+        // what every ElevatedButton that names no ground inherits.
+        backgroundColor: accentOrangeFill,
         foregroundColor: primaryWhite,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -345,7 +355,7 @@ class CrimpyTheme {
         fontFamily: 'JetBrainsMono',
         letterSpacing: 0.5,
       ),
-      hintStyle: TextStyle(color: textMuted, fontFamily: 'JetBrainsMono'),
+      hintStyle: TextStyle(color: textMutedSmall, fontFamily: 'JetBrainsMono'),
     ),
 
     // Chip theme with minimal styling
@@ -473,7 +483,7 @@ class CrimpyTheme {
         fontSize: 10,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.5,
-        color: textMuted,
+        color: textMutedSmall,
         fontFamily: 'JetBrainsMono',
       ),
     ),
@@ -688,8 +698,12 @@ class CrimpyTheme {
     // both names, the way [_accentTextColors] answers accentOrange and
     // primaryOrange with one.
     accentYellow: accentYellowText,
-    // textMuted misses the mark floor too, at 2.85:1 against 3:1. Marginal, but
-    // an icon drawn in it is as unreadable as the label beside it was.
+    // textMuted misses the mark floor too, at 2.85:1 against 3:1, so an icon
+    // drawn in it is as unreadable as the label beside it was. No caller passes
+    // it today: every foreground use moved to textMutedSmall directly rather
+    // than through this map. The entry is here so that a future caller routing
+    // a muted mark through markOn is answered correctly instead of being handed
+    // back a colour under the floor, which is what this map is for.
     textMuted: textMutedSmall,
   });
 
@@ -705,9 +719,14 @@ class CrimpyTheme {
   /// with an activity colour were unreadable at every size they are used.
   ///
   /// These are the accents themselves darkened, not new hues, so a filled button
-  /// still reads as its activity. It is --pr-dk and --rd-dk in
-  /// crimpy-frontend/src/routes/layout.css, which took the same decision for the
-  /// portal's primary and destructive buttons. See Krakoer/crimpy#137.
+  /// still reads as its activity.
+  ///
+  /// The portal took the same decision with its own hues, in --pr-dk and
+  /// --rd-dk of crimpy-frontend/src/routes/layout.css. Those are not these
+  /// values and are not meant to match: the two palettes start from different
+  /// reds and terracottas, and the app needs no fill for statusError because it
+  /// already carries white. Unlike the tokens named in mirroredWebTokens, these
+  /// are a shared decision rather than a shared number. See Krakoer/crimpy#137.
   static const Color accentOrangeFill = Color(0xFFB25739);
   static const Color accentYellowFill = Color(0xFF8A6C2C);
   static const Color accentGreenFill = Color(0xFF4F7B4F);
@@ -715,6 +734,12 @@ class CrimpyTheme {
   static const Color accentBlueFill = Color(0xFF537497);
   static const Color statusInfoFill = Color(0xFF4D7878);
 
+  // Several accents answer under a name they share a value with, the way the
+  // two maps above do: accentTeal and statusInfo hold one colour, as do
+  // statusWarning and accentYellow, and trainingColor, assessmentColor and
+  // stretchingColor are aliases of three of these. One entry answers every
+  // name. Splitting any of those pairs means adding the entry the split
+  // orphans, or fillOn quietly hands back a colour under the floor.
   static final Map<Color, Color> _accentFillColors = Map.unmodifiable({
     accentOrange: accentOrangeFill,
     accentYellow: accentYellowFill,

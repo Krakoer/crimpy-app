@@ -150,7 +150,9 @@ class MissingAssessmentsDialog extends StatelessWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      backgroundColor: CrimpyTheme.assessmentColor,
+                      backgroundColor: CrimpyTheme.fillOn(
+                        CrimpyTheme.assessmentColor,
+                      ),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),

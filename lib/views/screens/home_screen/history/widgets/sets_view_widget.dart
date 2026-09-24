@@ -148,7 +148,7 @@ class SetCardWidget extends StatelessWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.15),
+                    color: CrimpyTheme.tintOf(statusColor),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -188,7 +188,7 @@ class SetCardWidget extends StatelessWidget {
                     child: _buildSetStat(
                       'Avg Performed',
                       '${performed.toStringAsFixed(1)} kg',
-                      statusColor,
+                      CrimpyTheme.textOn(statusColor),
                     ),
                   ),
                 if (avgWeight != null && avgTarget != null)
@@ -262,7 +262,7 @@ class SetPerformanceBar extends StatelessWidget {
           width: 48,
           height: 32,
           decoration: BoxDecoration(
-            color: repColor.withValues(alpha: 0.2),
+            color: CrimpyTheme.tintOf(repColor),
             border: Border.all(color: repColor, width: 1.5),
             borderRadius: BorderRadius.circular(4),
           ),

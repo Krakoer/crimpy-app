@@ -563,7 +563,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
       decoration: BoxDecoration(
         border: Border.all(
-          color: CrimpyTheme.textMuted,
+          color: CrimpyTheme.textMutedSmall,
           width: 2,
           strokeAlign: BorderSide.strokeAlignInside,
         ),
@@ -586,7 +586,11 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Column(
         children: [
-          Icon(FontAwesomeIcons.clock, size: 26, color: CrimpyTheme.textMuted),
+          Icon(
+            FontAwesomeIcons.clock,
+            size: 26,
+            color: CrimpyTheme.textMutedSmall,
+          ),
           const SizedBox(height: 12),
           Text(
             'WEEK ${widget.weekNumber} NOT PLANNED YET',
@@ -809,7 +813,7 @@ class _CalendarRow extends ConsumerWidget {
                             ? CrimpyTheme.primaryOrange
                             : defined
                             ? CrimpyTheme.borderDefault
-                            : CrimpyTheme.textMuted,
+                            : CrimpyTheme.textMutedSmall,
                         width: isToday ? 2 : 1,
                       ),
                     ),
