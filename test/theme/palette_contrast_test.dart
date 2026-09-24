@@ -365,45 +365,6 @@ class NeutralOffence {
       '${floor.toStringAsFixed(1)}:1 floor';
 }
 
-/// Every accent written into a `TextStyle`, an `Icon` or a `FaIcon` without
-/// going through the theme's helpers, measured against white.
-///
-/// The ground is taken to be white rather than looked up. A Flutter ground is a
-/// decoration on some ancestor Container and cannot be read from the call site,
-/// and every ground in this app is white or a tint over white, so it is never
-/// lighter than white: assuming white therefore understates rather than
-/// overstates, and a pairing this reports reads at least as badly as it says.
-/// An accent written on its own tint already goes through [CrimpyTheme.textOn]
-/// and is skipped because of it.
-///
-/// What it cannot see, stated so its silence is not read as proof:
-///
-///   - a colour held in a variable or taken from a parameter, which is most of
-///     the session history. `sessionColor` and the `color` local of the log and
-///     edit screens are that shape, and were swept by hand.
-///   - a style built by a helper, the way full_tank_layout builds one, and a
-///     palette record such as its `_TankPalette`.
-///   - a size it cannot read. A computed size, and a call that states no size at
-///     all because the size lives in the theme, are both taken to be small text
-///     and held to 4.5:1, which is the safe direction: a large figure that wants
-///     the 3:1 exemption has to say how large it is.
-///   - the ground, again: this measures against white only. An accent that
-///     clears 4.5:1 on white but not on bgHover, which statusError at 4.75 and
-///     4.36 and statusSuccess at 4.91 and 4.51 both do, passes here while the
-///     real row fails. The token level group above measures all three grounds,
-///     which is what covers it.
-///   - a colour reached through `Theme.of(context).colorScheme`, which is how
-///     the bottom nav writes the accent. Every one of those was walked by hand
-///     and clears its floor, but the scan does not read them.
-///   - a call whose name merely ends in `style`, which is read as a style
-///     builder. Over-reporting rather than under, and nothing in lib/ is
-///     mis-read today.
-///   - which class an accent name belongs to. There is only one CrimpyTheme
-///     since Krakoer/crimpy#137, so every name in lib/ resolves against
-///     lib/theme/crimpy_theme.dart and the question does not arise. A second
-///     palette would have to be declared in [foreignPalettes] to be skipped,
-///     and a name read from one that is not would be measured against the
-///     wrong hex.
 /// The neutral a label can be written in on top of an accent ground, with the
 /// value each name holds. `primaryWhite` is the one that matters: it is what
 /// the theme gives an ElevatedButton and a SnackBar, so a filled surface gets
@@ -573,6 +534,45 @@ List<NeutralOffence> accentGroundOffences() {
   return offences;
 }
 
+/// Every accent written into a `TextStyle`, an `Icon` or a `FaIcon` without
+/// going through the theme's helpers, measured against white.
+///
+/// The ground is taken to be white rather than looked up. A Flutter ground is a
+/// decoration on some ancestor Container and cannot be read from the call site,
+/// and every ground in this app is white or a tint over white, so it is never
+/// lighter than white: assuming white therefore understates rather than
+/// overstates, and a pairing this reports reads at least as badly as it says.
+/// An accent written on its own tint already goes through [CrimpyTheme.textOn]
+/// and is skipped because of it.
+///
+/// What it cannot see, stated so its silence is not read as proof:
+///
+///   - a colour held in a variable or taken from a parameter, which is most of
+///     the session history. `sessionColor` and the `color` local of the log and
+///     edit screens are that shape, and were swept by hand.
+///   - a style built by a helper, the way full_tank_layout builds one, and a
+///     palette record such as its `_TankPalette`.
+///   - a size it cannot read. A computed size, and a call that states no size at
+///     all because the size lives in the theme, are both taken to be small text
+///     and held to 4.5:1, which is the safe direction: a large figure that wants
+///     the 3:1 exemption has to say how large it is.
+///   - the ground, again: this measures against white only. An accent that
+///     clears 4.5:1 on white but not on bgHover, which statusError at 4.75 and
+///     4.36 and statusSuccess at 4.91 and 4.51 both do, passes here while the
+///     real row fails. The token level group above measures all three grounds,
+///     which is what covers it.
+///   - a colour reached through `Theme.of(context).colorScheme`, which is how
+///     the bottom nav writes the accent. Every one of those was walked by hand
+///     and clears its floor, but the scan does not read them.
+///   - a call whose name merely ends in `style`, which is read as a style
+///     builder. Over-reporting rather than under, and nothing in lib/ is
+///     mis-read today.
+///   - which class an accent name belongs to. There is only one CrimpyTheme
+///     since Krakoer/crimpy#137, so every name in lib/ resolves against
+///     lib/theme/crimpy_theme.dart and the question does not arise. A second
+///     palette would have to be declared in [foreignPalettes] to be skipped,
+///     and a name read from one that is not would be measured against the
+///     wrong hex.
 List<NeutralOffence> neutralOffences() {
   final offences = <NeutralOffence>[];
   for (final entity in libRoot.listSync(recursive: true)) {
@@ -1009,9 +1009,13 @@ void main() {
       );
     });
 
-    test('textMutedSmall clears the text floor on every neutral ground', () {
+    test('textMutedSmall clears the text floor on the card grounds', () {
       for (final entry in neutralGrounds.entries) {
         final ratio = contrastRatio(CrimpyTheme.textMutedSmall, entry.value);
+        // bgHover is the exception and is held to the mark floor: #737373
+        // reads 4.35:1 there, which the theme doc records. Naming this test
+        // "every neutral ground" put a green tick under a claim its body does
+        // not make.
         expect(
           ratio,
           greaterThanOrEqualTo(
@@ -1045,7 +1049,12 @@ void main() {
     test('no widget paints with a raw Material colour', () {
       final offenders = <String>[];
       final written = RegExp(
-        r'(?:color|backgroundColor|foregroundColor|labelColor):\s*Colors\.\w+',
+        // Every argument in lib/ that names a colour. iconColor was missing and
+        // hid three live Colors.orange icons in assessment_tutorials.dart, at
+        // 1.99:1 on the tint they sit on: a guard written to forbid a shape has
+        // to know every spelling of it.
+        r'(?:color|backgroundColor|foregroundColor|labelColor|iconColor'
+        r'|borderColor|shadowColor|fillColor|surfaceTintColor):\s*Colors\.\w+',
       );
       for (final entity in libRoot.listSync(recursive: true)) {
         if (entity is! File || !entity.path.endsWith('.dart')) continue;

@@ -276,56 +276,58 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
               // Box of text to show the user the action to do (rest or pull).
               Positioned(
                 top: 230,
-                child: Opacity(
-                  opacity: 0.7,
-                  child: Container(
-                    width: 200,
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: CrimpyTheme.fillOn(CrimpyTheme.accentYellow),
-                      border: Border.all(
-                        color: CrimpyTheme.borderDefault,
-                        width: 2,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: CrimpyTheme.borderDefault,
-                          offset: Offset(4, 4),
-                          blurRadius: 0,
-                          spreadRadius: 0,
-                        ),
-                      ],
+                // No Opacity wrapper. It composited the white label and the
+                // darkened fill together, so fillOn bought 2.80:1 rather than
+                // the 4.93:1 it measures alone, still under the 3:1 these large
+                // labels answer to. The box has a hard border and a shadow and
+                // was not relying on the fade.
+                child: Container(
+                  width: 200,
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: CrimpyTheme.fillOn(CrimpyTheme.accentYellow),
+                    border: Border.all(
+                      color: CrimpyTheme.borderDefault,
+                      width: 2,
                     ),
-                    child: timer.currentItem is! RestItem
-                        ? Text(
-                            "Pull!\n${timer.currentItemRemaining}",
-                            style: TextStyle(
-                              fontSize: 39,
-                              color: CrimpyTheme.primaryWhite,
-                            ),
-                            textAlign: TextAlign.center,
-                          )
-                        : Column(
-                            children: [
-                              Text(
-                                "Pulling with ${timer.currentItemIndex == 0 ? "right" : "left"} hand in",
-                                style: TextStyle(
-                                  fontSize: 29,
-                                  color: CrimpyTheme.primaryWhite,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              Text(
-                                "${timer.currentItemRemaining}",
-                                style: TextStyle(
-                                  fontSize: 39,
-                                  color: CrimpyTheme.primaryWhite,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: CrimpyTheme.borderDefault,
+                        offset: Offset(4, 4),
+                        blurRadius: 0,
+                        spreadRadius: 0,
+                      ),
+                    ],
                   ),
+                  child: timer.currentItem is! RestItem
+                      ? Text(
+                          "Pull!\n${timer.currentItemRemaining}",
+                          style: TextStyle(
+                            fontSize: 39,
+                            color: CrimpyTheme.primaryWhite,
+                          ),
+                          textAlign: TextAlign.center,
+                        )
+                      : Column(
+                          children: [
+                            Text(
+                              "Pulling with ${timer.currentItemIndex == 0 ? "right" : "left"} hand in",
+                              style: TextStyle(
+                                fontSize: 29,
+                                color: CrimpyTheme.primaryWhite,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              "${timer.currentItemRemaining}",
+                              style: TextStyle(
+                                fontSize: 39,
+                                color: CrimpyTheme.primaryWhite,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
                 ),
               ),
               // If on an active rep, show the max bar with max value.

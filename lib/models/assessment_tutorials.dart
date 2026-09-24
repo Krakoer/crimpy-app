@@ -2,6 +2,7 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/tutorial_content.dart';
 import 'package:crimpy/services/tutorial_service.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 /// Provides tutorial content for different assessment types.
 class AssessmentTutorials {
@@ -22,7 +23,7 @@ class AssessmentTutorials {
           title: 'Warm-up Required',
           content:
               'Make sure you are properly warmed up before starting! Perform light hangs and gradually increase intensity to prepare your fingers.',
-          iconColor: Colors.orange,
+          iconColor: CrimpyTheme.accentYellowText,
         ),
         TutorialSection(
           icon: Icons.pan_tool,
@@ -67,7 +68,7 @@ class AssessmentTutorials {
           title: 'Warm-up Required',
           content:
               'This is a demanding test! Ensure you are thoroughly warmed up with progressive hangs before starting.',
-          iconColor: Colors.orange,
+          iconColor: CrimpyTheme.accentYellowText,
         ),
         TutorialSection(
           icon: Icons.schedule,
@@ -112,7 +113,7 @@ class AssessmentTutorials {
           title: 'Warm-up Required',
           content:
               'Complete a thorough warm-up including progressive hangs before starting this endurance test.',
-          iconColor: Colors.orange,
+          iconColor: CrimpyTheme.accentYellowText,
         ),
         const TutorialSection(
           icon: Icons.timer,
