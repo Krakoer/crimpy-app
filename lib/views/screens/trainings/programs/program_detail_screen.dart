@@ -200,7 +200,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: selected
-                  ? CrimpyTheme.primaryOrange
+                  ? CrimpyTheme.fillOn(CrimpyTheme.primaryOrange)
                   : CrimpyTheme.bgPrimary,
               border: Border.all(color: CrimpyTheme.borderDefault, width: 2),
             ),
@@ -255,7 +255,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: selected
-                        ? CrimpyTheme.primaryOrange
+                        ? CrimpyTheme.fillOn(CrimpyTheme.primaryOrange)
                         : CrimpyTheme.bgPrimary,
                     border: Border.all(
                       color: CrimpyTheme.borderDefault,
@@ -462,7 +462,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
               padding: const EdgeInsets.symmetric(vertical: 7),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? CrimpyTheme.primaryOrange
+                    ? CrimpyTheme.fillOn(CrimpyTheme.primaryOrange)
                     : isToday
                     ? CrimpyTheme.tintOf(CrimpyTheme.primaryOrange)
                     : Colors.transparent,

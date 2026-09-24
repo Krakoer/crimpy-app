@@ -266,7 +266,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                     width: 200,
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: CrimpyTheme.accentYellow,
+                      color: CrimpyTheme.fillOn(CrimpyTheme.accentYellow),
                       border: Border.all(
                         color: CrimpyTheme.borderDefault,
                         width: 2,

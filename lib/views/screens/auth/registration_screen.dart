@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/views/screens/auth/email_verification_screen.dart';
@@ -200,13 +201,13 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.red.shade50,
+                      color: CrimpyTheme.bgError,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.shade300),
+                      border: Border.all(color: CrimpyTheme.statusError),
                     ),
                     child: Text(
                       _errorMessage!,
-                      style: TextStyle(color: Colors.red.shade700),
+                      style: TextStyle(color: CrimpyTheme.statusErrorText),
                     ),
                   ),
                 if (_errorMessage != null) const SizedBox(height: 24),

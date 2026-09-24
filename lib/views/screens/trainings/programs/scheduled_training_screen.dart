@@ -220,7 +220,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
             height: 24,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: CrimpyTheme.primaryOrange,
+              color: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
               border: Border.all(color: CrimpyTheme.borderDefault, width: 1.5),
             ),
             child: Text(

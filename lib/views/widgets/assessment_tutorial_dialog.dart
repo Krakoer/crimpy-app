@@ -249,7 +249,7 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                             backgroundColor: CrimpyTheme.fillOn(
                               CrimpyTheme.assessmentColor,
                             ),
-                            foregroundColor: Colors.white,
+                            foregroundColor: CrimpyTheme.primaryWhite,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),

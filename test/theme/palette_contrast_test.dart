@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'dart:math' as math;
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:crimpy/models/common.dart';
@@ -430,11 +430,28 @@ const Color impliedForeground = CrimpyTheme.primaryWhite;
 /// backgroundColor and its label colour from snackBarTheme, and that is how the
 /// log-session confirmation sat at 2.25:1 without a line naming white.
 final RegExp groundOpeners = RegExp(
-  r'\b(\w*[Ss]tyle|styleFrom|copyWith|SnackBar|Chip|Card|Material)\(',
+  r'\b(\w*[Ss]tyle|styleFrom|copyWith|SnackBar|Container)\(',
 );
+
+/// The openers that spell their fill `color:` rather than `backgroundColor:`.
+///
+/// A Container and a BoxDecoration are how almost every filled surface in this
+/// app is painted, and neither carries a `backgroundColor`. Reading only that
+/// argument left eight grounds unmeasured, two of them the assessment-run boxes
+/// at 1.73:1. Card and Material were in this set briefly and could never match
+/// for the same reason, which is what made the gap look closed.
+const Set<String> fillsWithColour = {'Container'};
 
 final RegExp groundArgument = RegExp(
   r'\bbackgroundColor:'
+  r'\s*((?:[^,()]|\((?:[^()]|\([^()]*\))*\))*)',
+);
+
+/// The same, for the openers that name their fill `color:`. Only the call's own
+/// argument counts, which `topLevelColours` already enforces elsewhere: a
+/// `BoxDecoration(border: Border.all(color: ...))` names a border, not a fill.
+final RegExp fillArgument = RegExp(
+  r'\bcolor:'
   r'\s*((?:[^,()]|\((?:[^()]|\([^()]*\))*\))*)',
 );
 
@@ -465,7 +482,10 @@ List<NeutralOffence> accentGroundOffences() {
     for (final opener in groundOpeners.allMatches(source)) {
       final body = callBody(source, opener.start);
       if (body == null) continue;
-      final ground = groundArgument.firstMatch(body);
+      final opensWithColour = fillsWithColour.contains(opener.group(1));
+      final ground = opensWithColour
+          ? fillArgument.firstMatch(body)
+          : groundArgument.firstMatch(body);
       if (ground == null) continue;
       final groundValue = ground.group(1)!;
       if (fadedByAlpha.hasMatch(groundValue)) continue;
@@ -476,16 +496,49 @@ List<NeutralOffence> accentGroundOffences() {
       if (grounds.isEmpty) continue;
 
       // The label named in the same call, or the white the theme supplies.
+      //
+      // A Container names no label: its text is a child, so the call body holds
+      // the fill and nothing else. Assuming the theme's white there would report
+      // every orange Container in the app, including the ones whose child is
+      // dark. So for those openers the children are read instead, and a fill
+      // with no neutral label under it is left alone rather than guessed at.
       Color foreground = impliedForeground;
       var foregroundName = 'the theme default';
+      if (opensWithColour) {
+        // The Container's own body, which holds its fill and its child alike.
+        // BoxDecoration is deliberately not an opener: its body stops before the
+        // child, so the label would never be in it, and a window wide enough to
+        // reach the child also reaches the next widget. An 8px progress tick was
+        // reported that way, off a neutral belonging to a sibling.
+        // The fill itself is cut out first. A fill written as a ternary names a
+        // neutral in its other arm, and reading that as the label reported an
+        // 8px progress tick that holds no text at all: its two arms are orange
+        // and bgPrimary, and neither is a label.
+        final withoutFill = body.replaceFirst(ground.group(0)!, ' ');
+        final named = scannedNeutralForegrounds.keys.firstWhere(
+          (name) =>
+              RegExp('\\b${RegExp.escape(name)}\\b').hasMatch(withoutFill),
+          orElse: () => '',
+        );
+        if (named.isEmpty) continue;
+        foreground = scannedNeutralForegrounds[named]!;
+        foregroundName = named;
+      }
       for (final (argument, value) in topLevelColours(body)) {
         if (argument != 'foregroundColor' && argument != 'color') continue;
         if (fadedByAlpha.hasMatch(value)) continue;
         final bare = withoutResolved(value);
-        final named = scannedNeutralForegrounds.keys.firstWhere(
-          (name) => RegExp(RegExp.escape(name)).hasMatch(bare),
-          orElse: () => '',
-        );
+        // Word bounded, and longest name first: the map is insertion ordered
+        // and textMuted precedes textMutedSmall, so an unbounded match reads a
+        // textMutedSmall label as #999999.
+        final named =
+            (scannedNeutralForegrounds.keys.toList()
+                  ..sort((a, b) => b.length.compareTo(a.length)))
+                .firstWhere(
+                  (name) =>
+                      RegExp('\\b${RegExp.escape(name)}\\b').hasMatch(bare),
+                  orElse: () => '',
+                );
         if (named.isEmpty) continue;
         foreground = scannedNeutralForegrounds[named]!;
         foregroundName = named;
@@ -927,12 +980,6 @@ void main() {
 
     test('fillOn moves an accent exactly when the accent fails', () {
       for (final entry in scannedAccents.entries) {
-        // textMuted is in scannedAccents so the foreground scan measures it,
-        // not because it is an accent. It is decoration, never a ground under a
-        // label, and fillOn has no entry for it on purpose. A surface filled
-        // with it under white is still caught, by the ground scan below, which
-        // reads it at 2.85:1 straight out of the same table.
-        if (entry.key == 'textMuted') continue;
         final fill = CrimpyTheme.fillOn(entry.value);
         final bare = contrastRatio(CrimpyTheme.primaryWhite, entry.value);
         if (bare >= contrastFloor) {
@@ -983,6 +1030,47 @@ void main() {
       expect(
         contrastRatio(CrimpyTheme.textMuted, CrimpyTheme.bgPrimary),
         lessThan(markFloor),
+      );
+    });
+
+    // Section 4 of Krakoer/crimpy#137 was "replace raw Material colours", and
+    // neither scan can see one: scannedAccents holds CrimpyTheme names, so
+    // `backgroundColor: Colors.red` is not a ground to the ground scan and
+    // `foregroundColor: Colors.red` is not a label to the label scan. A guard
+    // added to stop a hand sweep leaving gaps has to cover the category the
+    // sweep was about, so this asserts the absence of the shape rather than
+    // measuring it: a Material colour written as a colour anywhere in lib/.
+    //
+    // Debug-only screens are exempt: they sit behind kDebugMode and never ship.
+    test('no widget paints with a raw Material colour', () {
+      final offenders = <String>[];
+      final written = RegExp(
+        r'(?:color|backgroundColor|foregroundColor|labelColor):\s*Colors\.\w+',
+      );
+      for (final entity in libRoot.listSync(recursive: true)) {
+        if (entity is! File || !entity.path.endsWith('.dart')) continue;
+        if (generatedSuffixes.any(entity.path.endsWith)) continue;
+        if (entity.path.contains('debug_')) continue;
+        // Commented-out code paints nothing. sessions_screen.dart is most of a
+        // screen left behind that way, and rewriting its colours would be
+        // editing a comment to satisfy a guard.
+        final source = entity
+            .readAsStringSync()
+            .split('\n')
+            .map((line) => line.trimLeft().startsWith('//') ? '' : line)
+            .join('\n');
+        for (final match in written.allMatches(source)) {
+          // Colors.transparent paints nothing and has no contrast to answer to.
+          if (match.group(0)!.endsWith('transparent')) continue;
+          final line =
+              '\n'.allMatches(source.substring(0, match.start)).length + 1;
+          offenders.add('${entity.path}:$line ${match.group(0)}');
+        }
+      }
+      expect(
+        offenders,
+        isEmpty,
+        reason: 'raw Material colours in lib/:\n${offenders.join('\n')}',
       );
     });
 

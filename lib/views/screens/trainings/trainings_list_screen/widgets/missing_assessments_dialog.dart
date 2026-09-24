@@ -126,7 +126,10 @@ class MissingAssessmentsDialog extends StatelessWidget {
                     onPressed: () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(color: CrimpyTheme.textMuted, width: 1),
+                      side: BorderSide(
+                        color: CrimpyTheme.textMutedSmall,
+                        width: 1,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -153,7 +156,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
                       backgroundColor: CrimpyTheme.fillOn(
                         CrimpyTheme.assessmentColor,
                       ),
-                      foregroundColor: Colors.white,
+                      foregroundColor: CrimpyTheme.primaryWhite,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),

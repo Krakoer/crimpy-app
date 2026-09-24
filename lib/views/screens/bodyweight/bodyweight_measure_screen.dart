@@ -185,7 +185,7 @@ class _BodyweightMeasureScreenState
   Widget _readingBox(double? lastValue) => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: Colors.black.withValues(alpha: 0.7),
+      color: CrimpyTheme.primaryBlack.withValues(alpha: 0.7),
       borderRadius: BorderRadius.circular(8),
     ),
     child: Column(
@@ -195,7 +195,7 @@ class _BodyweightMeasureScreenState
           '${lastValue == null ? "--" : lastValue.toStringAsFixed(1)} kg',
           style: const TextStyle(
             fontSize: 48,
-            color: Colors.white,
+            color: CrimpyTheme.primaryWhite,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -204,7 +204,10 @@ class _BodyweightMeasureScreenState
           _measurement.phase == BodyweightMeasurementPhase.holding
               ? 'Recording ${_measurement.stableValue!.toStringAsFixed(1)} kg'
               : 'Waiting for a steady reading',
-          style: const TextStyle(fontSize: 16, color: Colors.white70),
+          style: const TextStyle(
+            fontSize: 16,
+            color: CrimpyTheme.textOnFillSecondary,
+          ),
         ),
       ],
     ),

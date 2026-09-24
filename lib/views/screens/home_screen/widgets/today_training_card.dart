@@ -174,7 +174,7 @@ class _ProgramTodayCard extends ConsumerWidget {
                   horizontal: 14,
                   vertical: 8,
                 ),
-                color: CrimpyTheme.primaryOrange,
+                color: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
                 child: Row(
                   children: [
                     const Expanded(
@@ -397,7 +397,7 @@ class _TodayTrainingRow extends ConsumerWidget {
       height: 38,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: CrimpyTheme.primaryOrange,
+        color: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
         border: Border.all(color: CrimpyTheme.borderDefault, width: 2),
       ),
       child: const Icon(

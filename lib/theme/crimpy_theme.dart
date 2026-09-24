@@ -128,10 +128,15 @@ class CrimpyTheme {
   /// Muted grey. **Not a foreground.**
   ///
   /// 2.85:1 on white, which is under the 4.5:1 text floor and also under the
-  /// 3:1 floor a mark answers to, so it cannot be written as a label or drawn
-  /// as an icon on any ground this app paints. What is left is decoration that
-  /// carries no information and is exempt under WCAG 1.4.11: a divider rule, a
-  /// faded step dot. Two uses in lib/ and nothing else.
+  /// 3:1 floor a mark answers to, so it cannot be written as a label, drawn as
+  /// an icon, or used as the boundary of a control. WCAG 1.4.11 exempts
+  /// decoration but covers "visual information required to identify user
+  /// interface components", so a button outline is the covered case, not the
+  /// exempt one, and both Cancel buttons take textMutedSmall.
+  ///
+  /// One use is left in lib/: the inactive step dot of the tutorial dialog,
+  /// already faded to alpha 0.3 and carrying no information the numbered step
+  /// beside it does not.
   ///
   /// Anything a reader has to read takes [textMutedSmall]. The palette guard
   /// scans this name for exactly that reason; Krakoer/crimpy#137 moved 22 uses
@@ -747,6 +752,12 @@ class CrimpyTheme {
     accentPurple: accentPurpleFill,
     accentBlue: accentBlueFill,
     statusInfo: statusInfoFill,
+    // Not an accent, and answered anyway. fillOn hands an unmapped colour back
+    // unchanged, so without this a surface filled with fillOn(textMuted) would
+    // render white on #999999 at 2.85:1 and pass every check: the ground scan
+    // cuts a resolved fillOn(...) out before it looks for an accent, which is
+    // the one hole an otherwise closed contract had.
+    textMuted: textMutedSmall,
   });
 
   /// The colour a surface is filled with when a white label sits on it. An

@@ -430,7 +430,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                 child: Container(
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.7),
+                    color: CrimpyTheme.primaryBlack.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -440,14 +440,17 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                         '${lastValue.toStringAsFixed(1)} kg',
                         style: TextStyle(
                           fontSize: 48,
-                          color: Colors.white,
+                          color: CrimpyTheme.primaryWhite,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       SizedBox(height: 4),
                       Text(
                         'Target: ${_targetForce.toStringAsFixed(1)} kg (${_minForce.toStringAsFixed(1)} - ${_maxForce.toStringAsFixed(1)})',
-                        style: TextStyle(fontSize: 16, color: Colors.white70),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: CrimpyTheme.textOnFillSecondary,
+                        ),
                       ),
                     ],
                   ),
