@@ -1,5 +1,6 @@
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/format.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/home_card.dart';
 import 'package:crimpy/views/screens/trainings/training_details_screen.dart';
@@ -132,6 +133,11 @@ class FavoriteTrainingList extends ConsumerWidget {
                 onPressed: () {
                   ref.invalidate(trainingLibraryProvider);
                   ref.invalidate(builtinTrainingCatalogProvider);
+                  // The catalog derives the history rather than reading it, so
+                  // a failure that came from there survives a catalog drop: the
+                  // rebuild watches the same failed future. The root is what
+                  // has to go for the retry to reach the server.
+                  ref.invalidate(assessmentHistoryProvider);
                 },
                 child: const Text('Retry'),
               ),
@@ -234,6 +240,11 @@ class PinTrainingDialog extends ConsumerWidget {
                 onPressed: () {
                   ref.invalidate(trainingLibraryProvider);
                   ref.invalidate(builtinTrainingCatalogProvider);
+                  // The catalog derives the history rather than reading it, so
+                  // a failure that came from there survives a catalog drop: the
+                  // rebuild watches the same failed future. The root is what
+                  // has to go for the retry to reach the server.
+                  ref.invalidate(assessmentHistoryProvider);
                 },
                 child: const Text('Retry'),
               ),

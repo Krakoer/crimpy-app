@@ -97,6 +97,30 @@ Future<AssessmentResults> assessmentResults(Ref ref) async {
   return AssessmentResults.fromHistory(measured, definitions: definitions);
 }
 
+/// The athlete's whole assessment history, read once and shared by everything
+/// that reads it.
+///
+/// `GET /api/assessments` takes no parameters and always answers the whole
+/// history, so every caller that wanted a narrower view was paying for the
+/// whole one anyway. Two of them asked for it at the same time: the dashboard
+/// through [assessmentsProvider] and the builtin catalog through the builtin
+/// repository, so a cold load and every pull to refresh of the home screen put
+/// the byte identical request on the wire twice. They derive from this now, and
+/// the fetch happens once.
+///
+/// This is the provider to invalidate to read the history again. Invalidating
+/// anything below it rebuilds from what is already held and never reaches the
+/// server, which is what makes a filtered view free.
+///
+/// It is the root rather than [assessmentsProvider] with a null key because
+/// that one is an autoDispose family: a keepAlive provider watching an entry of
+/// it would pin that entry for the session, and every existing invalidation of
+/// it would start refetching the builtin availability as a side effect. A root
+/// of its own leaves those call sites meaning what they already meant.
+@Riverpod(keepAlive: true)
+Future<List<AssessmentModel>> assessmentHistory(Ref ref) =>
+    ref.watch(assessmentRepositoryProvider).getAssessments();
+
 /// Returns the list of assessments.
 /// Allow to filter on the assessment measured.
 @riverpod
@@ -104,9 +128,18 @@ class Assessments extends _$Assessments {
   late AssessmentRepository _assessmentRepository;
 
   @override
-  Future<List<AssessmentModel>> build(String? assessmentId) {
+  Future<List<AssessmentModel>> build(String? assessmentId) async {
     _assessmentRepository = ref.watch(assessmentRepositoryProvider);
-    return _assessmentRepository.getAssessments(assessmentId: assessmentId);
+    final history = await ref.watch(assessmentHistoryProvider.future);
+    if (assessmentId == null) return history;
+    // Filtered here rather than asked for narrower. Both stores answer the
+    // whole history sorted oldest first and filter it themselves, so narrowing
+    // in memory gives the same list in the same order and costs no request.
+    // Callers take the last entry as the most recent one, and a filter over a
+    // sorted list keeps that true.
+    return history
+        .where((assessment) => assessment.assessmentId == assessmentId)
+        .toList();
   }
 
   /// Save the assessment into the database. If the assessment has already been done today, the previous results will be deleted.
@@ -159,16 +192,13 @@ class Assessments extends _$Assessments {
     await _assessmentRepository.saveAssessment(assessmentModel, sessionId);
 
     if (ref.mounted) {
-      ref.invalidateSelf();
-      // Invalidate the null provider as well, since it fetches all trainings.
-      ref.invalidate(assessmentsProvider(null));
-      // What the next percentage driven run reads, so a training prescribed
-      // against this assessment resolves against the number just measured.
-      ref.invalidate(assessmentResultsProvider);
-      // A builtin's availability is read off the assessments, so the catalog
-      // is what this write made stale. Dropping it rebuilds both training
-      // lists, the home screen card included, and leaves the library alone.
-      ref.invalidate(builtinTrainingCatalogProvider);
+      // One drop, where four used to stand. The history is the only thing this
+      // write made stale, and everything that showed the old one derives from
+      // it: this notifier and its siblings in the family, the results the next
+      // percentage driven run resolves against, and the builtin catalog, whose
+      // availability is read off the assessments. Dropping the root rebuilds
+      // all of them from one read, and leaves the training library alone.
+      ref.invalidate(assessmentHistoryProvider);
     }
   }
 

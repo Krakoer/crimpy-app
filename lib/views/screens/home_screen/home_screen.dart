@@ -44,11 +44,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     // rather than blanking.
     ref.invalidate(sessionsProvider);
     ref.invalidate(filteredSessionsProvider);
-    // The one instance this dashboard reads, through assessmentResults. The
-    // family holds an entry per assessment the other tabs show, and those tabs
-    // are kept alive behind this one: invalidating it whole refetches lists
-    // nothing here displays.
-    ref.invalidate(assessmentsProvider(null));
+    // The history itself, which the dashboard reads through assessmentResults
+    // and the builtin catalog reads for availability. Dropping the root is what
+    // asks the server again; dropping a view of it would rebuild from the list
+    // already held.
+    ref.invalidate(assessmentHistoryProvider);
     ref.invalidate(assessmentDefinitionsProvider);
     // The two reads both training cards are built from. They hold different
     // content, all builtins against pinned builtins, but they filter the same

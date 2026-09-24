@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:crimpy/views/widgets/pull_to_refresh.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/missing_assessments_dialog.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/training_list_item.dart';
@@ -52,6 +53,11 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen>
             // which is the whole point of a pull.
             ref.invalidate(trainingLibraryProvider);
             ref.invalidate(builtinTrainingCatalogProvider);
+            // A builtin's availability is read off the assessment history, and
+            // the catalog derives that rather than fetching it, so dropping the
+            // catalog alone would rebuild availability from the history already
+            // held and a pull would never refresh it.
+            ref.invalidate(assessmentHistoryProvider);
             await Future.wait([
               ref.read(allTrainingsProvider.future),
               ref.read(activeProgramProvider.future),

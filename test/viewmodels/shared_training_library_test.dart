@@ -105,7 +105,11 @@ class _NoAssessments extends AssessmentRepository {
       await Future<void>.delayed(Duration.zero);
       throw ApiException('offline', isOffline: true);
     }
-    return const [];
+    // A fresh list per read, not `const []`. Dart canonicalises const empty
+    // lists, so two independent reads of one would answer the same instance and
+    // every assertion that two consumers share one read would pass without
+    // being true.
+    return <AssessmentModel>[];
   }
 
   @override
@@ -216,11 +220,25 @@ ProviderContainer _containerFor(
   Iterable<String> pinnedBuiltins = const [],
 }) => _setUp(client, pinnedBuiltins: pinnedBuiltins).container;
 
+/// What `trainings_list_screen.dart` does on a pull. It drops the history as
+/// well as the library and the catalog, because builtin availability is read
+/// off the history and the catalog derives it rather than fetching it.
+Future<void> _trainingsTabRefresh(ProviderContainer container) {
+  container.invalidate(trainingLibraryProvider);
+  container.invalidate(builtinTrainingCatalogProvider);
+  container.invalidate(assessmentHistoryProvider);
+  return container.read(allTrainingsProvider.future);
+}
+
 /// What `home_screen.dart` does for the two training cards on a pull: drop the
-/// two reads behind them, then wait for both lists.
+/// reads behind them, then wait for both lists.
 Future<void> _homeScreenRefresh(ProviderContainer container) {
   container.invalidate(trainingLibraryProvider);
   container.invalidate(builtinTrainingCatalogProvider);
+  // The history is its own root since Krakoer/crimpy#135, and the catalog
+  // derives it rather than reading it, so this is what makes a pull ask the
+  // server for the assessments again. The screen drops all three.
+  container.invalidate(assessmentHistoryProvider);
   return Future.wait([
     container.read(allTrainingsProvider.future),
     container.read(pinnedTrainingsProvider.future),
@@ -277,6 +295,59 @@ void main() {
       expect(setUp.assessments.reads, 1);
       expect(setUp.preferences.reads, 1);
     });
+
+    // The point of Krakoer/crimpy#135. The dashboard reads the history through
+    // assessmentResults and the builtin catalog reads it for availability, and
+    // both used to ask the repository themselves: one home screen load sent the
+    // byte identical request twice, at the same time. Spelled out as one rather
+    // than derived, since the number is the whole assertion.
+    test('reads the assessment history once on a cold load', () async {
+      final client = _CountingApiClient(const ['t-0']);
+      final setUp = _setUp(client);
+
+      await _homeScreenLoad(setUp.container);
+      await setUp.container.read(assessmentResultsProvider.future);
+
+      expect(setUp.assessments.reads, 1);
+    });
+
+    test('reads the assessment history once on a pull to refresh', () async {
+      final client = _CountingApiClient(const ['t-0']);
+      final setUp = _setUp(client);
+      await _homeScreenLoad(setUp.container);
+      await setUp.container.read(assessmentResultsProvider.future);
+      setUp.assessments.reads = 0;
+
+      await _homeScreenRefresh(setUp.container);
+      await setUp.container.read(assessmentResultsProvider.future);
+
+      expect(setUp.assessments.reads, 1);
+    });
+
+    // The two sides of the duplication, asserted against each other rather than
+    // against a count: a dashboard reading a different history from the one the
+    // builtin availability was evaluated against is the bug the single read
+    // exists to make impossible.
+    test(
+      'evaluates builtins against the history the dashboard shows',
+      () async {
+        final client = _CountingApiClient(const ['t-0']);
+        final setUp = _setUp(client);
+
+        final catalog = await setUp.container.read(
+          builtinTrainingCatalogProvider.future,
+        );
+        // Read through the dashboard's own path rather than the root, so this
+        // covers the null key passing the history straight through as well as
+        // the catalog deriving it.
+        final history = await setUp.container.read(
+          assessmentsProvider(null).future,
+        );
+
+        expect(identical(catalog.assessments, history), isTrue);
+        expect(setUp.assessments.reads, 1);
+      },
+    );
 
     test('shows what a pull fetched rather than what it held', () async {
       final client = _CountingApiClient(const ['t-0']);
@@ -394,8 +465,15 @@ void main() {
 
       // A pin belongs to the catalog, so the library is never asked for, and
       // the catalog is asked for once for both lists rather than once each.
+      //
+      // The assessments are not asked for at all. They used to be, because the
+      // catalog read them itself and a pin change dropped the catalog. They are
+      // a root of their own now, so a pin refreshes the pins and leaves the
+      // history alone: a heart tap says nothing about what the athlete has
+      // measured. This assertion moved from 1 to 0 because the behaviour got
+      // better, not because the test was relaxed.
       expect(client.libraryReads, 0);
-      expect(setUp.assessments.reads, 1);
+      expect(setUp.assessments.reads, 0);
       expect(
         pinned.where((item) => item.isBuiltin).map((item) => item.id),
         contains(builtinId),
@@ -543,6 +621,55 @@ void main() {
 
       expect(await container.read(pinnedTrainingsProvider.future), isNotNull);
       expect(client.libraryReads, 1);
+    });
+
+    // The trainings tab shows builtin availability, which is evaluated against
+    // the assessment history. The catalog derives that history now instead of
+    // fetching it, so dropping the catalog alone rebuilds availability from the
+    // list already held and a pull would never refresh it. This is the row the
+    // invalidation audit found that names no assessment provider.
+    test('a trainings tab pull refreshes the builtin availability', () async {
+      final client = _CountingApiClient(const ['t-0']);
+      final setUp = _setUp(client);
+      await setUp.container.read(allTrainingsProvider.future);
+      setUp.assessments.reads = 0;
+
+      await _trainingsTabRefresh(setUp.container);
+
+      expect(setUp.assessments.reads, 1);
+    });
+
+    // And the same shape on the error path, which is worse: a keepAlive root in
+    // error state hands the same failed future back to a rebuilt catalog, so a
+    // retry that drops only the catalog asks the server nothing and shows the
+    // athlete the same error forever.
+    test('a retry after a failed history read asks the server again', () async {
+      final client = _CountingApiClient(const ['t-0']);
+      final setUp = _setUp(client);
+      setUp.assessments.failing = true;
+      await expectLater(
+        setUp.container.read(pinnedTrainingsProvider.future),
+        throwsA(isA<ApiException>()),
+      );
+      setUp.assessments.failing = false;
+      setUp.assessments.reads = 0;
+
+      // What the Retry buttons on the favourite card used to do on their own.
+      setUp.container.invalidate(builtinTrainingCatalogProvider);
+      await expectLater(
+        setUp.container.read(pinnedTrainingsProvider.future),
+        throwsA(isA<ApiException>()),
+      );
+      expect(setUp.assessments.reads, 0);
+
+      // And what they do now.
+      setUp.container.invalidate(assessmentHistoryProvider);
+
+      expect(
+        await setUp.container.read(pinnedTrainingsProvider.future),
+        isNotNull,
+      );
+      expect(setUp.assessments.reads, 1);
     });
 
     test('invalidating a derived list does not reach the server', () async {

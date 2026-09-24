@@ -410,6 +410,109 @@ final class AssessmentResultsProvider
 
 String _$assessmentResultsHash() => r'fc70903128ed0bf856973ebf3d8ff909818a922d';
 
+/// The athlete's whole assessment history, read once and shared by everything
+/// that reads it.
+///
+/// `GET /api/assessments` takes no parameters and always answers the whole
+/// history, so every caller that wanted a narrower view was paying for the
+/// whole one anyway. Two of them asked for it at the same time: the dashboard
+/// through [assessmentsProvider] and the builtin catalog through the builtin
+/// repository, so a cold load and every pull to refresh of the home screen put
+/// the byte identical request on the wire twice. They derive from this now, and
+/// the fetch happens once.
+///
+/// This is the provider to invalidate to read the history again. Invalidating
+/// anything below it rebuilds from what is already held and never reaches the
+/// server, which is what makes a filtered view free.
+///
+/// It is the root rather than [assessmentsProvider] with a null key because
+/// that one is an autoDispose family: a keepAlive provider watching an entry of
+/// it would pin that entry for the session, and every existing invalidation of
+/// it would start refetching the builtin availability as a side effect. A root
+/// of its own leaves those call sites meaning what they already meant.
+
+@ProviderFor(assessmentHistory)
+const assessmentHistoryProvider = AssessmentHistoryProvider._();
+
+/// The athlete's whole assessment history, read once and shared by everything
+/// that reads it.
+///
+/// `GET /api/assessments` takes no parameters and always answers the whole
+/// history, so every caller that wanted a narrower view was paying for the
+/// whole one anyway. Two of them asked for it at the same time: the dashboard
+/// through [assessmentsProvider] and the builtin catalog through the builtin
+/// repository, so a cold load and every pull to refresh of the home screen put
+/// the byte identical request on the wire twice. They derive from this now, and
+/// the fetch happens once.
+///
+/// This is the provider to invalidate to read the history again. Invalidating
+/// anything below it rebuilds from what is already held and never reaches the
+/// server, which is what makes a filtered view free.
+///
+/// It is the root rather than [assessmentsProvider] with a null key because
+/// that one is an autoDispose family: a keepAlive provider watching an entry of
+/// it would pin that entry for the session, and every existing invalidation of
+/// it would start refetching the builtin availability as a side effect. A root
+/// of its own leaves those call sites meaning what they already meant.
+
+final class AssessmentHistoryProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<AssessmentModel>>,
+          List<AssessmentModel>,
+          FutureOr<List<AssessmentModel>>
+        >
+    with
+        $FutureModifier<List<AssessmentModel>>,
+        $FutureProvider<List<AssessmentModel>> {
+  /// The athlete's whole assessment history, read once and shared by everything
+  /// that reads it.
+  ///
+  /// `GET /api/assessments` takes no parameters and always answers the whole
+  /// history, so every caller that wanted a narrower view was paying for the
+  /// whole one anyway. Two of them asked for it at the same time: the dashboard
+  /// through [assessmentsProvider] and the builtin catalog through the builtin
+  /// repository, so a cold load and every pull to refresh of the home screen put
+  /// the byte identical request on the wire twice. They derive from this now, and
+  /// the fetch happens once.
+  ///
+  /// This is the provider to invalidate to read the history again. Invalidating
+  /// anything below it rebuilds from what is already held and never reaches the
+  /// server, which is what makes a filtered view free.
+  ///
+  /// It is the root rather than [assessmentsProvider] with a null key because
+  /// that one is an autoDispose family: a keepAlive provider watching an entry of
+  /// it would pin that entry for the session, and every existing invalidation of
+  /// it would start refetching the builtin availability as a side effect. A root
+  /// of its own leaves those call sites meaning what they already meant.
+  const AssessmentHistoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'assessmentHistoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$assessmentHistoryHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<AssessmentModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<AssessmentModel>> create(Ref ref) {
+    return assessmentHistory(ref);
+  }
+}
+
+String _$assessmentHistoryHash() => r'e2f2460befeaab72e1a50fc23b10d592a3751d52';
+
 /// Returns the list of assessments.
 /// Allow to filter on the assessment measured.
 
@@ -458,7 +561,7 @@ final class AssessmentsProvider
   }
 }
 
-String _$assessmentsHash() => r'98ba7417e4cda6708783346f6729bf247ff28ee7';
+String _$assessmentsHash() => r'ac70536667e6387e36d2e3f1ab2389971e72e1d5';
 
 /// Returns the list of assessments.
 /// Allow to filter on the assessment measured.
