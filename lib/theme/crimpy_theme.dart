@@ -139,8 +139,8 @@ class CrimpyTheme {
   /// beside it does not.
   ///
   /// Anything a reader has to read takes [textMutedSmall]. The palette guard
-  /// scans this name for exactly that reason; Krakoer/crimpy#137 moved 22 uses
-  /// off it, of which a hand sweep had found 13.
+  /// scans this name for exactly that reason: a hand sweep found 13 of the
+  /// foreground uses and the guard found the rest, 34 call sites in all.
   static const Color textMuted = Color(0xFF999999);
 
   /// The muted voice at a size that has to clear the 4.5:1 text floor.
@@ -680,10 +680,12 @@ class CrimpyTheme {
     accentPurple: accentPurpleText,
     accentBlue: accentBlueText,
     statusError: statusErrorText,
-    // Not an accent, and the reason it is here anyway: callers already route
-    // the muted voice through textOn, and without an entry it was handed back
-    // unchanged at 2.85:1. ScheduleStatusTag writes it as a 10px w700 label
-    // that way. See Krakoer/crimpy#137.
+    // Not an accent, and here for the same reason the mark map's entry is: no
+    // caller passes textMuted today, because every foreground use moved to
+    // textMutedSmall directly. ScheduleStatusTag used to route it through
+    // textOn and now passes the readable form itself. The entry answers a
+    // future caller correctly instead of handing back 2.85:1.
+    // See Krakoer/crimpy#137.
     textMuted: textMutedSmall,
   });
 

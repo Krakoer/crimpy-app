@@ -219,7 +219,7 @@ final RegExp styleOpeners = RegExp(
 /// because `dart format` wraps a long value onto its own line and a scan that
 /// stops at the newline reads `CrimpyTheme.textOn(` as the whole answer.
 final RegExp colourArgument = RegExp(
-  r'\b(color|foregroundColor|labelColor):'
+  r'\b(color|foregroundColor|labelColor|iconColor):'
   r'\s*((?:[^,()]|\((?:[^()]|\([^()]*\))*\))*)',
 );
 final RegExp fontSizeArgument = RegExp(r'fontSize:\s*([^\n,]*)');
@@ -338,6 +338,9 @@ List<(String, String)> topLevelColours(String body) {
 /// one.
 bool paintsText(String opener, String argument, {required bool iconOnly}) {
   if (opener == 'Icon' || opener == 'FaIcon') return argument != 'color';
+  // iconColor reaches a stroke and nothing else, whatever the call around it
+  // is, so it answers to the mark floor the way an Icon's own colour does.
+  if (argument == 'iconColor') return false;
   return !iconOnly;
 }
 
@@ -408,9 +411,64 @@ final RegExp groundArgument = RegExp(
   r'\s*((?:[^,()]|\((?:[^()]|\([^()]*\))*\))*)',
 );
 
-/// The same, for the openers that name their fill `color:`. Only the call's own
-/// argument counts, which `topLevelColours` already enforces elsewhere: a
-/// `BoxDecoration(border: Border.all(color: ...))` names a border, not a fill.
+/// The `color:` that is actually [body]'s fill, or null when it paints none.
+///
+/// Two shapes count and nothing else: `Container(color: x)`, where the fill is
+/// an argument of the call itself, and `Container(decoration: BoxDecoration(
+/// color: x))`, which is how almost every filled surface in this app is
+/// painted. A plain depth-one rule gets only the first of those.
+///
+/// Everything else at any depth is not a fill: a `Border.all(color:)`, a
+/// `BoxShadow(color:)`, a child's own colour. Matching the first `color:`
+/// anywhere read all three as grounds. It was harmless in lib/ as it stood -
+/// every Container whose first `color:` is a border or a shadow has no fill at
+/// all - but it fails in both directions: reorder a BoxDecoration so `border:`
+/// precedes `color:`, which is identical Dart that dart format leaves alone,
+/// and a gold fill under a white 39px label stops being measured.
+Match? fillIn(String body) {
+  final depth = <int>[];
+  var level = 0;
+  for (var i = 0; i < body.length; i++) {
+    depth.add(level);
+    if (body[i] == '(') level++;
+    if (body[i] == ')') level--;
+  }
+
+  // The decoration argument's own span, so a colour inside it can be told from
+  // one inside a Border or a BoxShadow nested deeper in the same decoration.
+  var decorationStart = -1;
+  var decorationEnd = -1;
+  final decoration = RegExp(
+    r'\bdecoration:\s*\w*BoxDecoration\(',
+  ).firstMatch(body);
+  if (decoration != null && depth[decoration.start] == 1) {
+    decorationStart = decoration.end;
+    var inner = 1;
+    for (var i = decorationStart; i < body.length; i++) {
+      if (body[i] == '(') inner++;
+      if (body[i] == ')') {
+        inner--;
+        if (inner == 0) {
+          decorationEnd = i;
+          break;
+        }
+      }
+    }
+  }
+
+  for (final match in fillArgument.allMatches(body)) {
+    if (depth[match.start] == 1) return match;
+    if (decorationStart >= 0 &&
+        match.start > decorationStart &&
+        match.start < decorationEnd &&
+        depth[match.start] == 2) {
+      return match;
+    }
+  }
+  return null;
+}
+
+/// The `color:` argument pattern the reader above selects from.
 final RegExp fillArgument = RegExp(
   r'\bcolor:'
   r'\s*((?:[^,()]|\((?:[^()]|\([^()]*\))*\))*)',
@@ -445,7 +503,7 @@ List<NeutralOffence> accentGroundOffences() {
       if (body == null) continue;
       final opensWithColour = fillsWithColour.contains(opener.group(1));
       final ground = opensWithColour
-          ? fillArgument.firstMatch(body)
+          ? fillIn(body)
           : groundArgument.firstMatch(body);
       if (ground == null) continue;
       final groundValue = ground.group(1)!;
@@ -649,6 +707,14 @@ List<NeutralOffence> neutralOffences() {
   offences.sort((a, b) => a.toString().compareTo(b.toString()));
   return offences;
 }
+
+/// Widgets built only under kDebugMode, whose colours never reach a release
+/// build. Named individually rather than by file: debug_modal.dart holds three
+/// more widgets that are not gated and do ship.
+const Set<String> debugOnlyWidgets = {
+  '_DebugToolsSection',
+  '_DebugToolsSectionState',
+};
 
 void main() {
   group('accent text on a tint of its own accent', () {
@@ -1059,10 +1125,17 @@ void main() {
       for (final entity in libRoot.listSync(recursive: true)) {
         if (entity is! File || !entity.path.endsWith('.dart')) continue;
         if (generatedSuffixes.any(entity.path.endsWith)) continue;
-        if (entity.path.contains('debug_')) continue;
+
         // Commented-out code paints nothing. sessions_screen.dart is most of a
         // screen left behind that way, and rewriting its colours would be
         // editing a comment to satisfy a guard.
+        //
+        // Debug-only widgets are exempt by name rather than by file. The
+        // earlier rule exempted debug_modal.dart whole and justified it with
+        // "sits behind kDebugMode", which is false of that file: only
+        // _DebugToolsSection is gated, while _ReportBugButton, _SendLogsButton
+        // and _AppVersionSection build unconditionally and ship. A raw colour
+        // added to the report-a-bug button would have gone unreported.
         final source = entity
             .readAsStringSync()
             .split('\n')
@@ -1071,6 +1144,15 @@ void main() {
         for (final match in written.allMatches(source)) {
           // Colors.transparent paints nothing and has no contrast to answer to.
           if (match.group(0)!.endsWith('transparent')) continue;
+          // The widget this colour sits in, taken as the nearest class opened
+          // above it. A widget named here is built only under kDebugMode.
+          final opened = RegExp(
+            r'class\s+(\w+)',
+          ).allMatches(source.substring(0, match.start));
+          if (opened.isNotEmpty &&
+              debugOnlyWidgets.contains(opened.last.group(1))) {
+            continue;
+          }
           final line =
               '\n'.allMatches(source.substring(0, match.start)).length + 1;
           offenders.add('${entity.path}:$line ${match.group(0)}');

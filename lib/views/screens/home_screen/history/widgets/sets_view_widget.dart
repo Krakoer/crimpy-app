@@ -276,7 +276,16 @@ class SetPerformanceBar extends StatelessWidget {
                       color: CrimpyTheme.textOn(repColor),
                     ),
                   )
-                : Icon(Icons.fitness_center, size: 12, color: repColor),
+                : Icon(
+                    Icons.fitness_center,
+                    size: 12,
+                    // The session accent at full strength, not repColor. With
+                    // no target repColor is that accent at alpha 0.3, and the
+                    // icon then sits on a tint of itself at 1.41:1, under the
+                    // 3:1 a mark answers to. The fade said "no target" twice,
+                    // once in the ground and once in the icon.
+                    color: CrimpyTheme.markOn(sessionColor),
+                  ),
           ),
         );
       }),
