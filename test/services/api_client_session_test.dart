@@ -1,9 +1,9 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/api_exception.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -45,6 +45,36 @@ ResponseBody Function(RequestOptions) _expiredUnlessFresh(
     (options) => options.headers['Authorization'] == 'Bearer fresh'
     ? answer()
     : _json(401, {'error': 'Invalid or expired token'});
+
+/// Secure storage whose access token writes fail, the way a keystore that
+/// went unavailable mid refresh does, while every other key works.
+class _AccessTokenWriteFailingStorage extends FlutterSecureStorage {
+  @override
+  Future<void> write({
+    required String key,
+    required String? value,
+    IOSOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    MacOsOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) {
+    if (key == ApiClient.tokenKey) {
+      throw PlatformException(code: 'keystore_unavailable');
+    }
+    return super.write(
+      key: key,
+      value: value,
+      iOptions: iOptions,
+      aOptions: aOptions,
+      lOptions: lOptions,
+      webOptions: webOptions,
+      mOptions: mOptions,
+      wOptions: wOptions,
+    );
+  }
+}
 
 void main() {
   late int unauthorizedCalls;
@@ -250,6 +280,28 @@ void main() {
       ),
     );
 
+    expect(await client.getRefreshToken(), 'rotated');
+    expect(unauthorizedCalls, 0);
+  });
+
+  // The server revoked the old refresh token before it answered, so the one it
+  // sent back is the only one still worth anything, whatever fails after it.
+  test('an access token that cannot be stored keeps the rotated one', () async {
+    final storage = _AccessTokenWriteFailingStorage();
+    final client = ApiClient(
+      storage: storage,
+      httpClientAdapter: _ScriptedAdapter({
+        ...refreshed,
+        '/api/sessions': _expiredUnlessFresh(() => _json(200, [])),
+      }),
+    )..onUnauthorized = () => unauthorizedCalls++;
+
+    await expectLater(
+      client.getSessions(),
+      throwsA(isA<ApiException>().having((e) => e.statusCode, 'status', 200)),
+    );
+
+    expect(await client.getRefreshToken(), 'rotated');
     expect(unauthorizedCalls, 0);
   });
 

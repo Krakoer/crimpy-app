@@ -200,28 +200,32 @@ class ApiClient {
       return const _RefreshRejected();
     }
     final Response<dynamic> res;
+    // A bare Dio without the auth interceptor avoids recursion on 401.
+    final refreshDio = _createDio(_httpClientAdapter);
     try {
-      // A bare Dio without the auth interceptor avoids recursion on 401.
-      res = await _createDio(
-        _httpClientAdapter,
-      ).post('/auth/refresh', data: {'refresh_token': refreshToken});
+      res = await refreshDio.post(
+        '/auth/refresh',
+        data: {'refresh_token': refreshToken},
+      );
     } on DioException catch (e) {
       AppLoggerHelper.info('Token refresh failed: $e');
       final status = e.response?.statusCode;
       if (status == 400 || status == 401) return const _RefreshRejected();
       return _RefreshUnavailable(failure: e);
+    } finally {
+      refreshDio.close();
     }
 
     try {
       final data = res.data as Map<String, dynamic>;
-      final newToken = data['token'] as String;
-      final newRefresh = data['refresh_token'] as String?;
       // The server has already revoked the token it was sent, so the one that
-      // replaces it goes first. Dying between the two writes then leaves an
-      // expired access token next to a live refresh token, which the next
-      // request recovers from, rather than the other way round.
+      // replaces it is stored first, and whatever else the answer lacks. Dying
+      // between the two writes then leaves an expired access token next to a
+      // live refresh token, which the next request recovers from, rather than
+      // the other way round.
+      final newRefresh = data['refresh_token'] as String?;
       if (newRefresh != null) await saveRefreshToken(newRefresh);
-      await saveToken(newToken);
+      await saveToken(data['token'] as String);
       AppLoggerHelper.info('Access token refreshed');
       return const _Refreshed();
     } catch (e) {
