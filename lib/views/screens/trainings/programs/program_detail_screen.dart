@@ -200,7 +200,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: selected
-                  ? CrimpyTheme.primaryOrange
+                  ? CrimpyTheme.fillOn(CrimpyTheme.primaryOrange)
                   : CrimpyTheme.bgPrimary,
               border: Border.all(color: CrimpyTheme.borderDefault, width: 2),
             ),
@@ -255,7 +255,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: selected
-                        ? CrimpyTheme.primaryOrange
+                        ? CrimpyTheme.fillOn(CrimpyTheme.primaryOrange)
                         : CrimpyTheme.bgPrimary,
                     border: Border.all(
                       color: CrimpyTheme.borderDefault,
@@ -462,7 +462,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
               padding: const EdgeInsets.symmetric(vertical: 7),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? CrimpyTheme.primaryOrange
+                    ? CrimpyTheme.fillOn(CrimpyTheme.primaryOrange)
                     : isToday
                     ? CrimpyTheme.tintOf(CrimpyTheme.primaryOrange)
                     : Colors.transparent,
@@ -483,7 +483,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
                       fontWeight: FontWeight.w700,
                       color: isSelected
                           ? CrimpyTheme.bgPrimary
-                          : CrimpyTheme.textMuted,
+                          : CrimpyTheme.textMutedSmall,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -563,7 +563,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
       decoration: BoxDecoration(
         border: Border.all(
-          color: CrimpyTheme.textMuted,
+          color: CrimpyTheme.textMutedSmall,
           width: 2,
           strokeAlign: BorderSide.strokeAlignInside,
         ),
@@ -575,7 +575,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
           fontFamily: 'JetBrainsMono',
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: CrimpyTheme.textMuted,
+          color: CrimpyTheme.textMutedSmall,
         ),
       ),
     );
@@ -586,7 +586,11 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
       padding: const EdgeInsets.symmetric(vertical: 40),
       child: Column(
         children: [
-          Icon(FontAwesomeIcons.clock, size: 26, color: CrimpyTheme.textMuted),
+          Icon(
+            FontAwesomeIcons.clock,
+            size: 26,
+            color: CrimpyTheme.textMutedSmall,
+          ),
           const SizedBox(height: 12),
           Text(
             'WEEK ${widget.weekNumber} NOT PLANNED YET',
@@ -603,7 +607,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
             style: TextStyle(
               fontFamily: 'JetBrainsMono',
               fontSize: 11,
-              color: CrimpyTheme.textMuted,
+              color: CrimpyTheme.textMutedSmall,
             ),
           ),
         ],
@@ -651,7 +655,7 @@ class _CalendarView extends StatelessWidget {
                         fontFamily: 'JetBrainsMono',
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
-                        color: CrimpyTheme.textMuted,
+                        color: CrimpyTheme.textMutedSmall,
                       ),
                     ),
                   ),
@@ -778,7 +782,7 @@ class _CalendarRow extends ConsumerWidget {
                   fontWeight: FontWeight.w700,
                   color: defined
                       ? CrimpyTheme.textPrimary
-                      : CrimpyTheme.textMuted,
+                      : CrimpyTheme.textMutedSmall,
                 ),
               ),
             ),
@@ -809,7 +813,7 @@ class _CalendarRow extends ConsumerWidget {
                             ? CrimpyTheme.primaryOrange
                             : defined
                             ? CrimpyTheme.borderDefault
-                            : CrimpyTheme.textMuted,
+                            : CrimpyTheme.textMutedSmall,
                         width: isToday ? 2 : 1,
                       ),
                     ),

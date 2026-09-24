@@ -117,13 +117,13 @@ class _EmailVerificationScreenState
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.red.shade50,
+                    color: CrimpyTheme.bgError,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red.shade300),
+                    border: Border.all(color: CrimpyTheme.statusError),
                   ),
                   child: Text(
                     _errorMessage!,
-                    style: TextStyle(color: Colors.red.shade700),
+                    style: TextStyle(color: CrimpyTheme.statusErrorText),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -131,13 +131,15 @@ class _EmailVerificationScreenState
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green.shade50,
+                    color: CrimpyTheme.bgSuccess,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.green.shade300),
+                    border: Border.all(color: CrimpyTheme.statusSuccess),
                   ),
                   child: Text(
                     _successMessage!,
-                    style: TextStyle(color: Colors.green.shade700),
+                    style: TextStyle(
+                      color: CrimpyTheme.textOn(CrimpyTheme.statusSuccess),
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),

@@ -12,7 +12,7 @@ import 'package:crimpy/views/screens/trainings/post_workout_screen/widgets/item_
 import 'package:crimpy/models/session_rpe.dart';
 import 'package:crimpy/views/widgets/session_rpe_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:crimpy/theme.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class PostWorkoutScreen extends ConsumerStatefulWidget {
   final Training template;

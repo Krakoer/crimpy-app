@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/viewmodels/app_info_view_model.dart';
 
@@ -13,7 +14,10 @@ class WhatsNewDialog extends ConsumerWidget {
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.new_releases, color: Colors.blue),
+          Icon(
+            Icons.new_releases,
+            color: CrimpyTheme.markOn(CrimpyTheme.accentBlue),
+          ),
           const SizedBox(width: 8),
           const Text('What\'s New'),
         ],
@@ -30,7 +34,7 @@ class WhatsNewDialog extends ConsumerWidget {
                 'Version ${appInfo.version}',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.blue,
+                  color: CrimpyTheme.textOn(CrimpyTheme.accentBlue),
                 ),
               ),
               loading: () => const SizedBox.shrink(),
@@ -88,7 +92,11 @@ class WhatsNewDialog extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.check_circle, color: Colors.green, size: 20),
+          Icon(
+            Icons.check_circle,
+            color: CrimpyTheme.markOn(CrimpyTheme.statusSuccess),
+            size: 20,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(

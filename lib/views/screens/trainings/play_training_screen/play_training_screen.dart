@@ -568,7 +568,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
               fontFamily: 'JetBrainsMono',
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: CrimpyTheme.textMuted,
+              color: CrimpyTheme.textMutedSmall,
             ),
           ),
       ],
@@ -1017,8 +1017,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                                       icon: const Icon(Icons.check),
                                       label: const Text('DONE'),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            CrimpyTheme.primaryOrange,
+                                        backgroundColor: CrimpyTheme.fillOn(
+                                          CrimpyTheme.primaryOrange,
+                                        ),
                                         foregroundColor: CrimpyTheme.bgPrimary,
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 16,

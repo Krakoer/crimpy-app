@@ -1,12 +1,13 @@
 import 'package:crimpy/models/assessment_history.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/views/screens/auth/login_screen.dart';
 import 'package:crimpy/views/screens/auth/registration_screen.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/bodyweight_card.dart';
-import 'package:crimpy/views/screens/profile_screen/widgets/stat_content.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/mvc_grip_position_stat_content.dart';
+import 'package:crimpy/views/screens/profile_screen/widgets/stat_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -149,7 +150,11 @@ class ProfileContent extends ConsumerWidget {
                                 Text(
                                   'Email not verified',
                                   style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(color: Colors.orange),
+                                      ?.copyWith(
+                                        color: CrimpyTheme.textOn(
+                                          CrimpyTheme.statusWarning,
+                                        ),
+                                      ),
                                 ),
                             ],
                           ),

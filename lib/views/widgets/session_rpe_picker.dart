@@ -81,7 +81,7 @@ class SessionRpePicker extends StatelessWidget {
                   : 'Optional. You can add it later from the session.',
               style: const TextStyle(
                 fontSize: 12,
-                color: CrimpyTheme.textMuted,
+                color: CrimpyTheme.textMutedSmall,
               ),
             ),
           ],

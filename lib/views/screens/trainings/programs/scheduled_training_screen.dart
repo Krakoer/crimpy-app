@@ -175,7 +175,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                         Icon(
                           FontAwesomeIcons.calendar,
                           size: 12,
-                          color: CrimpyTheme.textMuted,
+                          color: CrimpyTheme.textMutedSmall,
                         ),
                         const SizedBox(width: 6),
                         Text(
@@ -220,7 +220,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
             height: 24,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: CrimpyTheme.primaryOrange,
+              color: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
               border: Border.all(color: CrimpyTheme.borderDefault, width: 1.5),
             ),
             child: Text(
@@ -447,7 +447,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       icon: const Icon(Icons.play_arrow),
       label: const Text('START TRAINING'),
       style: ElevatedButton.styleFrom(
-        backgroundColor: CrimpyTheme.primaryOrange,
+        backgroundColor: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
         foregroundColor: CrimpyTheme.bgPrimary,
         padding: const EdgeInsets.symmetric(vertical: 14),
       ),
@@ -497,7 +497,10 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       icon: const Icon(Icons.check),
       label: Text(label),
       style: ElevatedButton.styleFrom(
-        backgroundColor: color,
+        // Darkened to carry the white label the theme puts on an
+        // ElevatedButton. The activity colours are under the 4.5:1
+        // floor beneath white, and gold is at 2.25:1.
+        backgroundColor: CrimpyTheme.fillOn(color),
         foregroundColor: CrimpyTheme.bgPrimary,
         padding: const EdgeInsets.symmetric(vertical: 14),
       ),

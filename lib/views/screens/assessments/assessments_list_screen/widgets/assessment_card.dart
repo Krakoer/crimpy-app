@@ -43,13 +43,13 @@ class AssessmentCard extends StatelessWidget {
                       FaIcon(
                         FontAwesomeIcons.clockRotateLeft,
                         size: 10,
-                        color: CrimpyTheme.textMuted,
+                        color: CrimpyTheme.textMutedSmall,
                       ),
                       const SizedBox(width: 5),
                       Text(
                         lastResult!,
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: CrimpyTheme.textMuted,
+                          color: CrimpyTheme.textMutedSmall,
                         ),
                       ),
                     ],
@@ -61,7 +61,7 @@ class AssessmentCard extends StatelessWidget {
           const SizedBox(width: 12),
           FaIcon(
             FontAwesomeIcons.chevronRight,
-            color: CrimpyTheme.textMuted,
+            color: CrimpyTheme.textMutedSmall,
             size: 12,
           ),
         ],

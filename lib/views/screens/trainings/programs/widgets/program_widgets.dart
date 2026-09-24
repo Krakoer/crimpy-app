@@ -83,8 +83,8 @@ class ScheduleStatusTag extends StatelessWidget {
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
       ScheduleStatus.due => ('TODAY', CrimpyTheme.primaryOrange),
-      ScheduleStatus.upcoming => ('UPCOMING', CrimpyTheme.textMuted),
-      ScheduleStatus.past => ('PAST', CrimpyTheme.textMuted),
+      ScheduleStatus.upcoming => ('UPCOMING', CrimpyTheme.textMutedSmall),
+      ScheduleStatus.past => ('PAST', CrimpyTheme.textMutedSmall),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
@@ -210,7 +210,7 @@ class ScheduledTrainingRow extends StatelessWidget {
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: done
-                            ? CrimpyTheme.textMuted
+                            ? CrimpyTheme.textMutedSmall
                             : CrimpyTheme.textPrimary,
                         decoration: done ? TextDecoration.lineThrough : null,
                       ),

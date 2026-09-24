@@ -78,13 +78,13 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
                   ),
                   decoration: BoxDecoration(
                     color: overall.onTarget == overall.total
-                        ? Colors.green.withValues(alpha: 0.15)
-                        : Colors.orange.withValues(alpha: 0.15),
+                        ? CrimpyTheme.tintOf(CrimpyTheme.statusSuccess)
+                        : CrimpyTheme.tintOf(CrimpyTheme.statusWarning),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: overall.onTarget == overall.total
-                          ? Colors.green.shade700
-                          : Colors.orange.shade700,
+                          ? CrimpyTheme.textOn(CrimpyTheme.statusSuccess)
+                          : CrimpyTheme.textOn(CrimpyTheme.statusWarning),
                       width: 1,
                     ),
                   ),
@@ -95,8 +95,8 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: overall.onTarget == overall.total
-                          ? Colors.green.shade700
-                          : Colors.orange.shade700,
+                          ? CrimpyTheme.textOn(CrimpyTheme.statusSuccess)
+                          : CrimpyTheme.textOn(CrimpyTheme.statusWarning),
                     ),
                   ),
                 ),

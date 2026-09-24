@@ -93,7 +93,7 @@ class _TankPalette {
     force: CrimpyTheme.primaryBlack,
     secondary: CrimpyTheme.textSecondary,
     accent: CrimpyTheme.accentOrangeText,
-    muted: CrimpyTheme.textMuted,
+    muted: CrimpyTheme.textMutedSmall,
     detail: CrimpyTheme.gray400,
     notch: CrimpyTheme.borderDefault,
     goal: CrimpyTheme.goalColor,
@@ -352,7 +352,7 @@ class FullTankLayout extends ConsumerWidget {
   /// 4.05:1 does not reach it. See Krakoer/crimpy#128.
   Color _stateColor({required bool paused, required bool onTarget}) {
     if (isPreparation) return CrimpyTheme.textOn(CrimpyTheme.primaryOrange);
-    if (paused) return CrimpyTheme.textMuted;
+    if (paused) return CrimpyTheme.textMutedSmall;
     if (item is RestItem || onTarget) return CrimpyTheme.statusSuccess;
     return CrimpyTheme.textOn(CrimpyTheme.primaryOrange);
   }
@@ -1229,7 +1229,7 @@ class _ControlStrip extends StatelessWidget {
             icon: const Icon(Icons.check),
             label: const Text('DONE'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: CrimpyTheme.primaryOrange,
+              backgroundColor: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
               foregroundColor: CrimpyTheme.primaryWhite,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             ),

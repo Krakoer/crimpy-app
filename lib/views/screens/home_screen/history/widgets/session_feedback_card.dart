@@ -76,7 +76,7 @@ class SessionFeedbackCard extends StatelessWidget {
                       DateFormat('MMM d, yyyy').format(answeredAt),
                       style: const TextStyle(
                         fontSize: 12,
-                        color: CrimpyTheme.textMuted,
+                        color: CrimpyTheme.textMutedSmall,
                       ),
                     ),
                   ],
@@ -114,7 +114,7 @@ class _NewBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
     decoration: BoxDecoration(
-      color: CrimpyTheme.primaryOrange,
+      color: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
       borderRadius: BorderRadius.circular(CrimpyTheme.radiusSmall),
     ),
     child: const Text(

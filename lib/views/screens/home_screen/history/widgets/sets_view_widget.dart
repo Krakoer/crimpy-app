@@ -91,11 +91,15 @@ class SetCardWidget extends StatelessWidget {
     final count = onTarget;
     // A set graded by nothing is not a failed one, so its stats stay neutral
     // instead of taking the color a missed set is drawn in.
+    // Theme accents rather than raw Material colours. Colors.orange.shade600 is
+    // #FB8C00, which reads about 2.37:1 as an 11px bold label on a near white
+    // card, worse than the gold Krakoer/crimpy#128 moved. These carry a text
+    // form through textOn for exactly that reason.
     final Color statusColor = count == null
         ? CrimpyTheme.gray700
         : count.onTarget == count.total
-        ? Colors.green.shade600
-        : Colors.orange.shade600;
+        ? CrimpyTheme.statusSuccess
+        : CrimpyTheme.statusWarning;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -144,7 +148,7 @@ class SetCardWidget extends StatelessWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.15),
+                    color: CrimpyTheme.tintOf(statusColor),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -152,7 +156,7 @@ class SetCardWidget extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
-                      color: statusColor,
+                      color: CrimpyTheme.textOn(statusColor),
                     ),
                   ),
                 ),
@@ -184,7 +188,7 @@ class SetCardWidget extends StatelessWidget {
                     child: _buildSetStat(
                       'Avg Performed',
                       '${performed.toStringAsFixed(1)} kg',
-                      statusColor,
+                      CrimpyTheme.textOn(statusColor),
                     ),
                   ),
                 if (avgWeight != null && avgTarget != null)
@@ -249,16 +253,16 @@ class SetPerformanceBar extends StatelessWidget {
         final Color repColor = !hasTarget
             ? sessionColor.withValues(alpha: 0.3)
             : isSuccess
-            ? Colors.green.shade600
+            ? CrimpyTheme.statusSuccess
             : successRate >= 0.75
-            ? Colors.orange.shade600
-            : Colors.red.shade600;
+            ? CrimpyTheme.statusWarning
+            : CrimpyTheme.statusError;
 
         return Container(
           width: 48,
           height: 32,
           decoration: BoxDecoration(
-            color: repColor.withValues(alpha: 0.2),
+            color: CrimpyTheme.tintOf(repColor),
             border: Border.all(color: repColor, width: 1.5),
             borderRadius: BorderRadius.circular(4),
           ),
@@ -269,10 +273,19 @@ class SetPerformanceBar extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: repColor,
+                      color: CrimpyTheme.textOn(repColor),
                     ),
                   )
-                : Icon(Icons.fitness_center, size: 12, color: repColor),
+                : Icon(
+                    Icons.fitness_center,
+                    size: 12,
+                    // The session accent at full strength, not repColor. With
+                    // no target repColor is that accent at alpha 0.3, and the
+                    // icon then sits on a tint of itself at 1.41:1, under the
+                    // 3:1 a mark answers to. The fade said "no target" twice,
+                    // once in the ground and once in the icon.
+                    color: CrimpyTheme.markOn(sessionColor),
+                  ),
           ),
         );
       }),

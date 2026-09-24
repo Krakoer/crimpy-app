@@ -519,7 +519,7 @@ class _LoadFailure extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.cloud_off, color: CrimpyTheme.textMuted),
+          const Icon(Icons.cloud_off, color: CrimpyTheme.textMutedSmall),
           const SizedBox(height: 12),
           const Text(
             'Your weeks could not be loaded.',

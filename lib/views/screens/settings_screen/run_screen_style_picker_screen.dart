@@ -114,7 +114,7 @@ class _StyleCard extends StatelessWidget {
               height: 18,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? CrimpyTheme.primaryOrange
+                    ? CrimpyTheme.fillOn(CrimpyTheme.primaryOrange)
                     : CrimpyTheme.primaryWhite,
                 border: Border.all(color: ink, width: isSelected ? 0 : 1),
               ),

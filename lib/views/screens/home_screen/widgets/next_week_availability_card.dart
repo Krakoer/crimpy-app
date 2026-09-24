@@ -80,7 +80,7 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, color: CrimpyTheme.textMuted),
+          const Icon(Icons.chevron_right, color: CrimpyTheme.textMutedSmall),
         ],
       ),
     );

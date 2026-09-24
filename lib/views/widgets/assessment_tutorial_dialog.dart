@@ -217,7 +217,7 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               side: BorderSide(
-                                color: CrimpyTheme.textMuted,
+                                color: CrimpyTheme.textMutedSmall,
                                 width: 1,
                               ),
                               shape: RoundedRectangleBorder(
@@ -246,8 +246,10 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                                 }
                               : _nextSection,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: CrimpyTheme.assessmentColor,
-                            foregroundColor: Colors.white,
+                            backgroundColor: CrimpyTheme.fillOn(
+                              CrimpyTheme.assessmentColor,
+                            ),
+                            foregroundColor: CrimpyTheme.primaryWhite,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),

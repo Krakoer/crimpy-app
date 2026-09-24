@@ -98,7 +98,9 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   enabled: !isPlayedSession,
                   leading: Icon(
                     Icons.calendar_today,
-                    color: isPlayedSession ? CrimpyTheme.textMuted : markColor,
+                    color: isPlayedSession
+                        ? CrimpyTheme.textMutedSmall
+                        : markColor,
                   ),
                   title: const Text('Date'),
                   subtitle: Text(
@@ -118,7 +120,9 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   enabled: !isPlayedSession,
                   leading: Icon(
                     Icons.access_time,
-                    color: isPlayedSession ? CrimpyTheme.textMuted : markColor,
+                    color: isPlayedSession
+                        ? CrimpyTheme.textMutedSmall
+                        : markColor,
                   ),
                   title: const Text('Time'),
                   subtitle: Text(_selectedTime.format(context)),
@@ -142,7 +146,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                           Icon(
                             Icons.timer,
                             color: isPlayedSession
-                                ? CrimpyTheme.textMuted
+                                ? CrimpyTheme.textMutedSmall
                                 : markColor,
                           ),
                           const SizedBox(width: 8),
@@ -244,7 +248,10 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
               ElevatedButton(
                 onPressed: _updateSession,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: color,
+                  // Darkened to carry the white label the theme puts on an
+                  // ElevatedButton. The activity colours are under the 4.5:1
+                  // floor beneath white, and gold is at 2.25:1.
+                  backgroundColor: CrimpyTheme.fillOn(color),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: const Text(
@@ -333,7 +340,12 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
             content: Text(
               '${widget.session.activity.displayName} session updated!',
             ),
-            backgroundColor: CrimpyTheme.activityColor(widget.session.activity),
+            // snackBarTheme writes its label in primaryWhite, so this ground
+            // carries a white label without a line here saying so. Gold is
+            // 2.25:1 under white, so it takes the darkened fill.
+            backgroundColor: CrimpyTheme.fillOn(
+              CrimpyTheme.activityColor(widget.session.activity),
+            ),
           ),
         );
         Navigator.of(context).pop();

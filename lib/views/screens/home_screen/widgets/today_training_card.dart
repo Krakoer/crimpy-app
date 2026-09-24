@@ -174,7 +174,7 @@ class _ProgramTodayCard extends ConsumerWidget {
                   horizontal: 14,
                   vertical: 8,
                 ),
-                color: CrimpyTheme.primaryOrange,
+                color: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
                 child: Row(
                   children: [
                     const Expanded(
@@ -343,7 +343,7 @@ class _TodayTrainingRow extends ConsumerWidget {
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: done
-                          ? CrimpyTheme.textMuted
+                          ? CrimpyTheme.textMutedSmall
                           : CrimpyTheme.textPrimary,
                       decoration: done ? TextDecoration.lineThrough : null,
                     ),
@@ -397,7 +397,7 @@ class _TodayTrainingRow extends ConsumerWidget {
       height: 38,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: CrimpyTheme.primaryOrange,
+        color: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
         border: Border.all(color: CrimpyTheme.borderDefault, width: 2),
       ),
       child: const Icon(
@@ -468,7 +468,7 @@ class _FlexTrainingRow extends ConsumerWidget {
               FontAwesomeIcons.play,
               size: 13,
               color: done >= target
-                  ? CrimpyTheme.textMuted
+                  ? CrimpyTheme.textMutedSmall
                   : CrimpyTheme.primaryOrange,
             ),
           ],

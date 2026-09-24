@@ -372,7 +372,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Error deleting session: $e'),
-                          backgroundColor: Colors.red,
+                          backgroundColor: CrimpyTheme.fillOn(
+                            CrimpyTheme.statusError,
+                          ),
                         ),
                       );
                     }
@@ -381,7 +383,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                     Navigator.of(context).pop();
                   }
                 },
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                style: TextButton.styleFrom(
+                  foregroundColor: CrimpyTheme.statusErrorText,
+                ),
                 child: const Text('Delete'),
               ),
             ],

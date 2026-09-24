@@ -125,8 +125,38 @@ class CrimpyTheme {
   /// Secondary text - Medium gray
   static const Color textSecondary = Color(0xFF666666);
 
-  /// Muted text - Light gray
+  /// Muted grey. **Not a foreground.**
+  ///
+  /// 2.85:1 on white, which is under the 4.5:1 text floor and also under the
+  /// 3:1 floor a mark answers to, so it cannot be written as a label, drawn as
+  /// an icon, or used as the boundary of a control. WCAG 1.4.11 exempts
+  /// decoration but covers "visual information required to identify user
+  /// interface components", so a button outline is the covered case, not the
+  /// exempt one, and both Cancel buttons take textMutedSmall.
+  ///
+  /// One use is left in lib/: the inactive step dot of the tutorial dialog,
+  /// already faded to alpha 0.3 and carrying no information the numbered step
+  /// beside it does not.
+  ///
+  /// Anything a reader has to read takes [textMutedSmall]. The palette guard
+  /// scans this name for exactly that reason: a hand sweep found 13 of the
+  /// foreground uses and the guard found the rest, 34 call sites in all.
   static const Color textMuted = Color(0xFF999999);
+
+  /// The muted voice at a size that has to clear the 4.5:1 text floor.
+  ///
+  /// 4.74:1 on white and 4.54:1 on [bgSecondary]. It cannot be lighter: 4.5:1
+  /// on a near white card admits nothing paler, which is why it lands close to
+  /// [textSecondary] at 5.74:1. At these sizes the muted voice and the
+  /// secondary one cannot be told apart by lightness and stay readable, so the
+  /// difference between them has to be carried by size and weight. That is a
+  /// real cost of the split rather than an oversight, and the portal's
+  /// --tx3-sm in crimpy-frontend/src/routes/layout.css records the same one.
+  ///
+  /// It does not clear the floor on [bgHover] at 4.35:1. Nothing writes small
+  /// muted text on a hover ground today; a caller that wants to takes
+  /// [textSecondary]. See Krakoer/crimpy#137.
+  static const Color textMutedSmall = Color(0xFF737373);
 
   /// Secondary text drawn over a filled surface - Translucent white
   static const Color textOnFillSecondary = Color(0xB3FFFFFF);
@@ -251,7 +281,10 @@ class CrimpyTheme {
     // Primary button - Orange with sharp edges
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: primaryOrange,
+        // Darkened so the white label the line below sets clears 4.5:1.
+        // primaryOrange itself reads 4.05:1 under white, and this theme is
+        // what every ElevatedButton that names no ground inherits.
+        backgroundColor: accentOrangeFill,
         foregroundColor: primaryWhite,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -327,7 +360,7 @@ class CrimpyTheme {
         fontFamily: 'JetBrainsMono',
         letterSpacing: 0.5,
       ),
-      hintStyle: TextStyle(color: textMuted, fontFamily: 'JetBrainsMono'),
+      hintStyle: TextStyle(color: textMutedSmall, fontFamily: 'JetBrainsMono'),
     ),
 
     // Chip theme with minimal styling
@@ -455,7 +488,7 @@ class CrimpyTheme {
         fontSize: 10,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.5,
-        color: textMuted,
+        color: textMutedSmall,
         fontFamily: 'JetBrainsMono',
       ),
     ),
@@ -647,6 +680,13 @@ class CrimpyTheme {
     accentPurple: accentPurpleText,
     accentBlue: accentBlueText,
     statusError: statusErrorText,
+    // Not an accent, and here for the same reason the mark map's entry is: no
+    // caller passes textMuted today, because every foreground use moved to
+    // textMutedSmall directly. ScheduleStatusTag used to route it through
+    // textOn and now passes the readable form itself. The entry answers a
+    // future caller correctly instead of handing back 2.85:1.
+    // See Krakoer/crimpy#137.
+    textMuted: textMutedSmall,
   });
 
   /// Every accent too pale to stand as a mark on a neutral ground, keyed by the
@@ -665,7 +705,70 @@ class CrimpyTheme {
     // both names, the way [_accentTextColors] answers accentOrange and
     // primaryOrange with one.
     accentYellow: accentYellowText,
+    // textMuted misses the mark floor too, at 2.85:1 against 3:1, so an icon
+    // drawn in it is as unreadable as the label beside it was. No caller passes
+    // it today: every foreground use moved to textMutedSmall directly rather
+    // than through this map. The entry is here so that a future caller routing
+    // a muted mark through markOn is answered correctly instead of being handed
+    // back a colour under the floor, which is what this map is for.
+    textMuted: textMutedSmall,
   });
+
+  /// Every accent darkened far enough to carry a white label, keyed by the
+  /// accent itself the way [_accentTextColors] is.
+  ///
+  /// The mirror of that map. [textOn] answers "what do I write on a tint of this
+  /// accent"; this answers "what do I fill with when the label on top is white".
+  /// Every accent in this palette is under the 4.5:1 floor beneath white except
+  /// statusError and statusSuccess, and gold is at 2.25:1, which fails even the
+  /// 3:1 floor a large label would answer to. A 16px w600 label is not large by
+  /// WCAG, which asks 18.66px of a bold one, so the session buttons that fill
+  /// with an activity colour were unreadable at every size they are used.
+  ///
+  /// These are the accents themselves darkened, not new hues, so a filled button
+  /// still reads as its activity.
+  ///
+  /// The portal took the same decision with its own hues, in --pr-dk and
+  /// --rd-dk of crimpy-frontend/src/routes/layout.css. Those are not these
+  /// values and are not meant to match: the two palettes start from different
+  /// reds and terracottas, and the app needs no fill for statusError because it
+  /// already carries white. Unlike the tokens named in mirroredWebTokens, these
+  /// are a shared decision rather than a shared number. See Krakoer/crimpy#137.
+  static const Color accentOrangeFill = Color(0xFFB25739);
+  static const Color accentYellowFill = Color(0xFF8A6C2C);
+  static const Color accentGreenFill = Color(0xFF4F7B4F);
+  static const Color accentPurpleFill = Color(0xFF846696);
+  static const Color accentBlueFill = Color(0xFF537497);
+  static const Color statusInfoFill = Color(0xFF4D7878);
+
+  // Several accents answer under a name they share a value with, the way the
+  // two maps above do: accentTeal and statusInfo hold one colour, as do
+  // statusWarning and accentYellow, and trainingColor, assessmentColor and
+  // stretchingColor are aliases of three of these. One entry answers every
+  // name. Splitting any of those pairs means adding the entry the split
+  // orphans, or fillOn quietly hands back a colour under the floor.
+  static final Map<Color, Color> _accentFillColors = Map.unmodifiable({
+    accentOrange: accentOrangeFill,
+    accentYellow: accentYellowFill,
+    accentGreen: accentGreenFill,
+    accentPurple: accentPurpleFill,
+    accentBlue: accentBlueFill,
+    statusInfo: statusInfoFill,
+    // Not an accent, and answered anyway. fillOn hands an unmapped colour back
+    // unchanged, so without this a surface filled with fillOn(textMuted) would
+    // render white on #999999 at 2.85:1 and pass every check: the ground scan
+    // cuts a resolved fillOn(...) out before it looks for an accent, which is
+    // the one hole an otherwise closed contract had.
+    textMuted: textMutedSmall,
+  });
+
+  /// The colour a surface is filled with when a white label sits on it. An
+  /// accent that already carries white at 4.5:1 is answered with itself, so a
+  /// caller is never handed a darker form of something that did not need one.
+  ///
+  /// Only for a ground under a neutral label. A border, a rule or an icon fill
+  /// carries no text and keeps the accent.
+  static Color fillOn(Color accent) => _accentFillColors[accent] ?? accent;
 
   /// The colour a mark is drawn in when it sits on a neutral ground: an icon,
   /// or text large enough to answer to the 3:1 floor. Mirrors the `mark` field

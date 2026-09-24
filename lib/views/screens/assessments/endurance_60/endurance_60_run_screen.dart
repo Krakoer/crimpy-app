@@ -344,8 +344,11 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                         xValueMapper: (BleDataPoint p, _) => p.timestamp,
                         yValueMapper: (BleDataPoint p, _) => p.value,
                         color: _isInTargetZone
-                            ? Colors.green
-                            : CrimpyTheme.accentYellow.withValues(alpha: 0.8),
+                            ? CrimpyTheme.markOn(CrimpyTheme.accentGreen)
+                            // The same series, held to the same 3:1 floor.
+                            : CrimpyTheme.markOn(
+                                CrimpyTheme.accentYellow,
+                              ).withValues(alpha: 0.8),
                         width: 3,
                         markerSettings: const MarkerSettings(isVisible: false),
                         animationDuration: 0,
@@ -363,9 +366,12 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                 child: Container(
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
+                    // The label on this box is white. The alpha is gone as well as the
+                    // hue darkened: at 0.9 even the darkened gold only reaches 4.03:1,
+                    // and the bare accents read 2.06:1 and 3.33:1 under white.
                     color: _assessmentStarted
-                        ? Colors.green.withValues(alpha: 0.9)
-                        : CrimpyTheme.accentYellow.withValues(alpha: 0.9),
+                        ? CrimpyTheme.fillOn(CrimpyTheme.accentGreen)
+                        : CrimpyTheme.fillOn(CrimpyTheme.accentYellow),
                     border: Border.all(
                       color: CrimpyTheme.borderDefault,
                       width: 2,
@@ -424,7 +430,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                 child: Container(
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.7),
+                    color: CrimpyTheme.primaryBlack.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -434,14 +440,17 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                         '${lastValue.toStringAsFixed(1)} kg',
                         style: TextStyle(
                           fontSize: 48,
-                          color: Colors.white,
+                          color: CrimpyTheme.primaryWhite,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       SizedBox(height: 4),
                       Text(
                         'Target: ${_targetForce.toStringAsFixed(1)} kg (${_minForce.toStringAsFixed(1)} - ${_maxForce.toStringAsFixed(1)})',
-                        style: TextStyle(fontSize: 16, color: Colors.white70),
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: CrimpyTheme.textOnFillSecondary,
+                        ),
                       ),
                     ],
                   ),
