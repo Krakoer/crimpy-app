@@ -96,14 +96,12 @@ class ApiClient {
               _logDeniedRequest(error);
               return handler.next(error);
             case _RefreshUnavailable(:final failure):
-              // The server never judged the refresh token, so it is kept for
+              // The server did not turn the refresh token down, so it is kept for
               // the next request. The request fails the way the refresh did,
               // which lets an unreachable server read as offline rather than as
               // a denied sign in.
-              _logDeniedRequest(error);
               return handler.next(
-                failure?.copyWith(requestOptions: error.requestOptions) ??
-                    error,
+                failure.copyWith(requestOptions: error.requestOptions),
               );
           }
         },
@@ -201,27 +199,40 @@ class ApiClient {
     if (refreshToken == null || refreshToken.isEmpty) {
       return const _RefreshRejected();
     }
+    final Response<dynamic> res;
     try {
       // A bare Dio without the auth interceptor avoids recursion on 401.
-      final res = await _createDio(
+      res = await _createDio(
         _httpClientAdapter,
       ).post('/auth/refresh', data: {'refresh_token': refreshToken});
-      final data = res.data as Map<String, dynamic>;
-      final newToken = data['token'] as String?;
-      final newRefresh = data['refresh_token'] as String?;
-      if (newToken == null) return const _RefreshUnavailable();
-      await saveToken(newToken);
-      if (newRefresh != null) await saveRefreshToken(newRefresh);
-      AppLoggerHelper.info('Access token refreshed');
-      return const _Refreshed();
     } on DioException catch (e) {
       AppLoggerHelper.info('Token refresh failed: $e');
       final status = e.response?.statusCode;
       if (status == 400 || status == 401) return const _RefreshRejected();
       return _RefreshUnavailable(failure: e);
+    }
+
+    try {
+      final data = res.data as Map<String, dynamic>;
+      final newToken = data['token'] as String;
+      final newRefresh = data['refresh_token'] as String?;
+      // The server has already revoked the token it was sent, so the one that
+      // replaces it goes first. Dying between the two writes then leaves an
+      // expired access token next to a live refresh token, which the next
+      // request recovers from, rather than the other way round.
+      if (newRefresh != null) await saveRefreshToken(newRefresh);
+      await saveToken(newToken);
+      AppLoggerHelper.info('Access token refreshed');
+      return const _Refreshed();
     } catch (e) {
-      AppLoggerHelper.info('Token refresh failed: $e');
-      return const _RefreshUnavailable();
+      AppLoggerHelper.error('Token refresh answer could not be used: $e');
+      return _RefreshUnavailable(
+        failure: DioException(
+          requestOptions: res.requestOptions,
+          response: res,
+          error: e,
+        ),
+      );
     }
   }
 
@@ -764,7 +775,7 @@ class _RefreshRejected extends _RefreshOutcome {
 }
 
 class _RefreshUnavailable extends _RefreshOutcome {
-  final DioException? failure;
+  final DioException failure;
 
-  const _RefreshUnavailable({this.failure});
+  const _RefreshUnavailable({required this.failure});
 }
