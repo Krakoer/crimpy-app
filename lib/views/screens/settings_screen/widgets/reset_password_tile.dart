@@ -43,7 +43,7 @@ class _ResetPasswordTileState extends ConsumerState<ResetPasswordTile> {
     try {
       await ref.read(authStateProvider.notifier).requestPasswordReset(email);
       messenger.showSnackBar(
-        SnackBar(content: Text('Reset link sent to $email')),
+        SnackBar(content: Text('Check your inbox at $email for a reset link')),
       );
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(e.toString())));

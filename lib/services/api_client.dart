@@ -266,7 +266,7 @@ class ApiClient {
       '  Headers: $headers',
     ];
     if (request.data != null) {
-      parts.add('  Request body: ${request.data}');
+      parts.add('  Request body: ${redactRequestBody(request.data)}');
     }
     if (e.response?.data != null) {
       parts.add('  Response body: ${e.response!.data}');
@@ -782,4 +782,26 @@ class _RefreshUnavailable extends _RefreshOutcome {
   final DioException failure;
 
   const _RefreshUnavailable({required this.failure});
+}
+
+const _secretRequestFields = {
+  'password',
+  'old_password',
+  'new_password',
+  'refresh_token',
+  'token',
+};
+
+/// A request body as it may be written to the log: sign in, registration and
+/// password changes carry a password, which a denied request must not leave
+/// in a log the athlete can mail to support.
+@visibleForTesting
+Object? redactRequestBody(Object? body) {
+  if (body is! Map) return body;
+  return {
+    for (final entry in body.entries)
+      entry.key: _secretRequestFields.contains(entry.key)
+          ? '[REDACTED]'
+          : entry.value,
+  };
 }

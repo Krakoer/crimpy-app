@@ -2,6 +2,7 @@ import 'package:crimpy/models/auth_models.dart' as auth_models;
 import 'package:crimpy/services/api_exception.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/views/screens/auth/forgot_password_screen.dart';
+import 'package:crimpy/views/screens/auth/login_screen.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/reset_password_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -114,6 +115,34 @@ void main() {
     });
   });
 
+  testWidgets('the login screen opens it with the email typed so far', (
+    tester,
+  ) async {
+    final auth = RecordingAuth();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [authStateProvider.overrideWith(() => auth)],
+        child: const MaterialApp(home: LoginScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Email'),
+      ' climber@example.com ',
+    );
+    await tester.tap(find.text('Forgot password?'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ForgotPasswordScreen), findsOneWidget);
+    expect(
+      tester
+          .widget<ForgotPasswordScreen>(find.byType(ForgotPasswordScreen))
+          .initialEmail,
+      'climber@example.com',
+    );
+  });
+
   group('reset password setting', () {
     testWidgets('is not offered to a guest', (tester) async {
       await _pump(tester, const ResetPasswordTile());
@@ -135,7 +164,7 @@ void main() {
 
       expect(auth.resetRequests, ['climber@example.com']);
       expect(
-        find.text('Reset link sent to climber@example.com'),
+        find.text('Check your inbox at climber@example.com for a reset link'),
         findsOneWidget,
       );
     });
