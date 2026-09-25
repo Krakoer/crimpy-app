@@ -1,9 +1,9 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/api_exception.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -45,6 +45,36 @@ ResponseBody Function(RequestOptions) _expiredUnlessFresh(
     (options) => options.headers['Authorization'] == 'Bearer fresh'
     ? answer()
     : _json(401, {'error': 'Invalid or expired token'});
+
+/// Secure storage whose access token writes fail, the way a keystore that
+/// went unavailable mid refresh does, while every other key works.
+class _AccessTokenWriteFailingStorage extends FlutterSecureStorage {
+  @override
+  Future<void> write({
+    required String key,
+    required String? value,
+    IOSOptions? iOptions,
+    AndroidOptions? aOptions,
+    LinuxOptions? lOptions,
+    WebOptions? webOptions,
+    MacOsOptions? mOptions,
+    WindowsOptions? wOptions,
+  }) {
+    if (key == ApiClient.tokenKey) {
+      throw PlatformException(code: 'keystore_unavailable');
+    }
+    return super.write(
+      key: key,
+      value: value,
+      iOptions: iOptions,
+      aOptions: aOptions,
+      lOptions: lOptions,
+      webOptions: webOptions,
+      mOptions: mOptions,
+      wOptions: wOptions,
+    );
+  }
+}
 
 void main() {
   late int unauthorizedCalls;
@@ -180,6 +210,122 @@ void main() {
     await Future.wait([client.getSessions(), client.getRepeaters()]);
 
     expect(adapter.requestedPaths.where((p) => p == '/auth/refresh').length, 1);
+    expect(unauthorizedCalls, 0);
+  });
+
+  // The auth limiter allows 20 calls a minute per address, and a gym Wi-Fi puts
+  // every athlete in the room behind one. Being throttled is not being denied.
+  test('a throttled refresh keeps the session', () async {
+    final client = clientFor(
+      _ScriptedAdapter({
+        '/auth/refresh': (_) => _json(429, {'error': 'Too many requests'}),
+        '/api/sessions': _expiredUnlessFresh(() => _json(200, [])),
+      }),
+    );
+
+    await expectLater(
+      client.getSessions(),
+      throwsA(isA<ApiException>().having((e) => e.statusCode, 'status', 429)),
+    );
+
+    expect(await client.getRefreshToken(), 'still-valid');
+    expect(unauthorizedCalls, 0);
+  });
+
+  test('a refresh the server reads as malformed ends the session', () async {
+    final client = clientFor(
+      _ScriptedAdapter({
+        '/auth/refresh': (_) => _json(400, {'error': 'Refresh token required'}),
+        '/api/sessions': _expiredUnlessFresh(() => _json(200, [])),
+      }),
+    );
+
+    await expectLater(client.getSessions(), throwsA(isA<ApiException>()));
+
+    expect(await client.getRefreshToken(), isNull);
+    expect(unauthorizedCalls, 1);
+  });
+
+  // With nothing to refresh with, the 401 is the last word on the session.
+  test('no refresh token stored ends the session', () async {
+    FlutterSecureStorage.setMockInitialValues({ApiClient.tokenKey: 'expired'});
+    final adapter = _ScriptedAdapter({
+      '/api/sessions': _expiredUnlessFresh(() => _json(200, [])),
+    });
+    final client = clientFor(adapter);
+
+    await expectLater(client.getSessions(), throwsA(isA<ApiException>()));
+
+    expect(adapter.requestedPaths, isNot(contains('/auth/refresh')));
+    expect(await client.getToken(), isNull);
+    expect(unauthorizedCalls, 1);
+  });
+
+  // An answer the app cannot use is a server fault, and must not reach the
+  // athlete as a sign in they got wrong.
+  test('a refresh answer without a token keeps the session', () async {
+    final client = clientFor(
+      _ScriptedAdapter({
+        '/auth/refresh': (_) => _json(200, {'refresh_token': 'rotated'}),
+        '/api/sessions': _expiredUnlessFresh(() => _json(200, [])),
+      }),
+    );
+
+    await expectLater(
+      client.getSessions(),
+      throwsA(
+        isA<ApiException>()
+            .having((e) => e.statusCode, 'status', isNot(401))
+            .having((e) => e.isOffline, 'offline', false),
+      ),
+    );
+
+    expect(await client.getRefreshToken(), 'rotated');
+    expect(unauthorizedCalls, 0);
+  });
+
+  // The server revoked the old refresh token before it answered, so the one it
+  // sent back is the only one still worth anything, whatever fails after it.
+  test('an access token that cannot be stored keeps the rotated one', () async {
+    final storage = _AccessTokenWriteFailingStorage();
+    final client = ApiClient(
+      storage: storage,
+      httpClientAdapter: _ScriptedAdapter({
+        ...refreshed,
+        '/api/sessions': _expiredUnlessFresh(() => _json(200, [])),
+      }),
+    )..onUnauthorized = () => unauthorizedCalls++;
+
+    await expectLater(
+      client.getSessions(),
+      throwsA(isA<ApiException>().having((e) => e.statusCode, 'status', 200)),
+    );
+
+    expect(await client.getRefreshToken(), 'rotated');
+    expect(unauthorizedCalls, 0);
+  });
+
+  test('a retry that loses its connection keeps the session', () async {
+    final client = clientFor(
+      _ScriptedAdapter({
+        ...refreshed,
+        '/api/sessions': (options) =>
+            options.headers['Authorization'] == 'Bearer fresh'
+            ? throw DioException.connectionError(
+                requestOptions: options,
+                reason: 'reset',
+              )
+            : _json(401, {'error': 'Invalid or expired token'}),
+      }),
+    );
+
+    await expectLater(
+      client.getSessions(),
+      throwsA(isA<ApiException>().having((e) => e.isOffline, 'offline', true)),
+    );
+
+    expect(await client.getToken(), 'fresh');
+    expect(await client.getRefreshToken(), 'rotated');
     expect(unauthorizedCalls, 0);
   });
 }
