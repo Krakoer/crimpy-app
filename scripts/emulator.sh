@@ -16,6 +16,12 @@ activity="com.crimpyclimbing.crimpy.MainActivity"
 apk="build/app/outputs/flutter-apk/app-beta-debug.apk"
 log="build/emulator.log"
 
+# Every adb call below targets this serial, so a phone plugged in over USB is
+# never the device that gets configured, installed onto or screenshotted.
+port="${CRIMPY_EMULATOR_PORT:-5554}"
+export ANDROID_SERIAL="emulator-$port"
+user="$(id -un)"
+
 # 10.0.2.2 is the host's loopback as the emulator sees it, so this reaches
 # the API of the dev stack running on the same machine.
 api_url="${CRIMPY_API_URL:-http://10.0.2.2:3000}"
@@ -50,12 +56,12 @@ require_kvm() {
     if [ -w /dev/kvm ]; then
         return
     fi
-    if id -nG "$USER" | tr ' ' '\n' | grep -qx kvm ||
-        getent group kvm | cut -d: -f4 | tr ',' '\n' | grep -qx "$USER"; then
+    if id -nG "$user" | tr ' ' '\n' | grep -qx kvm ||
+        getent group kvm | cut -d: -f4 | tr ',' '\n' | grep -qx "$user"; then
         return
     fi
-    echo "$USER cannot open /dev/kvm. Add it to the kvm group, then log in again:" >&2
-    echo "    sudo gpasswd -a $USER kvm" >&2
+    echo "$user cannot open /dev/kvm. Add it to the kvm group, then log in again:" >&2
+    echo "    sudo gpasswd -a $user kvm" >&2
     exit 1
 }
 
@@ -69,12 +75,16 @@ run_with_kvm() {
     fi
 }
 
-serial() {
-    "$adb" devices | awk '/^emulator-[0-9]+\tdevice$/ { print $1; exit }'
+emulator_online() {
+    "$adb" devices | grep -q "^$ANDROID_SERIAL[[:space:]]device$"
+}
+
+emulator_process_alive() {
+    pgrep -f -- "-avd $avd .*-port $port" >/dev/null
 }
 
 require_emulator() {
-    if [ -z "$(serial)" ]; then
+    if ! emulator_online; then
         echo "no emulator is running, start one with: $0 start" >&2
         exit 1
     fi
@@ -95,8 +105,8 @@ cmd_setup() {
 
 cmd_start() {
     require_kvm
-    if [ -n "$(serial)" ]; then
-        echo "emulator already running as $(serial)"
+    if emulator_online; then
+        echo "emulator already running as $ANDROID_SERIAL"
         return
     fi
     if ! "$emulator" -list-avds | grep -qx "$avd"; then
@@ -106,13 +116,18 @@ cmd_start() {
     mkdir -p "$(dirname "$log")"
     # Detached from this shell so it outlives the command that started it.
     # No snapshot is saved, so every boot starts from the same clean device.
-    run_with_kvm setsid nohup "$emulator" -avd "$avd" \
+    run_with_kvm setsid nohup "$emulator" -avd "$avd" -port "$port" \
         -no-window -no-audio -no-boot-anim -no-snapshot-save \
         -gpu swiftshader_indirect >"$log" 2>&1 </dev/null &
-    echo "booting $avd, log in $log"
-    "$adb" wait-for-device
+    echo "booting $avd as $ANDROID_SERIAL, log in $log"
     local waited=0
     until [ "$("$adb" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do
+        # Give the process a moment to appear before treating its absence as
+        # a crash at boot.
+        if [ "$waited" -ge 6 ] && ! emulator_process_alive; then
+            echo "emulator exited during boot, see $log" >&2
+            exit 1
+        fi
         if [ "$waited" -ge 300 ]; then
             echo "emulator did not finish booting in 300s, see $log" >&2
             exit 1
@@ -124,7 +139,7 @@ cmd_start() {
     "$adb" shell settings put global window_animation_scale 0
     "$adb" shell settings put global transition_animation_scale 0
     "$adb" shell settings put global animator_duration_scale 0
-    echo "emulator ready as $(serial)"
+    echo "emulator ready as $ANDROID_SERIAL"
 }
 
 cmd_install() {
@@ -142,7 +157,7 @@ cmd_launch() {
 
 cmd_dev() {
     require_emulator
-    flutter run --flavor beta -d "$(serial)" "${dart_defines[@]}"
+    flutter run --flavor beta -d "$ANDROID_SERIAL" "${dart_defines[@]}"
 }
 
 cmd_screenshot() {
@@ -154,11 +169,11 @@ cmd_screenshot() {
 }
 
 cmd_stop() {
-    if [ -z "$(serial)" ]; then
-        echo "no emulator running"
+    if ! emulator_online; then
+        echo "no emulator running as $ANDROID_SERIAL"
         return
     fi
-    "$adb" -s "$(serial)" emu kill
+    "$adb" emu kill
 }
 
 [ $# -ge 1 ] || usage

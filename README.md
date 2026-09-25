@@ -300,7 +300,17 @@ two defines:
 
 **Driving it without a screen.** Agents and scripts drive the app with `adb`.
 The `android` CLI from the SDK command line tools lists what is on screen, with
-coordinates:
+coordinates. The script calls the SDK tools by their full path, but these need
+them on `PATH`:
+
+```bash
+export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+```
+
+The script pins every call to the emulator by exporting
+`ANDROID_SERIAL=emulator-5554` (the port comes from `CRIMPY_EMULATOR_PORT`), so a
+phone plugged in over USB is never touched. Export the same variable before
+running `adb` or `android` by hand when a phone is connected too.
 
 ```bash
 android layout --flat                # visible elements, with a center to tap

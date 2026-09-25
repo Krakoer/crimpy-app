@@ -1,7 +1,15 @@
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/repositories/ble_repository.dart';
+import 'package:crimpy/services/sensor_link/sensor_link.dart';
 import 'package:crimpy/services/sensor_link/simulated_sensor_link.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// A link to a device that connects but does not carry the force
+/// characteristic.
+class _LinkWithoutForceCharacteristic extends SimulatedSensorLink {
+  @override
+  Future<SensorChannel?> open(SensorDevice device) async => null;
+}
 
 void main() {
   group('SimulatedHangProfile', () {
@@ -62,6 +70,24 @@ void main() {
     expect(repository.isConnected, isFalse);
     expect(states.last, BleConnectionState.disconnected);
     expect(points, hasLength(sampleCount));
+  });
+
+  test('a device without the force characteristic ends disconnected', () async {
+    final repository = BleRepository(link: _LinkWithoutForceCharacteristic());
+    final states = <BleConnectionState>[];
+    repository.connectionStateStream.listen(states.add);
+
+    final connected = await repository.connectToDevice(
+      SimulatedSensorLink.device,
+    );
+    await pumpEventQueue();
+
+    expect(connected, isFalse);
+    expect(repository.isConnected, isFalse);
+    expect(states, [
+      BleConnectionState.connecting,
+      BleConnectionState.disconnected,
+    ]);
   });
 
   test('frames decode back to the reading the way the firmware sends it', () {
