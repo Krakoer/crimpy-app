@@ -148,7 +148,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   // Setup the workout timer
   late WorkoutTimer timer = WorkoutTimer(
     items: _itemsWithPreparation,
-    // Audible 3-2-1 countdown + transition cue, useful when the phone is on
+    // Audible 2-1 countdown + transition cue, useful when the phone is on
     // the ground during a hangboard session.
     playSound: true,
     // Set state each second to update the UI.

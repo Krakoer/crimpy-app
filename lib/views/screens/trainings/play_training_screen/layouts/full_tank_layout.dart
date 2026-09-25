@@ -20,6 +20,14 @@ const double controlStripHeight = 96;
 /// does not overflow.
 const double _referenceTankHeight = 624;
 
+/// Height of the set and rep card at the foot of the tank, scaled like the
+/// rest of it. Fixed rather than sized by its text, so the block centred above
+/// it can keep clear of it.
+double repContextCardHeight(double scale) => (56 * scale).clamp(44.0, 72.0);
+
+/// Gap between the foot of the tank and the set and rep card.
+const double _repContextCardBottom = 16;
+
 /// Height the target sits at, as a fraction of the tank. It is where the fill
 /// mapping puts the target, so the level lands on the notch exactly when the
 /// target is met.
@@ -121,8 +129,8 @@ class _TankPalette {
 class FullTankLayout extends ConsumerWidget {
   final TrainingExecutionItem item;
 
-  /// Step the current one leads into, used by the rest block and by the line
-  /// under the state word. Null on the last step.
+  /// Step the current one leads into, used by the rest block and by the strip
+  /// under a working step. Null on the last step.
   final TrainingExecutionItem? nextItem;
 
   final int secondsRemaining;
@@ -303,14 +311,11 @@ class FullTankLayout extends ConsumerWidget {
                   if (paused) Opacity(opacity: 0.38, child: tank) else tank,
                   if (repContext != null)
                     Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                      bottom: _repContextCardBottom,
                       child: Center(
-                        child: _RepContextPill(
-                          text: repContext!,
-                          overFill: fillHeight > 0,
-                        ),
+                        child: _RepContextCard(text: repContext!, scale: scale),
                       ),
                     ),
                   if (paused)
@@ -322,9 +327,10 @@ class FullTankLayout extends ConsumerWidget {
               ),
             ),
             _ControlStrip(
-              stateWord: _stateWord(paused: paused, onTarget: onTarget),
-              stateColor: _stateColor(paused: paused, onTarget: onTarget),
-              detail: paused ? repContext : _nextStepLine(),
+              stateWord: _stateWord,
+              stateColor: _stateColor,
+              detail: paused ? repContext : null,
+              nextStep: paused ? null : _nextStep,
               isRunning: isRunning,
               showConfirm: state == _TankState.confirm,
               onPlayPause: onPlayPause,
@@ -339,30 +345,31 @@ class FullTankLayout extends ConsumerWidget {
     );
   }
 
-  String _stateWord({required bool paused, required bool onTarget}) {
+  /// What the run is doing, when the tank does not already say it. A working
+  /// step has none: the level and the notch show the effort and whether the
+  /// target is met better than a word could.
+  String? get _stateWord {
     if (isPreparation) return 'READY';
-    if (paused) return 'PAUSED';
+    if (!isRunning) return 'PAUSED';
     if (item is RestItem) return 'REST';
-    if (onTarget) return 'ON TARGET';
-    return 'WORK';
+    return null;
   }
 
   /// The state word is 18px bold on the white control strip, under the
   /// 18.66px large text threshold, so it answers to 4.5:1 and the accent's
   /// 4.05:1 does not reach it. See Krakoer/crimpy#128.
-  Color _stateColor({required bool paused, required bool onTarget}) {
+  Color get _stateColor {
     if (isPreparation) return CrimpyTheme.textOn(CrimpyTheme.primaryOrange);
-    if (paused) return CrimpyTheme.textMutedSmall;
-    if (item is RestItem || onTarget) return CrimpyTheme.statusSuccess;
-    return CrimpyTheme.textOn(CrimpyTheme.primaryOrange);
+    if (!isRunning) return CrimpyTheme.textMutedSmall;
+    return CrimpyTheme.statusSuccess;
   }
 
-  /// The step coming up, under the state word. A preparation and a rest fill
-  /// the middle of the tank with what is next already, so their strip stays
-  /// down to the one word.
-  String? _nextStepLine() {
+  /// The step coming up, which a working step has the strip to itself for. A
+  /// preparation and a rest fill the middle of the tank with what is next
+  /// already, so their strip stays down to the one word.
+  String? get _nextStep {
     if (isPreparation || item is RestItem || nextItem == null) return null;
-    return 'Next: ${describeExecutionItem(nextItem!)}';
+    return describeExecutionItem(nextItem!);
   }
 }
 
@@ -429,8 +436,8 @@ class _TankContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A step with no sensor puts its countdown in the middle of the screen, so
-    // the corner is free for the total time left.
+    // A step with no sensor puts its countdown in the middle of the screen, and
+    // a self paced one has none.
     final cornerCountdown =
         state != _TankState.timed && state != _TankState.confirm;
 
@@ -469,23 +476,24 @@ class _TankContent extends StatelessWidget {
           child: _topLeftBlock(),
         ),
         if (cornerCountdown)
-          Positioned(right: 16, top: 14, child: _countdown())
-        else if (layout.showRemaining)
-          Positioned(
-            right: 16,
-            top: 14,
-            child: _timeBlock(
-              'LEFT',
-              layout.remainingMilliseconds,
-              alignEnd: true,
-            ),
-          ),
+          Positioned(right: 16, top: 14, child: _countdown()),
         if (state == _TankState.sensorWork)
           ..._forceReadout()
         else
           Positioned.fill(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              // Kept clear of the set and rep card, which is opaque and would
+              // otherwise hide the foot of a tall block.
+              padding: EdgeInsets.fromLTRB(
+                16,
+                14,
+                16,
+                layout.repContext == null
+                    ? 14
+                    : _repContextCardBottom +
+                          repContextCardHeight(scale) +
+                          _s(12),
+              ),
               child: Center(child: _centerBlock(context)),
             ),
           ),
@@ -501,7 +509,17 @@ class _TankContent extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        _timeBlock('ELAPSED', layout.elapsedMilliseconds),
+        // The total time left sits beside the time spent on every step, rather
+        // than in the corner the countdown of the running step takes.
+        Wrap(
+          spacing: _s(20),
+          runSpacing: _s(6),
+          children: [
+            _timeBlock('ELAPSED', layout.elapsedMilliseconds),
+            if (layout.showRemaining)
+              _timeBlock('LEFT', layout.remainingMilliseconds),
+          ],
+        ),
         if (namesTheGrip) ...[
           SizedBox(height: _s(10)),
           Text(
@@ -611,28 +629,25 @@ class _TankContent extends StatelessWidget {
     ],
   );
 
-  Widget _timeBlock(String label, int milliseconds, {bool alignEnd = false}) =>
-      Column(
-        crossAxisAlignment: alignEnd
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: _style(
-              9,
-              color: palette.muted,
-              weight: FontWeight.w700,
-              letterSpacing: 0.6,
-            ),
-          ),
-          Text(
-            formatMillisMinutesSeconds(milliseconds),
-            style: _style(20, color: palette.force),
-          ),
-        ],
-      );
+  Widget _timeBlock(String label, int milliseconds) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        label,
+        style: _style(
+          9,
+          color: palette.muted,
+          weight: FontWeight.w700,
+          letterSpacing: 0.6,
+        ),
+      ),
+      Text(
+        formatMillisMinutesSeconds(milliseconds),
+        style: _style(20, color: palette.force),
+      ),
+    ],
+  );
 
   /// Seconds left, without minutes or colon under a minute. A hang is counted
   /// in seconds and a bare numeral is the fastest thing to read.
@@ -775,7 +790,7 @@ class _TankContent extends StatelessWidget {
 
   String _preparationInstruction(TimedItem? rep) {
     if (rep == null) return 'Get ready.';
-    if (!rep.collectSensorData) {
+    if (!rep.isHang) {
       return 'Get ready. First up: ${rep.label.toLowerCase()}.';
     }
     final hands = rep.handSide.displayName.toLowerCase();
@@ -799,7 +814,7 @@ class _TankContent extends StatelessWidget {
       );
     }
     final rep = next is TimedItem ? next : null;
-    final sensor = rep?.collectSensorData ?? false;
+    final hang = rep?.isHang ?? false;
 
     return _column([
       Text(
@@ -817,7 +832,7 @@ class _TankContent extends StatelessWidget {
       ],
       SizedBox(height: _s(14)),
       Text(
-        sensor
+        hang
             ? rep!.handSide.displayName
             : describeExecutionItem(next).toUpperCase(),
         textAlign: TextAlign.center,
@@ -837,7 +852,7 @@ class _TankContent extends StatelessWidget {
           ].join(' - '),
           style: _style(20, color: palette.accent, weight: FontWeight.w700),
         ),
-        if (sensor) ...[
+        if (hang) ...[
           SizedBox(height: _s(14)),
           Text(
             gripLine(rep.gripPosition, rep.edgeSizeMm),
@@ -889,6 +904,25 @@ class _TankContent extends StatelessWidget {
           letterSpacing: 1,
         ),
       ),
+      // A hang on both hands runs without the sensor, so this is where the
+      // athlete reads how to take the edge.
+      if (rep.isHang) ...[
+        SizedBox(height: _s(8)),
+        Text(
+          rep.handSide.displayName,
+          style: _style(
+            22,
+            color: palette.force,
+            weight: FontWeight.w900,
+            letterSpacing: 1,
+          ),
+        ),
+        SizedBox(height: _s(4)),
+        Text(
+          gripLine(rep.gripPosition, rep.edgeSizeMm),
+          style: _style(15, color: palette.secondary, weight: FontWeight.w700),
+        ),
+      ],
       if (layout.protocol != null) ...[
         SizedBox(height: _s(8)),
         _protocolBlock(layout.protocol!, maxLines: 4),
@@ -1058,31 +1092,47 @@ class _FillClipper extends CustomClipper<Rect> {
       oldClipper.fillHeight != fillHeight;
 }
 
-/// Set and rep of the running step. Its background is opaque over the level so
-/// it never ends up unreadable half way through an inversion.
-class _RepContextPill extends StatelessWidget {
+/// Set and rep of the running step, drawn as the paused card is so it belongs
+/// to the same screen. Its background is opaque over the level so it never
+/// ends up unreadable half way through an inversion.
+class _RepContextCard extends StatelessWidget {
   final String text;
-  final bool overFill;
+  final double scale;
 
-  const _RepContextPill({required this.text, required this.overFill});
+  const _RepContextCard({required this.text, required this.scale});
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-    decoration: BoxDecoration(
-      color: overFill
-          ? CrimpyTheme.primaryWhite
-          : CrimpyTheme.tintOf(CrimpyTheme.primaryOrange),
-      border: Border.all(color: CrimpyTheme.primaryOrange, width: 1.5),
+    height: repContextCardHeight(scale),
+    padding: EdgeInsets.symmetric(horizontal: 18 * scale),
+    decoration: const BoxDecoration(
+      color: CrimpyTheme.primaryWhite,
+      border: Border.fromBorderSide(
+        BorderSide(color: CrimpyTheme.borderDefault, width: 2),
+      ),
+      boxShadow: [
+        BoxShadow(color: CrimpyTheme.borderDefault, offset: Offset(3, 3)),
+      ],
     ),
-    child: Text(
-      text,
-      style: TextStyle(
-        fontFamily: 'JetBrainsMono',
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.5,
-        color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
+    // Sized to its text across, so a short context stays a card rather than a
+    // banner over the fill. A long one such as "SET 10/10 - REP 12/12" shrinks
+    // to one line on a narrow phone instead of wrapping out of the fixed
+    // height.
+    child: Center(
+      widthFactor: 1,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          text,
+          maxLines: 1,
+          style: TextStyle(
+            fontFamily: 'JetBrainsMono',
+            fontSize: (22 * scale).clamp(16.0, 28.0),
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+            color: CrimpyTheme.primaryBlack,
+          ),
+        ),
       ),
     ),
   );
@@ -1136,9 +1186,14 @@ class _PausedCard extends StatelessWidget {
 /// The strip under the tank: what the run is doing on the left, the controls
 /// on the right.
 class _ControlStrip extends StatelessWidget {
-  final String stateWord;
+  final String? stateWord;
   final Color stateColor;
+
+  /// Small print under the state word.
   final String? detail;
+
+  /// The step coming up, set large where there is no state word to read.
+  final String? nextStep;
   final bool isRunning;
   final bool showConfirm;
   final VoidCallback onPlayPause;
@@ -1153,6 +1208,7 @@ class _ControlStrip extends StatelessWidget {
     required this.stateWord,
     required this.stateColor,
     required this.detail,
+    required this.nextStep,
     required this.isRunning,
     required this.showConfirm,
     required this.onPlayPause,
@@ -1189,16 +1245,42 @@ class _ControlStrip extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                stateWord,
-                style: TextStyle(
-                  fontFamily: 'JetBrainsMono',
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 4,
-                  color: stateColor,
+              if (stateWord != null)
+                Text(
+                  stateWord!,
+                  style: TextStyle(
+                    fontFamily: 'JetBrainsMono',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 4,
+                    color: stateColor,
+                  ),
                 ),
-              ),
+              if (nextStep != null) ...[
+                const Text(
+                  'NEXT',
+                  style: TextStyle(
+                    fontFamily: 'JetBrainsMono',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2,
+                    color: CrimpyTheme.textMutedSmall,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  nextStep!.toUpperCase(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'JetBrainsMono',
+                    fontSize: 20,
+                    height: 1.15,
+                    fontWeight: FontWeight.w900,
+                    color: CrimpyTheme.primaryBlack,
+                  ),
+                ),
+              ],
               if (detail != null) ...[
                 const SizedBox(height: 4),
                 Text(

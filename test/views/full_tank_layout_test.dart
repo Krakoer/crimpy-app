@@ -214,13 +214,35 @@ void main() {
       expect(find.text('3FD - 20mm'), findsWidgets);
     });
 
-    testWidgets('calls out reaching the target', (tester) async {
+    // The level and the notch already say it, so no word repeats it.
+    testWidgets('leaves reaching the target to the level', (tester) async {
       await _pump(tester, item: _hang, currentWeight: 41.9);
-      expect(find.text('ON TARGET'), findsNothing);
-      expect(find.text('WORK'), findsOneWidget);
+      expect(find.text('WORK'), findsNothing);
 
       await _pump(tester, item: _hang, currentWeight: 42);
-      expect(find.text('ON TARGET'), findsOneWidget);
+      expect(find.text('ON TARGET'), findsNothing);
+    });
+
+    testWidgets('keeps the total time left beside the countdown', (
+      tester,
+    ) async {
+      await _pump(tester, item: _hang, currentWeight: 10, secondsRemaining: 5);
+
+      expect(find.text('LEFT'), findsWidgets);
+      expect(find.text('01:58'), findsWidgets);
+      expect(find.text('ELAPSED'), findsWidgets);
+    });
+
+    testWidgets('names the step coming up in the strip', (tester) async {
+      await _pump(
+        tester,
+        item: _hang,
+        nextItem: const RestItem(durationSeconds: 3),
+        currentWeight: 10,
+      );
+
+      expect(find.text('NEXT'), findsOneWidget);
+      expect(find.text('REST 3S'), findsOneWidget);
     });
 
     testWidgets('draws the readouts twice so they invert over the level', (
@@ -317,8 +339,8 @@ void main() {
       expect(find.text('42 kg - 7s'), findsOneWidget);
       expect(find.text('SEC REST'), findsOneWidget);
       expect(find.text('REST'), findsOneWidget);
-      // The block above already names what is next, so the strip stays quiet.
-      expect(find.textContaining('Next:'), findsNothing);
+      // The block above already names what is next, so the strip stays quiet
+      // and the one NEXT above is the block's.
     });
 
     testWidgets('a step without the sensor centers its countdown', (
@@ -337,7 +359,52 @@ void main() {
       expect(find.text('TARGET 12 kg'), findsOneWidget);
       // The corner is free for the total time left, in minutes and seconds.
       expect(find.text('01:58'), findsOneWidget);
-      expect(find.text('Next: rest 30s'), findsOneWidget);
+      expect(find.text('REST 30S'), findsOneWidget);
+    });
+
+    // Only a hang on a single hand goes through the sensor, so a hang on both
+    // runs as a timed step and has to name the grip itself.
+    testWidgets('a hang without the sensor names the grip', (tester) async {
+      await _pump(
+        tester,
+        item: const TimedItem(
+          label: 'Hang',
+          durationSeconds: 10,
+          targetLoad: 0,
+          handSide: HandSide.both,
+          gripPosition: GripPosition.halfCrimp,
+          collectSensorData: false,
+          edgeSizeMm: 20,
+          isHang: true,
+        ),
+        secondsRemaining: 10,
+      );
+
+      expect(find.text('HANG'), findsOneWidget);
+      expect(find.text('BOTH HANDS'), findsOneWidget);
+      expect(find.text('HC - 20mm'), findsOneWidget);
+    });
+
+    testWidgets('a rest before a hang without the sensor names its grip', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 3),
+        nextItem: const TimedItem(
+          label: 'Hang',
+          durationSeconds: 10,
+          targetLoad: 0,
+          handSide: HandSide.both,
+          gripPosition: GripPosition.halfCrimp,
+          collectSensorData: false,
+          isHang: true,
+        ),
+        secondsRemaining: 3,
+      );
+
+      expect(find.text('BOTH HANDS'), findsOneWidget);
+      expect(find.text('HC'), findsOneWidget);
     });
 
     testWidgets('pausing says so without hiding where the run stopped', (
@@ -398,6 +465,98 @@ void main() {
       expect(find.text('12 reps  -  10 kg'), findsOneWidget);
       expect(find.text('DONE'), findsOneWidget);
       expect(find.byIcon(Icons.skip_next), findsNothing);
+    });
+  });
+
+  group('the set and rep card', () {
+    const busyHang = TimedItem(
+      label: 'Hang',
+      durationSeconds: 10,
+      targetLoad: 12,
+      handSide: HandSide.both,
+      gripPosition: GripPosition.halfCrimp,
+      collectSensorData: false,
+      edgeSizeMm: 20,
+      isHang: true,
+    );
+
+    void phone(WidgetTester tester, Size size) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+    }
+
+    // The card is opaque, so a tall block running under it would lose its
+    // last line, here the target.
+    testWidgets('keeps clear of a tall block centred above it', (tester) async {
+      phone(tester, const Size(390, 844));
+      await _pump(
+        tester,
+        item: busyHang,
+        secondsRemaining: 10,
+        goal: 'Finger strength',
+        protocol:
+            'To failure or 10s. Past 10s add 2kg on the next set, under 6s '
+            'take 2kg off, and stop the block after two misses in a row',
+        comment:
+            'Keep the shoulders engaged all the way through, breathe out on '
+            'the way onto the edge and do not let the elbows lock at any '
+            'point of the hang, even on the last set of the block',
+      );
+
+      final targetBottom = tester.getBottomLeft(find.text('TARGET 12 kg')).dy;
+      final cardTop = tester
+          .getTopLeft(
+            find
+                .ancestor(
+                  of: find.text('SET 2/4 - REP 3/6'),
+                  matching: find.byType(Container),
+                )
+                .first,
+          )
+          .dy;
+      expect(targetBottom, lessThanOrEqualTo(cardTop));
+    });
+
+    // Opaque, so drawn any wider than its text it would hide the foot of the
+    // force level across the whole tank.
+    testWidgets('is only as wide as a short context needs', (tester) async {
+      phone(tester, const Size(390, 844));
+      await _pump(
+        tester,
+        item: _hang,
+        currentWeight: 10,
+        repContext: 'SET 1/3',
+      );
+
+      final card = find
+          .ancestor(of: find.text('SET 1/3'), matching: find.byType(Container))
+          .first;
+      // The room the card is laid out in is the tank less 16 on each side.
+      expect(tester.getSize(card).width, lessThan(390 - 32 - 60));
+    });
+
+    testWidgets('keeps a long context on one line on a narrow phone', (
+      tester,
+    ) async {
+      phone(tester, const Size(360, 640));
+      await _pump(
+        tester,
+        item: _hang,
+        currentWeight: 10,
+        repContext: 'SET 10/10 - REP 12/12',
+      );
+
+      final text = find.text('SET 10/10 - REP 12/12');
+      final lines = tester
+          .renderObject<RenderParagraph>(text)
+          .getBoxesForSelection(
+            const TextSelection(baseOffset: 0, extentOffset: 21),
+          )
+          .map((box) => box.top)
+          .toSet();
+      expect(lines, hasLength(1));
+      expect(tester.takeException(), isNull);
     });
   });
 
