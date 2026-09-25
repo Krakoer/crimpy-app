@@ -468,6 +468,80 @@ void main() {
     });
   });
 
+  group('the set and rep card', () {
+    const busyHang = TimedItem(
+      label: 'Hang',
+      durationSeconds: 10,
+      targetLoad: 12,
+      handSide: HandSide.both,
+      gripPosition: GripPosition.halfCrimp,
+      collectSensorData: false,
+      edgeSizeMm: 20,
+      isHang: true,
+    );
+
+    void phone(WidgetTester tester, Size size) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+    }
+
+    // The card is opaque, so a tall block running under it would lose its
+    // last line, here the target.
+    testWidgets('keeps clear of a tall block centred above it', (tester) async {
+      phone(tester, const Size(390, 844));
+      await _pump(
+        tester,
+        item: busyHang,
+        secondsRemaining: 10,
+        goal: 'Finger strength',
+        protocol:
+            'To failure or 10s. Past 10s add 2kg on the next set, under 6s '
+            'take 2kg off, and stop the block after two misses in a row',
+        comment:
+            'Keep the shoulders engaged all the way through, breathe out on '
+            'the way onto the edge and do not let the elbows lock at any '
+            'point of the hang, even on the last set of the block',
+      );
+
+      final targetBottom = tester.getBottomLeft(find.text('TARGET 12 kg')).dy;
+      final cardTop = tester
+          .getTopLeft(
+            find
+                .ancestor(
+                  of: find.text('SET 2/4 - REP 3/6'),
+                  matching: find.byType(Container),
+                )
+                .first,
+          )
+          .dy;
+      expect(targetBottom, lessThanOrEqualTo(cardTop));
+    });
+
+    testWidgets('keeps a long context on one line on a narrow phone', (
+      tester,
+    ) async {
+      phone(tester, const Size(360, 640));
+      await _pump(
+        tester,
+        item: _hang,
+        currentWeight: 10,
+        repContext: 'SET 10/10 - REP 12/12',
+      );
+
+      final text = find.text('SET 10/10 - REP 12/12');
+      final lines = tester
+          .renderObject<RenderParagraph>(text)
+          .getBoxesForSelection(
+            const TextSelection(baseOffset: 0, extentOffset: 21),
+          )
+          .map((box) => box.top)
+          .toSet();
+      expect(lines, hasLength(1));
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('a step title', () {
     // The cap exists to stop a pathological title taking the tank over, not to
     // shorten a name a coach actually wrote: a title has no pause to read the

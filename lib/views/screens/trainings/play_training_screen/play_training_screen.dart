@@ -340,6 +340,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                 : _stageHeader(
                     rep?.label,
                     rep?.targetLoad ?? 0,
+                    handSide: rep != null && rep.isHang ? rep.handSide : null,
                     gripPosition: rep != null && rep.isHang
                         ? rep.gripPosition
                         : null,
@@ -499,7 +500,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   Widget _contextSlot() {
     final context = _currentContext();
     return SizedBox(
-      height: 40,
+      height: 52,
       child: Center(
         child: context == null
             ? const SizedBox.shrink()
@@ -508,22 +509,31 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     );
   }
 
+  /// Set and rep of the running step, drawn as the full tank draws it.
   Widget _subtitleText(String text) => Container(
-    margin: const EdgeInsets.only(bottom: 8),
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-    decoration: BoxDecoration(
-      color: CrimpyTheme.tintOf(CrimpyTheme.primaryOrange),
-      border: Border.all(color: CrimpyTheme.primaryOrange, width: 1.5),
-      borderRadius: BorderRadius.circular(4),
+    margin: const EdgeInsets.only(bottom: 8, left: 16, right: 16),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+    decoration: const BoxDecoration(
+      color: CrimpyTheme.primaryWhite,
+      border: Border.fromBorderSide(
+        BorderSide(color: CrimpyTheme.borderDefault, width: 2),
+      ),
+      boxShadow: [
+        BoxShadow(color: CrimpyTheme.borderDefault, offset: Offset(3, 3)),
+      ],
     ),
-    child: Text(
-      text,
-      style: TextStyle(
-        fontFamily: 'JetBrainsMono',
-        fontSize: 13,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.5,
-        color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        text,
+        maxLines: 1,
+        style: const TextStyle(
+          fontFamily: 'JetBrainsMono',
+          fontSize: 18,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1,
+          color: CrimpyTheme.primaryBlack,
+        ),
       ),
     ),
   );
@@ -531,6 +541,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   Widget _stageHeader(
     String? label,
     double targetWeight, {
+    HandSide? handSide,
     GripPosition? gripPosition,
     int? edgeSizeMm,
   }) {
@@ -548,6 +559,19 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
           ),
         ),
+        // A hang on both hands runs without the sensor, so it names the hands
+        // here rather than through the hand label a sensor step gets.
+        if (handSide != null)
+          Text(
+            handSide.displayName,
+            style: const TextStyle(
+              fontFamily: 'JetBrainsMono',
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1,
+              color: CrimpyTheme.primaryBlack,
+            ),
+          ),
         if (gripPosition != null)
           Text(
             [
@@ -954,7 +978,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
                           // Space taken by the top header + context pill, the fixed
                           // header/below slots around the circle, the progress bar and the
                           // controls. Whatever is left is available to the gauge.
-                          const chromeHeight = 320.0;
+                          const chromeHeight = 332.0;
                           final gaugeSpace = availableHeight - chromeHeight;
 
                           // Calculate gauge size (max 300, but scale down if needed)

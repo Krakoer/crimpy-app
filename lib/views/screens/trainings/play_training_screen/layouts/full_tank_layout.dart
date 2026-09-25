@@ -20,6 +20,14 @@ const double controlStripHeight = 96;
 /// does not overflow.
 const double _referenceTankHeight = 624;
 
+/// Height of the set and rep card at the foot of the tank, scaled like the
+/// rest of it. Fixed rather than sized by its text, so the block centred above
+/// it can keep clear of it.
+double repContextCardHeight(double scale) => (56 * scale).clamp(44.0, 72.0);
+
+/// Gap between the foot of the tank and the set and rep card.
+const double _repContextCardBottom = 16;
+
 /// Height the target sits at, as a fraction of the tank. It is where the fill
 /// mapping puts the target, so the level lands on the notch exactly when the
 /// target is met.
@@ -303,9 +311,9 @@ class FullTankLayout extends ConsumerWidget {
                   if (paused) Opacity(opacity: 0.38, child: tank) else tank,
                   if (repContext != null)
                     Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                      bottom: _repContextCardBottom,
                       child: Center(
                         child: _RepContextCard(text: repContext!, scale: scale),
                       ),
@@ -474,7 +482,18 @@ class _TankContent extends StatelessWidget {
         else
           Positioned.fill(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              // Kept clear of the set and rep card, which is opaque and would
+              // otherwise hide the foot of a tall block.
+              padding: EdgeInsets.fromLTRB(
+                16,
+                14,
+                16,
+                layout.repContext == null
+                    ? 14
+                    : _repContextCardBottom +
+                          repContextCardHeight(scale) +
+                          _s(12),
+              ),
               child: Center(child: _centerBlock(context)),
             ),
           ),
@@ -1084,7 +1103,9 @@ class _RepContextCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: EdgeInsets.symmetric(horizontal: 18 * scale, vertical: 10 * scale),
+    height: repContextCardHeight(scale),
+    padding: EdgeInsets.symmetric(horizontal: 18 * scale),
+    alignment: Alignment.center,
     decoration: const BoxDecoration(
       color: CrimpyTheme.primaryWhite,
       border: Border.fromBorderSide(
@@ -1094,14 +1115,20 @@ class _RepContextCard extends StatelessWidget {
         BoxShadow(color: CrimpyTheme.borderDefault, offset: Offset(3, 3)),
       ],
     ),
-    child: Text(
-      text,
-      style: TextStyle(
-        fontFamily: 'JetBrainsMono',
-        fontSize: (22 * scale).clamp(16.0, 28.0),
-        fontWeight: FontWeight.w900,
-        letterSpacing: 1,
-        color: CrimpyTheme.primaryBlack,
+    // A long context such as "SET 10/10 - REP 12/12" shrinks to one line on a
+    // narrow phone instead of wrapping out of the card's fixed height.
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        text,
+        maxLines: 1,
+        style: TextStyle(
+          fontFamily: 'JetBrainsMono',
+          fontSize: (22 * scale).clamp(16.0, 28.0),
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1,
+          color: CrimpyTheme.primaryBlack,
+        ),
       ),
     ),
   );
