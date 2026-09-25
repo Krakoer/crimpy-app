@@ -75,7 +75,7 @@ class _EmailVerificationScreenState
               ),
               const SizedBox(height: 16),
               Text(
-                'We sent a verification link to:',
+                'Check your inbox at:',
                 style: Theme.of(context).textTheme.bodyMedium,
                 textAlign: TextAlign.center,
               ),
@@ -106,8 +106,8 @@ class _EmailVerificationScreenState
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      '1. Open the verification email\n'
-                      '2. Click the verification link\n'
+                      '1. Open the email from Crimpy\n'
+                      '2. Follow the link in it\n'
                       '3. Return to the app and log in',
                       textAlign: TextAlign.center,
                     ),

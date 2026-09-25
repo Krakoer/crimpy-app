@@ -295,7 +295,7 @@ class ApiClient {
       case 404:
         return 'Resource not found.';
       case 409:
-        return 'This clashes with what is already saved. Please refresh and try again.';
+        return 'This clashes with what is already saved.';
       case 429:
         return 'Too many requests. Please try again later.';
       case 500:

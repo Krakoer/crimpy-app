@@ -39,5 +39,6 @@ void main() {
       find.textContaining('If your email still needs verifying'),
       findsOneWidget,
     );
+    expect(find.textContaining('verification link'), findsNothing);
   });
 }
