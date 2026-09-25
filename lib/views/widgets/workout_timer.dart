@@ -47,7 +47,8 @@ class ManualCrimpyWatch extends CrimpyWatch {
 
 /// Beeps mix over whatever else is playing, so an athlete's music keeps going
 /// underneath them: no audio focus is requested on Android, and the iOS session
-/// is shared with other apps rather than interrupting them.
+/// is shared with other apps rather than interrupting them. iOS has no per player
+/// context, so there it applies to the whole app and the last one set wins.
 final beepAudioContext = AudioContext(
   android: const AudioContextAndroid(audioFocus: AndroidAudioFocus.none),
   iOS: AudioContextIOS(
