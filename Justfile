@@ -11,3 +11,9 @@ beta-release *args:
 
 prod-release bump *args:
     ./scripts/prod-release.sh {{bump}} {{args}}
+
+# Headless Android emulator with a simulated sensor, see the README.
+# Runs from the invocation directory, so a relative screenshot path lands
+# where it was typed.
+emulator *args:
+    cd "{{invocation_directory()}}" && "{{justfile_directory()}}/scripts/emulator.sh" {{args}}

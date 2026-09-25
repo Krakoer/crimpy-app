@@ -52,60 +52,59 @@ final class BleRepositoryProvider
   }
 }
 
-String _$bleRepositoryHash() => r'dd8aec7fe877bd2d4ffa782add52d9d61e54de99';
+String _$bleRepositoryHash() => r'5666f37b2ee5ce82affa5503bb53ce9bda6d32f0';
 
-/// Adapter state provider
+/// Whether the Bluetooth adapter is on. Allows to turn it on.
 
-@ProviderFor(BleAdapterState)
-const bleAdapterStateProvider = BleAdapterStateProvider._();
+@ProviderFor(BleAdapterOn)
+const bleAdapterOnProvider = BleAdapterOnProvider._();
 
-/// Adapter state provider
-final class BleAdapterStateProvider
-    extends $NotifierProvider<BleAdapterState, BluetoothAdapterState> {
-  /// Adapter state provider
-  const BleAdapterStateProvider._()
+/// Whether the Bluetooth adapter is on. Allows to turn it on.
+final class BleAdapterOnProvider extends $NotifierProvider<BleAdapterOn, bool> {
+  /// Whether the Bluetooth adapter is on. Allows to turn it on.
+  const BleAdapterOnProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'bleAdapterStateProvider',
+        name: r'bleAdapterOnProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$bleAdapterStateHash();
+  String debugGetCreateSourceHash() => _$bleAdapterOnHash();
 
   @$internal
   @override
-  BleAdapterState create() => BleAdapterState();
+  BleAdapterOn create() => BleAdapterOn();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(BluetoothAdapterState value) {
+  Override overrideWithValue(bool value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<BluetoothAdapterState>(value),
+      providerOverride: $SyncValueProvider<bool>(value),
     );
   }
 }
 
-String _$bleAdapterStateHash() => r'69e1ae7719a5989c24ada6ee4de1d4332c927660';
+String _$bleAdapterOnHash() => r'66e05096a5d39cb2aa99fb7dadee0800604f6d08';
 
-/// Adapter state provider
+/// Whether the Bluetooth adapter is on. Allows to turn it on.
 
-abstract class _$BleAdapterState extends $Notifier<BluetoothAdapterState> {
-  BluetoothAdapterState build();
+abstract class _$BleAdapterOn extends $Notifier<bool> {
+  bool build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
-    final ref = this.ref as $Ref<BluetoothAdapterState, BluetoothAdapterState>;
+    final ref = this.ref as $Ref<bool, bool>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<BluetoothAdapterState, BluetoothAdapterState>,
-              BluetoothAdapterState,
+              AnyNotifier<bool, bool>,
+              bool,
               Object?,
               Object?
             >;
@@ -149,7 +148,7 @@ final class BleConnectionProvider
   }
 }
 
-String _$bleConnectionHash() => r'cf944a9a7cee9427702382eee91a3252c66524c8';
+String _$bleConnectionHash() => r'a104aa4e60007c4eb06a93ea482665554fa495de';
 
 /// Returns the BLE connection state. Allows to (dis)connect to/from a BLE device.
 
@@ -180,13 +179,8 @@ const connectedDeviceProvider = ConnectedDeviceProvider._();
 /// Returns the connected device info, if any.
 
 final class ConnectedDeviceProvider
-    extends
-        $FunctionalProvider<
-          BluetoothDevice?,
-          BluetoothDevice?,
-          BluetoothDevice?
-        >
-    with $Provider<BluetoothDevice?> {
+    extends $FunctionalProvider<SensorDevice?, SensorDevice?, SensorDevice?>
+    with $Provider<SensorDevice?> {
   /// Returns the connected device info, if any.
   const ConnectedDeviceProvider._()
     : super(
@@ -204,24 +198,24 @@ final class ConnectedDeviceProvider
 
   @$internal
   @override
-  $ProviderElement<BluetoothDevice?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<SensorDevice?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  BluetoothDevice? create(Ref ref) {
+  SensorDevice? create(Ref ref) {
     return connectedDevice(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(BluetoothDevice? value) {
+  Override overrideWithValue(SensorDevice? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<BluetoothDevice?>(value),
+      providerOverride: $SyncValueProvider<SensorDevice?>(value),
     );
   }
 }
 
-String _$connectedDeviceHash() => r'f3a9e57b47be3514a046045e8a4bb7ca17ce89b7';
+String _$connectedDeviceHash() => r'c8c1e5b492532c8b5ccad6173c83d3b7ce866828';
 
 /// Returns the results of a BLE scan.
 /// A scan that fails because the adapter is off must not be retried on its own:
@@ -236,7 +230,7 @@ const scanResultsProvider = ScanResultsProvider._();
 /// the user turns Bluetooth back on and triggers a new scan explicitly.
 /// TODO: Maybe convert to a Stream provider so that we don't have to wait till the end of the scan to see the results ?
 final class ScanResultsProvider
-    extends $AsyncNotifierProvider<ScanResults, List<BluetoothDevice>> {
+    extends $AsyncNotifierProvider<ScanResults, List<SensorDevice>> {
   /// Returns the results of a BLE scan.
   /// A scan that fails because the adapter is off must not be retried on its own:
   /// the user turns Bluetooth back on and triggers a new scan explicitly.
@@ -260,30 +254,26 @@ final class ScanResultsProvider
   ScanResults create() => ScanResults();
 }
 
-String _$scanResultsHash() => r'515670811cbaef78a20eb85272d2fc218bd868e5';
+String _$scanResultsHash() => r'20c3a8a427d6bb783d93187afc44c07ec9b5d2a1';
 
 /// Returns the results of a BLE scan.
 /// A scan that fails because the adapter is off must not be retried on its own:
 /// the user turns Bluetooth back on and triggers a new scan explicitly.
 /// TODO: Maybe convert to a Stream provider so that we don't have to wait till the end of the scan to see the results ?
 
-abstract class _$ScanResults extends $AsyncNotifier<List<BluetoothDevice>> {
-  FutureOr<List<BluetoothDevice>> build();
+abstract class _$ScanResults extends $AsyncNotifier<List<SensorDevice>> {
+  FutureOr<List<SensorDevice>> build();
   @$mustCallSuper
   @override
   void runBuild() {
     final created = build();
     final ref =
-        this.ref
-            as $Ref<AsyncValue<List<BluetoothDevice>>, List<BluetoothDevice>>;
+        this.ref as $Ref<AsyncValue<List<SensorDevice>>, List<SensorDevice>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<
-                AsyncValue<List<BluetoothDevice>>,
-                List<BluetoothDevice>
-              >,
-              AsyncValue<List<BluetoothDevice>>,
+              AnyNotifier<AsyncValue<List<SensorDevice>>, List<SensorDevice>>,
+              AsyncValue<List<SensorDevice>>,
               Object?,
               Object?
             >;

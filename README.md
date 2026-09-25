@@ -254,6 +254,79 @@ data behind it. Sentry is gated on `kReleaseMode`, so errors watched live in the
 debugger never reach it, and `options.environment` comes from `appFlavor` so the
 beta test stays separable from production.
 
+### Running on an emulator
+
+The app can run on a headless Android emulator against a simulated force sensor,
+so a change can be seen working without a phone or the hardware. Linux only, as
+it needs KVM.
+
+**Once per machine.** Put the user in the `kvm` group, then install the emulator
+and the system image and create the `crimpy` AVD:
+
+```bash
+sudo gpasswd -a $USER kvm
+just emulator setup
+```
+
+The group only takes effect in a new login shell. Until then the script runs the
+emulator through `sg kvm`, so there is no need to log out first. The Android SDK
+is looked for in `ANDROID_HOME`, then `ANDROID_SDK_ROOT`, then `~/Android/sdk`,
+and needs the command line tools installed. Building the APK also needs the JDK
+described in the workspace `docs/DEVELOPMENT.md`.
+
+**Every session.**
+
+```bash
+just emulator start                  # boot headless, wait until ready
+just emulator run                    # build, install and launch the app
+just emulator screenshot build/shot.png   # save the screen as a PNG
+just emulator stop
+```
+
+`just emulator dev` runs `flutter run` on the emulator instead, with hot reload.
+
+The build is the beta debug variant, `com.crimpyclimbing.crimpy.beta.debug`, with
+two defines:
+
+- `CRIMPY_SIMULATED_SENSOR=true` swaps the Bluetooth link for
+  `SimulatedSensorLink`. A scan always finds one device, `Crimpy simulator`.
+  Once connected it sends the firmware's frames ten times a second: 3 s of rest,
+  then 7 s of hang at about 20 kg, repeating. Everything past the link
+  (decoding, tare, calibration, the run screens, saved sessions) runs as it does
+  against the hardware. A release build ignores the define.
+- `CRIMPY_API_URL` defaults to `http://10.0.2.2:3000`, the dev stack's API on
+  the host as the emulator sees it. Set `CRIMPY_API_URL` in the environment to
+  point it somewhere else.
+
+**Driving it without a screen.** Agents and scripts drive the app with `adb`.
+The `android` CLI from the SDK command line tools lists what is on screen, with
+coordinates. The script calls the SDK tools by their full path, but these need
+them on `PATH`:
+
+```bash
+export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+```
+
+The script pins every call to the emulator by exporting
+`ANDROID_SERIAL=emulator-5554` (the port comes from `CRIMPY_EMULATOR_PORT`), so a
+phone plugged in over USB is never touched. Export the same variable before
+running `adb` by hand when a phone is connected too. The `android` CLI ignores
+it and takes `--device` instead, as above.
+
+A relative screenshot path is resolved from where the command was typed. Keep
+screenshots under `build/`, which git ignores, so one never lands on a branch by
+accident.
+
+```bash
+android layout --flat --device "$ANDROID_SERIAL"   # visible elements, with a center to tap
+adb shell input tap 540 1247
+adb shell input text "coach@local.com"
+```
+
+Flutter exposes its widgets through the accessibility tree, so labels show up
+as `content-desc` rather than `text`. The start script turns the system
+animations off, so a screenshot does not catch a transition half way through.
+
 ### Project Structure
 ```
 lib/
