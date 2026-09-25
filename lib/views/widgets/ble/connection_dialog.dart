@@ -1,7 +1,6 @@
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../viewmodels/ble_view_model.dart';
 import '../../../theme/crimpy_theme.dart';
@@ -20,10 +19,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   void initState() {
     super.initState();
     final connectionState = ref.read(connectionStateProvider);
-    final adapterState = ref.read(bleAdapterStateProvider);
+    final adapterOn = ref.read(bleAdapterOnProvider);
     // Only start scan if not connected
-    if (connectionState != BleConnectionState.connected &&
-        adapterState == BluetoothAdapterState.on) {
+    if (connectionState != BleConnectionState.connected && adapterOn) {
       _startScan();
     }
   }
@@ -39,7 +37,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   @override
   Widget build(BuildContext context) {
     final connectionState = ref.watch(connectionStateProvider);
-    final adapterState = ref.watch(bleAdapterStateProvider);
+    final adapterOn = ref.watch(bleAdapterOnProvider);
 
     return Dialog(
       child: Padding(
@@ -62,7 +60,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               ],
             ),
             const Divider(),
-            if (adapterState == BluetoothAdapterState.on) ...[
+            if (adapterOn) ...[
               if (connectionState == BleConnectionState.connected)
                 _buildConnectedView()
               else
@@ -101,7 +99,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                     child: const Text('Turn Bluetooth ON'),
                     onPressed: () async {
                       try {
-                        await FlutterBluePlus.turnOn();
+                        await ref.read(bleAdapterOnProvider.notifier).turnOn();
                       } catch (e) {
                         AppLoggerHelper.warning(
                           "Error while turning bluetooth adapter on: $e",
@@ -145,11 +143,11 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      device?.platformName ?? 'Unknown Device',
+                      device?.name ?? 'Unknown Device',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     Text(
-                      device?.remoteId.toString() ?? '',
+                      device?.id ?? '',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: CrimpyTheme.gray500,
                       ),
@@ -167,7 +165,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   Widget _buildScanView() {
     final scanResults = ref.watch(scanResultsProvider);
 
-    Widget buildScanResults(List<BluetoothDevice> devices) {
+    Widget buildScanResults(List<SensorDevice> devices) {
       setState(() {
         _isScanning = false;
       });
@@ -187,12 +185,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           final device = devices[index];
           return ListTile(
             leading: const Icon(Icons.bluetooth),
-            title: Text(
-              device.platformName.isNotEmpty
-                  ? device.platformName
-                  : 'Unknown Device',
-            ),
-            subtitle: Text(device.remoteId.toString()),
+            title: Text(device.name),
+            subtitle: Text(device.id),
             onTap: () {
               ref
                   .read(connectionStateProvider.notifier)

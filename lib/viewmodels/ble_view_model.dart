@@ -4,7 +4,7 @@ import 'package:crimpy/models/config.dart';
 import 'package:crimpy/models/sensor_preset.dart';
 import '../models/ble_data_model.dart';
 import '../repositories/ble_repository.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:crimpy/services/sensor_link/simulated_sensor_link.dart';
 
 part 'ble_view_model.g.dart';
 
@@ -14,7 +14,9 @@ Duration? noRetry(int retryCount, Object error) => null;
 /// Main provider, gives access to the BLE repository.
 @Riverpod(keepAlive: true)
 BleRepository bleRepository(Ref ref) {
-  final repository = BleRepository();
+  final repository = BleRepository(
+    link: useSimulatedSensor ? SimulatedSensorLink() : null,
+  );
   // Loads the stored calibration in the background. Consumers that need the
   // persisted values wait on `configReady` instead of blocking creation here.
   unawaited(repository.initConfig());
@@ -22,20 +24,24 @@ BleRepository bleRepository(Ref ref) {
   return repository;
 }
 
-/// Adapter state provider
+/// Whether the Bluetooth adapter is on. Allows to turn it on.
 @Riverpod(keepAlive: true)
-class BleAdapterState extends _$BleAdapterState {
-  @override
-  BluetoothAdapterState build() {
-    final repo = ref.watch(bleRepositoryProvider);
+class BleAdapterOn extends _$BleAdapterOn {
+  late BleRepository _bleRepository;
 
-    final subscription = repo.adapterStateStream.listen((s) {
-      state = s;
+  @override
+  bool build() {
+    _bleRepository = ref.watch(bleRepositoryProvider);
+
+    final subscription = _bleRepository.adapterOnStream.listen((on) {
+      state = on;
     });
     ref.onDispose(subscription.cancel);
 
-    return repo.currentAdapterState;
+    return _bleRepository.isAdapterOn;
   }
+
+  Future<void> turnOn() => _bleRepository.turnAdapterOn();
 }
 
 /// Returns the BLE connection state. Allows to (dis)connect to/from a BLE device.
@@ -55,7 +61,7 @@ class BleConnection extends _$BleConnection {
     return _bleRepository.currentConnectionState;
   }
 
-  Future<void> connectToDevice(BluetoothDevice device) =>
+  Future<void> connectToDevice(SensorDevice device) =>
       _bleRepository.connectToDevice(device);
 
   Future<void> disconnect() => _bleRepository.disconnect();
@@ -63,7 +69,7 @@ class BleConnection extends _$BleConnection {
 
 /// Returns the connected device info, if any.
 @Riverpod(keepAlive: true)
-BluetoothDevice? connectedDevice(Ref ref) {
+SensorDevice? connectedDevice(Ref ref) {
   return ref.watch(bleRepositoryProvider).connectedDevice;
 }
 
@@ -74,7 +80,7 @@ BluetoothDevice? connectedDevice(Ref ref) {
 @Riverpod(keepAlive: true, retry: noRetry)
 class ScanResults extends _$ScanResults {
   @override
-  Future<List<BluetoothDevice>> build() {
+  Future<List<SensorDevice>> build() {
     final bleRepository = ref.watch(bleRepositoryProvider);
     return bleRepository.scanForDevices();
   }

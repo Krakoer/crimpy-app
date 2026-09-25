@@ -69,6 +69,14 @@ abstract final class ForceCurve {
   }
 }
 
+/// A sensor found by a scan, as the connection dialog lists it.
+class SensorDevice {
+  final String id;
+  final String name;
+
+  const SensorDevice({required this.id, required this.name});
+}
+
 /// Connection state enum
 enum BleConnectionState { disconnected, connecting, connected, failed }
 

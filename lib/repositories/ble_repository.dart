@@ -1,33 +1,28 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../models/ble_data_model.dart';
 import '../database/database.dart';
 import 'package:crimpy/models/sensor_preset.dart';
+import 'package:crimpy/services/sensor_link/flutter_blue_plus_sensor_link.dart';
+import 'package:crimpy/services/sensor_link/sensor_link.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BleRepository {
-  // ignore: non_constant_identifier_names
-  static Guid SERVICE_UUID = Guid.fromString(
-    "7e4e1701-1ea6-40c9-9dcc-13d34ffead57",
-  );
-  // ignore: non_constant_identifier_names
-  static Guid CHARACTERISTIC_UUID = Guid.fromString(
-    "7e4e1702-1ea6-40c9-9dcc-13d34ffead57",
-  );
+  BleRepository({SensorLink? link})
+    : _link = link ?? FlutterBluePlusSensorLink();
+
+  final SensorLink _link;
 
   // ------------------------------------- BLE DEVICE -------------------------------------
-  /// Adapter state stream that always starts with the current state
-  Stream<BluetoothAdapterState> get adapterStateStream async* {
-    // emit the current state immediately
-    yield FlutterBluePlus.adapterStateNow;
-
-    // then forward subsequent changes
-    yield* FlutterBluePlus.adapterState;
+  /// Whether the Bluetooth adapter is on, starting with the current state.
+  Stream<bool> get adapterOnStream async* {
+    yield _link.isAdapterOn;
+    yield* _link.adapterOnChanges;
   }
 
-  BluetoothAdapterState get currentAdapterState =>
-      FlutterBluePlus.adapterStateNow;
+  bool get isAdapterOn => _link.isAdapterOn;
+
+  Future<void> turnAdapterOn() => _link.turnAdapterOn();
 
   final _connectionStateController =
       StreamController<BleConnectionState>.broadcast();
@@ -40,127 +35,71 @@ class BleRepository {
       : BleConnectionState.connected;
 
   /// Stores the connected device.
-  BluetoothDevice? _device;
+  SensorDevice? _device;
 
-  /// Stores the connected BLE characteristic.
-  BluetoothCharacteristic? _characteristic;
+  /// The open connection to [_device].
+  SensorChannel? _channel;
 
   /// Subscriptions to the connected device. They are held so a reconnection
   /// replaces them instead of stacking a second set on top: every extra
   /// listener re-emits the same notification, which doubles the apparent
   /// sample rate and the connection state events.
-  StreamSubscription<BluetoothConnectionState>? _connectionSubscription;
+  StreamSubscription<bool>? _connectionSubscription;
   StreamSubscription<List<int>>? _characteristicSubscription;
 
   /// returns whether a device is connected and a characteristic is listened to.
-  bool get isConnected => _device != null && _characteristic != null;
+  bool get isConnected => _device != null && _channel != null;
 
   /// Get the current connected device.
-  BluetoothDevice? get connectedDevice => _device;
+  SensorDevice? get connectedDevice => _device;
 
-  Future<List<BluetoothDevice>> scanForDevices() async {
-    List<BluetoothDevice> devices = [];
+  Future<List<SensorDevice>> scanForDevices() => _link.scan();
 
-    // Start scanning
-    await FlutterBluePlus.startScan(timeout: Duration(seconds: 4));
-
-    // Listen to scan results
-    var subscription = FlutterBluePlus.scanResults.listen((results) {
-      for (ScanResult r in results) {
-        if (r.device.platformName.isNotEmpty) {
-          if (!devices.any((d) => d.remoteId == r.device.remoteId)) {
-            devices.add(r.device);
-          }
-        }
-      }
-    });
-
-    // Wait for the scan to complete
-    await Future.delayed(Duration(seconds: 4));
-    await FlutterBluePlus.stopScan();
-    await subscription.cancel();
-
-    return devices;
-  }
-
-  Future<bool> connectToDevice(BluetoothDevice device) async {
+  Future<bool> connectToDevice(SensorDevice device) async {
     try {
       _connectionStateController.add(BleConnectionState.connecting);
-      await device.connect();
+      final channel = await _link.open(device);
+      if (channel == null) {
+        _device = null;
+        _connectionStateController.add(BleConnectionState.disconnected);
+        return false;
+      }
       _device = device;
+      _channel = channel;
 
-      // Listen to connection state updates
       await _connectionSubscription?.cancel();
-      _connectionSubscription = device.connectionState.listen((event) {
-        switch (event) {
-          case BluetoothConnectionState.connected:
-            _connectionStateController.add(BleConnectionState.connected);
-            break;
-          case BluetoothConnectionState.disconnected:
-            _connectionStateController.add(BleConnectionState.disconnected);
-            _device = null;
-            break;
-          default:
-            break;
+      _connectionSubscription = channel.connectionChanges.listen((connected) {
+        if (connected) {
+          _connectionStateController.add(BleConnectionState.connected);
+        } else {
+          _connectionStateController.add(BleConnectionState.disconnected);
+          _device = null;
+          _channel = null;
         }
       });
 
-      // Discover services
-      List<BluetoothService> services = await device.discoverServices();
-
-      // Find our service
-      for (BluetoothService service in services) {
-        if (service.uuid == SERVICE_UUID) {
-          // Find our characteristic
-          for (BluetoothCharacteristic characteristic
-              in service.characteristics) {
-            if (characteristic.uuid == CHARACTERISTIC_UUID) {
-              _characteristic = characteristic;
-
-              // Set up notification
-              await characteristic.setNotifyValue(true);
-              await _characteristicSubscription?.cancel();
-              _characteristicSubscription = characteristic.lastValueStream
-                  .listen(handleRawSample);
-              return true;
-            }
-          }
-        }
-      }
-
-      // If we reach here, we didn't find our service/characteristic
-      await device.disconnect();
-      _device = null;
-      return false;
+      await _characteristicSubscription?.cancel();
+      _characteristicSubscription = channel.notifications.listen(
+        handleRawSample,
+      );
+      return true;
     } catch (e) {
       _device = null;
+      _channel = null;
       _connectionStateController.add(BleConnectionState.failed);
       return false;
     }
   }
 
-  Future<bool> connectToKnownDevice(String deviceId) async {
-    try {
-      _device = BluetoothDevice.fromId(deviceId);
-      return await connectToDevice(_device!);
-    } catch (e) {
-      _device = null;
-      return false;
-    }
-  }
-
   Future<void> disconnect() async {
+    final channel = _channel;
+    _channel = null;
+    _device = null;
     await _connectionSubscription?.cancel();
     _connectionSubscription = null;
     await _characteristicSubscription?.cancel();
     _characteristicSubscription = null;
-    if (_device != null) {
-      if (_characteristic != null && _device!.isConnected) {
-        _characteristic = null;
-      }
-      await _device!.disconnect();
-      _device = null;
-    }
+    await channel?.close();
     // Disposing the repository disconnects and closes the controller without
     // waiting for the disconnection to complete, so by the time we get here
     // there may be nothing left to notify.
