@@ -214,13 +214,35 @@ void main() {
       expect(find.text('3FD - 20mm'), findsWidgets);
     });
 
-    testWidgets('calls out reaching the target', (tester) async {
+    // The level and the notch already say it, so no word repeats it.
+    testWidgets('leaves reaching the target to the level', (tester) async {
       await _pump(tester, item: _hang, currentWeight: 41.9);
-      expect(find.text('ON TARGET'), findsNothing);
-      expect(find.text('WORK'), findsOneWidget);
+      expect(find.text('WORK'), findsNothing);
 
       await _pump(tester, item: _hang, currentWeight: 42);
-      expect(find.text('ON TARGET'), findsOneWidget);
+      expect(find.text('ON TARGET'), findsNothing);
+    });
+
+    testWidgets('keeps the total time left beside the countdown', (
+      tester,
+    ) async {
+      await _pump(tester, item: _hang, currentWeight: 10, secondsRemaining: 5);
+
+      expect(find.text('LEFT'), findsWidgets);
+      expect(find.text('01:58'), findsWidgets);
+      expect(find.text('ELAPSED'), findsWidgets);
+    });
+
+    testWidgets('names the step coming up in the strip', (tester) async {
+      await _pump(
+        tester,
+        item: _hang,
+        nextItem: const RestItem(durationSeconds: 3),
+        currentWeight: 10,
+      );
+
+      expect(find.text('NEXT'), findsOneWidget);
+      expect(find.text('REST 3S'), findsOneWidget);
     });
 
     testWidgets('draws the readouts twice so they invert over the level', (
@@ -317,8 +339,8 @@ void main() {
       expect(find.text('42 kg - 7s'), findsOneWidget);
       expect(find.text('SEC REST'), findsOneWidget);
       expect(find.text('REST'), findsOneWidget);
-      // The block above already names what is next, so the strip stays quiet.
-      expect(find.textContaining('Next:'), findsNothing);
+      // The block above already names what is next, so the strip stays quiet
+      // and the one NEXT above is the block's.
     });
 
     testWidgets('a step without the sensor centers its countdown', (
@@ -337,7 +359,52 @@ void main() {
       expect(find.text('TARGET 12 kg'), findsOneWidget);
       // The corner is free for the total time left, in minutes and seconds.
       expect(find.text('01:58'), findsOneWidget);
-      expect(find.text('Next: rest 30s'), findsOneWidget);
+      expect(find.text('REST 30S'), findsOneWidget);
+    });
+
+    // Only a hang on a single hand goes through the sensor, so a hang on both
+    // runs as a timed step and has to name the grip itself.
+    testWidgets('a hang without the sensor names the grip', (tester) async {
+      await _pump(
+        tester,
+        item: const TimedItem(
+          label: 'Hang',
+          durationSeconds: 10,
+          targetLoad: 0,
+          handSide: HandSide.both,
+          gripPosition: GripPosition.halfCrimp,
+          collectSensorData: false,
+          edgeSizeMm: 20,
+          isHang: true,
+        ),
+        secondsRemaining: 10,
+      );
+
+      expect(find.text('HANG'), findsOneWidget);
+      expect(find.text('BOTH HANDS'), findsOneWidget);
+      expect(find.text('HC - 20mm'), findsOneWidget);
+    });
+
+    testWidgets('a rest before a hang without the sensor names its grip', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 3),
+        nextItem: const TimedItem(
+          label: 'Hang',
+          durationSeconds: 10,
+          targetLoad: 0,
+          handSide: HandSide.both,
+          gripPosition: GripPosition.halfCrimp,
+          collectSensorData: false,
+          isHang: true,
+        ),
+        secondsRemaining: 3,
+      );
+
+      expect(find.text('BOTH HANDS'), findsOneWidget);
+      expect(find.text('HC'), findsOneWidget);
     });
 
     testWidgets('pausing says so without hiding where the run stopped', (

@@ -931,7 +931,7 @@ void main() {
     expect(find.text('PIGEON'), findsOneWidget);
     expect(find.text('Right leg'), findsOneWidget);
     expect(find.text('SEC LEFT'), findsOneWidget);
-    expect(find.text('WORK'), findsOneWidget);
+    expect(find.text('NEXT'), findsOneWidget);
 
     await _skip(tester);
 
