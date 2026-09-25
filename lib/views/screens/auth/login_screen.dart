@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
+import 'package:crimpy/views/screens/auth/forgot_password_screen.dart';
 import 'package:crimpy/views/screens/auth/registration_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -209,7 +210,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   },
                   onFieldSubmitted: (_) => _handleLogin(),
                 ),
-                const SizedBox(height: 24),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => ForgotPasswordScreen(
+                                initialEmail: _emailController.text.trim(),
+                              ),
+                            ),
+                          ),
+                    child: const Text('Forgot password?'),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 if (_errorMessage != null)
                   Container(
                     padding: const EdgeInsets.all(12),

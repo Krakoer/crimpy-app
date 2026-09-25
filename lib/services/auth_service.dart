@@ -68,6 +68,12 @@ class AuthService {
     AppLoggerHelper.info('Verification email resent to: $email');
   }
 
+  Future<void> requestPasswordReset(String email) async {
+    await _apiClient.post('/auth/forgot-password', data: {'email': email});
+
+    AppLoggerHelper.info('Password reset requested');
+  }
+
   Future<User> getCurrentUser() async {
     final response = await _apiClient.get('/api/user');
     final user = User.fromJson(response.data);
