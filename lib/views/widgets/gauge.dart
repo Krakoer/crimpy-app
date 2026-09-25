@@ -150,6 +150,30 @@ class WeightGaugePainter extends CustomPainter {
       fillPercentage: fillPercentage,
       size: size,
     );
+
+    // "ON TARGET" cue once the target weight is reached.
+    if (targetMatched && targetWeight > 0) {
+      final onTargetPainter = TextPainter(
+        text: const TextSpan(
+          text: "ON TARGET",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+            color: CrimpyTheme.statusSuccess,
+          ),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      )..layout();
+      onTargetPainter.paint(
+        canvas,
+        Offset(
+          center.dx - onTargetPainter.width / 2,
+          size.height - onTargetPainter.height - radius / 4,
+        ),
+      );
+    }
   }
 
   void _drawTextWithColorTransition({
