@@ -279,7 +279,7 @@ described in the workspace `docs/DEVELOPMENT.md`.
 ```bash
 just emulator start                  # boot headless, wait until ready
 just emulator run                    # build, install and launch the app
-just emulator screenshot shot.png    # save the screen as a PNG
+just emulator screenshot build/shot.png   # save the screen as a PNG
 just emulator stop
 ```
 
@@ -310,10 +310,15 @@ export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin
 The script pins every call to the emulator by exporting
 `ANDROID_SERIAL=emulator-5554` (the port comes from `CRIMPY_EMULATOR_PORT`), so a
 phone plugged in over USB is never touched. Export the same variable before
-running `adb` or `android` by hand when a phone is connected too.
+running `adb` by hand when a phone is connected too. The `android` CLI ignores
+it and takes `--device` instead, as above.
+
+A relative screenshot path is resolved from where the command was typed. Keep
+screenshots under `build/`, which git ignores, so one never lands on a branch by
+accident.
 
 ```bash
-android layout --flat                # visible elements, with a center to tap
+android layout --flat --device "$ANDROID_SERIAL"   # visible elements, with a center to tap
 adb shell input tap 540 1247
 adb shell input text "coach@local.com"
 ```

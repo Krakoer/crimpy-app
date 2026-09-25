@@ -31,6 +31,7 @@ Never use unicode characters such as long dashes, triple dots, arrows or emojis,
 - `just emulator start` then `just emulator run` - Boot a headless emulator and run the app on it against a simulated sensor and the local API
 - `just emulator screenshot <file>` - Save the emulator screen, for PR screenshots
 - See "Running on an emulator" in the README for setup
+- Every PR that changes something an athlete can see ships a screenshot from the emulator, posted as a PR comment. The review-app skill's "Screenshots on every PR" section has the procedure and the image hosting
 
 ### Testing & Debugging
 - `adb install -r .\build\app\outputs\flutter-apk\app-prod-release.apk` - Install APK without losing data

@@ -134,10 +134,14 @@ Take it from the real app on the emulator, not from a golden test or a mockup:
 
     just emulator start
     just emulator run
-    just emulator screenshot shot.png
+    just emulator screenshot build/shot.png
 
-`android layout --flat` lists the elements on screen with a center to tap, and
-`adb shell input tap X Y` drives the app to the screen that shows the change.
+`android layout --flat --device emulator-5554` lists the elements on screen with
+a center to tap, and `adb -s emulator-5554 shell input tap X Y` drives the app to
+the screen that shows the change. Name the device every time: with a phone
+plugged in as well, an unpinned call reads or taps the wrong screen. Keep the
+PNG under `build/`, which git ignores, so it cannot be committed onto the PR
+branch by accident.
 The README's "Running on an emulator" section covers setup.
 
 The sensor is simulated: 3 s of rest then 7 s of hang at about 20 kg, repeating.
@@ -150,7 +154,7 @@ needs one.
 public, so push the file to a branch of its own and link the raw URL. Keep it off
 the PR branch, or the screenshot merges into `dev`:
 
-    BLOB=$(git hash-object -w shot.png)
+    BLOB=$(git hash-object -w build/shot.png)
     TREE=$(printf '100644 blob %s\tshot.png\n' "$BLOB" | git mktree)
     COMMIT=$(git commit-tree "$TREE" -m "Screenshot for ticket NN")
     REF='refs/heads/assets/NN-screenshot'

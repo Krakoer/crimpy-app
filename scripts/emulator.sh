@@ -4,6 +4,7 @@
 # Linux only: it relies on KVM. See "Running on an emulator" in the README.
 set -euo pipefail
 
+caller_dir="$PWD"
 cd "$(dirname "$0")/.."
 
 sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Android/sdk}}"
@@ -53,6 +54,11 @@ EOF
 }
 
 require_kvm() {
+    if [ ! -e /dev/kvm ]; then
+        echo "/dev/kvm does not exist: this machine offers no KVM, so the emulator" >&2
+        echo "cannot run here. On a VM, the host has to enable nested virtualization." >&2
+        exit 1
+    fi
     if [ -w /dev/kvm ]; then
         return
     fi
@@ -66,13 +72,18 @@ require_kvm() {
 }
 
 # A group added since login is in /etc/group but not in this shell's
-# credentials yet. sg picks it up without a new login.
+# credentials yet. sg picks it up without a new login. sg hands its command to
+# the login shell, which may not be bash, so the command goes in a bash script
+# rather than through that shell's quoting.
 run_with_kvm() {
     if [ -w /dev/kvm ]; then
         "$@"
-    else
-        sg kvm -c "$(printf '%q ' "$@")"
+        return
     fi
+    local script
+    script="$(mktemp)"
+    printf 'rm -f -- "$0"\nexec %s\n' "$(printf '%q ' "$@")" >"$script"
+    sg kvm -c "bash $script"
 }
 
 emulator_online() {
@@ -106,7 +117,10 @@ cmd_setup() {
 cmd_start() {
     require_kvm
     if emulator_online; then
+        # adbd answers well before the system has booted, so a start that was
+        # interrupted, or is still running elsewhere, still has to be waited on.
         echo "emulator already running as $ANDROID_SERIAL"
+        wait_for_boot false
         return
     fi
     if ! "$emulator" -list-avds | grep -qx "$avd"; then
@@ -120,11 +134,19 @@ cmd_start() {
         -no-window -no-audio -no-boot-anim -no-snapshot-save \
         -gpu swiftshader_indirect >"$log" 2>&1 </dev/null &
     echo "booting $avd as $ANDROID_SERIAL, log in $log"
+    wait_for_boot true
+}
+
+# Waits for the system to finish booting, then turns animations off. Checks the
+# emulator process is alive only when this script started it: one started
+# elsewhere may run under other arguments.
+wait_for_boot() {
+    local started_here="$1"
     local waited=0
     until [ "$("$adb" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; do
         # Give the process a moment to appear before treating its absence as
         # a crash at boot.
-        if [ "$waited" -ge 6 ] && ! emulator_process_alive; then
+        if [ "$started_here" = true ] && [ "$waited" -ge 6 ] && ! emulator_process_alive; then
             echo "emulator exited during boot, see $log" >&2
             exit 1
         fi
@@ -163,9 +185,14 @@ cmd_dev() {
 cmd_screenshot() {
     [ $# -eq 1 ] || usage
     require_emulator
-    mkdir -p "$(dirname "$1")"
-    "$adb" exec-out screencap -p >"$1"
-    echo "saved $1"
+    local file="$1"
+    case "$file" in
+        /*) ;;
+        *) file="$caller_dir/$file" ;;
+    esac
+    mkdir -p "$(dirname "$file")"
+    "$adb" exec-out screencap -p >"$file"
+    echo "saved $file"
 }
 
 cmd_stop() {
