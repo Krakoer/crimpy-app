@@ -33,7 +33,9 @@ class _EmailVerificationScreenState
 
       if (mounted) {
         setState(() {
-          _successMessage = 'Verification email sent! Check your inbox.';
+          _successMessage =
+              'If your email still needs verifying, a new link is on its way. '
+              'Check your inbox.';
         });
       }
     } catch (e) {
