@@ -27,6 +27,11 @@ Never use unicode characters such as long dashes, triple dots, arrows or emojis,
 - `dart run build_runner build` - Generate code for Drift database and Riverpod
 - `dart run build_runner build --delete-conflicting-outputs` - Regenerate all generated files
 
+### Emulator
+- `just emulator start` then `just emulator run` - Boot a headless emulator and run the app on it against a simulated sensor and the local API
+- `just emulator screenshot <file>` - Save the emulator screen, for PR screenshots
+- See "Running on an emulator" in the README for setup
+
 ### Testing & Debugging
 - `adb install -r .\build\app\outputs\flutter-apk\app-prod-release.apk` - Install APK without losing data
 - `adb -d shell "run-as com.crimpyclimbing.crimpy.beta.debug cat /data/user/0/com.crimpyclimbing.crimpy.beta.debug/app_flutter/<filename>" > data.json` - Debug data extraction (beta). `run-as` only works on debuggable builds, which carry the `.debug` suffix; drop it to read a release build's data through other means
@@ -70,6 +75,7 @@ lib/
 - Uses `flutter_blue_plus` for BLE communication
 - BLE data models in `lib/models/ble_data_model.dart`
 - Connection management in `lib/viewmodels/ble_view_model.dart`
+- The transport sits behind `SensorLink` in `lib/services/sensor_link/`: `FlutterBluePlusSensorLink` for the hardware, `SimulatedSensorLink` when built with `CRIMPY_SIMULATED_SENSOR=true`
 - Real-time force sensor data collection and storage
 
 ### Key Features

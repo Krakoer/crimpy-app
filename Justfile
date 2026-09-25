@@ -11,3 +11,7 @@ beta-release *args:
 
 prod-release bump *args:
     ./scripts/prod-release.sh {{bump}} {{args}}
+
+# Headless Android emulator with a simulated sensor, see the README.
+emulator *args:
+    ./scripts/emulator.sh {{args}}

@@ -117,6 +117,49 @@ Review BLE diffs for: subscription cancellation on dispose, behaviour when the
 sensor disconnects mid-training, and no direct `flutter_blue_plus` imports in
 screens.
 
+The transport sits behind `SensorLink` in `lib/services/sensor_link/`. Only
+`FlutterBluePlusSensorLink` imports `flutter_blue_plus`; the repository and
+everything above it speak `SensorDevice` and raw frames. A `flutter_blue_plus`
+type reaching the repository, a viewmodel or a widget is a finding, since
+`SimulatedSensorLink` cannot provide it and the emulator path breaks. Decoding,
+tare and calibration stay in the repository, so the simulated sensor exercises
+them too: logic added to one link that the other lacks is a finding.
+`useSimulatedSensor` must stay false in release builds.
+
+## Screenshots on every PR
+
+Every PR that changes something an athlete can see ships a screenshot, posted as
+a comment on the PR. A PR that changes the UI and shows none is itself a finding.
+Take it from the real app on the emulator, not from a golden test or a mockup:
+
+    just emulator start
+    just emulator run
+    just emulator screenshot shot.png
+
+`android layout --flat` lists the elements on screen with a center to tap, and
+`adb shell input tap X Y` drives the app to the screen that shows the change.
+The README's "Running on an emulator" section covers setup.
+
+The sensor is simulated: 3 s of rest then 7 s of hang at about 20 kg, repeating.
+Say so in the comment whenever a force reading is in the shot, so nobody reads it
+as a real hang. The app points at the local API on the host, which runs `dev`;
+sign in with an account the workspace `docs/DEVELOPMENT.md` lists when the screen
+needs one.
+
+**Hosting.** GitHub has no API that attaches an image to a comment. The repo is
+public, so push the file to a branch of its own and link the raw URL. Keep it off
+the PR branch, or the screenshot merges into `dev`:
+
+    BLOB=$(git hash-object -w shot.png)
+    TREE=$(printf '100644 blob %s\tshot.png\n' "$BLOB" | git mktree)
+    COMMIT=$(git commit-tree "$TREE" -m "Screenshot for ticket NN")
+    REF='refs/heads/assets/NN-screenshot'
+    git push origin "$COMMIT":"$REF"
+
+Then link
+`https://raw.githubusercontent.com/Krakoer/crimpy-app/<branch>/shot.png` from the
+comment. That branch has to stay: deleting it breaks the image.
+
 ## Before merge
 
 `flutter analyze` clean (custom_lint is enabled via the analyzer plugin), tests in
