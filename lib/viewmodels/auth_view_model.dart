@@ -170,6 +170,18 @@ class AuthState extends _$AuthState {
     }
   }
 
+  /// Emails a link to choose a new password. The API answers the same way
+  /// whether or not the address has an account, so success here only means the
+  /// request went through.
+  Future<void> requestPasswordReset(String email) async {
+    try {
+      await ref.read(authServiceProvider).requestPasswordReset(email);
+    } catch (e) {
+      AppLoggerHelper.error('Password reset request error: $e');
+      rethrow;
+    }
+  }
+
   Future<void> refreshUser() async {
     try {
       final authService = ref.read(authServiceProvider);
