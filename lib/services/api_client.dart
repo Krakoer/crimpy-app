@@ -46,21 +46,16 @@ class ApiClient {
 
   /// Guards against firing concurrent refreshes when several requests 401 at
   /// once; they all await the same in-flight refresh.
-  Future<bool>? _refreshFuture;
+  Future<_RefreshOutcome>? _refreshFuture;
 
-  ApiClient({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage(),
-      _dio = Dio(
-        BaseOptions(
-          baseUrl: baseUrl,
-          connectTimeout: const Duration(seconds: 30),
-          receiveTimeout: const Duration(seconds: 30),
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        ),
-      ) {
+  final HttpClientAdapter? _httpClientAdapter;
+
+  ApiClient({
+    FlutterSecureStorage? storage,
+    HttpClientAdapter? httpClientAdapter,
+  }) : _storage = storage ?? const FlutterSecureStorage(),
+       _httpClientAdapter = httpClientAdapter,
+       _dio = _createDio(httpClientAdapter) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
@@ -73,29 +68,70 @@ class ApiClient {
         onError: (error, handler) async {
           final isProtected = error.requestOptions.path.startsWith('/api/');
           final alreadyRetried = error.requestOptions.extra['retried'] == true;
-          if (error.response?.statusCode == 401 &&
-              isProtected &&
-              !alreadyRetried) {
-            if (await _refreshToken()) {
-              try {
-                final options = error.requestOptions;
-                options.extra['retried'] = true;
-                final retryResponse = await _dio.fetch(options);
-                return handler.resolve(retryResponse);
-              } catch (_) {
-                // Retry still failed; fall through to the logout path below.
-              }
-            }
-            AppLoggerHelper.info('Refresh failed, clearing tokens');
-            await clearToken();
-            await clearRefreshToken();
-            onUnauthorized?.call();
+          if (error.response?.statusCode != 401 ||
+              !isProtected ||
+              alreadyRetried) {
+            _logDeniedRequest(error);
+            return handler.next(error);
           }
-          _logDeniedRequest(error);
-          return handler.next(error);
+
+          switch (await _refreshToken()) {
+            case _Refreshed():
+              final options = error.requestOptions;
+              options.extra['retried'] = true;
+              try {
+                return handler.resolve(await _dio.fetch(options));
+              } on DioException catch (retryError) {
+                // Only a fresh access token turned away says the session is
+                // over. Any other failure of the retry, a 404 an endpoint
+                // answers for an absent row or a dropped connection, belongs to
+                // the request and is handed back to it as is.
+                if (retryError.response?.statusCode == 401) {
+                  await _dropSession();
+                }
+                return handler.next(retryError);
+              }
+            case _RefreshRejected():
+              await _dropSession();
+              _logDeniedRequest(error);
+              return handler.next(error);
+            case _RefreshUnavailable(:final failure):
+              // The server never judged the refresh token, so it is kept for
+              // the next request. The request fails the way the refresh did,
+              // which lets an unreachable server read as offline rather than as
+              // a denied sign in.
+              _logDeniedRequest(error);
+              return handler.next(
+                failure?.copyWith(requestOptions: error.requestOptions) ??
+                    error,
+              );
+          }
         },
       ),
     );
+  }
+
+  static Dio _createDio(HttpClientAdapter? httpClientAdapter) {
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: baseUrl,
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ),
+    );
+    if (httpClientAdapter != null) dio.httpClientAdapter = httpClientAdapter;
+    return dio;
+  }
+
+  Future<void> _dropSession() async {
+    AppLoggerHelper.info('Session rejected by the server, clearing tokens');
+    await clearToken();
+    await clearRefreshToken();
+    onUnauthorized?.call();
   }
 
   Future<void> saveToken(String token) async {
@@ -153,42 +189,39 @@ class ApiClient {
   }
 
   /// Exchanges the stored refresh token for a new access token, deduplicating
-  /// concurrent callers. Returns whether a fresh access token was stored.
-  Future<bool> _refreshToken() {
+  /// concurrent callers.
+  Future<_RefreshOutcome> _refreshToken() {
     return _refreshFuture ??= _performRefresh().whenComplete(() {
       _refreshFuture = null;
     });
   }
 
-  Future<bool> _performRefresh() async {
+  Future<_RefreshOutcome> _performRefresh() async {
     final refreshToken = await getRefreshToken();
-    if (refreshToken == null || refreshToken.isEmpty) return false;
+    if (refreshToken == null || refreshToken.isEmpty) {
+      return const _RefreshRejected();
+    }
     try {
       // A bare Dio without the auth interceptor avoids recursion on 401.
-      final refreshDio = Dio(
-        BaseOptions(
-          baseUrl: baseUrl,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        ),
-      );
-      final res = await refreshDio.post(
-        '/auth/refresh',
-        data: {'refresh_token': refreshToken},
-      );
+      final res = await _createDio(
+        _httpClientAdapter,
+      ).post('/auth/refresh', data: {'refresh_token': refreshToken});
       final data = res.data as Map<String, dynamic>;
       final newToken = data['token'] as String?;
       final newRefresh = data['refresh_token'] as String?;
-      if (newToken == null) return false;
+      if (newToken == null) return const _RefreshUnavailable();
       await saveToken(newToken);
       if (newRefresh != null) await saveRefreshToken(newRefresh);
       AppLoggerHelper.info('Access token refreshed');
-      return true;
+      return const _Refreshed();
+    } on DioException catch (e) {
+      AppLoggerHelper.info('Token refresh failed: $e');
+      final status = e.response?.statusCode;
+      if (status == 400 || status == 401) return const _RefreshRejected();
+      return _RefreshUnavailable(failure: e);
     } catch (e) {
       AppLoggerHelper.info('Token refresh failed: $e');
-      return false;
+      return const _RefreshUnavailable();
     }
   }
 
@@ -713,4 +746,25 @@ class ApiClient {
     onUnauthorized = null;
     _dio.close();
   }
+}
+
+/// What asking for a new access token came to. Only a refresh token the server
+/// turned down ends the session: a cold start with no signal, or a server
+/// that answered 5xx, says nothing about the athlete's credentials.
+sealed class _RefreshOutcome {
+  const _RefreshOutcome();
+}
+
+class _Refreshed extends _RefreshOutcome {
+  const _Refreshed();
+}
+
+class _RefreshRejected extends _RefreshOutcome {
+  const _RefreshRejected();
+}
+
+class _RefreshUnavailable extends _RefreshOutcome {
+  final DioException? failure;
+
+  const _RefreshUnavailable({this.failure});
 }
