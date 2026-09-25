@@ -141,7 +141,7 @@ class WorkoutTimer {
         // A rep change already reported itself from within _advance, and its
         // transition tone stands in for the countdown beep on that tick.
         onSecondChange?.call();
-        if (playSound && [3, 2, 1].contains(currentItemRemaining)) {
+        if (playSound && [2, 1].contains(currentItemRemaining)) {
           _playerBip?.resume();
         }
       }
