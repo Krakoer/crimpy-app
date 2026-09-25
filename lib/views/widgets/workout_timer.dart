@@ -45,6 +45,17 @@ class ManualCrimpyWatch extends CrimpyWatch {
   void skip(int millis) => _elapsed += millis;
 }
 
+/// Beeps mix over whatever else is playing, so an athlete's music keeps going
+/// underneath them: no audio focus is requested on Android, and the iOS session
+/// is shared with other apps rather than interrupting them.
+final beepAudioContext = AudioContext(
+  android: const AudioContextAndroid(audioFocus: AndroidAudioFocus.none),
+  iOS: AudioContextIOS(
+    category: AVAudioSessionCategory.playback,
+    options: const {AVAudioSessionOptions.mixWithOthers},
+  ),
+);
+
 /// Drives a workout: walks the execution items in order, counting each one
 /// down and reporting transitions.
 class WorkoutTimer {
@@ -90,9 +101,11 @@ class WorkoutTimer {
     if (playSound) {
       // Load the sound file in cache
       _playerBip = AudioPlayer();
+      _playerBip!.setAudioContext(beepAudioContext);
       _playerBip!.setSource(AssetSource('beep-07a.mp3'));
       _playerBip!.setReleaseMode(ReleaseMode.stop);
       _playerBiiip = AudioPlayer();
+      _playerBiiip!.setAudioContext(beepAudioContext);
       _playerBiiip!.setSource(AssetSource('beep-09.mp3'));
       _playerBiiip!.setReleaseMode(ReleaseMode.stop);
     }
