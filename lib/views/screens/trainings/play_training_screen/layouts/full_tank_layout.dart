@@ -1105,7 +1105,6 @@ class _RepContextCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     height: repContextCardHeight(scale),
     padding: EdgeInsets.symmetric(horizontal: 18 * scale),
-    alignment: Alignment.center,
     decoration: const BoxDecoration(
       color: CrimpyTheme.primaryWhite,
       border: Border.fromBorderSide(
@@ -1115,19 +1114,24 @@ class _RepContextCard extends StatelessWidget {
         BoxShadow(color: CrimpyTheme.borderDefault, offset: Offset(3, 3)),
       ],
     ),
-    // A long context such as "SET 10/10 - REP 12/12" shrinks to one line on a
-    // narrow phone instead of wrapping out of the card's fixed height.
-    child: FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Text(
-        text,
-        maxLines: 1,
-        style: TextStyle(
-          fontFamily: 'JetBrainsMono',
-          fontSize: (22 * scale).clamp(16.0, 28.0),
-          fontWeight: FontWeight.w900,
-          letterSpacing: 1,
-          color: CrimpyTheme.primaryBlack,
+    // Sized to its text across, so a short context stays a card rather than a
+    // banner over the fill. A long one such as "SET 10/10 - REP 12/12" shrinks
+    // to one line on a narrow phone instead of wrapping out of the fixed
+    // height.
+    child: Center(
+      widthFactor: 1,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          text,
+          maxLines: 1,
+          style: TextStyle(
+            fontFamily: 'JetBrainsMono',
+            fontSize: (22 * scale).clamp(16.0, 28.0),
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1,
+            color: CrimpyTheme.primaryBlack,
+          ),
         ),
       ),
     ),

@@ -518,6 +518,24 @@ void main() {
       expect(targetBottom, lessThanOrEqualTo(cardTop));
     });
 
+    // Opaque, so drawn any wider than its text it would hide the foot of the
+    // force level across the whole tank.
+    testWidgets('is only as wide as a short context needs', (tester) async {
+      phone(tester, const Size(390, 844));
+      await _pump(
+        tester,
+        item: _hang,
+        currentWeight: 10,
+        repContext: 'SET 1/3',
+      );
+
+      final card = find
+          .ancestor(of: find.text('SET 1/3'), matching: find.byType(Container))
+          .first;
+      // The room the card is laid out in is the tank less 16 on each side.
+      expect(tester.getSize(card).width, lessThan(390 - 32 - 60));
+    });
+
     testWidgets('keeps a long context on one line on a narrow phone', (
       tester,
     ) async {
