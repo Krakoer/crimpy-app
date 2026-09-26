@@ -420,8 +420,8 @@ void main() {
 
       expect(find.text('PAUSED'), findsNWidgets(2));
       expect(find.text('Tap play to resume'), findsOneWidget);
-      // In the set and rep card, and again under the state word where the next step sits
-      // while the run is going.
+      // In the set and rep card, and again under the state word where the next
+      // step sits while the run is going.
       expect(find.text('SET 2/4 - REP 3/6'), findsNWidgets(2));
       expect(find.byIcon(Icons.play_arrow), findsOneWidget);
     });
