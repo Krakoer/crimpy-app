@@ -43,9 +43,8 @@ double tankScaleWeight({
   required double? bodyweight,
 }) => targetWeight > 0 ? targetWeight : (bodyweight ?? 0);
 
-/// Height of the force level as a fraction of the tank. It is the mapping the
-/// circular gauge already fills with, so both designs read the same. With
-/// nothing to scale against the tank stays empty, as the circle does.
+/// Height of the force level as a fraction of the tank. With nothing to scale
+/// against the tank stays empty.
 double tankFillFraction({
   required double currentWeight,
   required double scaleWeight,
