@@ -2,15 +2,12 @@ import 'dart:typed_data';
 
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
-import 'package:crimpy/models/run_screen_style.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/repositories/ble_repository.dart';
-import 'package:crimpy/services/run_screen_style_service.dart';
 import 'package:crimpy/services/video_launcher.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
-import 'package:crimpy/viewmodels/run_screen_style_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen.dart';
 import 'package:flutter/material.dart';
@@ -178,10 +175,10 @@ Training _amrapEmom() => const Training(
 
 /// The backend's per-item comment cap, past which a coach's note used to be
 /// silently truncated. A run has to lay out a note of exactly this length
-/// without overflowing, on either run screen design. Word-based rather than
-/// one unbroken run of characters, since that is the shape a coach actually
-/// pastes in, and each item gets its own word so a test can tell which one it
-/// is reading off screen.
+/// without overflowing. Word-based rather than one unbroken run of
+/// characters, since that is the shape a coach actually pastes in, and each
+/// item gets its own word so a test can tell which one it is reading off
+/// screen.
 String _commentOfLength(String word, int length) => List.filled(
   (length / (word.length + 1)).ceil() + 1,
   word,
@@ -238,8 +235,8 @@ Training _protocolBlock() => const Training(
 );
 
 /// A repeater and a hang rep, each carrying a protocol at the length limit, so
-/// either run design can be checked for a layout that survives one. No rest
-/// between them, so a skip lands straight on the second.
+/// the run can be checked for a layout that survives one. No rest between
+/// them, so a skip lands straight on the second.
 Training _hangsWithLongProtocols() => Training(
   id: 't11',
   title: 'Long protocols',
@@ -298,8 +295,7 @@ Training _hangsWithLongComments() => Training(
 );
 
 /// An EMOM whose own comment sits at the new length limit, run for a single
-/// self paced round: the round itself is what has no FittedBox and no scroll
-/// around its comment, so it is the step that must be reached to prove the
+/// self paced round, which is the step that must be reached to prove the
 /// layout survives.
 Training _emomWithLongComment() => Training(
   id: 't9',
@@ -443,26 +439,9 @@ class _FixedBleSession extends BleSession {
   void reset() {}
 }
 
-/// Serves one design without touching the device storage, so a test states
-/// which layout it is about.
-class _FixedStyleService extends RunScreenStyleService {
-  _FixedStyleService(this.style);
-
-  final RunScreenStyle style;
-
-  @override
-  Future<RunScreenStyle> load() async => style;
-
-  @override
-  Future<void> save(RunScreenStyle style) async {}
-}
-
-/// Runs a training in a given design, the ring by default, whose header, timer
-/// and next-up line most of these tests are written against.
 Future<void> _pumpRun(
   WidgetTester tester,
   Training training, {
-  RunScreenStyle style = RunScreenStyle.ringAndTank,
   BleRepository? bleRepository,
   bool useSensor = false,
   BleSessionStats? sensorStats,
@@ -481,9 +460,6 @@ Future<void> _pumpRun(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        runScreenStyleServiceProvider.overrideWithValue(
-          _FixedStyleService(style),
-        ),
         // Always served, never built: the real provider reaches for the stored
         // calibration on creation, which no test binding can answer, and the
         // screen reads the repository whether or not it runs with the sensor.
@@ -616,29 +592,20 @@ void main() {
     tester,
   ) async {
     await _pumpRun(tester, _stretchingCircuit());
-
-    // Preparation rest first: it leads into the first exercise, whose comment
-    // is shown ahead of time under the name of that upcoming step.
-    expect(find.text('Right leg'), findsOneWidget);
-    expect(find.textContaining('Next:'), findsOneWidget);
-    expect(
-      tester.getTopLeft(find.text('Right leg')).dy,
-      greaterThan(tester.getTopLeft(find.textContaining('Next:')).dy),
-    );
-
     await _skip(tester);
 
-    // Now running the exercise itself: the comment follows its title, above
-    // the timer.
+    // Running the exercise itself: the comment follows its title.
     expect(find.text('Right leg'), findsOneWidget);
     expect(
       tester.getTopLeft(find.text('Right leg')).dy,
       greaterThan(tester.getTopLeft(find.text('PIGEON')).dy),
     );
-    expect(
-      tester.getTopLeft(find.text('Right leg')).dy,
-      lessThan(tester.getTopLeft(find.text('00:35')).dy),
-    );
+
+    // Its rest leads into the second exercise, whose comment is shown ahead of
+    // time.
+    await _skip(tester);
+    expect(find.text('Left leg'), findsOneWidget);
+    expect(find.text('Right leg'), findsNothing);
   });
 
   testWidgets('a rest only carries the comment of the step it leads into', (
@@ -664,31 +631,15 @@ void main() {
     expect(find.text('Right leg'), findsOneWidget);
   });
 
-  // The goal is why the athlete is here, so it heads the step: above the name,
-  // and above the numbers the name leads into.
+  // The goal is why the athlete is here, so it heads the step, above its name.
   testWidgets('the goal of a step heads it, above its name', (tester) async {
     await _pumpRun(tester, _goalBlock());
-
-    // Preparation rest first: it leads into the first exercise, which inherits
-    // the goal of the block it sits in. The goal follows the "Next:" label
-    // rather than heading it, or it would read as a heading for the rest the
-    // athlete is currently in rather than for the step it names.
-    expect(find.text('RESI DOIGTS'), findsOneWidget);
-    expect(
-      tester.getTopLeft(find.text('RESI DOIGTS')).dy,
-      greaterThan(tester.getTopLeft(find.textContaining('Next:')).dy),
-    );
-
     await _skip(tester);
 
     expect(find.text('RESI DOIGTS'), findsOneWidget);
     expect(
       tester.getTopLeft(find.text('RESI DOIGTS')).dy,
       lessThan(tester.getTopLeft(find.text('FROG')).dy),
-    );
-    expect(
-      tester.getTopLeft(find.text('RESI DOIGTS')).dy,
-      lessThan(tester.getTopLeft(find.text('00:20')).dy),
     );
   });
 
@@ -726,66 +677,12 @@ void main() {
     expect(find.text('Right leg'), findsOneWidget);
   });
 
-  testWidgets(
-    'a repeater and a hang rep each lay out a comment at the length limit',
-    (tester) async {
-      await _pumpRun(tester, _hangsWithLongComments());
-
-      // Preparation rest previews the repeater's comment ahead of time.
-      expect(find.text(_repeaterComment), findsOneWidget);
-      expect(tester.takeException(), isNull);
-
-      await _skip(tester);
-      // Running the repeater hang itself: the step whose header is wrapped in
-      // a FittedBox, which scales rather than overflows, so a widget that
-      // finds the comment text and finds no exception cannot tell a merely
-      // wrapped comment from one that has shrunk the title to nothing. The
-      // 4-line cap is what keeps the shrink from being severe; check the
-      // title actually rendered at a legible size rather than a sliver.
-      expect(find.text(_repeaterComment), findsOneWidget);
-      expect(find.text(_hangRepComment), findsNothing);
-      // Reverting the 4-line cap shrinks this to well under 1px on the test
-      // surface (measured ~0.7px); capped, it holds well above that.
-      expect(tester.getRect(find.text('RIGHT HANG')).height, greaterThan(3));
-      expect(tester.takeException(), isNull);
-
-      await _skip(tester);
-      // Running the hang rep.
-      expect(find.text(_hangRepComment), findsOneWidget);
-      expect(find.text(_repeaterComment), findsNothing);
-      expect(tester.getRect(find.text('HANG')).height, greaterThan(3));
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  testWidgets('an emom round lays out a comment at the length limit', (
-    tester,
-  ) async {
-    await _pumpRun(tester, _emomWithLongComment());
-
-    // Preparation rest previews the round's comment ahead of time.
-    expect(find.text(_emomComment), findsOneWidget);
-    expect(tester.takeException(), isNull);
-
-    await _skip(tester);
-    // Running the round itself: a self paced step, whose comment sits in a
-    // plain Column with no FittedBox and no scroll around it, which is where
-    // an unbounded comment used to overflow.
-    expect(find.text(_emomComment), findsOneWidget);
-    expect(tester.takeException(), isNull);
-  });
-
   // The full tank lays every comment straight into a plain Column with no
-  // FittedBox and no scroll, so it is the design most exposed to an overflow
-  // from a long note.
+  // FittedBox and no scroll, so a long note is what could overflow it.
   testWidgets(
     'the full tank lays out a comment at the length limit on a timed step',
     (tester) async {
-      await _pumpRun(
-        tester,
-        _hangsWithLongComments(),
-        style: RunScreenStyle.fullTank,
-      );
+      await _pumpRun(tester, _hangsWithLongComments());
       await _skip(tester);
       expect(find.text(_repeaterComment), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -795,11 +692,7 @@ void main() {
   testWidgets(
     'the full tank lays out a comment at the length limit on a confirm step',
     (tester) async {
-      await _pumpRun(
-        tester,
-        _emomWithLongComment(),
-        style: RunScreenStyle.fullTank,
-      );
+      await _pumpRun(tester, _emomWithLongComment());
       await _skip(tester);
       expect(find.text(_emomComment), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -815,14 +708,9 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
-      await _pumpRun(
-        tester,
-        _hangsWithLongCommentsAndRest(),
-        style: RunScreenStyle.fullTank,
-      );
+      await _pumpRun(tester, _hangsWithLongCommentsAndRest());
       // Running the repeater hang, then its rest, which previews the hang
-      // rep's comment ahead of time: the site the ring/tank design skips
-      // over via a FittedBox that this design has no equivalent of.
+      // rep's comment ahead of time.
       await _skip(tester);
       await _skip(tester);
       expect(find.text(_hangRepComment), findsOneWidget);
@@ -830,17 +718,13 @@ void main() {
     },
   );
 
-  // The rule is what the athlete resolves the step by, so it is read on the
-  // rest that leads into the step and again while the step runs.
+  // The rule is what the athlete resolves the step by, so it is read while the
+  // step runs.
   testWidgets('the protocol of a step is shown during the run', (tester) async {
     await _pumpRun(tester, _protocolBlock());
-
-    // Preparation rest previews the first step, which inherits the rule of the
-    // block it sits in.
-    expect(find.text('PROTOCOL'), findsOneWidget);
-    expect(find.text('To failure or 40s. Past 40s add 5kg.'), findsOneWidget);
-
     await _skip(tester);
+
+    expect(find.text('PROTOCOL'), findsOneWidget);
     expect(find.text('To failure or 40s. Past 40s add 5kg.'), findsOneWidget);
   });
 
@@ -869,53 +753,18 @@ void main() {
     expect(find.text('PROTOCOL'), findsNothing);
   });
 
-  // The protocol gets the comment's 2000 characters, so it gets the comment's
-  // overflow check too, on the design whose header is wrapped in a FittedBox.
-  testWidgets(
-    'a repeater and a hang rep each lay out a protocol at the length limit',
-    (tester) async {
-      await _pumpRun(tester, _hangsWithLongProtocols());
-
-      expect(find.text(_repeaterProtocol), findsOneWidget);
-      expect(tester.takeException(), isNull);
-
-      await _skip(tester);
-      expect(find.text(_repeaterProtocol), findsOneWidget);
-      expect(find.text(_hangRepProtocol), findsNothing);
-      expect(tester.getRect(find.text('RIGHT HANG')).height, greaterThan(3));
-      expect(tester.takeException(), isNull);
-
-      await _skip(tester);
-      expect(find.text(_hangRepProtocol), findsOneWidget);
-      expect(tester.getRect(find.text('HANG')).height, greaterThan(3));
-      expect(tester.takeException(), isNull);
-    },
-  );
-
   testWidgets(
     'the full tank lays out a protocol at the length limit on a timed step',
     (tester) async {
-      await _pumpRun(
-        tester,
-        _hangsWithLongProtocols(),
-        style: RunScreenStyle.fullTank,
-      );
+      await _pumpRun(tester, _hangsWithLongProtocols());
       await _skip(tester);
       expect(find.text(_repeaterProtocol), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
 
-  // The design every user gets unless they pick the other one, wired to the
-  // same timer, look-ahead and skip button as the ring.
-  testWidgets('the full tank runs a training from its own layout', (
-    tester,
-  ) async {
-    await _pumpRun(
-      tester,
-      _stretchingCircuit(),
-      style: RunScreenStyle.fullTank,
-    );
+  testWidgets('the full tank runs a training step by step', (tester) async {
+    await _pumpRun(tester, _stretchingCircuit());
 
     // Preparation comes first and looks ahead to name what it leads into. The
     // tank owns the whole screen, so the training title has no app bar to sit
@@ -984,11 +833,7 @@ void main() {
   testWidgets('answering No to the leave prompt resumes the run', (
     tester,
   ) async {
-    await _pumpRun(
-      tester,
-      _trainingWithLongNote(),
-      style: RunScreenStyle.fullTank,
-    );
+    await _pumpRun(tester, _trainingWithLongNote());
     await _skip(tester);
     expect(find.text('PAUSED'), findsNothing);
 
@@ -1225,7 +1070,7 @@ void main() {
       await _pumpRun(tester, _amrapEmom());
       await _skip(tester);
 
-      await tester.tap(find.textContaining('I CANNOT MAKE THE NEXT ROUND'));
+      await tester.tap(find.byTooltip('I cannot make the next round'));
       await tester.pumpAndSettle();
 
       expect(find.text('Stop this block?'), findsOneWidget);
@@ -1258,7 +1103,7 @@ void main() {
 
       // Out of the rest that closed round one, then out of the block.
       await _skip(tester);
-      await tester.tap(find.textContaining('I CANNOT MAKE THE NEXT ROUND'));
+      await tester.tap(find.byTooltip('I cannot make the next round'));
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(TextButton, 'Stop'));
       await tester.pumpAndSettle();
@@ -1289,53 +1134,26 @@ void main() {
       await _pumpRun(tester, _stretchingCircuit());
       await _skip(tester);
 
-      expect(find.textContaining('I CANNOT MAKE THE NEXT ROUND'), findsNothing);
+      expect(find.byTooltip('I cannot make the next round'), findsNothing);
     });
   });
 
   // The video has to reach the run, and it has to reach it where a tap is safe.
-  // The preparation rest previews the first step, which is where an athlete
-  // about to hang can still look the movement up with both hands free.
-  testWidgets('the demo video is offered during the preparation rest', (
-    tester,
-  ) async {
-    await _pumpRun(tester, _hangWithVideo());
-
-    expect(find.text('WATCH DEMO'), findsOneWidget);
-  });
-
-  // The requirement the ticket states: a tap target during a running set has to
-  // not be reachable by accident. Once the hang starts there is none.
-  testWidgets('the demo video is not reachable while a set is running', (
-    tester,
-  ) async {
-    await _pumpRun(tester, _hangWithVideo());
-    await _skip(tester);
-
-    expect(find.text('WATCH DEMO'), findsNothing);
-  });
-
-  testWidgets('a self paced step offers the demo video', (tester) async {
-    await _pumpRun(tester, _repsWithVideo());
-    await _skip(tester);
-
-    expect(find.text('WATCH DEMO'), findsOneWidget);
-  });
-
-  // The ticket's requirement has to hold in both designs, not just the default
-  // one, and the full tank is a separate layout with its own blocks.
+  // The preparation previews the first step, which is where an athlete about
+  // to hang can still look the movement up with both hands free.
   testWidgets('the full tank offers the demo video during the preparation', (
     tester,
   ) async {
-    await _pumpRun(tester, _hangWithVideo(), style: RunScreenStyle.fullTank);
+    await _pumpRun(tester, _hangWithVideo());
 
     expect(find.text('WATCH DEMO'), findsOneWidget);
   });
 
+  // A tap target during a running set has to not be reachable by accident.
   testWidgets('the full tank hides the demo video while a set is running', (
     tester,
   ) async {
-    await _pumpRun(tester, _hangWithVideo(), style: RunScreenStyle.fullTank);
+    await _pumpRun(tester, _hangWithVideo());
     await _skip(tester);
 
     expect(find.text('WATCH DEMO'), findsNothing);
@@ -1344,22 +1162,18 @@ void main() {
   testWidgets('the full tank offers the demo video on a self paced step', (
     tester,
   ) async {
-    await _pumpRun(tester, _repsWithVideo(), style: RunScreenStyle.fullTank);
+    await _pumpRun(tester, _repsWithVideo());
     await _skip(tester);
 
     expect(find.text('WATCH DEMO'), findsOneWidget);
   });
 
   // A run of one timed set is preparation then the set, so if the preparation
-  // did not offer the video nothing would: this is the gap the full tank had.
+  // did not offer the video nothing would.
   testWidgets('a single timed set still reaches its demo video', (
     tester,
   ) async {
-    await _pumpRun(
-      tester,
-      _singleTimedSetWithVideo(),
-      style: RunScreenStyle.fullTank,
-    );
+    await _pumpRun(tester, _singleTimedSetWithVideo());
 
     expect(find.text('WATCH DEMO'), findsOneWidget);
   });
@@ -1375,40 +1189,13 @@ void main() {
     expect(find.text('Could not open the video'), findsOneWidget);
   });
 
-  // A note is prose the athlete reads. The ring design scrolls its self paced
-  // step once the content does not fit, so the whole note is shown there rather
-  // than cut short: there is no pause on a step the athlete ends themselves, so
-  // an ellipsis would hide text with no way to reach it.
-  testWidgets('the ring design shows a long note whole and scrollable', (
-    tester,
-  ) async {
-    await _pumpRun(tester, _trainingWithLongNote());
-    await _skip(tester);
-
-    expect(find.text('NOTE'), findsOneWidget);
-    final prose = tester.widget<Text>(find.text(_longNoteText));
-    expect(prose.maxLines, isNull);
-    expect(
-      find.ancestor(
-        of: find.text(_longNoteText),
-        matching: find.byType(SingleChildScrollView),
-      ),
-      findsOneWidget,
-    );
-    expect(tester.takeException(), isNull);
-  });
-
   // The reader is only worth anything if the athlete can reach it, and a self
   // paced step carries no play control to pause with: the note itself is the
   // control.
   testWidgets('the full tank opens a long note when the athlete taps it', (
     tester,
   ) async {
-    await _pumpRun(
-      tester,
-      _trainingWithLongNote(),
-      style: RunScreenStyle.fullTank,
-    );
+    await _pumpRun(tester, _trainingWithLongNote());
     await _skip(tester);
 
     expect(find.text('NOTE'), findsOneWidget);

@@ -43,9 +43,8 @@ double tankScaleWeight({
   required double? bodyweight,
 }) => targetWeight > 0 ? targetWeight : (bodyweight ?? 0);
 
-/// Height of the force level as a fraction of the tank. It is the mapping the
-/// circular gauge already fills with, so both designs read the same. With
-/// nothing to scale against the tank stays empty, as the circle does.
+/// Height of the force level as a fraction of the tank. With nothing to scale
+/// against the tank stays empty.
 double tankFillFraction({
   required double currentWeight,
   required double scaleWeight,
@@ -146,7 +145,7 @@ class FullTankLayout extends ConsumerWidget {
 
   final bool isRunning;
 
-  /// Set and rep of the running step, shown in the pill.
+  /// Set and rep of the running step, shown in the set and rep card.
   final String? repContext;
 
   /// What the blocks the running and upcoming steps belong to are for. Set

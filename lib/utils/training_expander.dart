@@ -353,9 +353,7 @@ void _expandFree(
         //
         // No client can prescribe a duration on a note today, and the portal
         // offers no control for one, so this branch is unreachable and how it
-        // draws is unaudited: the full tank caps every line the title lands in,
-        // while the ring design scales its header inside a FittedBox instead of
-        // wrapping it, which would make a paragraph small rather than overflow.
+        // draws is unaudited: the full tank caps every line the title lands in.
         // A duration control on the note card needs a prose slot on TimedItem
         // before it ships.
         label: prose ?? title,
