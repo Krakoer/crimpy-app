@@ -281,8 +281,8 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
   /// Set/rep/round context of the current step. During a rest the context of
   /// the step the rest leads into is shown, so the set and rep card stays
-  /// filled between reps. The look-ahead stops at the next working step to avoid borrowing a
-  /// label from an unrelated block later in the training.
+  /// filled between reps. The look-ahead stops at the next working step to
+  /// avoid borrowing a label from an unrelated block later in the training.
   String? _currentContext() {
     for (var i = timer.currentItemIndex; i < timer.items.length; i++) {
       final item = timer.items[i];

@@ -145,7 +145,7 @@ class FullTankLayout extends ConsumerWidget {
 
   final bool isRunning;
 
-  /// Set and rep of the running step, shown in the pill.
+  /// Set and rep of the running step, shown in the set and rep card.
   final String? repContext;
 
   /// What the blocks the running and upcoming steps belong to are for. Set
