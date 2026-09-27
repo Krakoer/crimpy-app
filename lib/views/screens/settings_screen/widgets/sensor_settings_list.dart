@@ -45,15 +45,13 @@ class _SensorSettingsListState extends ConsumerState<SensorSettingsList> {
                                 children: [
                                   Text(
                                     "Tare: ${config.tare.toStringAsFixed(2)}",
-                                    style: TextStyle(
-                                      fontSize: 12,
+                                    style: CrimpyTheme.bodySmall.copyWith(
                                       color: CrimpyTheme.textMedium,
                                     ),
                                   ),
                                   Text(
                                     "Coef: ${config.coef.toStringAsFixed(2)}",
-                                    style: TextStyle(
-                                      fontSize: 12,
+                                    style: CrimpyTheme.bodySmall.copyWith(
                                       color: CrimpyTheme.textMedium,
                                     ),
                                   ),

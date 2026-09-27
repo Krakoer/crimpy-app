@@ -115,8 +115,7 @@ class FavoriteTrainingList extends ConsumerWidget {
                           SizedBox(width: 8),
                           Text(
                             "Pin a training",
-                            style: TextStyle(
-                              fontSize: 18,
+                            style: CrimpyTheme.title.copyWith(
                               color: CrimpyTheme.textPrimary,
                             ),
                           ),

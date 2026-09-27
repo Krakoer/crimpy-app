@@ -1,5 +1,6 @@
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -40,7 +41,7 @@ class _TareDialogState extends ConsumerState<TareDialog> {
         padding: EdgeInsetsGeometry.symmetric(vertical: 20),
         child: Text(
           bleString,
-          style: TextStyle(fontSize: 26),
+          style: CrimpyTheme.tabular(CrimpyTheme.headline),
           textAlign: TextAlign.center,
         ),
       ),

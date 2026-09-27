@@ -126,10 +126,7 @@ class ProfileContent extends ConsumerWidget {
                           radius: 24,
                           child: Text(
                             user.firstname[0].toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: CrimpyTheme.headline,
                           ),
                         ),
                         const SizedBox(width: 16),

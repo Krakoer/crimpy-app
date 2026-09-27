@@ -155,7 +155,7 @@ class TrainingListItemWidget extends ConsumerWidget {
             icon: const Icon(Icons.assessment, size: 20),
             label: const Text(
               'Test before training!',
-              style: TextStyle(fontSize: 17),
+              style: CrimpyTheme.title,
             ),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

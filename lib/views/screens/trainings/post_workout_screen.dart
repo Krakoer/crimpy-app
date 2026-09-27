@@ -391,9 +391,10 @@ class _OverallOnTarget extends StatelessWidget {
           TextSpan(text: "you hit your target on ", style: muted),
           TextSpan(
             text: "${count.onTarget} of ${count.total}",
-            style: Theme.of(
-              context,
-            ).textTheme.labelLarge?.copyWith(fontSize: 12),
+            style: CrimpyTheme.bodySmall.copyWith(
+              color: CrimpyTheme.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           TextSpan(text: " reps", style: muted),
           // The reps the sensor never measured are graded by nothing, so they
@@ -432,9 +433,10 @@ class _BlocksOnTarget extends StatelessWidget {
                   Expanded(child: Text(block.label, style: muted)),
                   Text(
                     "${block.count.onTarget}/${block.count.total} on target",
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelLarge?.copyWith(fontSize: 12),
+                    style: CrimpyTheme.bodySmall.copyWith(
+                      color: CrimpyTheme.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   if (unmeasuredNote(block.count) case final note?)
                     Text(" ($note)", style: muted),

@@ -233,10 +233,7 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                           ),
                           label: Text(
                             _isLastSection ? 'Got it!' : 'Next',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: CrimpyTheme.title,
                           ),
                         ),
                       ),

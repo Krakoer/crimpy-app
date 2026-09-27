@@ -389,10 +389,8 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                       if (!_assessmentStarted)
                         Text(
                           'Hold 60% MVC for 1s to start',
-                          style: TextStyle(
-                            fontSize: 20,
+                          style: CrimpyTheme.titleLarge.copyWith(
                             color: CrimpyTheme.textOnFill,
-                            fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
                         )
@@ -401,17 +399,14 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                           children: [
                             Text(
                               'Time: ${_formatElapsedTime()}',
-                              style: TextStyle(
-                                fontSize: 32,
-                                color: CrimpyTheme.textOnFill,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: CrimpyTheme.tabular(
+                                CrimpyTheme.headline,
+                              ).copyWith(color: CrimpyTheme.textOnFill),
                             ),
                             SizedBox(height: 8),
                             Text(
                               _isInTargetZone ? 'Keep going!' : 'Out of zone!',
-                              style: TextStyle(
-                                fontSize: 18,
+                              style: CrimpyTheme.title.copyWith(
                                 color: CrimpyTheme.textOnFill,
                               ),
                             ),
@@ -436,17 +431,14 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                     children: [
                       Text(
                         '${lastValue.toStringAsFixed(1)} kg',
-                        style: TextStyle(
-                          fontSize: 48,
-                          color: CrimpyTheme.textOnFill,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: CrimpyTheme.numerals(
+                          48,
+                        ).copyWith(color: CrimpyTheme.textOnFill),
                       ),
                       SizedBox(height: 4),
                       Text(
                         'Target: ${_targetForce.toStringAsFixed(1)} kg (${_minForce.toStringAsFixed(1)} - ${_maxForce.toStringAsFixed(1)})',
-                        style: TextStyle(
-                          fontSize: 16,
+                        style: CrimpyTheme.bodyLarge.copyWith(
                           color: CrimpyTheme.textOnFillSecondary,
                         ),
                       ),

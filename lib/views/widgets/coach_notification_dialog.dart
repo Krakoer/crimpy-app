@@ -44,12 +44,14 @@ class CoachNotificationDialog extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(_explanation, style: const TextStyle(fontSize: 14)),
+        Text(_explanation, style: CrimpyTheme.body),
         const SizedBox(height: 12),
-        const Text(
+        Text(
           'This is separate from the training reminders, which stay off '
           'until you turn them on.',
-          style: TextStyle(fontSize: 12, color: CrimpyTheme.textSecondary),
+          style: CrimpyTheme.bodySmall.copyWith(
+            color: CrimpyTheme.textSecondary,
+          ),
         ),
       ],
     ),

@@ -219,8 +219,8 @@ String withoutResolved(String value) => value.replaceAll(resolvedByTheme, '');
 /// `textTheme.headlineMedium!.copyWith(color: ...)`, which is not a TextStyle
 /// constructor to anything reading the source. Anything ending in `style` is
 /// here for the same reason: full_tank_layout builds every one of its labels
-/// through a local `_style(size, color: ...)`, and two step titles sat at
-/// 4.05:1 inside it.
+/// through its local `_scaledStyle` and `_numeralStyle`, and two step titles
+/// sat at 4.05:1 inside the builder they replaced.
 final RegExp styleOpeners = RegExp(
   r'\b(\w*[Ss]tyle|Icon|FaIcon|copyWith|styleFrom)\(',
 );
@@ -236,7 +236,7 @@ final RegExp colourArgument = RegExp(
 final RegExp fontSizeArgument = RegExp(r'fontSize:\s*([^\n,]*)');
 
 /// A size given as the first positional argument rather than as `fontSize:`,
-/// which is how full_tank_layout's `_style(22, color: ...)` states it.
+/// which is how full_tank_layout's `_numeralStyle(92, color: ...)` states it.
 final RegExp positionalSize = RegExp(r'^\w+\(\s*(\d+(?:\.\d+)?)\s*,');
 
 /// A button style that paints no label, so its `foregroundColor` is a mark.

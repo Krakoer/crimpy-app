@@ -33,8 +33,7 @@ class DateFilterBanner extends StatelessWidget {
           Expanded(
             child: Text(
               'Showing: ${DateFormat('EEEE, MMMM d, y').format(selectedDate)}',
-              style: TextStyle(
-                fontSize: 12,
+              style: CrimpyTheme.bodySmall.copyWith(
                 fontWeight: FontWeight.w600,
                 color: CrimpyTheme.textOn(CrimpyTheme.current),
               ),
@@ -47,7 +46,7 @@ class DateFilterBanner extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text('Show All', style: TextStyle(fontSize: 11)),
+            child: const Text('Show All', style: CrimpyTheme.bodySmall),
           ),
         ],
       ),

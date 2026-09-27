@@ -53,17 +53,13 @@ class SessionRpePicker extends StatelessWidget {
                   color: CrimpyTheme.control,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Session RPE',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
+                const Text('Session RPE', style: CrimpyTheme.title),
               ],
             ),
             const SizedBox(height: 4),
             Text(
               subtitle ?? 'How much recovery did this session cost you?',
-              style: const TextStyle(
-                fontSize: 13,
+              style: CrimpyTheme.body.copyWith(
                 color: CrimpyTheme.textSecondary,
               ),
             ),
@@ -79,8 +75,7 @@ class SessionRpePicker extends StatelessWidget {
               answer.isAnswered
                   ? 'Tap the answer again to clear it. You can also change it later.'
                   : 'Optional. You can add it later from the session.',
-              style: const TextStyle(
-                fontSize: 12,
+              style: CrimpyTheme.bodySmall.copyWith(
                 color: CrimpyTheme.textMutedSmall,
               ),
             ),
@@ -133,21 +128,23 @@ class _SessionRpeOptionTile extends StatelessWidget {
                 ),
                 child: Text(
                   option.label,
-                  style: TextStyle(
-                    fontSize: option.isFailure ? 11 : 14,
-                    fontWeight: FontWeight.w700,
-                    color: selected
-                        ? CrimpyTheme.textOnFill
-                        : CrimpyTheme.textSecondary,
-                  ),
+                  style:
+                      (option.isFailure
+                              ? CrimpyTheme.labelSmall
+                              : CrimpyTheme.titleSmall)
+                          .copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: selected
+                                ? CrimpyTheme.textOnFill
+                                : CrimpyTheme.textSecondary,
+                          ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   option.anchor,
-                  style: TextStyle(
-                    fontSize: 13,
+                  style: CrimpyTheme.body.copyWith(
                     color: selected
                         ? CrimpyTheme.textPrimary
                         : CrimpyTheme.textSecondary,

@@ -258,8 +258,7 @@ class ItemReviewCard extends StatelessWidget {
                 if (draft.occurrence > 0)
                   Text(
                     'Pass ${draft.occurrence + 1}',
-                    style: const TextStyle(
-                      fontSize: 11,
+                    style: CrimpyTheme.bodySmall.copyWith(
                       color: CrimpyTheme.textSecondary,
                     ),
                   ),
@@ -269,8 +268,7 @@ class ItemReviewCard extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 'Asked $prescribed',
-                style: const TextStyle(
-                  fontSize: 12,
+                style: CrimpyTheme.bodySmall.copyWith(
                   color: CrimpyTheme.textSecondary,
                 ),
               ),
@@ -319,8 +317,7 @@ class ItemReviewCard extends StatelessWidget {
                   ? null
                   : Text(
                       '$currentLength/$maxLength',
-                      style: const TextStyle(
-                        fontSize: 11,
+                      style: CrimpyTheme.bodySmall.copyWith(
                         color: CrimpyTheme.textSecondary,
                       ),
                     ),

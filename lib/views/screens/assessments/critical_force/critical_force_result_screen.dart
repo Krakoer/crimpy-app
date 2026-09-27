@@ -3,6 +3,7 @@ import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/assessments/post_assessment_screen.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -50,18 +51,15 @@ class CriticalForceResultScreen extends ConsumerWidget {
             SizedBox(height: 20),
             Text(
               "Critical force:",
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
+              style: CrimpyTheme.headline.copyWith(
                 color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 30,
               ),
             ),
             Text(
               "${results.criticalLoad.toStringAsFixed(2)} kg",
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 45,
-                fontWeight: FontWeight.bold,
-              ),
+              style: CrimpyTheme.numerals(
+                48,
+              ).copyWith(color: Theme.of(context).colorScheme.onSurface),
             ),
             SfCartesianChart(
               plotAreaBorderWidth: 0,

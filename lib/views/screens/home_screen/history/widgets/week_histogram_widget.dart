@@ -111,8 +111,7 @@ class WeekHistogramWidget extends StatelessWidget {
           // Duration is above
           Text(
             durationText,
-            style: TextStyle(
-              fontSize: 12,
+            style: CrimpyTheme.bodySmall.copyWith(
               color: textColor,
               fontWeight: FontWeight.w500,
             ),
@@ -146,8 +145,7 @@ class WeekHistogramWidget extends StatelessWidget {
           // Day of the week text
           Text(
             dayName,
-            style: TextStyle(
-              fontSize: 14,
+            style: CrimpyTheme.body.copyWith(
               fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
               color: textColor,
             ),

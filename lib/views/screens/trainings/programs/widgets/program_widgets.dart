@@ -83,11 +83,7 @@ class ScheduleStatusTag extends StatelessWidget {
       decoration: BoxDecoration(border: Border.all(color: color, width: 1.5)),
       child: Text(
         label,
-        style: TextStyle(
-          fontFamily: 'JetBrainsMono',
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
+        style: CrimpyTheme.labelSmall.copyWith(
           color: CrimpyTheme.textOn(color),
         ),
       ),
@@ -114,12 +110,7 @@ class WeekProgressBar extends StatelessWidget {
       children: [
         Text(
           'WEEK $currentWeek / $total',
-          style: const TextStyle(
-            fontFamily: 'JetBrainsMono',
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: CrimpyTheme.textPrimary,
-          ),
+          style: CrimpyTheme.capsLabel.copyWith(color: CrimpyTheme.textPrimary),
         ),
         const SizedBox(height: 7),
         Row(
@@ -195,10 +186,7 @@ class ScheduledTrainingRow extends StatelessWidget {
                       session.trainingTitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontFamily: 'JetBrainsMono',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                      style: CrimpyTheme.titleSmall.copyWith(
                         color: done
                             ? CrimpyTheme.textMutedSmall
                             : CrimpyTheme.textPrimary,
@@ -208,10 +196,7 @@ class ScheduledTrainingRow extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       programSessionLabel(type),
-                      style: TextStyle(
-                        fontFamily: 'JetBrainsMono',
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
+                      style: CrimpyTheme.labelSmall.copyWith(
                         color: CrimpyTheme.textSecondary,
                       ),
                     ),
@@ -281,20 +266,14 @@ class FlexTrainingRow extends StatelessWidget {
                       session.trainingTitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'JetBrainsMono',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
+                      style: CrimpyTheme.titleSmall.copyWith(
                         color: CrimpyTheme.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       programSessionLabel(type),
-                      style: TextStyle(
-                        fontFamily: 'JetBrainsMono',
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
+                      style: CrimpyTheme.labelSmall.copyWith(
                         color: CrimpyTheme.textSecondary,
                       ),
                     ),
@@ -307,10 +286,7 @@ class FlexTrainingRow extends StatelessWidget {
                 children: [
                   Text(
                     complete ? 'DONE' : '$doneCount/${times}x',
-                    style: TextStyle(
-                      fontFamily: 'JetBrainsMono',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                    style: CrimpyTheme.labelSmall.copyWith(
                       color: complete
                           ? CrimpyTheme.textOn(CrimpyTheme.done)
                           : CrimpyTheme.textSecondary,

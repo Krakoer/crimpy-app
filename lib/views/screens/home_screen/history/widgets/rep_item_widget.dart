@@ -43,8 +43,7 @@ class RepItemWidget extends StatelessWidget {
           const SizedBox(width: 12),
           Text(
             'Rest',
-            style: TextStyle(
-              fontSize: 14,
+            style: CrimpyTheme.body.copyWith(
               fontWeight: FontWeight.w500,
               color: CrimpyTheme.textStrong,
             ),
@@ -52,7 +51,7 @@ class RepItemWidget extends StatelessWidget {
           const Spacer(),
           Text(
             '${rep.duration}s',
-            style: TextStyle(fontSize: 13, color: CrimpyTheme.textMedium),
+            style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textMedium),
           ),
         ],
       ),
@@ -105,9 +104,8 @@ class RepItemWidget extends StatelessWidget {
                 child: Center(
                   child: Text(
                     '${index + 1}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                    style: CrimpyTheme.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
                       color: CrimpyTheme.textStrong,
                     ),
                   ),
@@ -135,9 +133,7 @@ class RepItemWidget extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           rep.handSide.label,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                          style: CrimpyTheme.titleSmall.copyWith(
                             color: CrimpyTheme.textStrong,
                           ),
                         ),
@@ -149,8 +145,7 @@ class RepItemWidget extends StatelessWidget {
                         '${rep.duration}s',
                         if (rep.edgeSizeMm != null) '${rep.edgeSizeMm}mm',
                       ].join(' - '),
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: CrimpyTheme.bodySmall.copyWith(
                         color: CrimpyTheme.textMedium,
                       ),
                     ),
@@ -179,9 +174,7 @@ class RepItemWidget extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         '${(successRate * 100).toStringAsFixed(0)}%',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                        style: CrimpyTheme.labelSmall.copyWith(
                           color: CrimpyTheme.textOn(statusColor),
                         ),
                       ),
@@ -200,9 +193,7 @@ class RepItemWidget extends StatelessWidget {
                   ),
                   child: Text(
                     'Not measured',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                    style: CrimpyTheme.labelSmall.copyWith(
                       color: CrimpyTheme.textMedium,
                     ),
                   ),
@@ -220,16 +211,13 @@ class RepItemWidget extends StatelessWidget {
                     children: [
                       Text(
                         'Target',
-                        style: TextStyle(
-                          fontSize: 11,
+                        style: CrimpyTheme.bodySmall.copyWith(
                           color: CrimpyTheme.textMedium,
                         ),
                       ),
                       Text(
                         '${rep.targetWeight.toStringAsFixed(1)} kg',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                        style: CrimpyTheme.titleSmall.copyWith(
                           color: CrimpyTheme.textStrong,
                         ),
                       ),
@@ -249,16 +237,13 @@ class RepItemWidget extends StatelessWidget {
                       children: [
                         Text(
                           'Performed',
-                          style: TextStyle(
-                            fontSize: 11,
+                          style: CrimpyTheme.bodySmall.copyWith(
                             color: CrimpyTheme.textMedium,
                           ),
                         ),
                         Text(
                           '${rep.averageWeight.toStringAsFixed(1)} kg',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                          style: CrimpyTheme.titleSmall.copyWith(
                             color: CrimpyTheme.textOn(statusColor),
                           ),
                         ),
@@ -279,13 +264,13 @@ class RepItemWidget extends StatelessWidget {
               children: [
                 Text(
                   'Performed',
-                  style: TextStyle(fontSize: 11, color: CrimpyTheme.textMedium),
+                  style: CrimpyTheme.bodySmall.copyWith(
+                    color: CrimpyTheme.textMedium,
+                  ),
                 ),
                 Text(
                   '${rep.averageWeight.toStringAsFixed(1)} kg',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                  style: CrimpyTheme.titleSmall.copyWith(
                     color: CrimpyTheme.textStrong,
                   ),
                 ),

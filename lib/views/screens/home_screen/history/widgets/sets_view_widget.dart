@@ -122,9 +122,8 @@ class SetCardWidget extends StatelessWidget {
                 ),
                 child: Text(
                   label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                  style: CrimpyTheme.bodySmall.copyWith(
+                    fontWeight: FontWeight.w600,
                     color: CrimpyTheme.textStrong,
                   ),
                 ),
@@ -135,7 +134,9 @@ class SetCardWidget extends StatelessWidget {
                   '${workReps.length} reps',
                   if (_sharedEdgeSizeMm != null) '${_sharedEdgeSizeMm}mm',
                 ].join(' - '),
-                style: TextStyle(fontSize: 12, color: CrimpyTheme.textMedium),
+                style: CrimpyTheme.bodySmall.copyWith(
+                  color: CrimpyTheme.textMedium,
+                ),
               ),
               const Spacer(),
               if (count != null)
@@ -150,9 +151,7 @@ class SetCardWidget extends StatelessWidget {
                   ),
                   child: Text(
                     '${count.onTarget}/${count.total}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                    style: CrimpyTheme.labelSmall.copyWith(
                       color: CrimpyTheme.textOn(statusColor),
                     ),
                   ),
@@ -169,7 +168,9 @@ class SetCardWidget extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   note,
-                  style: TextStyle(fontSize: 12, color: CrimpyTheme.textMedium),
+                  style: CrimpyTheme.bodySmall.copyWith(
+                    color: CrimpyTheme.textMedium,
+                  ),
                 ),
               ),
           const SizedBox(height: 12),
@@ -215,17 +216,10 @@ class SetCardWidget extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(fontSize: 11, color: CrimpyTheme.textMedium),
+          style: CrimpyTheme.bodySmall.copyWith(color: CrimpyTheme.textMedium),
         ),
         const SizedBox(height: 2),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: valueColor,
-          ),
-        ),
+        Text(value, style: CrimpyTheme.titleSmall.copyWith(color: valueColor)),
       ],
     );
   }
@@ -276,9 +270,7 @@ class SetPerformanceBar extends StatelessWidget {
             child: hasTarget
                 ? Text(
                     '${(successRate * 100).toStringAsFixed(0)}%',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+                    style: CrimpyTheme.labelSmall.copyWith(
                       color: CrimpyTheme.textOn(repColor),
                     ),
                   )

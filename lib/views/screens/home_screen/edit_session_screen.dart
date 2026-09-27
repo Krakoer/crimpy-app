@@ -84,8 +84,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                         Expanded(
                           child: Text(
                             'Only the notes and the RPE can be edited for a session played in the app',
-                            style: TextStyle(
-                              fontSize: 13,
+                            style: CrimpyTheme.body.copyWith(
                               color: CrimpyTheme.textSecondary,
                             ),
                           ),
@@ -155,13 +154,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                                 : markColor,
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            'Duration',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          const Text('Duration', style: CrimpyTheme.title),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -224,13 +217,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                         children: [
                           Icon(Icons.notes, color: markColor),
                           const SizedBox(width: 8),
-                          const Text(
-                            'Notes',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          const Text('Notes', style: CrimpyTheme.title),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -255,10 +242,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text(
-                  'Update Session',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
+                child: const Text('Update Session', style: CrimpyTheme.title),
               ),
             ],
           ),

@@ -39,11 +39,7 @@ class SectionLabel extends StatelessWidget {
                   label.toUpperCase(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'JetBrainsMono',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
+                  style: CrimpyTheme.capsLabel.copyWith(
                     color: CrimpyTheme.textSecondary,
                   ),
                 ),
@@ -70,12 +66,7 @@ class SectionTextBlock extends StatelessWidget {
     return CrimpyCard.simple(
       child: Text(
         text,
-        style: const TextStyle(
-          fontFamily: 'JetBrainsMono',
-          fontSize: 12,
-          height: 1.5,
-          color: CrimpyTheme.textPrimary,
-        ),
+        style: CrimpyTheme.bodySmall.copyWith(color: CrimpyTheme.textPrimary),
       ),
     );
   }

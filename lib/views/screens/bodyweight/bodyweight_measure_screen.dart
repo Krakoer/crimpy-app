@@ -160,22 +160,16 @@ class _BodyweightMeasureScreenState
       children: [
         Text(
           holding ? 'Hold still' : 'Hang with all your weight on the sensor',
-          style: const TextStyle(
-            fontSize: 20,
-            color: CrimpyTheme.textOnFill,
-            fontWeight: FontWeight.bold,
-          ),
+          style: CrimpyTheme.titleLarge.copyWith(color: CrimpyTheme.textOnFill),
           textAlign: TextAlign.center,
         ),
         if (holding) ...[
           const SizedBox(height: 8),
           Text(
             '${_measurement.secondsRemaining}',
-            style: const TextStyle(
-              fontSize: 40,
-              color: CrimpyTheme.textOnFill,
-              fontWeight: FontWeight.bold,
-            ),
+            style: CrimpyTheme.numerals(
+              48,
+            ).copyWith(color: CrimpyTheme.textOnFill),
           ),
         ],
       ],
@@ -193,19 +187,16 @@ class _BodyweightMeasureScreenState
       children: [
         Text(
           '${lastValue == null ? "--" : lastValue.toStringAsFixed(1)} kg',
-          style: const TextStyle(
-            fontSize: 48,
-            color: CrimpyTheme.textOnFill,
-            fontWeight: FontWeight.bold,
-          ),
+          style: CrimpyTheme.numerals(
+            48,
+          ).copyWith(color: CrimpyTheme.textOnFill),
         ),
         const SizedBox(height: 4),
         Text(
           _measurement.phase == BodyweightMeasurementPhase.holding
               ? 'Recording ${_measurement.stableValue!.toStringAsFixed(1)} kg'
               : 'Waiting for a steady reading',
-          style: const TextStyle(
-            fontSize: 16,
+          style: CrimpyTheme.bodyLarge.copyWith(
             color: CrimpyTheme.textOnFillSecondary,
           ),
         ),

@@ -62,12 +62,9 @@ class _NavItem extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 9,
+              style: CrimpyTheme.labelSmall.copyWith(
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 color: labelColor,
-                letterSpacing: 0.3,
               ),
             ),
             const SizedBox(height: 10),

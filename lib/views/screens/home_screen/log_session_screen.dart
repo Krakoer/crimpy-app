@@ -84,13 +84,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
                         children: [
                           Icon(Icons.edit, color: markColor),
                           const SizedBox(width: 8),
-                          const Text(
-                            'Name',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          const Text('Name', style: CrimpyTheme.title),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -150,13 +144,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
                         children: [
                           Icon(Icons.timer, color: markColor),
                           const SizedBox(width: 8),
-                          const Text(
-                            'Duration',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          const Text('Duration', style: CrimpyTheme.title),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -207,13 +195,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
                         children: [
                           Icon(Icons.notes, color: markColor),
                           const SizedBox(width: 8),
-                          const Text(
-                            'Notes',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          const Text('Notes', style: CrimpyTheme.title),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -238,10 +220,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text(
-                  'Save Session',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
+                child: const Text('Save Session', style: CrimpyTheme.title),
               ),
             ],
           ),

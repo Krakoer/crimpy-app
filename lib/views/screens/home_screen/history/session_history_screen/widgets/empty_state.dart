@@ -19,10 +19,7 @@ class EmptyState extends StatelessWidget {
             selectedDate != null
                 ? 'No sessions on ${DateFormat('MMMM d, y').format(selectedDate!)}'
                 : 'No sessions found',
-            style: const TextStyle(
-              fontSize: 18,
-              color: CrimpyTheme.textSecondary,
-            ),
+            style: CrimpyTheme.title.copyWith(color: CrimpyTheme.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],

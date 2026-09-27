@@ -232,9 +232,8 @@ class ResultCard extends StatelessWidget {
                       ),
                       child: Text(
                         "${isPositive ? '+' : ''}$percentage%",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                        style: CrimpyTheme.bodySmall.copyWith(
+                          fontWeight: FontWeight.w600,
                           color: CrimpyTheme.textOn(percentageColor),
                         ),
                       ),

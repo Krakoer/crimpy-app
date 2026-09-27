@@ -141,17 +141,14 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                 widget.activity == null
                     ? 'Add to ${widget.dayLabel}'
                     : 'Edit ${widget.dayLabel}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
+                style: CrimpyTheme.title.copyWith(
                   color: CrimpyTheme.textPrimary,
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'Say what you are doing. Everything but the name is optional.',
-                style: TextStyle(
-                  fontSize: 12,
+                style: CrimpyTheme.bodySmall.copyWith(
                   color: CrimpyTheme.textSecondary,
                 ),
               ),

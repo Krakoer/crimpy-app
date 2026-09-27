@@ -172,10 +172,7 @@ class _SectionTitle extends StatelessWidget {
     padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
     child: Text(
       title.toUpperCase(),
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: CrimpyTheme.textSecondary,
-        letterSpacing: 0.8,
-      ),
+      style: CrimpyTheme.capsLabel.copyWith(color: CrimpyTheme.textSecondary),
     ),
   );
 }

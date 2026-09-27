@@ -282,30 +282,38 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                     ],
                   ),
                   child: timer.currentItem is! RestItem
-                      ? Text(
-                          "Pull!\n${timer.currentItemRemaining}",
-                          style: TextStyle(
-                            fontSize: 39,
-                            color: CrimpyTheme.textOnFill,
-                          ),
-                          textAlign: TextAlign.center,
-                        )
-                      : Column(
+                      ? Column(
                           children: [
                             Text(
-                              "Pulling in",
-                              style: TextStyle(
-                                fontSize: 29,
+                              "Pull!",
+                              style: CrimpyTheme.headline.copyWith(
                                 color: CrimpyTheme.textOnFill,
                               ),
                               textAlign: TextAlign.center,
                             ),
                             Text(
                               "${timer.currentItemRemaining}",
-                              style: TextStyle(
-                                fontSize: 39,
+                              style: CrimpyTheme.numerals(
+                                48,
+                              ).copyWith(color: CrimpyTheme.textOnFill),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            Text(
+                              "Pulling in",
+                              style: CrimpyTheme.headline.copyWith(
                                 color: CrimpyTheme.textOnFill,
                               ),
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              "${timer.currentItemRemaining}",
+                              style: CrimpyTheme.numerals(
+                                48,
+                              ).copyWith(color: CrimpyTheme.textOnFill),
                               textAlign: TextAlign.center,
                             ),
                           ],

@@ -32,10 +32,7 @@ class ExerciseVideoButton extends StatelessWidget {
       ),
       label: Text(
         'WATCH DEMO',
-        style: TextStyle(
-          fontFamily: 'JetBrainsMono',
-          fontSize: compact ? 10.5 : 11.5,
-          fontWeight: FontWeight.w700,
+        style: CrimpyTheme.capsLabel.copyWith(
           color: CrimpyTheme.textOn(CrimpyTheme.control),
         ),
       ),
@@ -79,12 +76,7 @@ class ExerciseDescription extends StatelessWidget {
 
     return Text(
       text,
-      style: const TextStyle(
-        fontFamily: 'JetBrainsMono',
-        fontSize: 11,
-        height: 1.4,
-        color: CrimpyTheme.textMutedSmall,
-      ),
+      style: CrimpyTheme.bodySmall.copyWith(color: CrimpyTheme.textMutedSmall),
     );
   }
 }

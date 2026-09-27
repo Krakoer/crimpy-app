@@ -154,10 +154,8 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                       children: [
                         Text(
                           programSessionLabel(type),
-                          style: TextStyle(
-                            fontFamily: 'JetBrainsMono',
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                          style: CrimpyTheme.bodySmall.copyWith(
+                            fontWeight: FontWeight.w600,
                             color: CrimpyTheme.textSecondary,
                           ),
                         ),
@@ -178,9 +176,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                         const SizedBox(width: 6),
                         Text(
                           schedule,
-                          style: const TextStyle(
-                            fontFamily: 'JetBrainsMono',
-                            fontSize: 11,
+                          style: CrimpyTheme.bodySmall.copyWith(
                             color: CrimpyTheme.textSecondary,
                           ),
                         ),
@@ -223,10 +219,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
             ),
             child: Text(
               initials,
-              style: const TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
+              style: CrimpyTheme.labelSmall.copyWith(
                 color: CrimpyTheme.bgPrimary,
               ),
             ),
@@ -235,10 +228,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
           Expanded(
             child: Text(
               note,
-              style: const TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 11.5,
-                height: 1.45,
+              style: CrimpyTheme.bodySmall.copyWith(
                 color: CrimpyTheme.textPrimary,
               ),
             ),
@@ -264,13 +254,10 @@ class ScheduledTrainingScreen extends ConsumerWidget {
             color: CrimpyTheme.textOn(CrimpyTheme.overrideMark),
           ),
           const SizedBox(width: 9),
-          const Expanded(
+          Expanded(
             child: Text(
               'TUNED FOR YOU THIS WEEK. Highlighted values differ from the base training.',
-              style: TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 11,
-                height: 1.45,
+              style: CrimpyTheme.bodySmall.copyWith(
                 color: CrimpyTheme.textPrimary,
               ),
             ),
@@ -335,10 +322,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
             ),
             child: Text(
               e,
-              style: TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
+              style: CrimpyTheme.labelSmall.copyWith(
                 color: CrimpyTheme.textOn(CrimpyTheme.overrideMark),
               ),
             ),
@@ -420,10 +404,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
           const SizedBox(width: 8),
           Text(
             'DONE',
-            style: TextStyle(
-              fontFamily: 'JetBrainsMono',
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
+            style: CrimpyTheme.titleSmall.copyWith(
               color: CrimpyTheme.textOn(CrimpyTheme.done),
             ),
           ),

@@ -85,10 +85,7 @@ class TrainingItemComment extends StatelessWidget {
           Expanded(
             child: Text(
               comment,
-              style: const TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 11.5,
-                height: 1.4,
+              style: CrimpyTheme.bodySmall.copyWith(
                 color: CrimpyTheme.textPrimary,
               ),
             ),
@@ -132,11 +129,7 @@ class _LabelledNote extends StatelessWidget {
         children: [
           Text(
             label,
-            style: TextStyle(
-              fontFamily: 'JetBrainsMono',
-              fontSize: 9.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
+            style: CrimpyTheme.capsLabel.copyWith(
               color: CrimpyTheme.textOn(accent),
             ),
           ),
@@ -144,10 +137,7 @@ class _LabelledNote extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 11.5,
-                height: 1.4,
+              style: CrimpyTheme.bodySmall.copyWith(
                 color: CrimpyTheme.textPrimary,
               ),
             ),
@@ -252,11 +242,7 @@ class TrainingItemTile extends StatelessWidget {
           ),
           child: Text(
             '$number',
-            style: const TextStyle(
-              fontFamily: 'JetBrainsMono',
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
+            style: CrimpyTheme.bodySmall.copyWith(fontWeight: FontWeight.w600),
           ),
         ),
         const SizedBox(width: 11),
@@ -266,10 +252,7 @@ class TrainingItemTile extends StatelessWidget {
             children: [
               Text(
                 trainingItemTitle(item),
-                style: const TextStyle(
-                  fontFamily: 'JetBrainsMono',
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w700,
+                style: CrimpyTheme.titleSmall.copyWith(
                   color: CrimpyTheme.textPrimary,
                 ),
               ),
@@ -277,9 +260,7 @@ class TrainingItemTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   detail,
-                  style: const TextStyle(
-                    fontFamily: 'JetBrainsMono',
-                    fontSize: 11,
+                  style: CrimpyTheme.bodySmall.copyWith(
                     color: CrimpyTheme.textSecondary,
                   ),
                 ),

@@ -55,10 +55,7 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
               children: [
                 Text(
                   isDeclared ? 'NEXT WEEK SENT' : 'NEXT WEEK',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
+                  style: CrimpyTheme.capsLabel.copyWith(
                     color: CrimpyTheme.textSecondary,
                   ),
                 ),
@@ -67,9 +64,7 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
                   isDeclared
                       ? 'Your coach knows when you can train'
                       : 'Tell your coach when you can train',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                  style: CrimpyTheme.titleSmall.copyWith(
                     color: CrimpyTheme.textPrimary,
                   ),
                 ),

@@ -100,10 +100,7 @@ class TodayTrainingCard extends ConsumerWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontFamily: 'JetBrainsMono',
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
+                    style: CrimpyTheme.titleSmall.copyWith(
                       color: CrimpyTheme.textPrimary,
                     ),
                   ),
@@ -112,9 +109,7 @@ class TodayTrainingCard extends ConsumerWidget {
                     subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: 'JetBrainsMono',
-                      fontSize: 11,
+                    style: CrimpyTheme.bodySmall.copyWith(
                       color: CrimpyTheme.textSecondary,
                     ),
                   ),
@@ -177,14 +172,10 @@ class _ProgramTodayCard extends ConsumerWidget {
                 color: CrimpyTheme.fillOn(CrimpyTheme.current),
                 child: Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         "TODAY'S TRAINING",
-                        style: TextStyle(
-                          fontFamily: 'JetBrainsMono',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.8,
+                        style: CrimpyTheme.capsLabel.copyWith(
                           color: CrimpyTheme.bgPrimary,
                         ),
                       ),
@@ -241,11 +232,9 @@ class _ProgramTodayCard extends ConsumerWidget {
       children: [
         Icon(FontAwesomeIcons.check, size: 16, color: CrimpyTheme.done),
         const SizedBox(width: 12),
-        const Text(
+        Text(
           'REST DAY - nothing scheduled today',
-          style: TextStyle(
-            fontFamily: 'JetBrainsMono',
-            fontSize: 12,
+          style: CrimpyTheme.bodySmall.copyWith(
             color: CrimpyTheme.textSecondary,
           ),
         ),
@@ -334,10 +323,7 @@ class _TodayTrainingRow extends ConsumerWidget {
                     session.trainingTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'JetBrainsMono',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
+                    style: CrimpyTheme.titleSmall.copyWith(
                       color: done
                           ? CrimpyTheme.textMutedSmall
                           : CrimpyTheme.textPrimary,
@@ -349,10 +335,7 @@ class _TodayTrainingRow extends ConsumerWidget {
                     children: [
                       Text(
                         programSessionLabel(type),
-                        style: TextStyle(
-                          fontFamily: 'JetBrainsMono',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                        style: CrimpyTheme.labelSmall.copyWith(
                           color: CrimpyTheme.textSecondary,
                         ),
                       ),
@@ -360,9 +343,7 @@ class _TodayTrainingRow extends ConsumerWidget {
                         const SizedBox(width: 8),
                         Text(
                           formatDurationHMS(seconds),
-                          style: const TextStyle(
-                            fontFamily: 'JetBrainsMono',
-                            fontSize: 10,
+                          style: CrimpyTheme.labelSmall.copyWith(
                             color: CrimpyTheme.textSecondary,
                           ),
                         ),
@@ -439,10 +420,8 @@ class _FlexTrainingRow extends ConsumerWidget {
                 session.trainingTitle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: 'JetBrainsMono',
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
+                style: CrimpyTheme.bodySmall.copyWith(
+                  fontWeight: FontWeight.w600,
                   color: CrimpyTheme.textPrimary,
                 ),
               ),
@@ -450,10 +429,7 @@ class _FlexTrainingRow extends ConsumerWidget {
             const SizedBox(width: 8),
             Text(
               '$done/$target',
-              style: TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
+              style: CrimpyTheme.labelSmall.copyWith(
                 color: done >= target
                     ? CrimpyTheme.textOn(CrimpyTheme.done)
                     : CrimpyTheme.textSecondary,

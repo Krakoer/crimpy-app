@@ -45,10 +45,7 @@ class ProgramSummaryCard extends ConsumerWidget {
                         Expanded(
                           child: Text(
                             program.name,
-                            style: const TextStyle(
-                              fontFamily: 'JetBrainsMono',
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                            style: CrimpyTheme.title.copyWith(
                               color: CrimpyTheme.textPrimary,
                             ),
                           ),
@@ -93,12 +90,9 @@ class ProgramSummaryCard extends ConsumerWidget {
         border: Border(top: BorderSide(color: CrimpyTheme.outline, width: 2)),
       ),
       child: today == null
-          ? const Text(
+          ? Text(
               'REST DAY - NOTHING SCHEDULED TODAY',
-              style: TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 11.5,
-                fontWeight: FontWeight.w500,
+              style: CrimpyTheme.capsLabel.copyWith(
                 color: CrimpyTheme.textSecondary,
               ),
             )
@@ -112,11 +106,7 @@ class ProgramSummaryCard extends ConsumerWidget {
                     children: [
                       Text(
                         'TODAY',
-                        style: TextStyle(
-                          fontFamily: 'JetBrainsMono',
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.6,
+                        style: CrimpyTheme.capsLabel.copyWith(
                           color: CrimpyTheme.textOn(CrimpyTheme.current),
                         ),
                       ),
@@ -124,10 +114,7 @@ class ProgramSummaryCard extends ConsumerWidget {
                         today.session.trainingTitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: 'JetBrainsMono',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
+                        style: CrimpyTheme.titleSmall.copyWith(
                           color: CrimpyTheme.textPrimary,
                         ),
                       ),
@@ -154,11 +141,7 @@ class ProgramSummaryCard extends ConsumerWidget {
                       horizontal: 14,
                       vertical: 8,
                     ),
-                    textStyle: const TextStyle(
-                      fontFamily: 'JetBrainsMono',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    textStyle: CrimpyTheme.labelSmall,
                   ),
                 ),
               ],
