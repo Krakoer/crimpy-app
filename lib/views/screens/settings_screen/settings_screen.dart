@@ -152,9 +152,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         flex: 1,
                         child: Padding(
                           padding: const EdgeInsets.only(left: 8, right: 16),
-                          child: ElevatedButton(
+                          child: OutlinedButton(
                             onPressed: _showCreatePresetPopup,
-                            style: ElevatedButton.styleFrom(
+                            style: OutlinedButton.styleFrom(
                               minimumSize: const Size.fromHeight(50),
                             ),
                             child: const Text('+ Create preset'),

@@ -16,7 +16,7 @@ class SelectHandDialog extends StatelessWidget {
       content: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          ElevatedButton(
+          OutlinedButton(
             child: Row(
               children: [
                 Transform(
@@ -32,7 +32,7 @@ class SelectHandDialog extends StatelessWidget {
               Navigator.of(context).pop(HandSide.left);
             },
           ),
-          ElevatedButton(
+          OutlinedButton(
             child: Row(
               children: [
                 Text('Right'),

@@ -170,14 +170,18 @@ class ScheduledTrainingRow extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           boxShadow: [
-            BoxShadow(color: borderColor, offset: const Offset(2, 2)),
+            // Due today reads by weight now that it has no hue of its own.
+            BoxShadow(
+              color: borderColor,
+              offset: due ? const Offset(4, 4) : const Offset(2, 2),
+            ),
           ],
         ),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: CrimpyTheme.bgPrimary,
-            border: Border.all(color: borderColor, width: 2),
+            border: Border.all(color: borderColor, width: due ? 3 : 2),
           ),
           child: Row(
             children: [

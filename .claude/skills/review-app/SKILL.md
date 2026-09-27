@@ -108,9 +108,12 @@ chips, switches, sliders, links, progress, secondary and text buttons take
 `control`, which is ink. A widget painting something else orange is a finding.
 A category's colour shows as an icon or a dot only (`CategoryIconTile`,
 `markOn(activityColor(...))`), never as a tinted ground, a coloured tile, a
-coloured label or a full-height card bar. `CrimpyCard.category`'s bar is for a
-signal the whole card carries (a week override, a planned day), not for a
-category. See Krakoer/crimpy#170.
+coloured label or a full-height card bar. Charts are the exception: a bar or a
+line that encodes a category's data keeps its colour (the week histogram, the
+session calendar, the rep performance bar's graded tiles). `CrimpyCard.category`'s
+bar is for a state the whole card carries (a week override, a planned day, a
+week still to declare), not for a category. A disabled control reads light,
+never dark, so it cannot pass for a selected one. See Krakoer/crimpy#170.
 
 Several roles hold the same hue today. That is the point: each meaning can
 change on its own. A widget painting a new meaning adds a role to the ROLES

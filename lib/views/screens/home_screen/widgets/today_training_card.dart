@@ -463,9 +463,11 @@ class _FlexTrainingRow extends ConsumerWidget {
             Icon(
               FontAwesomeIcons.play,
               size: 13,
+              // The card's filled Play is its primary action; this one is a
+              // quieter way in to the same kind of run.
               color: done >= target
                   ? CrimpyTheme.textMutedSmall
-                  : CrimpyTheme.action,
+                  : CrimpyTheme.control,
             ),
           ],
         ),

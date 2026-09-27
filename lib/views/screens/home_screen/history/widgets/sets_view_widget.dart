@@ -255,7 +255,7 @@ class SetPerformanceBar extends StatelessWidget {
         final bool isSuccess = successRate >= 0.9;
 
         final Color repColor = !hasTarget
-            ? sessionColor.withValues(alpha: 0.3)
+            ? CrimpyTheme.outlineSubtle
             : isSuccess
             ? CrimpyTheme.onTarget
             : successRate >= 0.75
@@ -266,7 +266,9 @@ class SetPerformanceBar extends StatelessWidget {
           width: 48,
           height: 32,
           decoration: BoxDecoration(
-            color: CrimpyTheme.tintOf(repColor),
+            color: hasTarget
+                ? CrimpyTheme.tintOf(repColor)
+                : CrimpyTheme.bgPrimary,
             border: Border.all(color: repColor, width: 1.5),
             borderRadius: BorderRadius.circular(4),
           ),
@@ -283,11 +285,8 @@ class SetPerformanceBar extends StatelessWidget {
                 : Icon(
                     Icons.fitness_center,
                     size: 12,
-                    // The session accent at full strength, not repColor. With
-                    // no target repColor is that accent at alpha 0.3, and the
-                    // icon then sits on a tint of itself at 1.41:1, under the
-                    // 3:1 a mark answers to. The fade said "no target" twice,
-                    // once in the ground and once in the icon.
+                    // The category shows in the icon only; the tile of a rep
+                    // with no target is neutral. See Krakoer/crimpy#170.
                     color: CrimpyTheme.markOn(sessionColor),
                   ),
           ),

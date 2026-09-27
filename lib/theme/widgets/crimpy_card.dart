@@ -29,9 +29,9 @@ class CrimpyCard extends StatelessWidget {
     this.onTap,
   });
 
-  /// Card with a coloured bar down its left edge, for a signal the whole card
-  /// carries: a week override, a planned day, a call to act. Not for a
-  /// category, which shows as an icon only. See Krakoer/crimpy#170.
+  /// Card with a bar down its left edge, for a state the whole card carries: a
+  /// week override, a planned day, a week still to declare. Not for a category,
+  /// which shows as an icon only. See Krakoer/crimpy#170.
   const CrimpyCard.category({
     super.key,
     required this.child,

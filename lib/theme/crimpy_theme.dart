@@ -471,13 +471,18 @@ class CrimpyTheme {
     chipTheme: ChipThemeData(
       backgroundColor: bgSecondary,
       selectedColor: control,
-      disabledColor: outline,
+      // Light rather than dark: a selected chip is filled with ink, and a
+      // disabled one must not read as selected. See Krakoer/crimpy#170.
+      disabledColor: bgSunken,
       checkmarkColor: textOnFill,
       // A selected chip is filled with ink, so its label turns white with it.
       labelStyle: TextStyle(
         color: WidgetStateColor.resolveWith(
-          (states) =>
-              states.contains(WidgetState.selected) ? textOnFill : textPrimary,
+          (states) => states.contains(WidgetState.disabled)
+              ? textMutedSmall
+              : states.contains(WidgetState.selected)
+              ? textOnFill
+              : textPrimary,
         ),
         fontSize: 11,
         fontWeight: FontWeight.w500,
