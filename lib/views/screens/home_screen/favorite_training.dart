@@ -280,6 +280,14 @@ class PinTrainingDialog extends ConsumerWidget {
         ),
         _ => const Center(child: CircularProgressIndicator()),
       },
+      // The choices are the list itself, each saved as it is tapped, so the
+      // one action closes the dialog.
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Done'),
+        ),
+      ],
     );
   }
 }

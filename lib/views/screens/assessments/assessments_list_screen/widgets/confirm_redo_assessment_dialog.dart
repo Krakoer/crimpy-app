@@ -13,7 +13,7 @@ class ConfirmRedoAssessmentDialog extends StatelessWidget {
     return AlertDialog(
       title: Text("Assessment already done today"),
       content: Text(
-        "You already did this assessment today. Do you really want to redo it? This will discard you previous assessment results.",
+        "You already did this assessment today. Do you really want to redo it? This will discard your previous assessment results.",
       ),
       actions: [
         TextButton(

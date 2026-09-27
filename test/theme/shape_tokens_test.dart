@@ -17,6 +17,21 @@ final RegExp cornerName = RegExp(
 
 const String themeFile = 'lib/theme/crimpy_theme.dart';
 
+final RegExp dropdownOpening = RegExp(
+  r'\bDropdownButton(FormField)?(<[^>(]*>)?\(',
+);
+
+/// The index just past the parenthesis that closes a call whose arguments
+/// start at [start].
+int callEnd(String source, int start) {
+  var depth = 1;
+  for (var i = start; i < source.length; i++) {
+    if (source[i] == '(') depth++;
+    if (source[i] == ')' && --depth == 0) return i;
+  }
+  return source.length;
+}
+
 void main() {
   test('no file outside the theme names a corner', () {
     final offences = <String>[];
@@ -28,6 +43,25 @@ void main() {
         if (lines[i].trimLeft().startsWith('//')) continue;
         for (final match in cornerName.allMatches(lines[i])) {
           offences.add('${entity.path}:${i + 1} names ${match.group(0)}');
+        }
+      }
+    }
+    expect(offences, isEmpty, reason: offences.join('\n'));
+  });
+
+  // Material draws a dropdown's open menu at a 2px radius of its own unless
+  // the widget names one, and no theme reaches it, so the corner guard above
+  // cannot see a dropdown that forgot.
+  test('every dropdown names the theme corner for its menu', () {
+    final offences = <String>[];
+    for (final entity in Directory('lib').listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final source = entity.readAsStringSync();
+      for (final match in dropdownOpening.allMatches(source)) {
+        final call = source.substring(match.end, callEnd(source, match.end));
+        if (!call.contains('borderRadius: CrimpyTheme.corners')) {
+          final line = '\n'.allMatches(source.substring(0, match.start)).length;
+          offences.add('${entity.path}:${line + 1} opens a rounded menu');
         }
       }
     }

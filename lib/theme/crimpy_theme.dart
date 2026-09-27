@@ -361,6 +361,21 @@ class CrimpyTheme {
     foregroundColor: textOnFill,
   );
 
+  /// The borders of a field, shared by the app's inputs and the time picker's
+  /// keyboard mode so the two cannot drift apart.
+  static const OutlineInputBorder _fieldBorder = OutlineInputBorder(
+    borderRadius: corners,
+    borderSide: BorderSide(color: outline, width: 1),
+  );
+  static const OutlineInputBorder _fieldFocusedBorder = OutlineInputBorder(
+    borderRadius: corners,
+    borderSide: BorderSide(color: control, width: 1),
+  );
+  static const OutlineInputBorder _fieldErrorBorder = OutlineInputBorder(
+    borderRadius: corners,
+    borderSide: BorderSide(color: statusError, width: 1),
+  );
+
   /// A picker's OK. The pickers take a style for a TextButton rather than a
   /// button of their own, so the fill the theme's FilledButton carries is
   /// spelled out here.
@@ -581,27 +596,18 @@ class CrimpyTheme {
       dialBackgroundColor: bgSunken,
       // The keyboard mode's hour and minute fields. Left unset, the picker
       // draws them with its own 8px rounded decoration rather than the app's.
+      // The dial mode's hour and minute boxes take the same ground, so the
+      // two modes read as one picker.
+      hourMinuteColor: bgSunken,
       inputDecorationTheme: const InputDecorationThemeData(
         filled: true,
         fillColor: bgSunken,
         contentPadding: EdgeInsets.zero,
-        border: OutlineInputBorder(borderRadius: corners),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: corners,
-          borderSide: BorderSide(color: outline, width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: corners,
-          borderSide: BorderSide(color: control, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: corners,
-          borderSide: BorderSide(color: statusError, width: 1),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: corners,
-          borderSide: BorderSide(color: statusError, width: 2),
-        ),
+        border: _fieldBorder,
+        enabledBorder: _fieldBorder,
+        focusedBorder: _fieldFocusedBorder,
+        errorBorder: _fieldErrorBorder,
+        focusedErrorBorder: _fieldErrorBorder,
       ),
       confirmButtonStyle: _pickerConfirmButton,
     ),
@@ -620,26 +626,11 @@ class CrimpyTheme {
       filled: true,
       fillColor: bgPrimary,
       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      border: OutlineInputBorder(
-        borderRadius: corners,
-        borderSide: BorderSide(color: outline, width: 1),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: corners,
-        borderSide: BorderSide(color: outline, width: 1),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: corners,
-        borderSide: BorderSide(color: control, width: 1),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: corners,
-        borderSide: BorderSide(color: statusError, width: 1),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: corners,
-        borderSide: BorderSide(color: statusError, width: 1),
-      ),
+      border: _fieldBorder,
+      enabledBorder: _fieldBorder,
+      focusedBorder: _fieldFocusedBorder,
+      errorBorder: _fieldErrorBorder,
+      focusedErrorBorder: _fieldErrorBorder,
       disabledBorder: OutlineInputBorder(
         borderRadius: corners,
         borderSide: BorderSide(color: outlineSubtle, width: 1),
