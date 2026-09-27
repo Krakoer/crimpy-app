@@ -78,9 +78,11 @@ class CrimpyCard extends StatelessWidget {
     );
     final effectivePadding = padding ?? const EdgeInsets.all(16.0);
 
-    // A tapped card paints its surface as Ink, on the Material the ripple
-    // draws on, so the ripple shows over the fill rather than under it. The
-    // margin stays outside the InkWell, so the gap around a card is not a tap.
+    // A tapped card paints its fill and line as Ink, on the Material the
+    // ripple draws on, so the ripple shows over the fill rather than under
+    // it. Its shadow is painted outside that Material, which clips its ink to
+    // its own box and would cut away an offset shadow. The margin stays
+    // outside the InkWell, so the gap around a card is not a tap.
     final Widget card = onTap == null
         ? Container(
             width: double.infinity,
@@ -88,16 +90,26 @@ class CrimpyCard extends StatelessWidget {
             decoration: decoration,
             child: child,
           )
-        : Material(
-            type: MaterialType.transparency,
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: CrimpyTheme.corners,
-              child: Ink(
-                width: double.infinity,
-                padding: effectivePadding,
-                decoration: decoration,
-                child: child,
+        : DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: decoration.borderRadius,
+              boxShadow: decoration.boxShadow,
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: CrimpyTheme.corners,
+                child: Ink(
+                  width: double.infinity,
+                  padding: effectivePadding,
+                  decoration: BoxDecoration(
+                    color: decoration.color,
+                    border: decoration.border,
+                    borderRadius: decoration.borderRadius,
+                  ),
+                  child: child,
+                ),
               ),
             ),
           );

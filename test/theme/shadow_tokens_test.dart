@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// A shadow named outside the theme. The app has two surfaces,
@@ -62,40 +64,83 @@ void main() {
     );
   });
 
-  testWidgets('a card is raised when tapped as a whole, flat otherwise', (
-    tester,
-  ) async {
-    BoxDecoration surfaceOf(Widget card) {
-      final ink = find.descendant(
-        of: find.byWidget(card),
-        matching: find.byType(Ink),
+  // Read off the painted pixels rather than the decoration objects: a shadow
+  // can be declared and still be clipped away on its way to the screen, as it
+  // is when an ink feature carries it.
+  group('the offset shadow reaches the screen', () {
+    const cardOrigin = 20.0;
+    const cardSize = Size(100, 50);
+    final boundaryKey = GlobalKey();
+
+    /// The colour painted inside the shadow's band, just past the card's
+    /// bottom right corner, where only the offset shadow can reach.
+    Future<Color> paintedInShadowBand(WidgetTester tester, Widget card) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Align(
+            alignment: Alignment.topLeft,
+            child: RepaintBoundary(
+              key: boundaryKey,
+              child: Container(
+                color: CrimpyTheme.bgPrimary,
+                padding: const EdgeInsets.all(cardOrigin),
+                child: SizedBox(width: cardSize.width, child: card),
+              ),
+            ),
+          ),
+        ),
       );
-      if (ink.evaluate().isNotEmpty) {
-        return tester.widget<Ink>(ink).decoration! as BoxDecoration;
-      }
-      final container = tester.widget<Container>(
-        find
-            .descendant(
-              of: find.byWidget(card),
-              matching: find.byType(Container),
-            )
-            .first,
+      final boundary =
+          tester.renderObject(find.byKey(boundaryKey)) as RenderRepaintBoundary;
+      final bytes = await tester.runAsync(() async {
+        final image = await boundary.toImage(pixelRatio: 1);
+        final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+        final width = image.width;
+        image.dispose();
+        return (data!, width);
+      });
+      final (data, width) = bytes!;
+      final x = (cardOrigin + cardSize.width + CrimpyTheme.raisedOffset - 1)
+          .toInt();
+      final y = (cardOrigin + cardSize.height + CrimpyTheme.raisedOffset - 1)
+          .toInt();
+      final i = (y * width + x) * 4;
+      return Color.fromARGB(
+        data.getUint8(i + 3),
+        data.getUint8(i),
+        data.getUint8(i + 1),
+        data.getUint8(i + 2),
       );
-      return container.decoration! as BoxDecoration;
     }
 
-    final tapped = CrimpyCard.simple(onTap: () {}, child: const Text('a'));
-    final still = const CrimpyCard.simple(child: Text('b'));
-    final chosen = const CrimpyCard.simple(raised: true, child: Text('c'));
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: Column(children: [tapped, still, chosen])),
-      ),
+    Widget cardOf({VoidCallback? onTap, bool? raised}) => CrimpyCard.simple(
+      onTap: onTap,
+      raised: raised,
+      margin: EdgeInsets.zero,
+      padding: EdgeInsets.zero,
+      child: SizedBox(height: cardSize.height),
     );
 
-    expect(surfaceOf(tapped).boxShadow, CrimpyTheme.raisedShadow);
-    expect(surfaceOf(still).boxShadow, isNull);
-    expect(surfaceOf(chosen).boxShadow, CrimpyTheme.raisedShadow);
+    testWidgets('under a tapped card', (tester) async {
+      expect(
+        await paintedInShadowBand(tester, cardOf(onTap: () {})),
+        CrimpyTheme.outline,
+      );
+    });
+
+    testWidgets('under a card raised without a tap', (tester) async {
+      expect(
+        await paintedInShadowBand(tester, cardOf(raised: true)),
+        CrimpyTheme.outline,
+      );
+    });
+
+    testWidgets('and not under a flat card', (tester) async {
+      expect(
+        await paintedInShadowBand(tester, cardOf()),
+        CrimpyTheme.bgPrimary,
+      );
+    });
   });
 
   testWidgets('a tapped card ripples over its surface, not in its margin', (
