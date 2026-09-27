@@ -112,8 +112,8 @@ coloured label or a full-height card bar. Charts are the exception: a bar or a
 line that encodes a category's data keeps its colour (the week histogram, the
 session calendar, the rep performance bar's graded tiles). `CrimpyCard.category`'s
 bar is for a state the whole card carries (a week override, a planned day, a
-week still to declare), not for a category. A disabled control reads light,
-never dark, so it cannot pass for a selected one. See Krakoer/crimpy#170.
+week still to declare), not for a category. A disabled control is never as
+dark as a selected one, so it cannot pass for it. See Krakoer/crimpy#170.
 
 Several roles hold the same hue today. That is the point: each meaning can
 change on its own. A widget painting a new meaning adds a role to the ROLES
