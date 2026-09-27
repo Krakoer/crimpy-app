@@ -65,7 +65,7 @@ void main() {
   testWidgets('gives a coach assessment a section of its own', (tester) async {
     await _show(tester, [_record(_pullUpPyramid, right: 14)]);
 
-    expect(find.text('Pull up pyramid'), findsOneWidget);
+    expect(find.text('PULL UP PYRAMID'), findsOneWidget);
   });
 
   // Calling a pull up count "Right Hand" would misread the result, so a single
@@ -84,7 +84,7 @@ void main() {
   ) async {
     await _show(tester, [_record(_lockOff, right: 3, left: 6)]);
 
-    expect(find.text('One arm lock off'), findsOneWidget);
+    expect(find.text('ONE ARM LOCK OFF'), findsOneWidget);
     // Two cards, so no single "Best" number stands for the pair.
     expect(find.text('Best'), findsNothing);
     expect(find.text('6s'), findsOneWidget);
@@ -103,8 +103,8 @@ void main() {
       _record(_pullUpPyramid, right: 14),
     ]);
 
-    expect(find.text('60% Endurance'), findsOneWidget);
-    expect(find.text('Pull up pyramid'), findsOneWidget);
+    expect(find.text('60% ENDURANCE'), findsOneWidget);
+    expect(find.text('PULL UP PYRAMID'), findsOneWidget);
   });
 
   // The sections Crimpy ships are what invite the athlete to do an assessment,
@@ -114,10 +114,10 @@ void main() {
   ) async {
     await _show(tester, []);
 
-    expect(find.text('Critical Force'), findsOneWidget);
-    expect(find.text('60% Endurance'), findsOneWidget);
+    expect(find.text('CRITICAL FORCE'), findsOneWidget);
+    expect(find.text('60% ENDURANCE'), findsOneWidget);
     expect(find.text('Start Assessment'), findsWidgets);
     // A coach assessment has nothing to show until it is first done.
-    expect(find.text('Pull up pyramid'), findsNothing);
+    expect(find.text('PULL UP PYRAMID'), findsNothing);
   });
 }

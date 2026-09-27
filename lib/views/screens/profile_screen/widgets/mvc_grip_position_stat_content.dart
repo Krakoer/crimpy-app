@@ -102,22 +102,22 @@ class _MvcGripPositionStatContentState
         Row(
           children: [
             Text(
-              "Max Force",
-              style: CrimpyTheme.title.copyWith(
-                color: CrimpyTheme.textPrimary,
-                fontWeight: FontWeight.bold,
+              'MAX FORCE',
+              style: CrimpyTheme.capsLabel.copyWith(
+                color: CrimpyTheme.textSecondary,
               ),
             ),
-            if (widget.mvcByGripPosition.length > 1) ...[
+            if (widget.mvcByGripPosition.isNotEmpty) ...[
               const SizedBox(width: 8),
               Text(
-                "·",
-                style: CrimpyTheme.title.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: CrimpyTheme.textFaint,
+                '-',
+                style: CrimpyTheme.capsLabel.copyWith(
+                  color: CrimpyTheme.textMutedSmall,
                 ),
               ),
               const SizedBox(width: 8),
+            ],
+            if (widget.mvcByGripPosition.length > 1)
               Expanded(
                 child: GestureDetector(
                   onTap: () => _showGripPositionPicker(context),
@@ -127,7 +127,7 @@ class _MvcGripPositionStatContentState
                       Text(
                         _selectedGripPosition?.displayName ?? '',
                         style: CrimpyTheme.body.copyWith(
-                          color: CrimpyTheme.textFaint,
+                          color: CrimpyTheme.textSecondary,
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -139,26 +139,16 @@ class _MvcGripPositionStatContentState
                     ],
                   ),
                 ),
-              ),
-            ] else if (widget.mvcByGripPosition.length == 1) ...[
-              const SizedBox(width: 8),
-              Text(
-                "·",
-                style: CrimpyTheme.title.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: CrimpyTheme.textFaint,
-                ),
-              ),
-              const SizedBox(width: 8),
+              )
+            else if (widget.mvcByGripPosition.length == 1)
               Expanded(
                 child: Text(
                   _selectedGripPosition?.displayName ?? '',
                   style: CrimpyTheme.body.copyWith(
-                    color: CrimpyTheme.textFaint,
+                    color: CrimpyTheme.textSecondary,
                   ),
                 ),
               ),
-            ],
           ],
         ),
         const SizedBox(height: 12),

@@ -18,10 +18,9 @@ class SessionRawDataCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Raw Data',
-                style: CrimpyTheme.title.copyWith(
-                  color: CrimpyTheme.textPrimary,
-                  fontWeight: FontWeight.bold,
+                'RAW DATA',
+                style: CrimpyTheme.capsLabel.copyWith(
+                  color: CrimpyTheme.textSecondary,
                 ),
               ),
               Text(

@@ -1,7 +1,7 @@
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
 
-/// Section title widget
+/// Heading of a section, in capitals like every section heading in the app.
 class SectionTitle extends StatelessWidget {
   final String title;
   const SectionTitle(this.title, {super.key});
@@ -11,11 +11,8 @@ class SectionTitle extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: Text(
-        title,
-        style: CrimpyTheme.title.copyWith(
-          color: CrimpyTheme.textPrimary,
-          fontWeight: FontWeight.bold,
-        ),
+        title.toUpperCase(),
+        style: CrimpyTheme.capsLabel.copyWith(color: CrimpyTheme.textSecondary),
       ),
     );
   }
