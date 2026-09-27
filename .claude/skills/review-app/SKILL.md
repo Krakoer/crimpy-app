@@ -87,14 +87,30 @@ migration step; check `lib/database/database.steps.dart` moved if tables changed
 ## Theme
 
 All colors, radii and spacing come from `CrimpyTheme` in
-`lib/theme/crimpy_theme.dart`: `primaryOrange`, `accentGreen`, `statusError`,
-`bgSecondary`, `textSecondary`, `borderDefault`, `radiusSmall`, and the semantic
-aliases `assessmentColor` / `trainingColor` / `stretchingColor`.
+`lib/theme/crimpy_theme.dart`. It has two layers:
+
+- **The palette**: `primaryOrange`, `primaryBlack`, `primaryWhite` and the
+  `accent*` hues with their `*Text` and `*Fill` forms. Only the theme file may
+  name them; `test/theme/role_tokens_test.dart` fails on any other file that does.
+- **The roles** a widget names instead: neutrals (`textPrimary`,
+  `textSecondary`, `textMutedSmall`, `textStrong`, `textMedium`, `textFaint`,
+  `textOnFill`, `bgPrimary`, `bgSecondary`, `bgSunken`, `outline`,
+  `outlineSubtle`, `scrim`), notices (`status*` with `bg*`), categories
+  (`activityColor`, `assessmentColor`, `trainingColor`), and what a colour
+  means where it is painted (`action`, `current`, `coachNote`, `done`,
+  `onTarget`, `phaseRest`, `leftHand`, and the rest of the ROLES section).
+
+Several roles hold the same hue today. That is the point: each meaning can
+change on its own. A widget painting a new meaning adds a role to the ROLES
+section rather than borrowing one that happens to hold the right colour, and
+adds it to `scannedAccents` in `test/theme/palette_contrast_test.dart` when it
+holds an accent, or the contrast sweep no longer sees it. `textOn`, `markOn`,
+`fillOn` and `tintOf` take a role as readily as a hue.
 
 A raw `Color(0xFF...)` or `Colors.grey` in a widget is a finding: use or add a
-theme constant. Prefer the semantic alias over the raw accent when one exists.
-Keep parity with the web portal's Alpine palette in
-`crimpy-frontend/src/lib/.../layout.css`.
+role. `textFaint` is decoration only and is under the text floor; text set in
+it is a finding (Krakoer/crimpy#169). Keep parity with the web portal's
+Alpine palette in `crimpy-frontend/src/routes/layout.css`.
 
 ## Domain vocabulary
 
