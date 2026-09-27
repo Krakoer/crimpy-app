@@ -86,7 +86,10 @@ class SessionPerformanceCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: CrimpyTheme.gray600, fontSize: 12)),
+        Text(
+          label,
+          style: TextStyle(color: CrimpyTheme.textMedium, fontSize: 12),
+        ),
         Text(
           value,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),

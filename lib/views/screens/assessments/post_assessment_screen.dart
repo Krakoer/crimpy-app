@@ -171,7 +171,7 @@ class ResultCard extends StatelessWidget {
         : ((newValue - prevValue!) / prevValue! * 100).round();
     final isPositive = prevValue == null ? true : newValue >= prevValue!;
     final percentageColor = isPositive
-        ? CrimpyTheme.accentYellow
+        ? CrimpyTheme.improvement
         : Theme.of(context).colorScheme.error;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,7 +199,7 @@ class ResultCard extends StatelessWidget {
                     Text(
                       'Previous',
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: CrimpyTheme.gray500,
+                        color: CrimpyTheme.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -255,7 +255,7 @@ class ResultCard extends StatelessWidget {
                     Text(
                       'Current',
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: CrimpyTheme.gray500,
+                        color: CrimpyTheme.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 8),

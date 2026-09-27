@@ -13,13 +13,16 @@ class EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.history, size: 64, color: CrimpyTheme.gray500),
+          const Icon(Icons.history, size: 64, color: CrimpyTheme.textSecondary),
           const SizedBox(height: 16),
           Text(
             selectedDate != null
                 ? 'No sessions on ${DateFormat('MMMM d, y').format(selectedDate!)}'
                 : 'No sessions found',
-            style: const TextStyle(fontSize: 18, color: CrimpyTheme.gray500),
+            style: const TextStyle(
+              fontSize: 18,
+              color: CrimpyTheme.textSecondary,
+            ),
             textAlign: TextAlign.center,
           ),
         ],

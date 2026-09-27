@@ -7,7 +7,6 @@ import 'package:intl/intl.dart';
 
 class WeekHistogramWidget extends StatelessWidget {
   final List<SessionModel> sessions;
-  final Color barColor;
   final Color textColor;
   final double maxBarHeight;
   final DateTime? startOfWeek;
@@ -16,8 +15,7 @@ class WeekHistogramWidget extends StatelessWidget {
   const WeekHistogramWidget({
     super.key,
     required this.sessions,
-    this.barColor = CrimpyTheme.accentOrange,
-    this.textColor = CrimpyTheme.primaryBlack,
+    this.textColor = CrimpyTheme.textPrimary,
     this.maxBarHeight = 200.0,
     this.startOfWeek,
   });
@@ -161,7 +159,7 @@ class WeekHistogramWidget extends StatelessWidget {
             margin: const EdgeInsets.only(top: 4),
             decoration: isToday
                 ? const BoxDecoration(
-                    color: CrimpyTheme.primaryOrange,
+                    color: CrimpyTheme.current,
                     shape: BoxShape.circle,
                   )
                 : null,

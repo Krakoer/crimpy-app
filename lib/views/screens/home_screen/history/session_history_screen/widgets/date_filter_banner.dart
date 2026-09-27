@@ -17,9 +17,9 @@ class DateFilterBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: CrimpyTheme.primaryOrange.withValues(alpha: 0.1),
+        color: CrimpyTheme.current.withValues(alpha: 0.1),
         border: const Border(
-          bottom: BorderSide(color: CrimpyTheme.primaryOrange, width: 1),
+          bottom: BorderSide(color: CrimpyTheme.current, width: 1),
         ),
       ),
       child: Row(
@@ -27,7 +27,7 @@ class DateFilterBanner extends StatelessWidget {
           Icon(
             Icons.filter_alt,
             size: 16,
-            color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
+            color: CrimpyTheme.textOn(CrimpyTheme.current),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -36,7 +36,7 @@ class DateFilterBanner extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
+                color: CrimpyTheme.textOn(CrimpyTheme.current),
               ),
             ),
           ),

@@ -169,15 +169,42 @@ final Map<String, Color> scannedAccents = {
   'assessmentColor': CrimpyTheme.assessmentColor,
   'trainingColor': CrimpyTheme.trainingColor,
   'stretchingColor': CrimpyTheme.stretchingColor,
-  'successColor': CrimpyTheme.successColor,
-  'errorColor': CrimpyTheme.errorColor,
-  'warningColor': CrimpyTheme.warningColor,
   // Not an accent, and scanned anyway. textMuted is the app's muted voice at
   // 2.85:1 on white, under both floors, and Krakoer/crimpy#137 split it into
   // textMutedSmall for the sizes that have to clear 4.5:1. Without an entry
   // here the sweep that did that was by hand, and a hand sweep leaves
   // hand-sized gaps: five text sites and eleven icons survived it.
   'textMuted': CrimpyTheme.textMuted,
+  // The roles of Krakoer/crimpy#168. Each holds one of the accents above, and a
+  // widget names the role rather than the accent, so a role missing here is an
+  // accent the sweep no longer sees.
+  'action': CrimpyTheme.action,
+  'current': CrimpyTheme.current,
+  'coachNote': CrimpyTheme.coachNote,
+  'goalMark': CrimpyTheme.goalMark,
+  'protocolMark': CrimpyTheme.protocolMark,
+  'overrideMark': CrimpyTheme.overrideMark,
+  'done': CrimpyTheme.done,
+  'onTarget': CrimpyTheme.onTarget,
+  'offTarget': CrimpyTheme.offTarget,
+  'farOffTarget': CrimpyTheme.farOffTarget,
+  'improvement': CrimpyTheme.improvement,
+  'achieved': CrimpyTheme.achieved,
+  'phaseRest': CrimpyTheme.phaseRest,
+  'phasePreparation': CrimpyTheme.phasePreparation,
+  'runPrompt': CrimpyTheme.runPrompt,
+  'tankOnTarget': CrimpyTheme.tankOnTarget,
+  'pullCue': CrimpyTheme.pullCue,
+  'measuring': CrimpyTheme.measuring,
+  'measureSettled': CrimpyTheme.measureSettled,
+  'targetZone': CrimpyTheme.targetZone,
+  'sensorConnected': CrimpyTheme.sensorConnected,
+  'sensorConnecting': CrimpyTheme.sensorConnecting,
+  'forceTrace': CrimpyTheme.forceTrace,
+  'leftHand': CrimpyTheme.leftHand,
+  'rightHand': CrimpyTheme.rightHand,
+  'planned': CrimpyTheme.planned,
+  'newsMark': CrimpyTheme.newsMark,
 };
 
 /// A colour already asked for through the theme's own helpers is this scan's
@@ -374,12 +401,15 @@ class NeutralOffence {
 /// it without naming it.
 final Map<String, Color> scannedNeutralForegrounds = {
   'primaryWhite': CrimpyTheme.primaryWhite,
+  'textOnFill': CrimpyTheme.textOnFill,
   'bgPrimary': CrimpyTheme.bgPrimary,
   'Colors.white': const Color(0xFFFFFFFF),
   'textPrimary': CrimpyTheme.textPrimary,
   'textSecondary': CrimpyTheme.textSecondary,
   'textMuted': CrimpyTheme.textMuted,
   'textMutedSmall': CrimpyTheme.textMutedSmall,
+  'textStrong': CrimpyTheme.textStrong,
+  'textMedium': CrimpyTheme.textMedium,
 };
 
 /// What the theme writes on a filled surface when the call names no label

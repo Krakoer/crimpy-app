@@ -30,7 +30,7 @@ class _SensorSettingsListState extends ConsumerState<SensorSettingsList> {
                 children: value
                     .map(
                       (config) => Dismissible(
-                        background: Container(color: CrimpyTheme.errorColor),
+                        background: Container(color: CrimpyTheme.statusError),
                         key: ValueKey<String>(config.id),
                         // Setting card
                         child: CrimpyCard.simple(
@@ -47,14 +47,14 @@ class _SensorSettingsListState extends ConsumerState<SensorSettingsList> {
                                     "Tare: ${config.tare.toStringAsFixed(2)}",
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: CrimpyTheme.gray600,
+                                      color: CrimpyTheme.textMedium,
                                     ),
                                   ),
                                   Text(
                                     "Coef: ${config.coef.toStringAsFixed(2)}",
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: CrimpyTheme.gray600,
+                                      color: CrimpyTheme.textMedium,
                                     ),
                                   ),
                                 ],

@@ -25,7 +25,7 @@ class SessionRawDataCard extends StatelessWidget {
               ),
               Text(
                 '${dataPoints.length} data points',
-                style: TextStyle(color: CrimpyTheme.gray600, fontSize: 12),
+                style: TextStyle(color: CrimpyTheme.textMedium, fontSize: 12),
               ),
             ],
           ),

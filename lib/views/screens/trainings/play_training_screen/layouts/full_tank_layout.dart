@@ -96,26 +96,26 @@ class _TankPalette {
   /// What the tank is painted in over the unfilled part, which is plain white.
   /// The accent is written as 16px bold text there, so it takes the text form:
   /// the bare accent reads 4.05:1, under the 4.5:1 floor. Krakoer/crimpy#128.
-  static const overTank = _TankPalette(
-    force: CrimpyTheme.primaryBlack,
+  static final overTank = _TankPalette(
+    force: CrimpyTheme.textPrimary,
     secondary: CrimpyTheme.textSecondary,
-    accent: CrimpyTheme.accentOrangeText,
+    accent: CrimpyTheme.textOn(CrimpyTheme.runPrompt),
     muted: CrimpyTheme.textMutedSmall,
-    detail: CrimpyTheme.gray400,
-    notch: CrimpyTheme.borderDefault,
+    detail: CrimpyTheme.textFaint,
+    notch: CrimpyTheme.outline,
     goal: CrimpyTheme.goalColor,
     protocol: CrimpyTheme.protocolColor,
   );
 
   static const overFill = _TankPalette(
-    force: CrimpyTheme.primaryWhite,
+    force: CrimpyTheme.textOnFill,
     secondary: CrimpyTheme.textOnFillSecondary,
-    accent: CrimpyTheme.primaryWhite,
+    accent: CrimpyTheme.textOnFill,
     muted: CrimpyTheme.textOnFillSecondary,
     detail: CrimpyTheme.textOnFillSecondary,
-    notch: CrimpyTheme.primaryWhite,
-    goal: CrimpyTheme.primaryWhite,
-    protocol: CrimpyTheme.primaryWhite,
+    notch: CrimpyTheme.textOnFill,
+    goal: CrimpyTheme.textOnFill,
+    protocol: CrimpyTheme.textOnFill,
   );
 }
 
@@ -272,8 +272,8 @@ class FullTankLayout extends ConsumerWidget {
           children: [
             ColoredBox(
               color: state == _TankState.rest
-                  ? CrimpyTheme.bgSuccess
-                  : CrimpyTheme.primaryWhite,
+                  ? CrimpyTheme.phaseRestGround
+                  : CrimpyTheme.bgPrimary,
             ),
             if (fillHeight > 0)
               Align(
@@ -284,8 +284,8 @@ class FullTankLayout extends ConsumerWidget {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     color: onTarget
-                        ? CrimpyTheme.statusSuccess
-                        : CrimpyTheme.gray600,
+                        ? CrimpyTheme.tankOnTarget
+                        : CrimpyTheme.tankBelowTarget,
                   ),
                 ),
               ),
@@ -358,9 +358,11 @@ class FullTankLayout extends ConsumerWidget {
   /// 18.66px large text threshold, so it answers to 4.5:1 and the accent's
   /// 4.05:1 does not reach it. See Krakoer/crimpy#128.
   Color get _stateColor {
-    if (isPreparation) return CrimpyTheme.textOn(CrimpyTheme.primaryOrange);
+    if (isPreparation) {
+      return CrimpyTheme.textOn(CrimpyTheme.phasePreparation);
+    }
     if (!isRunning) return CrimpyTheme.textMutedSmall;
-    return CrimpyTheme.statusSuccess;
+    return CrimpyTheme.phaseRest;
   }
 
   /// The step coming up, which a working step has the strip to itself for. A
@@ -653,7 +655,7 @@ class _TankContent extends StatelessWidget {
   Widget _countdown() {
     final seconds = layout.secondsRemaining;
     final resting = state == _TankState.rest;
-    final color = resting ? CrimpyTheme.statusSuccess : palette.force;
+    final color = resting ? CrimpyTheme.phaseRest : palette.force;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -675,7 +677,7 @@ class _TankContent extends StatelessWidget {
           resting ? 'SEC REST' : 'SEC',
           style: _style(
             11,
-            color: resting ? CrimpyTheme.statusSuccess : palette.secondary,
+            color: resting ? CrimpyTheme.phaseRest : palette.secondary,
             weight: FontWeight.w700,
             letterSpacing: 2,
           ),
@@ -806,7 +808,7 @@ class _TankContent extends StatelessWidget {
         'LAST REST',
         style: _style(
           22,
-          color: CrimpyTheme.statusSuccess,
+          color: CrimpyTheme.phaseRest,
           weight: FontWeight.w700,
           letterSpacing: 4,
         ),
@@ -1105,13 +1107,11 @@ class _RepContextCard extends StatelessWidget {
     height: repContextCardHeight(scale),
     padding: EdgeInsets.symmetric(horizontal: 18 * scale),
     decoration: const BoxDecoration(
-      color: CrimpyTheme.primaryWhite,
+      color: CrimpyTheme.bgPrimary,
       border: Border.fromBorderSide(
-        BorderSide(color: CrimpyTheme.borderDefault, width: 2),
+        BorderSide(color: CrimpyTheme.outline, width: 2),
       ),
-      boxShadow: [
-        BoxShadow(color: CrimpyTheme.borderDefault, offset: Offset(3, 3)),
-      ],
+      boxShadow: [BoxShadow(color: CrimpyTheme.outline, offset: Offset(3, 3))],
     ),
     // Sized to its text across, so a short context stays a card rather than a
     // banner over the fill. A long one such as "SET 10/10 - REP 12/12" shrinks
@@ -1129,7 +1129,7 @@ class _RepContextCard extends StatelessWidget {
             fontSize: (22 * scale).clamp(16.0, 28.0),
             fontWeight: FontWeight.w900,
             letterSpacing: 1,
-            color: CrimpyTheme.primaryBlack,
+            color: CrimpyTheme.textPrimary,
           ),
         ),
       ),
@@ -1146,13 +1146,11 @@ class _PausedCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(20),
     decoration: const BoxDecoration(
-      color: CrimpyTheme.primaryWhite,
+      color: CrimpyTheme.bgPrimary,
       border: Border.fromBorderSide(
-        BorderSide(color: CrimpyTheme.borderDefault, width: 2),
+        BorderSide(color: CrimpyTheme.outline, width: 2),
       ),
-      boxShadow: [
-        BoxShadow(color: CrimpyTheme.borderDefault, offset: Offset(3, 3)),
-      ],
+      boxShadow: [BoxShadow(color: CrimpyTheme.outline, offset: Offset(3, 3))],
     ),
     child: Column(
       mainAxisSize: MainAxisSize.min,
@@ -1164,7 +1162,7 @@ class _PausedCard extends StatelessWidget {
             fontSize: 24 * scale,
             fontWeight: FontWeight.w900,
             letterSpacing: 4 * scale,
-            color: CrimpyTheme.primaryBlack,
+            color: CrimpyTheme.textPrimary,
           ),
         ),
         SizedBox(height: 8 * scale),
@@ -1232,10 +1230,8 @@ class _ControlStrip extends StatelessWidget {
     height: controlStripHeight,
     padding: const EdgeInsets.symmetric(horizontal: 20),
     decoration: const BoxDecoration(
-      color: CrimpyTheme.primaryWhite,
-      border: Border(
-        top: BorderSide(color: CrimpyTheme.borderDefault, width: 2),
-      ),
+      color: CrimpyTheme.bgPrimary,
+      border: Border(top: BorderSide(color: CrimpyTheme.outline, width: 2)),
     ),
     child: Row(
       children: [
@@ -1276,7 +1272,7 @@ class _ControlStrip extends StatelessWidget {
                     fontSize: 20,
                     height: 1.15,
                     fontWeight: FontWeight.w900,
-                    color: CrimpyTheme.primaryBlack,
+                    color: CrimpyTheme.textPrimary,
                   ),
                 ),
               ],
@@ -1310,19 +1306,19 @@ class _ControlStrip extends StatelessWidget {
             icon: const Icon(Icons.check),
             label: const Text('DONE'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
-              foregroundColor: CrimpyTheme.primaryWhite,
+              backgroundColor: CrimpyTheme.fillOn(CrimpyTheme.action),
+              foregroundColor: CrimpyTheme.textOnFill,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             ),
           )
         else ...[
           _icon(
             isRunning ? Icons.pause : Icons.play_arrow,
-            CrimpyTheme.primaryOrange,
+            CrimpyTheme.action,
             onPlayPause,
           ),
           const SizedBox(width: 28),
-          _icon(Icons.skip_next, CrimpyTheme.primaryBlack, onSkip),
+          _icon(Icons.skip_next, CrimpyTheme.textPrimary, onSkip),
         ],
       ],
     ),

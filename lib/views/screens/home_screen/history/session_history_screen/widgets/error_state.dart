@@ -16,17 +16,17 @@ class ErrorState extends StatelessWidget {
           const Icon(
             Icons.error_outline,
             size: 64,
-            color: CrimpyTheme.errorColor,
+            color: CrimpyTheme.statusError,
           ),
           const SizedBox(height: 16),
           Text(
             'Error loading sessions',
-            style: TextStyle(fontSize: 18, color: CrimpyTheme.gray700),
+            style: TextStyle(fontSize: 18, color: CrimpyTheme.textStrong),
           ),
           const SizedBox(height: 8),
           Text(
             error,
-            style: TextStyle(fontSize: 14, color: CrimpyTheme.gray600),
+            style: TextStyle(fontSize: 14, color: CrimpyTheme.textMedium),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),

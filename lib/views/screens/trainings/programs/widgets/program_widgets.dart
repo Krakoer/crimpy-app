@@ -82,7 +82,7 @@ class ScheduleStatusTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
-      ScheduleStatus.due => ('TODAY', CrimpyTheme.primaryOrange),
+      ScheduleStatus.due => ('TODAY', CrimpyTheme.current),
       ScheduleStatus.upcoming => ('UPCOMING', CrimpyTheme.textMutedSmall),
       ScheduleStatus.past => ('PAST', CrimpyTheme.textMutedSmall),
     };
@@ -138,12 +138,9 @@ class WeekProgressBar extends StatelessWidget {
                 margin: EdgeInsets.only(right: i == total - 1 ? 0 : 3),
                 decoration: BoxDecoration(
                   color: i < currentWeek
-                      ? CrimpyTheme.primaryOrange
+                      ? CrimpyTheme.action
                       : CrimpyTheme.bgPrimary,
-                  border: Border.all(
-                    color: CrimpyTheme.borderDefault,
-                    width: 1.5,
-                  ),
+                  border: Border.all(color: CrimpyTheme.outline, width: 1.5),
                 ),
               ),
             );
@@ -175,9 +172,7 @@ class ScheduledTrainingRow extends StatelessWidget {
     final color = programSessionColor(type);
     final status = scheduleStatusFor(date, DateTime.now());
     final due = status == ScheduleStatus.due && !done;
-    final borderColor = due
-        ? CrimpyTheme.primaryOrange
-        : CrimpyTheme.borderDefault;
+    final borderColor = due ? CrimpyTheme.current : CrimpyTheme.outline;
 
     return GestureDetector(
       onTap: onTap,
@@ -233,7 +228,7 @@ class ScheduledTrainingRow extends StatelessWidget {
                 Icon(
                   FontAwesomeIcons.circleCheck,
                   size: 20,
-                  color: CrimpyTheme.statusSuccess,
+                  color: CrimpyTheme.done,
                 )
               else
                 ScheduleStatusTag(status: status),
@@ -274,7 +269,7 @@ class FlexTrainingRow extends StatelessWidget {
           dashPattern: const [6, 4],
           strokeWidth: 2,
           radius: Radius.zero,
-          color: CrimpyTheme.borderDefault,
+          color: CrimpyTheme.outline,
         ),
         child: Container(
           color: CrimpyTheme.bgPrimary,
@@ -322,7 +317,7 @@ class FlexTrainingRow extends StatelessWidget {
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: complete
-                          ? CrimpyTheme.textOn(CrimpyTheme.statusSuccess)
+                          ? CrimpyTheme.textOn(CrimpyTheme.done)
                           : CrimpyTheme.textOn(color),
                     ),
                   ),

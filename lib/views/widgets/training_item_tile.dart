@@ -67,9 +67,9 @@ class TrainingItemComment extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
       decoration: BoxDecoration(
-        color: CrimpyTheme.primaryOrange.withValues(alpha: 0.10),
+        color: CrimpyTheme.coachNote.withValues(alpha: 0.10),
         border: Border.all(
-          color: CrimpyTheme.primaryOrange.withValues(alpha: 0.4),
+          color: CrimpyTheme.coachNote.withValues(alpha: 0.4),
           width: 1.5,
         ),
       ),
@@ -79,7 +79,7 @@ class TrainingItemComment extends StatelessWidget {
           const Icon(
             FontAwesomeIcons.comment,
             size: 11,
-            color: CrimpyTheme.primaryOrange,
+            color: CrimpyTheme.coachNote,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -171,7 +171,7 @@ class TrainingItemGoal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      _LabelledNote(label: 'GOAL', accent: CrimpyTheme.accentGreen, text: goal);
+      _LabelledNote(label: 'GOAL', accent: CrimpyTheme.goalMark, text: goal);
 }
 
 /// The rule the athlete resolves while performing the block, e.g. "to failure
@@ -189,7 +189,7 @@ class TrainingItemProtocol extends StatelessWidget {
   @override
   Widget build(BuildContext context) => _LabelledNote(
     label: 'PROTOCOL',
-    accent: CrimpyTheme.accentYellow,
+    accent: CrimpyTheme.protocolMark,
     text: protocol,
   );
 }
@@ -248,7 +248,7 @@ class TrainingItemTile extends StatelessWidget {
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: CrimpyTheme.bgSecondary,
-            border: Border.all(color: CrimpyTheme.borderDefault, width: 1.5),
+            border: Border.all(color: CrimpyTheme.outline, width: 1.5),
           ),
           child: Text(
             '$number',

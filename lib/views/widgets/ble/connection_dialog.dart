@@ -76,7 +76,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.error,
-                        foregroundColor: CrimpyTheme.primaryWhite,
+                        foregroundColor: CrimpyTheme.textOnFill,
                       ),
                       onPressed: () {
                         ref.read(connectionStateProvider.notifier).disconnect();
@@ -127,14 +127,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             'Connected to:',
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.gray500),
+            ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.textSecondary),
           ),
           const SizedBox(height: 8),
           Row(
             children: [
               Icon(
                 Icons.bluetooth_connected,
-                color: CrimpyTheme.markOn(CrimpyTheme.accentYellow),
+                color: CrimpyTheme.markOn(CrimpyTheme.sensorConnected),
                 size: 24,
               ),
               const SizedBox(width: 8),
@@ -149,7 +149,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                     Text(
                       device?.id ?? '',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: CrimpyTheme.gray500,
+                        color: CrimpyTheme.textSecondary,
                       ),
                     ),
                   ],

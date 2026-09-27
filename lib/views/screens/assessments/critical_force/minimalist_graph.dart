@@ -47,7 +47,7 @@ class MinimalistGraph extends ConsumerWidget {
               // against the white card; the mark form reads 3.64:1 at this
               // alpha. See Krakoer/crimpy#137.
               color: CrimpyTheme.markOn(
-                CrimpyTheme.accentYellow,
+                CrimpyTheme.forceTrace,
               ).withValues(alpha: 0.8),
               width: 3,
               markerSettings: const MarkerSettings(isVisible: false),

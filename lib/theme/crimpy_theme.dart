@@ -161,16 +161,137 @@ class CrimpyTheme {
   /// Secondary text drawn over a filled surface - Translucent white
   static const Color textOnFillSecondary = Color(0xB3FFFFFF);
 
-  // ==================== BORDER COLORS ====================
+  /// Text a step darker than [textSecondary], for the numbers and headings of
+  /// the history cards.
+  static const Color textStrong = Color(0xFF404040);
 
-  /// Default border - Light gray
-  static const Color borderDefault = Color.fromARGB(255, 29, 29, 29);
+  /// Text between [textStrong] and [textSecondary], for the labels of the
+  /// history cards.
+  static const Color textMedium = Color(0xFF525252);
 
-  /// Darker border for emphasis
-  static const Color borderDark = Color(0xFFCCCCCC);
+  /// Grey for decoration only: chevrons, idle icons, empty placeholders. At
+  /// 2.53:1 on white it is not a text colour; see Krakoer/crimpy#169.
+  static const Color textFaint = Color(0xFFA3A3A3);
 
-  // ==================== SEMANTIC COLOR MAPPING ====================
-  // For backwards compatibility with existing code
+  /// Text and icons drawn over a filled surface.
+  static const Color textOnFill = primaryWhite;
+
+  // ==================== LINES AND GROUNDS ====================
+
+  /// The line of a card, an input and a divider, and the colour of the hard
+  /// offset shadow cards cast.
+  static const Color outline = Color.fromARGB(255, 29, 29, 29);
+
+  /// A quieter line, for separators inside a card and unselected controls.
+  static const Color outlineSubtle = Color(0xFFCCCCCC);
+
+  /// A ground set into a card, under a group of rows.
+  static const Color bgSunken = Color(0xFFF5F5F5);
+
+  /// What is laid over the screen behind a modal notice. Always faded.
+  static const Color scrim = primaryBlack;
+
+  // ==================== ROLES ====================
+  // What a colour means where a widget paints it. Widgets name a role, never a
+  // hue: several roles hold the same hue today, and giving each meaning its own
+  // name is what lets one of them change without the others moving with it.
+  // The values are the ones each meaning was painted in before the roles
+  // existed. See Krakoer/crimpy#168.
+
+  /// A primary action, a selected control, progress.
+  static const Color action = primaryOrange;
+
+  /// The present: today on a calendar, this week in a program, a date filter.
+  static const Color current = primaryOrange;
+
+  /// What a coach wrote to the athlete.
+  static const Color coachNote = primaryOrange;
+
+  /// The mark of what a block is for. [goalColor] is its text form.
+  static const Color goalMark = accentGreen;
+
+  /// The mark of the rule a block is resolved by. [protocolColor] is its text
+  /// form.
+  static const Color protocolMark = accentYellow;
+
+  /// A value this week's program set differently from the training.
+  static const Color overrideMark = accentYellow;
+
+  /// A scheduled training that was done.
+  static const Color done = statusSuccess;
+
+  /// A rep that held its target load.
+  static const Color onTarget = statusSuccess;
+
+  /// A rep that missed its target load.
+  static const Color offTarget = statusWarning;
+
+  /// A rep that fell well short of its target load, where a view grades a miss
+  /// in two tiers: [offTarget] is then the milder one.
+  static const Color farOffTarget = statusError;
+
+  /// A result better than the previous one.
+  static const Color improvement = accentYellow;
+
+  /// What the athlete reported achieving on a step.
+  static const Color achieved = primaryOrange;
+
+  /// The mark of a precaution to take before a test, such as warming up.
+  static const Color caution = accentYellowText;
+
+  /// The countdown and labels of a rest on the run screen.
+  static const Color phaseRest = statusSuccess;
+
+  /// The ground of the run screen during a rest.
+  static const Color phaseRestGround = bgSuccess;
+
+  /// The countdown before the first step of a run.
+  static const Color phasePreparation = primaryOrange;
+
+  /// The run screen's instruction: which hand, which step, what load.
+  static const Color runPrompt = primaryOrange;
+
+  /// The run screen's fill when the load holds the target.
+  static const Color tankOnTarget = statusSuccess;
+
+  /// The run screen's fill while the load is under the target.
+  static const Color tankBelowTarget = textMedium;
+
+  /// The cue to pull during an assessment run.
+  static const Color pullCue = accentYellow;
+
+  /// A reading not yet where the test wants it: still settling, not started,
+  /// or outside its zone.
+  static const Color measuring = accentYellow;
+
+  /// A reading where the test wants it: settled, started, inside its zone.
+  static const Color measureSettled = accentGreen;
+
+  /// The band a test asks the load to stay inside.
+  static const Color targetZone = accentYellow;
+
+  /// A sensor that is connected.
+  static const Color sensorConnected = accentYellow;
+
+  /// A sensor that is being connected to.
+  static const Color sensorConnecting = accentOrange;
+
+  /// The live force trace of an assessment run.
+  static const Color forceTrace = accentYellow;
+
+  /// The left hand's series in a chart.
+  static const Color leftHand = accentOrange;
+
+  /// The right hand's series in a chart.
+  static const Color rightHand = accentYellow;
+
+  /// A day the athlete planned to train on.
+  static const Color planned = accentGreen;
+
+  /// The mark of what changed in a new release.
+  static const Color newsMark = accentBlue;
+
+  // ==================== CATEGORIES ====================
 
   /// Assessment activities
   static const Color assessmentColor = accentOrange;
@@ -194,26 +315,6 @@ class CrimpyTheme {
   /// crimpy-frontend/src/routes/layout.css.
   static const Color protocolColor = accentYellowText;
 
-  /// Success/rest states
-  static const Color successColor = statusSuccess;
-
-  /// Error states
-  static const Color errorColor = statusError;
-
-  /// Warning states
-  static const Color warningColor = statusWarning;
-
-  // ==================== GRAY SCALE ====================
-  // Maintained for backwards compatibility
-
-  static const Color gray100 = Color(0xFFF5F5F5);
-  static const Color gray200 = borderDefault;
-  static const Color gray300 = borderDark;
-  static const Color gray400 = Color(0xFFA3A3A3);
-  static const Color gray500 = textSecondary;
-  static const Color gray600 = Color(0xFF525252);
-  static const Color gray700 = Color(0xFF404040);
-
   // ==================== SPACING CONSTANTS ====================
 
   /// No border radius for sharp, minimal look
@@ -233,7 +334,7 @@ class CrimpyTheme {
     fontFamily: 'JetBrainsMono', // Monospace font like Radicle
     // Color Scheme
     colorScheme: const ColorScheme.light(
-      primary: primaryOrange,
+      primary: action,
       secondary: accentGreen,
       tertiary: accentPurple,
       surface: bgPrimary,
@@ -242,8 +343,8 @@ class CrimpyTheme {
       onSecondary: primaryWhite,
       onSurface: textPrimary,
       onError: primaryWhite,
-      outline: borderDefault,
-      outlineVariant: borderDark,
+      outline: outline,
+      outlineVariant: outlineSubtle,
     ),
 
     // Scaffold
@@ -272,10 +373,10 @@ class CrimpyTheme {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.zero,
-        side: BorderSide(color: borderDefault, width: 2),
+        side: BorderSide(color: outline, width: 2),
       ),
       margin: EdgeInsets.symmetric(vertical: 8),
-      shadowColor: borderDefault,
+      shadowColor: outline,
     ),
 
     // Primary button - Orange with sharp edges
@@ -284,7 +385,7 @@ class CrimpyTheme {
         // Darkened so the white label the line below sets clears 4.5:1.
         // primaryOrange itself reads 4.05:1 under white, and this theme is
         // what every ElevatedButton that names no ground inherits.
-        backgroundColor: accentOrangeFill,
+        backgroundColor: fillOn(action),
         foregroundColor: primaryWhite,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -303,9 +404,9 @@ class CrimpyTheme {
     // since a border is not text. See Krakoer/crimpy#128.
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: accentOrangeText,
+        foregroundColor: textOn(action),
         backgroundColor: bgPrimary,
-        side: const BorderSide(color: primaryOrange, width: 1),
+        side: const BorderSide(color: action, width: 1),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         textStyle: const TextStyle(
@@ -322,7 +423,7 @@ class CrimpyTheme {
     // TextButton.icon's icon too, which only helps it. See Krakoer/crimpy#128.
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: accentOrangeText,
+        foregroundColor: textOn(action),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         textStyle: const TextStyle(
           fontSize: 13,
@@ -339,15 +440,15 @@ class CrimpyTheme {
       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(color: borderDefault, width: 1),
+        borderSide: BorderSide(color: outline, width: 1),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(color: borderDefault, width: 1),
+        borderSide: BorderSide(color: outline, width: 1),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(color: primaryOrange, width: 1),
+        borderSide: BorderSide(color: action, width: 1),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.zero,
@@ -366,22 +467,22 @@ class CrimpyTheme {
     // Chip theme with minimal styling
     chipTheme: ChipThemeData(
       backgroundColor: bgSecondary,
-      selectedColor: primaryOrange,
-      disabledColor: gray200,
+      selectedColor: action,
+      disabledColor: outline,
       labelStyle: const TextStyle(
         color: textPrimary,
         fontSize: 11,
         fontWeight: FontWeight.w500,
         fontFamily: 'JetBrainsMono',
       ),
-      side: const BorderSide(color: borderDefault, width: 1),
+      side: const BorderSide(color: outline, width: 1),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     ),
 
     // Bottom navigation
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: bgSecondary,
-      selectedItemColor: primaryOrange,
+      selectedItemColor: action,
       unselectedItemColor: textPrimary,
       showUnselectedLabels: true,
       type: BottomNavigationBarType.fixed,
@@ -390,13 +491,13 @@ class CrimpyTheme {
 
     navigationBarTheme: const NavigationBarThemeData(
       backgroundColor: bgSecondary,
-      indicatorColor: primaryOrange,
+      indicatorColor: action,
       elevation: 0,
     ),
 
     // FAB with sharp corners
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: primaryOrange,
+      backgroundColor: action,
       foregroundColor: primaryWhite,
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
@@ -495,7 +596,7 @@ class CrimpyTheme {
 
     // Divider with minimal styling
     dividerTheme: const DividerThemeData(
-      color: borderDefault,
+      color: outline,
       thickness: 1,
       space: 16,
     ),
@@ -506,11 +607,11 @@ class CrimpyTheme {
         if (states.contains(WidgetState.selected)) {
           return primaryWhite;
         }
-        return borderDark;
+        return outlineSubtle;
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return primaryOrange;
+          return action;
         }
         return bgSecondary;
       }),
@@ -520,12 +621,12 @@ class CrimpyTheme {
     checkboxTheme: CheckboxThemeData(
       fillColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return primaryOrange;
+          return action;
         }
         return bgPrimary;
       }),
       checkColor: WidgetStateProperty.all(primaryWhite),
-      side: const BorderSide(color: borderDefault, width: 1),
+      side: const BorderSide(color: outline, width: 1),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     ),
 
@@ -533,33 +634,33 @@ class CrimpyTheme {
     radioTheme: RadioThemeData(
       fillColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return primaryOrange;
+          return action;
         }
-        return borderDefault;
+        return outline;
       }),
     ),
 
     // Slider theme
-    sliderTheme: const SliderThemeData(
-      activeTrackColor: primaryOrange,
-      inactiveTrackColor: borderDefault,
-      thumbColor: primaryOrange,
-      overlayColor: Color(0x1FC6613F), // 12% opacity orange
-      valueIndicatorColor: primaryOrange,
+    sliderTheme: SliderThemeData(
+      activeTrackColor: action,
+      inactiveTrackColor: outline,
+      thumbColor: action,
+      overlayColor: action.withAlpha(0x1F),
+      valueIndicatorColor: action,
     ),
 
     // Progress indicator theme
     progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: primaryOrange,
-      linearTrackColor: borderDefault,
-      circularTrackColor: borderDefault,
+      color: action,
+      linearTrackColor: outline,
+      circularTrackColor: outline,
     ),
 
     // Tab bar theme
     tabBarTheme: const TabBarThemeData(
-      labelColor: primaryOrange,
+      labelColor: action,
       unselectedLabelColor: textSecondary,
-      indicatorColor: primaryOrange,
+      indicatorColor: action,
       indicatorSize: TabBarIndicatorSize.label,
       labelStyle: TextStyle(
         fontSize: 13,
@@ -583,64 +684,6 @@ class CrimpyTheme {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
       behavior: SnackBarBehavior.floating,
     ),
-  );
-
-  // ==================== CUSTOM DECORATIONS ====================
-
-  /// Basic card decoration with double border effect
-  static BoxDecoration cardDecoration = BoxDecoration(
-    color: bgPrimary,
-    border: Border.all(color: borderDefault, width: 2),
-    boxShadow: [
-      BoxShadow(
-        color: borderDefault,
-        offset: const Offset(4, 4),
-        blurRadius: 0, // Sharp shadow for double border effect
-        spreadRadius: 0,
-      ),
-    ],
-  );
-
-  /// Hover effect decoration
-  static BoxDecoration hoverDecoration = BoxDecoration(
-    color: bgHover,
-    border: Border.all(color: primaryOrange, width: 1),
-    boxShadow: [
-      BoxShadow(
-        color: primaryOrange.withValues(alpha: 0.1),
-        offset: const Offset(0, 2),
-        blurRadius: 8,
-      ),
-    ],
-  );
-
-  /// Category-specific card decoration with colored left border and double border effect
-  static BoxDecoration categoryCardDecoration(Color categoryColor) =>
-      BoxDecoration(
-        color: bgPrimary,
-        border: Border(
-          left: BorderSide(color: categoryColor, width: 4),
-          top: BorderSide(color: borderDefault, width: 2),
-          right: BorderSide(color: borderDefault, width: 2),
-          bottom: BorderSide(color: borderDefault, width: 2),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: borderDefault,
-            offset: const Offset(4, 4),
-            blurRadius: 0, // Sharp shadow for double border effect
-            spreadRadius: 0,
-          ),
-        ],
-      );
-
-  /// Status background decoration
-  static BoxDecoration statusDecoration(
-    Color statusColor,
-    Color backgroundColor,
-  ) => BoxDecoration(
-    color: backgroundColor,
-    border: Border.all(color: statusColor, width: 1),
   );
 
   // ==================== CATEGORY HELPERS ====================
@@ -798,59 +841,4 @@ class CrimpyTheme {
   /// form, and giving the status green its own would be a seventh token with no
   /// counterpart in the portal palette.
   static Color textOn(Color accent) => _accentTextColors[accent] ?? accent;
-
-  /// Get category color for training types
-  static Color getCategoryColor(String category) {
-    switch (category.toLowerCase()) {
-      case 'strength':
-      case 'assessment':
-        return accentOrange;
-      case 'endurance':
-        return accentGreen;
-      case 'power':
-      case 'training':
-        return accentYellow;
-      case 'technique':
-        return accentPurple;
-      case 'flexibility':
-      case 'stretching':
-        return accentTeal;
-      default:
-        return accentOrange;
-    }
-  }
-
-  /// Get status decoration for different states
-  static BoxDecoration getStatusDecoration(String status) {
-    switch (status.toLowerCase()) {
-      case 'success':
-      case 'completed':
-        return statusDecoration(statusSuccess, bgSuccess);
-      case 'error':
-      case 'failed':
-        return statusDecoration(statusError, bgError);
-      case 'warning':
-      case 'pending':
-        return statusDecoration(statusWarning, bgWarning);
-      case 'info':
-      case 'active':
-        return statusDecoration(statusInfo, bgInfo);
-      default:
-        return cardDecoration;
-    }
-  }
-
-  // ==================== BACKWARDS COMPATIBILITY ====================
-  // Aliases for existing code that uses old naming conventions
-
-  static const Color background = bgSecondary;
-  static const Color accentCardDecoration = accentOrange; // For method calls
-
-  /// Legacy method for accent card decoration
-  static BoxDecoration getAccentCardDecoration(Color accentColor) =>
-      categoryCardDecoration(accentColor);
-
-  /// Legacy shadow decorations
-  static BoxDecoration get cardShadow => cardDecoration;
-  static BoxDecoration get buttonShadow => hoverDecoration;
 }

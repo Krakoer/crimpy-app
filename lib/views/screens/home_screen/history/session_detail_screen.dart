@@ -294,11 +294,11 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 64, color: CrimpyTheme.gray500),
+          Icon(Icons.error_outline, size: 64, color: CrimpyTheme.textSecondary),
           SizedBox(height: 16),
           Text(
             'Session not found',
-            style: TextStyle(fontSize: 18, color: CrimpyTheme.gray500),
+            style: TextStyle(fontSize: 18, color: CrimpyTheme.textSecondary),
           ),
         ],
       ),
@@ -313,17 +313,17 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
           const Icon(
             Icons.error_outline,
             size: 64,
-            color: CrimpyTheme.errorColor,
+            color: CrimpyTheme.statusError,
           ),
           const SizedBox(height: 16),
           Text(
             'Error loading session details',
-            style: TextStyle(fontSize: 18, color: CrimpyTheme.gray700),
+            style: TextStyle(fontSize: 18, color: CrimpyTheme.textStrong),
           ),
           const SizedBox(height: 8),
           Text(
             error,
-            style: TextStyle(fontSize: 14, color: CrimpyTheme.gray600),
+            style: TextStyle(fontSize: 14, color: CrimpyTheme.textMedium),
             textAlign: TextAlign.center,
           ),
         ],

@@ -49,9 +49,7 @@ class SectionLabel extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: _labelGap),
-              Expanded(
-                child: Container(height: 2, color: CrimpyTheme.borderDefault),
-              ),
+              Expanded(child: Container(height: 2, color: CrimpyTheme.outline)),
             ],
           );
         },

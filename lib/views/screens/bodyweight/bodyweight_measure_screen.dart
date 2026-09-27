@@ -119,10 +119,10 @@ class _BodyweightMeasureScreenState
               xValueMapper: (BleDataPoint p, _) => p.timestamp,
               yValueMapper: (BleDataPoint p, _) => p.value,
               color: holding
-                  ? CrimpyTheme.markOn(CrimpyTheme.accentGreen)
+                  ? CrimpyTheme.markOn(CrimpyTheme.measureSettled)
                   // The same series, held to the same 3:1 non-text floor.
                   : CrimpyTheme.markOn(
-                      CrimpyTheme.accentYellow,
+                      CrimpyTheme.measuring,
                     ).withValues(alpha: 0.8),
               width: 3,
               markerSettings: const MarkerSettings(isVisible: false),
@@ -143,12 +143,12 @@ class _BodyweightMeasureScreenState
       // hue darkened: at 0.9 even the darkened gold only reaches 4.03:1,
       // and the bare accents read 2.06:1 and 3.33:1 under white.
       color: holding
-          ? CrimpyTheme.fillOn(CrimpyTheme.accentGreen)
-          : CrimpyTheme.fillOn(CrimpyTheme.accentYellow),
-      border: Border.all(color: CrimpyTheme.borderDefault, width: 2),
+          ? CrimpyTheme.fillOn(CrimpyTheme.measureSettled)
+          : CrimpyTheme.fillOn(CrimpyTheme.measuring),
+      border: Border.all(color: CrimpyTheme.outline, width: 2),
       boxShadow: const [
         BoxShadow(
-          color: CrimpyTheme.borderDefault,
+          color: CrimpyTheme.outline,
           offset: Offset(4, 4),
           blurRadius: 0,
           spreadRadius: 0,
@@ -162,7 +162,7 @@ class _BodyweightMeasureScreenState
           holding ? 'Hold still' : 'Hang with all your weight on the sensor',
           style: const TextStyle(
             fontSize: 20,
-            color: CrimpyTheme.primaryWhite,
+            color: CrimpyTheme.textOnFill,
             fontWeight: FontWeight.bold,
           ),
           textAlign: TextAlign.center,
@@ -173,7 +173,7 @@ class _BodyweightMeasureScreenState
             '${_measurement.secondsRemaining}',
             style: const TextStyle(
               fontSize: 40,
-              color: CrimpyTheme.primaryWhite,
+              color: CrimpyTheme.textOnFill,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -185,7 +185,7 @@ class _BodyweightMeasureScreenState
   Widget _readingBox(double? lastValue) => Container(
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: CrimpyTheme.primaryBlack.withValues(alpha: 0.7),
+      color: CrimpyTheme.scrim.withValues(alpha: 0.7),
       borderRadius: BorderRadius.circular(8),
     ),
     child: Column(
@@ -195,7 +195,7 @@ class _BodyweightMeasureScreenState
           '${lastValue == null ? "--" : lastValue.toStringAsFixed(1)} kg',
           style: const TextStyle(
             fontSize: 48,
-            color: CrimpyTheme.primaryWhite,
+            color: CrimpyTheme.textOnFill,
             fontWeight: FontWeight.bold,
           ),
         ),

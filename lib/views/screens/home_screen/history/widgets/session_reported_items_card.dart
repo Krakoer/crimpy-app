@@ -73,7 +73,7 @@ class _ReportedItemRow extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
+                      color: CrimpyTheme.textOn(CrimpyTheme.achieved),
                     ),
                   ),
                   if (item.prescribed case final prescribed?)

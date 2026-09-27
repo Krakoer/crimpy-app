@@ -132,7 +132,7 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                   width: 36,
                   height: 4,
                   decoration: const BoxDecoration(
-                    color: CrimpyTheme.borderDark,
+                    color: CrimpyTheme.outlineSubtle,
                   ),
                 ),
               ),

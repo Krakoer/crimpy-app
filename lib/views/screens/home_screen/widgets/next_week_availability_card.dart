@@ -32,9 +32,7 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
     final isDeclared = declared.map(getStartOfWeek).contains(nextWeek);
 
     return CrimpyCard.category(
-      accentColor: isDeclared
-          ? CrimpyTheme.accentGreen
-          : CrimpyTheme.primaryOrange,
+      accentColor: isDeclared ? CrimpyTheme.planned : CrimpyTheme.action,
       margin: const EdgeInsets.only(bottom: 16),
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
@@ -48,9 +46,7 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
                 ? FontAwesomeIcons.circleCheck
                 : FontAwesomeIcons.calendarDay,
             size: 18,
-            color: isDeclared
-                ? CrimpyTheme.accentGreen
-                : CrimpyTheme.primaryOrange,
+            color: isDeclared ? CrimpyTheme.planned : CrimpyTheme.action,
           ),
           const SizedBox(width: 12),
           Expanded(

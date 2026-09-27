@@ -53,7 +53,7 @@ class SessionOverviewCard extends StatelessWidget {
                       Text(
                         session.activity.displayName,
                         style: TextStyle(
-                          color: CrimpyTheme.gray600,
+                          color: CrimpyTheme.textMedium,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
@@ -162,7 +162,7 @@ class SessionOverviewCard extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: CrimpyTheme.gray600),
+        Icon(icon, size: 16, color: CrimpyTheme.textMedium),
         const SizedBox(width: 8),
         // Flexible rather than bare: the RPE anchor is a sentence where every
         // other stat is a figure, and an unbounded Column would lay it out on
@@ -173,7 +173,7 @@ class SessionOverviewCard extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(color: CrimpyTheme.gray600, fontSize: 12),
+                style: TextStyle(color: CrimpyTheme.textMedium, fontSize: 12),
               ),
               Text(
                 value,

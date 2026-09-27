@@ -247,7 +247,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                               'There is nothing to note step by step on this '
                               'training. Tell us how it went below.',
                               style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: CrimpyTheme.gray500),
+                                  ?.copyWith(color: CrimpyTheme.textSecondary),
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -384,7 +384,7 @@ class _OverallOnTarget extends StatelessWidget {
   Widget build(BuildContext context) {
     final muted = Theme.of(
       context,
-    ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.gray500);
+    ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.textSecondary);
 
     return Text.rich(
       TextSpan(
@@ -419,7 +419,7 @@ class _BlocksOnTarget extends StatelessWidget {
   Widget build(BuildContext context) {
     final muted = Theme.of(
       context,
-    ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.gray500);
+    ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.textSecondary);
 
     return Padding(
       padding: const EdgeInsets.only(top: 8, left: 32, right: 32),
