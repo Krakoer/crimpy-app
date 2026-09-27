@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/repositories/training_repository.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/dummy_data_generator.dart';
 import 'package:crimpy/viewmodels/app_info_view_model.dart';
 import 'package:crimpy/views/widgets/whats_new_dialog.dart';
@@ -18,9 +19,6 @@ void showDebugModal(BuildContext context) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
     builder: (context) => const _DebugModalContent(),
   );
 }
@@ -51,7 +49,7 @@ class _DebugModalContent extends ConsumerWidget {
                   height: 4,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: CrimpyTheme.corners,
                   ),
                 ),
               ),
@@ -253,7 +251,7 @@ class _DebugToolsSectionState extends ConsumerState<_DebugToolsSection> {
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: const Text('Generate'),
           ),
@@ -308,12 +306,9 @@ class _DebugToolsSectionState extends ConsumerState<_DebugToolsSection> {
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(
+          FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
+            style: CrimpyTheme.destructiveButton,
             child: const Text('Clear All'),
           ),
         ],

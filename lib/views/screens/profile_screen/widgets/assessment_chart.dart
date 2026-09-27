@@ -111,7 +111,7 @@ class _ForceChartState extends State<ForceChart> {
           if (allData.isEmpty) ...[
             Positioned.fill(
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: CrimpyTheme.corners,
                 child: Container(
                   color: CrimpyTheme.bgPrimary.withValues(alpha: 0.7),
                 ),

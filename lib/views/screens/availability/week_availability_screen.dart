@@ -131,8 +131,9 @@ class _WeekAvailabilityScreenState
             onPressed: () => Navigator.of(ctx).pop(false),
             child: const Text('Stay'),
           ),
-          TextButton(
+          FilledButton(
             onPressed: () => Navigator.of(ctx).pop(true),
+            style: CrimpyTheme.destructiveButton,
             child: const Text('Discard'),
           ),
         ],

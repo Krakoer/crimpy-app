@@ -142,7 +142,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text(type));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('OK'));
+      await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
     }
 
@@ -164,7 +164,7 @@ void main() {
 
       await tester.enterText(fieldWithLabel('Title (optional)'), 'Pull block');
       await tester.enterText(fieldWithLabel('Rest between items (s)'), '15');
-      await tester.tap(find.text('OK'));
+      await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
 
       expect(find.text('Pull block'), findsOneWidget);
@@ -199,7 +199,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Group'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('OK'));
+      await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
       await addItem(tester, 'Hang rep', find.text('Add item'));
 
@@ -230,7 +230,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(fieldWithLabel('Rest between cycles (s)'), '');
-      await tester.tap(find.text('OK'));
+      await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
 
       // The dialog stays up on its error rather than saving the old 120 behind
@@ -239,7 +239,7 @@ void main() {
       expect(find.text('Circuit'), findsOneWidget);
 
       await tester.enterText(fieldWithLabel('Rest between cycles (s)'), '60');
-      await tester.tap(find.text('OK'));
+      await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
 
       expect(find.text('3 cycles - 60s between cycles'), findsOneWidget);
@@ -269,7 +269,7 @@ void main() {
       await tester.tap(find.text('Circuit'));
       await tester.pumpAndSettle();
       await tester.enterText(fieldWithLabel('Rest between items (s)'), '15');
-      await tester.tap(find.text('OK'));
+      await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
 
       // The row of buttons this card used to carry left the text about 100dp
@@ -295,7 +295,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text(group));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('OK'));
+      await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Add item'));
@@ -306,7 +306,7 @@ void main() {
 
       await tester.tap(find.text(cycle));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('OK'));
+      await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
 
       // A container renders its children above its own add button, so the

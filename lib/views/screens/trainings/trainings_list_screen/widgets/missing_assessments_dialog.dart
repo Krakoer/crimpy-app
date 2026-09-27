@@ -17,7 +17,6 @@ class MissingAssessmentsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -59,7 +58,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: CrimpyTheme.bgSecondary,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: CrimpyTheme.corners,
                 border: Border.all(color: CrimpyTheme.outlineSubtle),
               ),
               child: Column(
@@ -115,48 +114,21 @@ class MissingAssessmentsDialog extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: BorderSide(
-                        color: CrimpyTheme.textMutedSmall,
-                        width: 1,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      'Cancel',
-                      style: TextStyle(
-                        color: CrimpyTheme.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    child: const Text('Not now'),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   flex: 2,
-                  child: ElevatedButton.icon(
+                  child: FilledButton.icon(
                     onPressed: () {
                       Navigator.of(context).pop();
                       onGoToAssessments();
                     },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      backgroundColor: CrimpyTheme.fillOn(CrimpyTheme.action),
-                      foregroundColor: CrimpyTheme.textOnFill,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
                     icon: const Icon(Icons.arrow_forward, size: 20),
-                    label: const Text(
-                      'Go to Assessments',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
+                    label: const Text('Go to Assessments'),
                   ),
                 ),
               ],

@@ -412,11 +412,12 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('No'),
+                child: const Text('Keep going'),
               ),
-              TextButton(
+              FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Yes'),
+                style: CrimpyTheme.destructiveButton,
+                child: const Text('Leave'),
               ),
             ],
           ),

@@ -33,7 +33,7 @@ class StatCard extends StatelessWidget {
             width: 40,
             decoration: BoxDecoration(
               color: accentColor,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: CrimpyTheme.corners,
             ),
           ),
         ],

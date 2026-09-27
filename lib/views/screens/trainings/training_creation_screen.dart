@@ -1,5 +1,6 @@
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/hangboard_config.dart';
 import 'package:crimpy/utils/training_expander.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
@@ -216,8 +217,9 @@ class _UnifiedTrainingCreationScreenState
               onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancel'),
             ),
-            TextButton(
+            FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
+              style: CrimpyTheme.destructiveButton,
               child: const Text('Delete'),
             ),
           ],
@@ -378,10 +380,7 @@ class _UnifiedTrainingCreationScreenState
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Title'),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
@@ -1005,7 +1004,7 @@ class _ContainerEditorDialogState extends State<_ContainerEditorDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
-        TextButton(onPressed: _submit, child: const Text('OK')),
+        FilledButton(onPressed: _submit, child: const Text('Done')),
       ],
     );
   }
@@ -1082,7 +1081,7 @@ class _ItemEditorDialogState extends State<_ItemEditorDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
-        TextButton(onPressed: _submit, child: const Text('OK')),
+        FilledButton(onPressed: _submit, child: const Text('Done')),
       ],
     );
   }

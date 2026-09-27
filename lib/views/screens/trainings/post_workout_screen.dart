@@ -167,11 +167,12 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text('No'),
+                child: Text('Keep reviewing'),
               ),
-              TextButton(
+              FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text('Yes'),
+                style: CrimpyTheme.destructiveButton,
+                child: Text('Leave'),
               ),
             ],
           ),
@@ -212,7 +213,6 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                           controller: _trainingNameController,
                           decoration: const InputDecoration(
                             labelText: 'Training Name',
-                            border: OutlineInputBorder(),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -262,7 +262,6 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                           decoration: const InputDecoration(
                             labelText: 'Notes',
                             hintText: "How did you feel?",
-                            border: OutlineInputBorder(),
                             alignLabelWithHint: true,
                           ),
                           keyboardType: TextInputType.multiline,

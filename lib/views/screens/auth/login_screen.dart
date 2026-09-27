@@ -178,7 +178,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   enabled: !_isLoading,
                   decoration: const InputDecoration(
                     labelText: 'Email',
-                    border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.email),
                   ),
                   validator: (value) {
@@ -199,7 +198,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   enabled: !_isLoading,
                   decoration: const InputDecoration(
                     labelText: 'Password',
-                    border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.lock),
                   ),
                   validator: (value) {
@@ -231,7 +229,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: CrimpyTheme.bgError,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: CrimpyTheme.corners,
                       border: Border.all(color: CrimpyTheme.statusError),
                     ),
                     child: Text(

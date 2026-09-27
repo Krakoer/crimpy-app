@@ -72,11 +72,11 @@ class WhatsNewDialog extends ConsumerWidget {
         ),
       ),
       actions: [
-        TextButton(
+        FilledButton(
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: const Text('Got it!'),
+          child: const Text('Got it'),
         ),
       ],
     );

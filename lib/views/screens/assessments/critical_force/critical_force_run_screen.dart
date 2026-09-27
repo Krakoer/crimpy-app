@@ -195,17 +195,18 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                   });
                   Navigator.of(context).pop(false);
                 },
-                child: Text('No'),
+                child: Text('Keep going'),
               ),
-              TextButton(
+              FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text('Yes'),
+                style: CrimpyTheme.destructiveButton,
+                child: Text('Leave'),
               ),
             ],
           ),
         );
 
-        // If user clicked on `Yes`, leave workout.
+        // If user chose to leave, leave the workout.
         if (shouldPop ?? false) {
           navigator.pop();
         }

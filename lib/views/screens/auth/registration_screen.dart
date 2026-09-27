@@ -104,7 +104,6 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   textCapitalization: TextCapitalization.words,
                   decoration: const InputDecoration(
                     labelText: 'First Name',
-                    border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.person),
                   ),
                   validator: (value) {
@@ -122,7 +121,6 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   textCapitalization: TextCapitalization.words,
                   decoration: const InputDecoration(
                     labelText: 'Last Name',
-                    border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.person_outline),
                   ),
                   validator: (value) {
@@ -140,7 +138,6 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   enabled: !_isLoading,
                   decoration: const InputDecoration(
                     labelText: 'Email',
-                    border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.email),
                   ),
                   validator: (value) {
@@ -161,7 +158,6 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   enabled: !_isLoading,
                   decoration: const InputDecoration(
                     labelText: 'Password',
-                    border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.lock),
                   ),
                   validator: (value) {
@@ -182,7 +178,6 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                   enabled: !_isLoading,
                   decoration: const InputDecoration(
                     labelText: 'Confirm Password',
-                    border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.lock_outline),
                   ),
                   validator: (value) {
@@ -202,7 +197,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: CrimpyTheme.bgError,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: CrimpyTheme.corners,
                       border: Border.all(color: CrimpyTheme.statusError),
                     ),
                     child: Text(

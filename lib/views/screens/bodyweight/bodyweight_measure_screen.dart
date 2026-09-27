@@ -186,7 +186,7 @@ class _BodyweightMeasureScreenState
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: CrimpyTheme.scrim.withValues(alpha: 0.7),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: CrimpyTheme.corners,
     ),
     child: Column(
       mainAxisSize: MainAxisSize.min,

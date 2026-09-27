@@ -33,11 +33,7 @@ class AssessmentAnswerFields extends StatelessWidget {
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-      decoration: InputDecoration(
-        labelText: label,
-        suffixText: _suffix,
-        border: const OutlineInputBorder(),
-      ),
+      decoration: InputDecoration(labelText: label, suffixText: _suffix),
       validator: (value) {
         final parsed = parseAnswer(value);
         if (parsed == null) return 'Enter a number';

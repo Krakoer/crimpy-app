@@ -139,7 +139,6 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
               suffixText: 'kg',
               hintText: 'e.g., 68.5',
               errorText: _error,
-              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 16),
@@ -162,7 +161,7 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        TextButton(
+        FilledButton(
           onPressed: _saving ? null : _save,
           child: const Text('Save'),
         ),

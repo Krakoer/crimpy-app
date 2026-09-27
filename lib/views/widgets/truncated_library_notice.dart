@@ -62,7 +62,7 @@ class TruncatedLibraryNotice extends ConsumerWidget {
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
         color: CrimpyTheme.bgInfo,
-        borderRadius: BorderRadius.circular(CrimpyTheme.radiusSmall),
+        borderRadius: CrimpyTheme.corners,
         border: Border.all(color: CrimpyTheme.statusInfo),
       ),
       child: Row(

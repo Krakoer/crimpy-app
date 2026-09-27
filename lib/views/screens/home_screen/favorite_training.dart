@@ -94,7 +94,7 @@ class FavoriteTrainingList extends ConsumerWidget {
                     borderPadding: EdgeInsets.all(2),
                     dashPattern: [10, 5],
                     strokeWidth: 2,
-                    radius: Radius.circular(16),
+                    radius: CrimpyTheme.corner,
                     color: CrimpyTheme.textPrimary.withValues(alpha: 0.5),
                   ),
                   child: InkWell(

@@ -20,7 +20,7 @@ class _CreatePresetDialogState extends ConsumerState<CreatePresetDialog> {
     return AlertDialog(
       title: Text("Save a calibration preset"),
       actions: [
-        TextButton.icon(
+        FilledButton.icon(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
               widget.onSave(_targetController.text);

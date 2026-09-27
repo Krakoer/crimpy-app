@@ -57,10 +57,11 @@ class PostAssessmentScreen extends ConsumerWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text('Cancel'),
+                child: Text('Keep reviewing'),
               ),
-              TextButton(
+              FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
+                style: CrimpyTheme.destructiveButton,
                 child: Text('Discard'),
               ),
             ],
@@ -226,7 +227,7 @@ class ResultCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: percentageColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: CrimpyTheme.corners,
                         border: Border.all(color: percentageColor, width: 1),
                       ),
                       child: Text(

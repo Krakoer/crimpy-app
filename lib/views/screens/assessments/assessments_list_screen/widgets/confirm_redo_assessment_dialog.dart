@@ -1,3 +1,4 @@
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
 
 class ConfirmRedoAssessmentDialog extends StatelessWidget {
@@ -16,15 +17,16 @@ class ConfirmRedoAssessmentDialog extends StatelessWidget {
       ),
       actions: [
         TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text("Keep today's"),
+        ),
+        FilledButton(
           onPressed: () {
             Navigator.of(context).pop();
             runAssessment();
           },
-          child: Text("Run anyway"),
-        ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text("Cancel"),
+          style: CrimpyTheme.destructiveButton,
+          child: Text("Run again"),
         ),
       ],
     );
