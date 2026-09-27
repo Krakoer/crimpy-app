@@ -200,7 +200,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: selected
-                  ? CrimpyTheme.fillOn(CrimpyTheme.action)
+                  ? CrimpyTheme.fillOn(CrimpyTheme.control)
                   : CrimpyTheme.bgPrimary,
               border: Border.all(color: CrimpyTheme.outline, width: 2),
             ),
@@ -255,7 +255,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: selected
-                        ? CrimpyTheme.fillOn(CrimpyTheme.action)
+                        ? CrimpyTheme.fillOn(CrimpyTheme.control)
                         : CrimpyTheme.bgPrimary,
                     border: Border.all(color: CrimpyTheme.outline, width: 2),
                   ),
@@ -459,7 +459,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
               padding: const EdgeInsets.symmetric(vertical: 7),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? CrimpyTheme.fillOn(CrimpyTheme.action)
+                    ? CrimpyTheme.fillOn(CrimpyTheme.control)
                     : isToday
                     ? CrimpyTheme.tintOf(CrimpyTheme.current)
                     : Colors.transparent,
@@ -800,9 +800,7 @@ class _CalendarRow extends ConsumerWidget {
                     margin: const EdgeInsets.all(2),
                     height: 30,
                     decoration: BoxDecoration(
-                      color:
-                          fill?.withValues(alpha: 0.15) ??
-                          CrimpyTheme.bgPrimary,
+                      color: CrimpyTheme.bgPrimary,
                       border: Border.all(
                         color: isToday
                             ? CrimpyTheme.current

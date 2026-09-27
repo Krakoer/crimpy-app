@@ -29,7 +29,9 @@ class CrimpyCard extends StatelessWidget {
     this.onTap,
   });
 
-  /// Category card with colored accent border
+  /// Card with a coloured bar down its left edge, for a signal the whole card
+  /// carries: a week override, a planned day, a call to act. Not for a
+  /// category, which shows as an icon only. See Krakoer/crimpy#170.
   const CrimpyCard.category({
     super.key,
     required this.child,
@@ -175,15 +177,15 @@ extension CrimpyCardExtensions on Widget {
 
 /// Pre-configured card styles for common use cases
 class CrimpyCards {
-  /// Assessment card with orange accent
+  /// Assessment card. The category shows in the card's icon, not as a bar.
+  /// See Krakoer/crimpy#170.
   static Widget assessment({
     required Widget child,
     EdgeInsetsGeometry? padding,
     EdgeInsetsGeometry? margin,
     VoidCallback? onTap,
   }) {
-    return CrimpyCard.category(
-      accentColor: CrimpyTheme.assessmentColor,
+    return CrimpyCard.simple(
       padding: padding,
       margin: margin,
       onTap: onTap,
@@ -191,15 +193,15 @@ class CrimpyCards {
     );
   }
 
-  /// Training card with yellow accent
+  /// Training card. The category shows in the card's icon, not as a bar.
+  /// See Krakoer/crimpy#170.
   static Widget training({
     required Widget child,
     EdgeInsetsGeometry? padding,
     EdgeInsetsGeometry? margin,
     VoidCallback? onTap,
   }) {
-    return CrimpyCard.category(
-      accentColor: CrimpyTheme.trainingColor,
+    return CrimpyCard.simple(
       padding: padding,
       margin: margin,
       onTap: onTap,

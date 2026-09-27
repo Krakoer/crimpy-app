@@ -56,19 +56,11 @@ class SessionActivityTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = programSessionColor(type);
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        border: Border.all(color: color, width: 2),
-      ),
-      child: Icon(
-        programSessionIcon(type),
-        color: CrimpyTheme.textOn(color),
-        size: size * 0.45,
-      ),
+    return CategoryIconTile(
+      icon: programSessionIcon(type),
+      category: programSessionColor(type),
+      iconSize: size * 0.45,
+      size: size,
     );
   }
 }
@@ -138,7 +130,7 @@ class WeekProgressBar extends StatelessWidget {
                 margin: EdgeInsets.only(right: i == total - 1 ? 0 : 3),
                 decoration: BoxDecoration(
                   color: i < currentWeek
-                      ? CrimpyTheme.action
+                      ? CrimpyTheme.control
                       : CrimpyTheme.bgPrimary,
                   border: Border.all(color: CrimpyTheme.outline, width: 1.5),
                 ),
@@ -169,7 +161,6 @@ class ScheduledTrainingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final type = session.activity;
-    final color = programSessionColor(type);
     final status = scheduleStatusFor(date, DateTime.now());
     final due = status == ScheduleStatus.due && !done;
     final borderColor = due ? CrimpyTheme.current : CrimpyTheme.outline;
@@ -217,7 +208,7 @@ class ScheduledTrainingRow extends StatelessWidget {
                         fontFamily: 'JetBrainsMono',
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
-                        color: CrimpyTheme.textOn(color),
+                        color: CrimpyTheme.textSecondary,
                       ),
                     ),
                   ],
@@ -300,7 +291,7 @@ class FlexTrainingRow extends StatelessWidget {
                         fontFamily: 'JetBrainsMono',
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
-                        color: CrimpyTheme.textOn(color),
+                        color: CrimpyTheme.textSecondary,
                       ),
                     ),
                   ],
@@ -318,7 +309,7 @@ class FlexTrainingRow extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       color: complete
                           ? CrimpyTheme.textOn(CrimpyTheme.done)
-                          : CrimpyTheme.textOn(color),
+                          : CrimpyTheme.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 5),

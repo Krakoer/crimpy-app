@@ -30,20 +30,10 @@ class SessionOverviewCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: CrimpyTheme.tintOf(sessionColor),
-                    border: Border.all(
-                      color: sessionColor.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Icon(
-                    sessionIcon,
-                    color: CrimpyTheme.textOn(sessionColor),
-                    size: 24,
-                  ),
+                CategoryIconTile(
+                  icon: sessionIcon,
+                  category: sessionColor,
+                  iconSize: 24,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

@@ -198,14 +198,19 @@ class CrimpyTheme {
   // The values are the ones each meaning was painted in before the roles
   // existed. See Krakoer/crimpy#168.
 
-  /// A primary action, a selected control, progress.
+  /// The primary action of a screen: a filled button, the FAB. With the brand,
+  /// the only thing painted orange. See Krakoer/crimpy#170.
   static const Color action = primaryOrange;
 
+  /// A control that is not the primary action: a selected tab or chip, a
+  /// switch, a slider, a link, progress, a secondary button.
+  static const Color control = textPrimary;
+
   /// The present: today on a calendar, this week in a program, a date filter.
-  static const Color current = primaryOrange;
+  static const Color current = textPrimary;
 
   /// What a coach wrote to the athlete.
-  static const Color coachNote = primaryOrange;
+  static const Color coachNote = textPrimary;
 
   /// The mark of what a block is for. [goalColor] is its text form.
   static const Color goalMark = accentGreen;
@@ -234,7 +239,7 @@ class CrimpyTheme {
   static const Color improvement = accentYellow;
 
   /// What the athlete reported achieving on a step.
-  static const Color achieved = primaryOrange;
+  static const Color achieved = textPrimary;
 
   /// The mark of a precaution to take before a test, such as warming up.
   static const Color caution = accentYellowText;
@@ -246,10 +251,10 @@ class CrimpyTheme {
   static const Color phaseRestGround = bgSuccess;
 
   /// The countdown before the first step of a run.
-  static const Color phasePreparation = primaryOrange;
+  static const Color phasePreparation = textPrimary;
 
   /// The run screen's instruction: which hand, which step, what load.
-  static const Color runPrompt = primaryOrange;
+  static const Color runPrompt = textPrimary;
 
   /// The run screen's fill when the load holds the target.
   static const Color tankOnTarget = statusSuccess;
@@ -274,7 +279,7 @@ class CrimpyTheme {
   static const Color sensorConnected = accentYellow;
 
   /// A sensor that is being connected to.
-  static const Color sensorConnecting = accentOrange;
+  static const Color sensorConnecting = textPrimary;
 
   /// The live force trace of an assessment run.
   static const Color forceTrace = accentYellow;
@@ -334,7 +339,7 @@ class CrimpyTheme {
     fontFamily: 'JetBrainsMono', // Monospace font like Radicle
     // Color Scheme
     colorScheme: const ColorScheme.light(
-      primary: action,
+      primary: control,
       secondary: accentGreen,
       tertiary: accentPurple,
       surface: bgPrimary,
@@ -398,15 +403,13 @@ class CrimpyTheme {
       ),
     ),
 
-    // Outlined button - Orange border, with the label in the text form: at
-    // 13px on the white surface every dialog and sheet uses, primaryOrange
-    // reads 4.05:1, under the 4.5:1 floor. The border stays on the accent,
-    // since a border is not text. See Krakoer/crimpy#128.
+    // Outlined button: a secondary action, so ink rather than the primary
+    // action's orange. See Krakoer/crimpy#170.
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: textOn(action),
+        foregroundColor: control,
         backgroundColor: bgPrimary,
-        side: const BorderSide(color: action, width: 1),
+        side: const BorderSide(color: control, width: 1),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         textStyle: const TextStyle(
@@ -417,13 +420,13 @@ class CrimpyTheme {
       ),
     ),
 
-    // Text button. Its 13px label is the largest population of accent on white
-    // in the app, sixty odd call sites inheriting this one entry, so the text
-    // form belongs here rather than at each of them. foregroundColor paints a
-    // TextButton.icon's icon too, which only helps it. See Krakoer/crimpy#128.
+    // Text button: sixty odd call sites inherit this one entry, dialog actions
+    // and links among them, and none of them is a screen's primary action, so
+    // they are ink. foregroundColor paints a TextButton.icon's icon too.
+    // See Krakoer/crimpy#170.
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: textOn(action),
+        foregroundColor: control,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         textStyle: const TextStyle(
           fontSize: 13,
@@ -448,7 +451,7 @@ class CrimpyTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(color: action, width: 1),
+        borderSide: BorderSide(color: control, width: 1),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.zero,
@@ -467,10 +470,15 @@ class CrimpyTheme {
     // Chip theme with minimal styling
     chipTheme: ChipThemeData(
       backgroundColor: bgSecondary,
-      selectedColor: action,
+      selectedColor: control,
       disabledColor: outline,
-      labelStyle: const TextStyle(
-        color: textPrimary,
+      checkmarkColor: textOnFill,
+      // A selected chip is filled with ink, so its label turns white with it.
+      labelStyle: TextStyle(
+        color: WidgetStateColor.resolveWith(
+          (states) =>
+              states.contains(WidgetState.selected) ? textOnFill : textPrimary,
+        ),
         fontSize: 11,
         fontWeight: FontWeight.w500,
         fontFamily: 'JetBrainsMono',
@@ -482,7 +490,7 @@ class CrimpyTheme {
     // Bottom navigation
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: bgSecondary,
-      selectedItemColor: action,
+      selectedItemColor: control,
       unselectedItemColor: textPrimary,
       showUnselectedLabels: true,
       type: BottomNavigationBarType.fixed,
@@ -491,7 +499,7 @@ class CrimpyTheme {
 
     navigationBarTheme: const NavigationBarThemeData(
       backgroundColor: bgSecondary,
-      indicatorColor: action,
+      indicatorColor: control,
       elevation: 0,
     ),
 
@@ -611,7 +619,7 @@ class CrimpyTheme {
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return action;
+          return control;
         }
         return bgSecondary;
       }),
@@ -621,7 +629,7 @@ class CrimpyTheme {
     checkboxTheme: CheckboxThemeData(
       fillColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return action;
+          return control;
         }
         return bgPrimary;
       }),
@@ -634,7 +642,7 @@ class CrimpyTheme {
     radioTheme: RadioThemeData(
       fillColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return action;
+          return control;
         }
         return outline;
       }),
@@ -642,25 +650,25 @@ class CrimpyTheme {
 
     // Slider theme
     sliderTheme: SliderThemeData(
-      activeTrackColor: action,
+      activeTrackColor: control,
       inactiveTrackColor: outline,
-      thumbColor: action,
-      overlayColor: action.withAlpha(0x1F),
-      valueIndicatorColor: action,
+      thumbColor: control,
+      overlayColor: control.withAlpha(0x1F),
+      valueIndicatorColor: control,
     ),
 
     // Progress indicator theme
     progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: action,
+      color: control,
       linearTrackColor: outline,
       circularTrackColor: outline,
     ),
 
     // Tab bar theme
     tabBarTheme: const TabBarThemeData(
-      labelColor: action,
+      labelColor: control,
       unselectedLabelColor: textSecondary,
-      indicatorColor: action,
+      indicatorColor: control,
       indicatorSize: TabBarIndicatorSize.label,
       labelStyle: TextStyle(
         fontSize: 13,

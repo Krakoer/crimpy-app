@@ -87,23 +87,6 @@ const List<(String, Color)> tintedAccents = [
 /// older grounds still in the tree.
 const List<double> tintAlphas = [0.06, 0.1, CrimpyTheme.tintAlpha];
 
-/// The surface the history cards are drawn on. White rather than bgSecondary
-/// since session_reps_card.dart moved its block card there, and stated here
-/// because a nested tint composited over the wrong base reads better than it
-/// paints: over bgSecondary the same stretching badge is 4.40:1, not 4.57:1.
-const Color historyCardBase = CrimpyTheme.bgPrimary;
-
-/// What the session cards of the history screens tint themselves at, under the
-/// badges that tint again from the same accent.
-///
-/// This is a hand copy of the literal at rep_item_widget.dart and
-/// sets_view_widget.dart, not a reference to it, and nothing makes it follow
-/// them: raise theirs to 0.10 and this file keeps measuring 0.05 while the
-/// stretching badge on that card drops to 4.36:1. It is kept here rather than
-/// in CrimpyTheme because it is one screen's layering, not a palette rule, so
-/// the cost of that copy is a line in this comment.
-const double historyCardAlpha = 0.05;
-
 /// The floor an accent answers to when it is not small text: an icon, a rule,
 /// or type at or above 18.66px bold, which WCAG 1.4.3 exempts from the 4.5:1
 /// floor and 1.4.11 holds to the same 3:1 as any other non text content.
@@ -768,25 +751,6 @@ void main() {
           activity.name,
           CrimpyTheme.activityTextColor(activity),
           tintOver(accent, CrimpyTheme.tintAlpha, CrimpyTheme.primaryWhite),
-        );
-      }
-    });
-
-    // The history widgets nest one tint inside another: the rep badge of
-    // rep_item_widget and the set chip of sets_view_widget are tinted at
-    // [CrimpyTheme.tintAlpha] on a card already tinted at [historyCardAlpha]
-    // from the same accent, so the ground they actually sit on is darker than
-    // either alpha alone. Measured flat on white the pair looks safer than it
-    // is, which is how a change to tintAlpha could pass this suite and still
-    // put those badges under the floor.
-    test('a tint nested in the history card still holds the floor', () {
-      for (final activity in SessionActivity.values) {
-        final accent = CrimpyTheme.activityColor(activity);
-        final card = tintOver(accent, historyCardAlpha, historyCardBase);
-        expectClearsFloor(
-          '${activity.name} badge on the history card',
-          CrimpyTheme.activityTextColor(activity),
-          tintOver(accent, CrimpyTheme.tintAlpha, card),
         );
       }
     });

@@ -47,12 +47,10 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final color = CrimpyTheme.activityColor(widget.session.activity);
-    // The icons sit on a white Card, where climbing's gold reads 2.25:1 and
-    // misses the 3:1 mark floor. The tint and the fill below keep the accent,
-    // since a ground is not a mark. See Krakoer/crimpy#128.
-    final markColor = CrimpyTheme.markOn(color);
-    final textColor = CrimpyTheme.activityTextColor(widget.session.activity);
+    // The activity shows in the field icons only. See Krakoer/crimpy#170.
+    final markColor = CrimpyTheme.markOn(
+      CrimpyTheme.activityColor(widget.session.activity),
+    );
     // A played session owns its date, duration and reps: they are what the run
     // measured, so only the notes are open for editing. What was trained has no
     // say in it, which is why this reads the origin and not the activity.
@@ -72,17 +70,24 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
               // Info message for played sessions
               if (isPlayedSession) ...[
                 Card(
-                  color: color.withValues(alpha: 0.1),
+                  color: CrimpyTheme.bgSunken,
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline, color: textColor, size: 20),
+                        const Icon(
+                          Icons.info_outline,
+                          color: CrimpyTheme.textSecondary,
+                          size: 20,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'Only the notes and the RPE can be edited for a session played in the app',
-                            style: TextStyle(fontSize: 13, color: textColor),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: CrimpyTheme.textSecondary,
+                            ),
                           ),
                         ),
                       ],
@@ -248,10 +253,6 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
               ElevatedButton(
                 onPressed: _updateSession,
                 style: ElevatedButton.styleFrom(
-                  // Darkened to carry the white label the theme puts on an
-                  // ElevatedButton. The activity colours are under the 4.5:1
-                  // floor beneath white, and gold is at 2.25:1.
-                  backgroundColor: CrimpyTheme.fillOn(color),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: const Text(
@@ -339,12 +340,6 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
           SnackBar(
             content: Text(
               '${widget.session.activity.displayName} session updated!',
-            ),
-            // snackBarTheme writes its label in primaryWhite, so this ground
-            // carries a white label without a line here saying so. Gold is
-            // 2.25:1 under white, so it takes the darkened fill.
-            backgroundColor: CrimpyTheme.fillOn(
-              CrimpyTheme.activityColor(widget.session.activity),
             ),
           ),
         );

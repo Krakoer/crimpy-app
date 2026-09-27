@@ -43,9 +43,8 @@ class _NavItem extends StatelessWidget {
     final color = isSelected
         ? primary
         : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.35);
-    // The 18px icon is a mark and clears the 3:1 floor on the white bar at
-    // 4.05:1, so it keeps the accent. The 9px label does not clear 4.5:1 and
-    // takes the darker form. See Krakoer/crimpy#128.
+    // The selected tab is the theme's primary, which is ink: a selected tab is
+    // a control, not the primary action. See Krakoer/crimpy#170.
     final labelColor = isSelected ? CrimpyTheme.textOn(primary) : color;
 
     return Expanded(

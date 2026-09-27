@@ -104,11 +104,8 @@ class SetCardWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: sessionColor.withValues(alpha: 0.05),
-        border: Border.all(
-          color: sessionColor.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        color: CrimpyTheme.bgPrimary,
+        border: Border.all(color: CrimpyTheme.outlineSubtle),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -120,15 +117,15 @@ class SetCardWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: CrimpyTheme.tintOf(sessionColor),
+                  color: CrimpyTheme.bgSunken,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   label,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: CrimpyTheme.textOn(sessionColor),
+                    color: CrimpyTheme.textStrong,
                   ),
                 ),
               ),

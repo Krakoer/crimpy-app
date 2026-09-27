@@ -149,11 +149,7 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
       children: [
         Column(
           children: List.generate(displayCount, (index) {
-            return RepItemWidget(
-              rep: reps[index],
-              index: index,
-              sessionColor: widget.sessionColor,
-            );
+            return RepItemWidget(rep: reps[index], index: index);
           }),
         ),
         if (hasMany) ...[
@@ -174,12 +170,6 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
       label: Text(
         _repsExpanded ? 'Show less' : 'Show all $total reps',
         style: const TextStyle(fontSize: 14),
-      ),
-      // foregroundColor paints the 14px label and the 20px icon together, so
-      // the label's 4.5:1 floor decides for both. A climbing session's gold
-      // reads 2.25:1 on this white card. See Krakoer/crimpy#128.
-      style: TextButton.styleFrom(
-        foregroundColor: CrimpyTheme.textOn(widget.sessionColor),
       ),
     );
   }
@@ -263,11 +253,7 @@ class _BlockCard extends StatelessWidget {
             Column(
               children: [
                 for (final (index, rep) in _shownReps.indexed)
-                  RepItemWidget(
-                    rep: rep,
-                    index: index,
-                    sessionColor: sessionColor,
-                  ),
+                  RepItemWidget(rep: rep, index: index),
               ],
             ),
         ],

@@ -40,17 +40,10 @@ class TrainingListItemWidget extends ConsumerWidget {
         children: [
           // Icon
           if (item.isBuiltin)
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: CrimpyTheme.trainingColor.withValues(alpha: 0.1),
-                border: Border.all(color: CrimpyTheme.trainingColor, width: 1),
-              ),
-              child: Icon(
-                FontAwesomeIcons.bolt,
-                color: CrimpyTheme.textOn(CrimpyTheme.trainingColor),
-                size: 16,
-              ),
+            const CategoryIconTile(
+              icon: FontAwesomeIcons.bolt,
+              category: CrimpyTheme.trainingColor,
+              iconSize: 16,
             ),
           if (item.isBuiltin) const SizedBox(width: 16),
           Expanded(
