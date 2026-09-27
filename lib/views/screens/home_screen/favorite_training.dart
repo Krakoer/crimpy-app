@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/views/widgets/truncated_library_notice.dart';
 import 'package:crimpy/utils/format.dart';
@@ -189,12 +191,15 @@ class PinTrainingDialog extends ConsumerWidget {
       // list this reads, so through AsyncData the dialog would collapse to a
       // spinner and back on every tap.
       content: switch (availableTrainings) {
-        // Bounded rather than fixed. A SizedBox of exactly 300 does not notice
-        // when the room around it shrinks: it keeps reporting 300 while the
-        // viewport clips it, which hid this defect from the round 2 regression
-        // test. A maximum lets the list shrink and keep scrolling.
-        AsyncValue(:final value?) => ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 300, maxHeight: 300),
+        // Sized from the screen rather than bounded. A scrollable AlertDialog
+        // measures its content's intrinsic size, and a lazy ListView has none
+        // to give: a list that only had a maximum made that layout throw, and
+        // the athlete got an empty dialog. A tight size answers without asking
+        // the list, and taking it from the screen still lets the list give way
+        // on a short one, which a plain 300 hid from the regression test.
+        AsyncValue(:final value?) => SizedBox(
+          width: 300,
+          height: math.min(300, MediaQuery.sizeOf(context).height * 0.4),
           child: value.isEmpty
               ? Center(
                   child: Text(

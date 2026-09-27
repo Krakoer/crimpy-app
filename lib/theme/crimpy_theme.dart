@@ -593,6 +593,15 @@ class CrimpyTheme {
       hourMinuteShape: shape,
       dayPeriodShape: shape,
       dayPeriodBorderSide: const BorderSide(color: outline, width: 1),
+      // AM or PM is a selection, so it is ink, as a selected chip is. Left
+      // unset, Material fills it from the scheme's tertiary, which is purple.
+      dayPeriodColor: WidgetStateColor.resolveWith(
+        (states) => states.contains(WidgetState.selected) ? control : bgPrimary,
+      ),
+      dayPeriodTextColor: WidgetStateColor.resolveWith(
+        (states) =>
+            states.contains(WidgetState.selected) ? textOnFill : textPrimary,
+      ),
       dialBackgroundColor: bgSunken,
       // The keyboard mode's hour and minute fields. Left unset, the picker
       // draws them with its own 8px rounded decoration rather than the app's.

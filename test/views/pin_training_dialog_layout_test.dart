@@ -38,9 +38,14 @@ Future<void> _pumpDialog(
         trainingLibraryTruncatedProvider.overrideWith((ref) async => truncated),
       ],
       child: MaterialApp(
-        home: MediaQuery(
-          data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
-          child: const Scaffold(body: Center(child: PinTrainingDialog())),
+        // The surface's own size is kept: the list takes its height from it.
+        home: Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(textScale)),
+            child: const Scaffold(body: Center(child: PinTrainingDialog())),
+          ),
         ),
       ),
     ),
@@ -50,12 +55,11 @@ Future<void> _pumpDialog(
 
 /// The height the athlete can actually see the list through.
 ///
-/// Measured off the `ListView` itself, which is the scrolling viewport now that
-/// the content is a `ConstrainedBox` rather than a fixed `SizedBox` inside a
-/// scroll view. That shape matters for this measurement: a `SizedBox` of
-/// exactly 300 inside a `SingleChildScrollView` is handed unbounded height and
-/// reports 300 in every configuration, including ones where the athlete can see
-/// none of it, so a test written against it cannot observe what it claims to.
+/// Measured off the `ListView` itself, which is the scrolling viewport. Its
+/// height is taken from the screen, so a short one gives it less; a constant
+/// 300 would report 300 in every configuration, including ones where the
+/// athlete can see none of it, and a test written against it could not observe
+/// what it claims to.
 double _listViewport(WidgetTester tester) =>
     tester.getSize(find.byType(ListView).first).height;
 
@@ -77,6 +81,40 @@ void main() {
         300.0,
         reason: 'the notice must not take height from the training list',
       );
+    });
+
+    // The home screen opens this through showDialog, where the scrollable
+    // AlertDialog measures its content's intrinsic width. A lazy ListView has
+    // none to give, so the layout threw and the athlete saw an empty box.
+    // Pumped in a Scaffold, as the tests above are, nothing asks for it.
+    testWidgets('lists the trainings when opened as a dialog', (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            allTrainingsProvider.overrideWith((ref) async => _library(30)),
+            trainingLibraryTruncatedProvider.overrideWith((ref) async => false),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: TextButton(
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => const PinTrainingDialog(),
+                  ),
+                  child: const Text('Pin a training'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Pin a training'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Training 0'), findsOneWidget);
+      expect(find.text('Done'), findsOneWidget);
     });
 
     testWidgets('is unchanged when the library is whole', (tester) async {
