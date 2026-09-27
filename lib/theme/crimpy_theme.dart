@@ -223,10 +223,11 @@ class CrimpyTheme {
   /// A rep that held its target load.
   static const Color onTarget = statusSuccess;
 
-  /// A rep that missed its target load by a little.
+  /// A rep that missed its target load.
   static const Color offTarget = statusWarning;
 
-  /// A rep that fell well short of its target load.
+  /// A rep that fell well short of its target load, where a view grades a miss
+  /// in two tiers: [offTarget] is then the milder one.
   static const Color farOffTarget = statusError;
 
   /// A result better than the previous one.

@@ -98,9 +98,9 @@ All colors, radii and spacing come from `CrimpyTheme` in
   `outlineSubtle`, `scrim`), notices (`status*` with `bg*`), categories
   (`activityColor`, `assessmentColor`, `trainingColor`, `stretchingColor`),
   the note text tokens shared with the portal (`goalColor`, `protocolColor`),
-  and what a colour
-  means where it is painted (`action`, `current`, `coachNote`, `done`,
-  `onTarget`, `phaseRest`, `leftHand`, and the rest of the ROLES section).
+  and what a colour means where it is painted (`action`, `current`,
+  `coachNote`, `done`, `onTarget`, `phaseRest`, `leftHand`, and the rest of
+  the ROLES section).
 
 Several roles hold the same hue today. That is the point: each meaning can
 change on its own. A widget painting a new meaning adds a role to the ROLES
