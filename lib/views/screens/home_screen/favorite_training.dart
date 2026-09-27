@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/views/widgets/truncated_library_notice.dart';
 import 'package:crimpy/utils/format.dart';
@@ -191,15 +189,15 @@ class PinTrainingDialog extends ConsumerWidget {
       // list this reads, so through AsyncData the dialog would collapse to a
       // spinner and back on every tap.
       content: switch (availableTrainings) {
-        // Sized from the screen rather than bounded. A scrollable AlertDialog
-        // measures its content's intrinsic size, and a lazy ListView has none
-        // to give: a list that only had a maximum made that layout throw, and
-        // the athlete got an empty dialog. A tight size answers without asking
-        // the list, and taking it from the screen still lets the list give way
-        // on a short one, which a plain 300 hid from the regression test.
+        // A tight size rather than a maximum. AlertDialog measures its
+        // content's intrinsic width, and a lazy ListView has none to give: a
+        // list that only had a maximum made that layout throw, and the athlete
+        // got an empty dialog. On a short screen the dialog scrolls the title
+        // and this box together, so the list is reached by scrolling rather
+        // than squeezed.
         AsyncValue(:final value?) => SizedBox(
           width: 300,
-          height: math.min(300, MediaQuery.sizeOf(context).height * 0.4),
+          height: 300,
           child: value.isEmpty
               ? Center(
                   child: Text(
@@ -254,7 +252,12 @@ class PinTrainingDialog extends ConsumerWidget {
                             size: 17,
                           ),
                           SizedBox(width: 6),
-                          Text(formatDurationMinSec(item.totalDuration)),
+                          Flexible(
+                            child: Text(
+                              formatDurationMinSec(item.totalDuration),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                     );
