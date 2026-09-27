@@ -727,7 +727,7 @@ void _reviewPassTests() {
     });
 
     test('a timed exercise names its time and is asked for a time', () {
-      expect(prescribedSummary(plank), 'of 1mn 30s');
+      expect(prescribedSummary(plank), 'of 1 min 30s');
       final fields = reportableFields(plank);
       expect(fields.duration, isTrue);
       // It counts no repetitions, so it is not asked for any.

@@ -1,6 +1,6 @@
 import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
-import 'package:crimpy/utils/format.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/views/screens/availability/widgets/activity_editor_sheet.dart';
 import 'package:flutter/material.dart';
 
@@ -139,7 +139,7 @@ class DayScheduleCard extends StatelessWidget {
               ),
               if (day.plannedMinutes > 0)
                 Text(
-                  formatMinutesAsLength(day.plannedMinutes),
+                  formatMinutes(day.plannedMinutes),
                   style: CrimpyTheme.bodySmall.copyWith(
                     fontWeight: FontWeight.w600,
                     color: CrimpyTheme.textOn(CrimpyTheme.planned),
@@ -252,7 +252,7 @@ class _ActivityTile extends StatelessWidget {
                           if (activity.durationMinutes != null) ...[
                             const SizedBox(width: 8),
                             Text(
-                              formatMinutesAsLength(activity.durationMinutes!),
+                              formatMinutes(activity.durationMinutes!),
                               style: CrimpyTheme.bodySmall.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: CrimpyTheme.textSecondary,

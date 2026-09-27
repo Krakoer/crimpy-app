@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:crimpy/models/training_list_item.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
-import 'package:crimpy/utils/format.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/views/screens/trainings/training_details_screen.dart';
 import 'package:crimpy/views/screens/trainings/training_creation_screen.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/delete_training_dialog.dart';
@@ -80,7 +80,7 @@ class TrainingListItemWidget extends ConsumerWidget {
                     const SizedBox(width: 6),
                     Text(
                       item.isAvailable
-                          ? formatDurationMinSec(item.totalDuration)
+                          ? formatLength(item.totalDuration)
                           : 'Assessment required',
                       style: CrimpyTheme.bodySmall.copyWith(
                         color: item.isAvailable

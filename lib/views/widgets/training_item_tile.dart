@@ -1,7 +1,7 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
-import 'package:crimpy/utils/format.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/utils/video_link.dart';
 import 'package:crimpy/views/widgets/exercise_video_link.dart';
 import 'package:flutter/material.dart';
@@ -23,16 +23,18 @@ String trainingItemDetail(
       : reps != null
       ? '$reps reps'
       : duration != null
-      ? '${duration}s'
+      ? formatExactLength(duration)
       : null;
 
   switch (item.type) {
     case TrainingItemType.repeater:
-      return '${item.cycles ?? 1}x${item.reps ?? 1} - ${item.worktimeSeconds ?? 7}s on / ${item.restSeconds ?? 3}s off';
+      return '${item.cycles ?? 1}x${item.reps ?? 1} - '
+          '${formatExactLength(item.worktimeSeconds ?? 7)} on / '
+          '${formatExactLength(item.restSeconds ?? 3)} off';
     case TrainingItemType.hangboardRep:
       return [
         if (reps != null) '$reps reps',
-        '${item.worktimeSeconds ?? 7}s on / ${item.restSeconds ?? 3}s off',
+        '${formatExactLength(item.worktimeSeconds ?? 7)} on / ${formatExactLength(item.restSeconds ?? 3)} off',
         if (load != null) load,
       ].join(' - ');
     case TrainingItemType.exercise:
@@ -40,19 +42,20 @@ String trainingItemDetail(
     case TrainingItemType.circuit:
       return [
         '${item.cycles ?? 1} cycles',
-        if ((item.restSeconds ?? 0) > 0) '${item.restSeconds}s between items',
+        if ((item.restSeconds ?? 0) > 0)
+          '${formatExactLength(item.restSeconds!)} between items',
         if ((item.cycleRestSeconds ?? 0) > 0)
-          '${item.cycleRestSeconds}s between cycles',
+          '${formatExactLength(item.cycleRestSeconds!)} between cycles',
       ].join(' - ');
     case TrainingItemType.emom:
       return [
         '${item.cycles ?? 1} rounds',
-        'every ${formatSecondsAsLength(item.intervalSeconds ?? 60)}',
+        'every ${formatExactLength(item.intervalSeconds ?? 60)}',
       ].join(' - ');
     case TrainingItemType.group:
       return '';
     case TrainingItemType.free:
-      return duration != null ? '${duration}s' : '';
+      return duration != null ? formatExactLength(duration) : '';
   }
 }
 

@@ -157,7 +157,7 @@ void main() {
       ),
     );
 
-    expect(find.text('2m'), findsOneWidget);
+    expect(find.text('2 min'), findsOneWidget);
     expect(find.text('30s'), findsNothing);
   });
 
@@ -176,7 +176,7 @@ void main() {
       ),
     );
 
-    expect(find.text('1m 12s'), findsOneWidget);
+    expect(find.text('1 min'), findsOneWidget);
     expect(find.text('30s'), findsNothing);
   });
 

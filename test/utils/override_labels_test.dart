@@ -74,7 +74,7 @@ void main() {
           results: AssessmentResults.none,
           bodyweightKg: null,
         ),
-        ['TIME 1mn 30s'],
+        ['TIME 1 min 30s'],
       );
       expect(
         overrideChipLabels(
@@ -82,7 +82,7 @@ void main() {
           results: AssessmentResults.none,
           bodyweightKg: null,
         ),
-        ['EVERY 2mn'],
+        ['EVERY 2 min'],
       );
       expect(
         overrideChipLabels(

@@ -2,7 +2,7 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
-import 'package:crimpy/utils/format.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/utils/program_completion.dart';
 import 'package:crimpy/utils/training_expander.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
@@ -343,7 +343,7 @@ class _TodayTrainingRow extends ConsumerWidget {
                       if (seconds > 0) ...[
                         const SizedBox(width: 8),
                         Text(
-                          formatDurationHMS(seconds),
+                          formatLength(Duration(seconds: seconds)),
                           style: CrimpyTheme.labelSmall.copyWith(
                             color: CrimpyTheme.textSecondary,
                           ),

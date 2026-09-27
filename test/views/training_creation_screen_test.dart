@@ -169,7 +169,7 @@ void main() {
 
       expect(find.text('Pull block'), findsOneWidget);
       expect(
-        find.text('3 cycles - 15s between items - 120s between cycles'),
+        find.text('3 cycles - 15s between items - 2 min between cycles'),
         findsOneWidget,
       );
 
@@ -242,7 +242,7 @@ void main() {
       await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
 
-      expect(find.text('3 cycles - 60s between cycles'), findsOneWidget);
+      expect(find.text('3 cycles - 1 min between cycles'), findsOneWidget);
     });
 
     // The numbers a circuit carries are the point of its card, so they have to
@@ -275,7 +275,7 @@ void main() {
       // The row of buttons this card used to carry left the text about 100dp
       // of a 360dp screen. The width it gets is what the assertion guards; the
       // line count cannot be, since the test font is far wider than a real one.
-      const detail = '3 cycles - 15s between items - 120s between cycles';
+      const detail = '3 cycles - 15s between items - 2 min between cycles';
       final paragraph = tester.renderObject<RenderParagraph>(find.text(detail));
       expect(paragraph.size.width, greaterThan(180));
     });

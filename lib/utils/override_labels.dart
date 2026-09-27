@@ -1,6 +1,6 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
-import 'package:crimpy/utils/format.dart';
+import 'package:crimpy/utils/duration_format.dart';
 
 /// The keys that carry no chip of their own because another key already says
 /// what they mean. The max effort marker mirrors the load units and only ever
@@ -77,14 +77,13 @@ final Map<String, _ChipLabel> _labels = {
   'left_loads': (v, results, bw) => 'LEFT ${_loads(v, results, bw)}',
   'reps': (v, _, __) => 'REPS $v',
   'reps_is_max': (v, _, __) => v == true ? 'AMRAP' : 'FIXED REPS',
-  'duration': (v, _, __) => 'TIME ${formatSecondsAsLength(v as int)}',
+  'duration': (v, _, __) => 'TIME ${formatExactLength(v as int)}',
   'cycles': (v, _, __) => 'CYCLES $v',
-  'interval_seconds': (v, _, __) => 'EVERY ${formatSecondsAsLength(v as int)}',
+  'interval_seconds': (v, _, __) => 'EVERY ${formatExactLength(v as int)}',
   'cycle_rest_seconds': (v, _, __) =>
-      'CYCLE REST ${formatSecondsAsLength(v as int)}',
-  'rest_seconds': (v, _, __) => 'REST ${formatSecondsAsLength(v as int)}',
-  'hb_worktime_seconds': (v, _, __) =>
-      'WORK ${formatSecondsAsLength(v as int)}',
+      'CYCLE REST ${formatExactLength(v as int)}',
+  'rest_seconds': (v, _, __) => 'REST ${formatExactLength(v as int)}',
+  'hb_worktime_seconds': (v, _, __) => 'WORK ${formatExactLength(v as int)}',
   'edge_sizes_mm': (v, _, __) => 'EDGE ${_list(v)}mm',
   'hand_positions': (v, _, __) => 'GRIP ${_grips(v)}',
   'hand': (v, _, __) => _hand(v),

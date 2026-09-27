@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 
 class RepItemWidget extends StatelessWidget {
@@ -50,7 +51,7 @@ class RepItemWidget extends StatelessWidget {
           ),
           const Spacer(),
           Text(
-            '${rep.duration}s',
+            formatExactLength(rep.duration),
             style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textMedium),
           ),
         ],
@@ -142,7 +143,7 @@ class RepItemWidget extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       [
-                        '${rep.duration}s',
+                        formatExactLength(rep.duration),
                         if (rep.edgeSizeMm != null) '${rep.edgeSizeMm}mm',
                       ].join(' - '),
                       style: CrimpyTheme.bodySmall.copyWith(

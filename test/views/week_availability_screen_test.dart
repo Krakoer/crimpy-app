@@ -179,7 +179,7 @@ void main() {
     );
 
     expect(find.text('3 things across 2 days'), findsOneWidget);
-    expect(find.text('3h'), findsOneWidget);
+    expect(find.text('3 h'), findsOneWidget);
   });
 
   testWidgets('leaving a dirty week with the back button asks first', (

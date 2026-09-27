@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:intl/intl.dart';
 
 class SessionCard extends StatelessWidget {
@@ -56,7 +57,7 @@ class SessionCard extends StatelessWidget {
                     Icon(Icons.timer, size: 14, color: CrimpyTheme.textMedium),
                     const SizedBox(width: 4),
                     Text(
-                      _formatDuration(duration),
+                      formatLength(duration),
                       style: CrimpyTheme.bodySmall.copyWith(
                         color: CrimpyTheme.textMedium,
                       ),
@@ -103,19 +104,5 @@ class SessionCard extends StatelessWidget {
       SessionActivity.workout => Icons.fitness_center,
       SessionActivity.other => Icons.directions_run,
     };
-  }
-
-  String _formatDuration(Duration duration) {
-    final int hours = duration.inHours;
-    final int minutes = duration.inMinutes % 60;
-    final int seconds = duration.inSeconds % 60;
-
-    if (hours > 0) {
-      return '${hours}h ${minutes}m';
-    } else if (minutes > 0) {
-      return '${minutes}m ${seconds}s';
-    } else {
-      return '${seconds}s';
-    }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 
 class SessionPerformanceCard extends StatelessWidget {
@@ -41,7 +42,7 @@ class SessionPerformanceCard extends StatelessWidget {
         ('Avg Weight', '${avgWeight.toStringAsFixed(1)} kg'),
       if (maxWeight != null)
         ('Max Weight', '${maxWeight.toStringAsFixed(1)} kg'),
-      ('Work Time', '${totalWorkTime}s'),
+      ('Work Time', formatExactLength(totalWorkTime)),
       ('Work Reps', '${workReps.length}'),
     ];
 

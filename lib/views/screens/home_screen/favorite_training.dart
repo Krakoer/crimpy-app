@@ -1,6 +1,6 @@
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/views/widgets/truncated_library_notice.dart';
-import 'package:crimpy/utils/format.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/home_card.dart';
@@ -83,7 +83,7 @@ class FavoriteTrainingList extends ConsumerWidget {
                               size: 17,
                             ),
                             SizedBox(width: 6),
-                            Text(formatDurationMinSec(item.totalDuration)),
+                            Text(formatLength(item.totalDuration)),
                           ],
                         ),
                       ),
@@ -257,7 +257,7 @@ class PinTrainingDialog extends ConsumerWidget {
                           SizedBox(width: 6),
                           Flexible(
                             child: Text(
-                              formatDurationMinSec(item.totalDuration),
+                              formatLength(item.totalDuration),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),

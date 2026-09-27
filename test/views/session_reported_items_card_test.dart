@@ -66,7 +66,10 @@ void main() {
       ),
     ], _prescription);
 
-    expect(results.single.passes.single.achieved, '8 reps, 1mn 30s at 17.5 kg');
+    expect(
+      results.single.passes.single.achieved,
+      '8 reps, 1 min 30s at 17.5 kg',
+    );
     expect(results.single.passes.single.note, 'hard on the shoulders');
   });
 

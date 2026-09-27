@@ -1,7 +1,7 @@
 import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/availability_window.dart';
-import 'package:crimpy/utils/format.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/viewmodels/availability_view_model.dart';
 import 'package:crimpy/views/screens/availability/widgets/day_schedule_card.dart';
 import 'package:flutter/material.dart';
@@ -363,7 +363,7 @@ class _WeekSummary extends StatelessWidget {
               ),
               if (minutes > 0)
                 Text(
-                  formatMinutesAsLength(minutes),
+                  formatMinutes(minutes),
                   style: CrimpyTheme.title.copyWith(
                     color: CrimpyTheme.textOn(CrimpyTheme.planned),
                   ),
