@@ -45,6 +45,9 @@ class _HistoryScreenState extends ConsumerState<WeekHistogramCard> {
     return HomeCard(
       title: weekTitle,
       onTap: () => _navigateToSessionHistory(context),
+      // Read-only content, so it sits flat although it opens the history:
+      // the shadow on the home screen is kept for the trainings.
+      raised: false,
       topLeft: Row(
         children: [
           // Navigation buttons

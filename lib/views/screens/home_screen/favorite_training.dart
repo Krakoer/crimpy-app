@@ -49,6 +49,7 @@ class FavoriteTrainingList extends ConsumerWidget {
 
                     // Favorite training Card.
                     return CrimpyCards.training(
+                      raised: true,
                       padding: EdgeInsets.all(0),
                       child: ListTile(
                         // On tap, show the details to allow the user to start the training.

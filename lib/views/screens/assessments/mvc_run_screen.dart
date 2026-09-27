@@ -283,17 +283,8 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                 child: Container(
                   width: 200,
                   padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
+                  decoration: CrimpyTheme.raised.copyWith(
                     color: CrimpyTheme.fillOn(CrimpyTheme.pullCue),
-                    border: Border.all(color: CrimpyTheme.outline, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: CrimpyTheme.outline,
-                        offset: Offset(4, 4),
-                        blurRadius: 0,
-                        spreadRadius: 0,
-                      ),
-                    ],
                   ),
                   child: timer.currentItem is! RestItem
                       ? Column(

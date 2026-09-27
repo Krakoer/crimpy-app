@@ -1055,13 +1055,9 @@ class _RepContextCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     height: repContextCardHeight(scale),
     padding: EdgeInsets.symmetric(horizontal: 18 * scale),
-    decoration: const BoxDecoration(
-      color: CrimpyTheme.bgPrimary,
-      border: Border.fromBorderSide(
-        BorderSide(color: CrimpyTheme.outline, width: 2),
-      ),
-      boxShadow: [BoxShadow(color: CrimpyTheme.outline, offset: Offset(3, 3))],
-    ),
+    // Flat: it tells the athlete where they are, and the level and the prompt
+    // are what matter on this screen.
+    decoration: CrimpyTheme.flat,
     // Sized to its text across, so a short context stays a card rather than a
     // banner over the fill. A long one such as "SET 10/10 - REP 12/12" shrinks
     // to one line on a narrow phone instead of wrapping out of the fixed
@@ -1092,13 +1088,7 @@ class _PausedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(20),
-    decoration: const BoxDecoration(
-      color: CrimpyTheme.bgPrimary,
-      border: Border.fromBorderSide(
-        BorderSide(color: CrimpyTheme.outline, width: 2),
-      ),
-      boxShadow: [BoxShadow(color: CrimpyTheme.outline, offset: Offset(3, 3))],
-    ),
+    decoration: CrimpyTheme.raised,
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [

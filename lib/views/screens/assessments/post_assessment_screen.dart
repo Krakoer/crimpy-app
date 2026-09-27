@@ -189,6 +189,7 @@ class ResultCard extends StatelessWidget {
             ),
           ),
         CrimpyCards.assessment(
+          raised: true,
           margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
           child: Padding(
             padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
