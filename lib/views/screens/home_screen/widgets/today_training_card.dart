@@ -304,8 +304,10 @@ class _TodayTrainingRow extends ConsumerWidget {
 
     return InkWell(
       onTap: () => _openSession(context, program, weekNumber, session),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceXs),
+      // A row is a tap target, so it never drops under the 48dp minimum.
+      child: Container(
+        constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
+        padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceSm),
         child: Row(
           children: [
             SessionActivityTile(type: type, size: 38),
@@ -404,7 +406,8 @@ class _FlexTrainingRow extends ConsumerWidget {
 
     return InkWell(
       onTap: () => _openSession(context, program, weekNumber, session),
-      child: Padding(
+      child: Container(
+        constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
         padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceXs),
         child: Row(
           children: [

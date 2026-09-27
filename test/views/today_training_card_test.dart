@@ -132,6 +132,46 @@ Future<void> _pump(
 }
 
 void main() {
+  testWidgets('a training row is never shorter than a tap target', (
+    tester,
+  ) async {
+    await _pump(tester, _weekSession());
+
+    final row = find.ancestor(
+      of: find.text('Core work'),
+      matching: find.byType(InkWell),
+    );
+    expect(
+      tester.getSize(row.first).height,
+      greaterThanOrEqualTo(kMinInteractiveDimension),
+    );
+  });
+
+  testWidgets('a this-week row is never shorter than a tap target', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      const WeekSession(
+        id: 'week-session-1',
+        trainingId: _trainingId,
+        trainingTitle: 'Core work',
+        trainingType: 'workout',
+        timesPerWeek: 2,
+        position: 0,
+      ),
+    );
+
+    final row = find.ancestor(
+      of: find.text('Core work'),
+      matching: find.byType(InkWell),
+    );
+    expect(
+      tester.getSize(row.first).height,
+      greaterThanOrEqualTo(kMinInteractiveDimension),
+    );
+  });
+
   testWidgets('estimates an untouched session from the training itself', (
     tester,
   ) async {
