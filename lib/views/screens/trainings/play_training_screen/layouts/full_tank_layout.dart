@@ -102,7 +102,7 @@ class _TankPalette {
     secondary: CrimpyTheme.textSecondary,
     accent: CrimpyTheme.textOn(CrimpyTheme.runPrompt),
     muted: CrimpyTheme.textMutedSmall,
-    detail: CrimpyTheme.textFaint,
+    detail: CrimpyTheme.textMutedSmall,
     notch: CrimpyTheme.outline,
     goal: CrimpyTheme.goalColor,
     protocol: CrimpyTheme.protocolColor,
