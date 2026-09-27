@@ -37,15 +37,16 @@ class SessionFeedbackCard extends StatelessWidget {
         children: [
           Text(
             'Feedback',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: CrimpyTheme.title.copyWith(
+              color: CrimpyTheme.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           if (notes != null && notes!.isNotEmpty) ...[
             const SizedBox(height: 8),
             const _SectionLabel('How you felt'),
             const SizedBox(height: 4),
-            Text(notes!, style: const TextStyle(fontSize: 14)),
+            Text(notes!, style: CrimpyTheme.body),
           ],
           if (reply != null && reply.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -69,13 +70,12 @@ class SessionFeedbackCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(reply, style: const TextStyle(fontSize: 14)),
+                  Text(reply, style: CrimpyTheme.body),
                   if (coachReplyAt case final answeredAt?) ...[
                     const SizedBox(height: 6),
                     Text(
                       DateFormat('MMM d, yyyy').format(answeredAt),
-                      style: const TextStyle(
-                        fontSize: 12,
+                      style: CrimpyTheme.bodySmall.copyWith(
                         color: CrimpyTheme.textMutedSmall,
                       ),
                     ),
@@ -98,12 +98,7 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
     text.toUpperCase(),
-    style: const TextStyle(
-      fontSize: 11,
-      fontWeight: FontWeight.bold,
-      letterSpacing: 0.6,
-      color: CrimpyTheme.textSecondary,
-    ),
+    style: CrimpyTheme.capsLabel.copyWith(color: CrimpyTheme.textSecondary),
   );
 }
 
@@ -117,14 +112,9 @@ class _NewBadge extends StatelessWidget {
       color: CrimpyTheme.fillOn(CrimpyTheme.coachNote),
       borderRadius: CrimpyTheme.corners,
     ),
-    child: const Text(
+    child: Text(
       'NEW',
-      style: TextStyle(
-        fontSize: 10,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0.6,
-        color: CrimpyTheme.textOnFill,
-      ),
+      style: CrimpyTheme.capsLabel.copyWith(color: CrimpyTheme.textOnFill),
     ),
   );
 }

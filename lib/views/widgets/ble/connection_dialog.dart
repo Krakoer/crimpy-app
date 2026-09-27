@@ -51,7 +51,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               children: [
                 Text(
                   'BLE Connection',
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  style: CrimpyTheme.title.copyWith(
+                    color: CrimpyTheme.textPrimary,
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
@@ -122,9 +124,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         children: [
           Text(
             'Connected to:',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.textSecondary),
+            style: CrimpyTheme.bodySmall.copyWith(
+              color: CrimpyTheme.textSecondary,
+            ),
           ),
           const SizedBox(height: 8),
           Row(
@@ -141,11 +143,13 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                   children: [
                     Text(
                       device?.name ?? 'Unknown Device',
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: CrimpyTheme.titleSmall.copyWith(
+                        color: CrimpyTheme.textPrimary,
+                      ),
                     ),
                     Text(
                       device?.id ?? '',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      style: CrimpyTheme.bodySmall.copyWith(
                         color: CrimpyTheme.textSecondary,
                       ),
                     ),

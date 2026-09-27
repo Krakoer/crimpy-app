@@ -290,7 +290,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
   }
 
   Widget _buildNotFoundError(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -298,7 +298,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
           SizedBox(height: 16),
           Text(
             'Session not found',
-            style: TextStyle(fontSize: 18, color: CrimpyTheme.textSecondary),
+            style: CrimpyTheme.title.copyWith(color: CrimpyTheme.textSecondary),
           ),
         ],
       ),
@@ -318,12 +318,12 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
           const SizedBox(height: 16),
           Text(
             'Error loading session details',
-            style: TextStyle(fontSize: 18, color: CrimpyTheme.textStrong),
+            style: CrimpyTheme.title.copyWith(color: CrimpyTheme.textStrong),
           ),
           const SizedBox(height: 8),
           Text(
             error,
-            style: TextStyle(fontSize: 14, color: CrimpyTheme.textMedium),
+            style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textMedium),
             textAlign: TextAlign.center,
           ),
         ],

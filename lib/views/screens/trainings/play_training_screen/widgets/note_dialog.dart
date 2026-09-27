@@ -13,12 +13,7 @@ Future<void> showNoteDialog(BuildContext context, String text) =>
         content: SingleChildScrollView(
           child: Text(
             text,
-            style: const TextStyle(
-              fontFamily: 'JetBrainsMono',
-              fontSize: 14,
-              height: 1.45,
-              color: CrimpyTheme.textPrimary,
-            ),
+            style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textPrimary),
           ),
         ),
         actions: [

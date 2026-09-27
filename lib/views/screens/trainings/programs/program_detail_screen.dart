@@ -135,12 +135,17 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(program.name, style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            program.name,
+            style: CrimpyTheme.titleSmall.copyWith(
+              color: CrimpyTheme.textPrimary,
+            ),
+          ),
           if ((program.objective ?? '').isNotEmpty) ...[
             const SizedBox(height: 7),
             Text(
               program.objective!,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: CrimpyTheme.body.copyWith(
                 color: CrimpyTheme.textSecondary,
               ),
             ),
@@ -175,15 +180,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
         children: [
           Icon(icon, size: 11, color: CrimpyTheme.textPrimary),
           const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'JetBrainsMono',
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.4,
-            ),
-          ),
+          Text(label, style: CrimpyTheme.labelSmall),
         ],
       ),
     );
@@ -206,10 +203,8 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
             ),
             child: Text(
               label,
-              style: TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+              style: CrimpyTheme.bodySmall.copyWith(
+                fontWeight: FontWeight.w600,
                 color: selected
                     ? CrimpyTheme.bgPrimary
                     : CrimpyTheme.textPrimary,
@@ -264,10 +259,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                     children: [
                       Text(
                         'WEEK $week',
-                        style: TextStyle(
-                          fontFamily: 'JetBrainsMono',
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
+                        style: CrimpyTheme.capsLabel.copyWith(
                           color: selected
                               ? CrimpyTheme.bgPrimary
                               : CrimpyTheme.textPrimary,
@@ -382,11 +374,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
               isSameDay(selectedDate, today)
                   ? 'TODAY - ${formatDayMonth(selectedDate)}'
                   : '${weekdayShort(selectedDate)} - ${formatDayMonth(selectedDate)}',
-              style: const TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.4,
+              style: CrimpyTheme.capsLabel.copyWith(
                 color: CrimpyTheme.textSecondary,
               ),
             ),
@@ -472,10 +460,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
                 children: [
                   Text(
                     weekdayInitial(date),
-                    style: TextStyle(
-                      fontFamily: 'JetBrainsMono',
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
+                    style: CrimpyTheme.labelSmall.copyWith(
                       color: isSelected
                           ? CrimpyTheme.bgPrimary
                           : CrimpyTheme.textMutedSmall,
@@ -484,10 +469,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
                   const SizedBox(height: 4),
                   Text(
                     '${date.day}',
-                    style: TextStyle(
-                      fontFamily: 'JetBrainsMono',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
+                    style: CrimpyTheme.titleSmall.copyWith(
                       color: isSelected
                           ? CrimpyTheme.bgPrimary
                           : isToday
@@ -531,10 +513,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: const TextStyle(
-                  fontFamily: 'JetBrainsMono',
-                  fontSize: 11.5,
-                  height: 1.45,
+                style: CrimpyTheme.bodySmall.copyWith(
                   color: CrimpyTheme.textPrimary,
                 ),
                 children: [
@@ -563,13 +542,10 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
           strokeAlign: BorderSide.strokeAlignInside,
         ),
       ),
-      child: const Text(
+      child: Text(
         'REST DAY - NOTHING SCHEDULED',
         textAlign: TextAlign.center,
-        style: TextStyle(
-          fontFamily: 'JetBrainsMono',
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+        style: CrimpyTheme.capsLabel.copyWith(
           color: CrimpyTheme.textMutedSmall,
         ),
       ),
@@ -589,19 +565,14 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
           const SizedBox(height: 12),
           Text(
             'WEEK ${widget.weekNumber} NOT PLANNED YET',
-            style: const TextStyle(
-              fontFamily: 'JetBrainsMono',
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
+            style: CrimpyTheme.titleSmall.copyWith(
               color: CrimpyTheme.textSecondary,
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Your coach has not published this week.',
-            style: TextStyle(
-              fontFamily: 'JetBrainsMono',
-              fontSize: 11,
+            style: CrimpyTheme.bodySmall.copyWith(
               color: CrimpyTheme.textMutedSmall,
             ),
           ),
@@ -646,10 +617,7 @@ class _CalendarView extends StatelessWidget {
                     child: Text(
                       // Columns run Monday-Sunday.
                       weekdayInitial(addCalendarDays(program.weekStart(1), d)),
-                      style: const TextStyle(
-                        fontFamily: 'JetBrainsMono',
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
+                      style: CrimpyTheme.labelSmall.copyWith(
                         color: CrimpyTheme.textMutedSmall,
                       ),
                     ),
@@ -698,9 +666,7 @@ class _CalendarView extends StatelessWidget {
                 const SizedBox(width: 5),
                 Text(
                   e.$1,
-                  style: const TextStyle(
-                    fontFamily: 'JetBrainsMono',
-                    fontSize: 9,
+                  style: CrimpyTheme.labelSmall.copyWith(
                     color: CrimpyTheme.textSecondary,
                   ),
                 ),
@@ -756,11 +722,7 @@ class _CalendarRow extends ConsumerWidget {
               phase.toUpperCase(),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontFamily: 'JetBrainsMono',
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.4,
+              style: CrimpyTheme.capsLabel.copyWith(
                 color: CrimpyTheme.textSecondary,
               ),
             ),
@@ -771,10 +733,7 @@ class _CalendarRow extends ConsumerWidget {
               width: 36,
               child: Text(
                 'W$weekNumber',
-                style: TextStyle(
-                  fontFamily: 'JetBrainsMono',
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
+                style: CrimpyTheme.labelSmall.copyWith(
                   color: defined
                       ? CrimpyTheme.textPrimary
                       : CrimpyTheme.textMutedSmall,

@@ -354,9 +354,10 @@ class FullTankLayout extends ConsumerWidget {
     return null;
   }
 
-  /// The state word is 18px bold on the white control strip, under the
-  /// 18.66px large text threshold, so it answers to 4.5:1 and the accent's
-  /// 4.05:1 does not reach it. See Krakoer/crimpy#128.
+  /// The state word is set in capsHeadline, 24px on the white control strip,
+  /// which is large text and would pass at 3:1. It keeps the readable form of
+  /// its accent anyway, which clears 4.5:1, so the word reads the same as the
+  /// small labels around it. See Krakoer/crimpy#128.
   Color get _stateColor {
     if (isPreparation) {
       return CrimpyTheme.textOn(CrimpyTheme.phasePreparation);
@@ -414,26 +415,27 @@ class _TankContent extends StatelessWidget {
   bool _needsBackButton(BuildContext context) =>
       Theme.of(context).platform == TargetPlatform.iOS;
 
-  /// A type size, scaled from the tank the phone gave. Display numbers clamp
-  /// so they stay readable on a small screen without overflowing a large one.
-  TextStyle _style(
+  /// A style of the scale, grown or shrunk with the tank the phone gave.
+  TextStyle _scaledStyle(
+    TextStyle style, {
+    required Color color,
+    double? height,
+  }) => style
+      .apply(fontSizeFactor: scale, letterSpacingFactor: scale, color: color)
+      .copyWith(height: height);
+
+  /// A display number, scaled from the tank the phone gave and clamped so it
+  /// stays readable on a small screen without overflowing a large one.
+  TextStyle _numeralStyle(
     double size, {
     required Color color,
-    FontWeight weight = FontWeight.w500,
-    double letterSpacing = 0,
     double height = 1,
     double? min,
     double? max,
-  }) => TextStyle(
-    fontFamily: 'JetBrainsMono',
-    fontSize: (min == null || max == null)
-        ? _s(size)
-        : _s(size).clamp(min, max),
-    fontWeight: weight,
-    letterSpacing: _s(letterSpacing),
+  }) => CrimpyTheme.numerals(
+    (min == null || max == null) ? _s(size) : _s(size).clamp(min, max),
     height: height,
-    color: color,
-  );
+  ).copyWith(color: color);
 
   @override
   Widget build(BuildContext context) {
@@ -525,16 +527,11 @@ class _TankContent extends StatelessWidget {
           SizedBox(height: _s(10)),
           Text(
             rep!.handSide.displayName,
-            style: _style(
-              16,
-              color: palette.accent,
-              weight: FontWeight.w700,
-              letterSpacing: 1,
-            ),
+            style: _scaledStyle(CrimpyTheme.title, color: palette.accent),
           ),
           Text(
             gripLine(rep.gripPosition, rep.edgeSizeMm),
-            style: _style(12, color: palette.detail),
+            style: _scaledStyle(CrimpyTheme.bodySmall, color: palette.detail),
           ),
         ],
         // Only a sensor step has its middle taken by the force. Every other
@@ -558,7 +555,10 @@ class _TankContent extends StatelessWidget {
             layout.comment!,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: _style(11, color: palette.secondary, height: 1.4),
+            style: _scaledStyle(
+              CrimpyTheme.bodySmall,
+              color: palette.secondary,
+            ),
           ),
         ],
       ],
@@ -580,12 +580,7 @@ class _TankContent extends StatelessWidget {
     textAlign: align,
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
-    style: _style(
-      12,
-      color: palette.goal,
-      weight: FontWeight.w700,
-      letterSpacing: 1,
-    ),
+    style: _scaledStyle(CrimpyTheme.capsLabel, color: palette.goal),
   );
 
   /// The rule the step is resolved by, under the step it belongs to. Labelled
@@ -612,12 +607,7 @@ class _TankContent extends StatelessWidget {
     children: [
       Text(
         'PROTOCOL',
-        style: _style(
-          9,
-          color: palette.protocol,
-          weight: FontWeight.w700,
-          letterSpacing: 1,
-        ),
+        style: _scaledStyle(CrimpyTheme.capsLabel, color: palette.protocol),
       ),
       SizedBox(height: _s(3)),
       Text(
@@ -625,7 +615,7 @@ class _TankContent extends StatelessWidget {
         textAlign: align,
         maxLines: maxLines,
         overflow: TextOverflow.ellipsis,
-        style: _style(13, color: palette.secondary, height: 1.4),
+        style: _scaledStyle(CrimpyTheme.body, color: palette.secondary),
       ),
     ],
   );
@@ -636,16 +626,14 @@ class _TankContent extends StatelessWidget {
     children: [
       Text(
         label,
-        style: _style(
-          9,
-          color: palette.muted,
-          weight: FontWeight.w700,
-          letterSpacing: 0.6,
-        ),
+        style: _scaledStyle(CrimpyTheme.capsLabel, color: palette.muted),
       ),
       Text(
         formatMillisMinutesSeconds(milliseconds),
-        style: _style(20, color: palette.force),
+        style: _scaledStyle(
+          CrimpyTheme.tabular(CrimpyTheme.titleLarge),
+          color: palette.force,
+        ),
       ),
     ],
   );
@@ -665,21 +653,17 @@ class _TankContent extends StatelessWidget {
           seconds < 60
               ? '$seconds'
               : '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
-          style: _style(
+          style: _numeralStyle(
             seconds < 60 ? 92 : 64,
             color: color,
-            weight: FontWeight.w900,
-            letterSpacing: -2,
             height: 0.9,
           ),
         ),
         Text(
           resting ? 'SEC REST' : 'SEC',
-          style: _style(
-            11,
+          style: _scaledStyle(
+            CrimpyTheme.capsLabel,
             color: resting ? CrimpyTheme.phaseRest : palette.secondary,
-            weight: FontWeight.w700,
-            letterSpacing: 2,
           ),
         ),
       ],
@@ -687,49 +671,50 @@ class _TankContent extends StatelessWidget {
   }
 
   /// The force, as large as the tank allows, over the level that measures it.
+  /// The whole reading sits on one line with its unit beside it, and shrinks
+  /// rather than wraps when a reading runs to three figures on a narrow phone.
   List<Widget> _forceReadout() {
-    final formatted = formatKilograms(currentWeight);
-    final dot = formatted.indexOf('.');
-
     Widget line(double top, Widget child) =>
-        Positioned(left: 0, right: 0, top: tankHeight * top, child: child);
+        Positioned(left: 16, right: 16, top: tankHeight * top, child: child);
 
     return [
       line(
-        0.330,
-        Text(
-          dot == -1 ? formatted : formatted.substring(0, dot),
-          textAlign: TextAlign.center,
-          style: _style(
-            116,
-            color: palette.force,
-            weight: FontWeight.w900,
-            letterSpacing: -4,
-            min: 96,
-            max: 160,
+        0.345,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                formatKilograms(currentWeight),
+                style: _numeralStyle(
+                  104,
+                  color: palette.force,
+                  min: 80,
+                  max: 140,
+                ),
+              ),
+              SizedBox(width: _s(6)),
+              Text(
+                'kg',
+                style: _scaledStyle(
+                  CrimpyTheme.titleLarge,
+                  color: palette.secondary,
+                ),
+              ),
+            ],
           ),
-        ),
-      ),
-      line(
-        0.516,
-        Text(
-          '${dot == -1 ? '' : formatted.substring(dot)} kg',
-          textAlign: TextAlign.center,
-          style: _style(40, color: palette.force, weight: FontWeight.w900),
         ),
       ),
       if (notchLabel != null)
         line(
-          0.606,
+          0.56,
           Text(
             notchLabel!,
             textAlign: TextAlign.center,
-            style: _style(
-              16,
-              color: palette.secondary,
-              weight: FontWeight.w700,
-              letterSpacing: 2,
-            ),
+            style: _scaledStyle(CrimpyTheme.title, color: palette.secondary),
           ),
         ),
     ];
@@ -753,12 +738,7 @@ class _TankContent extends StatelessWidget {
     return _column([
       Text(
         'PREPARATION',
-        style: _style(
-          22,
-          color: palette.accent,
-          weight: FontWeight.w700,
-          letterSpacing: 4,
-        ),
+        style: _scaledStyle(CrimpyTheme.capsHeadline, color: palette.accent),
       ),
       SizedBox(height: _s(14)),
       Text(
@@ -766,18 +746,13 @@ class _TankContent extends StatelessWidget {
         textAlign: TextAlign.center,
         maxLines: _stepTitleMaxLines,
         overflow: TextOverflow.ellipsis,
-        style: _style(14, color: palette.secondary, height: 1.6),
+        style: _scaledStyle(CrimpyTheme.body, color: palette.secondary),
       ),
       if (rep != null && rep.targetLoad > 0) ...[
         SizedBox(height: _s(16)),
         Text(
           'FIRST TARGET ${formatKilograms(rep.targetLoad)} kg',
-          style: _style(
-            15,
-            color: palette.force,
-            weight: FontWeight.w700,
-            letterSpacing: 1,
-          ),
+          style: _scaledStyle(CrimpyTheme.titleSmall, color: palette.force),
         ),
       ],
       // The safest moment there is to look the movement up, and the only one a
@@ -806,11 +781,9 @@ class _TankContent extends StatelessWidget {
     if (next == null) {
       return Text(
         'LAST REST',
-        style: _style(
-          22,
+        style: _scaledStyle(
+          CrimpyTheme.capsHeadline,
           color: CrimpyTheme.phaseRest,
-          weight: FontWeight.w700,
-          letterSpacing: 4,
         ),
       );
     }
@@ -820,12 +793,7 @@ class _TankContent extends StatelessWidget {
     return _column([
       Text(
         'NEXT',
-        style: _style(
-          12,
-          color: palette.secondary,
-          weight: FontWeight.w700,
-          letterSpacing: 2,
-        ),
+        style: _scaledStyle(CrimpyTheme.capsLabel, color: palette.secondary),
       ),
       if (layout.nextGoal != null) ...[
         SizedBox(height: _s(8)),
@@ -838,11 +806,11 @@ class _TankContent extends StatelessWidget {
             : describeExecutionItem(next).toUpperCase(),
         textAlign: TextAlign.center,
         // The largest type in the block, so the step it names is what needs
-        // bounding most: a long exercise name wraps into it at 30px and would
-        // otherwise push the block past the tank.
+        // bounding most: a long exercise name wraps at the capsHeadline size and
+        // would otherwise push the block past the tank.
         maxLines: _stepTitleMaxLines,
         overflow: TextOverflow.ellipsis,
-        style: _style(30, color: palette.force, weight: FontWeight.w900),
+        style: _scaledStyle(CrimpyTheme.capsHeadline, color: palette.force),
       ),
       if (rep != null) ...[
         SizedBox(height: _s(14)),
@@ -851,13 +819,13 @@ class _TankContent extends StatelessWidget {
             if (rep.targetLoad > 0) '${formatKilograms(rep.targetLoad)} kg',
             '${rep.durationSeconds}s',
           ].join(' - '),
-          style: _style(20, color: palette.accent, weight: FontWeight.w700),
+          style: _scaledStyle(CrimpyTheme.titleLarge, color: palette.accent),
         ),
         if (hang) ...[
           SizedBox(height: _s(14)),
           Text(
             gripLine(rep.gripPosition, rep.edgeSizeMm),
-            style: _style(13, color: palette.secondary),
+            style: _scaledStyle(CrimpyTheme.body, color: palette.secondary),
           ),
         ],
       ],
@@ -875,7 +843,7 @@ class _TankContent extends StatelessWidget {
           textAlign: TextAlign.center,
           maxLines: 4,
           overflow: TextOverflow.ellipsis,
-          style: _style(13, color: palette.secondary, height: 1.4),
+          style: _scaledStyle(CrimpyTheme.body, color: palette.secondary),
         ),
       ],
       if (isPlayableVideoLink(layout.nextVideoLink)) ...[
@@ -898,12 +866,7 @@ class _TankContent extends StatelessWidget {
         textAlign: TextAlign.center,
         maxLines: _stepTitleMaxLines,
         overflow: TextOverflow.ellipsis,
-        style: _style(
-          18,
-          color: palette.accent,
-          weight: FontWeight.w700,
-          letterSpacing: 1,
-        ),
+        style: _scaledStyle(CrimpyTheme.title, color: palette.accent),
       ),
       // A hang on both hands runs without the sensor, so this is where the
       // athlete reads how to take the edge.
@@ -911,17 +874,12 @@ class _TankContent extends StatelessWidget {
         SizedBox(height: _s(8)),
         Text(
           rep.handSide.displayName,
-          style: _style(
-            22,
-            color: palette.force,
-            weight: FontWeight.w900,
-            letterSpacing: 1,
-          ),
+          style: _scaledStyle(CrimpyTheme.capsHeadline, color: palette.force),
         ),
         SizedBox(height: _s(4)),
         Text(
           gripLine(rep.gripPosition, rep.edgeSizeMm),
-          style: _style(15, color: palette.secondary, weight: FontWeight.w700),
+          style: _scaledStyle(CrimpyTheme.titleSmall, color: palette.secondary),
         ),
       ],
       if (layout.protocol != null) ...[
@@ -935,17 +893,15 @@ class _TankContent extends StatelessWidget {
           textAlign: TextAlign.center,
           maxLines: 4,
           overflow: TextOverflow.ellipsis,
-          style: _style(13, color: palette.secondary, height: 1.4),
+          style: _scaledStyle(CrimpyTheme.body, color: palette.secondary),
         ),
       ],
       SizedBox(height: _s(8)),
       Text(
         '${layout.secondsRemaining}',
-        style: _style(
+        style: _numeralStyle(
           150,
           color: palette.force,
-          weight: FontWeight.w900,
-          letterSpacing: -6,
           height: 0.9,
           min: 120,
           max: 190,
@@ -954,18 +910,13 @@ class _TankContent extends StatelessWidget {
       SizedBox(height: _s(8)),
       Text(
         'SEC LEFT',
-        style: _style(
-          14,
-          color: palette.secondary,
-          weight: FontWeight.w700,
-          letterSpacing: 4,
-        ),
+        style: _scaledStyle(CrimpyTheme.capsLabel, color: palette.secondary),
       ),
       if (rep.targetLoad > 0) ...[
         SizedBox(height: _s(12)),
         Text(
           'TARGET ${formatKilograms(rep.targetLoad)} kg',
-          style: _style(15, color: palette.muted, weight: FontWeight.w700),
+          style: _scaledStyle(CrimpyTheme.titleSmall, color: palette.muted),
         ),
       ],
     ]);
@@ -991,12 +942,7 @@ class _TankContent extends StatelessWidget {
         textAlign: TextAlign.center,
         maxLines: _stepTitleMaxLines,
         overflow: TextOverflow.ellipsis,
-        style: _style(
-          18,
-          color: palette.accent,
-          weight: FontWeight.w700,
-          letterSpacing: 1,
-        ),
+        style: _scaledStyle(CrimpyTheme.title, color: palette.accent),
       ),
       // A whole prescription rather than a name, so it is set as prose: mixed
       // case, a reading size, and line capped so the tank cannot be overflowed
@@ -1019,7 +965,7 @@ class _TankContent extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: noteProseMaxLines,
                   overflow: TextOverflow.ellipsis,
-                  style: _style(14, color: palette.force, height: 1.45),
+                  style: _scaledStyle(CrimpyTheme.body, color: palette.force),
                 ),
                 SizedBox(height: _s(6)),
                 // Says what the tap does and nothing about what is on screen:
@@ -1028,7 +974,10 @@ class _TankContent extends StatelessWidget {
                 // tank had room for.
                 Text(
                   'Tap the note to open it',
-                  style: _style(11, color: palette.secondary),
+                  style: _scaledStyle(
+                    CrimpyTheme.bodySmall,
+                    color: palette.secondary,
+                  ),
                 ),
               ],
             ),
@@ -1046,7 +995,7 @@ class _TankContent extends StatelessWidget {
           textAlign: TextAlign.center,
           maxLines: 4,
           overflow: TextOverflow.ellipsis,
-          style: _style(13, color: palette.secondary, height: 1.4),
+          style: _scaledStyle(CrimpyTheme.body, color: palette.secondary),
         ),
       ],
       if (details.isNotEmpty) ...[
@@ -1054,7 +1003,7 @@ class _TankContent extends StatelessWidget {
         Text(
           details,
           textAlign: TextAlign.center,
-          style: _style(30, color: palette.force, weight: FontWeight.w900),
+          style: _scaledStyle(CrimpyTheme.headline, color: palette.force),
         ),
       ],
       if (isPlayableVideoLink(layout.videoLink)) ...[
@@ -1066,7 +1015,7 @@ class _TankContent extends StatelessWidget {
         rep.repsAreOpen
             ? 'Tap DONE and say how many'
             : 'Tap DONE when finished',
-        style: _style(13, color: palette.secondary),
+        style: _scaledStyle(CrimpyTheme.body, color: palette.secondary),
       ),
     ]);
   }
@@ -1124,11 +1073,9 @@ class _RepContextCard extends StatelessWidget {
         child: Text(
           text,
           maxLines: 1,
-          style: TextStyle(
-            fontFamily: 'JetBrainsMono',
-            fontSize: (22 * scale).clamp(16.0, 28.0),
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1,
+          style: CrimpyTheme.tabular(CrimpyTheme.titleLarge).apply(
+            fontSizeFactor: scale.clamp(16 / 22, 28 / 22),
+            fontWeightDelta: 1,
             color: CrimpyTheme.textPrimary,
           ),
         ),
@@ -1157,21 +1104,17 @@ class _PausedCard extends StatelessWidget {
       children: [
         Text(
           'PAUSED',
-          style: TextStyle(
-            fontFamily: 'JetBrainsMono',
-            fontSize: 24 * scale,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 4 * scale,
+          style: CrimpyTheme.capsHeadline.apply(
+            fontSizeFactor: scale,
+            letterSpacingFactor: scale,
             color: CrimpyTheme.textPrimary,
           ),
         ),
         SizedBox(height: 8 * scale),
         Text(
           'Tap play to resume',
-          style: TextStyle(
-            fontFamily: 'JetBrainsMono',
-            fontSize: 12 * scale,
-            height: 1.6,
+          style: CrimpyTheme.bodySmall.apply(
+            fontSizeFactor: scale,
             color: CrimpyTheme.textSecondary,
           ),
         ),
@@ -1243,22 +1186,12 @@ class _ControlStrip extends StatelessWidget {
               if (stateWord != null)
                 Text(
                   stateWord!,
-                  style: TextStyle(
-                    fontFamily: 'JetBrainsMono',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 4,
-                    color: stateColor,
-                  ),
+                  style: CrimpyTheme.capsHeadline.copyWith(color: stateColor),
                 ),
               if (nextStep != null) ...[
-                const Text(
+                Text(
                   'NEXT',
-                  style: TextStyle(
-                    fontFamily: 'JetBrainsMono',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 2,
+                  style: CrimpyTheme.capsLabel.copyWith(
                     color: CrimpyTheme.textMutedSmall,
                   ),
                 ),
@@ -1267,11 +1200,7 @@ class _ControlStrip extends StatelessWidget {
                   nextStep!.toUpperCase(),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'JetBrainsMono',
-                    fontSize: 20,
-                    height: 1.15,
-                    fontWeight: FontWeight.w900,
+                  style: CrimpyTheme.title.copyWith(
                     color: CrimpyTheme.textPrimary,
                   ),
                 ),
@@ -1282,9 +1211,7 @@ class _ControlStrip extends StatelessWidget {
                   detail!,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'JetBrainsMono',
-                    fontSize: 11,
+                  style: CrimpyTheme.bodySmall.copyWith(
                     color: CrimpyTheme.textSecondary,
                   ),
                 ),

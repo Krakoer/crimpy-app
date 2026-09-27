@@ -79,9 +79,9 @@ class TruncatedLibraryNotice extends ConsumerWidget {
           Expanded(
             child: Text(
               compact ? _short : _full,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.textSecondary),
+              style: CrimpyTheme.bodySmall.copyWith(
+                color: CrimpyTheme.textSecondary,
+              ),
             ),
           ),
         ],

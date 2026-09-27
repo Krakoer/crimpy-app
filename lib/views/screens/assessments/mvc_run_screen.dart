@@ -250,11 +250,9 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                 padding: EdgeInsets.only(bottom: trueHeight * 0.75),
                 child: Text(
                   "${lastValue.toStringAsFixed(2)} kg",
-                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    fontSize: 70,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                  style: CrimpyTheme.numerals(
+                    70,
+                  ).copyWith(color: Theme.of(context).colorScheme.onSurface),
                 ),
               ),
               // Box to represent current sensor value. Only visible during active reps.
@@ -298,30 +296,38 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                     ],
                   ),
                   child: timer.currentItem is! RestItem
-                      ? Text(
-                          "Pull!\n${timer.currentItemRemaining}",
-                          style: TextStyle(
-                            fontSize: 39,
-                            color: CrimpyTheme.textOnFill,
-                          ),
-                          textAlign: TextAlign.center,
-                        )
-                      : Column(
+                      ? Column(
                           children: [
                             Text(
-                              "Pulling with ${timer.currentItemIndex == 0 ? "right" : "left"} hand in",
-                              style: TextStyle(
-                                fontSize: 29,
+                              "Pull!",
+                              style: CrimpyTheme.headline.copyWith(
                                 color: CrimpyTheme.textOnFill,
                               ),
                               textAlign: TextAlign.center,
                             ),
                             Text(
                               "${timer.currentItemRemaining}",
-                              style: TextStyle(
-                                fontSize: 39,
+                              style: CrimpyTheme.numerals(
+                                48,
+                              ).copyWith(color: CrimpyTheme.textOnFill),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            Text(
+                              "Pulling with ${timer.currentItemIndex == 0 ? "right" : "left"} hand in",
+                              style: CrimpyTheme.headline.copyWith(
                                 color: CrimpyTheme.textOnFill,
                               ),
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              "${timer.currentItemRemaining}",
+                              style: CrimpyTheme.numerals(
+                                48,
+                              ).copyWith(color: CrimpyTheme.textOnFill),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -340,10 +346,9 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                         padding: const EdgeInsets.only(left: 8.0),
                         child: Text(
                           "${bleSession.max.toStringAsFixed(2)} kg",
-                          style: Theme.of(context).textTheme.bodyLarge!
+                          style: CrimpyTheme.tabular(CrimpyTheme.headline)
                               .copyWith(
                                 color: Theme.of(context).colorScheme.primary,
-                                fontSize: 27,
                               ),
                         ),
                       ),

@@ -47,7 +47,7 @@ class CalendarCard extends StatelessWidget {
               ),
               headerStyle: const CalendarHeaderStyle(
                 textAlign: TextAlign.center,
-                textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                textStyle: CrimpyTheme.titleLarge,
               ),
               todayHighlightColor: CrimpyTheme.current,
               selectionDecoration: BoxDecoration(

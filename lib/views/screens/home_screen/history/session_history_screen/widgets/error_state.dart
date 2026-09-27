@@ -21,12 +21,12 @@ class ErrorState extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'Error loading sessions',
-            style: TextStyle(fontSize: 18, color: CrimpyTheme.textStrong),
+            style: CrimpyTheme.title.copyWith(color: CrimpyTheme.textStrong),
           ),
           const SizedBox(height: 8),
           Text(
             error,
-            style: TextStyle(fontSize: 14, color: CrimpyTheme.textMedium),
+            style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textMedium),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),

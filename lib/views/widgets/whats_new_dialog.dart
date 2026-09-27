@@ -32,7 +32,7 @@ class WhatsNewDialog extends ConsumerWidget {
             appInfoAsync.when(
               data: (appInfo) => Text(
                 'Version ${appInfo.version}',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                style: CrimpyTheme.title.copyWith(
                   fontWeight: FontWeight.bold,
                   color: CrimpyTheme.textOn(CrimpyTheme.newsMark),
                 ),
@@ -64,9 +64,10 @@ class WhatsNewDialog extends ConsumerWidget {
             const SizedBox(height: 8),
             Text(
               'Thank you for using Crimpy!',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic),
+              style: CrimpyTheme.body.copyWith(
+                color: CrimpyTheme.textPrimary,
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ],
         ),
@@ -104,14 +105,17 @@ class WhatsNewDialog extends ConsumerWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                  style: CrimpyTheme.titleSmall.copyWith(
+                    color: CrimpyTheme.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: CrimpyTheme.body.copyWith(
+                    color: CrimpyTheme.textPrimary,
+                  ),
                 ),
               ],
             ),

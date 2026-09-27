@@ -31,7 +31,7 @@ class AnalysisErrorScreen extends StatelessWidget {
               SizedBox(height: 24),
               Text(
                 "Analysis Failed",
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                style: CrimpyTheme.title.copyWith(
                   color: Theme.of(context).colorScheme.error,
                   fontWeight: FontWeight.bold,
                 ),
@@ -39,7 +39,9 @@ class AnalysisErrorScreen extends StatelessWidget {
               SizedBox(height: 16),
               Text(
                 "We couldn't analyze your critical force data. This could be due to insufficient data quality or technical issues.",
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: CrimpyTheme.body.copyWith(
+                  color: CrimpyTheme.textPrimary,
+                ),
                 textAlign: TextAlign.center,
               ),
               if (errorMessage != null) ...[
@@ -55,7 +57,7 @@ class AnalysisErrorScreen extends StatelessWidget {
                   ),
                   child: Text(
                     "Error details: $errorMessage",
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    style: CrimpyTheme.body.copyWith(
                       color: CrimpyTheme.textOn(CrimpyTheme.statusError),
                     ),
                   ),
@@ -64,9 +66,10 @@ class AnalysisErrorScreen extends StatelessWidget {
               SizedBox(height: 32),
               Text(
                 "Your session data has been saved for debugging purposes.",
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic),
+                style: CrimpyTheme.body.copyWith(
+                  color: CrimpyTheme.textPrimary,
+                  fontStyle: FontStyle.italic,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],

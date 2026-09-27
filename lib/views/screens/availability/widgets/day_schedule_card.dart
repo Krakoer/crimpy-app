@@ -124,9 +124,7 @@ class DayScheduleCard extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
+                style: CrimpyTheme.titleSmall.copyWith(
                   color: CrimpyTheme.textPrimary,
                 ),
               ),
@@ -134,8 +132,7 @@ class DayScheduleCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   dateLabel,
-                  style: const TextStyle(
-                    fontSize: 12,
+                  style: CrimpyTheme.bodySmall.copyWith(
                     color: CrimpyTheme.textSecondary,
                   ),
                 ),
@@ -143,9 +140,8 @@ class DayScheduleCard extends StatelessWidget {
               if (day.plannedMinutes > 0)
                 Text(
                   formatMinutesAsLength(day.plannedMinutes),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                  style: CrimpyTheme.bodySmall.copyWith(
+                    fontWeight: FontWeight.w600,
                     color: CrimpyTheme.textOn(CrimpyTheme.planned),
                   ),
                 ),
@@ -153,12 +149,11 @@ class DayScheduleCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           if (!planned)
-            const Padding(
+            Padding(
               padding: EdgeInsets.only(bottom: 4),
               child: Text(
                 'Nothing planned',
-                style: TextStyle(
-                  fontSize: 13,
+                style: CrimpyTheme.body.copyWith(
                   fontStyle: FontStyle.italic,
                   color: CrimpyTheme.textSecondary,
                 ),
@@ -249,9 +244,7 @@ class _ActivityTile extends StatelessWidget {
                           Expanded(
                             child: Text(
                               activity.label,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                              style: CrimpyTheme.titleSmall.copyWith(
                                 color: CrimpyTheme.textPrimary,
                               ),
                             ),
@@ -260,8 +253,7 @@ class _ActivityTile extends StatelessWidget {
                             const SizedBox(width: 8),
                             Text(
                               formatMinutesAsLength(activity.durationMinutes!),
-                              style: const TextStyle(
-                                fontSize: 12,
+                              style: CrimpyTheme.bodySmall.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: CrimpyTheme.textSecondary,
                               ),
@@ -273,8 +265,7 @@ class _ActivityTile extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           whenAndWhere,
-                          style: const TextStyle(
-                            fontSize: 12,
+                          style: CrimpyTheme.bodySmall.copyWith(
                             color: CrimpyTheme.textSecondary,
                           ),
                         ),

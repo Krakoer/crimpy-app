@@ -81,7 +81,9 @@ class PostAssessmentScreen extends ConsumerWidget {
               // If they gave their max, it's always a good job rigth ?
               Text(
                 "Great job! 💪",
-                style: Theme.of(context).textTheme.displaySmall,
+                style: CrimpyTheme.headline.copyWith(
+                  color: CrimpyTheme.textPrimary,
+                ),
               ),
               SizedBox(height: 16),
               // Show the results cards for the provided hands.
@@ -183,7 +185,7 @@ class ResultCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
             child: Text(
               rightHand! ? "Right Hand" : "Left Hand",
-              style: Theme.of(context).textTheme.headlineMedium,
+              style: CrimpyTheme.title.copyWith(color: CrimpyTheme.textPrimary),
             ),
           ),
         CrimpyCards.assessment(
@@ -199,7 +201,7 @@ class ResultCard extends StatelessWidget {
                   children: [
                     Text(
                       'Previous',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      style: CrimpyTheme.labelSmall.copyWith(
                         color: CrimpyTheme.textSecondary,
                       ),
                     ),
@@ -208,7 +210,9 @@ class ResultCard extends StatelessWidget {
                       prevValue == null
                           ? "--"
                           : formatAssessmentValue(prevValue!, displayUnit),
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      style: CrimpyTheme.title.copyWith(
+                        color: CrimpyTheme.textPrimary,
+                      ),
                     ),
                   ],
                 ),
@@ -232,9 +236,8 @@ class ResultCard extends StatelessWidget {
                       ),
                       child: Text(
                         "${isPositive ? '+' : ''}$percentage%",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+                        style: CrimpyTheme.bodySmall.copyWith(
+                          fontWeight: FontWeight.w600,
                           color: CrimpyTheme.textOn(percentageColor),
                         ),
                       ),
@@ -255,14 +258,16 @@ class ResultCard extends StatelessWidget {
                   children: [
                     Text(
                       'Current',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      style: CrimpyTheme.labelSmall.copyWith(
                         color: CrimpyTheme.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       formatAssessmentValue(newValue, displayUnit),
-                      style: Theme.of(context).textTheme.headlineMedium,
+                      style: CrimpyTheme.title.copyWith(
+                        color: CrimpyTheme.textPrimary,
+                      ),
                     ),
                   ],
                 ),

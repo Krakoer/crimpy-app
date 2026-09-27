@@ -22,9 +22,10 @@ class SessionReportedItemsCard extends StatelessWidget {
         children: [
           Text(
             'What you managed',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: CrimpyTheme.title.copyWith(
+              color: CrimpyTheme.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           for (final item in items)
@@ -60,9 +61,7 @@ class _ReportedItemRow extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(item.label, style: const TextStyle(fontSize: 14)),
-            ),
+            Expanded(child: Text(item.label, style: CrimpyTheme.body)),
             if (achieved.isNotEmpty) ...[
               const SizedBox(width: 12),
               Column(
@@ -70,17 +69,14 @@ class _ReportedItemRow extends StatelessWidget {
                 children: [
                   Text(
                     achieved.join(', '),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                    style: CrimpyTheme.title.copyWith(
                       color: CrimpyTheme.textOn(CrimpyTheme.achieved),
                     ),
                   ),
                   if (item.prescribed case final prescribed?)
                     Text(
                       prescribed,
-                      style: const TextStyle(
-                        fontSize: 11,
+                      style: CrimpyTheme.bodySmall.copyWith(
                         color: CrimpyTheme.textSecondary,
                       ),
                     ),
@@ -105,9 +101,7 @@ class _ReportedItemRow extends StatelessWidget {
                     if (pass.occurrence > 0) ...[
                       TextSpan(
                         text: 'Pass ${pass.occurrence + 1}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                        style: CrimpyTheme.labelSmall.copyWith(
                           fontStyle: FontStyle.normal,
                           color: CrimpyTheme.textSecondary,
                         ),
@@ -117,9 +111,7 @@ class _ReportedItemRow extends StatelessWidget {
                     TextSpan(text: note),
                   ],
                 ),
-                style: const TextStyle(
-                  fontSize: 13,
-                  height: 1.4,
+                style: CrimpyTheme.body.copyWith(
                   fontStyle: FontStyle.italic,
                   color: CrimpyTheme.textSecondary,
                 ),

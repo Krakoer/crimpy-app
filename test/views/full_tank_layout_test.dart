@@ -187,7 +187,7 @@ void main() {
   });
 
   group('a sensor step', () {
-    testWidgets('splits the force so the whole number reads first', (
+    testWidgets('sets the whole force on one line beside its unit', (
       tester,
     ) async {
       await _pump(
@@ -197,9 +197,10 @@ void main() {
         comment: 'Keep the shoulders engaged',
       );
 
-      expect(find.text('34'), findsWidgets);
+      expect(find.text('34.2'), findsWidgets);
       expect(find.text('Keep the shoulders engaged'), findsWidgets);
-      expect(find.text('.2 kg'), findsWidgets);
+      expect(find.text('kg'), findsWidgets);
+      expect(find.text('.2 kg'), findsNothing);
       expect(find.text('TARGET 42 kg'), findsWidgets);
     });
 
@@ -249,7 +250,7 @@ void main() {
       tester,
     ) async {
       await _pump(tester, item: _hang, currentWeight: 34.2);
-      expect(find.text('34'), findsNWidgets(2));
+      expect(find.text('34.2'), findsNWidgets(2));
 
       // Nothing to invert before the first pull, so a single copy is drawn.
       await _pump(tester, item: _hang, currentWeight: 0);
@@ -290,7 +291,7 @@ void main() {
       expect(find.text('BW 72 kg'), findsWidgets);
       expect(find.textContaining('TARGET'), findsNothing);
       // The level is up, so both copies of the readout are drawn.
-      expect(find.text('34'), findsNWidgets(2));
+      expect(find.text('34.2'), findsNWidgets(2));
     });
 
     testWidgets('leaves the tank empty when it has nothing to scale against', (
@@ -300,7 +301,7 @@ void main() {
 
       expect(find.textContaining('BW'), findsNothing);
       expect(find.textContaining('TARGET'), findsNothing);
-      expect(find.text('34'), findsOneWidget);
+      expect(find.text('34.2'), findsOneWidget);
     });
   });
 
@@ -434,10 +435,9 @@ void main() {
     ) async {
       await _pump(tester, item: _hang, currentWeight: 34.2, isRunning: false);
 
-      expect(find.text('34'), findsNothing);
-      expect(find.text('.2 kg'), findsNothing);
+      expect(find.text('34.2'), findsNothing);
       expect(find.text('0'), findsWidgets);
-      expect(find.text(' kg'), findsWidgets);
+      expect(find.text('kg'), findsWidgets);
     });
 
     // Preparation runs with the timer stopped, and it is not a pause: there is
@@ -864,7 +864,7 @@ void main() {
           .toSet();
       expect(painted, {CrimpyTheme.goalColor, CrimpyTheme.textOnFill});
       expect(find.text('Keep the shoulders engaged'), findsWidgets);
-      expect(find.text('34'), findsWidgets);
+      expect(find.text('34.2'), findsWidgets);
     });
 
     testWidgets('a step with no goal shows none', (tester) async {

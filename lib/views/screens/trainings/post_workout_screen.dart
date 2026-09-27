@@ -191,7 +191,9 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                 SizedBox(height: 100),
                 Text(
                   "Well done! 💪",
-                  style: Theme.of(context).textTheme.displaySmall,
+                  style: CrimpyTheme.headline.copyWith(
+                    color: CrimpyTheme.textPrimary,
+                  ),
                 ),
                 // Stated only for a run the training gave loads to grade against.
                 if (overall != null)
@@ -246,8 +248,9 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                             child: Text(
                               'There is nothing to note step by step on this '
                               'training. Tell us how it went below.',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: CrimpyTheme.textSecondary),
+                              style: CrimpyTheme.bodySmall.copyWith(
+                                color: CrimpyTheme.textSecondary,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -381,9 +384,9 @@ class _OverallOnTarget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final muted = Theme.of(
-      context,
-    ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.textSecondary);
+    final muted = CrimpyTheme.bodySmall.copyWith(
+      color: CrimpyTheme.textSecondary,
+    );
 
     return Text.rich(
       TextSpan(
@@ -391,9 +394,10 @@ class _OverallOnTarget extends StatelessWidget {
           TextSpan(text: "you hit your target on ", style: muted),
           TextSpan(
             text: "${count.onTarget} of ${count.total}",
-            style: Theme.of(
-              context,
-            ).textTheme.labelLarge?.copyWith(fontSize: 12),
+            style: CrimpyTheme.bodySmall.copyWith(
+              color: CrimpyTheme.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           TextSpan(text: " reps", style: muted),
           // The reps the sensor never measured are graded by nothing, so they
@@ -416,9 +420,9 @@ class _BlocksOnTarget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final muted = Theme.of(
-      context,
-    ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.textSecondary);
+    final muted = CrimpyTheme.bodySmall.copyWith(
+      color: CrimpyTheme.textSecondary,
+    );
 
     return Padding(
       padding: const EdgeInsets.only(top: 8, left: 32, right: 32),
@@ -432,9 +436,10 @@ class _BlocksOnTarget extends StatelessWidget {
                   Expanded(child: Text(block.label, style: muted)),
                   Text(
                     "${block.count.onTarget}/${block.count.total} on target",
-                    style: Theme.of(
-                      context,
-                    ).textTheme.labelLarge?.copyWith(fontSize: 12),
+                    style: CrimpyTheme.bodySmall.copyWith(
+                      color: CrimpyTheme.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   if (unmeasuredNote(block.count) case final note?)
                     Text(" ($note)", style: muted),

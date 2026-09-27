@@ -35,10 +35,7 @@ class SessionCard extends StatelessWidget {
                   children: [
                     Text(
                       session.name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
+                      style: CrimpyTheme.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -53,9 +50,8 @@ class SessionCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           formattedTime,
-                          style: TextStyle(
+                          style: CrimpyTheme.bodySmall.copyWith(
                             color: CrimpyTheme.textMedium,
-                            fontSize: 12,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -67,9 +63,8 @@ class SessionCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           _formatDuration(duration),
-                          style: TextStyle(
+                          style: CrimpyTheme.bodySmall.copyWith(
                             color: CrimpyTheme.textMedium,
-                            fontSize: 12,
                           ),
                         ),
                       ],
@@ -78,9 +73,8 @@ class SessionCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         session.notes!,
-                        style: TextStyle(
+                        style: CrimpyTheme.bodySmall.copyWith(
                           color: CrimpyTheme.textStrong,
-                          fontSize: 12,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,

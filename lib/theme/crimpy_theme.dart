@@ -386,12 +386,165 @@ class CrimpyTheme {
     shape: shape,
   );
 
+  // ==================== TYPE ====================
+  //
+  // The face is the platform's own sans: Roboto on Android, SF Pro on iOS. No
+  // font is bundled and none is named, so nothing here sets a family. Sizes,
+  // leading, weights and tracking follow Get a Grip's scale, and tracking
+  // follows size: open for small text and caps, tight for large text, since
+  // letterforms read further apart as they grow.
+  //
+  // A widget takes one of these rather than naming a size, a family or a
+  // tracking of its own, and test/theme/type_tokens_test.dart fails on any
+  // file outside the theme that does. A weight may still be set on top, to
+  // pick out a word, up to w700. A screen that scales its type with its
+  // layout, as the run screen does, scales these with TextStyle.apply. See
+  // Krakoer/crimpy#172.
+
+  /// A screen's title, in the app bar. The heaviest words on a screen and
+  /// still lighter than the numbers a screen exists to show.
+  static const TextStyle pageTitle = TextStyle(
+    fontSize: 28,
+    height: 33 / 28,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.5,
+  );
+
+  /// A heading inside a screen: a result, a section of a long page, a big
+  /// state word.
+  static const TextStyle headline = TextStyle(
+    fontSize: 24,
+    height: 29 / 24,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.4,
+  );
+
+  /// [headline] for a word set in capitals: a state word such as "REST" or
+  /// "PAUSED", a hand. Tracked open rather than tight, since capitals crowd at
+  /// any size where lower case does not.
+  static const TextStyle capsHeadline = TextStyle(
+    fontSize: 24,
+    height: 29 / 24,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.5,
+  );
+
+  /// A prominent line that is not a heading: a step name, a figure with its
+  /// unit.
+  static const TextStyle titleLarge = TextStyle(
+    fontSize: 22,
+    height: 27 / 22,
+    fontWeight: FontWeight.w500,
+    letterSpacing: -0.3,
+  );
+
+  /// The title of a card, a dialog, a list row.
+  static const TextStyle title = TextStyle(
+    fontSize: 17,
+    height: 23 / 17,
+    fontWeight: FontWeight.w600,
+    letterSpacing: -0.15,
+  );
+
+  /// A secondary title: a subheading in a card, a row's second line when it
+  /// names something.
+  static const TextStyle titleSmall = TextStyle(
+    fontSize: 15,
+    height: 21 / 15,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0,
+  );
+
+  /// Reading text given room: a note, a prescription.
+  static const TextStyle bodyLarge = TextStyle(
+    fontSize: 16,
+    height: 24 / 16,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0,
+  );
+
+  /// Running text, and anything that has no reason to be another size.
+  static const TextStyle body = TextStyle(
+    fontSize: 14,
+    height: 21 / 14,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0,
+  );
+
+  /// Supporting text: a caption, a detail line, a chart axis.
+  static const TextStyle bodySmall = TextStyle(
+    fontSize: 12,
+    height: 18 / 12,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0,
+  );
+
+  /// A control's label: a button, a tab.
+  static const TextStyle label = TextStyle(
+    fontSize: 14,
+    height: 20 / 14,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.1,
+  );
+
+  /// A small label in mixed case: a chip, a badge, a tab under an icon.
+  static const TextStyle labelSmall = TextStyle(
+    fontSize: 11,
+    height: 16 / 11,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.5,
+  );
+
+  /// A label set in capitals over what it names: "ELAPSED", "PROTOCOL",
+  /// "NEXT". Open by a little, as small caps want, and no more: spacing them
+  /// wide reads as a word spelled out. The caller writes the capitals.
+  static const TextStyle capsLabel = TextStyle(
+    fontSize: 11,
+    height: 16 / 11,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.8,
+  );
+
+  static const TextStyle _labelMedium = TextStyle(
+    fontSize: 12,
+    height: 16 / 12,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.2,
+  );
+
+  /// Figures that change while they are read: a timer, a force reading.
+  /// Tabular, so each digit keeps its width and the number does not jitter as
+  /// it counts.
+  static const List<FontFeature> tabularFigures = [
+    FontFeature.tabularFigures(),
+  ];
+
+  /// [style] with [tabularFigures], for a figure at a text size that changes
+  /// while it is read: a clock in a row, a live value in a card.
+  static TextStyle tabular(TextStyle style) =>
+      style.copyWith(fontFeatures: tabularFigures);
+
+  /// A display number: the force, the countdown, a result a screen exists to
+  /// show. Light, tabular, and tracked at -0.02 em so large figures sit
+  /// together rather than float apart. [size] is the one size a widget may
+  /// state, since a display number is sized to the room it has.
+  static TextStyle numerals(
+    double size, {
+    FontWeight weight = FontWeight.w300,
+    double height = 1.1,
+  }) => TextStyle(
+    fontSize: size,
+    height: height,
+    fontWeight: weight,
+    letterSpacing: size * -0.02,
+    fontFeatures: tabularFigures,
+  );
+
   // ==================== THEME DATA ====================
 
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-    fontFamily: 'JetBrainsMono', // Monospace font like Radicle
     // Color Scheme
     colorScheme: const ColorScheme.light(
       primary: control,
@@ -411,20 +564,14 @@ class CrimpyTheme {
     scaffoldBackgroundColor: bgPrimary,
 
     // AppBar with minimalist styling
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       backgroundColor: bgPrimary,
       foregroundColor: textPrimary,
       elevation: 0,
       centerTitle: false,
-      titleTextStyle: TextStyle(
-        fontFamily: 'JetBrainsMono',
-        color: textPrimary,
-        fontSize: 38,
-        fontWeight: FontWeight.w900,
-        letterSpacing: -0.5,
-      ),
-      iconTheme: IconThemeData(color: textPrimary),
-      actionsIconTheme: IconThemeData(color: textPrimary),
+      titleTextStyle: pageTitle.copyWith(color: textPrimary),
+      iconTheme: const IconThemeData(color: textPrimary),
+      actionsIconTheme: const IconThemeData(color: textPrimary),
     ),
 
     // Card with sharp edges and double border effect
@@ -447,11 +594,7 @@ class CrimpyTheme {
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         shape: shape,
-        textStyle: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          fontFamily: 'JetBrainsMono',
-        ),
+        textStyle: label,
       ),
     ),
 
@@ -464,11 +607,7 @@ class CrimpyTheme {
         side: const BorderSide(color: control, width: 1),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         shape: shape,
-        textStyle: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          fontFamily: 'JetBrainsMono',
-        ),
+        textStyle: label,
       ),
     ),
 
@@ -481,11 +620,7 @@ class CrimpyTheme {
         foregroundColor: control,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         shape: shape,
-        textStyle: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          fontFamily: 'JetBrainsMono',
-        ),
+        textStyle: label,
       ),
     ),
 
@@ -500,11 +635,7 @@ class CrimpyTheme {
         foregroundColor: textOnFill,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         shape: shape,
-        textStyle: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          fontFamily: 'JetBrainsMono',
-        ),
+        textStyle: label,
       ),
     ),
 
@@ -518,34 +649,19 @@ class CrimpyTheme {
         selectedBackgroundColor: control,
         side: const BorderSide(color: outline, width: 1),
         shape: shape,
-        textStyle: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          fontFamily: 'JetBrainsMono',
-        ),
+        textStyle: label,
       ),
     ),
 
     // Dialogs are cards laid over the screen: square, on the card's line,
     // without the tint Material 3 washes a raised surface with.
-    dialogTheme: const DialogThemeData(
+    dialogTheme: DialogThemeData(
       backgroundColor: bgPrimary,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       shape: framed,
-      titleTextStyle: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: textPrimary,
-        fontFamily: 'JetBrainsMono',
-      ),
-      contentTextStyle: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w400,
-        color: textPrimary,
-        fontFamily: 'JetBrainsMono',
-        height: 1.6,
-      ),
+      titleTextStyle: title.copyWith(color: textPrimary),
+      contentTextStyle: body.copyWith(color: textPrimary),
     ),
 
     // Bottom sheets rise from the screen's edge on the same line as a dialog.
@@ -559,7 +675,7 @@ class CrimpyTheme {
     ),
 
     // Overflow menus, on the line of a field.
-    popupMenuTheme: const PopupMenuThemeData(
+    popupMenuTheme: PopupMenuThemeData(
       color: bgPrimary,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
@@ -567,11 +683,7 @@ class CrimpyTheme {
         borderRadius: corners,
         side: BorderSide(color: outline, width: 1),
       ),
-      textStyle: TextStyle(
-        fontSize: 13,
-        color: textPrimary,
-        fontFamily: 'JetBrainsMono',
-      ),
+      textStyle: body.copyWith(color: textPrimary),
     ),
 
     // The date and time pickers are dialogs too. Their OK is the primary
@@ -621,17 +733,16 @@ class CrimpyTheme {
       confirmButtonStyle: _pickerConfirmButton,
     ),
 
-    tooltipTheme: const TooltipThemeData(
-      decoration: BoxDecoration(color: primaryBlack, borderRadius: corners),
-      textStyle: TextStyle(
-        fontSize: 11,
-        color: textOnFill,
-        fontFamily: 'JetBrainsMono',
+    tooltipTheme: TooltipThemeData(
+      decoration: const BoxDecoration(
+        color: primaryBlack,
+        borderRadius: corners,
       ),
+      textStyle: bodySmall.copyWith(color: textOnFill),
     ),
 
     // Input fields with sharp borders
-    inputDecorationTheme: const InputDecorationTheme(
+    inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: bgPrimary,
       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -644,14 +755,8 @@ class CrimpyTheme {
         borderRadius: corners,
         borderSide: BorderSide(color: outlineSubtle, width: 1),
       ),
-      labelStyle: TextStyle(
-        color: textSecondary,
-        fontWeight: FontWeight.w500,
-        fontSize: 12,
-        fontFamily: 'JetBrainsMono',
-        letterSpacing: 0.5,
-      ),
-      hintStyle: TextStyle(color: textMutedSmall, fontFamily: 'JetBrainsMono'),
+      labelStyle: _labelMedium.copyWith(color: textSecondary),
+      hintStyle: TextStyle(color: textMutedSmall),
     ),
 
     // Chip theme with minimal styling
@@ -680,9 +785,10 @@ class CrimpyTheme {
           if (states.contains(WidgetState.disabled)) return textSecondary;
           return textPrimary;
         }),
-        fontSize: 11,
+        fontSize: labelSmall.fontSize,
+        height: labelSmall.height,
         fontWeight: FontWeight.w500,
-        fontFamily: 'JetBrainsMono',
+        letterSpacing: labelSmall.letterSpacing,
       ),
       side: const BorderSide(color: outline, width: 1),
       shape: shape,
@@ -713,95 +819,50 @@ class CrimpyTheme {
       shape: shape,
     ),
 
-    // Typography - Monospace font throughout
-    textTheme: const TextTheme(
-      displayLarge: TextStyle(
+    // Get a Grip's scale, on the platform's sans. Only Material's own widgets
+    // read these slots: a widget in lib/ takes a style from the TYPE section
+    // above, and test/theme/type_tokens_test.dart fails on one that reads
+    // textTheme instead.
+    textTheme: TextTheme(
+      displayLarge: const TextStyle(
+        fontSize: 57,
+        height: 60 / 57,
+        fontWeight: FontWeight.w300,
+        letterSpacing: -1.4,
+        color: textPrimary,
+      ),
+      displayMedium: const TextStyle(
+        fontSize: 45,
+        height: 49 / 45,
+        fontWeight: FontWeight.w300,
+        letterSpacing: -1,
+        color: textPrimary,
+      ),
+      displaySmall: const TextStyle(
+        fontSize: 36,
+        height: 40 / 36,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.9,
+        color: textPrimary,
+      ),
+      headlineLarge: const TextStyle(
         fontSize: 32,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.5,
-        color: textPrimary,
-        fontFamily: 'JetBrainsMono',
-      ),
-      displayMedium: TextStyle(
-        fontSize: 24,
+        height: 37 / 32,
         fontWeight: FontWeight.w600,
-        letterSpacing: -0.5,
+        letterSpacing: -0.7,
         color: textPrimary,
-        fontFamily: 'JetBrainsMono',
       ),
-      displaySmall: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-        color: textPrimary,
-        fontFamily: 'JetBrainsMono',
-      ),
-      headlineLarge: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        color: textPrimary,
-        fontFamily: 'JetBrainsMono',
-      ),
-      headlineMedium: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: textPrimary,
-        fontFamily: 'JetBrainsMono',
-      ),
-      headlineSmall: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: textPrimary,
-        fontFamily: 'JetBrainsMono',
-      ),
-      titleLarge: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: textPrimary,
-        fontFamily: 'JetBrainsMono',
-      ),
-      bodyLarge: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        color: textPrimary,
-        fontFamily: 'JetBrainsMono',
-        height: 1.6,
-      ),
-      bodyMedium: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w400,
-        color: textPrimary,
-        fontFamily: 'JetBrainsMono',
-        height: 1.6,
-      ),
-      bodySmall: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        color: textSecondary,
-        fontFamily: 'JetBrainsMono',
-        height: 1.6,
-      ),
-      labelLarge: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.5,
-        color: textSecondary,
-        fontFamily: 'JetBrainsMono',
-        textBaseline: TextBaseline.alphabetic,
-      ),
-      labelMedium: TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.5,
-        color: textSecondary,
-        fontFamily: 'JetBrainsMono',
-      ),
-      labelSmall: TextStyle(
-        fontSize: 10,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.5,
-        color: textMutedSmall,
-        fontFamily: 'JetBrainsMono',
-      ),
+      headlineMedium: pageTitle.copyWith(color: textPrimary),
+      headlineSmall: headline.copyWith(color: textPrimary),
+      titleLarge: titleLarge.copyWith(color: textPrimary),
+      titleMedium: title.copyWith(color: textPrimary),
+      titleSmall: titleSmall.copyWith(color: textPrimary),
+      bodyLarge: bodyLarge.copyWith(color: textPrimary),
+      bodyMedium: body.copyWith(color: textPrimary),
+      bodySmall: bodySmall.copyWith(color: textSecondary),
+      labelLarge: label.copyWith(color: textSecondary),
+      labelMedium: _labelMedium.copyWith(color: textSecondary),
+      labelSmall: labelSmall.copyWith(color: textMutedSmall),
     ),
 
     // Divider with minimal styling
@@ -867,30 +928,19 @@ class CrimpyTheme {
     ),
 
     // Tab bar theme
-    tabBarTheme: const TabBarThemeData(
+    tabBarTheme: TabBarThemeData(
       labelColor: control,
       unselectedLabelColor: textSecondary,
       indicatorColor: control,
       indicatorSize: TabBarIndicatorSize.label,
-      labelStyle: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        fontFamily: 'JetBrainsMono',
-      ),
-      unselectedLabelStyle: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        fontFamily: 'JetBrainsMono',
-      ),
+      labelStyle: label,
+      unselectedLabelStyle: label.copyWith(fontWeight: FontWeight.w500),
     ),
 
     // Snack bar theme
-    snackBarTheme: const SnackBarThemeData(
+    snackBarTheme: SnackBarThemeData(
       backgroundColor: primaryBlack,
-      contentTextStyle: TextStyle(
-        color: primaryWhite,
-        fontFamily: 'JetBrainsMono',
-      ),
+      contentTextStyle: body.copyWith(color: primaryWhite),
       shape: shape,
       behavior: SnackBarBehavior.floating,
     ),

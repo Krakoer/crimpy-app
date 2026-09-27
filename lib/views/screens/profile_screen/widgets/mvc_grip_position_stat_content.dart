@@ -65,9 +65,10 @@ class _MvcGripPositionStatContentState
             alignment: Alignment.centerLeft,
             child: Text(
               "Max Force",
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: CrimpyTheme.title.copyWith(
+                color: CrimpyTheme.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           SizedBox(height: 12),
@@ -102,15 +103,16 @@ class _MvcGripPositionStatContentState
           children: [
             Text(
               "Max Force",
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: CrimpyTheme.title.copyWith(
+                color: CrimpyTheme.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             if (widget.mvcByGripPosition.length > 1) ...[
               const SizedBox(width: 8),
               Text(
                 "·",
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                style: CrimpyTheme.title.copyWith(
                   fontWeight: FontWeight.bold,
                   color: CrimpyTheme.textFaint,
                 ),
@@ -124,7 +126,7 @@ class _MvcGripPositionStatContentState
                     children: [
                       Text(
                         _selectedGripPosition?.displayName ?? '',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        style: CrimpyTheme.body.copyWith(
                           color: CrimpyTheme.textFaint,
                         ),
                       ),
@@ -142,7 +144,7 @@ class _MvcGripPositionStatContentState
               const SizedBox(width: 8),
               Text(
                 "·",
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                style: CrimpyTheme.title.copyWith(
                   fontWeight: FontWeight.bold,
                   color: CrimpyTheme.textFaint,
                 ),
@@ -151,9 +153,9 @@ class _MvcGripPositionStatContentState
               Expanded(
                 child: Text(
                   _selectedGripPosition?.displayName ?? '',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(color: CrimpyTheme.textFaint),
+                  style: CrimpyTheme.body.copyWith(
+                    color: CrimpyTheme.textFaint,
+                  ),
                 ),
               ),
             ],

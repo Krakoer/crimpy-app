@@ -36,9 +36,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
             // Title
             Text(
               'Assessment Required',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: CrimpyTheme.title.copyWith(color: CrimpyTheme.textPrimary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
@@ -46,7 +44,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
             // Description
             Text(
               'Complete these assessments to unlock this training:',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: CrimpyTheme.body.copyWith(
                 color: CrimpyTheme.textSecondary,
               ),
               textAlign: TextAlign.center,
@@ -83,19 +81,18 @@ class MissingAssessmentsDialog extends StatelessWidget {
                                     builtinAssessmentLabel(
                                       requirement.assessmentId,
                                     ),
-                                    style: Theme.of(context).textTheme.bodyLarge
-                                        ?.copyWith(fontWeight: FontWeight.w500),
+                                    style: CrimpyTheme.body.copyWith(
+                                      color: CrimpyTheme.textPrimary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                   if (requirement.gripPosition != null) ...[
                                     const SizedBox(height: 2),
                                     Text(
                                       'Grip: ${requirement.gripPosition!.displayName}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: CrimpyTheme.textSecondary,
-                                          ),
+                                      style: CrimpyTheme.bodySmall.copyWith(
+                                        color: CrimpyTheme.textSecondary,
+                                      ),
                                     ),
                                   ],
                                 ],

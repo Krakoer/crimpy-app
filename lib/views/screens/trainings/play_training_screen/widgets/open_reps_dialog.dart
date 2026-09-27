@@ -45,7 +45,7 @@ class _OpenRepsDialogState extends State<_OpenRepsDialog> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(widget.label, style: const TextStyle(fontSize: 13)),
+        Text(widget.label, style: CrimpyTheme.body),
         const SizedBox(height: 12),
         TextField(
           controller: _controller,

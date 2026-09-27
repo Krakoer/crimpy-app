@@ -356,9 +356,7 @@ class _WeekSummary extends StatelessWidget {
               Expanded(
                 child: Text(
                   _headline,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                  style: CrimpyTheme.title.copyWith(
                     color: CrimpyTheme.textPrimary,
                   ),
                 ),
@@ -366,19 +364,19 @@ class _WeekSummary extends StatelessWidget {
               if (minutes > 0)
                 Text(
                   formatMinutesAsLength(minutes),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                  style: CrimpyTheme.title.copyWith(
                     color: CrimpyTheme.textOn(CrimpyTheme.planned),
                   ),
                 ),
             ],
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Add whatever fills your days, training or not. Your coach builds '
             'the week around what is already in it.',
-            style: TextStyle(fontSize: 12, color: CrimpyTheme.textSecondary),
+            style: CrimpyTheme.bodySmall.copyWith(
+              color: CrimpyTheme.textSecondary,
+            ),
           ),
         ],
       ),
@@ -520,10 +518,10 @@ class _LoadFailure extends StatelessWidget {
         children: [
           const Icon(Icons.cloud_off, color: CrimpyTheme.textMutedSmall),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Your weeks could not be loaded.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: CrimpyTheme.textSecondary),
+            style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textSecondary),
           ),
           const SizedBox(height: 16),
           FilledButton(onPressed: onRetry, child: const Text('Try again')),

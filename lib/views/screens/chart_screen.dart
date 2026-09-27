@@ -68,7 +68,7 @@ class ChartScreen extends ConsumerWidget {
               connectionState == BleConnectionState.connecting
                   ? 'Connecting to device...'
                   : 'Not connected to any device',
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textPrimary),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
@@ -180,15 +180,14 @@ class ChartScreen extends ConsumerWidget {
       children: [
         Text(
           title,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(color: CrimpyTheme.textSecondary),
+          style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textSecondary),
         ),
         Text(
           value,
-          style: Theme.of(
-            context,
-          ).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.bold),
+          style: CrimpyTheme.titleLarge.copyWith(
+            color: CrimpyTheme.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ],
     );

@@ -42,19 +42,12 @@ class SessionOverviewCard extends StatelessWidget {
                     children: [
                       Text(
                         session.activity.displayName,
-                        style: TextStyle(
+                        style: CrimpyTheme.bodySmall.copyWith(
                           color: CrimpyTheme.textMedium,
-                          fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      Text(
-                        session.name,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      Text(session.name, style: CrimpyTheme.title),
                     ],
                   ),
                 ),
@@ -163,15 +156,11 @@ class SessionOverviewCard extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(color: CrimpyTheme.textMedium, fontSize: 12),
-              ),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+                style: CrimpyTheme.bodySmall.copyWith(
+                  color: CrimpyTheme.textMedium,
                 ),
               ),
+              Text(value, style: CrimpyTheme.titleSmall),
             ],
           ),
         ),

@@ -96,9 +96,8 @@ class _SessionActivityButton extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               activity.displayName,
-              style: const TextStyle(
+              style: CrimpyTheme.bodySmall.copyWith(
                 color: CrimpyTheme.textPrimary,
-                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,

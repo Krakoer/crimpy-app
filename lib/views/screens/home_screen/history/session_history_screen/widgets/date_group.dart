@@ -41,7 +41,7 @@ class DateGroup extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(
             dateLabel,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            style: CrimpyTheme.title.copyWith(
               fontWeight: FontWeight.bold,
               color: CrimpyTheme.textStrong,
             ),

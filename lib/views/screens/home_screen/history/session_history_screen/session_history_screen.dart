@@ -39,7 +39,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Session History', style: TextStyle(fontSize: 32)),
+        title: const Text('Session History'),
         actions: [
           if (_selectedDate != null)
             IconButton(

@@ -20,8 +20,6 @@ class AssessmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return CrimpyCards.assessment(
       onTap: onTap,
       child: Row(
@@ -33,9 +31,19 @@ class AssessmentCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: theme.textTheme.titleLarge),
+                Text(
+                  title,
+                  style: CrimpyTheme.titleSmall.copyWith(
+                    color: CrimpyTheme.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(description, style: theme.textTheme.bodySmall),
+                Text(
+                  description,
+                  style: CrimpyTheme.bodySmall.copyWith(
+                    color: CrimpyTheme.textSecondary,
+                  ),
+                ),
                 if (lastResult != null) ...[
                   const SizedBox(height: 6),
                   Row(
@@ -48,7 +56,7 @@ class AssessmentCard extends StatelessWidget {
                       const SizedBox(width: 5),
                       Text(
                         lastResult!,
-                        style: theme.textTheme.labelSmall?.copyWith(
+                        style: CrimpyTheme.labelSmall.copyWith(
                           color: CrimpyTheme.textMutedSmall,
                         ),
                       ),

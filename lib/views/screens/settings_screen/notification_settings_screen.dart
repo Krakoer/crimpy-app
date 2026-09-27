@@ -172,10 +172,7 @@ class _SectionTitle extends StatelessWidget {
     padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
     child: Text(
       title.toUpperCase(),
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: CrimpyTheme.textSecondary,
-        letterSpacing: 0.8,
-      ),
+      style: CrimpyTheme.capsLabel.copyWith(color: CrimpyTheme.textSecondary),
     ),
   );
 }
@@ -199,7 +196,7 @@ class _TimeTile extends StatelessWidget {
     title: Text(title),
     trailing: Text(
       time.toString(),
-      style: Theme.of(context).textTheme.titleMedium,
+      style: CrimpyTheme.title.copyWith(color: CrimpyTheme.textPrimary),
     ),
     onTap: enabled ? () => _pick(context) : null,
   );

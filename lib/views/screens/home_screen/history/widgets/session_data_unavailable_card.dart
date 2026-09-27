@@ -30,7 +30,7 @@ class SessionDataUnavailableCard extends StatelessWidget {
           Expanded(
             child: Text(
               '$what could not be loaded, so nothing here says what it held.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: CrimpyTheme.body.copyWith(
                 color: CrimpyTheme.textSecondary,
               ),
             ),

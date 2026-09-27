@@ -66,9 +66,10 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
             children: [
               Text(
                 blocks != null ? 'Blocks' : 'Repetitions Breakdown',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: CrimpyTheme.title.copyWith(
+                  color: CrimpyTheme.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               if (overall != null)
                 Container(
@@ -91,9 +92,8 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
                   child: Text(
                     '${overall.onTarget}/${overall.total}'
                     '${_unmeasuredSuffix(overall)}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                    style: CrimpyTheme.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
                       color: overall.onTarget == overall.total
                           ? CrimpyTheme.textOn(CrimpyTheme.onTarget)
                           : CrimpyTheme.textOn(CrimpyTheme.offTarget),
@@ -169,7 +169,7 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
       ),
       label: Text(
         _repsExpanded ? 'Show less' : 'Show all $total reps',
-        style: const TextStyle(fontSize: 14),
+        style: CrimpyTheme.body,
       ),
     );
   }
@@ -227,20 +227,11 @@ class _BlockCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Expanded(
-                child: Text(
-                  block.label,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              Expanded(child: Text(block.label, style: CrimpyTheme.titleSmall)),
               if (onTarget != null)
                 Text(
                   onTarget,
-                  style: TextStyle(
-                    fontSize: 12,
+                  style: CrimpyTheme.bodySmall.copyWith(
                     color: CrimpyTheme.textSecondary,
                   ),
                 ),
