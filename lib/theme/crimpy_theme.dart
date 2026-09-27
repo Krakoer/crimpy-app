@@ -483,6 +483,10 @@ class CrimpyTheme {
         return selected ? control : bgSecondary;
       }),
       checkmarkColor: textOnFill,
+      // Material paints a disabled chip's label and checkmark at 38% opacity
+      // on top of whatever this resolves to, so a disabled label renders
+      // lighter than textSecondary: #BEBEBE on bgSunken. Disabled controls
+      // are exempt from the text floor.
       labelStyle: TextStyle(
         color: WidgetStateColor.resolveWith((states) {
           if (states.contains(WidgetState.selected)) return textOnFill;
