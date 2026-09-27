@@ -333,8 +333,8 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                         xValueMapper: (BleDataPoint p, _) => p.timestamp,
                         highValueMapper: (_, __) => _maxForce,
                         lowValueMapper: (_, __) => _minForce,
-                        color: CrimpyTheme.accentYellow.withValues(alpha: 0.3),
-                        borderColor: CrimpyTheme.accentYellow,
+                        color: CrimpyTheme.targetZone.withValues(alpha: 0.3),
+                        borderColor: CrimpyTheme.targetZone,
                         borderWidth: 2,
                         animationDuration: 0,
                       ),
@@ -344,10 +344,10 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                         xValueMapper: (BleDataPoint p, _) => p.timestamp,
                         yValueMapper: (BleDataPoint p, _) => p.value,
                         color: _isInTargetZone
-                            ? CrimpyTheme.markOn(CrimpyTheme.accentGreen)
+                            ? CrimpyTheme.markOn(CrimpyTheme.measureSettled)
                             // The same series, held to the same 3:1 floor.
                             : CrimpyTheme.markOn(
-                                CrimpyTheme.accentYellow,
+                                CrimpyTheme.measuring,
                               ).withValues(alpha: 0.8),
                         width: 3,
                         markerSettings: const MarkerSettings(isVisible: false),
@@ -370,15 +370,12 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                     // hue darkened: at 0.9 even the darkened gold only reaches 4.03:1,
                     // and the bare accents read 2.06:1 and 3.33:1 under white.
                     color: _assessmentStarted
-                        ? CrimpyTheme.fillOn(CrimpyTheme.accentGreen)
-                        : CrimpyTheme.fillOn(CrimpyTheme.accentYellow),
-                    border: Border.all(
-                      color: CrimpyTheme.borderDefault,
-                      width: 2,
-                    ),
+                        ? CrimpyTheme.fillOn(CrimpyTheme.measureSettled)
+                        : CrimpyTheme.fillOn(CrimpyTheme.measuring),
+                    border: Border.all(color: CrimpyTheme.outline, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: CrimpyTheme.borderDefault,
+                        color: CrimpyTheme.outline,
                         offset: Offset(4, 4),
                         blurRadius: 0,
                         spreadRadius: 0,
@@ -393,7 +390,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                           'Hold 60% MVC for 1s to start',
                           style: TextStyle(
                             fontSize: 20,
-                            color: CrimpyTheme.primaryWhite,
+                            color: CrimpyTheme.textOnFill,
                             fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
@@ -405,7 +402,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                               'Time: ${_formatElapsedTime()}',
                               style: TextStyle(
                                 fontSize: 32,
-                                color: CrimpyTheme.primaryWhite,
+                                color: CrimpyTheme.textOnFill,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -414,7 +411,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                               _isInTargetZone ? 'Keep going!' : 'Out of zone!',
                               style: TextStyle(
                                 fontSize: 18,
-                                color: CrimpyTheme.primaryWhite,
+                                color: CrimpyTheme.textOnFill,
                               ),
                             ),
                           ],
@@ -430,7 +427,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                 child: Container(
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: CrimpyTheme.primaryBlack.withValues(alpha: 0.7),
+                    color: CrimpyTheme.scrim.withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -440,7 +437,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                         '${lastValue.toStringAsFixed(1)} kg',
                         style: TextStyle(
                           fontSize: 48,
-                          color: CrimpyTheme.primaryWhite,
+                          color: CrimpyTheme.textOnFill,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

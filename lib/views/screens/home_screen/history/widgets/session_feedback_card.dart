@@ -63,7 +63,7 @@ class SessionFeedbackCard extends StatelessWidget {
                 color: CrimpyTheme.bgSecondary,
                 borderRadius: BorderRadius.circular(CrimpyTheme.radiusSmall),
                 border: Border(
-                  left: BorderSide(color: CrimpyTheme.primaryOrange, width: 3),
+                  left: BorderSide(color: CrimpyTheme.coachNote, width: 3),
                 ),
               ),
               child: Column(
@@ -114,7 +114,7 @@ class _NewBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
     decoration: BoxDecoration(
-      color: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
+      color: CrimpyTheme.fillOn(CrimpyTheme.coachNote),
       borderRadius: BorderRadius.circular(CrimpyTheme.radiusSmall),
     ),
     child: const Text(
@@ -123,7 +123,7 @@ class _NewBadge extends StatelessWidget {
         fontSize: 10,
         fontWeight: FontWeight.bold,
         letterSpacing: 0.6,
-        color: CrimpyTheme.primaryWhite,
+        color: CrimpyTheme.textOnFill,
       ),
     ),
   );

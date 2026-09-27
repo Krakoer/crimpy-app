@@ -23,7 +23,7 @@ class AssessmentTutorials {
           title: 'Warm-up Required',
           content:
               'Make sure you are properly warmed up before starting! Perform light hangs and gradually increase intensity to prepare your fingers.',
-          iconColor: CrimpyTheme.accentYellowText,
+          iconColor: CrimpyTheme.caution,
         ),
         TutorialSection(
           icon: Icons.pan_tool,
@@ -68,7 +68,7 @@ class AssessmentTutorials {
           title: 'Warm-up Required',
           content:
               'This is a demanding test! Ensure you are thoroughly warmed up with progressive hangs before starting.',
-          iconColor: CrimpyTheme.accentYellowText,
+          iconColor: CrimpyTheme.caution,
         ),
         TutorialSection(
           icon: Icons.schedule,
@@ -113,7 +113,7 @@ class AssessmentTutorials {
           title: 'Warm-up Required',
           content:
               'Complete a thorough warm-up including progressive hangs before starting this endurance test.',
-          iconColor: CrimpyTheme.accentYellowText,
+          iconColor: CrimpyTheme.caution,
         ),
         const TutorialSection(
           icon: Icons.timer,

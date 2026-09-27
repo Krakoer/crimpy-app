@@ -26,8 +26,8 @@ class _ClimbingProfileScreenState extends ConsumerState<ClimbingProfileScreen>
     super.build(context);
     final asyncAssessments = ref.watch(assessmentsProvider(null));
 
-    final Color accentLeft = CrimpyTheme.accentOrange;
-    final Color accentRight = CrimpyTheme.accentYellow;
+    final Color accentLeft = CrimpyTheme.leftHand;
+    final Color accentRight = CrimpyTheme.rightHand;
 
     return PullToRefresh(
       // The root, not the view of it this screen watches: refreshing the view

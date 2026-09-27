@@ -112,7 +112,7 @@ class DayScheduleCard extends StatelessWidget {
     return CrimpyCard.category(
       // The accent is the day's own answer at a glance down the list: a day
       // with something on reads apart from one with nothing, without a badge.
-      accentColor: planned ? CrimpyTheme.accentGreen : CrimpyTheme.borderDark,
+      accentColor: planned ? CrimpyTheme.planned : CrimpyTheme.outlineSubtle,
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.fromLTRB(14, 12, 12, 8),
       child: Column(
@@ -143,10 +143,10 @@ class DayScheduleCard extends StatelessWidget {
               if (day.plannedMinutes > 0)
                 Text(
                   formatMinutesAsLength(day.plannedMinutes),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: CrimpyTheme.accentGreenText,
+                    color: CrimpyTheme.textOn(CrimpyTheme.planned),
                   ),
                 ),
             ],
@@ -224,7 +224,7 @@ class _ActivityTile extends StatelessWidget {
       // nearly the same value, so without the border a day holding three
       // activities reads as three unseparated lines rather than three tiles.
       decoration: BoxDecoration(
-        border: Border.all(color: CrimpyTheme.borderDark),
+        border: Border.all(color: CrimpyTheme.outlineSubtle),
       ),
       // Material rather than a Container fill, so the ink of the tap lands
       // above the background instead of under it and the row does not read as

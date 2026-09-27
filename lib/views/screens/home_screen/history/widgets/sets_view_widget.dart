@@ -96,10 +96,10 @@ class SetCardWidget extends StatelessWidget {
     // card, worse than the gold Krakoer/crimpy#128 moved. These carry a text
     // form through textOn for exactly that reason.
     final Color statusColor = count == null
-        ? CrimpyTheme.gray700
+        ? CrimpyTheme.textStrong
         : count.onTarget == count.total
-        ? CrimpyTheme.statusSuccess
-        : CrimpyTheme.statusWarning;
+        ? CrimpyTheme.onTarget
+        : CrimpyTheme.offTarget;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -138,7 +138,7 @@ class SetCardWidget extends StatelessWidget {
                   '${workReps.length} reps',
                   if (_sharedEdgeSizeMm != null) '${_sharedEdgeSizeMm}mm',
                 ].join(' - '),
-                style: TextStyle(fontSize: 12, color: CrimpyTheme.gray600),
+                style: TextStyle(fontSize: 12, color: CrimpyTheme.textMedium),
               ),
               const Spacer(),
               if (count != null)
@@ -172,7 +172,7 @@ class SetCardWidget extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   note,
-                  style: TextStyle(fontSize: 12, color: CrimpyTheme.gray600),
+                  style: TextStyle(fontSize: 12, color: CrimpyTheme.textMedium),
                 ),
               ),
           const SizedBox(height: 12),
@@ -192,13 +192,17 @@ class SetCardWidget extends StatelessWidget {
                     ),
                   ),
                 if (avgWeight != null && avgTarget != null)
-                  Container(width: 1, height: 20, color: CrimpyTheme.gray300),
+                  Container(
+                    width: 1,
+                    height: 20,
+                    color: CrimpyTheme.outlineSubtle,
+                  ),
                 if (avgTarget case final target?)
                   Expanded(
                     child: _buildSetStat(
                       'Target',
                       '${target.toStringAsFixed(1)} kg',
-                      CrimpyTheme.gray700,
+                      CrimpyTheme.textStrong,
                     ),
                   ),
               ],
@@ -212,7 +216,10 @@ class SetCardWidget extends StatelessWidget {
   Widget _buildSetStat(String label, String value, Color valueColor) {
     return Column(
       children: [
-        Text(label, style: TextStyle(fontSize: 11, color: CrimpyTheme.gray600)),
+        Text(
+          label,
+          style: TextStyle(fontSize: 11, color: CrimpyTheme.textMedium),
+        ),
         const SizedBox(height: 2),
         Text(
           value,
@@ -253,9 +260,9 @@ class SetPerformanceBar extends StatelessWidget {
         final Color repColor = !hasTarget
             ? sessionColor.withValues(alpha: 0.3)
             : isSuccess
-            ? CrimpyTheme.statusSuccess
+            ? CrimpyTheme.onTarget
             : successRate >= 0.75
-            ? CrimpyTheme.statusWarning
+            ? CrimpyTheme.offTarget
             : CrimpyTheme.statusError;
 
         return Container(

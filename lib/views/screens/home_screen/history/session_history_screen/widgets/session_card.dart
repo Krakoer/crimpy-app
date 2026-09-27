@@ -62,23 +62,27 @@ class SessionCard extends StatelessWidget {
                         Icon(
                           Icons.schedule,
                           size: 14,
-                          color: CrimpyTheme.gray600,
+                          color: CrimpyTheme.textMedium,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           formattedTime,
                           style: TextStyle(
-                            color: CrimpyTheme.gray600,
+                            color: CrimpyTheme.textMedium,
                             fontSize: 12,
                           ),
                         ),
                         const SizedBox(width: 16),
-                        Icon(Icons.timer, size: 14, color: CrimpyTheme.gray600),
+                        Icon(
+                          Icons.timer,
+                          size: 14,
+                          color: CrimpyTheme.textMedium,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           _formatDuration(duration),
                           style: TextStyle(
-                            color: CrimpyTheme.gray600,
+                            color: CrimpyTheme.textMedium,
                             fontSize: 12,
                           ),
                         ),
@@ -89,7 +93,7 @@ class SessionCard extends StatelessWidget {
                       Text(
                         session.notes!,
                         style: TextStyle(
-                          color: CrimpyTheme.gray700,
+                          color: CrimpyTheme.textStrong,
                           fontSize: 12,
                         ),
                         maxLines: 2,
@@ -106,12 +110,12 @@ class SessionCard extends StatelessWidget {
                 Icon(
                   Icons.mark_chat_unread,
                   size: 18,
-                  color: CrimpyTheme.primaryOrange,
+                  color: CrimpyTheme.coachNote,
                 ),
                 const SizedBox(width: 8),
               ],
               // Arrow indicator
-              Icon(Icons.chevron_right, color: CrimpyTheme.gray400),
+              Icon(Icons.chevron_right, color: CrimpyTheme.textFaint),
             ],
           ),
         ),

@@ -76,7 +76,7 @@ class FavoriteTrainingList extends ConsumerWidget {
                           children: [
                             Icon(
                               FontAwesomeIcons.stopwatch,
-                              color: CrimpyTheme.gray400,
+                              color: CrimpyTheme.textFaint,
                               size: 17,
                             ),
                             SizedBox(width: 6),
@@ -95,7 +95,7 @@ class FavoriteTrainingList extends ConsumerWidget {
                     dashPattern: [10, 5],
                     strokeWidth: 2,
                     radius: Radius.circular(16),
-                    color: CrimpyTheme.primaryBlack.withValues(alpha: 0.5),
+                    color: CrimpyTheme.textPrimary.withValues(alpha: 0.5),
                   ),
                   child: InkWell(
                     onTap: () => showDialog(
@@ -109,7 +109,7 @@ class FavoriteTrainingList extends ConsumerWidget {
                         children: [
                           Icon(
                             Icons.add,
-                            color: CrimpyTheme.primaryBlack,
+                            color: CrimpyTheme.textPrimary,
                             size: 30,
                           ),
                           SizedBox(width: 8),
@@ -117,7 +117,7 @@ class FavoriteTrainingList extends ConsumerWidget {
                             "Pin a training",
                             style: TextStyle(
                               fontSize: 18,
-                              color: CrimpyTheme.primaryBlack,
+                              color: CrimpyTheme.textPrimary,
                             ),
                           ),
                         ],
@@ -245,7 +245,7 @@ class PinTrainingDialog extends ConsumerWidget {
                         children: [
                           Icon(
                             FontAwesomeIcons.stopwatch,
-                            color: CrimpyTheme.gray400,
+                            color: CrimpyTheme.textFaint,
                             size: 17,
                           ),
                           SizedBox(width: 6),

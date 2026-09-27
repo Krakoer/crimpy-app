@@ -78,13 +78,13 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
                   ),
                   decoration: BoxDecoration(
                     color: overall.onTarget == overall.total
-                        ? CrimpyTheme.tintOf(CrimpyTheme.statusSuccess)
-                        : CrimpyTheme.tintOf(CrimpyTheme.statusWarning),
+                        ? CrimpyTheme.tintOf(CrimpyTheme.onTarget)
+                        : CrimpyTheme.tintOf(CrimpyTheme.offTarget),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: overall.onTarget == overall.total
-                          ? CrimpyTheme.textOn(CrimpyTheme.statusSuccess)
-                          : CrimpyTheme.textOn(CrimpyTheme.statusWarning),
+                          ? CrimpyTheme.textOn(CrimpyTheme.onTarget)
+                          : CrimpyTheme.textOn(CrimpyTheme.offTarget),
                       width: 1,
                     ),
                   ),
@@ -95,8 +95,8 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: overall.onTarget == overall.total
-                          ? CrimpyTheme.textOn(CrimpyTheme.statusSuccess)
-                          : CrimpyTheme.textOn(CrimpyTheme.statusWarning),
+                          ? CrimpyTheme.textOn(CrimpyTheme.onTarget)
+                          : CrimpyTheme.textOn(CrimpyTheme.offTarget),
                     ),
                   ),
                 ),
@@ -227,7 +227,7 @@ class _BlockCard extends StatelessWidget {
         // stretching badge composites to 4.40:1, under the floor. The border is
         // what separates the card from the page.
         color: CrimpyTheme.bgPrimary,
-        border: Border.all(color: CrimpyTheme.borderDefault),
+        border: Border.all(color: CrimpyTheme.outline),
         borderRadius: BorderRadius.circular(CrimpyTheme.radiusSmall),
       ),
       child: Column(

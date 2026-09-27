@@ -168,7 +168,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
       decoration: BoxDecoration(
-        border: Border.all(color: CrimpyTheme.borderDefault, width: 1.5),
+        border: Border.all(color: CrimpyTheme.outline, width: 1.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -200,9 +200,9 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: selected
-                  ? CrimpyTheme.fillOn(CrimpyTheme.primaryOrange)
+                  ? CrimpyTheme.fillOn(CrimpyTheme.action)
                   : CrimpyTheme.bgPrimary,
-              border: Border.all(color: CrimpyTheme.borderDefault, width: 2),
+              border: Border.all(color: CrimpyTheme.outline, width: 2),
             ),
             child: Text(
               label,
@@ -255,12 +255,9 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: selected
-                        ? CrimpyTheme.fillOn(CrimpyTheme.primaryOrange)
+                        ? CrimpyTheme.fillOn(CrimpyTheme.action)
                         : CrimpyTheme.bgPrimary,
-                    border: Border.all(
-                      color: CrimpyTheme.borderDefault,
-                      width: 2,
-                    ),
+                    border: Border.all(color: CrimpyTheme.outline, width: 2),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -283,7 +280,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                           height: 6,
                           color: selected
                               ? CrimpyTheme.bgPrimary
-                              : CrimpyTheme.primaryOrange,
+                              : CrimpyTheme.current,
                         ),
                       ],
                     ],
@@ -462,14 +459,12 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
               padding: const EdgeInsets.symmetric(vertical: 7),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? CrimpyTheme.fillOn(CrimpyTheme.primaryOrange)
+                    ? CrimpyTheme.fillOn(CrimpyTheme.action)
                     : isToday
-                    ? CrimpyTheme.tintOf(CrimpyTheme.primaryOrange)
+                    ? CrimpyTheme.tintOf(CrimpyTheme.current)
                     : Colors.transparent,
                 border: Border.all(
-                  color: isSelected
-                      ? CrimpyTheme.borderDefault
-                      : Colors.transparent,
+                  color: isSelected ? CrimpyTheme.outline : Colors.transparent,
                   width: 2,
                 ),
               ),
@@ -496,7 +491,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
                       color: isSelected
                           ? CrimpyTheme.bgPrimary
                           : isToday
-                          ? CrimpyTheme.textOn(CrimpyTheme.primaryOrange)
+                          ? CrimpyTheme.textOn(CrimpyTheme.current)
                           : CrimpyTheme.textPrimary,
                     ),
                   ),
@@ -521,8 +516,8 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
       decoration: BoxDecoration(
-        color: CrimpyTheme.primaryOrange.withValues(alpha: 0.1),
-        border: Border.all(color: CrimpyTheme.primaryOrange, width: 2),
+        color: CrimpyTheme.coachNote.withValues(alpha: 0.1),
+        border: Border.all(color: CrimpyTheme.coachNote, width: 2),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -530,7 +525,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
           Icon(
             FontAwesomeIcons.circleInfo,
             size: 15,
-            color: CrimpyTheme.primaryOrange,
+            color: CrimpyTheme.coachNote,
           ),
           const SizedBox(width: 9),
           Expanded(
@@ -810,9 +805,9 @@ class _CalendarRow extends ConsumerWidget {
                           CrimpyTheme.bgPrimary,
                       border: Border.all(
                         color: isToday
-                            ? CrimpyTheme.primaryOrange
+                            ? CrimpyTheme.current
                             : defined
-                            ? CrimpyTheme.borderDefault
+                            ? CrimpyTheme.outline
                             : CrimpyTheme.textMutedSmall,
                         width: isToday ? 2 : 1,
                       ),

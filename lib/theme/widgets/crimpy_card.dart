@@ -60,7 +60,7 @@ class CrimpyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveBackgroundColor = backgroundColor ?? CrimpyTheme.bgPrimary;
-    final effectiveBorderColor = borderColor ?? CrimpyTheme.borderDefault;
+    final effectiveBorderColor = borderColor ?? CrimpyTheme.outline;
     final effectivePadding = padding ?? const EdgeInsets.all(16.0);
     final effectiveMargin = margin ?? const EdgeInsets.symmetric(vertical: 8.0);
 
@@ -207,70 +207,6 @@ class CrimpyCards {
     );
   }
 
-  /// Flexibility card with teal accent
-  static Widget flexibility({
-    required Widget child,
-    EdgeInsetsGeometry? padding,
-    EdgeInsetsGeometry? margin,
-    VoidCallback? onTap,
-  }) {
-    return CrimpyCard.category(
-      accentColor: CrimpyTheme.stretchingColor,
-      padding: padding,
-      margin: margin,
-      onTap: onTap,
-      child: child,
-    );
-  }
-
-  /// Endurance card with green accent
-  static Widget endurance({
-    required Widget child,
-    EdgeInsetsGeometry? padding,
-    EdgeInsetsGeometry? margin,
-    VoidCallback? onTap,
-  }) {
-    return CrimpyCard.category(
-      accentColor: CrimpyTheme.accentGreen,
-      padding: padding,
-      margin: margin,
-      onTap: onTap,
-      child: child,
-    );
-  }
-
-  /// Power card with golden yellow accent
-  static Widget power({
-    required Widget child,
-    EdgeInsetsGeometry? padding,
-    EdgeInsetsGeometry? margin,
-    VoidCallback? onTap,
-  }) {
-    return CrimpyCard.category(
-      accentColor: CrimpyTheme.accentYellow,
-      padding: padding,
-      margin: margin,
-      onTap: onTap,
-      child: child,
-    );
-  }
-
-  /// Technique card with purple accent
-  static Widget technique({
-    required Widget child,
-    EdgeInsetsGeometry? padding,
-    EdgeInsetsGeometry? margin,
-    VoidCallback? onTap,
-  }) {
-    return CrimpyCard.category(
-      accentColor: CrimpyTheme.accentPurple,
-      padding: padding,
-      margin: margin,
-      onTap: onTap,
-      child: child,
-    );
-  }
-
   /// Stats card for displaying metrics
   static Widget stats({
     required Widget child,
@@ -282,22 +218,6 @@ class CrimpyCards {
       padding: padding ?? const EdgeInsets.all(20.0),
       margin: margin,
       backgroundColor: CrimpyTheme.bgSecondary,
-      onTap: onTap,
-      child: child,
-    );
-  }
-
-  /// Action card for buttons and interactive elements
-  static Widget action({
-    required Widget child,
-    EdgeInsetsGeometry? padding,
-    EdgeInsetsGeometry? margin,
-    VoidCallback? onTap,
-  }) {
-    return CrimpyCard.simple(
-      padding: padding,
-      margin: margin,
-      borderColor: CrimpyTheme.primaryOrange,
       onTap: onTap,
       child: child,
     );

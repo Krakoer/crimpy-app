@@ -68,16 +68,16 @@ class _ForceChartState extends State<ForceChart> {
                 axisLine: const AxisLine(width: 0),
                 intervalType: DateTimeIntervalType.days,
                 dateFormat: DateFormat.MMMd(), // needs intl package
-                labelStyle: TextStyle(color: CrimpyTheme.primaryBlack),
+                labelStyle: TextStyle(color: CrimpyTheme.textPrimary),
                 rangePadding: ChartRangePadding.additional,
               ),
               primaryYAxis: NumericAxis(
                 axisLine: const AxisLine(width: 0),
                 majorGridLines: MajorGridLines(
                   width: 0.5,
-                  color: CrimpyTheme.gray300,
+                  color: CrimpyTheme.outlineSubtle,
                 ),
-                labelStyle: TextStyle(color: CrimpyTheme.primaryBlack),
+                labelStyle: TextStyle(color: CrimpyTheme.textPrimary),
               ),
               legend: Legend(
                 isVisible: widget.showLegend,
@@ -113,7 +113,7 @@ class _ForceChartState extends State<ForceChart> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  color: CrimpyTheme.primaryWhite.withValues(alpha: 0.7),
+                  color: CrimpyTheme.bgPrimary.withValues(alpha: 0.7),
                 ),
               ),
             ),

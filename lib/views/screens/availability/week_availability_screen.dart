@@ -344,7 +344,7 @@ class _WeekSummary extends StatelessWidget {
       decoration: const BoxDecoration(
         color: CrimpyTheme.bgPrimary,
         border: Border(
-          bottom: BorderSide(color: CrimpyTheme.borderDefault, width: 2),
+          bottom: BorderSide(color: CrimpyTheme.outline, width: 2),
         ),
       ),
       child: Column(
@@ -365,10 +365,10 @@ class _WeekSummary extends StatelessWidget {
               if (minutes > 0)
                 Text(
                   formatMinutesAsLength(minutes),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: CrimpyTheme.accentGreenText,
+                    color: CrimpyTheme.textOn(CrimpyTheme.planned),
                   ),
                 ),
             ],
@@ -413,9 +413,7 @@ class _SendBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: const BoxDecoration(
         color: CrimpyTheme.bgPrimary,
-        border: Border(
-          top: BorderSide(color: CrimpyTheme.borderDefault, width: 2),
-        ),
+        border: Border(top: BorderSide(color: CrimpyTheme.outline, width: 2)),
       ),
       child: SafeArea(
         top: false,

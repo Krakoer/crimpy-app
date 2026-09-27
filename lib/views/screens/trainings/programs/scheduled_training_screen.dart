@@ -210,7 +210,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
         color: CrimpyTheme.bgSecondary,
-        border: Border.all(color: CrimpyTheme.borderDefault, width: 1.5),
+        border: Border.all(color: CrimpyTheme.outline, width: 1.5),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -220,8 +220,8 @@ class ScheduledTrainingScreen extends ConsumerWidget {
             height: 24,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
-              border: Border.all(color: CrimpyTheme.borderDefault, width: 1.5),
+              color: CrimpyTheme.fillOn(CrimpyTheme.coachNote),
+              border: Border.all(color: CrimpyTheme.outline, width: 1.5),
             ),
             child: Text(
               initials,
@@ -254,8 +254,8 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
       decoration: BoxDecoration(
-        color: CrimpyTheme.tintOf(CrimpyTheme.accentYellow),
-        border: Border.all(color: CrimpyTheme.accentYellow, width: 2),
+        color: CrimpyTheme.tintOf(CrimpyTheme.overrideMark),
+        border: Border.all(color: CrimpyTheme.overrideMark, width: 2),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +263,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
           Icon(
             FontAwesomeIcons.star,
             size: 15,
-            color: CrimpyTheme.textOn(CrimpyTheme.accentYellow),
+            color: CrimpyTheme.textOn(CrimpyTheme.overrideMark),
           ),
           const SizedBox(width: 9),
           const Expanded(
@@ -297,7 +297,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       items,
       bodyweightKg: bodyweightKg,
       results: results,
-      accentColorOf: (item) => tuned(item) ? CrimpyTheme.accentYellow : null,
+      accentColorOf: (item) => tuned(item) ? CrimpyTheme.overrideMark : null,
       extraOf: (item) => tuned(item)
           ? [
               Wrap(
@@ -332,8 +332,8 @@ class ScheduledTrainingScreen extends ConsumerWidget {
           (e) => Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: CrimpyTheme.tintOf(CrimpyTheme.accentYellow),
-              border: Border.all(color: CrimpyTheme.accentYellow, width: 1.5),
+              color: CrimpyTheme.tintOf(CrimpyTheme.overrideMark),
+              border: Border.all(color: CrimpyTheme.overrideMark, width: 1.5),
             ),
             child: Text(
               e,
@@ -341,7 +341,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                 fontFamily: 'JetBrainsMono',
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
-                color: CrimpyTheme.textOn(CrimpyTheme.accentYellow),
+                color: CrimpyTheme.textOn(CrimpyTheme.overrideMark),
               ),
             ),
           ),
@@ -390,9 +390,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
       decoration: const BoxDecoration(
         color: CrimpyTheme.bgPrimary,
-        border: Border(
-          top: BorderSide(color: CrimpyTheme.borderDefault, width: 2),
-        ),
+        border: Border(top: BorderSide(color: CrimpyTheme.outline, width: 2)),
       ),
       child: SizedBox(
         width: double.infinity,
@@ -410,8 +408,8 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 14),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: CrimpyTheme.tintOf(CrimpyTheme.statusSuccess),
-        border: Border.all(color: CrimpyTheme.statusSuccess, width: 2),
+        color: CrimpyTheme.tintOf(CrimpyTheme.done),
+        border: Border.all(color: CrimpyTheme.done, width: 2),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -419,7 +417,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
           Icon(
             FontAwesomeIcons.circleCheck,
             size: 16,
-            color: CrimpyTheme.textOn(CrimpyTheme.statusSuccess),
+            color: CrimpyTheme.textOn(CrimpyTheme.done),
           ),
           const SizedBox(width: 8),
           Text(
@@ -428,7 +426,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
               fontFamily: 'JetBrainsMono',
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: CrimpyTheme.textOn(CrimpyTheme.statusSuccess),
+              color: CrimpyTheme.textOn(CrimpyTheme.done),
             ),
           ),
         ],
@@ -447,7 +445,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       icon: const Icon(Icons.play_arrow),
       label: const Text('START TRAINING'),
       style: ElevatedButton.styleFrom(
-        backgroundColor: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
+        backgroundColor: CrimpyTheme.fillOn(CrimpyTheme.action),
         foregroundColor: CrimpyTheme.bgPrimary,
         padding: const EdgeInsets.symmetric(vertical: 14),
       ),

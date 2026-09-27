@@ -90,9 +90,7 @@ class ProgramSummaryCard extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       decoration: const BoxDecoration(
         color: CrimpyTheme.bgSecondary,
-        border: Border(
-          top: BorderSide(color: CrimpyTheme.borderDefault, width: 2),
-        ),
+        border: Border(top: BorderSide(color: CrimpyTheme.outline, width: 2)),
       ),
       child: today == null
           ? const Text(
@@ -119,7 +117,7 @@ class ProgramSummaryCard extends ConsumerWidget {
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.6,
-                          color: CrimpyTheme.textOn(CrimpyTheme.primaryOrange),
+                          color: CrimpyTheme.textOn(CrimpyTheme.current),
                         ),
                       ),
                       Text(
@@ -150,9 +148,7 @@ class ProgramSummaryCard extends ConsumerWidget {
                   icon: const Icon(FontAwesomeIcons.play, size: 12),
                   label: const Text('START'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: CrimpyTheme.fillOn(
-                      CrimpyTheme.primaryOrange,
-                    ),
+                    backgroundColor: CrimpyTheme.fillOn(CrimpyTheme.action),
                     foregroundColor: CrimpyTheme.bgPrimary,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,

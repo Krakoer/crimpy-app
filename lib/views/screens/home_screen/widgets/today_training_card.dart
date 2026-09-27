@@ -44,7 +44,7 @@ class TodayTrainingCard extends ConsumerWidget {
             context,
             program,
             icon: FontAwesomeIcons.clock,
-            accent: CrimpyTheme.primaryOrange,
+            accent: CrimpyTheme.current,
             title: 'STARTS ${_relativeStart(daysUntilStart).toUpperCase()}',
             subtitle: program.name,
           );
@@ -174,7 +174,7 @@ class _ProgramTodayCard extends ConsumerWidget {
                   horizontal: 14,
                   vertical: 8,
                 ),
-                color: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
+                color: CrimpyTheme.fillOn(CrimpyTheme.current),
                 child: Row(
                   children: [
                     const Expanded(
@@ -239,11 +239,7 @@ class _ProgramTodayCard extends ConsumerWidget {
   Widget _restRow() {
     return Row(
       children: [
-        Icon(
-          FontAwesomeIcons.check,
-          size: 16,
-          color: CrimpyTheme.statusSuccess,
-        ),
+        Icon(FontAwesomeIcons.check, size: 16, color: CrimpyTheme.done),
         const SizedBox(width: 12),
         const Text(
           'REST DAY - nothing scheduled today',
@@ -389,7 +385,7 @@ class _TodayTrainingRow extends ConsumerWidget {
       return Icon(
         FontAwesomeIcons.circleCheck,
         size: 24,
-        color: CrimpyTheme.statusSuccess,
+        color: CrimpyTheme.done,
       );
     }
     return Container(
@@ -397,8 +393,8 @@ class _TodayTrainingRow extends ConsumerWidget {
       height: 38,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: CrimpyTheme.fillOn(CrimpyTheme.primaryOrange),
-        border: Border.all(color: CrimpyTheme.borderDefault, width: 2),
+        color: CrimpyTheme.fillOn(CrimpyTheme.action),
+        border: Border.all(color: CrimpyTheme.outline, width: 2),
       ),
       child: const Icon(
         Icons.play_arrow,
@@ -459,7 +455,7 @@ class _FlexTrainingRow extends ConsumerWidget {
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: done >= target
-                    ? CrimpyTheme.textOn(CrimpyTheme.statusSuccess)
+                    ? CrimpyTheme.textOn(CrimpyTheme.done)
                     : CrimpyTheme.textOn(programSessionColor(type)),
               ),
             ),
@@ -469,7 +465,7 @@ class _FlexTrainingRow extends ConsumerWidget {
               size: 13,
               color: done >= target
                   ? CrimpyTheme.textMutedSmall
-                  : CrimpyTheme.primaryOrange,
+                  : CrimpyTheme.action,
             ),
           ],
         ),

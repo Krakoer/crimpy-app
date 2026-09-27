@@ -30,7 +30,7 @@ class RepItemWidget extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: CrimpyTheme.gray100,
+        color: CrimpyTheme.bgSunken,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -39,11 +39,11 @@ class RepItemWidget extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: CrimpyTheme.gray300,
+              color: CrimpyTheme.outlineSubtle,
               borderRadius: BorderRadius.circular(6),
             ),
             child: Center(
-              child: Icon(Icons.pause, size: 16, color: CrimpyTheme.gray600),
+              child: Icon(Icons.pause, size: 16, color: CrimpyTheme.textMedium),
             ),
           ),
           const SizedBox(width: 12),
@@ -52,13 +52,13 @@ class RepItemWidget extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: CrimpyTheme.gray700,
+              color: CrimpyTheme.textStrong,
             ),
           ),
           const Spacer(),
           Text(
             '${rep.duration}s',
-            style: TextStyle(fontSize: 13, color: CrimpyTheme.gray600),
+            style: TextStyle(fontSize: 13, color: CrimpyTheme.textMedium),
           ),
         ],
       ),
@@ -79,8 +79,8 @@ class RepItemWidget extends StatelessWidget {
     // Theme accents, not raw Material ones: Colors.orange.shade600 is unreadable
     // at the sizes the labels below use. See Krakoer/crimpy#137.
     final Color statusColor = isSuccess
-        ? CrimpyTheme.statusSuccess
-        : CrimpyTheme.statusWarning;
+        ? CrimpyTheme.onTarget
+        : CrimpyTheme.offTarget;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -136,7 +136,7 @@ class RepItemWidget extends StatelessWidget {
                             HandSide.both => Icons.pan_tool,
                           },
                           size: 16,
-                          color: CrimpyTheme.gray700,
+                          color: CrimpyTheme.textStrong,
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -144,7 +144,7 @@ class RepItemWidget extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: CrimpyTheme.gray700,
+                            color: CrimpyTheme.textStrong,
                           ),
                         ),
                       ],
@@ -157,7 +157,7 @@ class RepItemWidget extends StatelessWidget {
                       ].join(' - '),
                       style: TextStyle(
                         fontSize: 12,
-                        color: CrimpyTheme.gray600,
+                        color: CrimpyTheme.textMedium,
                       ),
                     ),
                   ],
@@ -201,7 +201,7 @@ class RepItemWidget extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: CrimpyTheme.gray100,
+                    color: CrimpyTheme.bgSunken,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -209,7 +209,7 @@ class RepItemWidget extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: CrimpyTheme.gray600,
+                      color: CrimpyTheme.textMedium,
                     ),
                   ),
                 ),
@@ -228,7 +228,7 @@ class RepItemWidget extends StatelessWidget {
                         'Target',
                         style: TextStyle(
                           fontSize: 11,
-                          color: CrimpyTheme.gray600,
+                          color: CrimpyTheme.textMedium,
                         ),
                       ),
                       Text(
@@ -236,13 +236,17 @@ class RepItemWidget extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: CrimpyTheme.gray700,
+                          color: CrimpyTheme.textStrong,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Container(width: 1, height: 24, color: CrimpyTheme.gray300),
+                Container(
+                  width: 1,
+                  height: 24,
+                  color: CrimpyTheme.outlineSubtle,
+                ),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.only(left: 12),
@@ -253,7 +257,7 @@ class RepItemWidget extends StatelessWidget {
                           'Performed',
                           style: TextStyle(
                             fontSize: 11,
-                            color: CrimpyTheme.gray600,
+                            color: CrimpyTheme.textMedium,
                           ),
                         ),
                         Text(
@@ -281,14 +285,14 @@ class RepItemWidget extends StatelessWidget {
               children: [
                 Text(
                   'Performed',
-                  style: TextStyle(fontSize: 11, color: CrimpyTheme.gray600),
+                  style: TextStyle(fontSize: 11, color: CrimpyTheme.textMedium),
                 ),
                 Text(
                   '${rep.averageWeight.toStringAsFixed(1)} kg',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: CrimpyTheme.gray700,
+                    color: CrimpyTheme.textStrong,
                   ),
                 ),
               ],

@@ -43,7 +43,7 @@ class DateGroup extends StatelessWidget {
             dateLabel,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              color: CrimpyTheme.gray700,
+              color: CrimpyTheme.textStrong,
             ),
           ),
         ),

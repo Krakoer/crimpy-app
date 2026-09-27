@@ -25,7 +25,7 @@ class StatCard extends StatelessWidget {
             label,
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: CrimpyTheme.gray500),
+            ).textTheme.bodyMedium?.copyWith(color: CrimpyTheme.textSecondary),
           ),
           const SizedBox(height: 8),
           Container(

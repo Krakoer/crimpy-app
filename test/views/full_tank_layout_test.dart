@@ -862,7 +862,7 @@ void main() {
           .widgetList<Text>(find.text('RESI DOIGTS'))
           .map((text) => text.style?.color)
           .toSet();
-      expect(painted, {CrimpyTheme.goalColor, CrimpyTheme.primaryWhite});
+      expect(painted, {CrimpyTheme.goalColor, CrimpyTheme.textOnFill});
       expect(find.text('Keep the shoulders engaged'), findsWidgets);
       expect(find.text('34'), findsWidgets);
     });
@@ -925,7 +925,7 @@ void main() {
           .widgetList<Text>(find.text('PROTOCOL'))
           .map((text) => text.style?.color)
           .toSet();
-      expect(painted, {CrimpyTheme.protocolColor, CrimpyTheme.primaryWhite});
+      expect(painted, {CrimpyTheme.protocolColor, CrimpyTheme.textOnFill});
       expect(find.text(rule), findsNWidgets(2));
     });
 

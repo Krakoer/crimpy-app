@@ -156,7 +156,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
                       backgroundColor: CrimpyTheme.fillOn(
                         CrimpyTheme.assessmentColor,
                       ),
-                      foregroundColor: CrimpyTheme.primaryWhite,
+                      foregroundColor: CrimpyTheme.textOnFill,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),

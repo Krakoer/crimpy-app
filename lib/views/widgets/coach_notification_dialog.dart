@@ -34,7 +34,7 @@ class CoachNotificationDialog extends StatelessWidget {
       children: [
         const Icon(
           Icons.mark_chat_unread_outlined,
-          color: CrimpyTheme.primaryOrange,
+          color: CrimpyTheme.coachNote,
         ),
         const SizedBox(width: 8),
         const Expanded(child: Text('Answers from your coach')),

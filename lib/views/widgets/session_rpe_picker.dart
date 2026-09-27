@@ -50,7 +50,7 @@ class SessionRpePicker extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.battery_charging_full,
-                  color: CrimpyTheme.primaryOrange,
+                  color: CrimpyTheme.action,
                 ),
                 const SizedBox(width: 8),
                 const Text(
@@ -108,7 +108,7 @@ class _SessionRpeOptionTile extends StatelessWidget {
     // rather than as the top of the scale.
     final accent = option.isFailure
         ? CrimpyTheme.statusError
-        : CrimpyTheme.primaryOrange;
+        : CrimpyTheme.action;
 
     return Semantics(
       selected: selected,
@@ -128,7 +128,7 @@ class _SessionRpeOptionTile extends StatelessWidget {
                   color: selected ? accent : CrimpyTheme.bgSecondary,
                   borderRadius: BorderRadius.circular(CrimpyTheme.radiusMedium),
                   border: Border.all(
-                    color: selected ? accent : CrimpyTheme.borderDark,
+                    color: selected ? accent : CrimpyTheme.outlineSubtle,
                   ),
                 ),
                 child: Text(
@@ -137,7 +137,7 @@ class _SessionRpeOptionTile extends StatelessWidget {
                     fontSize: option.isFailure ? 11 : 14,
                     fontWeight: FontWeight.w700,
                     color: selected
-                        ? CrimpyTheme.primaryWhite
+                        ? CrimpyTheme.textOnFill
                         : CrimpyTheme.textSecondary,
                   ),
                 ),

@@ -269,14 +269,11 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                   width: 200,
                   padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: CrimpyTheme.fillOn(CrimpyTheme.accentYellow),
-                    border: Border.all(
-                      color: CrimpyTheme.borderDefault,
-                      width: 2,
-                    ),
+                    color: CrimpyTheme.fillOn(CrimpyTheme.pullCue),
+                    border: Border.all(color: CrimpyTheme.outline, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: CrimpyTheme.borderDefault,
+                        color: CrimpyTheme.outline,
                         offset: Offset(4, 4),
                         blurRadius: 0,
                         spreadRadius: 0,
@@ -288,7 +285,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                           "Pull!\n${timer.currentItemRemaining}",
                           style: TextStyle(
                             fontSize: 39,
-                            color: CrimpyTheme.primaryWhite,
+                            color: CrimpyTheme.textOnFill,
                           ),
                           textAlign: TextAlign.center,
                         )
@@ -298,7 +295,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                               "Pulling in",
                               style: TextStyle(
                                 fontSize: 29,
-                                color: CrimpyTheme.primaryWhite,
+                                color: CrimpyTheme.textOnFill,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -306,7 +303,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                               "${timer.currentItemRemaining}",
                               style: TextStyle(
                                 fontSize: 39,
-                                color: CrimpyTheme.primaryWhite,
+                                color: CrimpyTheme.textOnFill,
                               ),
                               textAlign: TextAlign.center,
                             ),

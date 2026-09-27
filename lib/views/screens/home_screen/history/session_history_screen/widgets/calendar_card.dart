@@ -49,10 +49,10 @@ class CalendarCard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 textStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              todayHighlightColor: CrimpyTheme.primaryOrange,
+              todayHighlightColor: CrimpyTheme.current,
               selectionDecoration: BoxDecoration(
                 color: Colors.transparent,
-                border: Border.all(color: CrimpyTheme.primaryOrange, width: 2),
+                border: Border.all(color: CrimpyTheme.current, width: 2),
                 borderRadius: const BorderRadius.all(Radius.circular(4)),
               ),
               onTap: (CalendarTapDetails details) {

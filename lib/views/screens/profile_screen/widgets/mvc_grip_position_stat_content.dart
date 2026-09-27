@@ -112,7 +112,7 @@ class _MvcGripPositionStatContentState
                 "·",
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: CrimpyTheme.gray400,
+                  color: CrimpyTheme.textFaint,
                 ),
               ),
               const SizedBox(width: 8),
@@ -125,13 +125,13 @@ class _MvcGripPositionStatContentState
                       Text(
                         _selectedGripPosition?.displayName ?? '',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: CrimpyTheme.gray400,
+                          color: CrimpyTheme.textFaint,
                         ),
                       ),
                       const SizedBox(width: 4),
                       Icon(
                         Icons.arrow_drop_down,
-                        color: CrimpyTheme.gray400,
+                        color: CrimpyTheme.textFaint,
                         size: 20,
                       ),
                     ],
@@ -144,7 +144,7 @@ class _MvcGripPositionStatContentState
                 "·",
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: CrimpyTheme.gray400,
+                  color: CrimpyTheme.textFaint,
                 ),
               ),
               const SizedBox(width: 8),
@@ -153,7 +153,7 @@ class _MvcGripPositionStatContentState
                   _selectedGripPosition?.displayName ?? '',
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyLarge?.copyWith(color: CrimpyTheme.gray400),
+                  ).textTheme.bodyLarge?.copyWith(color: CrimpyTheme.textFaint),
                 ),
               ),
             ],

@@ -27,7 +27,7 @@ class AssessmentCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, size: 28, color: CrimpyTheme.primaryOrange),
+          Icon(icon, size: 28, color: CrimpyTheme.assessmentColor),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

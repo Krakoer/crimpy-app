@@ -16,7 +16,7 @@ class WhatsNewDialog extends ConsumerWidget {
         children: [
           Icon(
             Icons.new_releases,
-            color: CrimpyTheme.markOn(CrimpyTheme.accentBlue),
+            color: CrimpyTheme.markOn(CrimpyTheme.newsMark),
           ),
           const SizedBox(width: 8),
           const Text('What\'s New'),
@@ -34,7 +34,7 @@ class WhatsNewDialog extends ConsumerWidget {
                 'Version ${appInfo.version}',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: CrimpyTheme.textOn(CrimpyTheme.accentBlue),
+                  color: CrimpyTheme.textOn(CrimpyTheme.newsMark),
                 ),
               ),
               loading: () => const SizedBox.shrink(),

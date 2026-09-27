@@ -60,8 +60,8 @@ class ChartScreen extends ConsumerWidget {
               _getConnectionIcon(connectionState),
               size: 60,
               color: connectionState == BleConnectionState.connecting
-                  ? CrimpyTheme.accentOrange
-                  : CrimpyTheme.gray400,
+                  ? CrimpyTheme.sensorConnecting
+                  : CrimpyTheme.textFaint,
             ),
             const SizedBox(height: 16),
             Text(
@@ -182,7 +182,7 @@ class ChartScreen extends ConsumerWidget {
           title,
           style: Theme.of(
             context,
-          ).textTheme.bodyLarge?.copyWith(color: CrimpyTheme.gray500),
+          ).textTheme.bodyLarge?.copyWith(color: CrimpyTheme.textSecondary),
         ),
         Text(
           value,
