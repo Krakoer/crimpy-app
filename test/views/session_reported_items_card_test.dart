@@ -186,7 +186,7 @@ void main() {
       ),
     );
 
-    expect(find.text('What you managed'), findsOneWidget);
+    expect(find.text('WHAT YOU MANAGED'), findsOneWidget);
     expect(find.text('Pull up'), findsOneWidget);
     expect(find.text('23 reps'), findsOneWidget);
     expect(find.text('7 rounds'), findsOneWidget);

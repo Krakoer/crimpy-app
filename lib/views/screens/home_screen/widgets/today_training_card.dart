@@ -91,7 +91,7 @@ class TodayTrainingCard extends ConsumerWidget {
             ),
             child: Icon(icon, color: CrimpyTheme.textOn(accent), size: 18),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: CrimpyTheme.spaceMd),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,7 +114,7 @@ class TodayTrainingCard extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: CrimpyTheme.spaceSm),
           Icon(
             Icons.arrow_forward_ios,
             size: 14,
@@ -202,9 +202,9 @@ class _ProgramTodayCard extends ConsumerWidget {
                     ),
                   ),
                 if (flex.isNotEmpty) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: CrimpyTheme.spaceSm),
                   const SectionLabel('This week'),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: CrimpyTheme.spaceSm),
                   ...flex.map(
                     (s) => _FlexTrainingRow(
                       program: program,
@@ -226,7 +226,7 @@ class _ProgramTodayCard extends ConsumerWidget {
     return Row(
       children: [
         Icon(FontAwesomeIcons.check, size: 16, color: CrimpyTheme.done),
-        const SizedBox(width: 12),
+        const SizedBox(width: CrimpyTheme.spaceMd),
         Text(
           'REST DAY - nothing scheduled today',
           style: CrimpyTheme.bodySmall.copyWith(
@@ -305,11 +305,11 @@ class _TodayTrainingRow extends ConsumerWidget {
     return InkWell(
       onTap: () => _openSession(context, program, weekNumber, session),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceXs),
         child: Row(
           children: [
             SessionActivityTile(type: type, size: 38),
-            const SizedBox(width: 12),
+            const SizedBox(width: CrimpyTheme.spaceMd),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,7 +335,7 @@ class _TodayTrainingRow extends ConsumerWidget {
                         ),
                       ),
                       if (seconds > 0) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: CrimpyTheme.spaceSm),
                         Text(
                           formatLength(Duration(seconds: seconds)),
                           style: CrimpyTheme.labelSmall.copyWith(
@@ -348,7 +348,7 @@ class _TodayTrainingRow extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: CrimpyTheme.spaceSm),
             _trailing(done),
           ],
         ),
@@ -405,11 +405,11 @@ class _FlexTrainingRow extends ConsumerWidget {
     return InkWell(
       onTap: () => _openSession(context, program, weekNumber, session),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
+        padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceXs),
         child: Row(
           children: [
             SessionActivityTile(type: type, size: 28),
-            const SizedBox(width: 10),
+            const SizedBox(width: CrimpyTheme.spaceSm),
             Expanded(
               child: Text(
                 session.trainingTitle,
@@ -421,7 +421,7 @@ class _FlexTrainingRow extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: CrimpyTheme.spaceSm),
             Text(
               '$done/$target',
               style: CrimpyTheme.labelSmall.copyWith(
@@ -430,7 +430,7 @@ class _FlexTrainingRow extends ConsumerWidget {
                     : CrimpyTheme.textSecondary,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: CrimpyTheme.spaceSm),
             Icon(
               FontAwesomeIcons.play,
               size: 13,

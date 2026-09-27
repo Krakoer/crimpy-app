@@ -4,6 +4,7 @@ import 'package:crimpy/views/screens/profile_screen/widgets/assessment_chart.dar
 import 'package:crimpy/views/screens/profile_screen/widgets/stat_card.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
 
 class MvcGripPositionStatContent extends StatefulWidget {
   final Map<GripPosition, List<AssessmentModel>> mvcByGripPosition;
@@ -63,13 +64,7 @@ class _MvcGripPositionStatContentState
         children: [
           Align(
             alignment: Alignment.centerLeft,
-            child: Text(
-              "Max Force",
-              style: CrimpyTheme.title.copyWith(
-                color: CrimpyTheme.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: const SectionHeading('Max Force'),
           ),
           SizedBox(height: 12),
           Row(
@@ -101,12 +96,7 @@ class _MvcGripPositionStatContentState
         // Title with inline grip position selector
         Row(
           children: [
-            Text(
-              'MAX FORCE',
-              style: CrimpyTheme.capsLabel.copyWith(
-                color: CrimpyTheme.textSecondary,
-              ),
-            ),
+            const SectionHeading('Max Force'),
             if (widget.mvcByGripPosition.isNotEmpty) ...[
               const SizedBox(width: 8),
               Text(

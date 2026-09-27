@@ -1,6 +1,7 @@
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
 
 /// What the athlete reported on the steps they were prescribed: the numbers
 /// they reached, and the line they wrote about each one. Nothing else records
@@ -20,13 +21,7 @@ class SessionReportedItemsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'What you managed',
-            style: CrimpyTheme.title.copyWith(
-              color: CrimpyTheme.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          const SectionHeading('What you managed'),
           const SizedBox(height: 8),
           for (final item in items)
             Padding(

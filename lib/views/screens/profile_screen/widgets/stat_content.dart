@@ -1,6 +1,6 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/assessment_chart.dart';
-import 'package:crimpy/views/screens/profile_screen/widgets/section_tile.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/stat_card.dart';
 import 'package:flutter/material.dart';
 
@@ -38,7 +38,7 @@ class StatContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SectionTitle(title),
+        Align(alignment: Alignment.centerLeft, child: SectionHeading(title)),
         SizedBox(height: 12),
         if (perHand)
           Row(

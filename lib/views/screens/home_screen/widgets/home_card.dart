@@ -1,5 +1,6 @@
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
 
 class HomeCard extends StatelessWidget {
   final Widget child;
@@ -30,12 +31,7 @@ class HomeCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title.toUpperCase(),
-                style: CrimpyTheme.capsLabel.copyWith(
-                  color: CrimpyTheme.textSecondary,
-                ),
-              ),
+              SectionHeading(title),
               topLeft ?? const SizedBox.shrink(),
             ],
           ),

@@ -109,12 +109,18 @@ class WeekHistogramWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Duration is above
-          Text(
-            durationText,
-            style: CrimpyTheme.bodySmall.copyWith(
-              color: textColor,
-              fontWeight: FontWeight.w500,
+          // A day's column is a seventh of the card, about 42dp on a 360dp
+          // phone, and "1 h 30 min" is wider than that. It shrinks to fit on
+          // one line rather than wrapping out of the column.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              durationText,
+              maxLines: 1,
+              style: CrimpyTheme.bodySmall.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           const SizedBox(height: 6),

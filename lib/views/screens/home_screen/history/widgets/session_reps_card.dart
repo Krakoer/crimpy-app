@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
@@ -64,12 +65,8 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              SectionHeading(
                 blocks != null ? 'Blocks' : 'Repetitions Breakdown',
-                style: CrimpyTheme.title.copyWith(
-                  color: CrimpyTheme.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
               ),
               if (overall != null)
                 Container(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:intl/intl.dart';
@@ -17,12 +18,7 @@ class SessionRawDataCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'RAW DATA',
-                style: CrimpyTheme.capsLabel.copyWith(
-                  color: CrimpyTheme.textSecondary,
-                ),
-              ),
+              const SectionHeading('Raw Data'),
               Text(
                 '${dataPoints.length} data points',
                 style: CrimpyTheme.bodySmall.copyWith(
