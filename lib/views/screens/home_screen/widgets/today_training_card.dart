@@ -155,6 +155,7 @@ class _ProgramTodayCard extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: CrimpyCard.simple(
+        raised: true,
         padding: EdgeInsets.zero,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -138,22 +138,13 @@ class _BodyweightMeasureScreenState
 
   Widget _statusBox(bool holding) => Container(
     padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
+    decoration: CrimpyTheme.raised.copyWith(
       // The label on this box is white. The alpha is gone as well as the
       // hue darkened: at 0.9 even the darkened gold only reaches 4.03:1,
       // and the bare accents read 2.06:1 and 3.33:1 under white.
       color: holding
           ? CrimpyTheme.fillOn(CrimpyTheme.measureSettled)
           : CrimpyTheme.fillOn(CrimpyTheme.measuring),
-      border: Border.all(color: CrimpyTheme.outline, width: 2),
-      boxShadow: const [
-        BoxShadow(
-          color: CrimpyTheme.outline,
-          offset: Offset(4, 4),
-          blurRadius: 0,
-          spreadRadius: 0,
-        ),
-      ],
     ),
     child: Column(
       mainAxisSize: MainAxisSize.min,

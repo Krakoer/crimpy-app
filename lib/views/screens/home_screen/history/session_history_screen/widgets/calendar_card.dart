@@ -25,7 +25,6 @@ class CalendarCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
       child: Column(
         children: [
           if (selectedDate != null)

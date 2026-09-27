@@ -17,88 +17,80 @@ class SessionCard extends StatelessWidget {
     final sessionColor = CrimpyTheme.activityColor(session.activity);
     final sessionIcon = _getSessionIcon(session.activity);
 
-    return Card(
+    return CrimpyCard.simple(
+      onTap: onTap,
       margin: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // Session type icon
-              CategoryIconTile(icon: sessionIcon, category: sessionColor),
-              const SizedBox(width: 16),
-              // Session details
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          // Session type icon
+          CategoryIconTile(icon: sessionIcon, category: sessionColor),
+          const SizedBox(width: 16),
+          // Session details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  session.name,
+                  style: CrimpyTheme.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
                   children: [
+                    Icon(
+                      Icons.schedule,
+                      size: 14,
+                      color: CrimpyTheme.textMedium,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
-                      session.name,
-                      style: CrimpyTheme.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.schedule,
-                          size: 14,
-                          color: CrimpyTheme.textMedium,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          formattedTime,
-                          style: CrimpyTheme.bodySmall.copyWith(
-                            color: CrimpyTheme.textMedium,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Icon(
-                          Icons.timer,
-                          size: 14,
-                          color: CrimpyTheme.textMedium,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _formatDuration(duration),
-                          style: CrimpyTheme.bodySmall.copyWith(
-                            color: CrimpyTheme.textMedium,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (session.notes != null && session.notes!.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        session.notes!,
-                        style: CrimpyTheme.bodySmall.copyWith(
-                          color: CrimpyTheme.textStrong,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      formattedTime,
+                      style: CrimpyTheme.bodySmall.copyWith(
+                        color: CrimpyTheme.textMedium,
                       ),
-                    ],
+                    ),
+                    const SizedBox(width: 16),
+                    Icon(Icons.timer, size: 14, color: CrimpyTheme.textMedium),
+                    const SizedBox(width: 4),
+                    Text(
+                      _formatDuration(duration),
+                      style: CrimpyTheme.bodySmall.copyWith(
+                        color: CrimpyTheme.textMedium,
+                      ),
+                    ),
                   ],
                 ),
-              ),
-              // An answer from the coach the athlete has not opened yet. Shown
-              // on the row rather than only inside the session, so it can be
-              // found without opening every one.
-              if (session.hasUnreadCoachReply) ...[
-                Icon(
-                  Icons.mark_chat_unread,
-                  size: 18,
-                  color: CrimpyTheme.coachNote,
-                ),
-                const SizedBox(width: 8),
+                if (session.notes != null && session.notes!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    session.notes!,
+                    style: CrimpyTheme.bodySmall.copyWith(
+                      color: CrimpyTheme.textStrong,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ],
-              // Arrow indicator
-              Icon(Icons.chevron_right, color: CrimpyTheme.textFaint),
-            ],
+            ),
           ),
-        ),
+          // An answer from the coach the athlete has not opened yet. Shown
+          // on the row rather than only inside the session, so it can be
+          // found without opening every one.
+          if (session.hasUnreadCoachReply) ...[
+            Icon(
+              Icons.mark_chat_unread,
+              size: 18,
+              color: CrimpyTheme.coachNote,
+            ),
+            const SizedBox(width: 8),
+          ],
+          // Arrow indicator
+          Icon(Icons.chevron_right, color: CrimpyTheme.textFaint),
+        ],
       ),
     );
   }

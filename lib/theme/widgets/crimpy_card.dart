@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import '../crimpy_theme.dart';
 
-/// Custom card widget with double border design inspired by Meeko.store
-/// Creates depth through layered borders and subtle shadows
+/// A card on one of the theme's two surfaces, [CrimpyTheme.raised] or
+/// [CrimpyTheme.flat]. A card tapped as a whole is raised; any other is flat
+/// unless it says [raised], which is for the one element that matters most on
+/// its screen or a card whose content is what gets tapped. See
+/// Krakoer/crimpy#173.
 class CrimpyCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final Color? backgroundColor;
-  final Color? borderColor;
   final Color? accentColor;
-  final double borderWidth;
-  final double shadowOffset;
   final bool showAccentBorder;
   final VoidCallback? onTap;
+
+  /// Whether the card stands on the raised surface. Left out, a card with an
+  /// [onTap] is raised and any other is flat.
+  final bool? raised;
 
   const CrimpyCard({
     super.key,
@@ -21,12 +25,10 @@ class CrimpyCard extends StatelessWidget {
     this.padding,
     this.margin,
     this.backgroundColor,
-    this.borderColor,
     this.accentColor,
-    this.borderWidth = 2.0,
-    this.shadowOffset = 3.0,
     this.showAccentBorder = false,
     this.onTap,
+    this.raised,
   });
 
   /// Card with a bar down its left edge, for a state the whole card carries: a
@@ -39,10 +41,8 @@ class CrimpyCard extends StatelessWidget {
     this.padding,
     this.margin,
     this.backgroundColor,
-    this.borderColor,
-    this.borderWidth = 2.0,
-    this.shadowOffset = 3.0,
     this.onTap,
+    this.raised,
   }) : showAccentBorder = true;
 
   /// Simple card without accent
@@ -52,127 +52,49 @@ class CrimpyCard extends StatelessWidget {
     this.padding,
     this.margin,
     this.backgroundColor,
-    this.borderColor,
-    this.borderWidth = 2.0,
-    this.shadowOffset = 3.0,
     this.onTap,
+    this.raised,
   }) : showAccentBorder = false,
        accentColor = null;
 
+  bool get isRaised => raised ?? onTap != null;
+
   @override
   Widget build(BuildContext context) {
-    final effectiveBackgroundColor = backgroundColor ?? CrimpyTheme.bgPrimary;
-    final effectiveBorderColor = borderColor ?? CrimpyTheme.outline;
-    final effectivePadding = padding ?? const EdgeInsets.all(16.0);
-    final effectiveMargin = margin ?? const EdgeInsets.symmetric(vertical: 8.0);
+    final surface = isRaised ? CrimpyTheme.raised : CrimpyTheme.flat;
+    final side = (surface.border! as Border).top;
+    final accent = accentColor;
 
-    Widget cardContent = Container(
+    Widget card = Container(
       width: double.infinity,
-      padding: effectivePadding,
-      decoration: BoxDecoration(
-        color: effectiveBackgroundColor,
-        border: showAccentBorder && accentColor != null
+      margin: margin ?? const EdgeInsets.symmetric(vertical: 8.0),
+      padding: padding ?? const EdgeInsets.all(16.0),
+      decoration: surface.copyWith(
+        color: backgroundColor,
+        border: showAccentBorder && accent != null
             ? Border(
-                left: BorderSide(color: accentColor!, width: 4),
-                top: BorderSide(
-                  color: effectiveBorderColor,
-                  width: borderWidth,
-                ),
-                right: BorderSide(
-                  color: effectiveBorderColor,
-                  width: borderWidth,
-                ),
-                bottom: BorderSide(
-                  color: effectiveBorderColor,
-                  width: borderWidth,
-                ),
+                left: BorderSide(color: accent, width: 4),
+                top: side,
+                right: side,
+                bottom: side,
               )
-            : Border.all(color: effectiveBorderColor, width: borderWidth),
-        borderRadius:
-            CrimpyTheme.corners, // Sharp corners for Radicle aesthetic
+            : null,
       ),
       child: child,
     );
 
-    // Add double border effect using a Container with shadow
-    Widget doubleBoredCard = Container(
-      margin: effectiveMargin,
-      decoration: BoxDecoration(
-        // Shadow creates the "double border" effect
-        boxShadow: [
-          BoxShadow(
-            color: effectiveBorderColor,
-            offset: Offset(shadowOffset, shadowOffset),
-            blurRadius: 0, // Sharp shadow for clean look
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: cardContent,
-    );
-
-    // Wrap with InkWell if onTap is provided
     if (onTap != null) {
-      return Material(
+      card = Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: CrimpyTheme.corners,
-          child: doubleBoredCard,
+          child: card,
         ),
       );
     }
 
-    return doubleBoredCard;
-  }
-}
-
-/// Extension methods for easier card creation
-extension CrimpyCardExtensions on Widget {
-  /// Wrap widget in a simple CrimpyCard
-  Widget wrapInCard({
-    EdgeInsetsGeometry? padding,
-    EdgeInsetsGeometry? margin,
-    Color? backgroundColor,
-    Color? borderColor,
-    double borderWidth = 2.0,
-    double shadowOffset = 3.0,
-    VoidCallback? onTap,
-  }) {
-    return CrimpyCard.simple(
-      padding: padding,
-      margin: margin,
-      backgroundColor: backgroundColor,
-      borderColor: borderColor,
-      borderWidth: borderWidth,
-      shadowOffset: shadowOffset,
-      onTap: onTap,
-      child: this,
-    );
-  }
-
-  /// Wrap widget in a category CrimpyCard with accent color
-  Widget wrapInCategoryCard({
-    required Color accentColor,
-    EdgeInsetsGeometry? padding,
-    EdgeInsetsGeometry? margin,
-    Color? backgroundColor,
-    Color? borderColor,
-    double borderWidth = 2.0,
-    double shadowOffset = 3.0,
-    VoidCallback? onTap,
-  }) {
-    return CrimpyCard.category(
-      accentColor: accentColor,
-      padding: padding,
-      margin: margin,
-      backgroundColor: backgroundColor,
-      borderColor: borderColor,
-      borderWidth: borderWidth,
-      shadowOffset: shadowOffset,
-      onTap: onTap,
-      child: this,
-    );
+    return card;
   }
 }
 
@@ -185,11 +107,13 @@ class CrimpyCards {
     EdgeInsetsGeometry? padding,
     EdgeInsetsGeometry? margin,
     VoidCallback? onTap,
+    bool? raised,
   }) {
     return CrimpyCard.simple(
       padding: padding,
       margin: margin,
       onTap: onTap,
+      raised: raised,
       child: child,
     );
   }
@@ -201,27 +125,28 @@ class CrimpyCards {
     EdgeInsetsGeometry? padding,
     EdgeInsetsGeometry? margin,
     VoidCallback? onTap,
+    bool? raised,
   }) {
     return CrimpyCard.simple(
       padding: padding,
       margin: margin,
       onTap: onTap,
+      raised: raised,
       child: child,
     );
   }
 
-  /// Stats card for displaying metrics
+  /// A read-only metric, on the secondary ground and flat: stat tiles sit in
+  /// groups, and a group of raised tiles has nothing standing out.
   static Widget stats({
     required Widget child,
     EdgeInsetsGeometry? padding,
     EdgeInsetsGeometry? margin,
-    VoidCallback? onTap,
   }) {
     return CrimpyCard.simple(
       padding: padding ?? const EdgeInsets.all(20.0),
       margin: margin,
       backgroundColor: CrimpyTheme.bgSecondary,
-      onTap: onTap,
       child: child,
     );
   }

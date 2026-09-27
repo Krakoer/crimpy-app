@@ -154,66 +154,59 @@ class ScheduledTrainingRow extends StatelessWidget {
     final type = session.activity;
     final status = scheduleStatusFor(date, DateTime.now());
     final due = status == ScheduleStatus.due && !done;
-    final borderColor = due ? CrimpyTheme.current : CrimpyTheme.outline;
+    final surface = onTap != null || due
+        ? CrimpyTheme.raised
+        : CrimpyTheme.flat;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        decoration: BoxDecoration(
-          boxShadow: [
-            // Due today reads by weight now that it has no hue of its own.
-            BoxShadow(
-              color: borderColor,
-              offset: due ? const Offset(4, 4) : const Offset(2, 2),
-            ),
-          ],
-        ),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: CrimpyTheme.bgPrimary,
-            border: Border.all(color: borderColor, width: due ? 3 : 2),
-          ),
-          child: Row(
-            children: [
-              SessionActivityTile(type: type, size: 38),
-              const SizedBox(width: 11),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      session.trainingTitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: CrimpyTheme.titleSmall.copyWith(
-                        color: done
-                            ? CrimpyTheme.textMutedSmall
-                            : CrimpyTheme.textPrimary,
-                        decoration: done ? TextDecoration.lineThrough : null,
-                      ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        // Due today reads by weight now that it has no hue of its own.
+        decoration: due
+            ? surface.copyWith(
+                border: Border.all(color: CrimpyTheme.current, width: 3),
+              )
+            : surface,
+        child: Row(
+          children: [
+            SessionActivityTile(type: type, size: 38),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    session.trainingTitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: CrimpyTheme.titleSmall.copyWith(
+                      color: done
+                          ? CrimpyTheme.textMutedSmall
+                          : CrimpyTheme.textPrimary,
+                      decoration: done ? TextDecoration.lineThrough : null,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      programSessionLabel(type),
-                      style: CrimpyTheme.labelSmall.copyWith(
-                        color: CrimpyTheme.textSecondary,
-                      ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    programSessionLabel(type),
+                    style: CrimpyTheme.labelSmall.copyWith(
+                      color: CrimpyTheme.textSecondary,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              if (done)
-                Icon(
-                  FontAwesomeIcons.circleCheck,
-                  size: 20,
-                  color: CrimpyTheme.done,
-                )
-              else
-                ScheduleStatusTag(status: status),
-            ],
-          ),
+            ),
+            const SizedBox(width: 8),
+            if (done)
+              Icon(
+                FontAwesomeIcons.circleCheck,
+                size: 20,
+                color: CrimpyTheme.done,
+              )
+            else
+              ScheduleStatusTag(status: status),
+          ],
         ),
       ),
     );

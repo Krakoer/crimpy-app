@@ -118,21 +118,8 @@ class WeekHistogramWidget extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           // Draw the stacked bar
-          Container(
+          SizedBox(
             width: 24,
-            decoration: BoxDecoration(
-              borderRadius: CrimpyTheme.corners,
-              // Draw a slight shadow for current day
-              boxShadow: isToday
-                  ? [
-                      const BoxShadow(
-                        color: Color(0x4D000000),
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ]
-                  : null,
-            ),
             child: ClipRRect(
               borderRadius: CrimpyTheme.corners,
               child: Column(

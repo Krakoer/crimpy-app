@@ -346,11 +346,51 @@ class CrimpyTheme {
     borderRadius: corners,
   );
 
-  /// [shape] on the 2px line of a card, for a surface that stands on the
-  /// screen: a card, a dialog, a sheet, a picker.
+  /// [shape] on the 2px line of a raised card, for a surface that stands over
+  /// the screen: a dialog, a sheet, a menu, a picker.
   static const RoundedRectangleBorder framed = RoundedRectangleBorder(
     borderRadius: corners,
     side: BorderSide(color: outline, width: 2),
+  );
+
+  // ==================== SURFACES ====================
+  // Two surfaces, picked by role. The 2px line with a hard offset shadow is the
+  // app's identity, and it only stands out while few things wear it: what can
+  // be tapped, and the one element that matters most on a screen. Grouped,
+  // read-only content sits flat and is held together by spacing and a thin
+  // line. A widget takes [raised] or [flat] rather than building its own
+  // shadow; test/theme/shadow_tokens_test.dart fails on any file outside the
+  // theme that names one. See Krakoer/crimpy#173.
+
+  /// How far a raised surface's shadow falls, right and down.
+  static const double raisedOffset = 3;
+
+  /// The hard offset shadow a raised surface casts.
+  static const List<BoxShadow> raisedShadow = [
+    BoxShadow(color: outline, offset: Offset(raisedOffset, raisedOffset)),
+  ];
+
+  /// What can be tapped, and the one element that matters most on a screen.
+  /// A raised surface on its own ground takes this with copyWith(color:).
+  static const BoxDecoration raised = BoxDecoration(
+    color: bgPrimary,
+    border: Border.fromBorderSide(BorderSide(color: outline, width: 2)),
+    borderRadius: corners,
+    boxShadow: raisedShadow,
+  );
+
+  /// Grouped, read-only content: a stat tile, a chart, a section of a form or
+  /// a detail screen. A thin quiet line, no shadow.
+  static const BoxDecoration flat = BoxDecoration(
+    color: bgPrimary,
+    border: Border.fromBorderSide(BorderSide(color: outlineSubtle, width: 1)),
+    borderRadius: corners,
+  );
+
+  /// [flat] as a Material shape, for the card theme.
+  static const RoundedRectangleBorder flatShape = RoundedRectangleBorder(
+    borderRadius: corners,
+    side: BorderSide(color: outlineSubtle, width: 1),
   );
 
   /// The primary action of a dialog that throws something away, filled with
@@ -574,13 +614,13 @@ class CrimpyTheme {
       actionsIconTheme: const IconThemeData(color: textPrimary),
     ),
 
-    // Card with sharp edges and double border effect
+    // A Material Card holds a section of a form or a detail screen, so it is
+    // flat. Anything tapped as a whole is a raised CrimpyCard instead.
     cardTheme: const CardThemeData(
       color: bgPrimary,
       elevation: 0,
-      shape: framed,
+      shape: flatShape,
       margin: EdgeInsets.symmetric(vertical: 8),
-      shadowColor: outline,
     ),
 
     // Primary button - Orange with sharp edges
