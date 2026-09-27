@@ -101,7 +101,6 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                     widget.content.assessmentName,
                     style: CrimpyTheme.title.copyWith(
                       color: CrimpyTheme.textPrimary,
-                      fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
                   ),

@@ -14,7 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// a slot resized for Material's sake silently resizes every screen reading it.
 /// See Krakoer/crimpy#172.
 final RegExp typeName = RegExp(
-  r'\b(fontSize|letterSpacing|fontFamily):|\bGoogleFonts\b|\btextTheme\.',
+  r'\b(fontSize|letterSpacing|fontFamily):|\bGoogleFonts\b|\btextTheme\b|\bTextTheme\.of\b',
 );
 
 /// Heavier than any style of the scale. Heavy type everywhere was the problem
@@ -61,6 +61,9 @@ void main() {
     expect(typeName.hasMatch('.copyWith(letterSpacing: 2)'), isTrue);
     expect(typeName.hasMatch("fontFamily: 'JetBrainsMono',"), isTrue);
     expect(typeName.hasMatch('Theme.of(context).textTheme.bodySmall'), isTrue);
+    expect(typeName.hasMatch('    ).textTheme'), isTrue);
+    expect(typeName.hasMatch('final textTheme = theme.textTheme;'), isTrue);
+    expect(typeName.hasMatch('TextTheme.of(context).bodySmall'), isTrue);
     expect(typeName.hasMatch('style: CrimpyTheme.body,'), isFalse);
     expect(typeName.hasMatch('CrimpyTheme.numerals(48)'), isFalse);
     expect(typeName.hasMatch('.apply(fontSizeFactor: scale)'), isFalse);

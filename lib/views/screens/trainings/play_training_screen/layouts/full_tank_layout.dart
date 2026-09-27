@@ -806,8 +806,8 @@ class _TankContent extends StatelessWidget {
             : describeExecutionItem(next).toUpperCase(),
         textAlign: TextAlign.center,
         // The largest type in the block, so the step it names is what needs
-        // bounding most: a long exercise name wraps into it at 30px and would
-        // otherwise push the block past the tank.
+        // bounding most: a long exercise name wraps at the capsHeadline size and
+        // would otherwise push the block past the tank.
         maxLines: _stepTitleMaxLines,
         overflow: TextOverflow.ellipsis,
         style: _scaledStyle(CrimpyTheme.capsHeadline, color: palette.force),
