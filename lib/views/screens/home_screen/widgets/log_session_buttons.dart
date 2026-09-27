@@ -28,36 +28,35 @@ class LogSessionButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     return HomeCard(
       title: "Log Session",
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        // Laid out in rows of three rather than one row of five: at five the
-        // buttons are narrower than the longest activity name and the labels
-        // wrap mid word on a phone.
-        child: Column(
-          children: [
-            for (var first = 0; first < _activities.length; first += _columns)
-              Padding(
-                padding: EdgeInsets.only(top: first == 0 ? 0 : 8),
-                child: Row(
-                  children: [
-                    for (var column = 0; column < _columns; column++) ...[
-                      if (column > 0) const SizedBox(width: 8),
-                      Expanded(
-                        // The last row is padded with empty cells, so every
-                        // button keeps the width the full rows give it.
-                        child: first + column < _activities.length
-                            ? _SessionActivityButton(
-                                activity: _activities[first + column].activity,
-                                icon: _activities[first + column].icon,
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    ],
-                  ],
-                ),
+      // Laid out in rows of three rather than one row of five: at five the
+      // buttons are narrower than the longest activity name and the labels
+      // wrap mid word on a phone.
+      child: Column(
+        children: [
+          for (var first = 0; first < _activities.length; first += _columns)
+            Padding(
+              padding: EdgeInsets.only(
+                top: first == 0 ? 0 : CrimpyTheme.spaceSm,
               ),
-          ],
-        ),
+              child: Row(
+                children: [
+                  for (var column = 0; column < _columns; column++) ...[
+                    if (column > 0) const SizedBox(width: CrimpyTheme.spaceSm),
+                    Expanded(
+                      // The last row is padded with empty cells, so every
+                      // button keeps the width the full rows give it.
+                      child: first + column < _activities.length
+                          ? _SessionActivityButton(
+                              activity: _activities[first + column].activity,
+                              icon: _activities[first + column].icon,
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

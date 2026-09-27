@@ -75,55 +75,52 @@ class TodayTrainingCard extends ConsumerWidget {
     required String title,
     required String subtitle,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: CrimpyCard.simple(
-        onTap: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => ProgramDetailScreen(program))),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: CrimpyTheme.tintOf(accent),
-                border: Border.all(color: accent, width: 2),
-              ),
-              child: Icon(icon, color: CrimpyTheme.textOn(accent), size: 18),
+    return CrimpyCard.simple(
+      onTap: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => ProgramDetailScreen(program))),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: CrimpyTheme.tintOf(accent),
+              border: Border.all(color: accent, width: 2),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: CrimpyTheme.titleSmall.copyWith(
-                      color: CrimpyTheme.textPrimary,
-                    ),
+            child: Icon(icon, color: CrimpyTheme.textOn(accent), size: 18),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: CrimpyTheme.titleSmall.copyWith(
+                    color: CrimpyTheme.textPrimary,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: CrimpyTheme.bodySmall.copyWith(
-                      color: CrimpyTheme.textSecondary,
-                    ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: CrimpyTheme.bodySmall.copyWith(
+                    color: CrimpyTheme.textSecondary,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 14,
-              color: CrimpyTheme.textSecondary,
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 10),
+          Icon(
+            Icons.arrow_forward_ios,
+            size: 14,
+            color: CrimpyTheme.textSecondary,
+          ),
+        ],
       ),
     );
   }
@@ -152,78 +149,75 @@ class _ProgramTodayCard extends ConsumerWidget {
     final today = activeWeek.week.sessionsOnDay(offset);
     final flex = activeWeek.week.timesPerWeekSessions;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: CrimpyCard.simple(
-        raised: true,
-        padding: EdgeInsets.zero,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            InkWell(
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => ProgramDetailScreen(program)),
-              ),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                color: CrimpyTheme.fillOn(CrimpyTheme.current),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        "TODAY'S TRAINING",
-                        style: CrimpyTheme.capsLabel.copyWith(
-                          color: CrimpyTheme.bgPrimary,
-                        ),
-                      ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      size: 12,
-                      color: CrimpyTheme.bgPrimary,
-                    ),
-                  ],
-                ),
-              ),
+    return CrimpyCard.simple(
+      raised: true,
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => ProgramDetailScreen(program)),
             ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: CrimpyTheme.spaceLg,
+                vertical: CrimpyTheme.spaceSm,
+              ),
+              color: CrimpyTheme.fillOn(CrimpyTheme.current),
+              child: Row(
                 children: [
-                  if (today.isEmpty)
-                    _restRow()
-                  else
-                    ...today.map(
-                      (s) => _TodayTrainingRow(
-                        program: program,
-                        weekNumber: activeWeek.weekNumber,
-                        session: s,
-                        sessions: sessions,
+                  Expanded(
+                    child: Text(
+                      "TODAY'S TRAINING",
+                      style: CrimpyTheme.capsLabel.copyWith(
+                        color: CrimpyTheme.bgPrimary,
                       ),
                     ),
-                  if (flex.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    const SectionLabel('This week'),
-                    const SizedBox(height: 8),
-                    ...flex.map(
-                      (s) => _FlexTrainingRow(
-                        program: program,
-                        weekNumber: activeWeek.weekNumber,
-                        session: s,
-                        sessions: sessions,
-                      ),
-                    ),
-                  ],
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 12,
+                    color: CrimpyTheme.bgPrimary,
+                  ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+          Padding(
+            padding: CrimpyTheme.cardPadding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (today.isEmpty)
+                  _restRow()
+                else
+                  ...today.map(
+                    (s) => _TodayTrainingRow(
+                      program: program,
+                      weekNumber: activeWeek.weekNumber,
+                      session: s,
+                      sessions: sessions,
+                    ),
+                  ),
+                if (flex.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  const SectionLabel('This week'),
+                  const SizedBox(height: 8),
+                  ...flex.map(
+                    (s) => _FlexTrainingRow(
+                      program: program,
+                      weekNumber: activeWeek.weekNumber,
+                      session: s,
+                      sessions: sessions,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

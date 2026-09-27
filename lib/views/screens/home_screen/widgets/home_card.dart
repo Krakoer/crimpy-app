@@ -25,27 +25,22 @@ class HomeCard extends StatelessWidget {
     return CrimpyCard.simple(
       onTap: onTap,
       raised: raised,
-      padding: const EdgeInsets.all(8),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  title,
-                  style: CrimpyTheme.title.copyWith(
-                    color: CrimpyTheme.textPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
+              Text(
+                title.toUpperCase(),
+                style: CrimpyTheme.capsLabel.copyWith(
+                  color: CrimpyTheme.textSecondary,
                 ),
               ),
-              topLeft ?? Container(),
+              topLeft ?? const SizedBox.shrink(),
             ],
           ),
-          const SizedBox(height: 8),
-          Padding(padding: const EdgeInsets.all(8.0), child: child),
+          const SizedBox(height: CrimpyTheme.headingGap),
+          child,
         ],
       ),
     );

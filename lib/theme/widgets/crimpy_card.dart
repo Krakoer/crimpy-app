@@ -76,7 +76,7 @@ class CrimpyCard extends StatelessWidget {
             )
           : null,
     );
-    final effectivePadding = padding ?? const EdgeInsets.all(16.0);
+    final effectivePadding = padding ?? CrimpyTheme.cardPadding;
 
     // A tapped card paints its fill and line as Ink, on the Material the
     // ripple draws on, so the ripple shows over the fill rather than under
@@ -114,10 +114,7 @@ class CrimpyCard extends StatelessWidget {
             ),
           );
 
-    return Padding(
-      padding: margin ?? const EdgeInsets.symmetric(vertical: 8.0),
-      child: card,
-    );
+    return Padding(padding: margin ?? CrimpyTheme.cardMargin, child: card);
   }
 }
 
@@ -167,7 +164,7 @@ class CrimpyCards {
     EdgeInsetsGeometry? margin,
   }) {
     return CrimpyCard.simple(
-      padding: padding ?? const EdgeInsets.all(20.0),
+      padding: padding ?? CrimpyTheme.cardPadding,
       margin: margin,
       backgroundColor: CrimpyTheme.bgSecondary,
       child: child,
