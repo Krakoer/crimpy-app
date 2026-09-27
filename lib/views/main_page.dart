@@ -316,7 +316,7 @@ class _MainPageState extends ConsumerState<MainPage>
               ),
               _NavItem(
                 icon: FontAwesomeIcons.chartSimple,
-                label: 'Assess.',
+                label: 'Tests',
                 isSelected: currentPageIndex == 2,
                 onTap: () => _pageViewController.jumpToPage(2),
               ),

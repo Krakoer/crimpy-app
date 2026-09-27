@@ -80,7 +80,7 @@ class PostAssessmentScreen extends ConsumerWidget {
               SizedBox(height: 100),
               // If they gave their max, it's always a good job rigth ?
               Text(
-                "Great job! 💪",
+                "Great job!",
                 style: CrimpyTheme.headline.copyWith(
                   color: CrimpyTheme.textPrimary,
                 ),

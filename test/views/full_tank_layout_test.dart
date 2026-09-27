@@ -230,7 +230,7 @@ void main() {
       await _pump(tester, item: _hang, currentWeight: 10, secondsRemaining: 5);
 
       expect(find.text('LEFT'), findsWidgets);
-      expect(find.text('01:58'), findsWidgets);
+      expect(find.text('1:58'), findsWidgets);
       expect(find.text('ELAPSED'), findsWidgets);
     });
 
@@ -243,7 +243,7 @@ void main() {
       );
 
       expect(find.text('NEXT'), findsOneWidget);
-      expect(find.text('REST 3S'), findsOneWidget);
+      expect(find.text('REST 0:03'), findsOneWidget);
     });
 
     testWidgets('draws the readouts twice so they invert over the level', (
@@ -337,7 +337,7 @@ void main() {
 
       expect(find.text('NEXT'), findsOneWidget);
       expect(find.text('BOTH HANDS'), findsOneWidget);
-      expect(find.text('42 kg - 7s'), findsOneWidget);
+      expect(find.text('42 kg - 0:07'), findsOneWidget);
       expect(find.text('SEC REST'), findsOneWidget);
       expect(find.text('REST'), findsOneWidget);
       // The block above already names what is next, so the strip stays quiet
@@ -359,8 +359,8 @@ void main() {
       expect(find.text('SEC LEFT'), findsOneWidget);
       expect(find.text('TARGET 12 kg'), findsOneWidget);
       // The corner is free for the total time left, in minutes and seconds.
-      expect(find.text('01:58'), findsOneWidget);
-      expect(find.text('REST 30S'), findsOneWidget);
+      expect(find.text('1:58'), findsOneWidget);
+      expect(find.text('REST 0:30'), findsOneWidget);
     });
 
     // Only a hang on a single hand goes through the sensor, so a hang on both
@@ -623,7 +623,7 @@ void main() {
 
       // The preview names a timed step as its label plus its length.
       final title = tester.renderObject<RenderParagraph>(
-        find.text('${longName.toUpperCase()} 24S'),
+        find.text('${longName.toUpperCase()} 0:24'),
       );
       expect(title.didExceedMaxLines, isTrue);
       expect(tester.takeException(), isNull);
@@ -638,7 +638,7 @@ void main() {
       );
 
       final title = tester.renderObject<RenderParagraph>(
-        find.text('PULL-UPS 24S'),
+        find.text('PULL-UPS 0:24'),
       );
       expect(title.didExceedMaxLines, isFalse);
       expect(tester.takeException(), isNull);

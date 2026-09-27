@@ -353,6 +353,26 @@ class CrimpyTheme {
     side: BorderSide(color: outline, width: 2),
   );
 
+  // ==================== SPACING ====================
+  // One scale for the room between and inside things, so two cards that do
+  // the same job are as roomy as each other. A widget takes a step off it
+  // rather than a number of its own. See Krakoer/crimpy#169.
+
+  static const double spaceXs = 4;
+  static const double spaceSm = 8;
+  static const double spaceMd = 12;
+  static const double spaceLg = 16;
+  static const double spaceXl = 24;
+
+  /// Inside a card: the same on every card, whatever it holds.
+  static const EdgeInsets cardPadding = EdgeInsets.all(spaceLg);
+
+  /// Between a card and what is stacked above and below it.
+  static const EdgeInsets cardMargin = EdgeInsets.symmetric(vertical: spaceSm);
+
+  /// Between a section heading and what it heads.
+  static const double headingGap = spaceSm;
+
   // ==================== SURFACES ====================
   // Two surfaces, picked by role. The 2px line with a hard offset shadow is the
   // app's identity, and it only stands out while few things wear it: what can

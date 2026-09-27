@@ -2,6 +2,7 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/utils/format.dart';
 
 /// The repeater settings that decide how a block of reps splits into sets.
@@ -247,7 +248,7 @@ String? prescribedSummary(
     // review asks the athlete to report against.
     return work == null || work <= 0
         ? (load == null ? null : 'at $load')
-        : 'of ${formatSecondsAsLength(work)} hangs$at';
+        : 'of ${formatExactLength(work)} hangs$at';
   }
   if (item.repsIsMax) return 'as many reps as possible$at';
   if (results == null) {
@@ -262,7 +263,7 @@ String? prescribedSummary(
   }
   final duration = item.effectiveDuration(resolved);
   if (duration != null) {
-    return 'of ${formatSecondsAsLength(duration)}$at';
+    return 'of ${formatExactLength(duration)}$at';
   }
   final reps = item.effectiveReps(resolved);
   if (reps != null) return 'of $reps reps$at';
@@ -278,8 +279,7 @@ String? achievedSummary(SessionItemResultModel result) {
   final parts = <String>[
     if (result.reps case final reps?) '$reps reps',
     if (result.cycles case final cycles?) '$cycles rounds',
-    if (result.durationSeconds case final seconds?)
-      formatSecondsAsLength(seconds),
+    if (result.durationSeconds case final seconds?) formatExactLength(seconds),
   ];
   final line = parts.join(', ');
   if (result.loadKg case final load?) {

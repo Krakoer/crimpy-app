@@ -121,7 +121,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
         _outOfZoneTime != null &&
         _assessmentStarted &&
         !_assessmentEnded) {
-      // Still out of zone — check if out for more than 1s to end
+      // Still out of zone: check if out for more than 1s to end
       final duration = now.difference(_outOfZoneTime!);
       if (duration.inMilliseconds >= 1000) {
         _endAssessment();
@@ -129,7 +129,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
     } else if (isInZone &&
         _targetZoneEntryTime != null &&
         !_assessmentStarted) {
-      // In zone — check if in for more than 1s to start
+      // In zone: check if in for more than 1s to start
       final duration = now.difference(_targetZoneEntryTime!);
       if (duration.inMilliseconds >= 1000) {
         _startAssessment();

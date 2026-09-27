@@ -1,3 +1,4 @@
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/availability_view_model.dart';
 import 'package:crimpy/viewmodels/coach_view_model.dart';
@@ -80,7 +81,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return PullToRefresh(
       onRefresh: _refresh,
       child: RefreshableColumn(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
         child: Column(
           children: [
             // Today's scheduled training from the active program.

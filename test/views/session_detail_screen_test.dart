@@ -219,8 +219,8 @@ void main() {
       ),
     );
 
-    expect(find.text('Repetitions Breakdown'), findsOneWidget);
-    expect(find.text('Blocks'), findsNothing);
+    expect(find.text('REPETITIONS BREAKDOWN'), findsOneWidget);
+    expect(find.text('BLOCKS'), findsNothing);
     expect(find.text('Unnamed block'), findsNothing);
   });
 
@@ -260,7 +260,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Blocks'), findsOneWidget);
+    expect(find.text('BLOCKS'), findsOneWidget);
     expect(find.text('Hang rep 20mm'), findsOneWidget);
   });
 
@@ -278,7 +278,7 @@ void main() {
       resolved: [_hangRep('a')],
     );
 
-    expect(find.text('Blocks'), findsOneWidget);
+    expect(find.text('BLOCKS'), findsOneWidget);
     expect(find.text('Hang rep 20mm'), findsOneWidget);
   });
 

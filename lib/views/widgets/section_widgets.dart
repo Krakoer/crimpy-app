@@ -1,7 +1,25 @@
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
 
-/// Heading of a section, followed by a rule filling the rest of the line.
+/// Heading of a section, in capitals in the caps label style. Every section
+/// heading in the app is one of these, so none drifts back to Title Case. See
+/// Krakoer/crimpy#169.
+class SectionHeading extends StatelessWidget {
+  final String label;
+  final int? maxLines;
+
+  const SectionHeading(this.label, {this.maxLines, super.key});
+
+  @override
+  Widget build(BuildContext context) => Text(
+    label.toUpperCase(),
+    maxLines: maxLines,
+    overflow: maxLines == null ? null : TextOverflow.ellipsis,
+    style: CrimpyTheme.capsLabel.copyWith(color: CrimpyTheme.textSecondary),
+  );
+}
+
+/// [SectionHeading] followed by a rule filling the rest of the line.
 class SectionLabel extends StatelessWidget {
   /// Space between the label and the rule.
   static const double _labelGap = 8;
@@ -35,14 +53,7 @@ class SectionLabel extends StatelessWidget {
                 constraints: BoxConstraints(
                   maxWidth: labelRoom > 0 ? labelRoom : 0,
                 ),
-                child: Text(
-                  label.toUpperCase(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: CrimpyTheme.capsLabel.copyWith(
-                    color: CrimpyTheme.textSecondary,
-                  ),
-                ),
+                child: SectionHeading(label, maxLines: 1),
               ),
               const SizedBox(width: _labelGap),
               Expanded(child: Container(height: 2, color: CrimpyTheme.outline)),

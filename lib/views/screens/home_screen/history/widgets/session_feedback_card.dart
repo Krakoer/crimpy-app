@@ -1,5 +1,6 @@
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
 import 'package:intl/intl.dart';
 
 /// The feedback exchanged about a session: the notes the athlete left after the
@@ -35,16 +36,10 @@ class SessionFeedbackCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Feedback',
-            style: CrimpyTheme.title.copyWith(
-              color: CrimpyTheme.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          const SectionHeading('Feedback'),
           if (notes != null && notes!.isNotEmpty) ...[
             const SizedBox(height: 8),
-            const _SectionLabel('How you felt'),
+            const SectionHeading('How you felt'),
             const SizedBox(height: 4),
             Text(notes!, style: CrimpyTheme.body),
           ],
@@ -52,7 +47,7 @@ class SessionFeedbackCard extends StatelessWidget {
             const SizedBox(height: 16),
             Row(
               children: [
-                const _SectionLabel('Your coach answered'),
+                const SectionHeading('Your coach answered'),
                 if (unread) ...[const SizedBox(width: 8), const _NewBadge()],
               ],
             ),
@@ -88,18 +83,6 @@ class SessionFeedbackCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SectionLabel extends StatelessWidget {
-  final String text;
-
-  const _SectionLabel(this.text);
-
-  @override
-  Widget build(BuildContext context) => Text(
-    text.toUpperCase(),
-    style: CrimpyTheme.capsLabel.copyWith(color: CrimpyTheme.textSecondary),
-  );
 }
 
 class _NewBadge extends StatelessWidget {

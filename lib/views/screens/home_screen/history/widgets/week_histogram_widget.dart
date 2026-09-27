@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:intl/intl.dart';
 
 class WeekHistogramWidget extends StatelessWidget {
@@ -79,7 +80,7 @@ class WeekHistogramWidget extends StatelessWidget {
   ) {
     // Format day name and duration
     final String dayName = DateFormat('E').format(day); // Mon, Tue, etc.
-    final String durationText = _formatDuration(totalDuration);
+    final String durationText = formatLength(totalDuration);
     final bool isToday = DateUtils.isSameDay(day, DateTime.now());
 
     // Build stacked bar segments
@@ -108,12 +109,18 @@ class WeekHistogramWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Duration is above
-          Text(
-            durationText,
-            style: CrimpyTheme.bodySmall.copyWith(
-              color: textColor,
-              fontWeight: FontWeight.w500,
+          // A day's column is a seventh of the card, about 42dp on a 360dp
+          // phone, and "1 h 30 min" is wider than that. It shrinks to fit on
+          // one line rather than wrapping out of the column.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              durationText,
+              maxLines: 1,
+              style: CrimpyTheme.bodySmall.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           const SizedBox(height: 6),
@@ -178,17 +185,5 @@ class WeekHistogramWidget extends StatelessWidget {
     }
 
     return durationsPerDay;
-  }
-
-  /// Format duration as HH:MM
-  String _formatDuration(Duration duration) {
-    final int hours = duration.inHours;
-    final int minutes = duration.inMinutes % 60;
-
-    if (hours > 0) {
-      return '${hours}h ${minutes}m';
-    } else {
-      return '${minutes}m';
-    }
   }
 }

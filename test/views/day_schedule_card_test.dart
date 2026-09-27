@@ -1,5 +1,5 @@
 import 'package:crimpy/models/week_availability.dart';
-import 'package:crimpy/utils/format.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/views/screens/availability/widgets/day_schedule_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -307,9 +307,9 @@ void main() {
   });
 
   test('a planned duration reads as hours once it passes one', () {
-    expect(formatMinutesAsLength(45), '45m');
-    expect(formatMinutesAsLength(60), '1h');
-    expect(formatMinutesAsLength(90), '1h 30m');
-    expect(formatMinutesAsLength(125), '2h 5m');
+    expect(formatMinutes(45), '45 min');
+    expect(formatMinutes(60), '1 h');
+    expect(formatMinutes(90), '1 h 30 min');
+    expect(formatMinutes(125), '2 h 5 min');
   });
 }

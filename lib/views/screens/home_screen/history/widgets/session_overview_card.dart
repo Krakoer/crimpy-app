@@ -3,6 +3,7 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/session_rpe.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:intl/intl.dart';
 
 class SessionOverviewCard extends StatelessWidget {
@@ -86,7 +87,7 @@ class SessionOverviewCard extends StatelessWidget {
                   child: _buildStatItem(
                     context,
                     'Duration',
-                    _formatDuration(duration),
+                    formatLength(duration),
                     Icons.timer,
                   ),
                 ),
@@ -166,19 +167,5 @@ class SessionOverviewCard extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _formatDuration(Duration duration) {
-    final int hours = duration.inHours;
-    final int minutes = duration.inMinutes % 60;
-    final int seconds = duration.inSeconds % 60;
-
-    if (hours > 0) {
-      return '${hours}h ${minutes}m ${seconds}s';
-    } else if (minutes > 0) {
-      return '${minutes}m ${seconds}s';
-    } else {
-      return '${seconds}s';
-    }
   }
 }

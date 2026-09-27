@@ -4,6 +4,7 @@ import 'package:crimpy/views/screens/profile_screen/widgets/assessment_chart.dar
 import 'package:crimpy/views/screens/profile_screen/widgets/stat_card.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
 
 class MvcGripPositionStatContent extends StatefulWidget {
   final Map<GripPosition, List<AssessmentModel>> mvcByGripPosition;
@@ -63,13 +64,7 @@ class _MvcGripPositionStatContentState
         children: [
           Align(
             alignment: Alignment.centerLeft,
-            child: Text(
-              "Max Force",
-              style: CrimpyTheme.title.copyWith(
-                color: CrimpyTheme.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            child: const SectionHeading('Max Force'),
           ),
           SizedBox(height: 12),
           Row(
@@ -101,23 +96,18 @@ class _MvcGripPositionStatContentState
         // Title with inline grip position selector
         Row(
           children: [
-            Text(
-              "Max Force",
-              style: CrimpyTheme.title.copyWith(
-                color: CrimpyTheme.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (widget.mvcByGripPosition.length > 1) ...[
+            const SectionHeading('Max Force'),
+            if (widget.mvcByGripPosition.isNotEmpty) ...[
               const SizedBox(width: 8),
               Text(
-                "·",
-                style: CrimpyTheme.title.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: CrimpyTheme.textFaint,
+                '-',
+                style: CrimpyTheme.capsLabel.copyWith(
+                  color: CrimpyTheme.textMutedSmall,
                 ),
               ),
               const SizedBox(width: 8),
+            ],
+            if (widget.mvcByGripPosition.length > 1)
               Expanded(
                 child: GestureDetector(
                   onTap: () => _showGripPositionPicker(context),
@@ -127,7 +117,7 @@ class _MvcGripPositionStatContentState
                       Text(
                         _selectedGripPosition?.displayName ?? '',
                         style: CrimpyTheme.body.copyWith(
-                          color: CrimpyTheme.textFaint,
+                          color: CrimpyTheme.textSecondary,
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -139,26 +129,16 @@ class _MvcGripPositionStatContentState
                     ],
                   ),
                 ),
-              ),
-            ] else if (widget.mvcByGripPosition.length == 1) ...[
-              const SizedBox(width: 8),
-              Text(
-                "·",
-                style: CrimpyTheme.title.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: CrimpyTheme.textFaint,
-                ),
-              ),
-              const SizedBox(width: 8),
+              )
+            else if (widget.mvcByGripPosition.length == 1)
               Expanded(
                 child: Text(
                   _selectedGripPosition?.displayName ?? '',
                   style: CrimpyTheme.body.copyWith(
-                    color: CrimpyTheme.textFaint,
+                    color: CrimpyTheme.textSecondary,
                   ),
                 ),
               ),
-            ],
           ],
         ),
         const SizedBox(height: 12),

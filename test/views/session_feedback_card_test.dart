@@ -109,7 +109,7 @@ void main() {
   ) async {
     final repository = await _pump(tester, _session());
 
-    expect(find.text('Feedback'), findsOneWidget);
+    expect(find.text('FEEDBACK'), findsOneWidget);
     expect(find.text('HOW YOU FELT'), findsOneWidget);
     expect(find.text('YOUR COACH ANSWERED'), findsNothing);
     expect(repository.receipts, isEmpty);
@@ -143,6 +143,6 @@ void main() {
   testWidgets('shows no card on a session nobody wrote about', (tester) async {
     await _pump(tester, _session(notes: ''));
 
-    expect(find.text('Feedback'), findsNothing);
+    expect(find.text('FEEDBACK'), findsNothing);
   });
 }

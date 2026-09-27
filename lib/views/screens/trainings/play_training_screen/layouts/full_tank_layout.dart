@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/utils/video_link.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
@@ -101,7 +102,7 @@ class _TankPalette {
     secondary: CrimpyTheme.textSecondary,
     accent: CrimpyTheme.textOn(CrimpyTheme.runPrompt),
     muted: CrimpyTheme.textMutedSmall,
-    detail: CrimpyTheme.textFaint,
+    detail: CrimpyTheme.textMutedSmall,
     notch: CrimpyTheme.outline,
     goal: CrimpyTheme.goalColor,
     protocol: CrimpyTheme.protocolColor,
@@ -375,12 +376,14 @@ class FullTankLayout extends ConsumerWidget {
   }
 }
 
-/// One line naming a step, e.g. "rest 3s" or "hang 7s".
+/// One line naming a step, e.g. "rest 0:03" or "hang 0:07". The run screen
+/// reads every length as a clock, the way its countdowns run.
 String describeExecutionItem(TrainingExecutionItem item) => switch (item) {
-  RestItem(:final durationSeconds) => 'rest ${durationSeconds}s',
+  RestItem(:final durationSeconds) =>
+    'rest ${formatClock(Duration(seconds: durationSeconds))}',
   ConfirmItem(:final label) => label.toLowerCase(),
   TimedItem(:final label, :final durationSeconds) =>
-    '${label.toLowerCase()} ${durationSeconds}s',
+    '${label.toLowerCase()} ${formatClock(Duration(seconds: durationSeconds))}',
 };
 
 /// Everything drawn inside the tank. It is built twice in the two palettes and
@@ -629,7 +632,7 @@ class _TankContent extends StatelessWidget {
         style: _scaledStyle(CrimpyTheme.capsLabel, color: palette.muted),
       ),
       Text(
-        formatMillisMinutesSeconds(milliseconds),
+        formatClock(Duration(milliseconds: milliseconds)),
         style: _scaledStyle(
           CrimpyTheme.tabular(CrimpyTheme.titleLarge),
           color: palette.force,
@@ -817,7 +820,7 @@ class _TankContent extends StatelessWidget {
         Text(
           [
             if (rep.targetLoad > 0) '${formatKilograms(rep.targetLoad)} kg',
-            '${rep.durationSeconds}s',
+            formatClock(Duration(seconds: rep.durationSeconds)),
           ].join(' - '),
           style: _scaledStyle(CrimpyTheme.titleLarge, color: palette.accent),
         ),

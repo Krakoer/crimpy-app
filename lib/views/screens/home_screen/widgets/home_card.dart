@@ -1,5 +1,6 @@
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
 
 class HomeCard extends StatelessWidget {
   final Widget child;
@@ -25,27 +26,17 @@ class HomeCard extends StatelessWidget {
     return CrimpyCard.simple(
       onTap: onTap,
       raised: raised,
-      padding: const EdgeInsets.all(8),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  title,
-                  style: CrimpyTheme.title.copyWith(
-                    color: CrimpyTheme.textPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              topLeft ?? Container(),
+              SectionHeading(title),
+              topLeft ?? const SizedBox.shrink(),
             ],
           ),
-          const SizedBox(height: 8),
-          Padding(padding: const EdgeInsets.all(8.0), child: child),
+          const SizedBox(height: CrimpyTheme.headingGap),
+          child,
         ],
       ),
     );

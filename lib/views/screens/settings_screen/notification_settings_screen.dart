@@ -4,6 +4,7 @@ import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/notification_view_model.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const _weekdayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
@@ -170,10 +171,7 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-    child: Text(
-      title.toUpperCase(),
-      style: CrimpyTheme.capsLabel.copyWith(color: CrimpyTheme.textSecondary),
-    ),
+    child: SectionHeading(title),
   );
 }
 

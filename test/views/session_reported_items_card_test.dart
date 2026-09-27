@@ -66,7 +66,10 @@ void main() {
       ),
     ], _prescription);
 
-    expect(results.single.passes.single.achieved, '8 reps, 1mn 30s at 17.5 kg');
+    expect(
+      results.single.passes.single.achieved,
+      '8 reps, 1 min 30s at 17.5 kg',
+    );
     expect(results.single.passes.single.note, 'hard on the shoulders');
   });
 
@@ -183,7 +186,7 @@ void main() {
       ),
     );
 
-    expect(find.text('What you managed'), findsOneWidget);
+    expect(find.text('WHAT YOU MANAGED'), findsOneWidget);
     expect(find.text('Pull up'), findsOneWidget);
     expect(find.text('23 reps'), findsOneWidget);
     expect(find.text('7 rounds'), findsOneWidget);

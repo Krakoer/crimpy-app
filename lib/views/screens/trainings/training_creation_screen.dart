@@ -1,6 +1,7 @@
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/utils/hangboard_config.dart';
 import 'package:crimpy/utils/training_expander.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
@@ -763,7 +764,8 @@ class _TrainingItemCard extends StatelessWidget {
 
   String get _subtitle => switch (item.type) {
     TrainingItemType.hangboardRep || TrainingItemType.repeater =>
-      '${item.worktimeSeconds ?? 7}s hang / ${item.restSeconds ?? 3}s rest  '
+      '${formatExactLength(item.worktimeSeconds ?? 7)} hang / '
+          '${formatExactLength(item.restSeconds ?? 3)} rest  '
           '${_handLabel(item.hand)}',
     TrainingItemType.circuit ||
     TrainingItemType.emom => trainingItemDetail(item),
@@ -771,7 +773,7 @@ class _TrainingItemCard extends StatelessWidget {
     TrainingItemType.exercise =>
       item.effectiveReps() != null
           ? '${item.effectiveReps()} reps'
-          : '${item.effectiveDuration() ?? 0}s',
+          : formatExactLength(item.effectiveDuration() ?? 0),
     TrainingItemType.free => '',
   };
 
