@@ -132,6 +132,14 @@ fails on anything else. A circle (a dot, a dial) is a shape, not a corner.
 Dialogs, sheets, menus and pickers take their shape and ground from the theme,
 so a dialog passing `shape:` is a finding.
 
+Spacing is one scale: `spaceXs`, `spaceSm`, `spaceMd`, `spaceLg`, `spaceXl`,
+`spaceXxl` (4 to 32), plus `cardPadding`, `cardMargin` and `headingGap`. A
+padding, a margin, a gap or a `spacing:` names a step, never a number;
+`test/theme/spacing_tokens_test.dart` fails on anything else. Its allow-list is
+for sizes that are not spacing (an icon box, chart geometry, the run screen's
+proportions), each with its reason. A new entry that is only a padding someone
+wanted slightly bigger is a finding. See Krakoer/crimpy#174.
+
 A dialog's actions say what they do ("Leave", "Keep going", "Delete"), never
 "Yes", "No" or "OK". The one that dismisses is a `TextButton`, first; the
 primary action is a `FilledButton`, last, which the theme fills with `action`.
