@@ -187,6 +187,7 @@ final Map<String, Color> scannedAccents = {
   'done': CrimpyTheme.done,
   'onTarget': CrimpyTheme.onTarget,
   'offTarget': CrimpyTheme.offTarget,
+  'farOffTarget': CrimpyTheme.farOffTarget,
   'improvement': CrimpyTheme.improvement,
   'achieved': CrimpyTheme.achieved,
   'phaseRest': CrimpyTheme.phaseRest,

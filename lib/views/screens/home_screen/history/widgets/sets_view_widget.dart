@@ -263,7 +263,7 @@ class SetPerformanceBar extends StatelessWidget {
             ? CrimpyTheme.onTarget
             : successRate >= 0.75
             ? CrimpyTheme.offTarget
-            : CrimpyTheme.statusError;
+            : CrimpyTheme.farOffTarget;
 
         return Container(
           width: 48,

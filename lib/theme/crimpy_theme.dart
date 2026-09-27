@@ -223,8 +223,11 @@ class CrimpyTheme {
   /// A rep that held its target load.
   static const Color onTarget = statusSuccess;
 
-  /// A rep that missed its target load.
+  /// A rep that missed its target load by a little.
   static const Color offTarget = statusWarning;
+
+  /// A rep that fell well short of its target load.
+  static const Color farOffTarget = statusError;
 
   /// A result better than the previous one.
   static const Color improvement = accentYellow;
@@ -330,7 +333,7 @@ class CrimpyTheme {
     fontFamily: 'JetBrainsMono', // Monospace font like Radicle
     // Color Scheme
     colorScheme: const ColorScheme.light(
-      primary: primaryOrange,
+      primary: action,
       secondary: accentGreen,
       tertiary: accentPurple,
       surface: bgPrimary,
@@ -381,7 +384,7 @@ class CrimpyTheme {
         // Darkened so the white label the line below sets clears 4.5:1.
         // primaryOrange itself reads 4.05:1 under white, and this theme is
         // what every ElevatedButton that names no ground inherits.
-        backgroundColor: accentOrangeFill,
+        backgroundColor: fillOn(action),
         foregroundColor: primaryWhite,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -400,9 +403,9 @@ class CrimpyTheme {
     // since a border is not text. See Krakoer/crimpy#128.
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: accentOrangeText,
+        foregroundColor: textOn(action),
         backgroundColor: bgPrimary,
-        side: const BorderSide(color: primaryOrange, width: 1),
+        side: const BorderSide(color: action, width: 1),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
         textStyle: const TextStyle(
@@ -419,7 +422,7 @@ class CrimpyTheme {
     // TextButton.icon's icon too, which only helps it. See Krakoer/crimpy#128.
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: accentOrangeText,
+        foregroundColor: textOn(action),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         textStyle: const TextStyle(
           fontSize: 13,
@@ -444,7 +447,7 @@ class CrimpyTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(color: primaryOrange, width: 1),
+        borderSide: BorderSide(color: action, width: 1),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.zero,
@@ -463,7 +466,7 @@ class CrimpyTheme {
     // Chip theme with minimal styling
     chipTheme: ChipThemeData(
       backgroundColor: bgSecondary,
-      selectedColor: primaryOrange,
+      selectedColor: action,
       disabledColor: outline,
       labelStyle: const TextStyle(
         color: textPrimary,
@@ -478,7 +481,7 @@ class CrimpyTheme {
     // Bottom navigation
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: bgSecondary,
-      selectedItemColor: primaryOrange,
+      selectedItemColor: action,
       unselectedItemColor: textPrimary,
       showUnselectedLabels: true,
       type: BottomNavigationBarType.fixed,
@@ -487,13 +490,13 @@ class CrimpyTheme {
 
     navigationBarTheme: const NavigationBarThemeData(
       backgroundColor: bgSecondary,
-      indicatorColor: primaryOrange,
+      indicatorColor: action,
       elevation: 0,
     ),
 
     // FAB with sharp corners
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: primaryOrange,
+      backgroundColor: action,
       foregroundColor: primaryWhite,
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
@@ -607,7 +610,7 @@ class CrimpyTheme {
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return primaryOrange;
+          return action;
         }
         return bgSecondary;
       }),
@@ -617,7 +620,7 @@ class CrimpyTheme {
     checkboxTheme: CheckboxThemeData(
       fillColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return primaryOrange;
+          return action;
         }
         return bgPrimary;
       }),
@@ -630,33 +633,33 @@ class CrimpyTheme {
     radioTheme: RadioThemeData(
       fillColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return primaryOrange;
+          return action;
         }
         return outline;
       }),
     ),
 
     // Slider theme
-    sliderTheme: const SliderThemeData(
-      activeTrackColor: primaryOrange,
+    sliderTheme: SliderThemeData(
+      activeTrackColor: action,
       inactiveTrackColor: outline,
-      thumbColor: primaryOrange,
-      overlayColor: Color(0x1FC6613F), // 12% opacity orange
-      valueIndicatorColor: primaryOrange,
+      thumbColor: action,
+      overlayColor: action.withAlpha(0x1F),
+      valueIndicatorColor: action,
     ),
 
     // Progress indicator theme
     progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: primaryOrange,
+      color: action,
       linearTrackColor: outline,
       circularTrackColor: outline,
     ),
 
     // Tab bar theme
     tabBarTheme: const TabBarThemeData(
-      labelColor: primaryOrange,
+      labelColor: action,
       unselectedLabelColor: textSecondary,
-      indicatorColor: primaryOrange,
+      indicatorColor: action,
       indicatorSize: TabBarIndicatorSize.label,
       labelStyle: TextStyle(
         fontSize: 13,

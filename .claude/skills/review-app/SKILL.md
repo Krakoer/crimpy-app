@@ -96,7 +96,9 @@ All colors, radii and spacing come from `CrimpyTheme` in
   `textSecondary`, `textMutedSmall`, `textStrong`, `textMedium`, `textFaint`,
   `textOnFill`, `bgPrimary`, `bgSecondary`, `bgSunken`, `outline`,
   `outlineSubtle`, `scrim`), notices (`status*` with `bg*`), categories
-  (`activityColor`, `assessmentColor`, `trainingColor`), and what a colour
+  (`activityColor`, `assessmentColor`, `trainingColor`, `stretchingColor`),
+  the note text tokens shared with the portal (`goalColor`, `protocolColor`),
+  and what a colour
   means where it is painted (`action`, `current`, `coachNote`, `done`,
   `onTarget`, `phaseRest`, `leftHand`, and the rest of the ROLES section).
 
@@ -105,7 +107,10 @@ change on its own. A widget painting a new meaning adds a role to the ROLES
 section rather than borrowing one that happens to hold the right colour, and
 adds it to `scannedAccents` in `test/theme/palette_contrast_test.dart` when it
 holds an accent, or the contrast sweep no longer sees it. `textOn`, `markOn`,
-`fillOn` and `tintOf` take a role as readily as a hue.
+`fillOn` and `tintOf` take a role as readily as a hue. They are keyed by
+value, so two roles holding one value share their text, mark and fill forms.
+The component themes in `ThemeData` name roles too, so a role's value reaches
+the Material widgets that never name it.
 
 A raw `Color(0xFF...)` or `Colors.grey` in a widget is a finding: use or add a
 role. `textFaint` is decoration only and is under the text floor; text set in
