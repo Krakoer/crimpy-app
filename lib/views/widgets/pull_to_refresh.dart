@@ -100,7 +100,7 @@ class PullToRefresh extends StatelessWidget {
   @override
   Widget build(BuildContext context) => RefreshIndicator(
     onRefresh: () => _refresh(ScaffoldMessenger.maybeOf(context)),
-    color: CrimpyTheme.action,
+    color: CrimpyTheme.control,
     child: child,
   );
 }

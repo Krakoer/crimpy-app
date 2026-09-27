@@ -353,7 +353,7 @@ class _TodayTrainingRow extends ConsumerWidget {
                           fontFamily: 'JetBrainsMono',
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
-                          color: CrimpyTheme.textOn(programSessionColor(type)),
+                          color: CrimpyTheme.textSecondary,
                         ),
                       ),
                       if (seconds > 0) ...[
@@ -456,16 +456,18 @@ class _FlexTrainingRow extends ConsumerWidget {
                 fontWeight: FontWeight.w700,
                 color: done >= target
                     ? CrimpyTheme.textOn(CrimpyTheme.done)
-                    : CrimpyTheme.textOn(programSessionColor(type)),
+                    : CrimpyTheme.textSecondary,
               ),
             ),
             const SizedBox(width: 10),
             Icon(
               FontAwesomeIcons.play,
               size: 13,
+              // The card's filled Play is its primary action; this one is a
+              // quieter way in to the same kind of run.
               color: done >= target
                   ? CrimpyTheme.textMutedSmall
-                  : CrimpyTheme.action,
+                  : CrimpyTheme.control,
             ),
           ],
         ),

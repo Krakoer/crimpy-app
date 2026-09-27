@@ -76,13 +76,6 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
             // Header
             Container(
               padding: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
-              decoration: BoxDecoration(
-                color: CrimpyTheme.assessmentColor.withValues(alpha: 0.1),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-              ),
               child: Column(
                 children: [
                   // Close button
@@ -164,7 +157,7 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: index == _currentSectionIndex
-                          ? CrimpyTheme.assessmentColor
+                          ? CrimpyTheme.control
                           : CrimpyTheme.textMuted.withValues(alpha: 0.3),
                     ),
                   ),
@@ -247,7 +240,7 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                               : _nextSection,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: CrimpyTheme.fillOn(
-                              CrimpyTheme.assessmentColor,
+                              CrimpyTheme.action,
                             ),
                             foregroundColor: CrimpyTheme.textOnFill,
                             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -291,13 +284,8 @@ class _TutorialSectionWidget extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
+        Padding(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: (section.iconColor ?? CrimpyTheme.assessmentColor)
-                .withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
           child: Icon(
             section.icon,
             color: section.iconColor ?? CrimpyTheme.assessmentColor,

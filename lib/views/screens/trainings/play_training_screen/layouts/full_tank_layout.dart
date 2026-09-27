@@ -1314,7 +1314,8 @@ class _ControlStrip extends StatelessWidget {
         else ...[
           _icon(
             isRunning ? Icons.pause : Icons.play_arrow,
-            CrimpyTheme.action,
+            // Playing is the screen's primary action; pausing is a control.
+            isRunning ? CrimpyTheme.control : CrimpyTheme.action,
             onPlayPause,
           ),
           const SizedBox(width: 28),

@@ -131,7 +131,6 @@ class ScheduledTrainingScreen extends ConsumerWidget {
 
   Widget _infoCard(BuildContext context, DateTime? date) {
     final type = session.activity;
-    final color = programSessionColor(type);
     final schedule = switch (session.schedule) {
       SessionSchedule.dayOfWeek when date != null =>
         '${weekdayShort(date)} - ${formatDayMonth(date)}',
@@ -139,8 +138,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       _ => '${session.timesPerWeek ?? 1}x - ANY DAY',
     };
 
-    return CrimpyCard.category(
-      accentColor: color,
+    return CrimpyCard.simple(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -160,7 +158,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                             fontFamily: 'JetBrainsMono',
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: CrimpyTheme.textOn(color),
+                            color: CrimpyTheme.textSecondary,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -468,7 +466,6 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   );
 
   Widget _logButton(BuildContext context) {
-    final color = programSessionColor(session.activity);
     final canLog = _isScheduledToday();
     final date = session.scheduledDate(program, weekNumber);
     final label = canLog
@@ -495,11 +492,6 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       icon: const Icon(Icons.check),
       label: Text(label),
       style: ElevatedButton.styleFrom(
-        // Darkened to carry the white label the theme puts on an
-        // ElevatedButton. The activity colours are under the 4.5:1
-        // floor beneath white, and gold is at 2.25:1.
-        backgroundColor: CrimpyTheme.fillOn(color),
-        foregroundColor: CrimpyTheme.bgPrimary,
         padding: const EdgeInsets.symmetric(vertical: 14),
       ),
     );

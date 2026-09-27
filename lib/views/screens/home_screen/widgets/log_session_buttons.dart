@@ -71,8 +71,9 @@ class _SessionActivityButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = CrimpyTheme.activityColor(activity);
-    final textColor = CrimpyTheme.activityTextColor(activity);
+    // The activity shows in the icon only; the tile itself stays neutral.
+    // See Krakoer/crimpy#170.
+    final markColor = CrimpyTheme.markOn(CrimpyTheme.activityColor(activity));
 
     return InkWell(
       onTap: () {
@@ -85,18 +86,18 @@ class _SessionActivityButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
-          border: Border.all(color: color, width: 2),
-          color: color.withValues(alpha: 0.1),
+          border: Border.all(color: CrimpyTheme.outline, width: 2),
+          color: CrimpyTheme.bgPrimary,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: textColor, size: 28),
+            Icon(icon, color: markColor, size: 28),
             const SizedBox(height: 8),
             Text(
               activity.displayName,
-              style: TextStyle(
-                color: textColor,
+              style: const TextStyle(
+                color: CrimpyTheme.textPrimary,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),

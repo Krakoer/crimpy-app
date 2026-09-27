@@ -7,14 +7,8 @@ import 'package:crimpy/utils/rep_blocks.dart';
 class RepItemWidget extends StatelessWidget {
   final RepDataModel rep;
   final int index;
-  final Color sessionColor;
 
-  const RepItemWidget({
-    super.key,
-    required this.rep,
-    required this.index,
-    required this.sessionColor,
-  });
+  const RepItemWidget({super.key, required this.rep, required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -86,11 +80,11 @@ class RepItemWidget extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: sessionColor.withValues(alpha: 0.05),
+        color: CrimpyTheme.bgPrimary,
         border: Border.all(
           color: hasTarget
               ? statusColor.withValues(alpha: 0.3)
-              : sessionColor.withValues(alpha: 0.2),
+              : CrimpyTheme.outlineSubtle,
           width: 1.5,
         ),
         borderRadius: BorderRadius.circular(8),
@@ -105,16 +99,16 @@ class RepItemWidget extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: CrimpyTheme.tintOf(sessionColor),
+                  color: CrimpyTheme.bgSunken,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Center(
                   child: Text(
                     '${index + 1}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: CrimpyTheme.textOn(sessionColor),
+                      color: CrimpyTheme.textStrong,
                     ),
                   ),
                 ),

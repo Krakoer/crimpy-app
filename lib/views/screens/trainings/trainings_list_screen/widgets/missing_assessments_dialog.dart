@@ -26,10 +26,6 @@ class MissingAssessmentsDialog extends StatelessWidget {
             // Icon header
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: CrimpyTheme.assessmentColor.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
               child: Icon(
                 Icons.assessment,
                 color: CrimpyTheme.assessmentColor,
@@ -64,10 +60,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
               decoration: BoxDecoration(
                 color: CrimpyTheme.bgSecondary,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: CrimpyTheme.assessmentColor.withValues(alpha: 0.2),
-                  width: 1,
-                ),
+                border: Border.all(color: CrimpyTheme.outlineSubtle),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,9 +146,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      backgroundColor: CrimpyTheme.fillOn(
-                        CrimpyTheme.assessmentColor,
-                      ),
+                      backgroundColor: CrimpyTheme.fillOn(CrimpyTheme.action),
                       foregroundColor: CrimpyTheme.textOnFill,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),

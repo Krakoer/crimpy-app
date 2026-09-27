@@ -28,7 +28,7 @@ class ExerciseVideoButton extends StatelessWidget {
       icon: FaIcon(
         FontAwesomeIcons.circlePlay,
         size: compact ? 12 : 13,
-        color: CrimpyTheme.action,
+        color: CrimpyTheme.control,
       ),
       label: Text(
         'WATCH DEMO',
@@ -36,7 +36,7 @@ class ExerciseVideoButton extends StatelessWidget {
           fontFamily: 'JetBrainsMono',
           fontSize: compact ? 10.5 : 11.5,
           fontWeight: FontWeight.w700,
-          color: CrimpyTheme.textOn(CrimpyTheme.action),
+          color: CrimpyTheme.textOn(CrimpyTheme.control),
         ),
       ),
       style: TextButton.styleFrom(

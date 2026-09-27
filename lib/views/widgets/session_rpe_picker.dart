@@ -50,7 +50,7 @@ class SessionRpePicker extends StatelessWidget {
               children: [
                 const Icon(
                   Icons.battery_charging_full,
-                  color: CrimpyTheme.action,
+                  color: CrimpyTheme.control,
                 ),
                 const SizedBox(width: 8),
                 const Text(
@@ -108,7 +108,7 @@ class _SessionRpeOptionTile extends StatelessWidget {
     // rather than as the top of the scale.
     final accent = option.isFailure
         ? CrimpyTheme.statusError
-        : CrimpyTheme.action;
+        : CrimpyTheme.control;
 
     return Semantics(
       selected: selected,

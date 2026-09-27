@@ -26,21 +26,7 @@ class SessionCard extends StatelessWidget {
           child: Row(
             children: [
               // Session type icon
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: CrimpyTheme.tintOf(sessionColor),
-                  border: Border.all(
-                    color: sessionColor.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Icon(
-                  sessionIcon,
-                  color: CrimpyTheme.textOn(sessionColor),
-                  size: 20,
-                ),
-              ),
+              CategoryIconTile(icon: sessionIcon, category: sessionColor),
               const SizedBox(width: 16),
               // Session details
               Expanded(

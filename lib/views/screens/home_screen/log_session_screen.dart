@@ -59,11 +59,10 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final color = CrimpyTheme.activityColor(widget.activity);
-    // The icons sit on a white Card, where climbing's gold reads 2.25:1 and
-    // misses the 3:1 mark floor. The fill below keeps the accent, since a
-    // ground is not a mark. See Krakoer/crimpy#128.
-    final markColor = CrimpyTheme.markOn(color);
+    // The activity shows in the field icons only. See Krakoer/crimpy#170.
+    final markColor = CrimpyTheme.markOn(
+      CrimpyTheme.activityColor(widget.activity),
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text('Log ${widget.activity.displayName}')),
@@ -237,10 +236,6 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
               ElevatedButton(
                 onPressed: _saveSession,
                 style: ElevatedButton.styleFrom(
-                  // Darkened to carry the white label the theme puts on an
-                  // ElevatedButton. The activity colours are under the 4.5:1
-                  // floor beneath white, and gold is at 2.25:1.
-                  backgroundColor: CrimpyTheme.fillOn(color),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: const Text(
@@ -322,12 +317,6 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${widget.activity.displayName} session logged!'),
-            // snackBarTheme writes its label in primaryWhite, so this ground
-            // carries a white label without a line here saying so. Gold is
-            // 2.25:1 under white, so it takes the darkened fill.
-            backgroundColor: CrimpyTheme.fillOn(
-              CrimpyTheme.activityColor(widget.activity),
-            ),
           ),
         );
         Navigator.of(context).pop();

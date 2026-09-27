@@ -104,11 +104,8 @@ class SetCardWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: sessionColor.withValues(alpha: 0.05),
-        border: Border.all(
-          color: sessionColor.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        color: CrimpyTheme.bgPrimary,
+        border: Border.all(color: CrimpyTheme.outlineSubtle),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -120,15 +117,15 @@ class SetCardWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: CrimpyTheme.tintOf(sessionColor),
+                  color: CrimpyTheme.bgSunken,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   label,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: CrimpyTheme.textOn(sessionColor),
+                    color: CrimpyTheme.textStrong,
                   ),
                 ),
               ),
@@ -258,7 +255,7 @@ class SetPerformanceBar extends StatelessWidget {
         final bool isSuccess = successRate >= 0.9;
 
         final Color repColor = !hasTarget
-            ? sessionColor.withValues(alpha: 0.3)
+            ? CrimpyTheme.outlineSubtle
             : isSuccess
             ? CrimpyTheme.onTarget
             : successRate >= 0.75
@@ -269,7 +266,9 @@ class SetPerformanceBar extends StatelessWidget {
           width: 48,
           height: 32,
           decoration: BoxDecoration(
-            color: CrimpyTheme.tintOf(repColor),
+            color: hasTarget
+                ? CrimpyTheme.tintOf(repColor)
+                : CrimpyTheme.bgPrimary,
             border: Border.all(color: repColor, width: 1.5),
             borderRadius: BorderRadius.circular(4),
           ),
@@ -286,11 +285,8 @@ class SetPerformanceBar extends StatelessWidget {
                 : Icon(
                     Icons.fitness_center,
                     size: 12,
-                    // The session accent at full strength, not repColor. With
-                    // no target repColor is that accent at alpha 0.3, and the
-                    // icon then sits on a tint of itself at 1.41:1, under the
-                    // 3:1 a mark answers to. The fade said "no target" twice,
-                    // once in the ground and once in the icon.
+                    // The category shows in the icon only; the tile of a rep
+                    // with no target is neutral. See Krakoer/crimpy#170.
                     color: CrimpyTheme.markOn(sessionColor),
                   ),
           ),
