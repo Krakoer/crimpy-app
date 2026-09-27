@@ -65,36 +65,47 @@ class CrimpyCard extends StatelessWidget {
     final side = (surface.border! as Border).top;
     final accent = accentColor;
 
-    Widget card = Container(
-      width: double.infinity,
-      margin: margin ?? const EdgeInsets.symmetric(vertical: 8.0),
-      padding: padding ?? const EdgeInsets.all(16.0),
-      decoration: surface.copyWith(
-        color: backgroundColor,
-        border: showAccentBorder && accent != null
-            ? Border(
-                left: BorderSide(color: accent, width: 4),
-                top: side,
-                right: side,
-                bottom: side,
-              )
-            : null,
-      ),
-      child: child,
+    final decoration = surface.copyWith(
+      color: backgroundColor,
+      border: showAccentBorder && accent != null
+          ? Border(
+              left: BorderSide(color: accent, width: 4),
+              top: side,
+              right: side,
+              bottom: side,
+            )
+          : null,
     );
+    final effectivePadding = padding ?? const EdgeInsets.all(16.0);
 
-    if (onTap != null) {
-      card = Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: CrimpyTheme.corners,
-          child: card,
-        ),
-      );
-    }
+    // A tapped card paints its surface as Ink, on the Material the ripple
+    // draws on, so the ripple shows over the fill rather than under it. The
+    // margin stays outside the InkWell, so the gap around a card is not a tap.
+    final Widget card = onTap == null
+        ? Container(
+            width: double.infinity,
+            padding: effectivePadding,
+            decoration: decoration,
+            child: child,
+          )
+        : Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: CrimpyTheme.corners,
+              child: Ink(
+                width: double.infinity,
+                padding: effectivePadding,
+                decoration: decoration,
+                child: child,
+              ),
+            ),
+          );
 
-    return card;
+    return Padding(
+      padding: margin ?? const EdgeInsets.symmetric(vertical: 8.0),
+      child: card,
+    );
   }
 }
 
