@@ -132,7 +132,7 @@ class CrimpyTheme {
   /// an icon, or used as the boundary of a control. WCAG 1.4.11 exempts
   /// decoration but covers "visual information required to identify user
   /// interface components", so a button outline is the covered case, not the
-  /// exempt one, and both Cancel buttons take textMutedSmall.
+  /// exempt one.
   ///
   /// One use is left in lib/: the inactive step dot of the tutorial dialog,
   /// already faded to alpha 0.3 and carrying no information the numbered step
@@ -320,16 +320,71 @@ class CrimpyTheme {
   /// crimpy-frontend/src/routes/layout.css.
   static const Color protocolColor = accentYellowText;
 
-  // ==================== SPACING CONSTANTS ====================
+  /// An action that throws away what the athlete did, or cuts off what they
+  /// are using: deleting a training or a session, leaving a run or a review
+  /// before it is saved, disconnecting the sensor. It fills the
+  /// primary action of a dialog that asks for one, and carries white at
+  /// 4.75:1 without a darker form.
+  static const Color destructive = statusError;
 
-  /// No border radius for sharp, minimal look
-  static const double radiusNone = 0.0;
+  // ==================== SHAPE ====================
 
-  /// Small border radius for subtle rounding
-  static const double radiusSmall = 2.0;
+  /// The one corner of the app. Cards, buttons, fields, chips, dialogs, sheets,
+  /// menus, tiles and chart bars are all square; a dot or a ring is a circle,
+  /// which is a shape rather than a corner. A widget that wants a corner takes
+  /// this rather than naming a radius, and test/theme/shape_tokens_test.dart
+  /// fails on any file outside the theme that names one. See
+  /// Krakoer/crimpy#171.
+  static const Radius corner = Radius.zero;
 
-  /// Medium border radius
-  static const double radiusMedium = 4.0;
+  /// [corner] on all four sides, for a BoxDecoration or a ClipRRect.
+  static const BorderRadius corners = BorderRadius.all(corner);
+
+  /// [corners] as a Material shape, for a widget that takes an OutlinedBorder.
+  /// A side, when one is wanted, goes on with copyWith.
+  static const RoundedRectangleBorder shape = RoundedRectangleBorder(
+    borderRadius: corners,
+  );
+
+  /// [shape] on the 2px line of a card, for a surface that stands on the
+  /// screen: a card, a dialog, a sheet, a picker.
+  static const RoundedRectangleBorder framed = RoundedRectangleBorder(
+    borderRadius: corners,
+    side: BorderSide(color: outline, width: 2),
+  );
+
+  /// The primary action of a dialog that throws something away, filled with
+  /// [destructive] rather than the brand orange. The theme's FilledButton is
+  /// the primary action everywhere else.
+  static final ButtonStyle destructiveButton = FilledButton.styleFrom(
+    backgroundColor: destructive,
+    foregroundColor: textOnFill,
+  );
+
+  /// The borders of a field, shared by the app's inputs and the time picker's
+  /// keyboard mode so the two cannot drift apart.
+  static const OutlineInputBorder _fieldBorder = OutlineInputBorder(
+    borderRadius: corners,
+    borderSide: BorderSide(color: outline, width: 1),
+  );
+  static const OutlineInputBorder _fieldFocusedBorder = OutlineInputBorder(
+    borderRadius: corners,
+    borderSide: BorderSide(color: control, width: 1),
+  );
+  static const OutlineInputBorder _fieldErrorBorder = OutlineInputBorder(
+    borderRadius: corners,
+    borderSide: BorderSide(color: statusError, width: 1),
+  );
+
+  /// A picker's OK. The pickers take a style for a TextButton rather than a
+  /// button of their own, so the fill the theme's FilledButton carries is
+  /// spelled out here.
+  static final ButtonStyle _pickerConfirmButton = TextButton.styleFrom(
+    backgroundColor: fillOn(action),
+    foregroundColor: textOnFill,
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+    shape: shape,
+  );
 
   // ==================== THEME DATA ====================
 
@@ -376,10 +431,7 @@ class CrimpyTheme {
     cardTheme: const CardThemeData(
       color: bgPrimary,
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero,
-        side: BorderSide(color: outline, width: 2),
-      ),
+      shape: framed,
       margin: EdgeInsets.symmetric(vertical: 8),
       shadowColor: outline,
     ),
@@ -394,7 +446,7 @@ class CrimpyTheme {
         foregroundColor: primaryWhite,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        shape: shape,
         textStyle: const TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w500,
@@ -411,7 +463,7 @@ class CrimpyTheme {
         backgroundColor: bgPrimary,
         side: const BorderSide(color: control, width: 1),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        shape: shape,
         textStyle: const TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w500,
@@ -428,6 +480,7 @@ class CrimpyTheme {
       style: TextButton.styleFrom(
         foregroundColor: control,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        shape: shape,
         textStyle: const TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w500,
@@ -436,26 +489,160 @@ class CrimpyTheme {
       ),
     ),
 
+    // Filled button: the primary action of a dialog or a sheet, beside a
+    // TextButton that dismisses it. It is the same orange as the
+    // ElevatedButton a screen's primary action takes, so a choice reads the
+    // same wherever it is offered. A dialog whose primary action throws
+    // something away takes destructiveButton on top. See Krakoer/crimpy#171.
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: fillOn(action),
+        foregroundColor: textOnFill,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        shape: shape,
+        textStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          fontFamily: 'JetBrainsMono',
+        ),
+      ),
+    ),
+
+    // A choice between a few exclusive options: selected is filled with ink,
+    // as a selected chip is.
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: SegmentedButton.styleFrom(
+        foregroundColor: textPrimary,
+        backgroundColor: bgPrimary,
+        selectedForegroundColor: textOnFill,
+        selectedBackgroundColor: control,
+        side: const BorderSide(color: outline, width: 1),
+        shape: shape,
+        textStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          fontFamily: 'JetBrainsMono',
+        ),
+      ),
+    ),
+
+    // Dialogs are cards laid over the screen: square, on the card's line,
+    // without the tint Material 3 washes a raised surface with.
+    dialogTheme: const DialogThemeData(
+      backgroundColor: bgPrimary,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shape: framed,
+      titleTextStyle: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: textPrimary,
+        fontFamily: 'JetBrainsMono',
+      ),
+      contentTextStyle: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w400,
+        color: textPrimary,
+        fontFamily: 'JetBrainsMono',
+        height: 1.6,
+      ),
+    ),
+
+    // Bottom sheets rise from the screen's edge on the same line as a dialog.
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: bgPrimary,
+      modalBackgroundColor: bgPrimary,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      modalElevation: 0,
+      shape: framed,
+    ),
+
+    // Overflow menus, on the line of a field.
+    popupMenuTheme: const PopupMenuThemeData(
+      color: bgPrimary,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: corners,
+        side: BorderSide(color: outline, width: 1),
+      ),
+      textStyle: TextStyle(
+        fontSize: 13,
+        color: textPrimary,
+        fontFamily: 'JetBrainsMono',
+      ),
+    ),
+
+    // The date and time pickers are dialogs too. Their OK is the primary
+    // action, filled the way a dialog's is; a picked day or time is a
+    // selection, so it is ink, as colorScheme.primary already paints it.
+    datePickerTheme: DatePickerThemeData(
+      backgroundColor: bgPrimary,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shape: framed,
+      dayShape: const WidgetStatePropertyAll(shape),
+      yearShape: const WidgetStatePropertyAll(shape),
+      confirmButtonStyle: _pickerConfirmButton,
+    ),
+    timePickerTheme: TimePickerThemeData(
+      backgroundColor: bgPrimary,
+      elevation: 0,
+      shape: framed,
+      hourMinuteShape: shape,
+      dayPeriodShape: shape,
+      dayPeriodBorderSide: const BorderSide(color: outline, width: 1),
+      // AM or PM is a selection, so it is ink, as a selected chip is. Left
+      // unset, Material fills it from the scheme's tertiary, which is purple.
+      dayPeriodColor: WidgetStateColor.resolveWith(
+        (states) => states.contains(WidgetState.selected) ? control : bgPrimary,
+      ),
+      dayPeriodTextColor: WidgetStateColor.resolveWith(
+        (states) =>
+            states.contains(WidgetState.selected) ? textOnFill : textPrimary,
+      ),
+      dialBackgroundColor: bgSunken,
+      // The keyboard mode's hour and minute fields. Left unset, the picker
+      // draws them with its own 8px rounded decoration rather than the app's.
+      // The dial mode's hour and minute boxes take the same ground, so the
+      // two modes read as one picker.
+      hourMinuteColor: bgSunken,
+      inputDecorationTheme: const InputDecorationThemeData(
+        filled: true,
+        fillColor: bgSunken,
+        contentPadding: EdgeInsets.zero,
+        border: _fieldBorder,
+        enabledBorder: _fieldBorder,
+        focusedBorder: _fieldFocusedBorder,
+        errorBorder: _fieldErrorBorder,
+        focusedErrorBorder: _fieldErrorBorder,
+      ),
+      confirmButtonStyle: _pickerConfirmButton,
+    ),
+
+    tooltipTheme: const TooltipThemeData(
+      decoration: BoxDecoration(color: primaryBlack, borderRadius: corners),
+      textStyle: TextStyle(
+        fontSize: 11,
+        color: textOnFill,
+        fontFamily: 'JetBrainsMono',
+      ),
+    ),
+
     // Input fields with sharp borders
     inputDecorationTheme: const InputDecorationTheme(
       filled: true,
       fillColor: bgPrimary,
       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(color: outline, width: 1),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(color: outline, width: 1),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(color: control, width: 1),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.zero,
-        borderSide: BorderSide(color: statusError, width: 1),
+      border: _fieldBorder,
+      enabledBorder: _fieldBorder,
+      focusedBorder: _fieldFocusedBorder,
+      errorBorder: _fieldErrorBorder,
+      focusedErrorBorder: _fieldErrorBorder,
+      disabledBorder: OutlineInputBorder(
+        borderRadius: corners,
+        borderSide: BorderSide(color: outlineSubtle, width: 1),
       ),
       labelStyle: TextStyle(
         color: textSecondary,
@@ -498,7 +685,7 @@ class CrimpyTheme {
         fontFamily: 'JetBrainsMono',
       ),
       side: const BorderSide(color: outline, width: 1),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      shape: shape,
     ),
 
     // Bottom navigation
@@ -514,6 +701,7 @@ class CrimpyTheme {
     navigationBarTheme: const NavigationBarThemeData(
       backgroundColor: bgSecondary,
       indicatorColor: control,
+      indicatorShape: shape,
       elevation: 0,
     ),
 
@@ -522,7 +710,7 @@ class CrimpyTheme {
       backgroundColor: action,
       foregroundColor: primaryWhite,
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      shape: shape,
     ),
 
     // Typography - Monospace font throughout
@@ -649,7 +837,7 @@ class CrimpyTheme {
       }),
       checkColor: WidgetStateProperty.all(primaryWhite),
       side: const BorderSide(color: outline, width: 1),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      shape: shape,
     ),
 
     // Radio theme
@@ -703,7 +891,7 @@ class CrimpyTheme {
         color: primaryWhite,
         fontFamily: 'JetBrainsMono',
       ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      shape: shape,
       behavior: SnackBarBehavior.floating,
     ),
   );

@@ -247,7 +247,7 @@ void main() {
 
     await tester.tap(find.textContaining('In 2 weeks'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(TextButton, 'Discard'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Discard'));
     await tester.pumpAndSettle();
 
     expect(find.text('Undo'), findsNothing);
@@ -321,7 +321,7 @@ void main() {
 
     // The back was answered: the week is dirty, so it asks rather than leaving.
     expect(find.text('Leave this week?'), findsOneWidget);
-    await tester.tap(find.widgetWithText(TextButton, 'Discard'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Discard'));
     await tester.pumpAndSettle();
     expect(find.text('open the week'), findsOneWidget);
   });

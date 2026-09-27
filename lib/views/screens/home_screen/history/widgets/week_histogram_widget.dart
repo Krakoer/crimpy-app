@@ -122,7 +122,7 @@ class WeekHistogramWidget extends StatelessWidget {
           Container(
             width: 24,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: CrimpyTheme.corners,
               // Draw a slight shadow for current day
               boxShadow: isToday
                   ? [
@@ -135,7 +135,7 @@ class WeekHistogramWidget extends StatelessWidget {
                   : null,
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: CrimpyTheme.corners,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: barSegments.reversed.toList(),

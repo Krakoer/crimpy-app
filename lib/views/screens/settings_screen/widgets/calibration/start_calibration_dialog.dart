@@ -21,7 +21,7 @@ class _CalibrationDialogState extends ConsumerState<StartCalibrationDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       actions: [
-        TextButton(
+        FilledButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
               double targetWeight = double.parse(_targetController.value.text);
@@ -58,7 +58,6 @@ class _CalibrationDialogState extends ConsumerState<StartCalibrationDialog> {
                     child: TextFormField(
                       decoration: const InputDecoration(
                         labelText: 'Target weight (kg)',
-                        border: OutlineInputBorder(),
                         hintText: "e.g. 12.9",
                       ),
                       keyboardType: TextInputType.number,

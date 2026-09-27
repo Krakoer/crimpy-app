@@ -88,7 +88,8 @@ class CrimpyCard extends StatelessWidget {
                 ),
               )
             : Border.all(color: effectiveBorderColor, width: borderWidth),
-        borderRadius: BorderRadius.zero, // Sharp corners for Radicle aesthetic
+        borderRadius:
+            CrimpyTheme.corners, // Sharp corners for Radicle aesthetic
       ),
       child: child,
     );
@@ -116,7 +117,7 @@ class CrimpyCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.zero,
+          borderRadius: CrimpyTheme.corners,
           child: doubleBoredCard,
         ),
       );

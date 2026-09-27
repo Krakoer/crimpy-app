@@ -115,7 +115,7 @@ class _SessionRpeOptionTile extends StatelessWidget {
       button: true,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(CrimpyTheme.radiusMedium),
+        borderRadius: CrimpyTheme.corners,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(
@@ -126,7 +126,7 @@ class _SessionRpeOptionTile extends StatelessWidget {
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: selected ? accent : CrimpyTheme.bgSecondary,
-                  borderRadius: BorderRadius.circular(CrimpyTheme.radiusMedium),
+                  borderRadius: CrimpyTheme.corners,
                   border: Border.all(
                     color: selected ? accent : CrimpyTheme.outlineSubtle,
                   ),

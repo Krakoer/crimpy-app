@@ -94,7 +94,7 @@ class FavoriteTrainingList extends ConsumerWidget {
                     borderPadding: EdgeInsets.all(2),
                     dashPattern: [10, 5],
                     strokeWidth: 2,
-                    radius: Radius.circular(16),
+                    radius: CrimpyTheme.corner,
                     color: CrimpyTheme.textPrimary.withValues(alpha: 0.5),
                   ),
                   child: InkWell(
@@ -189,12 +189,15 @@ class PinTrainingDialog extends ConsumerWidget {
       // list this reads, so through AsyncData the dialog would collapse to a
       // spinner and back on every tap.
       content: switch (availableTrainings) {
-        // Bounded rather than fixed. A SizedBox of exactly 300 does not notice
-        // when the room around it shrinks: it keeps reporting 300 while the
-        // viewport clips it, which hid this defect from the round 2 regression
-        // test. A maximum lets the list shrink and keep scrolling.
-        AsyncValue(:final value?) => ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 300, maxHeight: 300),
+        // A tight size rather than a maximum. AlertDialog measures its
+        // content's intrinsic width, and a lazy ListView has none to give: a
+        // list that only had a maximum made that layout throw, and the athlete
+        // got an empty dialog. On a short screen the dialog scrolls the title
+        // and this box together, so the list is reached by scrolling rather
+        // than squeezed.
+        AsyncValue(:final value?) => SizedBox(
+          width: 300,
+          height: 300,
           child: value.isEmpty
               ? Center(
                   child: Text(
@@ -249,7 +252,12 @@ class PinTrainingDialog extends ConsumerWidget {
                             size: 17,
                           ),
                           SizedBox(width: 6),
-                          Text(formatDurationMinSec(item.totalDuration)),
+                          Flexible(
+                            child: Text(
+                              formatDurationMinSec(item.totalDuration),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                     );
@@ -280,6 +288,14 @@ class PinTrainingDialog extends ConsumerWidget {
         ),
         _ => const Center(child: CircularProgressIndicator()),
       },
+      // The choices are the list itself, each saved as it is tapped, so the
+      // one action closes the dialog.
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Done'),
+        ),
+      ],
     );
   }
 }

@@ -351,9 +351,9 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
+                child: const Text('Keep it'),
               ),
-              TextButton(
+              FilledButton(
                 onPressed: () async {
                   Navigator.of(context).pop();
                   try {
@@ -383,9 +383,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                     Navigator.of(context).pop();
                   }
                 },
-                style: TextButton.styleFrom(
-                  foregroundColor: CrimpyTheme.statusErrorText,
-                ),
+                style: CrimpyTheme.destructiveButton,
                 child: const Text('Delete'),
               ),
             ],

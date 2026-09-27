@@ -135,7 +135,7 @@ Future<void> showWorkoutPausedDialog(BuildContext context) => showDialog<void>(
         'sensor stopped recording. Get back in position, then resume.',
       ),
       actions: [
-        TextButton(
+        FilledButton(
           onPressed: () => Navigator.of(ctx).pop(),
           child: const Text('Resume'),
         ),
@@ -160,9 +160,9 @@ Future<void> showAssessmentInterruptedDialog(
         'stopped and nothing was saved.\n\n$reason',
       ),
       actions: [
-        TextButton(
+        FilledButton(
           onPressed: () => Navigator.of(ctx).pop(),
-          child: const Text('Back'),
+          child: const Text('Back to assessments'),
         ),
       ],
     ),

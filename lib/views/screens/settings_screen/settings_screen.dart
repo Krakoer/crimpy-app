@@ -63,7 +63,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                   controller: _tareController,
                                   decoration: const InputDecoration(
                                     labelText: 'Tare value',
-                                    border: OutlineInputBorder(),
                                   ),
                                   validator: (value) {
                                     if (value == null ||
@@ -99,7 +98,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                   controller: _calibrationController,
                                   decoration: const InputDecoration(
                                     labelText: 'Calibration value',
-                                    border: OutlineInputBorder(),
                                   ),
                                   validator: (value) {
                                     if (value == null ||

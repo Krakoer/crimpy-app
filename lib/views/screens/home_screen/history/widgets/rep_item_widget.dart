@@ -25,7 +25,7 @@ class RepItemWidget extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: CrimpyTheme.bgSunken,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: CrimpyTheme.corners,
       ),
       child: Row(
         children: [
@@ -34,7 +34,7 @@ class RepItemWidget extends StatelessWidget {
             height: 32,
             decoration: BoxDecoration(
               color: CrimpyTheme.outlineSubtle,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: CrimpyTheme.corners,
             ),
             child: Center(
               child: Icon(Icons.pause, size: 16, color: CrimpyTheme.textMedium),
@@ -87,7 +87,7 @@ class RepItemWidget extends StatelessWidget {
               : CrimpyTheme.outlineSubtle,
           width: 1.5,
         ),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: CrimpyTheme.corners,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,7 +100,7 @@ class RepItemWidget extends StatelessWidget {
                 height: 32,
                 decoration: BoxDecoration(
                   color: CrimpyTheme.bgSunken,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: CrimpyTheme.corners,
                 ),
                 child: Center(
                   child: Text(
@@ -166,7 +166,7 @@ class RepItemWidget extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: CrimpyTheme.corners,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -196,7 +196,7 @@ class RepItemWidget extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: CrimpyTheme.bgSunken,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: CrimpyTheme.corners,
                   ),
                   child: Text(
                     'Not measured',

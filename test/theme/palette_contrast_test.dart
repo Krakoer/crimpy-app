@@ -188,6 +188,7 @@ final Map<String, Color> scannedAccents = {
   'rightHand': CrimpyTheme.rightHand,
   'planned': CrimpyTheme.planned,
   'newsMark': CrimpyTheme.newsMark,
+  'destructive': CrimpyTheme.destructive,
 };
 
 /// A colour already asked for through the theme's own helpers is this scan's

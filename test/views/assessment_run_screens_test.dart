@@ -119,7 +119,7 @@ bool _clockIsRunning(WidgetTester tester) {
 
 /// Answers the interruption dialog, then lets the run route go.
 Future<void> _dismissInterruptionDialog(WidgetTester tester) async {
-  await tester.tap(find.text('Back'));
+  await tester.tap(find.text('Back to assessments'));
   await _settleRoute(tester);
   await _settleRoute(tester);
 }

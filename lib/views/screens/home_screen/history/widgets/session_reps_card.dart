@@ -80,7 +80,7 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
                     color: overall.onTarget == overall.total
                         ? CrimpyTheme.tintOf(CrimpyTheme.onTarget)
                         : CrimpyTheme.tintOf(CrimpyTheme.offTarget),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: CrimpyTheme.corners,
                     border: Border.all(
                       color: overall.onTarget == overall.total
                           ? CrimpyTheme.textOn(CrimpyTheme.onTarget)
@@ -218,7 +218,7 @@ class _BlockCard extends StatelessWidget {
         // what separates the card from the page.
         color: CrimpyTheme.bgPrimary,
         border: Border.all(color: CrimpyTheme.outline),
-        borderRadius: BorderRadius.circular(CrimpyTheme.radiusSmall),
+        borderRadius: CrimpyTheme.corners,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

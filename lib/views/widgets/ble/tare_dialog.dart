@@ -23,17 +23,17 @@ class _TareDialogState extends ConsumerState<TareDialog> {
       actions: [
         TextButton(
           onPressed: connected
-              ? ref.read(bleConfigProvider.notifier).tare
-              : null,
-          child: Text("Tare"),
-        ),
-        TextButton(
-          onPressed: connected
               ? () {
                   Navigator.of(context).pop();
                 }
               : null,
-          child: Text("Exit"),
+          child: Text("Done"),
+        ),
+        FilledButton(
+          onPressed: connected
+              ? ref.read(bleConfigProvider.notifier).tare
+              : null,
+          child: Text("Tare"),
         ),
       ],
       content: Padding(

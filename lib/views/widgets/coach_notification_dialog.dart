@@ -58,7 +58,7 @@ class CoachNotificationDialog extends StatelessWidget {
         onPressed: () => Navigator.of(context).pop(false),
         child: const Text('Not now'),
       ),
-      ElevatedButton(
+      FilledButton(
         onPressed: () => Navigator.of(context).pop(true),
         child: const Text('Allow'),
       ),

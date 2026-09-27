@@ -122,7 +122,7 @@ class _EmailVerificationScreenState
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: CrimpyTheme.bgError,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: CrimpyTheme.corners,
                     border: Border.all(color: CrimpyTheme.statusError),
                   ),
                   child: Text(
@@ -136,7 +136,7 @@ class _EmailVerificationScreenState
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: CrimpyTheme.bgSuccess,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: CrimpyTheme.corners,
                     border: Border.all(color: CrimpyTheme.statusSuccess),
                   ),
                   child: Text(

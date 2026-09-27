@@ -203,11 +203,7 @@ class ItemReviewCard extends StatelessWidget {
         decimal ? RegExp(r'[0-9.,]') : RegExp(r'[0-9]'),
       ),
     ],
-    decoration: InputDecoration(
-      labelText: label,
-      border: const OutlineInputBorder(),
-      isDense: true,
-    ),
+    decoration: InputDecoration(labelText: label, isDense: true),
     validator: (value) {
       final trimmed = value?.trim() ?? '';
       if (trimmed.isEmpty) return null;
@@ -300,7 +296,6 @@ class ItemReviewCard extends StatelessWidget {
               decoration: const InputDecoration(
                 labelText: 'Note',
                 hintText: 'Hard on the shoulders, did it with a band',
-                border: OutlineInputBorder(),
                 isDense: true,
                 alignLabelWithHint: true,
               ),

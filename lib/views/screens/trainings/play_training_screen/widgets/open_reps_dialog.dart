@@ -52,10 +52,7 @@ class _OpenRepsDialogState extends State<_OpenRepsDialog> {
           autofocus: true,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: const InputDecoration(
-            labelText: 'Reps',
-            border: OutlineInputBorder(),
-          ),
+          decoration: const InputDecoration(labelText: 'Reps'),
           onSubmitted: (_) => _submit(),
         ),
       ],
@@ -65,7 +62,7 @@ class _OpenRepsDialogState extends State<_OpenRepsDialog> {
         onPressed: () => Navigator.of(context).pop(),
         child: const Text('Cancel'),
       ),
-      TextButton(onPressed: _submit, child: const Text('Save')),
+      FilledButton(onPressed: _submit, child: const Text('Save')),
     ],
   );
 }
@@ -88,9 +85,9 @@ Future<bool> confirmEmomDropOut(BuildContext context, int roundsDone) async {
           onPressed: () => Navigator.of(context).pop(false),
           child: const Text('Keep going'),
         ),
-        TextButton(
+        FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
-          style: TextButton.styleFrom(foregroundColor: CrimpyTheme.statusError),
+          style: CrimpyTheme.destructiveButton,
           child: const Text('Stop'),
         ),
       ],

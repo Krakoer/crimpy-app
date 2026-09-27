@@ -263,7 +263,7 @@ class FlexTrainingRow extends StatelessWidget {
         options: RoundedRectDottedBorderOptions(
           dashPattern: const [6, 4],
           strokeWidth: 2,
-          radius: Radius.zero,
+          radius: CrimpyTheme.corner,
           color: CrimpyTheme.outline,
         ),
         child: Container(

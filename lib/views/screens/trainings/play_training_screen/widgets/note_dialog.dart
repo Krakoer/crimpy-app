@@ -22,7 +22,7 @@ Future<void> showNoteDialog(BuildContext context, String text) =>
           ),
         ),
         actions: [
-          TextButton(
+          FilledButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Close'),
           ),

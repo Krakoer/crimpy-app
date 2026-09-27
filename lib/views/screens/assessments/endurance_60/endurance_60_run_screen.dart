@@ -230,11 +230,12 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text('No'),
+                child: Text('Keep going'),
               ),
-              TextButton(
+              FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: Text('Yes'),
+                style: CrimpyTheme.destructiveButton,
+                child: Text('Leave'),
               ),
             ],
           ),
@@ -428,7 +429,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                   padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: CrimpyTheme.scrim.withValues(alpha: 0.7),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: CrimpyTheme.corners,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

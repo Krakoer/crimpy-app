@@ -51,9 +51,9 @@ Future<void> startTrainingRun(
               onPressed: () => Navigator.of(ctx).pop(false),
               child: const Text('Run without'),
             ),
-            TextButton(
+            FilledButton(
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Yes, connect'),
+              child: const Text('Connect'),
             ),
           ],
         ),

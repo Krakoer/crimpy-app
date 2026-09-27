@@ -67,7 +67,6 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 500),
         child: Column(
@@ -168,13 +167,7 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
             // Footer with navigation
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: CrimpyTheme.bgSecondary,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
-                ),
-              ),
+              color: CrimpyTheme.bgSecondary,
               child: Column(
                 children: [
                   // "Don't show again" checkbox (only on last section)
@@ -209,13 +202,6 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                             label: const Text('Back'),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              side: BorderSide(
-                                color: CrimpyTheme.textMutedSmall,
-                                width: 1,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
                             ),
                           ),
                         ),
@@ -225,7 +211,7 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                       // Next/Got it button
                       Expanded(
                         flex: _isFirstSection ? 1 : 2,
-                        child: ElevatedButton.icon(
+                        child: FilledButton.icon(
                           onPressed: _isLastSection
                               ? () async {
                                   if (_dontShowAgain) {
@@ -238,15 +224,8 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                                   }
                                 }
                               : _nextSection,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: CrimpyTheme.fillOn(
-                              CrimpyTheme.action,
-                            ),
-                            foregroundColor: CrimpyTheme.textOnFill,
+                          style: FilledButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
                           ),
                           icon: Icon(
                             _isLastSection ? Icons.check : Icons.arrow_forward,

@@ -38,9 +38,14 @@ Future<void> _pumpDialog(
         trainingLibraryTruncatedProvider.overrideWith((ref) async => truncated),
       ],
       child: MaterialApp(
-        home: MediaQuery(
-          data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
-          child: const Scaffold(body: Center(child: PinTrainingDialog())),
+        // The surface's own size is kept: the list takes its height from it.
+        home: Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(textScale)),
+            child: const Scaffold(body: Center(child: PinTrainingDialog())),
+          ),
         ),
       ),
     ),
@@ -48,14 +53,47 @@ Future<void> _pumpDialog(
   await tester.pumpAndSettle();
 }
 
-/// The height the athlete can actually see the list through.
-///
-/// Measured off the `ListView` itself, which is the scrolling viewport now that
-/// the content is a `ConstrainedBox` rather than a fixed `SizedBox` inside a
-/// scroll view. That shape matters for this measurement: a `SizedBox` of
-/// exactly 300 inside a `SingleChildScrollView` is handed unbounded height and
-/// reports 300 in every configuration, including ones where the athlete can see
-/// none of it, so a test written against it cannot observe what it claims to.
+/// The dialog as the home screen opens it, through showDialog, where the
+/// AlertDialog measures its content's intrinsic size.
+Future<void> _pumpThroughShowDialog(
+  WidgetTester tester, {
+  required bool truncated,
+  double textScale = 1.0,
+}) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        allTrainingsProvider.overrideWith((ref) async => _library(30)),
+        trainingLibraryTruncatedProvider.overrideWith((ref) async => truncated),
+      ],
+      child: MaterialApp(
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child!,
+        ),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => const PinTrainingDialog(),
+              ),
+              child: const Text('Pin a training'),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.tap(find.text('Pin a training'));
+  await tester.pumpAndSettle();
+}
+
+/// The list's own height. It is fixed at 300, so this only tells whether the
+/// notice took room from the list's box; whether the athlete can see it is
+/// measured through the dialog's scroll view below.
 double _listViewport(WidgetTester tester) =>
     tester.getSize(find.byType(ListView).first).height;
 
@@ -79,6 +117,18 @@ void main() {
       );
     });
 
+    // The home screen opens this through showDialog, where the scrollable
+    // AlertDialog measures its content's intrinsic width. A lazy ListView has
+    // none to give, so the layout threw and the athlete saw an empty box.
+    // Pumped in a Scaffold, as the tests above are, nothing asks for it.
+    testWidgets('lists the trainings when opened as a dialog', (tester) async {
+      await _pumpThroughShowDialog(tester, truncated: false);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Training 0'), findsOneWidget);
+      expect(find.text('Done'), findsOneWidget);
+    });
+
     testWidgets('is unchanged when the library is whole', (tester) async {
       await _pumpDialog(tester, truncated: false);
 
@@ -87,37 +137,35 @@ void main() {
     });
 
     // A small screen at an accessibility text scale is where the title and the
-    // content genuinely cannot both have what they want. The list is allowed to
-    // shrink there, since it scrolls, but it has to keep a usable window and
-    // the dialog must not overflow: a windowed list reports its full height
-    // while showing the athlete nothing, which is the failure a fixed SizedBox
-    // hid twice.
+    // list cannot both fit. The dialog scrolls the two together, so the list
+    // keeps its height and is reached by scrolling. Opened through showDialog,
+    // as the home screen does, and measured by what actually shows inside the
+    // dialog's scroll view once scrolled, not by the list's own size: that
+    // size is fixed and would pass whether the athlete could see it or not.
     testWidgets(
-      'leaves a usable list on a small screen at a large text scale',
+      'brings the list into view on a small screen at a large text scale',
       (tester) async {
-        await _pumpDialog(
-          tester,
-          truncated: true,
-          surface: const Size(320, 568),
-          textScale: 2.0,
-        );
+        tester.view.physicalSize = const Size(320, 568);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        await _pumpThroughShowDialog(tester, truncated: true, textScale: 2.0);
 
-        // Scoped to the vertical direction on purpose. This dialog's ListTile
-        // subtitle overflows horizontally at this size and scale on dev too,
-        // measured by checking out dev's copy of this screen and pumping it
-        // here, so asserting on every exception would make this test fail for a
-        // defect it is not about and cannot fix. The bottom overflow is the one
-        // this PR introduced and the one it has to keep out.
-        final overflow = tester.takeException();
-        expect(
-          overflow?.toString() ?? '',
-          isNot(contains('on the bottom')),
-          reason: 'the title must not push the dialog past its own height',
+        expect(tester.takeException(), isNull);
+
+        final dialogScroll = find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(SingleChildScrollView),
         );
+        await tester.drag(dialogScroll.first, const Offset(0, -600));
+        await tester.pumpAndSettle();
+
+        final viewport = tester.getRect(dialogScroll.first);
+        final list = tester.getRect(find.byType(ListView).first);
         expect(
-          _listViewport(tester),
+          viewport.intersect(list).height,
           greaterThan(48.0),
-          reason: 'the list must stay tall enough to show and scroll a row',
+          reason: 'scrolling the dialog must show at least a row of the list',
         );
       },
     );

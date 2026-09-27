@@ -830,7 +830,7 @@ void main() {
   // Backing out of the leave prompt has to put the run back the way it was. It
   // matters most on a self paced step, which offers no play control: a run left
   // stopped on one has nothing to resume with short of declaring it done.
-  testWidgets('answering No to the leave prompt resumes the run', (
+  testWidgets('choosing Keep going on the leave prompt resumes the run', (
     tester,
   ) async {
     await _pumpRun(tester, _trainingWithLongNote());
@@ -841,7 +841,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Leave the workout?'), findsOneWidget);
 
-    await tester.tap(find.text('No'));
+    await tester.tap(find.text('Keep going'));
     await tester.pumpAndSettle();
 
     expect(find.text('Leave the workout?'), findsNothing);
@@ -1034,7 +1034,7 @@ void main() {
 
       expect(find.text('How many did you manage?'), findsOneWidget);
       await tester.enterText(find.byType(TextField), '23');
-      await tester.tap(find.widgetWithText(TextButton, 'Save'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
       await tester.pumpAndSettle();
 
       // The run moves on to the rest that closes the round, so the question
@@ -1074,7 +1074,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Stop this block?'), findsOneWidget);
-      await tester.tap(find.widgetWithText(TextButton, 'Stop'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Stop'));
       await tester.pumpAndSettle();
 
       // The block held three rounds and the athlete dropped out of the first,
@@ -1098,14 +1098,14 @@ void main() {
       await tester.tap(find.text('DONE'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), '23');
-      await tester.tap(find.widgetWithText(TextButton, 'Save'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Save'));
       await tester.pumpAndSettle();
 
       // Out of the rest that closed round one, then out of the block.
       await _skip(tester);
       await tester.tap(find.byTooltip('I cannot make the next round'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(TextButton, 'Stop'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Stop'));
       await tester.pumpAndSettle();
 
       final post = tester.widget<PostWorkoutScreen>(

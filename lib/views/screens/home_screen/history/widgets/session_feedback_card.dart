@@ -61,7 +61,7 @@ class SessionFeedbackCard extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: CrimpyTheme.bgSecondary,
-                borderRadius: BorderRadius.circular(CrimpyTheme.radiusSmall),
+                borderRadius: CrimpyTheme.corners,
                 border: Border(
                   left: BorderSide(color: CrimpyTheme.coachNote, width: 3),
                 ),
@@ -115,7 +115,7 @@ class _NewBadge extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
     decoration: BoxDecoration(
       color: CrimpyTheme.fillOn(CrimpyTheme.coachNote),
-      borderRadius: BorderRadius.circular(CrimpyTheme.radiusSmall),
+      borderRadius: CrimpyTheme.corners,
     ),
     child: const Text(
       'NEW',

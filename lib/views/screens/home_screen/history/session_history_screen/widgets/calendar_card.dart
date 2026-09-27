@@ -53,7 +53,7 @@ class CalendarCard extends StatelessWidget {
               selectionDecoration: BoxDecoration(
                 color: Colors.transparent,
                 border: Border.all(color: CrimpyTheme.current, width: 2),
-                borderRadius: const BorderRadius.all(Radius.circular(4)),
+                borderRadius: CrimpyTheme.corners,
               ),
               onTap: (CalendarTapDetails details) {
                 if (details.targetElement == CalendarElement.calendarCell &&

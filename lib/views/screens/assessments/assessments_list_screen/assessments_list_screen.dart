@@ -365,10 +365,10 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
                                           "You must complete an MVC assessment for your ${hand.isRightHand ? 'right' : 'left'} hand with ${gripPosition.displayName} grip before running this assessment.",
                                         ),
                                         actions: [
-                                          TextButton(
+                                          FilledButton(
                                             onPressed: () =>
-                                                Navigator.of(context).pop(),
-                                            child: Text("OK"),
+                                                Navigator.of(ctx).pop(),
+                                            child: Text("Close"),
                                           ),
                                         ],
                                       ),

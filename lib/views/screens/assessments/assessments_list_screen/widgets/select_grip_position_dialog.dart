@@ -17,7 +17,7 @@ class SelectGripPositionDialog extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 4.0),
             child: SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: OutlinedButton(
                 child: Text(position.displayName),
                 onPressed: () {
                   Navigator.of(context).pop(position);

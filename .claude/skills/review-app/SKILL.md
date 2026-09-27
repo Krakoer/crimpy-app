@@ -125,6 +125,24 @@ value, so two roles holding one value share their text, mark and fill forms.
 The component themes in `ThemeData` name roles too, so a role's value reaches
 the Material widgets that never name it.
 
+One corner, `CrimpyTheme.corner`, and it is square. A widget takes
+`CrimpyTheme.corners`, `shape` or `framed`, never a radius or a border of its
+own; a field names no border and inherits the theme's. `test/theme/shape_tokens_test.dart`
+fails on anything else. A circle (a dot, a dial) is a shape, not a corner.
+Dialogs, sheets, menus and pickers take their shape and ground from the theme,
+so a dialog passing `shape:` is a finding.
+
+A dialog's actions say what they do ("Leave", "Keep going", "Delete"), never
+"Yes", "No" or "OK". The one that dismisses is a `TextButton`, first; the
+primary action is a `FilledButton`, last, which the theme fills with `action`.
+A primary action that throws away what the athlete did (delete, discard,
+leave a run or a review unsaved) adds `style: CrimpyTheme.destructiveButton`.
+A dialog whose only action is its primary one (Resume, Close) makes it the
+`FilledButton`; one whose choices sit in its content keeps a `TextButton` to
+dismiss it. A `DropdownButton` names `borderRadius: CrimpyTheme.corners`,
+since the theme cannot reach its menu. See
+Krakoer/crimpy#171.
+
 A raw `Color(0xFF...)` or `Colors.grey` in a widget is a finding: use or add a
 role. `textFaint` is decoration only and is under the text floor; text set in
 it is a finding (Krakoer/crimpy#169). Keep parity with the web portal's

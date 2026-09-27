@@ -106,7 +106,7 @@ class SetCardWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: CrimpyTheme.bgPrimary,
         border: Border.all(color: CrimpyTheme.outlineSubtle),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: CrimpyTheme.corners,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,7 +118,7 @@ class SetCardWidget extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: CrimpyTheme.bgSunken,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: CrimpyTheme.corners,
                 ),
                 child: Text(
                   label,
@@ -146,7 +146,7 @@ class SetCardWidget extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: CrimpyTheme.tintOf(statusColor),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: CrimpyTheme.corners,
                   ),
                   child: Text(
                     '${count.onTarget}/${count.total}',
@@ -270,7 +270,7 @@ class SetPerformanceBar extends StatelessWidget {
                 ? CrimpyTheme.tintOf(repColor)
                 : CrimpyTheme.bgPrimary,
             border: Border.all(color: repColor, width: 1.5),
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: CrimpyTheme.corners,
           ),
           child: Center(
             child: hasTarget
