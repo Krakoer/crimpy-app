@@ -68,7 +68,10 @@ class TrainingItemComment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
+      padding: const EdgeInsets.symmetric(
+        horizontal: CrimpyTheme.spaceSm,
+        vertical: CrimpyTheme.spaceSm,
+      ),
       decoration: BoxDecoration(
         color: CrimpyTheme.coachNote.withValues(alpha: 0.10),
         border: Border.all(
@@ -84,7 +87,7 @@ class TrainingItemComment extends StatelessWidget {
             size: 11,
             color: CrimpyTheme.coachNote,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: CrimpyTheme.spaceSm),
           Expanded(
             child: Text(
               comment,
@@ -122,7 +125,10 @@ class _LabelledNote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: CrimpyTheme.spaceSm,
+        vertical: CrimpyTheme.spaceSm,
+      ),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.10),
         border: Border(left: BorderSide(color: accent, width: 3)),
@@ -136,7 +142,7 @@ class _LabelledNote extends StatelessWidget {
               color: CrimpyTheme.textOn(accent),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: CrimpyTheme.spaceSm),
           Expanded(
             child: Text(
               text,
@@ -248,7 +254,7 @@ class TrainingItemTile extends StatelessWidget {
             style: CrimpyTheme.bodySmall.copyWith(fontWeight: FontWeight.w600),
           ),
         ),
-        const SizedBox(width: 11),
+        const SizedBox(width: CrimpyTheme.spaceMd),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,7 +266,7 @@ class TrainingItemTile extends StatelessWidget {
                 ),
               ),
               if (detail.isNotEmpty) ...[
-                const SizedBox(height: 2),
+                const SizedBox(height: CrimpyTheme.spaceXs),
                 Text(
                   detail,
                   style: CrimpyTheme.bodySmall.copyWith(
@@ -269,29 +275,32 @@ class TrainingItemTile extends StatelessWidget {
                 ),
               ],
               if (goal.isNotEmpty) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: CrimpyTheme.spaceSm),
                 TrainingItemGoal(goal),
               ],
               if (protocol.isNotEmpty) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: CrimpyTheme.spaceSm),
                 TrainingItemProtocol(protocol),
               ],
               for (final note in exerciseNotes) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: CrimpyTheme.spaceXs),
                 ExerciseDescription(note),
               ],
               if (comment.isNotEmpty) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: CrimpyTheme.spaceSm),
                 TrainingItemComment(comment),
               ],
               if (hasVideo) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: CrimpyTheme.spaceXs),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: ExerciseVideoButton(item.exerciseVideoLink),
                 ),
               ],
-              if (extra.isNotEmpty) ...[const SizedBox(height: 9), ...extra],
+              if (extra.isNotEmpty) ...[
+                const SizedBox(height: CrimpyTheme.spaceSm),
+                ...extra,
+              ],
             ],
           ),
         ),
@@ -319,7 +328,10 @@ List<Widget> buildTrainingItemTiles(
     final item = items[i];
     widgets.add(
       Padding(
-        padding: EdgeInsets.only(left: depth * 14.0, bottom: 10),
+        padding: EdgeInsets.only(
+          left: depth * CrimpyTheme.spaceLg,
+          bottom: CrimpyTheme.spaceMd,
+        ),
         child: TrainingItemTile(
           item: item,
           number: i + 1,

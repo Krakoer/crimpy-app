@@ -137,7 +137,7 @@ class _BodyweightMeasureScreenState
   }
 
   Widget _statusBox(bool holding) => Container(
-    padding: const EdgeInsets.all(16),
+    padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
     decoration: CrimpyTheme.raised.copyWith(
       // The label on this box is white. The alpha is gone as well as the
       // hue darkened: at 0.9 even the darkened gold only reaches 4.03:1,
@@ -155,7 +155,7 @@ class _BodyweightMeasureScreenState
           textAlign: TextAlign.center,
         ),
         if (holding) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: CrimpyTheme.spaceSm),
           Text(
             '${_measurement.secondsRemaining}',
             style: CrimpyTheme.numerals(
@@ -168,7 +168,7 @@ class _BodyweightMeasureScreenState
   );
 
   Widget _readingBox(double? lastValue) => Container(
-    padding: const EdgeInsets.all(16),
+    padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
     decoration: BoxDecoration(
       color: CrimpyTheme.scrim.withValues(alpha: 0.7),
       borderRadius: CrimpyTheme.corners,
@@ -182,7 +182,7 @@ class _BodyweightMeasureScreenState
             48,
           ).copyWith(color: CrimpyTheme.textOnFill),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: CrimpyTheme.spaceXs),
         Text(
           _measurement.phase == BodyweightMeasurementPhase.holding
               ? 'Recording ${_measurement.stableValue!.toStringAsFixed(1)} kg'

@@ -279,7 +279,12 @@ class _WeekAvailabilityScreenState
                 _WeekSummary(week: week, declared: _declared),
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(
+                      CrimpyTheme.spaceLg,
+                      CrimpyTheme.spaceMd,
+                      CrimpyTheme.spaceLg,
+                      CrimpyTheme.spaceLg,
+                    ),
                     children: [
                       for (final day in week.days)
                         DayScheduleCard(
@@ -341,7 +346,12 @@ class _WeekSummary extends StatelessWidget {
     final minutes = week.plannedMinutes;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      padding: const EdgeInsets.fromLTRB(
+        CrimpyTheme.spaceLg,
+        CrimpyTheme.spaceMd,
+        CrimpyTheme.spaceLg,
+        CrimpyTheme.spaceLg,
+      ),
       decoration: const BoxDecoration(
         color: CrimpyTheme.bgPrimary,
         border: Border(
@@ -370,7 +380,7 @@ class _WeekSummary extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: CrimpyTheme.spaceXs),
           Text(
             'Add whatever fills your days, training or not. Your coach builds '
             'the week around what is already in it.',
@@ -409,7 +419,12 @@ class _SendBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(
+        CrimpyTheme.spaceLg,
+        CrimpyTheme.spaceMd,
+        CrimpyTheme.spaceLg,
+        CrimpyTheme.spaceMd,
+      ),
       decoration: const BoxDecoration(
         color: CrimpyTheme.bgPrimary,
         border: Border(top: BorderSide(color: CrimpyTheme.outline, width: 2)),
@@ -436,7 +451,7 @@ class _SendBar extends StatelessWidget {
                       color: CrimpyTheme.textOnFillSecondary,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: CrimpyTheme.spaceMd),
                 ],
                 Text(_label),
               ],
@@ -475,11 +490,16 @@ class _WeekSwitcher extends StatelessWidget {
     ];
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      padding: const EdgeInsets.fromLTRB(
+        CrimpyTheme.spaceLg,
+        CrimpyTheme.spaceMd,
+        CrimpyTheme.spaceLg,
+        CrimpyTheme.spaceMd,
+      ),
       color: CrimpyTheme.bgPrimary,
       child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+        spacing: CrimpyTheme.spaceSm,
+        runSpacing: CrimpyTheme.spaceSm,
         children: [
           for (var index = 0; index < options.length; index++)
             ChoiceChip(
@@ -512,18 +532,18 @@ class _LoadFailure extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Center(
     child: Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(CrimpyTheme.spaceXl),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.cloud_off, color: CrimpyTheme.textMutedSmall),
-          const SizedBox(height: 12),
+          const SizedBox(height: CrimpyTheme.spaceMd),
           Text(
             'Your weeks could not be loaded.',
             textAlign: TextAlign.center,
             style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textSecondary),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: CrimpyTheme.spaceLg),
           FilledButton(onPressed: onRetry, child: const Text('Try again')),
         ],
       ),

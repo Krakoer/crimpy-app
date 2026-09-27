@@ -52,7 +52,7 @@ class _Content extends ConsumerWidget {
         enabled && ref.watch(reminderPermissionProvider).asData?.value == false;
 
     return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceSm),
       children: [
         if (permissionRevoked) const _PermissionWarning(),
         SwitchListTile(
@@ -170,7 +170,12 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+    padding: const EdgeInsets.fromLTRB(
+      CrimpyTheme.spaceLg,
+      CrimpyTheme.spaceSm,
+      CrimpyTheme.spaceLg,
+      CrimpyTheme.spaceXs,
+    ),
     child: SectionHeading(title),
   );
 }
@@ -227,9 +232,9 @@ class _WeekdaySelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16),
+    padding: const EdgeInsets.symmetric(horizontal: CrimpyTheme.spaceLg),
     child: Wrap(
-      spacing: 8,
+      spacing: CrimpyTheme.spaceSm,
       children: [
         for (var day = 0; day < _weekdayLabels.length; day++) _chip(day),
       ],
@@ -327,7 +332,7 @@ class _FlexibleTrainingTile extends ConsumerWidget {
               .read(notificationPreferencesControllerProvider.notifier)
               .setFlexibleDays(session.trainingId, days),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: CrimpyTheme.spaceSm),
       ],
     );
   }

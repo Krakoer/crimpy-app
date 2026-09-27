@@ -14,7 +14,7 @@ class EmptyState extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Icon(Icons.history, size: 64, color: CrimpyTheme.textSecondary),
-          const SizedBox(height: 16),
+          const SizedBox(height: CrimpyTheme.spaceLg),
           Text(
             selectedDate != null
                 ? 'No sessions on ${DateFormat('MMMM d, y').format(selectedDate!)}'

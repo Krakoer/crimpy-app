@@ -59,17 +59,17 @@ class _EmailVerificationScreenState
       appBar: AppBar(title: const Text('Verify Email')),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(CrimpyTheme.spaceXl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 32),
+              const SizedBox(height: CrimpyTheme.spaceXxl),
               Icon(
                 Icons.mark_email_read,
                 size: 80,
                 color: Theme.of(context).primaryColor,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: CrimpyTheme.spaceXl),
               Text(
                 'Check Your Email',
                 style: CrimpyTheme.title.copyWith(
@@ -77,7 +77,7 @@ class _EmailVerificationScreenState
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
               Text(
                 'Check your inbox at:',
                 style: CrimpyTheme.body.copyWith(
@@ -85,7 +85,7 @@ class _EmailVerificationScreenState
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: CrimpyTheme.spaceSm),
               Text(
                 widget.email,
                 style: CrimpyTheme.body.copyWith(
@@ -94,9 +94,9 @@ class _EmailVerificationScreenState
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: CrimpyTheme.spaceXxl),
               CrimpyCard.simple(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
                 child: Column(
                   children: [
                     Icon(
@@ -104,7 +104,7 @@ class _EmailVerificationScreenState
                       color: Theme.of(context).primaryColor,
                       size: 32,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: CrimpyTheme.spaceMd),
                     Text(
                       'Instructions',
                       style: CrimpyTheme.title.copyWith(
@@ -112,7 +112,7 @@ class _EmailVerificationScreenState
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: CrimpyTheme.spaceSm),
                     const Text(
                       '1. Open the email from Crimpy\n'
                       '2. Follow the link in it\n'
@@ -122,10 +122,10 @@ class _EmailVerificationScreenState
                   ],
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: CrimpyTheme.spaceXxl),
               if (_errorMessage != null)
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
                   decoration: BoxDecoration(
                     color: CrimpyTheme.bgError,
                     borderRadius: CrimpyTheme.corners,
@@ -139,7 +139,7 @@ class _EmailVerificationScreenState
                 ),
               if (_successMessage != null)
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
                   decoration: BoxDecoration(
                     color: CrimpyTheme.bgSuccess,
                     borderRadius: CrimpyTheme.corners,
@@ -154,8 +154,8 @@ class _EmailVerificationScreenState
                   ),
                 ),
               if (_errorMessage != null || _successMessage != null)
-                const SizedBox(height: 24),
-              const SizedBox(height: 16),
+                const SizedBox(height: CrimpyTheme.spaceXl),
+              const SizedBox(height: CrimpyTheme.spaceLg),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

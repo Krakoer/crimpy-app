@@ -12,6 +12,7 @@ import 'widgets/empty_state.dart';
 import 'widgets/error_state.dart';
 import 'package:crimpy/models/session_filter.dart';
 import 'package:crimpy/utils/datetimes.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class SessionHistoryScreen extends ConsumerStatefulWidget {
   const SessionHistoryScreen({super.key});
@@ -104,7 +105,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
       // Scrollable although it fits: an empty history is the state a pull is
       // most worth making, and a column that cannot move cannot be pulled.
       return RefreshableColumn(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
         child: Column(
           children: [
             CalendarCard(
@@ -137,7 +138,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
     return ListView.builder(
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
       itemCount: sortedDates.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {

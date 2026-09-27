@@ -45,7 +45,7 @@ class TrainingListItemWidget extends ConsumerWidget {
               category: CrimpyTheme.trainingColor,
               iconSize: 16,
             ),
-          if (item.isBuiltin) const SizedBox(width: 16),
+          if (item.isBuiltin) const SizedBox(width: CrimpyTheme.spaceLg),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,7 +57,7 @@ class TrainingListItemWidget extends ConsumerWidget {
                     color: CrimpyTheme.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: CrimpyTheme.spaceXs),
                 // Description
                 if (item.isBuiltin && item.description.isNotEmpty) ...[
                   Text(
@@ -66,7 +66,7 @@ class TrainingListItemWidget extends ConsumerWidget {
                       color: CrimpyTheme.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: CrimpyTheme.spaceXs),
                 ],
                 // Duration info
                 Row(
@@ -77,7 +77,7 @@ class TrainingListItemWidget extends ConsumerWidget {
                       color: CrimpyTheme.textMutedSmall,
                       size: 16,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: CrimpyTheme.spaceSm),
                     Text(
                       item.isAvailable
                           ? formatLength(item.totalDuration)
@@ -95,7 +95,7 @@ class TrainingListItemWidget extends ConsumerWidget {
           ),
           // Action buttons for custom trainings
           if (item.isRegular) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: CrimpyTheme.spaceSm),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -132,7 +132,7 @@ class TrainingListItemWidget extends ConsumerWidget {
               ],
             ),
           ] else ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: CrimpyTheme.spaceSm),
             Icon(
               Icons.arrow_forward_ios,
               color: CrimpyTheme.textSecondary,
@@ -165,7 +165,10 @@ class TrainingListItemWidget extends ConsumerWidget {
               style: CrimpyTheme.title,
             ),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: CrimpyTheme.spaceMd,
+                vertical: CrimpyTheme.spaceSm,
+              ),
               minimumSize: const Size(0, 32),
             ),
           ),

@@ -135,7 +135,7 @@ class WeekHistogramWidget extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: CrimpyTheme.spaceSm),
           // Day of the week text
           Text(
             dayName,
@@ -148,7 +148,7 @@ class WeekHistogramWidget extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            margin: const EdgeInsets.only(top: 4),
+            margin: const EdgeInsets.only(top: CrimpyTheme.spaceXs),
             decoration: isToday
                 ? const BoxDecoration(
                     color: CrimpyTheme.current,

@@ -66,15 +66,15 @@ class _MvcGripPositionStatContentState
             alignment: Alignment.centerLeft,
             child: const SectionHeading('Max Force'),
           ),
-          SizedBox(height: 12),
+          SizedBox(height: CrimpyTheme.spaceMd),
           Row(
             children: [
               Expanded(child: StatCard("Left Hand", "--", widget.accentLeft)),
-              const SizedBox(width: 12),
+              const SizedBox(width: CrimpyTheme.spaceMd),
               Expanded(child: StatCard("Right Hand", "--", widget.accentRight)),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: CrimpyTheme.spaceLg),
           ForceChart(
             leftData: [],
             rightData: [],
@@ -98,14 +98,14 @@ class _MvcGripPositionStatContentState
           children: [
             const SectionHeading('Max Force'),
             if (widget.mvcByGripPosition.isNotEmpty) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: CrimpyTheme.spaceSm),
               Text(
                 '-',
                 style: CrimpyTheme.capsLabel.copyWith(
                   color: CrimpyTheme.textMutedSmall,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: CrimpyTheme.spaceSm),
             ],
             if (widget.mvcByGripPosition.length > 1)
               Expanded(
@@ -120,7 +120,7 @@ class _MvcGripPositionStatContentState
                           color: CrimpyTheme.textSecondary,
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: CrimpyTheme.spaceXs),
                       Icon(
                         Icons.arrow_drop_down,
                         color: CrimpyTheme.textFaint,
@@ -141,7 +141,7 @@ class _MvcGripPositionStatContentState
               ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: CrimpyTheme.spaceMd),
         Row(
           children: [
             Expanded(
@@ -164,7 +164,7 @@ class _MvcGripPositionStatContentState
                 widget.accentLeft,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: CrimpyTheme.spaceMd),
             Expanded(
               child: StatCard(
                 "Right Hand",
@@ -187,7 +187,7 @@ class _MvcGripPositionStatContentState
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: CrimpyTheme.spaceLg),
         ForceChart(
           leftData: selectedAssessments
               .where((a) => a.leftValue != null)

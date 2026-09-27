@@ -19,7 +19,7 @@ class AnalysisErrorScreen extends StatelessWidget {
       appBar: AppBar(title: Text("Analysis Error")),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(CrimpyTheme.spaceXl),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -28,7 +28,7 @@ class AnalysisErrorScreen extends StatelessWidget {
                 size: 80,
                 color: Theme.of(context).colorScheme.error,
               ),
-              SizedBox(height: 24),
+              SizedBox(height: CrimpyTheme.spaceXl),
               Text(
                 "Analysis Failed",
                 style: CrimpyTheme.title.copyWith(
@@ -36,7 +36,7 @@ class AnalysisErrorScreen extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: CrimpyTheme.spaceLg),
               Text(
                 "We couldn't analyze your critical force data. This could be due to insufficient data quality or technical issues.",
                 style: CrimpyTheme.body.copyWith(
@@ -45,9 +45,9 @@ class AnalysisErrorScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               if (errorMessage != null) ...[
-                SizedBox(height: 16),
+                SizedBox(height: CrimpyTheme.spaceLg),
                 Container(
-                  padding: EdgeInsets.all(12),
+                  padding: EdgeInsets.all(CrimpyTheme.spaceMd),
                   decoration: BoxDecoration(
                     color: CrimpyTheme.bgError,
                     border: Border.all(
@@ -63,7 +63,7 @@ class AnalysisErrorScreen extends StatelessWidget {
                   ),
                 ),
               ],
-              SizedBox(height: 32),
+              SizedBox(height: CrimpyTheme.spaceXxl),
               Text(
                 "Your session data has been saved for debugging purposes.",
                 style: CrimpyTheme.body.copyWith(

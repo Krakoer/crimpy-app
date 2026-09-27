@@ -58,8 +58,8 @@ class TruncatedLibraryNotice extends ConsumerWidget {
     if (truncated != true) return const SizedBox.shrink();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12.0),
-      padding: const EdgeInsets.all(12.0),
+      margin: const EdgeInsets.only(bottom: CrimpyTheme.spaceMd),
+      padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
       decoration: BoxDecoration(
         color: CrimpyTheme.bgInfo,
         borderRadius: CrimpyTheme.corners,
@@ -75,7 +75,7 @@ class TruncatedLibraryNotice extends ConsumerWidget {
             size: 18.0,
             color: CrimpyTheme.markOn(CrimpyTheme.statusInfo),
           ),
-          const SizedBox(width: 8.0),
+          const SizedBox(width: CrimpyTheme.spaceSm),
           Expanded(
             child: Text(
               compact ? _short : _full,

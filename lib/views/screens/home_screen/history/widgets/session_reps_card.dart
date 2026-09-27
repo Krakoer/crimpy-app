@@ -71,8 +71,8 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
               if (overall != null)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
+                    horizontal: CrimpyTheme.spaceMd,
+                    vertical: CrimpyTheme.spaceSm,
                   ),
                   decoration: BoxDecoration(
                     color: overall.onTarget == overall.total
@@ -99,7 +99,7 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: CrimpyTheme.spaceLg),
           if (blocks != null)
             _buildBlocksView(blocks)
           else
@@ -118,10 +118,11 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
             sessionColor: widget.sessionColor,
             expanded: _repsExpanded,
           ),
-          if (index < blocks.length - 1) const SizedBox(height: 12),
+          if (index < blocks.length - 1)
+            const SizedBox(height: CrimpyTheme.spaceMd),
         ],
         if (blocks.any(_blockIsCapped)) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: CrimpyTheme.spaceSm),
           Center(child: _buildExpandButton(_countedReps(blocks))),
         ],
       ],
@@ -150,7 +151,7 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
           }),
         ),
         if (hasMany) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: CrimpyTheme.spaceSm),
           Center(child: _buildExpandButton(reps.length)),
         ],
       ],
@@ -207,7 +208,7 @@ class _BlockCard extends StatelessWidget {
     final onTarget = _onTarget;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
       decoration: BoxDecoration(
         // White rather than bgSecondary: the rep badge and the set chip inside
         // this card tint twice from the session accent, and on the grey the
@@ -234,7 +235,7 @@ class _BlockCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: CrimpyTheme.spaceMd),
           if (sets != null)
             SetsViewWidget(sets: sets, sessionColor: sessionColor)
           else

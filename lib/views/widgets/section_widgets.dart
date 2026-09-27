@@ -43,7 +43,7 @@ class SectionLabel extends StatelessWidget {
     // clips a label that had room. So the rule stays the only flex child and
     // the label is bounded to what is left of the line beyond a stub of rule.
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceXs),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final labelRoom = constraints.maxWidth - _labelGap - _minRuleWidth;

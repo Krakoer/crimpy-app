@@ -1,5 +1,6 @@
 import 'package:crimpy/models/common.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class SelectGripPositionDialog extends StatelessWidget {
   /// Dialog to ask the user to select which grip position to use for the assessment.
@@ -14,7 +15,7 @@ class SelectGripPositionDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: GripPosition.values.map((position) {
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceXs),
             child: SizedBox(
               width: double.infinity,
               child: OutlinedButton(

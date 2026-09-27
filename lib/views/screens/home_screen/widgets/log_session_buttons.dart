@@ -83,7 +83,10 @@ class _SessionActivityButton extends StatelessWidget {
         );
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        padding: const EdgeInsets.symmetric(
+          vertical: CrimpyTheme.spaceLg,
+          horizontal: CrimpyTheme.spaceSm,
+        ),
         decoration: BoxDecoration(
           border: Border.all(color: CrimpyTheme.outline, width: 2),
           color: CrimpyTheme.bgPrimary,
@@ -92,7 +95,7 @@ class _SessionActivityButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: markColor, size: 28),
-            const SizedBox(height: 8),
+            const SizedBox(height: CrimpyTheme.spaceSm),
             Text(
               activity.displayName,
               style: CrimpyTheme.bodySmall.copyWith(

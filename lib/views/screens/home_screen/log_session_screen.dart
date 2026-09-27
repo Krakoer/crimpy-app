@@ -67,7 +67,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
     return Scaffold(
       appBar: AppBar(title: Text('Log ${widget.activity.displayName}')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
         child: Form(
           key: _formKey,
           child: Column(
@@ -76,18 +76,18 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
               // Session name
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           Icon(Icons.edit, color: markColor),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: CrimpyTheme.spaceSm),
                           const Text('Name', style: CrimpyTheme.title),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: CrimpyTheme.spaceMd),
                       TextFormField(
                         controller: _nameController,
                         decoration: const InputDecoration(
@@ -105,7 +105,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
 
               // Date picker
               Card(
@@ -119,7 +119,7 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
                   onTap: _selectDate,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
 
               // Time picker
               Card(
@@ -131,23 +131,23 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
                   onTap: _selectTime,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
 
               // Duration input
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           Icon(Icons.timer, color: markColor),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: CrimpyTheme.spaceSm),
                           const Text('Duration', style: CrimpyTheme.title),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: CrimpyTheme.spaceMd),
                       TextFormField(
                         initialValue: _durationMinutes.toString(),
                         decoration: const InputDecoration(
@@ -176,29 +176,29 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
 
               SessionRpePicker(
                 answer: _rpe,
                 onChanged: (answer) => setState(() => _rpe = answer),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
 
               // Notes input
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           Icon(Icons.notes, color: markColor),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: CrimpyTheme.spaceSm),
                           const Text('Notes', style: CrimpyTheme.title),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: CrimpyTheme.spaceMd),
                       TextFormField(
                         controller: _notesController,
                         decoration: const InputDecoration(
@@ -212,13 +212,15 @@ class _LogSessionScreenState extends ConsumerState<LogSessionScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: CrimpyTheme.spaceXl),
 
               // Save button
               ElevatedButton(
                 onPressed: _saveSession,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: CrimpyTheme.spaceLg,
+                  ),
                 ),
                 child: const Text('Save Session', style: CrimpyTheme.title),
               ),

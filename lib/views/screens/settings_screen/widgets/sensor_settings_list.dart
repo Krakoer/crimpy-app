@@ -23,7 +23,7 @@ class _SensorSettingsListState extends ConsumerState<SensorSettingsList> {
       AsyncData(:final value) =>
         value.isEmpty
             ? Padding(
-                padding: const EdgeInsets.all(30.0),
+                padding: const EdgeInsets.all(CrimpyTheme.spaceXxl),
                 child: Text("No preset saved yet."),
               )
             : Column(
@@ -34,12 +34,14 @@ class _SensorSettingsListState extends ConsumerState<SensorSettingsList> {
                         key: ValueKey<String>(config.id),
                         // Setting card
                         child: CrimpyCard.simple(
-                          margin: EdgeInsets.all(16),
+                          margin: EdgeInsets.all(CrimpyTheme.spaceLg),
                           child: ListTile(
                             title: Text(config.name),
                             // The subtitle prints the config settings (tare & coef)
                             subtitle: Padding(
-                              padding: const EdgeInsets.only(left: 16),
+                              padding: const EdgeInsets.only(
+                                left: CrimpyTheme.spaceLg,
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [

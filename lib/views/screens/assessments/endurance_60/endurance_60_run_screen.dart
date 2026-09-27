@@ -365,7 +365,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
               Positioned(
                 top: 20,
                 child: Container(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(CrimpyTheme.spaceLg),
                   decoration: CrimpyTheme.raised.copyWith(
                     // The label on this box is white. The alpha is gone as well as the
                     // hue darkened: at 0.9 even the darkened gold only reaches 4.03:1,
@@ -394,7 +394,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                                 CrimpyTheme.headline,
                               ).copyWith(color: CrimpyTheme.textOnFill),
                             ),
-                            SizedBox(height: 8),
+                            SizedBox(height: CrimpyTheme.spaceSm),
                             Text(
                               _isInTargetZone ? 'Keep going!' : 'Out of zone!',
                               style: CrimpyTheme.title.copyWith(
@@ -412,7 +412,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
               Positioned(
                 bottom: 20,
                 child: Container(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(CrimpyTheme.spaceLg),
                   decoration: BoxDecoration(
                     color: CrimpyTheme.scrim.withValues(alpha: 0.7),
                     borderRadius: CrimpyTheme.corners,
@@ -426,7 +426,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                           48,
                         ).copyWith(color: CrimpyTheme.textOnFill),
                       ),
-                      SizedBox(height: 4),
+                      SizedBox(height: CrimpyTheme.spaceXs),
                       Text(
                         'Target: ${_targetForce.toStringAsFixed(1)} kg (${_minForce.toStringAsFixed(1)} - ${_maxForce.toStringAsFixed(1)})',
                         style: CrimpyTheme.bodyLarge.copyWith(

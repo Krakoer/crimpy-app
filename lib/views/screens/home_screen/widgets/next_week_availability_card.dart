@@ -33,7 +33,7 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
 
     return CrimpyCard.category(
       accentColor: isDeclared ? CrimpyTheme.planned : CrimpyTheme.control,
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: CrimpyTheme.spaceLg),
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => WeekAvailabilityScreen(weekStart: nextWeek),
@@ -48,7 +48,7 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
             size: 18,
             color: isDeclared ? CrimpyTheme.planned : CrimpyTheme.control,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: CrimpyTheme.spaceMd),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,7 +59,7 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
                     color: CrimpyTheme.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: CrimpyTheme.spaceXs),
                 Text(
                   isDeclared
                       ? 'Your coach knows when you can train'

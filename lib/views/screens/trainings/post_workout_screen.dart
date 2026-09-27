@@ -200,12 +200,12 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                   _OverallOnTarget(count: overall)
                 else if (blockCounts.isNotEmpty)
                   _BlocksOnTarget(counts: blockCounts),
-                SizedBox(height: 25),
+                SizedBox(height: CrimpyTheme.spaceXl),
                 // Form for session name and notes.
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 32.0,
-                    vertical: 16.0,
+                    horizontal: CrimpyTheme.spaceXxl,
+                    vertical: CrimpyTheme.spaceLg,
                   ),
                   child: Form(
                     key: _formKey,
@@ -223,18 +223,18 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: CrimpyTheme.spaceLg),
                         if (_assessment case final assessment?) ...[
                           AssessmentAnswerFields(
                             definition: assessment,
                             rightController: _rightAnswerController,
                             leftController: _leftAnswerController,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: CrimpyTheme.spaceLg),
                         ],
                         if (_itemReviews.isNotEmpty) ...[
                           ItemReviewSection(drafts: _itemReviews),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: CrimpyTheme.spaceLg),
                         ]
                         // Prescribed work and no line to offer for it. Said
                         // out loud: an athlete who gets the per exercise block
@@ -253,13 +253,13 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: CrimpyTheme.spaceLg),
                         ],
                         SessionRpePicker(
                           answer: _rpe,
                           onChanged: (answer) => setState(() => _rpe = answer),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: CrimpyTheme.spaceLg),
                         TextField(
                           controller: _noteController,
                           decoration: const InputDecoration(
@@ -425,12 +425,18 @@ class _BlocksOnTarget extends StatelessWidget {
     );
 
     return Padding(
-      padding: const EdgeInsets.only(top: 8, left: 32, right: 32),
+      padding: const EdgeInsets.only(
+        top: CrimpyTheme.spaceSm,
+        left: CrimpyTheme.spaceXxl,
+        right: CrimpyTheme.spaceXxl,
+      ),
       child: Column(
         children: [
           for (final block in counts)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
+              padding: const EdgeInsets.symmetric(
+                vertical: CrimpyTheme.spaceXs,
+              ),
               child: Row(
                 children: [
                   Expanded(child: Text(block.label, style: muted)),

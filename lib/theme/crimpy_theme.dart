@@ -363,6 +363,7 @@ class CrimpyTheme {
   static const double spaceMd = 12;
   static const double spaceLg = 16;
   static const double spaceXl = 24;
+  static const double spaceXxl = 32;
 
   /// Inside a card: the same on every card, whatever it holds.
   static const EdgeInsets cardPadding = EdgeInsets.all(spaceLg);

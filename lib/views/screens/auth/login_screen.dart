@@ -152,13 +152,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       appBar: AppBar(title: const Text('Login')),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(CrimpyTheme.spaceXl),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 32),
+                const SizedBox(height: CrimpyTheme.spaceXxl),
                 Text(
                   'Welcome Back',
                   style: CrimpyTheme.title.copyWith(
@@ -166,7 +166,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: CrimpyTheme.spaceSm),
                 Text(
                   'Sign in to continue',
                   style: CrimpyTheme.body.copyWith(
@@ -194,7 +194,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: CrimpyTheme.spaceLg),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: true,
@@ -227,10 +227,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: const Text('Forgot password?'),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: CrimpyTheme.spaceSm),
                 if (_errorMessage != null)
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
                     decoration: BoxDecoration(
                       color: CrimpyTheme.bgError,
                       borderRadius: CrimpyTheme.corners,
@@ -241,11 +241,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       style: TextStyle(color: CrimpyTheme.statusErrorText),
                     ),
                   ),
-                if (_errorMessage != null) const SizedBox(height: 24),
+                if (_errorMessage != null)
+                  const SizedBox(height: CrimpyTheme.spaceXl),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: CrimpyTheme.spaceLg,
+                    ),
                   ),
                   child: _isLoading
                       ? const SizedBox(
@@ -255,7 +258,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         )
                       : const Text('Login'),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: CrimpyTheme.spaceLg),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

@@ -41,7 +41,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
 
     return Dialog(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,7 +68,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               else
                 _buildScanView(),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: CrimpyTheme.spaceSm),
 
               // Action buttons
               Row(
@@ -92,7 +92,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               ),
             ] else
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
                 child: Center(
                   child: ElevatedButton(
                     child: const Text('Turn Bluetooth ON'),
@@ -118,7 +118,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     final device = ref.watch(connectedDeviceProvider);
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceLg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -128,7 +128,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               color: CrimpyTheme.textSecondary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: CrimpyTheme.spaceSm),
           Row(
             children: [
               Icon(
@@ -136,7 +136,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 color: CrimpyTheme.markOn(CrimpyTheme.sensorConnected),
                 size: 24,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: CrimpyTheme.spaceSm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,7 +174,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       if (devices.isEmpty) {
         return Center(
           child: const Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(CrimpyTheme.spaceLg),
             child: Text('No devices found. Try scanning again.'),
           ),
         );
@@ -208,18 +208,18 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           AsyncData(:final value) => buildScanResults(value),
           AsyncValue(:final error?) => Center(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
               child: Text('Error scanning: $error'),
             ),
           ),
 
           _ => const Center(
             child: Padding(
-              padding: EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(CrimpyTheme.spaceXl),
               child: Column(
                 children: [
                   CircularProgressIndicator(),
-                  SizedBox(height: 16),
+                  SizedBox(height: CrimpyTheme.spaceLg),
                   Text('Scanning for devices...'),
                 ],
               ),

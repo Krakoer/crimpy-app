@@ -15,7 +15,10 @@ class DateFilterBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: CrimpyTheme.spaceLg,
+        vertical: CrimpyTheme.spaceSm,
+      ),
       decoration: BoxDecoration(
         color: CrimpyTheme.current.withValues(alpha: 0.1),
         border: const Border(
@@ -29,7 +32,7 @@ class DateFilterBanner extends StatelessWidget {
             size: 16,
             color: CrimpyTheme.textOn(CrimpyTheme.current),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: CrimpyTheme.spaceSm),
           Expanded(
             child: Text(
               'Showing: ${DateFormat('EEEE, MMMM d, y').format(selectedDate)}',
@@ -43,7 +46,10 @@ class DateFilterBanner extends StatelessWidget {
             onPressed: onClearFilter,
             style: TextButton.styleFrom(
               minimumSize: Size.zero,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(
+                horizontal: CrimpyTheme.spaceSm,
+                vertical: CrimpyTheme.spaceXs,
+              ),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: const Text('Show All', style: CrimpyTheme.bodySmall),

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:crimpy/models/common.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class SelectHandDialog extends StatelessWidget {
   /// Dialog to ask the user to select which hand to assess.
@@ -24,7 +25,7 @@ class SelectHandDialog extends StatelessWidget {
                   alignment: Alignment.center,
                   child: Icon(FontAwesomeIcons.hand),
                 ),
-                SizedBox(width: 5),
+                SizedBox(width: CrimpyTheme.spaceXs),
                 Text('Left'),
               ],
             ),
@@ -36,7 +37,7 @@ class SelectHandDialog extends StatelessWidget {
             child: Row(
               children: [
                 Text('Right'),
-                SizedBox(width: 5),
+                SizedBox(width: CrimpyTheme.spaceXs),
                 Icon(FontAwesomeIcons.hand),
               ],
             ),

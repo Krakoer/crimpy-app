@@ -10,6 +10,7 @@ import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/tra
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/create_training_fab.dart';
 import 'package:crimpy/views/widgets/truncated_library_notice.dart';
 import 'package:crimpy/views/screens/trainings/programs/widgets/program_summary_card.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class TrainingScreen extends ConsumerStatefulWidget {
   final VoidCallback goToAssessments;
@@ -73,9 +74,9 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen>
             AsyncValue(:final value?) => ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.only(
-                left: 16.0,
-                right: 16.0,
-                top: 16.0,
+                left: CrimpyTheme.spaceLg,
+                right: CrimpyTheme.spaceLg,
+                top: CrimpyTheme.spaceLg,
                 bottom: 80.0, // Extra padding for FAB
               ),
               children: [
@@ -91,7 +92,7 @@ class _TrainingScreenState extends ConsumerState<TrainingScreen>
               ],
             ),
             AsyncValue(:final error?) => RefreshableColumn(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
               child: Center(child: Text('Oops $error')),
             ),
             _ => const Center(child: CircularProgressIndicator()),

@@ -164,17 +164,17 @@ class ItemReviewSection extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: CrimpyTheme.spaceXs),
         Text(
           'Only what you fill in is recorded.',
           style: CrimpyTheme.bodySmall.copyWith(
             color: CrimpyTheme.textSecondary,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: CrimpyTheme.spaceMd),
         for (final draft in drafts)
           Padding(
-            padding: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.only(bottom: CrimpyTheme.spaceMd),
             child: ItemReviewCard(draft: draft),
           ),
       ],
@@ -240,7 +240,7 @@ class ItemReviewCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -267,7 +267,7 @@ class ItemReviewCard extends StatelessWidget {
               ],
             ),
             if (prescribed != null) ...[
-              const SizedBox(height: 2),
+              const SizedBox(height: CrimpyTheme.spaceXs),
               Text(
                 'Asked $prescribed',
                 style: CrimpyTheme.bodySmall.copyWith(
@@ -276,20 +276,20 @@ class ItemReviewCard extends StatelessWidget {
               ),
             ],
             if (protocol.isNotEmpty) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: CrimpyTheme.spaceSm),
               TrainingItemProtocol(protocol),
             ],
-            const SizedBox(height: 10),
+            const SizedBox(height: CrimpyTheme.spaceMd),
             if (numbers.isNotEmpty) ...[
               Row(
                 children: [
                   for (final (index, field) in numbers.indexed) ...[
-                    if (index > 0) const SizedBox(width: 8),
+                    if (index > 0) const SizedBox(width: CrimpyTheme.spaceSm),
                     Expanded(child: field),
                   ],
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: CrimpyTheme.spaceSm),
             ],
             TextField(
               controller: draft.note,

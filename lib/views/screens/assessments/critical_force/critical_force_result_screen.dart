@@ -45,7 +45,7 @@ class CriticalForceResultScreen extends ConsumerWidget {
                 color: CrimpyTheme.textPrimary,
               ),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: CrimpyTheme.spaceLg),
             ResultCard(
               prevValue: previousCriticalForce,
               newValue: results.criticalLoad,

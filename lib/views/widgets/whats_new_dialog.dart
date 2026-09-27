@@ -18,7 +18,7 @@ class WhatsNewDialog extends ConsumerWidget {
             Icons.new_releases,
             color: CrimpyTheme.markOn(CrimpyTheme.newsMark),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: CrimpyTheme.spaceSm),
           const Text('What\'s New'),
         ],
       ),
@@ -40,7 +40,7 @@ class WhatsNewDialog extends ConsumerWidget {
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: CrimpyTheme.spaceLg),
             _buildFeatureItem(
               context,
               'Coach programs',
@@ -61,7 +61,7 @@ class WhatsNewDialog extends ConsumerWidget {
               'Screen stays awake',
               'The screen no longer turns off in the middle of a workout.',
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: CrimpyTheme.spaceSm),
             Text(
               'Thank you for using Crimpy!',
               style: CrimpyTheme.body.copyWith(
@@ -89,7 +89,7 @@ class WhatsNewDialog extends ConsumerWidget {
     String description,
   ) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+      padding: const EdgeInsets.only(bottom: CrimpyTheme.spaceMd),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -98,7 +98,7 @@ class WhatsNewDialog extends ConsumerWidget {
             color: CrimpyTheme.markOn(CrimpyTheme.statusSuccess),
             size: 20,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: CrimpyTheme.spaceSm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,7 +110,7 @@ class WhatsNewDialog extends ConsumerWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: CrimpyTheme.spaceXs),
                 Text(
                   description,
                   style: CrimpyTheme.body.copyWith(

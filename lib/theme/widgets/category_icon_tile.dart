@@ -26,7 +26,7 @@ class CategoryIconTile extends StatelessWidget {
     width: size,
     height: size,
     alignment: size == null ? null : Alignment.center,
-    padding: size == null ? const EdgeInsets.all(8) : null,
+    padding: size == null ? const EdgeInsets.all(CrimpyTheme.spaceSm) : null,
     decoration: BoxDecoration(
       color: CrimpyTheme.bgPrimary,
       border: Border.all(color: CrimpyTheme.outlineSubtle),

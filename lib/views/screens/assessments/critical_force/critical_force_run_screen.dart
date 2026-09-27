@@ -268,7 +268,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                 // was not relying on the fade.
                 child: Container(
                   width: 200,
-                  padding: EdgeInsets.all(8),
+                  padding: EdgeInsets.all(CrimpyTheme.spaceSm),
                   decoration: CrimpyTheme.raised.copyWith(
                     color: CrimpyTheme.fillOn(CrimpyTheme.pullCue),
                   ),

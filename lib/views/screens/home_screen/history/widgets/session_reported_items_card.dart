@@ -22,10 +22,12 @@ class SessionReportedItemsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SectionHeading('What you managed'),
-          const SizedBox(height: 8),
+          const SizedBox(height: CrimpyTheme.spaceSm),
           for (final item in items)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
+              padding: const EdgeInsets.symmetric(
+                vertical: CrimpyTheme.spaceSm,
+              ),
               child: _ReportedItemRow(item: item),
             ),
         ],
@@ -58,7 +60,7 @@ class _ReportedItemRow extends StatelessWidget {
           children: [
             Expanded(child: Text(item.label, style: CrimpyTheme.body)),
             if (achieved.isNotEmpty) ...[
-              const SizedBox(width: 12),
+              const SizedBox(width: CrimpyTheme.spaceMd),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -83,7 +85,7 @@ class _ReportedItemRow extends StatelessWidget {
         for (final pass in item.passes)
           if (pass.note case final note?)
             Padding(
-              padding: const EdgeInsets.only(top: 4),
+              padding: const EdgeInsets.only(top: CrimpyTheme.spaceXs),
               child: Text.rich(
                 TextSpan(
                   children: [
@@ -101,7 +103,9 @@ class _ReportedItemRow extends StatelessWidget {
                           color: CrimpyTheme.textSecondary,
                         ),
                       ),
-                      const WidgetSpan(child: SizedBox(width: 6)),
+                      const WidgetSpan(
+                        child: SizedBox(width: CrimpyTheme.spaceSm),
+                      ),
                     ],
                     TextSpan(text: note),
                   ],

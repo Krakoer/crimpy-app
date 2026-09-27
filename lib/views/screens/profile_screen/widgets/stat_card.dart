@@ -11,7 +11,10 @@ class StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CrimpyCards.stats(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+      padding: const EdgeInsets.symmetric(
+        vertical: 20,
+        horizontal: CrimpyTheme.spaceMd,
+      ),
       child: Column(
         children: [
           Text(
@@ -21,12 +24,12 @@ class StatCard extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: CrimpyTheme.spaceXs),
           Text(
             label,
             style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textSecondary),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: CrimpyTheme.spaceSm),
           Container(
             height: 4,
             width: 40,

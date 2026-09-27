@@ -282,7 +282,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                 // was not relying on the fade.
                 child: Container(
                   width: 200,
-                  padding: EdgeInsets.all(8),
+                  padding: EdgeInsets.all(CrimpyTheme.spaceSm),
                   decoration: CrimpyTheme.raised.copyWith(
                     color: CrimpyTheme.fillOn(CrimpyTheme.pullCue),
                   ),
@@ -334,7 +334,9 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(left: 8.0),
+                        padding: const EdgeInsets.only(
+                          left: CrimpyTheme.spaceSm,
+                        ),
                         child: Text(
                           "${bleSession.max.toStringAsFixed(2)} kg",
                           style: CrimpyTheme.tabular(CrimpyTheme.headline)

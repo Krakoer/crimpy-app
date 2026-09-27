@@ -61,7 +61,7 @@ class _ForceChartState extends State<ForceChart> {
         alignment: Alignment.center,
         children: [
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
             child: SfCartesianChart(
               primaryXAxis: DateTimeAxis(
                 majorGridLines: const MajorGridLines(width: 0),

@@ -27,12 +27,12 @@ class SessionRawDataCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: CrimpyTheme.spaceLg),
           Text(
             'Data collection period: ${DateFormat('HH:mm:ss').format(dataPoints.first.timestamp)} - ${DateFormat('HH:mm:ss').format(dataPoints.last.timestamp)}',
             style: CrimpyTheme.bodySmall,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: CrimpyTheme.spaceSm),
           Text(
             'Sample rate: ${(dataPoints.length / (dataPoints.last.timestamp.difference(dataPoints.first.timestamp).inSeconds)).toStringAsFixed(1)} Hz',
             style: CrimpyTheme.bodySmall,
