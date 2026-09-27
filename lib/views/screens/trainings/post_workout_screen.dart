@@ -190,7 +190,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
               children: [
                 SizedBox(height: 100),
                 Text(
-                  "Well done! 💪",
+                  "Well done!",
                   style: CrimpyTheme.headline.copyWith(
                     color: CrimpyTheme.textPrimary,
                   ),

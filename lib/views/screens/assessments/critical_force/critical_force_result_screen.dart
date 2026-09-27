@@ -40,7 +40,7 @@ class CriticalForceResultScreen extends ConsumerWidget {
           children: [
             SizedBox(height: 20),
             Text(
-              "Great job! 💪",
+              "Great job!",
               style: CrimpyTheme.headline.copyWith(
                 color: CrimpyTheme.textPrimary,
               ),

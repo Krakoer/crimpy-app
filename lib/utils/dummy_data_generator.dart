@@ -659,7 +659,7 @@ class DummyDataGenerator {
     required double performance,
     required HandSide handSide,
   }) {
-    // Add some random variation (±5%)
+    // Add some random variation (plus or minus 5%)
     final variation = 0.95 + _random.nextDouble() * 0.1;
     final achievedWeight = targetWeight * performance * variation;
 
