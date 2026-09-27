@@ -137,7 +137,10 @@ A dialog's actions say what they do ("Leave", "Keep going", "Delete"), never
 primary action is a `FilledButton`, last, which the theme fills with `action`.
 A primary action that throws away what the athlete did (delete, discard,
 leave a run or a review unsaved) adds `style: CrimpyTheme.destructiveButton`.
-A dialog with a single action makes it the `FilledButton`. See
+A dialog whose only action is its primary one (Resume, Close) makes it the
+`FilledButton`; one whose choices sit in its content keeps a `TextButton` to
+dismiss it. A `DropdownButton` names `borderRadius: CrimpyTheme.corners`,
+since the theme cannot reach its menu. See
 Krakoer/crimpy#171.
 
 A raw `Color(0xFF...)` or `Colors.grey` in a widget is a finding: use or add a

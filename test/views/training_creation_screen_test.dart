@@ -209,7 +209,7 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.tap(find.text('Cancel'));
+      await tester.tap(find.text('Keep it'));
       await tester.pumpAndSettle();
       expect(find.text('Group'), findsOneWidget);
 

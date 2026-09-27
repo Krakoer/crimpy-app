@@ -73,11 +73,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   if (connectionState == BleConnectionState.connected)
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.error,
-                        foregroundColor: CrimpyTheme.textOnFill,
-                      ),
+                    FilledButton(
+                      style: CrimpyTheme.destructiveButton,
                       onPressed: () {
                         ref.read(connectionStateProvider.notifier).disconnect();
                         Navigator.of(context).pop();
@@ -85,7 +82,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                       child: const Text('Disconnect'),
                     )
                   else if (!_isScanning)
-                    ElevatedButton(
+                    FilledButton(
                       onPressed: _startScan,
                       child: const Text('Scan Again'),
                     ),

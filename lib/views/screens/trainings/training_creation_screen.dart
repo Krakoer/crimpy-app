@@ -215,7 +215,7 @@ class _UnifiedTrainingCreationScreenState
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
+              child: const Text('Keep it'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
@@ -532,6 +532,7 @@ class _UnifiedTrainingCreationScreenState
     Widget gripField(String label, List<String> values) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: DropdownButtonFormField<String>(
+        borderRadius: CrimpyTheme.corners,
         initialValue: values[row],
         decoration: InputDecoration(labelText: label),
         items: grips
@@ -1093,6 +1094,7 @@ class _ItemEditorDialogState extends State<_ItemEditorDialog> {
         _intField('Work time (s)', _worktimeController),
         _intField('Rest (s)', _restController, min: 0),
         DropdownButtonFormField<String>(
+          borderRadius: CrimpyTheme.corners,
           initialValue: _hand,
           decoration: const InputDecoration(labelText: 'Hand'),
           // A single hang is one hand or both together: the modes that order

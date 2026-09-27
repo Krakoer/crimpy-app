@@ -320,8 +320,9 @@ class CrimpyTheme {
   /// crimpy-frontend/src/routes/layout.css.
   static const Color protocolColor = accentYellowText;
 
-  /// An action that throws away what the athlete did: deleting a training or
-  /// a session, leaving a run or a review before it is saved. It fills the
+  /// An action that throws away what the athlete did, or cuts off what they
+  /// are using: deleting a training or a session, leaving a run or a review
+  /// before it is saved, disconnecting the sensor. It fills the
   /// primary action of a dialog that asks for one, and carries white at
   /// 4.75:1 without a darker form.
   static const Color destructive = statusError;
@@ -578,6 +579,30 @@ class CrimpyTheme {
       dayPeriodShape: shape,
       dayPeriodBorderSide: const BorderSide(color: outline, width: 1),
       dialBackgroundColor: bgSunken,
+      // The keyboard mode's hour and minute fields. Left unset, the picker
+      // draws them with its own 8px rounded decoration rather than the app's.
+      inputDecorationTheme: const InputDecorationThemeData(
+        filled: true,
+        fillColor: bgSunken,
+        contentPadding: EdgeInsets.zero,
+        border: OutlineInputBorder(borderRadius: corners),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: corners,
+          borderSide: BorderSide(color: outline, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: corners,
+          borderSide: BorderSide(color: control, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: corners,
+          borderSide: BorderSide(color: statusError, width: 1),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: corners,
+          borderSide: BorderSide(color: statusError, width: 2),
+        ),
+      ),
       confirmButtonStyle: _pickerConfirmButton,
     ),
 

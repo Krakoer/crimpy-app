@@ -351,7 +351,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
+                child: const Text('Keep it'),
               ),
               FilledButton(
                 onPressed: () async {

@@ -5,7 +5,7 @@ class ConfirmRedoAssessmentDialog extends StatelessWidget {
   final Function runAssessment;
 
   /// Dialog to ask the use to confirm if they want to run the assessment despite having already done the assessment the same day.
-  /// Call `runAssessment` when the user click on the `Run anyway``button.
+  /// Call `runAssessment` when the user click on the `Run again` button.
   const ConfirmRedoAssessmentDialog({super.key, required this.runAssessment});
 
   @override

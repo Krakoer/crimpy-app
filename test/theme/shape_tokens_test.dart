@@ -8,9 +8,10 @@ import 'package:flutter_test/flutter_test.dart';
 /// its border from the theme's inputDecorationTheme and names none. A circle
 /// is a shape rather than a corner and is not matched. See Krakoer/crimpy#171.
 final RegExp cornerName = RegExp(
-  r'\b(BorderRadius\.(circular|only|vertical|horizontal|all|zero)'
+  r'\b(BorderRadius(Directional)?\.(circular|only|vertical|horizontal|all|zero)'
   r'|Radius\.(circular|elliptical|zero)'
-  r'|RoundedRectangleBorder|StadiumBorder|BeveledRectangleBorder'
+  r'|RoundedRectangleBorder|RoundedSuperellipseBorder|StadiumBorder'
+  r'|BeveledRectangleBorder'
   r'|ContinuousRectangleBorder|OutlineInputBorder|UnderlineInputBorder)\b',
 );
 
@@ -38,6 +39,7 @@ void main() {
     expect(cornerName.hasMatch('radius: Radius.circular(16),'), isTrue);
     expect(cornerName.hasMatch('border: OutlineInputBorder(),'), isTrue);
     expect(cornerName.hasMatch('shape: RoundedRectangleBorder('), isTrue);
+    expect(cornerName.hasMatch('BorderRadiusDirectional.circular(8)'), isTrue);
     expect(cornerName.hasMatch('borderRadius: CrimpyTheme.corners,'), isFalse);
     expect(cornerName.hasMatch('shape: CrimpyTheme.shape,'), isFalse);
     expect(cornerName.hasMatch('shape: BoxShape.circle,'), isFalse);
