@@ -76,8 +76,10 @@ class ProfileContent extends ConsumerWidget {
                       children: [
                         Text(
                           'Cloud Sync',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: CrimpyTheme.titleSmall.copyWith(
+                            color: CrimpyTheme.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         const Text('Sign in to sync your data across devices'),
@@ -136,22 +138,25 @@ class ProfileContent extends ConsumerWidget {
                             children: [
                               Text(
                                 '${user.firstname} ${user.lastname}',
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                style: CrimpyTheme.title.copyWith(
+                                  color: CrimpyTheme.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               Text(
                                 user.email,
-                                style: Theme.of(context).textTheme.bodySmall,
+                                style: CrimpyTheme.bodySmall.copyWith(
+                                  color: CrimpyTheme.textSecondary,
+                                ),
                               ),
                               if (!user.emailVerified)
                                 Text(
                                   'Email not verified',
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: CrimpyTheme.textOn(
-                                          CrimpyTheme.statusWarning,
-                                        ),
-                                      ),
+                                  style: CrimpyTheme.bodySmall.copyWith(
+                                    color: CrimpyTheme.textOn(
+                                      CrimpyTheme.statusWarning,
+                                    ),
+                                  ),
                                 ),
                             ],
                           ),

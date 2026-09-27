@@ -159,16 +159,17 @@ class ItemReviewSection extends StatelessWidget {
       children: [
         Text(
           'How did each one go?',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          style: CrimpyTheme.title.copyWith(
+            color: CrimpyTheme.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           'Only what you fill in is recorded.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: CrimpyTheme.textSecondary),
+          style: CrimpyTheme.bodySmall.copyWith(
+            color: CrimpyTheme.textSecondary,
+          ),
         ),
         const SizedBox(height: 12),
         for (final draft in drafts)
@@ -248,7 +249,8 @@ class ItemReviewCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     sessionBlockLabel(draft.item),
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    style: CrimpyTheme.titleSmall.copyWith(
+                      color: CrimpyTheme.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

@@ -55,7 +55,9 @@ class ScheduledTrainingScreen extends ConsumerWidget {
               child: Text(
                 'Could not load this training.\n$e',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: CrimpyTheme.body.copyWith(
+                  color: CrimpyTheme.textPrimary,
+                ),
               ),
             ),
           ),

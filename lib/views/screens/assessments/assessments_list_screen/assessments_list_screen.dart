@@ -208,7 +208,7 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
                   const SizedBox(width: 8),
                   Text(
                     'No sensor connected - tap to connect',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    style: CrimpyTheme.bodySmall.copyWith(
                       color: CrimpyTheme.textOn(CrimpyTheme.statusWarning),
                       fontWeight: FontWeight.w500,
                     ),

@@ -196,7 +196,7 @@ class _TimeTile extends StatelessWidget {
     title: Text(title),
     trailing: Text(
       time.toString(),
-      style: Theme.of(context).textTheme.titleMedium,
+      style: CrimpyTheme.title.copyWith(color: CrimpyTheme.textPrimary),
     ),
     onTap: enabled ? () => _pick(context) : null,
   );

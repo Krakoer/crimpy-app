@@ -354,9 +354,10 @@ class FullTankLayout extends ConsumerWidget {
     return null;
   }
 
-  /// The state word is 18px bold on the white control strip, under the
-  /// 18.66px large text threshold, so it answers to 4.5:1 and the accent's
-  /// 4.05:1 does not reach it. See Krakoer/crimpy#128.
+  /// The state word is set in capsHeadline, 24px on the white control strip,
+  /// which is large text and would pass at 3:1. It keeps the readable form of
+  /// its accent anyway, which clears 4.5:1, so the word reads the same as the
+  /// small labels around it. See Krakoer/crimpy#128.
   Color get _stateColor {
     if (isPreparation) {
       return CrimpyTheme.textOn(CrimpyTheme.phasePreparation);
@@ -737,7 +738,7 @@ class _TankContent extends StatelessWidget {
     return _column([
       Text(
         'PREPARATION',
-        style: _scaledStyle(CrimpyTheme.headline, color: palette.accent),
+        style: _scaledStyle(CrimpyTheme.capsHeadline, color: palette.accent),
       ),
       SizedBox(height: _s(14)),
       Text(
@@ -780,7 +781,10 @@ class _TankContent extends StatelessWidget {
     if (next == null) {
       return Text(
         'LAST REST',
-        style: _scaledStyle(CrimpyTheme.headline, color: CrimpyTheme.phaseRest),
+        style: _scaledStyle(
+          CrimpyTheme.capsHeadline,
+          color: CrimpyTheme.phaseRest,
+        ),
       );
     }
     final rep = next is TimedItem ? next : null;
@@ -806,7 +810,7 @@ class _TankContent extends StatelessWidget {
         // otherwise push the block past the tank.
         maxLines: _stepTitleMaxLines,
         overflow: TextOverflow.ellipsis,
-        style: _scaledStyle(CrimpyTheme.headline, color: palette.force),
+        style: _scaledStyle(CrimpyTheme.capsHeadline, color: palette.force),
       ),
       if (rep != null) ...[
         SizedBox(height: _s(14)),
@@ -870,7 +874,7 @@ class _TankContent extends StatelessWidget {
         SizedBox(height: _s(8)),
         Text(
           rep.handSide.displayName,
-          style: _scaledStyle(CrimpyTheme.headline, color: palette.force),
+          style: _scaledStyle(CrimpyTheme.capsHeadline, color: palette.force),
         ),
         SizedBox(height: _s(4)),
         Text(
@@ -1100,7 +1104,7 @@ class _PausedCard extends StatelessWidget {
       children: [
         Text(
           'PAUSED',
-          style: CrimpyTheme.headline.apply(
+          style: CrimpyTheme.capsHeadline.apply(
             fontSizeFactor: scale,
             letterSpacingFactor: scale,
             color: CrimpyTheme.textPrimary,
@@ -1182,7 +1186,7 @@ class _ControlStrip extends StatelessWidget {
               if (stateWord != null)
                 Text(
                   stateWord!,
-                  style: CrimpyTheme.headline.copyWith(color: stateColor),
+                  style: CrimpyTheme.capsHeadline.copyWith(color: stateColor),
                 ),
               if (nextStep != null) ...[
                 Text(

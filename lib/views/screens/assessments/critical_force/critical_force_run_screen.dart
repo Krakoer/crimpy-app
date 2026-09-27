@@ -327,7 +327,9 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                 top: 10,
                 child: Text(
                   "${timer.repCount}/$_totalPulls",
-                  style: Theme.of(context).textTheme.displaySmall,
+                  style: CrimpyTheme.tabular(
+                    CrimpyTheme.titleLarge,
+                  ).copyWith(color: CrimpyTheme.textPrimary),
                 ),
               ),
             ],

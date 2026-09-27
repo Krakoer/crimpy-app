@@ -41,7 +41,9 @@ class CriticalForceResultScreen extends ConsumerWidget {
             SizedBox(height: 20),
             Text(
               "Great job! 💪",
-              style: Theme.of(context).textTheme.displaySmall,
+              style: CrimpyTheme.headline.copyWith(
+                color: CrimpyTheme.textPrimary,
+              ),
             ),
             SizedBox(height: 16),
             ResultCard(

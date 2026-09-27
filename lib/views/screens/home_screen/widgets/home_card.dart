@@ -1,5 +1,5 @@
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
-import '../../../../theme/widgets/crimpy_card.dart';
 
 class HomeCard extends StatelessWidget {
   final Widget child;
@@ -28,7 +28,8 @@ class HomeCard extends StatelessWidget {
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: CrimpyTheme.title.copyWith(
+                    color: CrimpyTheme.textPrimary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

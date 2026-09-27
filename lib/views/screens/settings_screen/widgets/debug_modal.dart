@@ -60,7 +60,8 @@ class _DebugModalContent extends ConsumerWidget {
                 ),
                 child: Text(
                   'Debug',
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: CrimpyTheme.titleSmall.copyWith(
+                    color: CrimpyTheme.textPrimary,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -164,7 +165,7 @@ class _AppVersionSection extends ConsumerWidget {
                 const SizedBox(width: 8),
                 Text(
                   'Crimpy ${appInfo.version} (${appInfo.buildNumber})',
-                  style: theme.textTheme.bodyMedium?.copyWith(
+                  style: CrimpyTheme.body.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
@@ -185,8 +186,6 @@ class _DebugToolsSection extends ConsumerStatefulWidget {
 class _DebugToolsSectionState extends ConsumerState<_DebugToolsSection> {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -194,7 +193,8 @@ class _DebugToolsSectionState extends ConsumerState<_DebugToolsSection> {
         children: [
           Text(
             'Debug Tools',
-            style: theme.textTheme.titleMedium?.copyWith(
+            style: CrimpyTheme.title.copyWith(
+              color: CrimpyTheme.textPrimary,
               fontWeight: FontWeight.bold,
             ),
           ),

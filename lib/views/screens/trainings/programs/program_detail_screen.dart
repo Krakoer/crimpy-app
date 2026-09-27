@@ -135,12 +135,17 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(program.name, style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            program.name,
+            style: CrimpyTheme.titleSmall.copyWith(
+              color: CrimpyTheme.textPrimary,
+            ),
+          ),
           if ((program.objective ?? '').isNotEmpty) ...[
             const SizedBox(height: 7),
             Text(
               program.objective!,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              style: CrimpyTheme.body.copyWith(
                 color: CrimpyTheme.textSecondary,
               ),
             ),

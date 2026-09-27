@@ -68,8 +68,10 @@ class FavoriteTrainingList extends ConsumerWidget {
                         },
                         title: Text(
                           item.name,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: CrimpyTheme.titleSmall.copyWith(
+                            color: CrimpyTheme.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         subtitle: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -238,7 +240,8 @@ class PinTrainingDialog extends ConsumerWidget {
                       },
                       title: Text(
                         item.name,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        style: CrimpyTheme.titleSmall.copyWith(
+                          color: CrimpyTheme.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

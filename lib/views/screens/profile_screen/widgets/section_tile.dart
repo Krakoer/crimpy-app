@@ -1,3 +1,4 @@
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
 
 /// Section title widget
@@ -11,9 +12,10 @@ class SectionTitle extends StatelessWidget {
       alignment: Alignment.centerLeft,
       child: Text(
         title,
-        style: Theme.of(
-          context,
-        ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+        style: CrimpyTheme.title.copyWith(
+          color: CrimpyTheme.textPrimary,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

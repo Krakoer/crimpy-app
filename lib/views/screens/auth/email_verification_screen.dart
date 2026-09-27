@@ -72,21 +72,26 @@ class _EmailVerificationScreenState
               const SizedBox(height: 24),
               Text(
                 'Check Your Email',
-                style: Theme.of(context).textTheme.headlineMedium,
+                style: CrimpyTheme.title.copyWith(
+                  color: CrimpyTheme.textPrimary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               Text(
                 'Check your inbox at:',
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: CrimpyTheme.body.copyWith(
+                  color: CrimpyTheme.textPrimary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 widget.email,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: CrimpyTheme.body.copyWith(
+                  color: CrimpyTheme.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
@@ -102,7 +107,8 @@ class _EmailVerificationScreenState
                     const SizedBox(height: 12),
                     Text(
                       'Instructions',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: CrimpyTheme.title.copyWith(
+                        color: CrimpyTheme.textPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

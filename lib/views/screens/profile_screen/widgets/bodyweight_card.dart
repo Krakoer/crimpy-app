@@ -29,7 +29,8 @@ class BodyweightCard extends ConsumerWidget {
                 children: [
                   Text(
                     'Body weight',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    style: CrimpyTheme.titleSmall.copyWith(
+                      color: CrimpyTheme.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -38,14 +39,16 @@ class BodyweightCard extends ConsumerWidget {
                     value == null
                         ? 'Not set. Needed for loads set in % of body weight.'
                         : '${value.toStringAsFixed(1)} kg',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: CrimpyTheme.body.copyWith(
+                      color: CrimpyTheme.textPrimary,
+                    ),
                   ),
                   if (value != null && pending) ...[
                     const SizedBox(height: 4),
                     Text(
                       'Saved on this device. Your coach will see it once it '
                       'reaches Crimpy.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      style: CrimpyTheme.bodySmall.copyWith(
                         color: CrimpyTheme.textSecondary,
                       ),
                     ),

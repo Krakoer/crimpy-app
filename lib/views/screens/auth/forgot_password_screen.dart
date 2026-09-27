@@ -62,7 +62,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 const SizedBox(height: 32),
                 Text(
                   'Reset your password',
-                  style: Theme.of(context).textTheme.headlineMedium,
+                  style: CrimpyTheme.title.copyWith(
+                    color: CrimpyTheme.textPrimary,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
@@ -70,7 +72,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   'Enter the email you signed up with and we will send you a '
                   'link to choose a new password. The link is valid for one '
                   'hour.',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: CrimpyTheme.body.copyWith(
+                    color: CrimpyTheme.textPrimary,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),

@@ -494,7 +494,12 @@ class _UnifiedTrainingCreationScreenState
               .toList(),
         ),
         const SizedBox(height: 6),
-        Text(selected.$3, style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          selected.$3,
+          style: CrimpyTheme.bodySmall.copyWith(
+            color: CrimpyTheme.textSecondary,
+          ),
+        ),
       ],
     );
   }
@@ -583,7 +588,9 @@ class _UnifiedTrainingCreationScreenState
                 Expanded(
                   child: Text(
                     _config.labelOf(row),
-                    style: Theme.of(context).textTheme.titleSmall,
+                    style: CrimpyTheme.titleSmall.copyWith(
+                      color: CrimpyTheme.textPrimary,
+                    ),
                   ),
                 ),
                 if (row < _config.rowCount - 1)

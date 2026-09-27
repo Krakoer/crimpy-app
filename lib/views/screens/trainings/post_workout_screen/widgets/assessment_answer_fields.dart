@@ -62,7 +62,8 @@ class AssessmentAnswerFields extends StatelessWidget {
                 Expanded(
                   child: Text(
                     definition.label,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: CrimpyTheme.title.copyWith(
+                      color: CrimpyTheme.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -72,7 +73,7 @@ class AssessmentAnswerFields extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               definition.prompt ?? 'What was your result?',
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textPrimary),
             ),
             const SizedBox(height: 16),
             if (definition.perHand)

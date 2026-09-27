@@ -419,6 +419,16 @@ class CrimpyTheme {
     letterSpacing: -0.4,
   );
 
+  /// [headline] for a word set in capitals: a state word such as "REST" or
+  /// "PAUSED", a hand. Tracked open rather than tight, since capitals crowd at
+  /// any size where lower case does not.
+  static const TextStyle capsHeadline = TextStyle(
+    fontSize: 24,
+    height: 29 / 24,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0.5,
+  );
+
   /// A prominent line that is not a heading: a step name, a figure with its
   /// unit.
   static const TextStyle titleLarge = TextStyle(
@@ -809,9 +819,10 @@ class CrimpyTheme {
       shape: shape,
     ),
 
-    // Get a Grip's scale, on the platform's sans. The slots a widget names are
-    // the TYPE section above; the display and headline slots the app does not
-    // name are here so a Material widget reaching for one gets the same scale.
+    // Get a Grip's scale, on the platform's sans. Only Material's own widgets
+    // read these slots: a widget in lib/ takes a style from the TYPE section
+    // above, and test/theme/type_tokens_test.dart fails on one that reads
+    // textTheme instead.
     textTheme: TextTheme(
       displayLarge: const TextStyle(
         fontSize: 57,
@@ -917,29 +928,19 @@ class CrimpyTheme {
     ),
 
     // Tab bar theme
-    tabBarTheme: const TabBarThemeData(
+    tabBarTheme: TabBarThemeData(
       labelColor: control,
       unselectedLabelColor: textSecondary,
       indicatorColor: control,
       indicatorSize: TabBarIndicatorSize.label,
       labelStyle: label,
-      unselectedLabelStyle: TextStyle(
-        fontSize: 14,
-        height: 20 / 14,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.1,
-      ),
+      unselectedLabelStyle: label.copyWith(fontWeight: FontWeight.w500),
     ),
 
     // Snack bar theme
-    snackBarTheme: const SnackBarThemeData(
+    snackBarTheme: SnackBarThemeData(
       backgroundColor: primaryBlack,
-      contentTextStyle: TextStyle(
-        fontSize: 14,
-        height: 21 / 14,
-        letterSpacing: 0,
-        color: primaryWhite,
-      ),
+      contentTextStyle: body.copyWith(color: primaryWhite),
       shape: shape,
       behavior: SnackBarBehavior.floating,
     ),

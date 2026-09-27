@@ -9,9 +9,12 @@ import 'package:flutter_test/flutter_test.dart';
 /// it rather than stating a size of its own. A display number states its size
 /// through CrimpyTheme.numerals, which is a call rather than a `fontSize:`, and
 /// a screen scaling its type with its layout does it through
-/// TextStyle.apply. See Krakoer/crimpy#172.
+/// TextStyle.apply. Reading a slot of the Material textTheme is the same
+/// escape by another door: those slots carry sizes the widget cannot see, and
+/// a slot resized for Material's sake silently resizes every screen reading it.
+/// See Krakoer/crimpy#172.
 final RegExp typeName = RegExp(
-  r'\b(fontSize|letterSpacing|fontFamily):|\bGoogleFonts\b',
+  r'\b(fontSize|letterSpacing|fontFamily):|\bGoogleFonts\b|\btextTheme\.',
 );
 
 /// Heavier than any style of the scale. Heavy type everywhere was the problem
@@ -42,7 +45,8 @@ List<String> offencesOf(RegExp pattern, {bool skipTheme = true}) {
 }
 
 void main() {
-  test('no file outside the theme names a size, a tracking or a family', () {
+  test('no file outside the theme names a size, a tracking, a family or a '
+      'textTheme slot', () {
     final offences = offencesOf(typeName);
     expect(offences, isEmpty, reason: offences.join('\n'));
   });
@@ -56,6 +60,7 @@ void main() {
     expect(typeName.hasMatch('TextStyle(fontSize: 12)'), isTrue);
     expect(typeName.hasMatch('.copyWith(letterSpacing: 2)'), isTrue);
     expect(typeName.hasMatch("fontFamily: 'JetBrainsMono',"), isTrue);
+    expect(typeName.hasMatch('Theme.of(context).textTheme.bodySmall'), isTrue);
     expect(typeName.hasMatch('style: CrimpyTheme.body,'), isFalse);
     expect(typeName.hasMatch('CrimpyTheme.numerals(48)'), isFalse);
     expect(typeName.hasMatch('.apply(fontSizeFactor: scale)'), isFalse);

@@ -99,7 +99,8 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                   const SizedBox(height: 12),
                   Text(
                     widget.content.assessmentName,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    style: CrimpyTheme.title.copyWith(
+                      color: CrimpyTheme.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
@@ -107,7 +108,7 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                   const SizedBox(height: 4),
                   Text(
                     widget.content.subtitle,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    style: CrimpyTheme.body.copyWith(
                       color: CrimpyTheme.textSecondary,
                     ),
                     textAlign: TextAlign.center,
@@ -181,7 +182,9 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                       },
                       title: Text(
                         "Don't show this again",
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: CrimpyTheme.body.copyWith(
+                          color: CrimpyTheme.textPrimary,
+                        ),
                       ),
                       controlAffinity: ListTileControlAffinity.leading,
                       contentPadding: EdgeInsets.zero,
@@ -275,14 +278,15 @@ class _TutorialSectionWidget extends StatelessWidget {
             children: [
               Text(
                 section.title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: CrimpyTheme.title.copyWith(
+                  color: CrimpyTheme.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 section.content,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                style: CrimpyTheme.body.copyWith(
                   color: CrimpyTheme.textSecondary,
                   height: 1.5,
                 ),

@@ -51,9 +51,10 @@ class SessionPerformanceCard extends StatelessWidget {
         children: [
           Text(
             'Performance Stats',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: CrimpyTheme.title.copyWith(
+              color: CrimpyTheme.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           for (var row = 0; row * 2 < stats.length; row++) ...[

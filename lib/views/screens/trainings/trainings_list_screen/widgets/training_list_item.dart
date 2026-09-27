@@ -51,13 +51,20 @@ class TrainingListItemWidget extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Title
-                Text(item.name, style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  item.name,
+                  style: CrimpyTheme.titleSmall.copyWith(
+                    color: CrimpyTheme.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 // Description
                 if (item.isBuiltin && item.description.isNotEmpty) ...[
                   Text(
                     item.description,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: CrimpyTheme.bodySmall.copyWith(
+                      color: CrimpyTheme.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 4),
                 ],
@@ -75,7 +82,7 @@ class TrainingListItemWidget extends ConsumerWidget {
                       item.isAvailable
                           ? formatDurationMinSec(item.totalDuration)
                           : 'Assessment required',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      style: CrimpyTheme.bodySmall.copyWith(
                         color: item.isAvailable
                             ? CrimpyTheme.textSecondary
                             : CrimpyTheme.textMutedSmall,

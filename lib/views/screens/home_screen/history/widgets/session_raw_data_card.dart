@@ -19,9 +19,10 @@ class SessionRawDataCard extends StatelessWidget {
             children: [
               Text(
                 'Raw Data',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: CrimpyTheme.title.copyWith(
+                  color: CrimpyTheme.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 '${dataPoints.length} data points',

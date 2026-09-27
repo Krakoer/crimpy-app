@@ -37,9 +37,10 @@ class SessionFeedbackCard extends StatelessWidget {
         children: [
           Text(
             'Feedback',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: CrimpyTheme.title.copyWith(
+              color: CrimpyTheme.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           if (notes != null && notes!.isNotEmpty) ...[
             const SizedBox(height: 8),

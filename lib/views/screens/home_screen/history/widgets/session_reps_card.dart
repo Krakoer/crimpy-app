@@ -66,9 +66,10 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
             children: [
               Text(
                 blocks != null ? 'Blocks' : 'Repetitions Breakdown',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: CrimpyTheme.title.copyWith(
+                  color: CrimpyTheme.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               if (overall != null)
                 Container(

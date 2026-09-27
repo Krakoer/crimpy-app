@@ -22,9 +22,10 @@ class SessionReportedItemsCard extends StatelessWidget {
         children: [
           Text(
             'What you managed',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: CrimpyTheme.title.copyWith(
+              color: CrimpyTheme.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           for (final item in items)

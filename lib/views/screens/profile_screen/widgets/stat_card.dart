@@ -16,16 +16,15 @@ class StatCard extends StatelessWidget {
         children: [
           Text(
             value,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: CrimpyTheme.title.copyWith(
+              color: CrimpyTheme.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: CrimpyTheme.textSecondary),
+            style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textSecondary),
           ),
           const SizedBox(height: 8),
           Container(

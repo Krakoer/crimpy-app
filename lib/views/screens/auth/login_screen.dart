@@ -161,13 +161,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 32),
                 Text(
                   'Welcome Back',
-                  style: Theme.of(context).textTheme.headlineMedium,
+                  style: CrimpyTheme.title.copyWith(
+                    color: CrimpyTheme.textPrimary,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Sign in to continue',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: CrimpyTheme.body.copyWith(
+                    color: CrimpyTheme.textPrimary,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
