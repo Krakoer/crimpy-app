@@ -11,7 +11,8 @@ part of 'load_drop_alarm_view_model.dart';
 /// Whether the load of the running rep has dropped below its target, which
 /// raises the run screen alarm. The run says which step it is on with
 /// [LoadDropAlarmController.follow]; every sensor sample then feeds the rep's
-/// [LoadDropAlarm]. See Krakoer/crimpy#175.
+/// [LoadDropAlarm]. A sensor that reconnects mid-rep starts the watch over.
+/// See Krakoer/crimpy#175.
 
 @ProviderFor(LoadDropAlarmController)
 const loadDropAlarmProvider = LoadDropAlarmControllerProvider._();
@@ -19,13 +20,15 @@ const loadDropAlarmProvider = LoadDropAlarmControllerProvider._();
 /// Whether the load of the running rep has dropped below its target, which
 /// raises the run screen alarm. The run says which step it is on with
 /// [LoadDropAlarmController.follow]; every sensor sample then feeds the rep's
-/// [LoadDropAlarm]. See Krakoer/crimpy#175.
+/// [LoadDropAlarm]. A sensor that reconnects mid-rep starts the watch over.
+/// See Krakoer/crimpy#175.
 final class LoadDropAlarmControllerProvider
     extends $NotifierProvider<LoadDropAlarmController, bool> {
   /// Whether the load of the running rep has dropped below its target, which
   /// raises the run screen alarm. The run says which step it is on with
   /// [LoadDropAlarmController.follow]; every sensor sample then feeds the rep's
-  /// [LoadDropAlarm]. See Krakoer/crimpy#175.
+  /// [LoadDropAlarm]. A sensor that reconnects mid-rep starts the watch over.
+  /// See Krakoer/crimpy#175.
   const LoadDropAlarmControllerProvider._()
     : super(
         from: null,
@@ -54,12 +57,13 @@ final class LoadDropAlarmControllerProvider
 }
 
 String _$loadDropAlarmControllerHash() =>
-    r'b62c5f668b5eb5579262b480e8cda348fa225972';
+    r'4c94680ba6c07aae23966daaffa8fb076f55bbf6';
 
 /// Whether the load of the running rep has dropped below its target, which
 /// raises the run screen alarm. The run says which step it is on with
 /// [LoadDropAlarmController.follow]; every sensor sample then feeds the rep's
-/// [LoadDropAlarm]. See Krakoer/crimpy#175.
+/// [LoadDropAlarm]. A sensor that reconnects mid-rep starts the watch over.
+/// See Krakoer/crimpy#175.
 
 abstract class _$LoadDropAlarmController extends $Notifier<bool> {
   bool build();

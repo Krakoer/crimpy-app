@@ -822,9 +822,6 @@ void main() {
     expect(find.text('Left leg'), findsOneWidget);
   });
 
-  // Samples taken while the run is suspended belong to no rep. Recording them
-  // dragged the average force of the rep the pause interrupted down towards
-  // zero, since the athlete is off the board for the whole pause.
   // See Krakoer/crimpy#175. Target 30 kg: fires under 27 kg, clears at 28.5.
   testWidgets(
     'a load held below the target raises the alarm until it is back',
@@ -893,14 +890,29 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.play_arrow));
     await tester.pump();
-    // A fresh watch: back on target, then a dip shorter than the dwell.
-    read(30, 5000);
-    read(20, 5100);
-    read(20, 5400);
+    // A fresh watch: under the line before getting back on target raises
+    // nothing, however long it lasts.
+    read(20, 5000);
+    read(20, 5600);
     await tester.pump();
     expect(find.text('BELOW TARGET'), findsNothing);
+
+    // Back on target, then a dip shorter than the dwell.
+    read(30, 6000);
+    read(20, 6100);
+    read(20, 6400);
+    await tester.pump();
+    expect(find.text('BELOW TARGET'), findsNothing);
+
+    // The watch is live again: held under for the whole dwell, it fires.
+    read(20, 6600);
+    await tester.pump();
+    expect(find.text('BELOW TARGET'), findsOneWidget);
   });
 
+  // Samples taken while the run is suspended belong to no rep. Recording them
+  // dragged the average force of the rep the pause interrupted down towards
+  // zero, since the athlete is off the board for the whole pause.
   testWidgets('pausing the run stops recording sensor samples', (tester) async {
     final bleRepository = BleRepository();
     await _pumpRun(tester, _stretchingCircuit(), bleRepository: bleRepository);

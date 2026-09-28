@@ -9,7 +9,8 @@ part 'load_drop_alarm_view_model.g.dart';
 /// Whether the load of the running rep has dropped below its target, which
 /// raises the run screen alarm. The run says which step it is on with
 /// [LoadDropAlarmController.follow]; every sensor sample then feeds the rep's
-/// [LoadDropAlarm]. See Krakoer/crimpy#175.
+/// [LoadDropAlarm]. A sensor that reconnects mid-rep starts the watch over.
+/// See Krakoer/crimpy#175.
 @Riverpod(name: 'loadDropAlarmProvider')
 class LoadDropAlarmController extends _$LoadDropAlarmController {
   LoadDropAlarm? _rep;
@@ -21,6 +22,13 @@ class LoadDropAlarmController extends _$LoadDropAlarmController {
         .dataStream
         .listen(_onSample);
     ref.onDispose(subscription.cancel);
+    ref.listen(connectionStateProvider, (previous, next) {
+      if (next == BleConnectionState.connected &&
+          previous != BleConnectionState.connected) {
+        _rep?.reset();
+        state = false;
+      }
+    });
     return false;
   }
 

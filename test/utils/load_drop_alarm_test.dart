@@ -141,6 +141,31 @@ void main() {
     });
   });
 
+  // A sensor that reconnects mid-rep starts the watch over.
+  group('the reset', () {
+    test('disarms it, so a low first sample after it cannot fire', () {
+      final alarm = _armed(40);
+      alarm.reset();
+      expect(_feed(alarm, List.filled(10, 20), from: 100), isFalse);
+    });
+
+    test('watches afresh once the load is back on target', () {
+      final alarm = _armed(40);
+      _feed(alarm, [20, 20, 20, 20], from: 100);
+      alarm.reset();
+      alarm.update(40, _at(500));
+      expect(_feed(alarm, [20, 20, 20, 20, 20], from: 600), isFalse);
+      expect(alarm.update(20, _at(1100)), isTrue);
+    });
+
+    test('puts a raised alarm down', () {
+      final alarm = _armed(40);
+      expect(_feed(alarm, List.filled(6, 20), from: 100), isTrue);
+      alarm.reset();
+      expect(alarm.raised, isFalse);
+    });
+  });
+
   group('the steps it watches', () {
     test('a hang reading the sensor with a target load', () {
       expect(loadDropTargetOf(_hang()), 40);

@@ -38,6 +38,15 @@ class LoadDropAlarm {
 
   bool get raised => _raised;
 
+  /// Starts the rep's watch over: the load has to get on target again before
+  /// the alarm can fire. For a sensor that came back mid-rep, whose first
+  /// samples say nothing about the load before it went.
+  void reset() {
+    _reachedTarget = false;
+    _belowSince = null;
+    _raised = false;
+  }
+
   /// Takes the sample [load] read at [at] and answers whether the alarm is
   /// raised after it.
   bool update(double load, DateTime at) {
