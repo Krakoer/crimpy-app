@@ -11,6 +11,7 @@ import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/services/api_exception.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
+import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -197,11 +198,20 @@ _setUp(
         builtinPreferencesRepositoryProvider.overrideWith((ref) => preferences),
         // Only the assessment save path reaches this, and it writes nowhere.
         sessionsProvider.overrideWith(_CapturingSessions.new),
+        // The lists read the bodyweight to rate a %BW hang against the max.
+        // Stored on the device and on the server alike, it is neither of the
+        // reads these tests count.
+        bodyweightProvider.overrideWith(_NoBodyweight.new),
       ],
     ),
     assessments: assessments,
     preferences: preferences,
   );
+}
+
+class _NoBodyweight extends BodyweightController {
+  @override
+  Future<double?> build() async => null;
 }
 
 /// Saves without a store behind it, so recording a result can be driven

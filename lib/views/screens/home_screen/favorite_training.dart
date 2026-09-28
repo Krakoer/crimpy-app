@@ -5,6 +5,7 @@ import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/home_card.dart';
 import 'package:crimpy/views/screens/trainings/training_details_screen.dart';
+import 'package:crimpy/views/widgets/intensity_badge.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -84,6 +85,10 @@ class FavoriteTrainingList extends ConsumerWidget {
                             ),
                             SizedBox(width: CrimpyTheme.spaceSm),
                             Text(formatLength(item.totalDuration)),
+                            if (item.intensity != null) ...[
+                              const SizedBox(width: CrimpyTheme.spaceMd),
+                              IntensityBadge(item.intensity!),
+                            ],
                           ],
                         ),
                       ),

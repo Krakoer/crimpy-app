@@ -590,13 +590,16 @@ void _expandSplitRepeater(
 }
 
 /// Grips arrive either as the app's enum names or as the short codes the coach
-/// portal stores, so both vocabularies resolve here.
-/// Every known code is listed, so an unrecognised one falls to the default
-/// rather than hiding among the mapped ones.
-GripPosition _parseGrip(String? name) => switch (name) {
+/// portal stores, so both vocabularies resolve here. Null for a grip neither
+/// vocabulary knows, so a reader that must not guess can tell it apart.
+GripPosition? gripFromStored(String? name) => switch (name) {
   'threeFinger' || '3FD' => GripPosition.threeFinger,
   'fullCrimp' || 'FC' => GripPosition.fullCrimp,
   'openHand' || 'OC' || 'OH' => GripPosition.openHand,
   'halfCrimp' || 'HC' => GripPosition.halfCrimp,
-  _ => GripPosition.halfCrimp,
+  _ => null,
 };
+
+/// [gripFromStored], with an unrecognised grip run as a half crimp.
+GripPosition _parseGrip(String? name) =>
+    gripFromStored(name) ?? GripPosition.halfCrimp;

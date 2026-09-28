@@ -8,6 +8,7 @@ import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/views/screens/trainings/training_details_screen.dart';
 import 'package:crimpy/views/screens/trainings/training_creation_screen.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/delete_training_dialog.dart';
+import 'package:crimpy/views/widgets/intensity_badge.dart';
 
 class TrainingListItemWidget extends ConsumerWidget {
   final TrainingListItem item;
@@ -88,6 +89,10 @@ class TrainingListItemWidget extends ConsumerWidget {
                             : CrimpyTheme.textMutedSmall,
                       ),
                     ),
+                    if (item.isAvailable && item.intensity != null) ...[
+                      const SizedBox(width: CrimpyTheme.spaceMd),
+                      IntensityBadge(item.intensity!),
+                    ],
                   ],
                 ),
               ],

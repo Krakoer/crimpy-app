@@ -18,6 +18,7 @@ import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/repositories/builtin_training_repository.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
+import 'package:crimpy/utils/training_intensity.dart';
 
 part 'training_view_model.g.dart';
 
@@ -352,11 +353,30 @@ List<TrainingListItem> _buildTrainingList({
   required List<Training> library,
   required BuiltinTrainingCatalog catalog,
   required bool onlyPinned,
+  double? bodyweightKg,
 }) {
+  final maxForce = MaxForceReference.fromHistory(catalog.assessments);
+  final results = AssessmentResults.fromHistory(catalog.assessments);
+  TrainingIntensity? intensityOf(Training? training) => training == null
+      ? null
+      : peakIntensity(
+          training,
+          maxForce: maxForce,
+          results: results.withDefinitions(training.referencedAssessments),
+          bodyweightKg: bodyweightKg,
+        );
+
   final regular = onlyPinned
       ? library.where((training) => training.isFavorite).toList()
       : library;
-  final regularItems = regular.map(TrainingListItem.regular).toList();
+  final regularItems = regular
+      .map(
+        (training) => TrainingListItem.regular(
+          training,
+          intensity: intensityOf(training),
+        ),
+      )
+      .toList();
 
   final selected = onlyPinned
       ? catalog.trainings
@@ -378,11 +398,19 @@ List<TrainingListItem> _buildTrainingList({
       result.missing,
       result.training,
       catalog.pinnedIds.contains(builtin.id),
+      intensity: intensityOf(result.training),
     );
   }).toList();
 
   return [...regularItems, ...builtinItems];
 }
+
+/// The bodyweight a %BW hang is rated against, or none when it is not known or
+/// cannot be read: an intensity it cannot resolve is left off the card, which
+/// is no reason to fail the list.
+Future<double?> _bodyweightOrNone(Ref ref) => ref
+    .watch(bodyweightProvider.future)
+    .then<double?>((kilograms) => kilograms, onError: (_) => null);
 
 /// Provider for pinned builtin trainings (with favorites).
 @Riverpod(keepAlive: true)
@@ -391,10 +419,12 @@ class PinnedTrainings extends _$PinnedTrainings {
   Future<List<TrainingListItem>> build() async {
     final library = ref.watch(trainingLibraryProvider.future);
     final catalog = ref.watch(builtinTrainingCatalogProvider.future);
+    final bodyweightKg = _bodyweightOrNone(ref);
     return _buildTrainingList(
       library: (await library).trainings,
       catalog: await catalog,
       onlyPinned: true,
+      bodyweightKg: await bodyweightKg,
     );
   }
 
@@ -420,9 +450,11 @@ class PinnedTrainings extends _$PinnedTrainings {
 Future<List<TrainingListItem>> allTrainings(Ref ref) async {
   final library = ref.watch(trainingLibraryProvider.future);
   final catalog = ref.watch(builtinTrainingCatalogProvider.future);
+  final bodyweightKg = _bodyweightOrNone(ref);
   return _buildTrainingList(
     library: (await library).trainings,
     catalog: await catalog,
     onlyPinned: false,
+    bodyweightKg: await bodyweightKg,
   );
 }
