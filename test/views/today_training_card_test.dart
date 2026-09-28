@@ -1,10 +1,10 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
-import 'package:crimpy/utils/training_intensity.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/utils/training_intensity.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
