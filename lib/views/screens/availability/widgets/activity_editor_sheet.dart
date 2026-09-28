@@ -122,7 +122,12 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
       ),
       child: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, CrimpyTheme.spaceLg, 20, 20),
+          padding: const EdgeInsets.fromLTRB(
+            CrimpyTheme.spaceLgPlus,
+            CrimpyTheme.spaceLg,
+            CrimpyTheme.spaceLgPlus,
+            CrimpyTheme.spaceLgPlus,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,7 +157,7 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                   color: CrimpyTheme.textSecondary,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: CrimpyTheme.spaceLgPlus),
               TextField(
                 controller: _labelController,
                 autofocus: widget.activity == null,
@@ -218,7 +223,7 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                   isDense: true,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: CrimpyTheme.spaceLgPlus),
               Row(
                 children: [
                   Expanded(

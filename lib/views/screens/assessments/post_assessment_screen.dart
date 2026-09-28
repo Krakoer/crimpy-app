@@ -199,7 +199,11 @@ class ResultCard extends StatelessWidget {
             right: CrimpyTheme.spaceLg,
           ),
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
+            padding: const EdgeInsets.only(
+              bottom: CrimpyTheme.spaceLgPlus,
+              left: CrimpyTheme.spaceLgPlus,
+              right: CrimpyTheme.spaceLgPlus,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [

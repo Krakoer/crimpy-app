@@ -545,7 +545,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
-        vertical: 20,
+        vertical: CrimpyTheme.spaceLgPlus,
         horizontal: CrimpyTheme.spaceMd,
       ),
       decoration: BoxDecoration(

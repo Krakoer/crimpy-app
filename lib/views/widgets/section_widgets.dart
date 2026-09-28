@@ -19,10 +19,26 @@ class SectionHeading extends StatelessWidget {
   );
 }
 
+/// A label over one part of a section, under its [SectionHeading]: "How you
+/// felt" in the feedback card. Quieter than the heading it sits under, in
+/// sentence case and regular weight, so a card reads as one heading with
+/// parts rather than as a row of equal headings. See Krakoer/crimpy#174.
+class SectionSubLabel extends StatelessWidget {
+  final String label;
+
+  const SectionSubLabel(this.label, {super.key});
+
+  @override
+  Widget build(BuildContext context) => Text(
+    label,
+    style: CrimpyTheme.bodySmall.copyWith(color: CrimpyTheme.textSecondary),
+  );
+}
+
 /// [SectionHeading] followed by a rule filling the rest of the line.
 class SectionLabel extends StatelessWidget {
   /// Space between the label and the rule.
-  static const double _labelGap = 8;
+  static const double _labelGap = CrimpyTheme.spaceSm;
 
   /// How much rule is kept whatever the label says, so a heading still reads
   /// as a heading rather than as a line of text.

@@ -39,7 +39,7 @@ class SessionFeedbackCard extends StatelessWidget {
           const SectionHeading('Feedback'),
           if (notes != null && notes!.isNotEmpty) ...[
             const SizedBox(height: CrimpyTheme.spaceSm),
-            const SectionHeading('How you felt'),
+            const SectionSubLabel('How you felt'),
             const SizedBox(height: CrimpyTheme.spaceXs),
             Text(notes!, style: CrimpyTheme.body),
           ],
@@ -47,7 +47,7 @@ class SessionFeedbackCard extends StatelessWidget {
             const SizedBox(height: CrimpyTheme.spaceLg),
             Row(
               children: [
-                const SectionHeading('Your coach answered'),
+                const SectionSubLabel('Your coach answered'),
                 if (unread) ...[
                   const SizedBox(width: CrimpyTheme.spaceSm),
                   const _NewBadge(),

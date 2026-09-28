@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,7 +48,7 @@ class _CalibrationRunDialogState extends ConsumerState<RunCalibrationDialog> {
     return AlertDialog(
       title: Text("Calibrating..."),
       content: Padding(
-        padding: EdgeInsets.all(20),
+        padding: EdgeInsets.all(CrimpyTheme.spaceLgPlus),
         child: Text((5 - secondCount).toString()),
       ),
     );

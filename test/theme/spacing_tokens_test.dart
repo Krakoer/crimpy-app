@@ -53,7 +53,6 @@ const Map<String, Map<String, String>> offScale = {
     '2': 'calendar geometry: the gutter between day cells',
     '36': 'the calendar week label column, a width not a gap',
     '40': 'empty state: whitespace around the not-planned message',
-    '20': 'between spaceLg and spaceXl, 4dp either way; see #174',
   },
   'lib/views/screens/home_screen/favorite_training.dart': {
     '200': 'the favorite card height',
@@ -89,28 +88,14 @@ const Map<String, Map<String, String>> offScale = {
   },
   'lib/views/screens/assessments/post_assessment_screen.dart': {
     '100': 'whitespace above the result headline',
-    '20': 'between spaceLg and spaceXl, 4dp either way; see #174',
-  },
-  'lib/views/screens/assessments/critical_force/critical_force_result_screen.dart':
-      {'20': 'between spaceLg and spaceXl, 4dp either way; see #174'},
-  'lib/views/screens/availability/widgets/activity_editor_sheet.dart': {
-    '20': 'between spaceLg and spaceXl, 4dp either way; see #174',
-  },
-  'lib/views/screens/profile_screen/widgets/stat_card.dart': {
-    '20': 'between spaceLg and spaceXl, 4dp either way; see #174',
-  },
-  'lib/views/screens/settings_screen/widgets/calibration/run_calibration_dialog.dart':
-      {'20': 'between spaceLg and spaceXl, 4dp either way; see #174'},
-  'lib/views/screens/trainings/trainings_list_screen/widgets/missing_assessments_dialog.dart':
-      {'20': 'between spaceLg and spaceXl, 4dp either way; see #174'},
-  'lib/views/widgets/assessment_tutorial_dialog.dart': {
-    '20': 'between spaceLg and spaceXl, 4dp either way; see #174',
   },
 };
 
 final RegExp numberLiteral = RegExp(r'(?<![\w.])\d+(\.\d+)?(?![\w.])');
 
-final RegExp spacingCall = RegExp(r'\bEdgeInsets(Directional)?\.\w+\(');
+final RegExp spacingCall = RegExp(
+  r'\bEdgeInsets(Directional|Geometry)?\.\w+\(',
+);
 final RegExp sizedBoxCall = RegExp(r'\bSizedBox\(');
 final RegExp spacingArgument = RegExp(
   r'\b(spacing|runSpacing|mainAxisSpacing|crossAxisSpacing):',
@@ -248,6 +233,7 @@ void main() {
       '80',
     ]);
     expect(numbersIn('EdgeInsetsDirectional.only(start: 6)'), ['6']);
+    expect(numbersIn('EdgeInsetsGeometry.symmetric(vertical: 20)'), ['20']);
     expect(numbersIn('const SizedBox(height: 8)'), ['8']);
     expect(numbersIn('SizedBox(width: 20, height: 20, child: x)'), [
       '20',
@@ -273,6 +259,7 @@ void main() {
       CrimpyTheme.spaceSm,
       CrimpyTheme.spaceMd,
       CrimpyTheme.spaceLg,
+      CrimpyTheme.spaceLgPlus,
       CrimpyTheme.spaceXl,
       CrimpyTheme.spaceXxl,
     ];

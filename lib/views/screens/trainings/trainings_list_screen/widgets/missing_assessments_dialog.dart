@@ -31,7 +31,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
                 size: 48,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: CrimpyTheme.spaceLgPlus),
 
             // Title
             Text(
@@ -49,7 +49,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: CrimpyTheme.spaceLgPlus),
 
             // Assessment list
             Container(

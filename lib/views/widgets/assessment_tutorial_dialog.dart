@@ -176,7 +176,7 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
 
             // Footer with navigation
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(CrimpyTheme.spaceLgPlus),
               color: CrimpyTheme.bgSecondary,
               child: Column(
                 children: [

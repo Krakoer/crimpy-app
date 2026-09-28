@@ -12,7 +12,7 @@ class StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return CrimpyCards.stats(
       padding: const EdgeInsets.symmetric(
-        vertical: 20,
+        vertical: CrimpyTheme.spaceLgPlus,
         horizontal: CrimpyTheme.spaceMd,
       ),
       child: Column(

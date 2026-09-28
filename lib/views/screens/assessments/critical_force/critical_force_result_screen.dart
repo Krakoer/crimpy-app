@@ -38,7 +38,7 @@ class CriticalForceResultScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            SizedBox(height: 20),
+            SizedBox(height: CrimpyTheme.spaceLgPlus),
             Text(
               "Great job!",
               style: CrimpyTheme.headline.copyWith(
@@ -50,7 +50,7 @@ class CriticalForceResultScreen extends ConsumerWidget {
               prevValue: previousCriticalForce,
               newValue: results.criticalLoad,
             ),
-            SizedBox(height: 20),
+            SizedBox(height: CrimpyTheme.spaceLgPlus),
             Text(
               "Critical force:",
               style: CrimpyTheme.headline.copyWith(
