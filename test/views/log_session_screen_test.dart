@@ -56,9 +56,9 @@ void main() {
     // its own, so it could only be logged as something it was not.
     await _pump(tester, const Scaffold(body: LogSessionButtons()));
 
-    expect(find.text('Hangboard'), findsOneWidget);
+    expect(find.byTooltip('Log Hangboard'), findsOneWidget);
 
-    await tester.tap(find.text('Hangboard'));
+    await tester.tap(find.byTooltip('Log Hangboard'));
     await tester.pumpAndSettle();
 
     expect(find.text('Log Hangboard'), findsOneWidget);
@@ -68,8 +68,20 @@ void main() {
     await _pump(tester, const Scaffold(body: LogSessionButtons()));
 
     for (final activity in SessionActivity.values) {
-      expect(find.text(activity.displayName), findsOneWidget);
+      expect(find.byTooltip('Log ${activity.displayName}'), findsOneWidget);
     }
+  });
+
+  testWidgets('the activities sit on one row', (tester) async {
+    // Logging comes last on the home screen and is kept to one row, so it
+    // never outweighs the trainings above it. See Krakoer/crimpy#165.
+    await _pump(tester, const Scaffold(body: LogSessionButtons()));
+
+    final rows = SessionActivity.values
+        .map((activity) => find.byTooltip('Log ${activity.displayName}'))
+        .map((button) => tester.getCenter(button).dy)
+        .toSet();
+    expect(rows, hasLength(1));
   });
 
   testWidgets('the name defaults to what the session used to be called', (

@@ -109,21 +109,27 @@ class WeekHistogramWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // A day's column is a seventh of the card, about 42dp on a 360dp
-          // phone, and "1 h 30 min" is wider than that. It shrinks to fit on
-          // one line rather than wrapping out of the column.
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              durationText,
-              maxLines: 1,
-              style: CrimpyTheme.bodySmall.copyWith(
-                color: textColor,
-                fontWeight: FontWeight.w500,
+          // A day with nothing logged carries no label: a week of "0 min"
+          // reads as a row of numbers to look through for the days that
+          // count. The columns sit on their day names, so the bars stay
+          // aligned without it.
+          if (totalDuration > Duration.zero) ...[
+            // A day's column is a seventh of the card, about 42dp on a 360dp
+            // phone, and "1 h 30 min" is wider than that. It shrinks to fit
+            // on one line rather than wrapping out of the column.
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                durationText,
+                maxLines: 1,
+                style: CrimpyTheme.bodySmall.copyWith(
+                  color: textColor,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 6),
+            const SizedBox(height: 6),
+          ],
           // Draw the stacked bar
           SizedBox(
             width: 24,

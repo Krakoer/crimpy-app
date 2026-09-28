@@ -19,42 +19,24 @@ const List<_LoggableActivity> _activities = [
   (activity: SessionActivity.other, icon: Icons.directions_run),
 ];
 
-const int _columns = 3;
-
+/// Logging records something done away from the app, so it sits last on the
+/// home screen as one row of icons rather than as tiles that outweigh the
+/// trainings above it. Each icon names its activity in its tooltip, which is
+/// also what a screen reader announces. See Krakoer/crimpy#165.
 class LogSessionButtons extends StatelessWidget {
   const LogSessionButtons({super.key});
 
   @override
   Widget build(BuildContext context) {
     return HomeCard(
-      title: "Log Session",
-      // Laid out in rows of three rather than one row of five: at five the
-      // buttons are narrower than the longest activity name and the labels
-      // wrap mid word on a phone.
-      child: Column(
+      title: "Log a session",
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          for (var first = 0; first < _activities.length; first += _columns)
-            Padding(
-              padding: EdgeInsets.only(
-                top: first == 0 ? 0 : CrimpyTheme.spaceSm,
-              ),
-              child: Row(
-                children: [
-                  for (var column = 0; column < _columns; column++) ...[
-                    if (column > 0) const SizedBox(width: CrimpyTheme.spaceSm),
-                    Expanded(
-                      // The last row is padded with empty cells, so every
-                      // button keeps the width the full rows give it.
-                      child: first + column < _activities.length
-                          ? _SessionActivityButton(
-                              activity: _activities[first + column].activity,
-                              icon: _activities[first + column].icon,
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  ],
-                ],
-              ),
+          for (final loggable in _activities)
+            _SessionActivityButton(
+              activity: loggable.activity,
+              icon: loggable.icon,
             ),
         ],
       ),
@@ -70,43 +52,19 @@ class _SessionActivityButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The activity shows in the icon only; the tile itself stays neutral.
+    // The activity shows in the icon only; the button itself stays neutral.
     // See Krakoer/crimpy#170.
-    final markColor = CrimpyTheme.markOn(CrimpyTheme.activityColor(activity));
-
-    return InkWell(
-      onTap: () {
+    return IconButton(
+      tooltip: 'Log ${activity.displayName}',
+      icon: Icon(icon, size: 28),
+      color: CrimpyTheme.markOn(CrimpyTheme.activityColor(activity)),
+      onPressed: () {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => LogSessionScreen(activity: activity),
           ),
         );
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          vertical: CrimpyTheme.spaceLg,
-          horizontal: CrimpyTheme.spaceSm,
-        ),
-        decoration: BoxDecoration(
-          border: Border.all(color: CrimpyTheme.outline, width: 2),
-          color: CrimpyTheme.bgPrimary,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: markColor, size: 28),
-            const SizedBox(height: CrimpyTheme.spaceSm),
-            Text(
-              activity.displayName,
-              style: CrimpyTheme.bodySmall.copyWith(
-                color: CrimpyTheme.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
