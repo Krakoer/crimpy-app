@@ -40,18 +40,18 @@ class _SwatchPainter extends CustomPainter {
 
   const _SwatchPainter({required this.color, required this.stroke});
 
-  static const double _dash = 8;
-  static const double _gap = 8;
-
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..color = color;
-    if (stroke == SeriesStroke.solid) {
+    final pattern = stroke.chartDashArray;
+    if (pattern == null) {
       canvas.drawRect(Offset.zero & size, paint);
       return;
     }
-    for (double x = 0; x < size.width; x += _dash + _gap) {
-      final end = (x + _dash).clamp(0, size.width).toDouble();
+    // The chart's own dash pattern, so the legend reads like the line it names.
+    final (dash, gap) = (pattern[0], pattern[1]);
+    for (double x = 0; x < size.width; x += dash + gap) {
+      final end = (x + dash).clamp(0, size.width).toDouble();
       canvas.drawRect(Rect.fromLTRB(x, 0, end, size.height), paint);
     }
   }

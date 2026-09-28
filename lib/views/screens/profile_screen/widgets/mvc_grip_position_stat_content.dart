@@ -85,6 +85,7 @@ class _MvcGripPositionStatContentState
             leftData: [],
             rightData: [],
             seriesColor: widget.seriesColor,
+            unit: AssessmentUnit.kilograms,
             onStartAssessment: widget.onStartAssessment,
           ),
         ],
@@ -204,6 +205,7 @@ class _MvcGripPositionStatContentState
               .map<(DateTime, double)>((a) => (a.date, a.rightValue!))
               .toList(),
           seriesColor: widget.seriesColor,
+          unit: AssessmentUnit.kilograms,
           onStartAssessment: widget.onStartAssessment,
         ),
       ],

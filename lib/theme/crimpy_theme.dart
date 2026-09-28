@@ -382,10 +382,11 @@ class CrimpyTheme {
   // dashed. The hands used to take the hangboard orange and the climbing
   // yellow, two categories that mean something else everywhere else in the
   // app. Max force is ink, the working baseline. Critical force is the blue,
-  // so the two stay apart wherever they are read together; the blue's other
-  // meanings (the "other" activity, the news mark) never show on the profile.
-  // The portal draws its charts in the same hues, --tx and --bl. See
-  // Krakoer/crimpy#164.
+  // so the two stay apart wherever they are read together. The blue is only
+  // spent where no activity or training type colour shares the view, since it
+  // also means the "other" activity and the news mark: the profile shows
+  // neither. Anywhere that does, every metric takes ink. The portal follows the
+  // same rule with --tx and --bl. See Krakoer/crimpy#164.
 
   /// The series of a max force chart, and its stat cards' swatches.
   static const Color maxForceSeries = textPrimary;

@@ -42,11 +42,30 @@ void main() {
       ));
     });
 
-    test('keeps a wide axis to six labels at the most', () {
-      expect(valueAxisRange([22, 78], AssessmentUnit.kilograms), (
+    // Wider than six steps, the gap widens to a nice multiple of the span and
+    // both ends round out to it, so the top is always labelled. The same cases
+    // as crimpy-frontend's chart-axes.test.ts.
+    for (final (values, expected) in [
+      ([22.0, 53.0], (min: 20.0, max: 60.0, interval: 10.0)),
+      ([27.0, 58.0], (min: 20.0, max: 60.0, interval: 10.0)),
+      ([3.0, 64.0], (min: 0.0, max: 80.0, interval: 20.0)),
+      ([22.0, 78.0], (min: 20.0, max: 80.0, interval: 20.0)),
+      ([25.0, 75.0], (min: 20.0, max: 80.0, interval: 20.0)),
+    ]) {
+      test('labels both ends of $values kg, six labels at the most', () {
+        expect(valueAxisRange(values, AssessmentUnit.kilograms), expected);
+        expect(
+          (expected.max - expected.min) / expected.interval + 1,
+          lessThanOrEqualTo(6),
+        );
+      });
+    }
+
+    test('widens the axis for a value just past a step', () {
+      expect(valueAxisRange([20.2, 25.0004], AssessmentUnit.kilograms), (
         min: 20.0,
-        max: 80.0,
-        interval: 10.0,
+        max: 30.0,
+        interval: 5.0,
       ));
     });
 
@@ -60,6 +79,19 @@ void main() {
 
     test('has no range without values', () {
       expect(valueAxisRange([], AssessmentUnit.kilograms), isNull);
+    });
+  });
+
+  group('dateLabelInterval', () {
+    test('divides a span evenly so its last day is labelled', () {
+      expect(dateLabelInterval(8), 2);
+      expect(dateLabelInterval(9), 3);
+      expect(dateLabelInterval(2), 1);
+    });
+
+    test('labels only the two ends of a span nothing divides', () {
+      expect(dateLabelInterval(7), 7);
+      expect(dateLabelInterval(1), 1);
     });
   });
 

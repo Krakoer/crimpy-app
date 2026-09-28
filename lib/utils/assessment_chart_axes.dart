@@ -17,30 +17,62 @@ double minimumAxisSpan(AssessmentUnit unit) => switch (unit) {
   AssessmentUnit.repetitions => 5,
 };
 
-/// The value axis of a chart holding [values]: from the lowest value rounded
-/// down to a multiple of the unit's [minimumAxisSpan], never under zero, to the
-/// highest rounded up to one, and at least that span wide, with the gap between
-/// its labels. Null for no values.
+/// The most gaps between labels an axis carries, so at most six labels.
+const int _maximumLabelGaps = 5;
+
+/// The multiples of the span the gap between labels may take: 1, 2 and 4 of
+/// each power of ten, so the labels stay round numbers.
+int _niceMultiple(double atLeast) {
+  for (var power = 1; ; power *= 10) {
+    for (final multiple in const [1, 2, 4]) {
+      if (multiple * power >= atLeast) return multiple * power;
+    }
+  }
+}
+
+/// The value axis of a chart holding [values], and the gap between its labels.
+/// The narrowest axis is one [minimumAxisSpan] wide, from the lowest value
+/// rounded down to a multiple of the span, never under zero, labelled every
+/// fifth of it. A wider one is labelled every span, or a nice multiple of it
+/// when that would take more than six labels, and both its ends are rounded out
+/// to that gap, so the bottom and the top are always labelled. Null for no
+/// values.
 ({double min, double max, double interval})? valueAxisRange(
   Iterable<double> values,
   AssessmentUnit unit,
 ) {
   if (values.isEmpty) return null;
   final step = minimumAxisSpan(unit);
-  final low = values.reduce(math.min);
-  final high = values.reduce(math.max);
-  final min = math.max(0.0, (low / step).floor() * step);
-  final max = math.max((high / step).ceil() * step, min + step);
-  return (min: min, max: max, interval: _axisInterval(max - min, step));
+  final low = math.max(0.0, (values.reduce(math.min) / step).floor() * step);
+  final high = math.max(
+    (values.reduce(math.max) / step).ceil() * step,
+    low + step,
+  );
+  final steps = ((high - low) / step).round();
+  if (steps <= 1) return (min: low, max: high, interval: step / 5);
+  for (
+    var multiple = _niceMultiple(steps / _maximumLabelGaps);
+    ;
+    multiple = _niceMultiple(multiple + 1.0)
+  ) {
+    final interval = step * multiple;
+    final min = (low / interval).floor() * interval;
+    final max = (high / interval).ceil() * interval;
+    if (((max - min) / interval).round() <= _maximumLabelGaps) {
+      return (min: min, max: max, interval: interval);
+    }
+  }
 }
 
-/// A fifth of the span on the narrowest axis, then whole spans, widened so no
-/// chart carries more than six labels. The bounds are multiples of it, so no
-/// edge falls between two ticks.
-double _axisInterval(double width, double step) {
-  final steps = (width / step).round();
-  if (steps <= 1) return step / 5;
-  return step * (steps / 6).ceil();
+/// The gap in days between the date axis's labels, so the first and the last
+/// tested day are both labelled: the widest of a quarter, a third or a half of
+/// the span that divides it evenly, or the whole span, which labels only the
+/// two ends.
+int dateLabelInterval(int spanDays) {
+  for (final parts in const [4, 3, 2]) {
+    if (spanDays >= parts && spanDays % parts == 0) return spanDays ~/ parts;
+  }
+  return math.max(1, spanDays);
 }
 
 /// The calendar days [dates] fall on. A chart is drawn from the second one: a

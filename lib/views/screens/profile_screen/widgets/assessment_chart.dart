@@ -79,9 +79,13 @@ class _ForceChartState extends State<ForceChart> {
   @override
   Widget build(BuildContext context) {
     final isEmpty = widget.leftData.isEmpty && widget.rightData.isEmpty;
-    final leftData = isEmpty
+    // The placeholder behind Start Assessment previews both hands, the way a
+    // real per hand chart draws them.
+    final leftData = !widget.perHand
         ? const <(DateTime, double)>[]
-        : _byDay(widget.perHand ? widget.leftData : const []);
+        : isEmpty
+        ? _generateFakeData()
+        : _byDay(widget.leftData);
     final rightData = isEmpty ? _generateFakeData() : _byDay(widget.rightData);
     final allData = [...leftData, ...rightData];
 
@@ -98,6 +102,16 @@ class _ForceChartState extends State<ForceChart> {
     }
 
     final dates = allData.map((point) => point.$1).toList()..sort();
+    final spanDays =
+        DateTime.utc(dates.last.year, dates.last.month, dates.last.day)
+            .difference(
+              DateTime.utc(
+                dates.first.year,
+                dates.first.month,
+                dates.first.day,
+              ),
+            )
+            .inDays;
     final range = valueAxisRange(
       allData.map((point) => point.$2),
       widget.unit,
@@ -114,6 +128,7 @@ class _ForceChartState extends State<ForceChart> {
                 majorGridLines: const MajorGridLines(width: 0),
                 axisLine: const AxisLine(width: 0),
                 intervalType: DateTimeIntervalType.days,
+                interval: dateLabelInterval(spanDays).toDouble(),
                 dateFormat: DateFormat.MMMd(),
                 labelStyle: TextStyle(color: CrimpyTheme.textPrimary),
                 minimum: dates.first,

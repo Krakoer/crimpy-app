@@ -177,4 +177,48 @@ void main() {
       CrimpyTheme.assessmentSeries,
     );
   });
+
+  // The stat cards are the legend: left solid, right dashed, and the one line
+  // of a single value assessment solid. Swapping the strokes would make the
+  // legend say the opposite of the chart.
+  List<LineSeries> seriesOf(WidgetTester tester, String heading) {
+    final section = find.ancestor(
+      of: find.text(heading),
+      matching: find.byType(Column),
+    );
+    final chart = tester.widget<SfCartesianChart>(
+      find.descendant(
+        of: section.first,
+        matching: find.byType(SfCartesianChart),
+      ),
+    );
+    return chart.series.cast<LineSeries>();
+  }
+
+  testWidgets('draws the left hand solid and the right hand dashed', (
+    tester,
+  ) async {
+    await _show(tester, [
+      _record(_lockOff, right: 3, left: 6),
+      _record(_lockOff, right: 4, left: 7, date: DateTime(2026, 8, 20)),
+    ]);
+
+    final series = seriesOf(tester, 'ONE ARM LOCK OFF');
+    expect(series.map((line) => line.name), ['Left Hand', 'Right Hand']);
+    expect(series[0].dashArray, isNull);
+    expect(series[1].dashArray, [6, 4]);
+  });
+
+  testWidgets('draws a single value assessment as one solid line', (
+    tester,
+  ) async {
+    await _show(tester, [
+      _record(_pullUpPyramid, right: 14),
+      _record(_pullUpPyramid, right: 15, date: DateTime(2026, 8, 20)),
+    ]);
+
+    final series = seriesOf(tester, 'PULL UP PYRAMID');
+    expect(series.map((line) => line.name), ['Result']);
+    expect(series.single.dashArray, isNull);
+  });
 }
