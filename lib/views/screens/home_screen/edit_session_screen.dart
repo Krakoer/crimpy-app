@@ -61,7 +61,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
         title: Text('Edit ${widget.session.activity.displayName}'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
         child: Form(
           key: _formKey,
           child: Column(
@@ -72,7 +72,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                 Card(
                   color: CrimpyTheme.bgSunken,
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
                     child: Row(
                       children: [
                         const Icon(
@@ -80,7 +80,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                           color: CrimpyTheme.textSecondary,
                           size: 20,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: CrimpyTheme.spaceMd),
                         Expanded(
                           child: Text(
                             'Only the notes and the RPE can be edited for a session played in the app',
@@ -93,7 +93,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: CrimpyTheme.spaceLg),
               ],
 
               // Date picker (disabled for played sessions)
@@ -116,7 +116,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   onTap: isPlayedSession ? null : _selectDate,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
 
               // Time picker (disabled for played sessions)
               Card(
@@ -136,12 +136,12 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   onTap: isPlayedSession ? null : _selectTime,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
 
               // Duration input (disabled for played sessions)
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -153,11 +153,11 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                                 ? CrimpyTheme.textMutedSmall
                                 : markColor,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: CrimpyTheme.spaceSm),
                           const Text('Duration', style: CrimpyTheme.title),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: CrimpyTheme.spaceMd),
                       TextFormField(
                         enabled: !isPlayedSession,
                         initialValue: _durationMinutes.toString(),
@@ -191,7 +191,7 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
 
               // Offered whatever the origin: the RPE is what the athlete
               // reported about the session, not something the run measured, and
@@ -204,23 +204,23 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                     'How much recovery did this session cost you? '
                     'You can answer now even if you skipped it at the time.',
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
 
               // Notes input
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           Icon(Icons.notes, color: markColor),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: CrimpyTheme.spaceSm),
                           const Text('Notes', style: CrimpyTheme.title),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: CrimpyTheme.spaceMd),
                       TextFormField(
                         controller: _notesController,
                         decoration: const InputDecoration(
@@ -234,13 +234,15 @@ class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: CrimpyTheme.spaceXl),
 
               // Save button
               ElevatedButton(
                 onPressed: _updateSession,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: CrimpyTheme.spaceLg,
+                  ),
                 ),
                 child: const Text('Update Session', style: CrimpyTheme.title),
               ),

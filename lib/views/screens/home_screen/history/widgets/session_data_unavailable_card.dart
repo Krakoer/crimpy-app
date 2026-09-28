@@ -26,7 +26,7 @@ class SessionDataUnavailableCard extends StatelessWidget {
             size: 20,
             color: CrimpyTheme.textMutedSmall,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: CrimpyTheme.spaceMd),
           Expanded(
             child: Text(
               '$what could not be loaded, so nothing here says what it held.',

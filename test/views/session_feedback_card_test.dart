@@ -4,6 +4,7 @@ import 'package:crimpy/models/session_filter.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/repositories/training_repository.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/history/session_detail_screen.dart';
 import 'package:flutter/material.dart';
@@ -110,9 +111,25 @@ void main() {
     final repository = await _pump(tester, _session());
 
     expect(find.text('FEEDBACK'), findsOneWidget);
-    expect(find.text('HOW YOU FELT'), findsOneWidget);
-    expect(find.text('YOUR COACH ANSWERED'), findsNothing);
+    expect(find.text('How you felt'), findsOneWidget);
+    expect(find.text('Your coach answered'), findsNothing);
     expect(repository.receipts, isEmpty);
+  });
+
+  testWidgets('the card heading reads stronger than its sub-labels', (
+    tester,
+  ) async {
+    await _pump(tester, _session(coachReply: 'Noted'));
+
+    TextStyle styleOf(String text) =>
+        tester.widget<Text>(find.text(text)).style!;
+    final heading = styleOf('FEEDBACK');
+    for (final subLabel in ['How you felt', 'Your coach answered']) {
+      final style = styleOf(subLabel);
+      expect(style.fontWeight!.value, lessThan(heading.fontWeight!.value));
+      expect(style.letterSpacing, lessThan(heading.letterSpacing!));
+      expect(style.color, CrimpyTheme.textSecondary);
+    }
   });
 
   testWidgets('shows an unread answer as new and sends the receipt', (
@@ -123,7 +140,7 @@ void main() {
       _session(coachReply: 'Noted, I added a rest day'),
     );
 
-    expect(find.text('YOUR COACH ANSWERED'), findsOneWidget);
+    expect(find.text('Your coach answered'), findsOneWidget);
     expect(find.text('Noted, I added a rest day'), findsOneWidget);
     expect(find.text('NEW'), findsOneWidget);
     expect(repository.receipts, ['session-1']);

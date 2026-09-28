@@ -98,12 +98,12 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
           },
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
             children: [
               _header(),
-              const SizedBox(height: 14),
+              const SizedBox(height: CrimpyTheme.spaceLg),
               _viewToggle(),
-              const SizedBox(height: 14),
+              const SizedBox(height: CrimpyTheme.spaceLg),
               if (_calendar)
                 _CalendarView(
                   program: program,
@@ -114,7 +114,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                 )
               else ...[
                 _weekSelector(definedWeeks),
-                const SizedBox(height: 14),
+                const SizedBox(height: CrimpyTheme.spaceLg),
                 _WeekStripView(
                   program: program,
                   weekNumber: _selectedWeek,
@@ -142,7 +142,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
             ),
           ),
           if ((program.objective ?? '').isNotEmpty) ...[
-            const SizedBox(height: 7),
+            const SizedBox(height: CrimpyTheme.spaceSm),
             Text(
               program.objective!,
               style: CrimpyTheme.body.copyWith(
@@ -150,14 +150,14 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
               ),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: CrimpyTheme.spaceMd),
           _tag(
             FontAwesomeIcons.calendar,
             end == null ? start : '$start - ${formatDayMonth(end)}',
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: CrimpyTheme.spaceLg),
           const Divider(thickness: 2, height: 2),
-          const SizedBox(height: 14),
+          const SizedBox(height: CrimpyTheme.spaceLg),
           WeekProgressBar(
             currentWeek: program.isActiveOn(DateTime.now())
                 ? program.currentWeekNumber(DateTime.now())
@@ -171,7 +171,10 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
 
   Widget _tag(IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: CrimpyTheme.spaceSm,
+        vertical: CrimpyTheme.spaceXs,
+      ),
       decoration: BoxDecoration(
         border: Border.all(color: CrimpyTheme.outline, width: 1.5),
       ),
@@ -179,7 +182,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 11, color: CrimpyTheme.textPrimary),
-          const SizedBox(width: 5),
+          const SizedBox(width: CrimpyTheme.spaceXs),
           Text(label, style: CrimpyTheme.labelSmall),
         ],
       ),
@@ -193,7 +196,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
         child: GestureDetector(
           onTap: () => setState(() => _calendar = calendar),
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 9),
+            padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceMd),
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: selected
@@ -218,7 +221,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
     return Row(
       children: [
         button('WEEK', false),
-        const SizedBox(width: 8),
+        const SizedBox(width: CrimpyTheme.spaceSm),
         button('CALENDAR', true),
       ],
     );
@@ -236,7 +239,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
           final defined = definedWeeks?.contains(week) ?? false;
           final selected = week == _selectedWeek;
           return Padding(
-            padding: const EdgeInsets.only(right: 7),
+            padding: const EdgeInsets.only(right: CrimpyTheme.spaceSm),
             child: GestureDetector(
               onTap: defined
                   ? () => setState(() => _selectedWeek = week)
@@ -245,8 +248,8 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                 opacity: defined ? 1 : 0.4,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 13,
-                    vertical: 7,
+                    horizontal: CrimpyTheme.spaceMd,
+                    vertical: CrimpyTheme.spaceSm,
                   ),
                   decoration: BoxDecoration(
                     color: selected
@@ -266,7 +269,7 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
                         ),
                       ),
                       if (week == current) ...[
-                        const SizedBox(width: 6),
+                        const SizedBox(width: CrimpyTheme.spaceSm),
                         Container(
                           width: 6,
                           height: 6,
@@ -320,7 +323,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
       skipLoadingOnReload: true,
       skipError: true,
       loading: () => const Padding(
-        padding: EdgeInsets.all(24),
+        padding: EdgeInsets.all(CrimpyTheme.spaceXl),
         child: Center(child: CircularProgressIndicator()),
       ),
       error: (e, _) => Text('Could not load week.\n$e'),
@@ -362,14 +365,14 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
             // each week's detail landed.
             if ((week.name ?? '').isNotEmpty) ...[
               SectionLabel(week.name!),
-              const SizedBox(height: 10),
+              const SizedBox(height: CrimpyTheme.spaceMd),
             ],
             if ((week.notes ?? '').isNotEmpty) ...[
               _weekNote(week.notes!),
-              const SizedBox(height: 14),
+              const SizedBox(height: CrimpyTheme.spaceLg),
             ],
             _dayPicker(byDay, selected),
-            const SizedBox(height: 14),
+            const SizedBox(height: CrimpyTheme.spaceLg),
             Text(
               isSameDay(selectedDate, today)
                   ? 'TODAY - ${formatDayMonth(selectedDate)}'
@@ -378,13 +381,13 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
                 color: CrimpyTheme.textSecondary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: CrimpyTheme.spaceSm),
             if (selectedSessions.isEmpty)
               _restDay()
             else
               ...selectedSessions.map(
                 (s) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.only(bottom: CrimpyTheme.spaceMd),
                   child: ScheduledTrainingRow(
                     session: s,
                     date: selectedDate,
@@ -400,12 +403,12 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
                 ),
               ),
             if (timesPerWeek.isNotEmpty) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
               const SectionLabel('Any day this week'),
-              const SizedBox(height: 10),
+              const SizedBox(height: CrimpyTheme.spaceMd),
               ...timesPerWeek.map(
                 (s) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.only(bottom: CrimpyTheme.spaceMd),
                   child: FlexTrainingRow(
                     session: s,
                     doneCount: completionsInWeek(
@@ -436,6 +439,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
         final date = _dateForDay(d);
         final isSelected = d == selected;
         final isToday = isSameDay(date, today);
+        final isLastDay = d == 6;
         final dot = daySessions.isNotEmpty
             ? programSessionColor(daySessions.first.activity)
             : null;
@@ -443,8 +447,12 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
           child: GestureDetector(
             onTap: () => setState(() => _selectedDay = d),
             child: Container(
-              margin: EdgeInsets.only(right: d == 6 ? 0 : 5),
-              padding: const EdgeInsets.symmetric(vertical: 7),
+              margin: EdgeInsets.only(
+                right: isLastDay ? 0 : CrimpyTheme.spaceXs,
+              ),
+              padding: const EdgeInsets.symmetric(
+                vertical: CrimpyTheme.spaceSm,
+              ),
               decoration: BoxDecoration(
                 color: isSelected
                     ? CrimpyTheme.fillOn(CrimpyTheme.control)
@@ -466,7 +474,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
                           : CrimpyTheme.textMutedSmall,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: CrimpyTheme.spaceXs),
                   Text(
                     '${date.day}',
                     style: CrimpyTheme.titleSmall.copyWith(
@@ -477,7 +485,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
                           : CrimpyTheme.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: CrimpyTheme.spaceXs),
                   Container(
                     width: 7,
                     height: 7,
@@ -496,7 +504,10 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
 
   Widget _weekNote(String note) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+      padding: const EdgeInsets.symmetric(
+        horizontal: CrimpyTheme.spaceMd,
+        vertical: CrimpyTheme.spaceMd,
+      ),
       decoration: BoxDecoration(
         color: CrimpyTheme.coachNote.withValues(alpha: 0.1),
         border: Border.all(color: CrimpyTheme.coachNote, width: 2),
@@ -509,7 +520,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
             size: 15,
             color: CrimpyTheme.coachNote,
           ),
-          const SizedBox(width: 9),
+          const SizedBox(width: CrimpyTheme.spaceSm),
           Expanded(
             child: RichText(
               text: TextSpan(
@@ -534,7 +545,10 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
   Widget _restDay() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+      padding: const EdgeInsets.symmetric(
+        vertical: CrimpyTheme.spaceLgPlus,
+        horizontal: CrimpyTheme.spaceMd,
+      ),
       decoration: BoxDecoration(
         border: Border.all(
           color: CrimpyTheme.textMutedSmall,
@@ -562,14 +576,14 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
             size: 26,
             color: CrimpyTheme.textMutedSmall,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: CrimpyTheme.spaceMd),
           Text(
             'WEEK ${widget.weekNumber} NOT PLANNED YET',
             style: CrimpyTheme.titleSmall.copyWith(
               color: CrimpyTheme.textSecondary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: CrimpyTheme.spaceXs),
           Text(
             'Your coach has not published this week.',
             style: CrimpyTheme.bodySmall.copyWith(
@@ -626,11 +640,11 @@ class _CalendarView extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: CrimpyTheme.spaceSm),
           ...List.generate(totalWeeks, (i) {
             final week = i + 1;
             return Padding(
-              padding: const EdgeInsets.only(bottom: 4),
+              padding: const EdgeInsets.only(bottom: CrimpyTheme.spaceXs),
               child: _CalendarRow(
                 program: program,
                 weekNumber: week,
@@ -640,7 +654,7 @@ class _CalendarView extends StatelessWidget {
               ),
             );
           }),
-          const SizedBox(height: 12),
+          const SizedBox(height: CrimpyTheme.spaceMd),
           _legend(),
         ],
       ),
@@ -655,15 +669,15 @@ class _CalendarView extends StatelessWidget {
       ('WORKOUT', programSessionColor(SessionActivity.workout)),
     ];
     return Wrap(
-      spacing: 12,
-      runSpacing: 6,
+      spacing: CrimpyTheme.spaceMd,
+      runSpacing: CrimpyTheme.spaceSm,
       children: items
           .map(
             (e) => Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(width: 9, height: 9, color: e.$2),
-                const SizedBox(width: 5),
+                const SizedBox(width: CrimpyTheme.spaceXs),
                 Text(
                   e.$1,
                   style: CrimpyTheme.labelSmall.copyWith(

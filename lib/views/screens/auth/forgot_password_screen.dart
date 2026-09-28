@@ -53,13 +53,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       appBar: AppBar(title: const Text('Forgot password')),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(CrimpyTheme.spaceXl),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 32),
+                const SizedBox(height: CrimpyTheme.spaceXxl),
                 Text(
                   'Reset your password',
                   style: CrimpyTheme.title.copyWith(
@@ -67,7 +67,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: CrimpyTheme.spaceSm),
                 Text(
                   'Enter the email you signed up with and we will send you a '
                   'link to choose a new password. The link is valid for one '
@@ -77,10 +77,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: CrimpyTheme.spaceXxl),
                 if (_sentTo != null)
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
                     decoration: BoxDecoration(
                       color: CrimpyTheme.bgSuccess,
                       borderRadius: CrimpyTheme.corners,
@@ -116,10 +116,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     },
                     onFieldSubmitted: (_) => _handleSend(),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: CrimpyTheme.spaceXl),
                   if (_errorMessage != null) ...[
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
                       decoration: BoxDecoration(
                         color: CrimpyTheme.bgError,
                         borderRadius: CrimpyTheme.corners,
@@ -130,12 +130,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                         style: TextStyle(color: CrimpyTheme.statusErrorText),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: CrimpyTheme.spaceXl),
                   ],
                   ElevatedButton(
                     onPressed: _isSending ? null : _handleSend,
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: CrimpyTheme.spaceLg,
+                      ),
                     ),
                     child: _isSending
                         ? const SizedBox(

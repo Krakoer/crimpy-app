@@ -38,23 +38,26 @@ class SessionFeedbackCard extends StatelessWidget {
         children: [
           const SectionHeading('Feedback'),
           if (notes != null && notes!.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            const SectionHeading('How you felt'),
-            const SizedBox(height: 4),
+            const SizedBox(height: CrimpyTheme.spaceSm),
+            const SectionSubLabel('How you felt'),
+            const SizedBox(height: CrimpyTheme.spaceXs),
             Text(notes!, style: CrimpyTheme.body),
           ],
           if (reply != null && reply.isNotEmpty) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: CrimpyTheme.spaceLg),
             Row(
               children: [
-                const SectionHeading('Your coach answered'),
-                if (unread) ...[const SizedBox(width: 8), const _NewBadge()],
+                const SectionSubLabel('Your coach answered'),
+                if (unread) ...[
+                  const SizedBox(width: CrimpyTheme.spaceSm),
+                  const _NewBadge(),
+                ],
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: CrimpyTheme.spaceSm),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
               decoration: BoxDecoration(
                 color: CrimpyTheme.bgSecondary,
                 borderRadius: CrimpyTheme.corners,
@@ -67,7 +70,7 @@ class SessionFeedbackCard extends StatelessWidget {
                 children: [
                   Text(reply, style: CrimpyTheme.body),
                   if (coachReplyAt case final answeredAt?) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: CrimpyTheme.spaceSm),
                     Text(
                       DateFormat('MMM d, yyyy').format(answeredAt),
                       style: CrimpyTheme.bodySmall.copyWith(
@@ -90,7 +93,10 @@ class _NewBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    padding: const EdgeInsets.symmetric(
+      horizontal: CrimpyTheme.spaceSm,
+      vertical: CrimpyTheme.spaceXs,
+    ),
     decoration: BoxDecoration(
       color: CrimpyTheme.fillOn(CrimpyTheme.coachNote),
       borderRadius: CrimpyTheme.corners,

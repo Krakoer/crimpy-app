@@ -51,7 +51,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(CrimpyTheme.spaceXl),
               child: Text(
                 'Could not load this training.\n$e',
                 textAlign: TextAlign.center,
@@ -93,29 +93,29 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       children: [
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
             children: [
               _infoCard(context, date),
               if (session.overrides.isNotEmpty) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: CrimpyTheme.spaceMd),
                 _tunedBanner(context),
               ],
               if (goal.isNotEmpty) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: CrimpyTheme.spaceLg),
                 const SectionLabel('Goal'),
-                const SizedBox(height: 8),
+                const SizedBox(height: CrimpyTheme.spaceSm),
                 SectionTextBlock(goal),
               ],
               if (instructions.isNotEmpty) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: CrimpyTheme.spaceLg),
                 const SectionLabel('Instructions'),
-                const SizedBox(height: 8),
+                const SizedBox(height: CrimpyTheme.spaceSm),
                 SectionTextBlock(instructions),
               ],
               if (training.items.isNotEmpty) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: CrimpyTheme.spaceLg),
                 const SectionLabel('Exercises'),
-                const SizedBox(height: 8),
+                const SizedBox(height: CrimpyTheme.spaceSm),
                 ..._buildItems(
                   training.items,
                   overrideByItem,
@@ -147,7 +147,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
           Row(
             children: [
               SessionActivityTile(type: type, size: 46),
-              const SizedBox(width: 12),
+              const SizedBox(width: CrimpyTheme.spaceMd),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,13 +161,13 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                             color: CrimpyTheme.textSecondary,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: CrimpyTheme.spaceSm),
                         ScheduleStatusTag(
                           status: scheduleStatusFor(date, DateTime.now()),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: CrimpyTheme.spaceSm),
                     Row(
                       children: [
                         Icon(
@@ -175,7 +175,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                           size: 12,
                           color: CrimpyTheme.textMutedSmall,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: CrimpyTheme.spaceSm),
                         Text(
                           schedule,
                           style: CrimpyTheme.bodySmall.copyWith(
@@ -190,7 +190,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
             ],
           ),
           if ((session.notes ?? '').isNotEmpty) ...[
-            const SizedBox(height: 13),
+            const SizedBox(height: CrimpyTheme.spaceMd),
             _coachNote(session.notes!),
           ],
         ],
@@ -203,7 +203,10 @@ class ScheduledTrainingScreen extends ConsumerWidget {
         ? 'C'
         : program.name.trim()[0].toUpperCase();
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      padding: const EdgeInsets.symmetric(
+        horizontal: CrimpyTheme.spaceMd,
+        vertical: CrimpyTheme.spaceMd,
+      ),
       decoration: BoxDecoration(
         color: CrimpyTheme.bgSecondary,
         border: Border.all(color: CrimpyTheme.outline, width: 1.5),
@@ -226,7 +229,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(width: 9),
+          const SizedBox(width: CrimpyTheme.spaceSm),
           Expanded(
             child: Text(
               note,
@@ -242,7 +245,10 @@ class ScheduledTrainingScreen extends ConsumerWidget {
 
   Widget _tunedBanner(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+      padding: const EdgeInsets.symmetric(
+        horizontal: CrimpyTheme.spaceMd,
+        vertical: CrimpyTheme.spaceMd,
+      ),
       decoration: BoxDecoration(
         color: CrimpyTheme.tintOf(CrimpyTheme.overrideMark),
         border: Border.all(color: CrimpyTheme.overrideMark, width: 2),
@@ -255,7 +261,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
             size: 15,
             color: CrimpyTheme.textOn(CrimpyTheme.overrideMark),
           ),
-          const SizedBox(width: 9),
+          const SizedBox(width: CrimpyTheme.spaceSm),
           Expanded(
             child: Text(
               'TUNED FOR YOU THIS WEEK. Highlighted values differ from the base training.',
@@ -288,8 +294,8 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       extraOf: (item) => tuned(item)
           ? [
               Wrap(
-                spacing: 6,
-                runSpacing: 6,
+                spacing: CrimpyTheme.spaceSm,
+                runSpacing: CrimpyTheme.spaceSm,
                 children: _overrideChips(
                   overrideByItem[item.id]!.overrides,
                   results,
@@ -317,7 +323,10 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     return entries
         .map(
           (e) => Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(
+              horizontal: CrimpyTheme.spaceSm,
+              vertical: CrimpyTheme.spaceXs,
+            ),
             decoration: BoxDecoration(
               color: CrimpyTheme.tintOf(CrimpyTheme.overrideMark),
               border: Border.all(color: CrimpyTheme.overrideMark, width: 1.5),
@@ -371,7 +380,12 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       date: session.scheduledDate(program, weekNumber) ?? DateTime.now(),
     );
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      padding: const EdgeInsets.fromLTRB(
+        CrimpyTheme.spaceLg,
+        CrimpyTheme.spaceMd,
+        CrimpyTheme.spaceLg,
+        CrimpyTheme.spaceLg,
+      ),
       decoration: const BoxDecoration(
         color: CrimpyTheme.bgPrimary,
         border: Border(top: BorderSide(color: CrimpyTheme.outline, width: 2)),
@@ -389,7 +403,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
 
   Widget _doneButton() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceLg),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: CrimpyTheme.tintOf(CrimpyTheme.done),
@@ -403,7 +417,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
             size: 16,
             color: CrimpyTheme.textOn(CrimpyTheme.done),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: CrimpyTheme.spaceSm),
           Text(
             'DONE',
             style: CrimpyTheme.titleSmall.copyWith(
@@ -428,7 +442,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: CrimpyTheme.fillOn(CrimpyTheme.action),
         foregroundColor: CrimpyTheme.bgPrimary,
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceLg),
       ),
     );
   }
@@ -475,7 +489,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       icon: const Icon(Icons.check),
       label: Text(label),
       style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceLg),
       ),
     );
   }

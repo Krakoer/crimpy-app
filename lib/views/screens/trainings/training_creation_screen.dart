@@ -378,7 +378,12 @@ class _UnifiedTrainingCreationScreenState
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: const EdgeInsets.fromLTRB(
+                CrimpyTheme.spaceLg,
+                CrimpyTheme.spaceLg,
+                CrimpyTheme.spaceLg,
+                0,
+              ),
               child: TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(labelText: 'Title'),
@@ -386,7 +391,7 @@ class _UnifiedTrainingCreationScreenState
                     (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: CrimpyTheme.spaceSm),
             Expanded(
               child: _mode == TrainingCreationMode.repeater
                   ? _buildRepeaterBody()
@@ -406,7 +411,7 @@ class _UnifiedTrainingCreationScreenState
 
   Widget _buildRepeaterBody() {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
       children: [
         _countRow('Sets', _config.sets, (v) => _reshape(sets: v)),
         _countRow('Reps / set', _config.reps, (v) => _reshape(reps: v)),
@@ -421,7 +426,7 @@ class _UnifiedTrainingCreationScreenState
           _cycleRest,
           (v) => setState(() => _cycleRest = v),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: CrimpyTheme.spaceSm),
         _buildHandSelector(),
         const Divider(height: 24),
         // The simple case stays on one screen: a single edge, load and grip.
@@ -481,9 +486,9 @@ class _UnifiedTrainingCreationScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text('Hands'),
-        const SizedBox(height: 6),
+        const SizedBox(height: CrimpyTheme.spaceSm),
         Wrap(
-          spacing: 8,
+          spacing: CrimpyTheme.spaceSm,
           children: modes
               .map(
                 (m) => ChoiceChip(
@@ -494,7 +499,7 @@ class _UnifiedTrainingCreationScreenState
               )
               .toList(),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: CrimpyTheme.spaceSm),
         Text(
           selected.$3,
           style: CrimpyTheme.bodySmall.copyWith(
@@ -507,7 +512,7 @@ class _UnifiedTrainingCreationScreenState
 
   List<Widget> _buildDetailSection() {
     return [
-      const SizedBox(height: 8),
+      const SizedBox(height: CrimpyTheme.spaceSm),
       SegmentedButton<String>(
         segments: const [
           ButtonSegment(
@@ -526,7 +531,7 @@ class _UnifiedTrainingCreationScreenState
         },
         onSelectionChanged: (s) => _reshape(granularity: s.first),
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: CrimpyTheme.spaceSm),
       for (int row = 0; row < _config.rowCount; row++) _buildRowEditor(row),
     ];
   }
@@ -536,7 +541,7 @@ class _UnifiedTrainingCreationScreenState
     final separate = _config.worksHandsSeparately;
 
     Widget gripField(String label, List<String> values) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceXs),
       child: DropdownButtonFormField<String>(
         borderRadius: CrimpyTheme.corners,
         initialValue: values[row],
@@ -578,9 +583,14 @@ class _UnifiedTrainingCreationScreenState
 
     return Card(
       key: _rowKey(row),
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      margin: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceXs),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+        padding: const EdgeInsets.fromLTRB(
+          CrimpyTheme.spaceMd,
+          CrimpyTheme.spaceXs,
+          CrimpyTheme.spaceMd,
+          CrimpyTheme.spaceMd,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -634,7 +644,10 @@ class _UnifiedTrainingCreationScreenState
       buildDefaultDragHandles: false,
       padding: isNested
           ? EdgeInsets.zero
-          : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          : const EdgeInsets.symmetric(
+              horizontal: CrimpyTheme.spaceLg,
+              vertical: CrimpyTheme.spaceSm,
+            ),
       itemCount: items.length,
       onReorder: (oldIdx, newIdx) => _reorderItems(path, oldIdx, newIdx),
       itemBuilder: (ctx, i) {
@@ -692,7 +705,7 @@ class _UnifiedTrainingCreationScreenState
 
   Widget _intRow(String label, int value, void Function(int) onChanged) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceXs),
       child: TextFormField(
         initialValue: value.toString(),
         decoration: InputDecoration(labelText: label),
@@ -711,7 +724,7 @@ class _UnifiedTrainingCreationScreenState
     void Function(double) onChanged,
   ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceXs),
       child: TextFormField(
         initialValue: value.toString(),
         decoration: InputDecoration(labelText: label),
@@ -780,7 +793,7 @@ class _TrainingItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      margin: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceXs),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -864,7 +877,12 @@ class _TrainingItemCard extends StatelessWidget {
           ),
           if (nested != null)
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+              padding: const EdgeInsets.fromLTRB(
+                CrimpyTheme.spaceMd,
+                0,
+                CrimpyTheme.spaceMd,
+                CrimpyTheme.spaceXs,
+              ),
               child: nested,
             ),
         ],
@@ -883,7 +901,7 @@ Widget _intField(
   int min = 1,
 }) {
   return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
+    padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceXs),
     child: TextFormField(
       controller: controller,
       decoration: InputDecoration(labelText: label),
@@ -901,7 +919,7 @@ Widget _intField(
 /// The decimal counterpart of [_intField], for the loads.
 Widget _doubleField(String label, TextEditingController controller) {
   return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
+    padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceXs),
     child: TextFormField(
       controller: controller,
       decoration: InputDecoration(labelText: label),
@@ -1181,7 +1199,7 @@ class _CountFieldState extends State<_CountField> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceXs),
       child: TextFormField(
         controller: _controller,
         focusNode: _focusNode,

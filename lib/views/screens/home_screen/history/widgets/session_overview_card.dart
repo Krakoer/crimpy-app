@@ -25,7 +25,7 @@ class SessionOverviewCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -36,7 +36,7 @@ class SessionOverviewCard extends StatelessWidget {
                   category: sessionColor,
                   iconSize: 24,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: CrimpyTheme.spaceMd),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,7 +54,7 @@ class SessionOverviewCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: CrimpyTheme.spaceLg),
             // Top aligned, like the item internals: once a value can wrap, the
             // two halves of a pair are no longer the same height, and centring
             // them staggers the one that did not wrap.
@@ -79,7 +79,7 @@ class SessionOverviewCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: CrimpyTheme.spaceMd),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -102,7 +102,7 @@ class SessionOverviewCard extends StatelessWidget {
               ],
             ),
             if (rpe != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: CrimpyTheme.spaceMd),
               // In a Row with an Expanded child for symmetry with the four
               // stats above, which are laid out in pairs. It is not what makes
               // the anchor wrap: a child of the surrounding Column already has
@@ -147,7 +147,7 @@ class SessionOverviewCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: 16, color: CrimpyTheme.textMedium),
-        const SizedBox(width: 8),
+        const SizedBox(width: CrimpyTheme.spaceSm),
         // Flexible rather than bare: the RPE anchor is a sentence where every
         // other stat is a figure, and an unbounded Column would lay it out on
         // one line however wide that came out.

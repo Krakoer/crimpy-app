@@ -20,13 +20,13 @@ class SessionCard extends StatelessWidget {
 
     return CrimpyCard.simple(
       onTap: onTap,
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: CrimpyTheme.spaceSm),
+      padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
       child: Row(
         children: [
           // Session type icon
           CategoryIconTile(icon: sessionIcon, category: sessionColor),
-          const SizedBox(width: 16),
+          const SizedBox(width: CrimpyTheme.spaceLg),
           // Session details
           Expanded(
             child: Column(
@@ -38,7 +38,7 @@ class SessionCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: CrimpyTheme.spaceXs),
                 Row(
                   children: [
                     Icon(
@@ -46,16 +46,16 @@ class SessionCard extends StatelessWidget {
                       size: 14,
                       color: CrimpyTheme.textMedium,
                     ),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: CrimpyTheme.spaceXs),
                     Text(
                       formattedTime,
                       style: CrimpyTheme.bodySmall.copyWith(
                         color: CrimpyTheme.textMedium,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: CrimpyTheme.spaceLg),
                     Icon(Icons.timer, size: 14, color: CrimpyTheme.textMedium),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: CrimpyTheme.spaceXs),
                     Text(
                       formatLength(duration),
                       style: CrimpyTheme.bodySmall.copyWith(
@@ -65,7 +65,7 @@ class SessionCard extends StatelessWidget {
                   ],
                 ),
                 if (session.notes != null && session.notes!.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: CrimpyTheme.spaceXs),
                   Text(
                     session.notes!,
                     style: CrimpyTheme.bodySmall.copyWith(
@@ -87,7 +87,7 @@ class SessionCard extends StatelessWidget {
               size: 18,
               color: CrimpyTheme.coachNote,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: CrimpyTheme.spaceSm),
           ],
           // Arrow indicator
           Icon(Icons.chevron_right, color: CrimpyTheme.textFaint),

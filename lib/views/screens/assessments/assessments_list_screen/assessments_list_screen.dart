@@ -188,7 +188,10 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
                   }
                 }),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(
+                horizontal: CrimpyTheme.spaceLg,
+                vertical: CrimpyTheme.spaceMd,
+              ),
               decoration: BoxDecoration(
                 color: CrimpyTheme.bgWarning,
                 border: Border(
@@ -205,7 +208,7 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
                     size: 12,
                     color: CrimpyTheme.textOn(CrimpyTheme.statusWarning),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: CrimpyTheme.spaceSm),
                   Text(
                     'No sensor connected - tap to connect',
                     style: CrimpyTheme.bodySmall.copyWith(
@@ -236,7 +239,12 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              padding: const EdgeInsets.fromLTRB(
+                CrimpyTheme.spaceLg,
+                CrimpyTheme.spaceSm,
+                CrimpyTheme.spaceLg,
+                CrimpyTheme.spaceLg,
+              ),
               children: [
                 // The athlete's own recordable assessments come off the same
                 // capped library read as the trainings list, so one that sorts

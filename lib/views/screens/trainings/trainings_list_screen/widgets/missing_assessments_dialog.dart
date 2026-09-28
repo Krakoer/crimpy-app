@@ -18,20 +18,20 @@ class MissingAssessmentsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(CrimpyTheme.spaceXl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Icon header
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
               child: Icon(
                 Icons.assessment,
                 color: CrimpyTheme.assessmentColor,
                 size: 48,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: CrimpyTheme.spaceLgPlus),
 
             // Title
             Text(
@@ -39,7 +39,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
               style: CrimpyTheme.title.copyWith(color: CrimpyTheme.textPrimary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: CrimpyTheme.spaceMd),
 
             // Description
             Text(
@@ -49,11 +49,11 @@ class MissingAssessmentsDialog extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: CrimpyTheme.spaceLgPlus),
 
             // Assessment list
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
               decoration: BoxDecoration(
                 color: CrimpyTheme.bgSecondary,
                 borderRadius: CrimpyTheme.corners,
@@ -64,7 +64,9 @@ class MissingAssessmentsDialog extends StatelessWidget {
                 children: missingAssessments
                     .map(
                       (requirement) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6.0),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: CrimpyTheme.spaceSm,
+                        ),
                         child: Row(
                           children: [
                             Icon(
@@ -72,7 +74,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
                               color: CrimpyTheme.assessmentColor,
                               size: 18,
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: CrimpyTheme.spaceMd),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +89,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
                                     ),
                                   ),
                                   if (requirement.gripPosition != null) ...[
-                                    const SizedBox(height: 2),
+                                    const SizedBox(height: CrimpyTheme.spaceXs),
                                     Text(
                                       'Grip: ${requirement.gripPosition!.displayName}',
                                       style: CrimpyTheme.bodySmall.copyWith(
@@ -105,7 +107,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
                     .toList(),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: CrimpyTheme.spaceXl),
 
             // Actions
             Row(
@@ -116,7 +118,7 @@ class MissingAssessmentsDialog extends StatelessWidget {
                     child: const Text('Not now'),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: CrimpyTheme.spaceMd),
                 Expanded(
                   flex: 2,
                   child: FilledButton.icon(

@@ -34,7 +34,8 @@ class SetsViewWidget extends StatelessWidget {
               ),
               sessionColor: sessionColor,
             ),
-            if (setIndex < sets.length - 1) const SizedBox(height: 12),
+            if (setIndex < sets.length - 1)
+              const SizedBox(height: CrimpyTheme.spaceMd),
           ],
         );
       }),
@@ -102,7 +103,7 @@ class SetCardWidget extends StatelessWidget {
         : CrimpyTheme.offTarget;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
       decoration: BoxDecoration(
         color: CrimpyTheme.bgPrimary,
         border: Border.all(color: CrimpyTheme.outlineSubtle),
@@ -115,7 +116,10 @@ class SetCardWidget extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: CrimpyTheme.spaceSm,
+                  vertical: CrimpyTheme.spaceXs,
+                ),
                 decoration: BoxDecoration(
                   color: CrimpyTheme.bgSunken,
                   borderRadius: CrimpyTheme.corners,
@@ -128,7 +132,7 @@ class SetCardWidget extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: CrimpyTheme.spaceSm),
               Text(
                 [
                   '${workReps.length} reps',
@@ -142,8 +146,8 @@ class SetCardWidget extends StatelessWidget {
               if (count != null)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 3,
+                    horizontal: CrimpyTheme.spaceSm,
+                    vertical: CrimpyTheme.spaceXs,
                   ),
                   decoration: BoxDecoration(
                     color: CrimpyTheme.tintOf(statusColor),
@@ -165,7 +169,7 @@ class SetCardWidget extends StatelessWidget {
           if (count != null)
             if (unmeasuredNote(count) case final note?)
               Padding(
-                padding: const EdgeInsets.only(top: 6),
+                padding: const EdgeInsets.only(top: CrimpyTheme.spaceSm),
                 child: Text(
                   note,
                   style: CrimpyTheme.bodySmall.copyWith(
@@ -173,11 +177,11 @@ class SetCardWidget extends StatelessWidget {
                   ),
                 ),
               ),
-          const SizedBox(height: 12),
+          const SizedBox(height: CrimpyTheme.spaceMd),
           // Performance visualization
           SetPerformanceBar(workReps: workReps, sessionColor: sessionColor),
           if (avgWeight != null || avgTarget != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: CrimpyTheme.spaceSm),
             // Set statistics
             Row(
               children: [
@@ -218,7 +222,7 @@ class SetCardWidget extends StatelessWidget {
           label,
           style: CrimpyTheme.bodySmall.copyWith(color: CrimpyTheme.textMedium),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: CrimpyTheme.spaceXs),
         Text(value, style: CrimpyTheme.titleSmall.copyWith(color: valueColor)),
       ],
     );
@@ -238,8 +242,8 @@ class SetPerformanceBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: 4,
-      runSpacing: 4,
+      spacing: CrimpyTheme.spaceXs,
+      runSpacing: CrimpyTheme.spaceXs,
       children: List.generate(workReps.length, (index) {
         final rep = workReps[index];
         final bool hasTarget = rep.targetWeight > 0;

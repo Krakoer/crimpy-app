@@ -85,7 +85,7 @@ class PostAssessmentScreen extends ConsumerWidget {
                   color: CrimpyTheme.textPrimary,
                 ),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: CrimpyTheme.spaceLg),
               // Show the results cards for the provided hands.
               Column(
                 children: [
@@ -182,7 +182,10 @@ class ResultCard extends StatelessWidget {
         // If the hand side was provided, display it above the card.
         if (rightHand != null)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: CrimpyTheme.spaceLg,
+              vertical: CrimpyTheme.spaceSm,
+            ),
             child: Text(
               rightHand! ? "Right Hand" : "Left Hand",
               style: CrimpyTheme.title.copyWith(color: CrimpyTheme.textPrimary),
@@ -190,9 +193,17 @@ class ResultCard extends StatelessWidget {
           ),
         CrimpyCards.assessment(
           raised: true,
-          margin: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+          margin: const EdgeInsets.only(
+            bottom: CrimpyTheme.spaceLg,
+            left: CrimpyTheme.spaceLg,
+            right: CrimpyTheme.spaceLg,
+          ),
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 20, left: 20, right: 20),
+            padding: const EdgeInsets.only(
+              bottom: CrimpyTheme.spaceLgPlus,
+              left: CrimpyTheme.spaceLgPlus,
+              right: CrimpyTheme.spaceLgPlus,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -206,7 +217,7 @@ class ResultCard extends StatelessWidget {
                         color: CrimpyTheme.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: CrimpyTheme.spaceSm),
                     Text(
                       prevValue == null
                           ? "--"
@@ -227,8 +238,8 @@ class ResultCard extends StatelessWidget {
                     // Percentage change
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
+                        horizontal: CrimpyTheme.spaceSm,
+                        vertical: CrimpyTheme.spaceXs,
                       ),
                       decoration: BoxDecoration(
                         color: percentageColor.withValues(alpha: 0.1),
@@ -243,7 +254,7 @@ class ResultCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: CrimpyTheme.spaceMd),
                     // Arrow
                     Icon(
                       Icons.arrow_forward,
@@ -263,7 +274,7 @@ class ResultCard extends StatelessWidget {
                         color: CrimpyTheme.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: CrimpyTheme.spaceSm),
                     Text(
                       formatAssessmentValue(newValue, displayUnit),
                       style: CrimpyTheme.title.copyWith(

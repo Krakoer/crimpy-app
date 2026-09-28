@@ -102,7 +102,7 @@ class TodayTrainingCard extends ConsumerWidget {
                     color: CrimpyTheme.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: CrimpyTheme.spaceXs),
                 Text(
                   subtitle,
                   maxLines: 1,
@@ -327,7 +327,6 @@ class _TodayTrainingRow extends ConsumerWidget {
                       decoration: done ? TextDecoration.lineThrough : null,
                     ),
                   ),
-                  const SizedBox(height: 1),
                   Row(
                     children: [
                       Text(

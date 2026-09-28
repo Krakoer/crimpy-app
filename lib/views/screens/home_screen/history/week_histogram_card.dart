@@ -7,6 +7,7 @@ import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/week_histogram_widget.dart';
 import 'package:crimpy/views/screens/home_screen/history/session_history_screen/session_history_screen.dart';
 import 'package:crimpy/models/session_filter.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class WeekHistogramCard extends ConsumerStatefulWidget {
   final double maxBarHeight;
@@ -62,7 +63,7 @@ class _HistoryScreenState extends ConsumerState<WeekHistogramCard> {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: CrimpyTheme.spaceSm),
           IconButton(
             icon: const Icon(Icons.chevron_right, size: 20),
             onPressed: _weekOffset < 0

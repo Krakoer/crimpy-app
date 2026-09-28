@@ -38,8 +38,8 @@ class ExerciseVideoButton extends StatelessWidget {
       ),
       style: TextButton.styleFrom(
         padding: EdgeInsets.symmetric(
-          horizontal: compact ? 10 : 10,
-          vertical: compact ? 8 : 10,
+          horizontal: CrimpyTheme.spaceMd,
+          vertical: compact ? CrimpyTheme.spaceSm : CrimpyTheme.spaceMd,
         ),
         minimumSize: Size.zero,
         // The run screen keeps the shrink wrapped button so it does not push the

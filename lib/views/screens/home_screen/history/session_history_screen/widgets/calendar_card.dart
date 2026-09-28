@@ -24,7 +24,7 @@ class CalendarCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: CrimpyTheme.spaceLg),
       child: Column(
         children: [
           if (selectedDate != null)
@@ -33,7 +33,7 @@ class CalendarCard extends StatelessWidget {
               onClearFilter: onClearFilter,
             ),
           Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(CrimpyTheme.spaceSm),
             child: SfCalendar(
               firstDayOfWeek: DateTime.monday,
               view: CalendarView.month,

@@ -74,7 +74,11 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
           children: [
             // Header
             Container(
-              padding: const EdgeInsets.only(left: 24, right: 24, bottom: 16),
+              padding: const EdgeInsets.only(
+                left: CrimpyTheme.spaceXl,
+                right: CrimpyTheme.spaceXl,
+                bottom: CrimpyTheme.spaceLg,
+              ),
               child: Column(
                 children: [
                   // Close button
@@ -90,13 +94,13 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                       tooltip: 'Close',
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: CrimpyTheme.spaceSm),
                   Icon(
                     Icons.info_outline,
                     size: 48,
                     color: CrimpyTheme.assessmentColor,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: CrimpyTheme.spaceMd),
                   Text(
                     widget.content.assessmentName,
                     style: CrimpyTheme.title.copyWith(
@@ -104,7 +108,7 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: CrimpyTheme.spaceXs),
                   Text(
                     widget.content.subtitle,
                     style: CrimpyTheme.body.copyWith(
@@ -128,7 +132,9 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                 itemCount: widget.content.sections.length,
                 itemBuilder: (context, index) {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: CrimpyTheme.spaceLg,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -144,13 +150,17 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
 
             // Page indicator (dots)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                vertical: CrimpyTheme.spaceSm,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
                   widget.content.sections.length,
                   (index) => Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: CrimpyTheme.spaceXs,
+                    ),
                     width: 8,
                     height: 8,
                     decoration: BoxDecoration(
@@ -166,7 +176,7 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
 
             // Footer with navigation
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(CrimpyTheme.spaceLgPlus),
               color: CrimpyTheme.bgSecondary,
               child: Column(
                 children: [
@@ -190,7 +200,7 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                       dense: true,
                     ),
                   if (_isLastSection && widget.showDontShowAgain)
-                    const SizedBox(height: 4),
+                    const SizedBox(height: CrimpyTheme.spaceXs),
 
                   // Navigation buttons
                   Row(
@@ -203,12 +213,15 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                             icon: const Icon(Icons.arrow_back, size: 20),
                             label: const Text('Back'),
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: CrimpyTheme.spaceLg,
+                              ),
                             ),
                           ),
                         ),
 
-                      if (!_isFirstSection) const SizedBox(width: 12),
+                      if (!_isFirstSection)
+                        const SizedBox(width: CrimpyTheme.spaceMd),
 
                       // Next/Got it button
                       Expanded(
@@ -227,7 +240,9 @@ class _AssessmentTutorialDialogState extends State<AssessmentTutorialDialog> {
                                 }
                               : _nextSection,
                           style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: CrimpyTheme.spaceLg,
+                            ),
                           ),
                           icon: Icon(
                             _isLastSection ? Icons.check : Icons.arrow_forward,
@@ -263,14 +278,14 @@ class _TutorialSectionWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
           child: Icon(
             section.icon,
             color: section.iconColor ?? CrimpyTheme.assessmentColor,
             size: 24,
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: CrimpyTheme.spaceLg),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -282,7 +297,7 @@ class _TutorialSectionWidget extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: CrimpyTheme.spaceXs),
               Text(
                 section.content,
                 style: CrimpyTheme.body.copyWith(

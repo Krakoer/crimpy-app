@@ -7,6 +7,7 @@ import 'package:crimpy/views/screens/bodyweight/bodyweight_measure_screen.dart';
 import 'package:crimpy/views/widgets/ble/connection_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 /// Asks for the bodyweight, either typed in or measured by hanging on the
 /// sensor. Returns the saved weight in kilograms, or null when dismissed.
@@ -126,7 +127,7 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
             'Your body weight is used to turn loads set as a percentage of it '
             'into kilograms.',
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: CrimpyTheme.spaceLg),
           TextField(
             controller: _controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -141,7 +142,7 @@ class _BodyweightDialogState extends ConsumerState<BodyweightDialog> {
               errorText: _error,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: CrimpyTheme.spaceLg),
           if (connected)
             OutlinedButton.icon(
               onPressed: _measure,

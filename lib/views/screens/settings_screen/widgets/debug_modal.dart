@@ -38,13 +38,15 @@ class _DebugModalContent extends ConsumerWidget {
       builder: (context, scrollController) => SingleChildScrollView(
         controller: scrollController,
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 32),
+          padding: const EdgeInsets.only(bottom: CrimpyTheme.spaceXxl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Center(
                 child: Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  margin: const EdgeInsets.symmetric(
+                    vertical: CrimpyTheme.spaceMd,
+                  ),
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
@@ -55,8 +57,8 @@ class _DebugModalContent extends ConsumerWidget {
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+                  horizontal: CrimpyTheme.spaceLg,
+                  vertical: CrimpyTheme.spaceSm,
                 ),
                 child: Text(
                   'Debug',
@@ -70,7 +72,7 @@ class _DebugModalContent extends ConsumerWidget {
               _AppVersionSection(),
               const Divider(height: 24),
               _ReportBugButton(),
-              const SizedBox(height: 8),
+              const SizedBox(height: CrimpyTheme.spaceSm),
               _SendLogsButton(),
               if (kDebugMode) ...[
                 const Divider(height: 24),
@@ -88,7 +90,7 @@ class _ReportBugButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: CrimpyTheme.spaceLg),
       child: OutlinedButton.icon(
         onPressed: () => SentryFeedbackWidget.show(context),
         icon: const Icon(FontAwesomeIcons.bullhorn, size: 14),
@@ -105,7 +107,7 @@ class _SendLogsButton extends ConsumerWidget {
     final appInfo = ref.watch(appInfoProvider);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: CrimpyTheme.spaceLg),
       child: OutlinedButton.icon(
         // Package info and the in-memory log, neither of which any pull touches.
         // ignore: keep_the_held_value
@@ -149,7 +151,7 @@ class _AppVersionSection extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: CrimpyTheme.spaceLg),
       child: ref
           .watch(appInfoProvider)
           // Package info and the in-memory log, neither of which any pull touches.
@@ -162,7 +164,7 @@ class _AppVersionSection extends ConsumerWidget {
                   size: 16,
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: CrimpyTheme.spaceSm),
                 Text(
                   'Crimpy ${appInfo.version} (${appInfo.buildNumber})',
                   style: CrimpyTheme.body.copyWith(
@@ -187,7 +189,7 @@ class _DebugToolsSectionState extends ConsumerState<_DebugToolsSection> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: CrimpyTheme.spaceLg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -198,7 +200,7 @@ class _DebugToolsSectionState extends ConsumerState<_DebugToolsSection> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: CrimpyTheme.spaceMd),
           ElevatedButton.icon(
             onPressed: _showWhatsNewDialog,
             icon: const Icon(Icons.new_releases),
@@ -207,7 +209,7 @@ class _DebugToolsSectionState extends ConsumerState<_DebugToolsSection> {
               minimumSize: const Size.fromHeight(44),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: CrimpyTheme.spaceSm),
           ElevatedButton.icon(
             onPressed: _generateDummyData,
             icon: const Icon(Icons.data_array),
@@ -216,7 +218,7 @@ class _DebugToolsSectionState extends ConsumerState<_DebugToolsSection> {
               minimumSize: const Size.fromHeight(44),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: CrimpyTheme.spaceSm),
           ElevatedButton.icon(
             onPressed: _clearAllData,
             icon: const Icon(Icons.delete_sweep),

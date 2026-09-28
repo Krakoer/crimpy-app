@@ -3,6 +3,7 @@ import 'package:crimpy/views/screens/profile_screen/widgets/assessment_chart.dar
 import 'package:crimpy/views/widgets/section_widgets.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/stat_card.dart';
 import 'package:flutter/material.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class StatContent extends StatelessWidget {
   final String title;
@@ -39,7 +40,7 @@ class StatContent extends StatelessWidget {
     return Column(
       children: [
         Align(alignment: Alignment.centerLeft, child: SectionHeading(title)),
-        SizedBox(height: 12),
+        SizedBox(height: CrimpyTheme.spaceMd),
         if (perHand)
           Row(
             children: [
@@ -50,7 +51,7 @@ class StatContent extends StatelessWidget {
                   accentLeft,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: CrimpyTheme.spaceMd),
               Expanded(
                 child: StatCard(
                   "Right Hand",
@@ -66,7 +67,7 @@ class StatContent extends StatelessWidget {
             maxRight == 0 ? "--" : formatAssessmentValue(maxRight, unit),
             accentRight,
           ),
-        const SizedBox(height: 16),
+        const SizedBox(height: CrimpyTheme.spaceLg),
         ForceChart(
           leftData: perHand ? leftData : const [],
           rightData: rightData,

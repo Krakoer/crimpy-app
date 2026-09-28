@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/models/sensor_preset.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   /// Screen that allow the user to manage the app settings, including:
@@ -51,7 +52,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   Form(
                     key: _formKey,
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -74,7 +75,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                   },
                                 ),
                               ),
-                              SizedBox(width: 16),
+                              SizedBox(width: CrimpyTheme.spaceLg),
                               ElevatedButton(
                                 onPressed:
                                     ref.watch(connectionStateProvider) ==
@@ -89,7 +90,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: CrimpyTheme.spaceLg),
                           // Calibration coef row.
                           Row(
                             children: [
@@ -109,7 +110,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                   },
                                 ),
                               ),
-                              SizedBox(width: 16),
+                              SizedBox(width: CrimpyTheme.spaceLg),
                               ElevatedButton(
                                 onPressed:
                                     ref.watch(connectionStateProvider) ==
@@ -136,7 +137,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       Flexible(
                         flex: 1,
                         child: Padding(
-                          padding: const EdgeInsets.only(left: 16.0, right: 8),
+                          padding: const EdgeInsets.only(
+                            left: CrimpyTheme.spaceLg,
+                            right: CrimpyTheme.spaceSm,
+                          ),
                           child: ElevatedButton(
                             onPressed: _saveSettings,
                             style: ElevatedButton.styleFrom(
@@ -149,7 +153,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       Flexible(
                         flex: 1,
                         child: Padding(
-                          padding: const EdgeInsets.only(left: 8, right: 16),
+                          padding: const EdgeInsets.only(
+                            left: CrimpyTheme.spaceSm,
+                            right: CrimpyTheme.spaceLg,
+                          ),
                           child: OutlinedButton(
                             onPressed: _showCreatePresetPopup,
                             style: OutlinedButton.styleFrom(

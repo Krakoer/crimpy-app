@@ -26,7 +26,7 @@ class AssessmentCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Icon(icon, size: 28, color: CrimpyTheme.assessmentColor),
-          const SizedBox(width: 16),
+          const SizedBox(width: CrimpyTheme.spaceLg),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,7 +37,7 @@ class AssessmentCard extends StatelessWidget {
                     color: CrimpyTheme.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: CrimpyTheme.spaceXs),
                 Text(
                   description,
                   style: CrimpyTheme.bodySmall.copyWith(
@@ -45,7 +45,7 @@ class AssessmentCard extends StatelessWidget {
                   ),
                 ),
                 if (lastResult != null) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: CrimpyTheme.spaceSm),
                   Row(
                     children: [
                       FaIcon(
@@ -53,7 +53,7 @@ class AssessmentCard extends StatelessWidget {
                         size: 10,
                         color: CrimpyTheme.textMutedSmall,
                       ),
-                      const SizedBox(width: 5),
+                      const SizedBox(width: CrimpyTheme.spaceXs),
                       Text(
                         lastResult!,
                         style: CrimpyTheme.labelSmall.copyWith(
@@ -66,7 +66,7 @@ class AssessmentCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: CrimpyTheme.spaceMd),
           FaIcon(
             FontAwesomeIcons.chevronRight,
             color: CrimpyTheme.textMutedSmall,

@@ -362,7 +362,12 @@ class CrimpyTheme {
   static const double spaceSm = 8;
   static const double spaceMd = 12;
   static const double spaceLg = 16;
+
+  /// Between spaceLg and spaceXl: the room a dialog, a sheet or a result
+  /// screen gives its content.
+  static const double spaceLgPlus = 20;
   static const double spaceXl = 24;
+  static const double spaceXxl = 32;
 
   /// Inside a card: the same on every card, whatever it holds.
   static const EdgeInsets cardPadding = EdgeInsets.all(spaceLg);

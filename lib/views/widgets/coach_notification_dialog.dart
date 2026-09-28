@@ -36,7 +36,7 @@ class CoachNotificationDialog extends StatelessWidget {
           Icons.mark_chat_unread_outlined,
           color: CrimpyTheme.coachNote,
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: CrimpyTheme.spaceSm),
         const Expanded(child: Text('Answers from your coach')),
       ],
     ),
@@ -45,7 +45,7 @@ class CoachNotificationDialog extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(_explanation, style: CrimpyTheme.body),
-        const SizedBox(height: 12),
+        const SizedBox(height: CrimpyTheme.spaceMd),
         Text(
           'This is separate from the training reminders, which stay off '
           'until you turn them on.',

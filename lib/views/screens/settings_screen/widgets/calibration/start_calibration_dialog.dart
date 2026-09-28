@@ -2,6 +2,7 @@ import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/calibration/run_calibration_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class StartCalibrationDialog extends ConsumerStatefulWidget {
   /// Dialog to explain the user the calibration protocol, and ask him to enter the calibration weight.
@@ -48,7 +49,7 @@ class _CalibrationDialogState extends ConsumerState<StartCalibrationDialog> {
               "1. Make sure the sensor is tared before starting calibration\n2. Enter the known calibration weight in the input below.\n3. Hang the weight on the sensor, wait for it to be stable and click on \"Start calibration\".",
               style: TextStyle(height: 2),
             ),
-            SizedBox(height: 12),
+            SizedBox(height: CrimpyTheme.spaceMd),
             // Form to ask the user to input the calibration weight.
             Form(
               key: _formKey,
@@ -74,7 +75,7 @@ class _CalibrationDialogState extends ConsumerState<StartCalibrationDialog> {
                       controller: _targetController,
                     ),
                   ),
-                  SizedBox(width: 12),
+                  SizedBox(width: CrimpyTheme.spaceMd),
                   Text("kg"),
                 ],
               ),

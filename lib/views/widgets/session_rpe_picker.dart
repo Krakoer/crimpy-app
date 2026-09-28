@@ -42,7 +42,7 @@ class SessionRpePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -52,25 +52,25 @@ class SessionRpePicker extends StatelessWidget {
                   Icons.battery_charging_full,
                   color: CrimpyTheme.control,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: CrimpyTheme.spaceSm),
                 const Text('Session RPE', style: CrimpyTheme.title),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: CrimpyTheme.spaceXs),
             Text(
               subtitle ?? 'How much recovery did this session cost you?',
               style: CrimpyTheme.body.copyWith(
                 color: CrimpyTheme.textSecondary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: CrimpyTheme.spaceMd),
             for (final option in sessionRpeOptions)
               _SessionRpeOptionTile(
                 option: option,
                 selected: answer.matches(option),
                 onTap: () => _select(option),
               ),
-            const SizedBox(height: 8),
+            const SizedBox(height: CrimpyTheme.spaceSm),
             Text(
               answer.isAnswered
                   ? 'Tap the answer again to clear it. You can also change it later.'
@@ -112,7 +112,7 @@ class _SessionRpeOptionTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: CrimpyTheme.corners,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceSm),
           child: Row(
             children: [
               Container(
@@ -140,7 +140,7 @@ class _SessionRpeOptionTile extends StatelessWidget {
                           ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: CrimpyTheme.spaceMd),
               Expanded(
                 child: Text(
                   option.anchor,

@@ -113,8 +113,13 @@ class DayScheduleCard extends StatelessWidget {
       // The accent is the day's own answer at a glance down the list: a day
       // with something on reads apart from one with nothing, without a badge.
       accentColor: planned ? CrimpyTheme.planned : CrimpyTheme.outlineSubtle,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.fromLTRB(14, 12, 12, 8),
+      margin: const EdgeInsets.only(bottom: CrimpyTheme.spaceMd),
+      padding: const EdgeInsets.fromLTRB(
+        CrimpyTheme.spaceLg,
+        CrimpyTheme.spaceMd,
+        CrimpyTheme.spaceMd,
+        CrimpyTheme.spaceSm,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -128,7 +133,7 @@ class DayScheduleCard extends StatelessWidget {
                   color: CrimpyTheme.textPrimary,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: CrimpyTheme.spaceSm),
               Expanded(
                 child: Text(
                   dateLabel,
@@ -147,10 +152,10 @@ class DayScheduleCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: CrimpyTheme.spaceSm),
           if (!planned)
             Padding(
-              padding: EdgeInsets.only(bottom: 4),
+              padding: EdgeInsets.only(bottom: CrimpyTheme.spaceXs),
               child: Text(
                 'Nothing planned',
                 style: CrimpyTheme.body.copyWith(
@@ -174,7 +179,9 @@ class DayScheduleCard extends StatelessWidget {
               icon: const Icon(Icons.add, size: 18),
               label: Text(_isFull ? 'That is a full day' : 'Add something'),
               style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: CrimpyTheme.spaceSm,
+                ),
                 visualDensity: VisualDensity.compact,
               ),
             ),
@@ -214,7 +221,7 @@ class _ActivityTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final whenAndWhere = _whenAndWhere;
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
+      margin: const EdgeInsets.only(bottom: CrimpyTheme.spaceSm),
       // The tile needs an edge of its own: its fill sits on a card that is
       // nearly the same value, so without the border a day holding three
       // activities reads as three unseparated lines rather than three tiles.
@@ -229,7 +236,12 @@ class _ActivityTile extends StatelessWidget {
         child: InkWell(
           onTap: enabled ? onTap : null,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 4, 0, 4),
+            padding: const EdgeInsets.fromLTRB(
+              CrimpyTheme.spaceMd,
+              CrimpyTheme.spaceXs,
+              0,
+              CrimpyTheme.spaceXs,
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -250,7 +262,7 @@ class _ActivityTile extends StatelessWidget {
                             ),
                           ),
                           if (activity.durationMinutes != null) ...[
-                            const SizedBox(width: 8),
+                            const SizedBox(width: CrimpyTheme.spaceSm),
                             Text(
                               formatMinutes(activity.durationMinutes!),
                               style: CrimpyTheme.bodySmall.copyWith(
@@ -262,7 +274,7 @@ class _ActivityTile extends StatelessWidget {
                         ],
                       ),
                       if (whenAndWhere != null) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: CrimpyTheme.spaceXs),
                         Text(
                           whenAndWhere,
                           style: CrimpyTheme.bodySmall.copyWith(

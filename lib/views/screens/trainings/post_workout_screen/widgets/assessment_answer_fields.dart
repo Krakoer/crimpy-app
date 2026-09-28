@@ -47,7 +47,7 @@ class AssessmentAnswerFields extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -58,7 +58,7 @@ class AssessmentAnswerFields extends StatelessWidget {
                   color: CrimpyTheme.assessmentColor,
                   size: 20,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: CrimpyTheme.spaceSm),
                 Expanded(
                   child: Text(
                     definition.label,
@@ -70,12 +70,12 @@ class AssessmentAnswerFields extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: CrimpyTheme.spaceSm),
             Text(
               definition.prompt ?? 'What was your result?',
               style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textPrimary),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: CrimpyTheme.spaceLg),
             if (definition.perHand)
               Row(
                 children: [
@@ -86,7 +86,7 @@ class AssessmentAnswerFields extends StatelessWidget {
                       label: 'Right',
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: CrimpyTheme.spaceMd),
                   Expanded(
                     child: _field(
                       context,

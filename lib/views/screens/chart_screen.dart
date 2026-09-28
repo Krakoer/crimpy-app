@@ -63,14 +63,14 @@ class ChartScreen extends ConsumerWidget {
                   ? CrimpyTheme.sensorConnecting
                   : CrimpyTheme.textFaint,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: CrimpyTheme.spaceLg),
             Text(
               connectionState == BleConnectionState.connecting
                   ? 'Connecting to device...'
                   : 'Not connected to any device',
               style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textPrimary),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: CrimpyTheme.spaceXl),
             ElevatedButton(
               onPressed: () => _showConnectionDialog(context, ref),
               child: const Text('Connect to Device'),
@@ -90,7 +90,7 @@ class ChartScreen extends ConsumerWidget {
         }
 
         return Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(CrimpyTheme.spaceSm),
           child: Column(
             children: [
               Expanded(
@@ -128,9 +128,9 @@ class ChartScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
               CrimpyCards.stats(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
                 child: Column(
                   children: [
                     Row(

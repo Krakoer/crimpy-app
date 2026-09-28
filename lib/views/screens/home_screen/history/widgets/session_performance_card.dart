@@ -52,9 +52,9 @@ class SessionPerformanceCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SectionHeading('Performance Stats'),
-          const SizedBox(height: 16),
+          const SizedBox(height: CrimpyTheme.spaceLg),
           for (var row = 0; row * 2 < stats.length; row++) ...[
-            if (row > 0) const SizedBox(height: 12),
+            if (row > 0) const SizedBox(height: CrimpyTheme.spaceMd),
             Row(
               children: [
                 for (var column = 0; column < 2; column++)

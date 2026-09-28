@@ -82,7 +82,7 @@ class FavoriteTrainingList extends ConsumerWidget {
                               color: CrimpyTheme.textFaint,
                               size: 17,
                             ),
-                            SizedBox(width: 6),
+                            SizedBox(width: CrimpyTheme.spaceSm),
                             Text(formatLength(item.totalDuration)),
                           ],
                         ),
@@ -90,11 +90,11 @@ class FavoriteTrainingList extends ConsumerWidget {
                     );
                   },
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: CrimpyTheme.spaceSm),
                 // Button to show the dialog to manage favorite trainings.
                 DottedBorder(
                   options: RoundedRectDottedBorderOptions(
-                    borderPadding: EdgeInsets.all(2),
+                    borderPadding: EdgeInsets.all(CrimpyTheme.spaceXs),
                     dashPattern: [10, 5],
                     strokeWidth: 2,
                     radius: CrimpyTheme.corner,
@@ -106,7 +106,7 @@ class FavoriteTrainingList extends ConsumerWidget {
                       builder: (ctx) => PinTrainingDialog(),
                     ),
                     child: Container(
-                      padding: EdgeInsets.all(16),
+                      padding: EdgeInsets.all(CrimpyTheme.spaceLg),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -115,7 +115,7 @@ class FavoriteTrainingList extends ConsumerWidget {
                             color: CrimpyTheme.textPrimary,
                             size: 30,
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: CrimpyTheme.spaceSm),
                           Text(
                             "Pin a training",
                             style: CrimpyTheme.title.copyWith(
@@ -254,7 +254,7 @@ class PinTrainingDialog extends ConsumerWidget {
                             color: CrimpyTheme.textFaint,
                             size: 17,
                           ),
-                          SizedBox(width: 6),
+                          SizedBox(width: CrimpyTheme.spaceSm),
                           Flexible(
                             child: Text(
                               formatLength(item.totalDuration),

@@ -38,7 +38,7 @@ class _TareDialogState extends ConsumerState<TareDialog> {
         ),
       ],
       content: Padding(
-        padding: EdgeInsetsGeometry.symmetric(vertical: 20),
+        padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceLgPlus),
         child: Text(
           bleString,
           style: CrimpyTheme.tabular(CrimpyTheme.headline),

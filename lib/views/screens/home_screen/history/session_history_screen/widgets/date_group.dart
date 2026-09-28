@@ -38,7 +38,7 @@ class DateGroup extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceSm),
           child: Text(
             dateLabel,
             style: CrimpyTheme.title.copyWith(
@@ -51,7 +51,7 @@ class DateGroup extends StatelessWidget {
           (session) =>
               SessionCard(session: session, onTap: () => onSessionTap(session)),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: CrimpyTheme.spaceLg),
       ],
     );
   }

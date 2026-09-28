@@ -27,7 +27,7 @@ class ProgramSummaryCard extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionLabel('Your Program'),
-        const SizedBox(height: 8),
+        const SizedBox(height: CrimpyTheme.spaceSm),
         CrimpyCard.simple(
           padding: EdgeInsets.zero,
           onTap: () => Navigator.of(context).push(
@@ -36,7 +36,7 @@ class ProgramSummaryCard extends ConsumerWidget {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -57,7 +57,7 @@ class ProgramSummaryCard extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: CrimpyTheme.spaceLg),
                     WeekProgressBar(
                       currentWeek: program.isActiveOn(DateTime.now())
                           ? program.currentWeekNumber(DateTime.now())
@@ -71,9 +71,9 @@ class ProgramSummaryCard extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: CrimpyTheme.spaceLg),
         const SectionLabel('Training Library'),
-        const SizedBox(height: 8),
+        const SizedBox(height: CrimpyTheme.spaceSm),
       ],
     );
   }
@@ -84,7 +84,10 @@ class ProgramSummaryCard extends ConsumerWidget {
     TodayTraining? today,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      padding: const EdgeInsets.symmetric(
+        horizontal: CrimpyTheme.spaceLg,
+        vertical: CrimpyTheme.spaceMd,
+      ),
       decoration: const BoxDecoration(
         color: CrimpyTheme.bgSecondary,
         border: Border(top: BorderSide(color: CrimpyTheme.outline, width: 2)),
@@ -99,7 +102,7 @@ class ProgramSummaryCard extends ConsumerWidget {
           : Row(
               children: [
                 SessionActivityTile(type: today.session.activity, size: 34),
-                const SizedBox(width: 11),
+                const SizedBox(width: CrimpyTheme.spaceMd),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +124,7 @@ class ProgramSummaryCard extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: CrimpyTheme.spaceMd),
                 ElevatedButton.icon(
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute(
@@ -138,8 +141,8 @@ class ProgramSummaryCard extends ConsumerWidget {
                     backgroundColor: CrimpyTheme.fillOn(CrimpyTheme.action),
                     foregroundColor: CrimpyTheme.bgPrimary,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
+                      horizontal: CrimpyTheme.spaceLg,
+                      vertical: CrimpyTheme.spaceSm,
                     ),
                     textStyle: CrimpyTheme.labelSmall,
                   ),

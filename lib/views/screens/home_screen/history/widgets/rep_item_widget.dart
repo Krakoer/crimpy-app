@@ -22,8 +22,8 @@ class RepItemWidget extends StatelessWidget {
 
   Widget _buildRestItem() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: CrimpyTheme.spaceSm),
+      padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
       decoration: BoxDecoration(
         color: CrimpyTheme.bgSunken,
         borderRadius: CrimpyTheme.corners,
@@ -41,7 +41,7 @@ class RepItemWidget extends StatelessWidget {
               child: Icon(Icons.pause, size: 16, color: CrimpyTheme.textMedium),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: CrimpyTheme.spaceMd),
           Text(
             'Rest',
             style: CrimpyTheme.body.copyWith(
@@ -77,8 +77,8 @@ class RepItemWidget extends StatelessWidget {
         : CrimpyTheme.offTarget;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: CrimpyTheme.spaceSm),
+      padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
       decoration: BoxDecoration(
         color: CrimpyTheme.bgPrimary,
         border: Border.all(
@@ -112,7 +112,7 @@ class RepItemWidget extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: CrimpyTheme.spaceMd),
               // Hand indicator
               Expanded(
                 child: Column(
@@ -131,7 +131,7 @@ class RepItemWidget extends StatelessWidget {
                           size: 16,
                           color: CrimpyTheme.textStrong,
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: CrimpyTheme.spaceXs),
                         Text(
                           rep.handSide.label,
                           style: CrimpyTheme.titleSmall.copyWith(
@@ -140,7 +140,7 @@ class RepItemWidget extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: CrimpyTheme.spaceXs),
                     Text(
                       [
                         formatExactLength(rep.duration),
@@ -157,8 +157,8 @@ class RepItemWidget extends StatelessWidget {
               if (hasTarget)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 4,
+                    horizontal: CrimpyTheme.spaceSm,
+                    vertical: CrimpyTheme.spaceXs,
                   ),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.1),
@@ -172,7 +172,7 @@ class RepItemWidget extends StatelessWidget {
                         size: 14,
                         color: CrimpyTheme.markOn(statusColor),
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: CrimpyTheme.spaceXs),
                       Text(
                         '${(successRate * 100).toStringAsFixed(0)}%',
                         style: CrimpyTheme.labelSmall.copyWith(
@@ -185,8 +185,8 @@ class RepItemWidget extends StatelessWidget {
               else if (!weighed)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 4,
+                    horizontal: CrimpyTheme.spaceSm,
+                    vertical: CrimpyTheme.spaceXs,
                   ),
                   decoration: BoxDecoration(
                     color: CrimpyTheme.bgSunken,
@@ -202,7 +202,7 @@ class RepItemWidget extends StatelessWidget {
             ],
           ),
           if (hasTarget) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: CrimpyTheme.spaceSm),
             // Target vs Performed
             Row(
               children: [
@@ -232,7 +232,7 @@ class RepItemWidget extends StatelessWidget {
                 ),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(left: 12),
+                    padding: const EdgeInsets.only(left: CrimpyTheme.spaceMd),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -255,7 +255,7 @@ class RepItemWidget extends StatelessWidget {
               ],
             ),
           ] else if (weighed) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: CrimpyTheme.spaceSm),
             // A rep the sensor read against no prescribed load still names what
             // the athlete pulled: the card averages it in, and the portal prints
             // it on the row. There is nothing to grade it against, so it is

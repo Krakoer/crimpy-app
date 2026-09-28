@@ -60,7 +60,7 @@ class ProfileContent extends ConsumerWidget {
       // Scrollable although the sections may fit: this is what the profile is
       // pulled by, and a view that cannot move accepts no drag to pull it with.
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
       child: Column(
         children: [
           // Auth state, as in auth_view_model.
@@ -70,7 +70,7 @@ class ProfileContent extends ConsumerWidget {
               if (user == null) {
                 return Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -81,9 +81,9 @@ class ProfileContent extends ConsumerWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: CrimpyTheme.spaceSm),
                         const Text('Sign in to sync your data across devices'),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: CrimpyTheme.spaceLg),
                         Row(
                           children: [
                             Expanded(
@@ -98,7 +98,7 @@ class ProfileContent extends ConsumerWidget {
                                 child: const Text('Login'),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: CrimpyTheme.spaceMd),
                             Expanded(
                               child: ElevatedButton(
                                 onPressed: () {
@@ -121,7 +121,7 @@ class ProfileContent extends ConsumerWidget {
               } else {
                 return Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
                     child: Row(
                       children: [
                         CircleAvatar(
@@ -131,7 +131,7 @@ class ProfileContent extends ConsumerWidget {
                             style: CrimpyTheme.headline,
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: CrimpyTheme.spaceLg),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,24 +175,24 @@ class ProfileContent extends ConsumerWidget {
             },
             loading: () => const Card(
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(CrimpyTheme.spaceLg),
                 child: Center(child: CircularProgressIndicator()),
               ),
             ),
             error: (error, stack) => Card(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
                 child: Text('Error: $error'),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: CrimpyTheme.spaceLg),
 
           // The bodyweight is dropped on sign out, so offering to set it while
           // signed out would hand back a value that the next launch deletes.
           if (!isSignedOut(authState)) ...[
             const BodyweightCard(),
-            const SizedBox(height: 16),
+            const SizedBox(height: CrimpyTheme.spaceLg),
           ],
 
           // Max Force Section with Grip Position Selection
@@ -204,7 +204,7 @@ class ProfileContent extends ConsumerWidget {
           ),
 
           for (final assessed in otherAssessments) ...[
-            const SizedBox(height: 32),
+            const SizedBox(height: CrimpyTheme.spaceXxl),
             StatContent(
               title: assessed.definition.label,
               maxLeft: assessed.best((a) => a.leftValue),

@@ -122,7 +122,12 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
       ),
       child: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          padding: const EdgeInsets.fromLTRB(
+            CrimpyTheme.spaceLgPlus,
+            CrimpyTheme.spaceLg,
+            CrimpyTheme.spaceLgPlus,
+            CrimpyTheme.spaceLgPlus,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +141,7 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
               Text(
                 widget.activity == null
                     ? 'Add to ${widget.dayLabel}'
@@ -145,14 +150,14 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                   color: CrimpyTheme.textPrimary,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: CrimpyTheme.spaceXs),
               Text(
                 'Say what you are doing. Everything but the name is optional.',
                 style: CrimpyTheme.bodySmall.copyWith(
                   color: CrimpyTheme.textSecondary,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: CrimpyTheme.spaceLgPlus),
               TextField(
                 controller: _labelController,
                 autofocus: widget.activity == null,
@@ -169,7 +174,7 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                   isDense: true,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: CrimpyTheme.spaceLg),
               TextField(
                 controller: _durationController,
                 keyboardType: TextInputType.number,
@@ -185,7 +190,7 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                   isDense: true,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: CrimpyTheme.spaceLg),
               TextField(
                 controller: _whenController,
                 textCapitalization: TextCapitalization.sentences,
@@ -201,7 +206,7 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                   isDense: true,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: CrimpyTheme.spaceLg),
               TextField(
                 controller: _whereController,
                 textCapitalization: TextCapitalization.sentences,
@@ -218,7 +223,7 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                   isDense: true,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: CrimpyTheme.spaceLgPlus),
               Row(
                 children: [
                   Expanded(
@@ -227,7 +232,7 @@ class _ActivityEditorSheetState extends State<ActivityEditorSheet> {
                       child: const Text('Cancel'),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: CrimpyTheme.spaceMd),
                   Expanded(
                     child: FilledButton(
                       onPressed: _save,

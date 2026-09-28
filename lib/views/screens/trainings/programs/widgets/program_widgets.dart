@@ -79,7 +79,10 @@ class ScheduleStatusTag extends StatelessWidget {
       ScheduleStatus.past => ('PAST', CrimpyTheme.textMutedSmall),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+        horizontal: CrimpyTheme.spaceSm,
+        vertical: CrimpyTheme.spaceXs,
+      ),
       decoration: BoxDecoration(border: Border.all(color: color, width: 1.5)),
       child: Text(
         label,
@@ -112,13 +115,16 @@ class WeekProgressBar extends StatelessWidget {
           'WEEK $currentWeek / $total',
           style: CrimpyTheme.capsLabel.copyWith(color: CrimpyTheme.textPrimary),
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: CrimpyTheme.spaceSm),
         Row(
           children: List.generate(total, (i) {
+            final isLast = i == total - 1;
             return Expanded(
               child: Container(
                 height: 8,
-                margin: EdgeInsets.only(right: i == total - 1 ? 0 : 3),
+                margin: EdgeInsets.only(
+                  right: isLast ? 0 : CrimpyTheme.spaceXs,
+                ),
                 decoration: BoxDecoration(
                   color: i < currentWeek
                       ? CrimpyTheme.control
@@ -161,7 +167,10 @@ class ScheduledTrainingRow extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(
+          horizontal: CrimpyTheme.spaceMd,
+          vertical: CrimpyTheme.spaceMd,
+        ),
         // Due today reads by weight now that it has no hue of its own.
         decoration: due
             ? surface.copyWith(
@@ -171,7 +180,7 @@ class ScheduledTrainingRow extends StatelessWidget {
         child: Row(
           children: [
             SessionActivityTile(type: type, size: 38),
-            const SizedBox(width: 11),
+            const SizedBox(width: CrimpyTheme.spaceMd),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,7 +196,7 @@ class ScheduledTrainingRow extends StatelessWidget {
                       decoration: done ? TextDecoration.lineThrough : null,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: CrimpyTheme.spaceXs),
                   Text(
                     programSessionLabel(type),
                     style: CrimpyTheme.labelSmall.copyWith(
@@ -197,7 +206,7 @@ class ScheduledTrainingRow extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: CrimpyTheme.spaceSm),
             if (done)
               Icon(
                 FontAwesomeIcons.circleCheck,
@@ -246,11 +255,14 @@ class FlexTrainingRow extends StatelessWidget {
         ),
         child: Container(
           color: CrimpyTheme.bgPrimary,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(
+            horizontal: CrimpyTheme.spaceMd,
+            vertical: CrimpyTheme.spaceMd,
+          ),
           child: Row(
             children: [
               SessionActivityTile(type: type, size: 34),
-              const SizedBox(width: 11),
+              const SizedBox(width: CrimpyTheme.spaceMd),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +275,7 @@ class FlexTrainingRow extends StatelessWidget {
                         color: CrimpyTheme.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: CrimpyTheme.spaceXs),
                     Text(
                       programSessionLabel(type),
                       style: CrimpyTheme.labelSmall.copyWith(
@@ -273,7 +285,7 @@ class FlexTrainingRow extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: CrimpyTheme.spaceMd),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -285,7 +297,7 @@ class FlexTrainingRow extends StatelessWidget {
                           : CrimpyTheme.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: CrimpyTheme.spaceXs),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: List.generate(
@@ -293,7 +305,9 @@ class FlexTrainingRow extends StatelessWidget {
                       (i) => Container(
                         width: 8,
                         height: 8,
-                        margin: EdgeInsets.only(left: i == 0 ? 0 : 3),
+                        margin: EdgeInsets.only(
+                          left: i == 0 ? 0 : CrimpyTheme.spaceXs,
+                        ),
                         decoration: BoxDecoration(
                           color: i < doneCount ? color : null,
                           border: Border.all(color: color, width: 1.5),

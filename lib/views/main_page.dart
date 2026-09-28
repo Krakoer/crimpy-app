@@ -57,9 +57,11 @@ class _NavItem extends StatelessWidget {
               height: 2,
               color: isSelected ? primary : Colors.transparent,
             ),
-            const SizedBox(height: 10),
+            // Sm over the icon and Md under the label keep the bar at the
+            // height it had with 10 and 10.
+            const SizedBox(height: CrimpyTheme.spaceSm),
             FaIcon(icon, size: 18, color: color),
-            const SizedBox(height: 4),
+            const SizedBox(height: CrimpyTheme.spaceXs),
             Text(
               label,
               style: CrimpyTheme.labelSmall.copyWith(
@@ -67,7 +69,7 @@ class _NavItem extends StatelessWidget {
                 color: labelColor,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: CrimpyTheme.spaceMd),
           ],
         ),
       ),

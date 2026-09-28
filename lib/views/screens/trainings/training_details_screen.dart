@@ -10,6 +10,7 @@ import 'package:crimpy/views/screens/trainings/play_training_screen/play_trainin
 import 'package:crimpy/views/widgets/bodyweight_dialog.dart';
 import 'package:crimpy/views/widgets/training_item_tile.dart';
 import 'package:crimpy/views/widgets/section_widgets.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
 
 class TrainingDetailScreen extends ConsumerWidget {
   final Training template;
@@ -59,23 +60,23 @@ class TrainingDetailScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(template.title)),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
           children: [
             if (goal.isNotEmpty) ...[
               const SectionLabel('Goal'),
-              const SizedBox(height: 8),
+              const SizedBox(height: CrimpyTheme.spaceSm),
               SectionTextBlock(goal),
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
             ],
             if (comment.isNotEmpty) ...[
               const SectionLabel('Instructions'),
-              const SizedBox(height: 8),
+              const SizedBox(height: CrimpyTheme.spaceSm),
               SectionTextBlock(comment),
-              const SizedBox(height: 16),
+              const SizedBox(height: CrimpyTheme.spaceLg),
             ],
             if (template.items.isNotEmpty) ...[
               const SectionLabel('Exercises'),
-              const SizedBox(height: 8),
+              const SizedBox(height: CrimpyTheme.spaceSm),
               ...buildTrainingItemTiles(
                 template.items,
                 bodyweightKg: bodyweightKg,

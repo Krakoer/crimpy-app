@@ -62,7 +62,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                 child: Row(
                   children: [
                     Icon(Icons.edit),
-                    SizedBox(width: 8),
+                    SizedBox(width: CrimpyTheme.spaceSm),
                     Text('Edit'),
                   ],
                 ),
@@ -75,7 +75,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                       Icons.delete_forever,
                       color: Theme.of(context).colorScheme.error,
                     ),
-                    SizedBox(width: 8),
+                    SizedBox(width: CrimpyTheme.spaceSm),
                     Text('Delete'),
                   ],
                 ),
@@ -85,7 +85,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                 child: Row(
                   children: [
                     Icon(Icons.share),
-                    SizedBox(width: 8),
+                    SizedBox(width: CrimpyTheme.spaceSm),
                     Text('Share'),
                   ],
                 ),
@@ -95,7 +95,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
                 child: Row(
                   children: [
                     Icon(Icons.download),
-                    SizedBox(width: 8),
+                    SizedBox(width: CrimpyTheme.spaceSm),
                     Text('Export Data'),
                   ],
                 ),
@@ -158,13 +158,13 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Session overview card
           SessionOverviewCard(session: session),
-          const SizedBox(height: 16),
+          const SizedBox(height: CrimpyTheme.spaceLg),
 
           // A read that failed says so, in place of the two cards that would
           // have drawn what it held. Drawing nothing would read as a session
@@ -173,7 +173,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
             const SessionDataUnavailableCard(
               what: 'The rep data for this session',
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: CrimpyTheme.spaceLg),
           ],
 
           // Performance stats (if available)
@@ -182,7 +182,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
               reps: session.reps!,
               poolsBlocks: poolsBlocks,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: CrimpyTheme.spaceLg),
           ],
 
           // Repetitions breakdown (if available)
@@ -193,7 +193,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
               blocks: blocks,
               poolsBlocks: poolsBlocks,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: CrimpyTheme.spaceLg),
           ],
 
           // What the athlete reported on the prescribed items. No rep carries
@@ -202,10 +202,10 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
             const SessionDataUnavailableCard(
               what: 'What you reported on this session',
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: CrimpyTheme.spaceLg),
           ] else if (reported.isNotEmpty) ...[
             SessionReportedItemsCard(items: reported),
-            const SizedBox(height: 16),
+            const SizedBox(height: CrimpyTheme.spaceLg),
           ],
 
           // What the athlete wrote about the session and what their coach
@@ -222,7 +222,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
               // read off the session as it arrived rather than as it stands.
               unread: widget.session.hasUnreadCoachReply,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: CrimpyTheme.spaceLg),
           ],
 
           // Raw data section (if available)
@@ -295,7 +295,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.error_outline, size: 64, color: CrimpyTheme.textSecondary),
-          SizedBox(height: 16),
+          SizedBox(height: CrimpyTheme.spaceLg),
           Text(
             'Session not found',
             style: CrimpyTheme.title.copyWith(color: CrimpyTheme.textSecondary),
@@ -315,12 +315,12 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
             size: 64,
             color: CrimpyTheme.statusError,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: CrimpyTheme.spaceLg),
           Text(
             'Error loading session details',
             style: CrimpyTheme.title.copyWith(color: CrimpyTheme.textStrong),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: CrimpyTheme.spaceSm),
           Text(
             error,
             style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textMedium),

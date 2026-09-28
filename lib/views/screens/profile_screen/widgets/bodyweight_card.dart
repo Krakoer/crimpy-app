@@ -20,7 +20,7 @@ class BodyweightCard extends ConsumerWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
         child: Row(
           children: [
             Expanded(
@@ -34,7 +34,7 @@ class BodyweightCard extends ConsumerWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: CrimpyTheme.spaceXs),
                   Text(
                     value == null
                         ? 'Not set. Needed for loads set in % of body weight.'
@@ -44,7 +44,7 @@ class BodyweightCard extends ConsumerWidget {
                     ),
                   ),
                   if (value != null && pending) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: CrimpyTheme.spaceXs),
                     Text(
                       'Saved on this device. Your coach will see it once it '
                       'reaches Crimpy.',
@@ -56,7 +56,7 @@ class BodyweightCard extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: CrimpyTheme.spaceMd),
             bodyweight.isLoading && value == null
                 ? const SizedBox(
                     height: 24,
