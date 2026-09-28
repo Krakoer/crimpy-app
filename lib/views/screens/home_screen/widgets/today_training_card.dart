@@ -332,7 +332,12 @@ class _TodayTrainingRow extends ConsumerWidget {
                       decoration: done ? TextDecoration.lineThrough : null,
                     ),
                   ),
-                  Row(
+                  // Wraps rather than clips: on a narrow phone the badge
+                  // drops to a line of its own, number and all.
+                  Wrap(
+                    spacing: CrimpyTheme.spaceSm,
+                    runSpacing: CrimpyTheme.spaceXs,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
                         programSessionLabel(type),
@@ -340,19 +345,14 @@ class _TodayTrainingRow extends ConsumerWidget {
                           color: CrimpyTheme.textSecondary,
                         ),
                       ),
-                      if (seconds > 0) ...[
-                        const SizedBox(width: CrimpyTheme.spaceSm),
+                      if (seconds > 0)
                         Text(
                           formatLength(Duration(seconds: seconds)),
                           style: CrimpyTheme.labelSmall.copyWith(
                             color: CrimpyTheme.textSecondary,
                           ),
                         ),
-                      ],
-                      if (intensity != null) ...[
-                        const SizedBox(width: CrimpyTheme.spaceSm),
-                        IntensityBadge(intensity),
-                      ],
+                      if (intensity != null) IntensityBadge(intensity),
                     ],
                   ),
                 ],
