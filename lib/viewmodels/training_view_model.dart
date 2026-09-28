@@ -353,18 +353,10 @@ List<TrainingListItem> _buildTrainingList({
   required List<Training> library,
   required BuiltinTrainingCatalog catalog,
   required bool onlyPinned,
-  double? bodyweightKg,
+  required TrainingIntensityRater rater,
 }) {
-  final maxForce = MaxForceReference.fromHistory(catalog.assessments);
-  final results = AssessmentResults.fromHistory(catalog.assessments);
-  TrainingIntensity? intensityOf(Training? training) => training == null
-      ? null
-      : peakIntensity(
-          training,
-          maxForce: maxForce,
-          results: results.withDefinitions(training.referencedAssessments),
-          bodyweightKg: bodyweightKg,
-        );
+  TrainingIntensity? intensityOf(Training? training) =>
+      training == null ? null : rater.rate(training);
 
   final regular = onlyPinned
       ? library.where((training) => training.isFavorite).toList()
@@ -412,6 +404,19 @@ Future<double?> _bodyweightOrNone(Ref ref) => ref
     .watch(bodyweightProvider.future)
     .then<double?>((kilograms) => kilograms, onError: (_) => null);
 
+/// What every card rates a training's intensity against: the athlete's max
+/// force per grip, their other results and their bodyweight. See
+/// Krakoer/crimpy#166.
+@Riverpod(keepAlive: true)
+Future<TrainingIntensityRater> trainingIntensityRater(Ref ref) async {
+  final history = ref.watch(assessmentHistoryProvider.future);
+  final bodyweightKg = _bodyweightOrNone(ref);
+  return TrainingIntensityRater.fromHistory(
+    await history,
+    bodyweightKg: await bodyweightKg,
+  );
+}
+
 /// Provider for pinned builtin trainings (with favorites).
 @Riverpod(keepAlive: true)
 class PinnedTrainings extends _$PinnedTrainings {
@@ -419,12 +424,12 @@ class PinnedTrainings extends _$PinnedTrainings {
   Future<List<TrainingListItem>> build() async {
     final library = ref.watch(trainingLibraryProvider.future);
     final catalog = ref.watch(builtinTrainingCatalogProvider.future);
-    final bodyweightKg = _bodyweightOrNone(ref);
+    final rater = ref.watch(trainingIntensityRaterProvider.future);
     return _buildTrainingList(
       library: (await library).trainings,
       catalog: await catalog,
       onlyPinned: true,
-      bodyweightKg: await bodyweightKg,
+      rater: await rater,
     );
   }
 
@@ -450,11 +455,11 @@ class PinnedTrainings extends _$PinnedTrainings {
 Future<List<TrainingListItem>> allTrainings(Ref ref) async {
   final library = ref.watch(trainingLibraryProvider.future);
   final catalog = ref.watch(builtinTrainingCatalogProvider.future);
-  final bodyweightKg = _bodyweightOrNone(ref);
+  final rater = ref.watch(trainingIntensityRaterProvider.future);
   return _buildTrainingList(
     library: (await library).trainings,
     catalog: await catalog,
     onlyPinned: false,
-    bodyweightKg: await bodyweightKg,
+    rater: await rater,
   );
 }

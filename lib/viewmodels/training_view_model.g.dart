@@ -912,6 +912,59 @@ final class FilteredSessionsFamily extends $Family
   String toString() => r'filteredSessionsProvider';
 }
 
+/// What every card rates a training's intensity against: the athlete's max
+/// force per grip, their other results and their bodyweight. See
+/// Krakoer/crimpy#166.
+
+@ProviderFor(trainingIntensityRater)
+const trainingIntensityRaterProvider = TrainingIntensityRaterProvider._();
+
+/// What every card rates a training's intensity against: the athlete's max
+/// force per grip, their other results and their bodyweight. See
+/// Krakoer/crimpy#166.
+
+final class TrainingIntensityRaterProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<TrainingIntensityRater>,
+          TrainingIntensityRater,
+          FutureOr<TrainingIntensityRater>
+        >
+    with
+        $FutureModifier<TrainingIntensityRater>,
+        $FutureProvider<TrainingIntensityRater> {
+  /// What every card rates a training's intensity against: the athlete's max
+  /// force per grip, their other results and their bodyweight. See
+  /// Krakoer/crimpy#166.
+  const TrainingIntensityRaterProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'trainingIntensityRaterProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$trainingIntensityRaterHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<TrainingIntensityRater> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<TrainingIntensityRater> create(Ref ref) {
+    return trainingIntensityRater(ref);
+  }
+}
+
+String _$trainingIntensityRaterHash() =>
+    r'75e728ec6b737754f011cebe0226cf593303f90c';
+
 /// Provider for pinned builtin trainings (with favorites).
 
 @ProviderFor(PinnedTrainings)
@@ -940,7 +993,7 @@ final class PinnedTrainingsProvider
   PinnedTrainings create() => PinnedTrainings();
 }
 
-String _$pinnedTrainingsHash() => r'908bb00473aecee7f7fc5544cc4aa6467e2bf129';
+String _$pinnedTrainingsHash() => r'd524079d60b0d8c6881ef0f399dc286c96f8f956';
 
 /// Provider for pinned builtin trainings (with favorites).
 
@@ -1016,4 +1069,4 @@ final class AllTrainingsProvider
   }
 }
 
-String _$allTrainingsHash() => r'fc2fda492f0b80f5ff117926a6a5e43f07d10b47';
+String _$allTrainingsHash() => r'412872a4fc039a6143a84e658b3a70a9cbbd8f43';

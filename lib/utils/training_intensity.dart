@@ -156,3 +156,35 @@ TrainingIntensity? peakIntensity(
   final resolved = peak;
   return resolved == null ? null : TrainingIntensity(resolved);
 }
+
+/// Everything [peakIntensity] reads a training against, gathered once so every
+/// card that rates a training rates it the same way.
+class TrainingIntensityRater {
+  final MaxForceReference maxForce;
+  final AssessmentResults results;
+  final double? bodyweightKg;
+
+  const TrainingIntensityRater({
+    required this.maxForce,
+    required this.results,
+    this.bodyweightKg,
+  });
+
+  factory TrainingIntensityRater.fromHistory(
+    List<AssessmentModel> history, {
+    double? bodyweightKg,
+  }) => TrainingIntensityRater(
+    maxForce: MaxForceReference.fromHistory(history),
+    results: AssessmentResults.fromHistory(history),
+    bodyweightKg: bodyweightKg,
+  );
+
+  /// The training's intensity, reading its loads against the assessments it
+  /// names as well, since a coach's assessment is known only through them.
+  TrainingIntensity? rate(Training training) => peakIntensity(
+    training,
+    maxForce: maxForce,
+    results: results.withDefinitions(training.referencedAssessments),
+    bodyweightKg: bodyweightKg,
+  );
+}

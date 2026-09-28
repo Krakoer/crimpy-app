@@ -14,6 +14,7 @@ import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:crimpy/views/widgets/intensity_badge.dart';
 import 'package:crimpy/views/widgets/section_widgets.dart';
 import 'package:crimpy/utils/datetimes.dart';
 
@@ -302,6 +303,10 @@ class _TodayTrainingRow extends ConsumerWidget {
                     .withDefinitions(merged.referencedAssessments),
           );
 
+    final intensity = merged == null
+        ? null
+        : ref.watch(trainingIntensityRaterProvider).value?.rate(merged);
+
     return InkWell(
       onTap: () => _openSession(context, program, weekNumber, session),
       // A row is a tap target, so it never drops under the 48dp minimum.
@@ -343,6 +348,10 @@ class _TodayTrainingRow extends ConsumerWidget {
                             color: CrimpyTheme.textSecondary,
                           ),
                         ),
+                      ],
+                      if (intensity != null) ...[
+                        const SizedBox(width: CrimpyTheme.spaceSm),
+                        IntensityBadge(intensity),
                       ],
                     ],
                   ),
