@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/assessment_tutorials.dart';
+import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/utils/reps.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
@@ -10,6 +11,8 @@ import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/utils/critical_force_analysis.dart';
+import 'package:crimpy/views/screens/assessments/assessment_cue_box.dart';
+import 'package:crimpy/views/screens/assessments/assessment_run_phase.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/analysis_error_screen.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/critical_force_result_screen.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/minimalist_graph.dart';
@@ -169,6 +172,12 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
 
   @override
   Widget build(BuildContext context) {
+    final phase = assessmentStepPhase(
+      steps: widget.reps,
+      stepIndex: timer.currentItemIndex,
+      sensorLost:
+          ref.watch(connectionStateProvider) != BleConnectionState.connected,
+    );
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (res, didPop) async {
@@ -212,6 +221,9 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
         }
       },
       child: Scaffold(
+        backgroundColor: phase == RunPhase.calm
+            ? CrimpyTheme.phaseCalmGround
+            : null,
         appBar: AppBar(
           title: Text("Critical Force Test"),
           actions: [
@@ -261,54 +273,14 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
               // Box of text to show the user the action to do (rest or pull).
               Positioned(
                 top: 230,
-                // No Opacity wrapper. It composited the white label and the
-                // darkened fill together, so fillOn bought 2.80:1 rather than
-                // the 4.93:1 it measures alone, still under the 3:1 these large
-                // labels answer to. The box has a hard border and a shadow and
-                // was not relying on the fade.
-                child: Container(
-                  width: 200,
-                  padding: EdgeInsets.all(CrimpyTheme.spaceSm),
-                  decoration: CrimpyTheme.raised.copyWith(
-                    color: CrimpyTheme.fillOn(CrimpyTheme.pullCue),
-                  ),
-                  child: timer.currentItem is! RestItem
-                      ? Column(
-                          children: [
-                            Text(
-                              "Pull!",
-                              style: CrimpyTheme.headline.copyWith(
-                                color: CrimpyTheme.textOnFill,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            Text(
-                              "${timer.currentItemRemaining}",
-                              style: CrimpyTheme.numerals(
-                                48,
-                              ).copyWith(color: CrimpyTheme.textOnFill),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        )
-                      : Column(
-                          children: [
-                            Text(
-                              "Pulling in",
-                              style: CrimpyTheme.headline.copyWith(
-                                color: CrimpyTheme.textOnFill,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            Text(
-                              "${timer.currentItemRemaining}",
-                              style: CrimpyTheme.numerals(
-                                48,
-                              ).copyWith(color: CrimpyTheme.textOnFill),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
+                child: AssessmentCueBox(
+                  phase: phase,
+                  prompt: phase == RunPhase.alarm
+                      ? 'No sensor'
+                      : timer.currentItem is! RestItem
+                      ? 'Pull!'
+                      : 'Pulling in',
+                  secondsRemaining: timer.currentItemRemaining,
                 ),
               ),
               // Show a minimalist graph in the background

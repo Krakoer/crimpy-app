@@ -182,7 +182,6 @@ final Map<String, Color> scannedAccents = {
   'phaseEngaged': CrimpyTheme.phaseEngaged,
   'phaseAlarm': CrimpyTheme.phaseAlarm,
   'runPrompt': CrimpyTheme.runPrompt,
-  'pullCue': CrimpyTheme.pullCue,
   'measuring': CrimpyTheme.measuring,
   'measureSettled': CrimpyTheme.measureSettled,
   'targetZone': CrimpyTheme.targetZone,
@@ -1181,6 +1180,17 @@ void main() {
   // cannot see into, so what it paints is measured here directly: the words and
   // the countdown in each phase's text form, on the white strip and on the calm
   // ground, and the level in each phase's fill under the white force figure.
+  // Every screen the athlete pulls on, which all read the one phase map.
+  const runScreenFiles = [
+    'lib/views/screens/trainings/play_training_screen/layouts/'
+        'full_tank_layout.dart',
+    'lib/views/screens/assessments/mvc_run_screen.dart',
+    'lib/views/screens/assessments/assessment_cue_box.dart',
+    'lib/views/screens/assessments/critical_force/critical_force_run_screen.dart',
+    'lib/views/screens/assessments/critical_force/minimalist_graph.dart',
+    'lib/views/screens/assessments/endurance_60/endurance_60_run_screen.dart',
+  ];
+
   group('run phases', () {
     const grounds = {
       'bgPrimary': CrimpyTheme.bgPrimary,
@@ -1198,8 +1208,11 @@ void main() {
       }
     }
 
-    for (final phase in [RunPhase.armed, RunPhase.engaged]) {
-      test('the ${phase.name} level carries white', () {
+    // The training tank fills its level with armed, engaged and the alarm, and
+    // the assessment cue box is filled with any of the four under its white
+    // prompt and countdown.
+    for (final phase in RunPhase.values) {
+      test('the ${phase.name} fill carries white', () {
         expectClearsFloor(
           'white on the ${phase.name} level',
           CrimpyTheme.textOnFill,
@@ -1241,23 +1254,72 @@ void main() {
       expect(CrimpyTheme.phaseEngaged, CrimpyTheme.onTarget);
     });
 
-    test('the run screen names no red but the alarm', () {
-      final source = File(
-        'lib/views/screens/trainings/play_training_screen/layouts/'
-        'full_tank_layout.dart',
-      ).readAsStringSync();
-      for (final red in [
-        'statusError',
-        'statusErrorText',
-        'destructive',
-        'farOffTarget',
-      ]) {
-        expect(
-          source.contains('CrimpyTheme.$red'),
-          isFalse,
-          reason:
-              'the run screen paints CrimpyTheme.$red, and red there is '
-              'the alarm alone: ask phaseColor(RunPhase.alarm) instead',
+    test('no run screen names a red but the alarm', () {
+      for (final path in runScreenFiles) {
+        final source = File(path).readAsStringSync();
+        for (final red in [
+          'statusError',
+          'statusErrorText',
+          'destructive',
+          'farOffTarget',
+        ]) {
+          // A whole name: the leave dialog's destructiveButton is a
+          // dialog's action, and the dialog rules of Krakoer/crimpy#171 set it.
+          expect(
+            RegExp('CrimpyTheme\\.$red\\b').hasMatch(source),
+            isFalse,
+            reason:
+                '$path paints CrimpyTheme.$red, and red on a run screen is '
+                'the alarm alone: ask phaseColor(RunPhase.alarm) instead',
+          );
+        }
+      }
+    });
+
+    // The assessment runs had their own state colours before they took the
+    // phases (Krakoer/crimpy#176): a gold for measuring, a green for settled.
+    // Those are the bodyweight measure's now, and a run screen asks phaseColor.
+    test(
+      'no run screen paints the measuring states of the bodyweight scale',
+      () {
+        for (final path in runScreenFiles) {
+          final source = File(path).readAsStringSync();
+          for (final role in ['measuring', 'measureSettled']) {
+            expect(
+              source.contains('CrimpyTheme.$role'),
+              isFalse,
+              reason: '$path paints CrimpyTheme.$role: ask phaseColor instead',
+            );
+          }
+        }
+      },
+    );
+
+    test('the target band is on target and the bare trace is armed', () {
+      expect(CrimpyTheme.targetZone, CrimpyTheme.phaseEngaged);
+      expect(CrimpyTheme.forceTrace, CrimpyTheme.phaseArmed);
+    });
+
+    // The Critical Force trace is drawn at 0.8 over the white of a pull and
+    // the calm ground of a rest, and the 60% Endurance trace takes the mark
+    // form of armed or engaged at full strength on white.
+    test('the assessment traces hold the mark floor', () {
+      for (final ground in grounds.entries) {
+        expectClearsMarkFloor(
+          'forceTrace at 0.8 on ${ground.key}',
+          tintOver(
+            CrimpyTheme.markOn(CrimpyTheme.forceTrace),
+            0.8,
+            ground.value,
+          ),
+          ground.value,
+        );
+      }
+      for (final phase in [RunPhase.armed, RunPhase.engaged]) {
+        expectClearsMarkFloor(
+          '${phase.name} trace on bgPrimary',
+          CrimpyTheme.markOn(CrimpyTheme.phaseColor(phase)),
+          CrimpyTheme.bgPrimary,
         );
       }
     });
