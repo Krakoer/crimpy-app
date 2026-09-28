@@ -4,6 +4,22 @@ import 'package:flutter/material.dart';
 // Export custom widgets
 export 'widgets/widgets.dart';
 
+/// What a run is doing, as far as its colour is concerned. [CrimpyTheme.phaseColor]
+/// maps each one to its hue. See Krakoer/crimpy#158.
+enum RunPhase {
+  /// Resting, between sets, or paused.
+  calm,
+
+  /// Getting ready, or pulling and not yet on target.
+  armed,
+
+  /// On target.
+  engaged,
+
+  /// The sensor is lost mid-run.
+  alarm,
+}
+
 /// Crimpy Theme - Radicle-inspired minimalist design system
 /// Based on the clean, developer-focused aesthetic of Radicle.xyz
 class CrimpyTheme {
@@ -71,6 +87,39 @@ class CrimpyTheme {
   /// crimpy-frontend/src/routes/layout.css, where the same value clears the
   /// portal's own --pr-lt ground at 4.75:1.
   static const Color accentOrangeText = Color(0xFF965134);
+
+  // ==================== RUN PHASE HUES ====================
+  // The hues the run screen spends on its phases, and nothing else there. The
+  // chrome of that screen is ink; a hue is kept for what has to be read at arm's
+  // length mid-hang, and each one means a single thing:
+  //
+  //   steel  calm     resting, between sets, paused
+  //   ink    armed    getting ready, pulling but not yet on target
+  //   sage   engaged  on target
+  //   red    alarm    something is wrong: the sensor is lost
+  //
+  // Red is spent once, on the alarm, and statusError already holds it. The
+  // moment it is decorative it stops working, so a new meaning that wants to
+  // escalate (the intensity of a training, Krakoer/crimpy#166) takes steel,
+  // ink or sage from here, or a hue of its own, and never the alarm's red. The
+  // roles that name these are the RUN PHASES in the ROLES section, and
+  // [phaseColor] is the one map every part of the run screen reads.
+  // See Krakoer/crimpy#158.
+
+  /// Sage, the green the web portal marks a rep that held its target with: it
+  /// is --gn in crimpy-frontend/src/routes/layout.css. 3.63:1 on white, so it is
+  /// a mark; its text form and the fill that carries white are both
+  /// [accentGreenText], which is --gn-tx and reads 5.51:1 under white.
+  static const Color accentSage = Color(0xFF6B8F71);
+
+  /// Steel, the calm of the run screen: present but not shouting. A cool grey
+  /// rather than a hue, so a rest never reads as a result. 6.24:1 on white and
+  /// 5.76:1 on [accentSteelGround], so it is written in as it is.
+  static const Color accentSteel = Color(0xFF56626E);
+
+  /// The ground a calm run screen is laid on. As light as the pale green rest
+  /// ground it replaces, so every label that read on that one reads on this.
+  static const Color accentSteelGround = Color(0xFFF4F6F8);
 
   // ==================== STATUS COLORS ====================
 
@@ -225,8 +274,10 @@ class CrimpyTheme {
   /// A scheduled training that was done.
   static const Color done = statusSuccess;
 
-  /// A rep that held its target load.
-  static const Color onTarget = statusSuccess;
+  /// A rep that held its target load. The portal's sage, so a rep reads the
+  /// same on the phone and in the coach's session detail; the run screen's
+  /// [phaseEngaged] is this same meaning live.
+  static const Color onTarget = accentSage;
 
   /// A rep that missed its target load.
   static const Color offTarget = statusWarning;
@@ -244,23 +295,41 @@ class CrimpyTheme {
   /// The mark of a precaution to take before a test, such as warming up.
   static const Color caution = accentYellowText;
 
-  /// The countdown and labels of a rest on the run screen.
-  static const Color phaseRest = statusSuccess;
+  // ---- RUN PHASES ----
+  // One map from what the run is doing to the hue it is painted in, read by
+  // every part of the run screen through [phaseColor], so the tank, the
+  // countdown and the words under it move together. The hues are the RUN PHASE
+  // HUES above. See Krakoer/crimpy#158.
 
-  /// The ground of the run screen during a rest.
-  static const Color phaseRestGround = bgSuccess;
+  /// Resting, between sets, or paused: nothing is asked of the fingers.
+  static const Color phaseCalm = accentSteel;
 
-  /// The countdown before the first step of a run.
-  static const Color phasePreparation = textPrimary;
+  /// The ground of the run screen while it is calm.
+  static const Color phaseCalmGround = accentSteelGround;
+
+  /// Getting ready, or pulling and not yet on target. Ink, and the one phase
+  /// without a hue: it is the working baseline the others stand out from.
+  static const Color phaseArmed = textMedium;
+
+  /// On target: the load holds what the step prescribed. The same meaning as
+  /// [onTarget], and the only green the run screen has.
+  static const Color phaseEngaged = onTarget;
+
+  /// Something is wrong mid-run: the sensor is lost. The only red on the run
+  /// screen; nothing that is not an alarm may take it.
+  static const Color phaseAlarm = statusError;
 
   /// The run screen's instruction: which hand, which step, what load.
   static const Color runPrompt = textPrimary;
 
-  /// The run screen's fill when the load holds the target.
-  static const Color tankOnTarget = statusSuccess;
-
-  /// The run screen's fill while the load is under the target.
-  static const Color tankBelowTarget = textMedium;
+  /// The hue of [phase]. Every part of the run screen that paints a phase asks
+  /// here rather than naming a role, so no two of them can drift apart.
+  static Color phaseColor(RunPhase phase) => switch (phase) {
+    RunPhase.calm => phaseCalm,
+    RunPhase.armed => phaseArmed,
+    RunPhase.engaged => phaseEngaged,
+    RunPhase.alarm => phaseAlarm,
+  };
 
   /// The cue to pull during an assessment run.
   static const Color pullCue = accentYellow;
@@ -1045,6 +1114,8 @@ class CrimpyTheme {
     accentYellow: accentYellowText,
     accentGreen: accentGreenText,
     statusSuccess: accentGreenText,
+    // The portal's own pair: --gn written in --gn-tx.
+    accentSage: accentGreenText,
     accentPurple: accentPurpleText,
     accentBlue: accentBlueText,
     statusError: statusErrorText,
@@ -1119,6 +1190,9 @@ class CrimpyTheme {
     accentOrange: accentOrangeFill,
     accentYellow: accentYellowFill,
     accentGreen: accentGreenFill,
+    // --gn-tx carries white at 5.51:1, so the portal's text green is the fill
+    // too rather than a darker sage of the app's own.
+    accentSage: accentGreenText,
     accentPurple: accentPurpleFill,
     accentBlue: accentBlueFill,
     statusInfo: statusInfoFill,

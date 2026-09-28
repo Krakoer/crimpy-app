@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
@@ -225,11 +226,18 @@ class FullTankLayout extends ConsumerWidget {
     final targetWeight = rep?.targetLoad ?? 0;
     final paused = !isRunning && !isPreparation;
 
+    // A step that reads the sensor and has none to read is the one alarm the
+    // run screen raises. A step that reads nothing cannot lose it.
+    final sensorLost =
+        sensor &&
+        ref.watch(connectionStateProvider) != BleConnectionState.connected;
+
     // The tank only follows the sensor on a step that reads it. Watching the
     // stream on the other steps would rebuild the screen on every sample for
     // nothing. A pause mutes the stream, so the last sample it carries is stale
-    // and the tank empties instead of holding the reading it stopped on.
-    final currentWeight = sensor && !paused
+    // and the tank empties instead of holding the reading it stopped on. A lost
+    // sensor leaves a stale sample behind the same way.
+    final currentWeight = sensor && !paused && !sensorLost
         ? ref.watch(bleLastValueProvider) ?? 0
         : 0.0;
     // Only a step prescribing no load needs the bodyweight to scale against.
@@ -273,7 +281,7 @@ class FullTankLayout extends ConsumerWidget {
           children: [
             ColoredBox(
               color: state == _TankState.rest
-                  ? CrimpyTheme.phaseRestGround
+                  ? CrimpyTheme.phaseCalmGround
                   : CrimpyTheme.bgPrimary,
             ),
             if (fillHeight > 0)
@@ -284,9 +292,13 @@ class FullTankLayout extends ConsumerWidget {
                   width: double.infinity,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
-                    color: onTarget
-                        ? CrimpyTheme.tankOnTarget
-                        : CrimpyTheme.tankBelowTarget,
+                    // The level carries the force figure in white, so it is
+                    // filled with the form of its phase that carries white.
+                    color: CrimpyTheme.fillOn(
+                      CrimpyTheme.phaseColor(
+                        onTarget ? RunPhase.engaged : RunPhase.armed,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -327,10 +339,10 @@ class FullTankLayout extends ConsumerWidget {
               ),
             ),
             _ControlStrip(
-              stateWord: _stateWord,
-              stateColor: _stateColor,
+              stateWord: _stateWord(sensorLost: sensorLost),
+              stateColor: _stateColor(sensorLost: sensorLost),
               detail: paused ? repContext : null,
-              nextStep: paused ? null : _nextStep,
+              nextStep: paused || sensorLost ? null : _nextStep,
               isRunning: isRunning,
               showConfirm: state == _TankState.confirm,
               onPlayPause: onPlayPause,
@@ -347,24 +359,30 @@ class FullTankLayout extends ConsumerWidget {
 
   /// What the run is doing, when the tank does not already say it. A working
   /// step has none: the level and the notch show the effort and whether the
-  /// target is met better than a word could.
-  String? get _stateWord {
+  /// target is met better than a word could. A lost sensor empties the level,
+  /// so that one is said.
+  String? _stateWord({required bool sensorLost}) {
     if (isPreparation) return 'READY';
     if (!isRunning) return 'PAUSED';
+    if (sensorLost) return 'SENSOR LOST';
     if (item is RestItem) return 'REST';
     return null;
   }
 
-  /// The state word is set in capsHeadline, 24px on the white control strip,
+  /// The phase the state word names, in the hue [CrimpyTheme.phaseColor] gives
+  /// it. The word is set in capsHeadline, 24px on the white control strip,
   /// which is large text and would pass at 3:1. It keeps the readable form of
-  /// its accent anyway, which clears 4.5:1, so the word reads the same as the
+  /// its phase anyway, which clears 4.5:1, so the word reads the same as the
   /// small labels around it. See Krakoer/crimpy#128.
-  Color get _stateColor {
-    if (isPreparation) {
-      return CrimpyTheme.textOn(CrimpyTheme.phasePreparation);
-    }
-    if (!isRunning) return CrimpyTheme.textMutedSmall;
-    return CrimpyTheme.phaseRest;
+  Color _stateColor({required bool sensorLost}) {
+    final phase = isPreparation
+        ? RunPhase.armed
+        : !isRunning
+        ? RunPhase.calm
+        : sensorLost
+        ? RunPhase.alarm
+        : RunPhase.calm;
+    return CrimpyTheme.textOn(CrimpyTheme.phaseColor(phase));
   }
 
   /// The step coming up, which a working step has the strip to itself for. A
@@ -646,7 +664,8 @@ class _TankContent extends StatelessWidget {
   Widget _countdown() {
     final seconds = layout.secondsRemaining;
     final resting = state == _TankState.rest;
-    final color = resting ? CrimpyTheme.phaseRest : palette.force;
+    final calm = CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.calm));
+    final color = resting ? calm : palette.force;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -666,7 +685,7 @@ class _TankContent extends StatelessWidget {
           resting ? 'SEC REST' : 'SEC',
           style: _scaledStyle(
             CrimpyTheme.capsLabel,
-            color: resting ? CrimpyTheme.phaseRest : palette.secondary,
+            color: resting ? calm : palette.secondary,
           ),
         ),
       ],
@@ -739,9 +758,14 @@ class _TankContent extends StatelessWidget {
     final rep = next is TimedItem ? next : null;
 
     return _column([
+      // Only drawn over the empty tank: a preparation reads no sensor, so there
+      // is no level for a second copy to be clipped to.
       Text(
         'PREPARATION',
-        style: _scaledStyle(CrimpyTheme.capsHeadline, color: palette.accent),
+        style: _scaledStyle(
+          CrimpyTheme.capsHeadline,
+          color: CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.armed)),
+        ),
       ),
       SizedBox(height: _s(14)),
       Text(
@@ -786,7 +810,7 @@ class _TankContent extends StatelessWidget {
         'LAST REST',
         style: _scaledStyle(
           CrimpyTheme.capsHeadline,
-          color: CrimpyTheme.phaseRest,
+          color: CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.calm)),
         ),
       );
     }
@@ -1216,7 +1240,9 @@ class _ControlStrip extends StatelessWidget {
           IconButton(
             onPressed: onDropOut,
             icon: const Icon(Icons.flag_outlined),
-            color: CrimpyTheme.statusError,
+            // A choice the athlete makes, not an alarm, so it is not red. Red
+            // on the run screen is the alarm's alone. See Krakoer/crimpy#158.
+            color: CrimpyTheme.control,
             iconSize: 30,
             tooltip: 'I cannot make the next round',
           ),

@@ -57,6 +57,9 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
     // through the ratio each block carries instead. A run the training never
     // gave a target counts none, which is why the ratio is left out there.
     final overall = widget.poolsBlocks ? null : onTargetCount(reps);
+    final grade = overall == null || overall.onTarget == overall.total
+        ? CrimpyTheme.onTarget
+        : CrimpyTheme.offTarget;
 
     return CrimpyCard.simple(
       child: Column(
@@ -75,14 +78,10 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
                     vertical: CrimpyTheme.spaceSm,
                   ),
                   decoration: BoxDecoration(
-                    color: overall.onTarget == overall.total
-                        ? CrimpyTheme.tintOf(CrimpyTheme.onTarget)
-                        : CrimpyTheme.tintOf(CrimpyTheme.offTarget),
+                    color: CrimpyTheme.tintOf(grade),
                     borderRadius: CrimpyTheme.corners,
                     border: Border.all(
-                      color: overall.onTarget == overall.total
-                          ? CrimpyTheme.textOn(CrimpyTheme.onTarget)
-                          : CrimpyTheme.textOn(CrimpyTheme.offTarget),
+                      color: CrimpyTheme.textOn(grade),
                       width: 1,
                     ),
                   ),
@@ -91,9 +90,7 @@ class _SessionRepsCardState extends State<SessionRepsCard> {
                     '${_unmeasuredSuffix(overall)}',
                     style: CrimpyTheme.bodySmall.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: overall.onTarget == overall.total
-                          ? CrimpyTheme.textOn(CrimpyTheme.onTarget)
-                          : CrimpyTheme.textOn(CrimpyTheme.offTarget),
+                      color: CrimpyTheme.textOn(grade),
                     ),
                   ),
                 ),

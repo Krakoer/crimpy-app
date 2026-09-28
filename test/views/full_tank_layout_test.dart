@@ -1,3 +1,4 @@
+import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
@@ -16,6 +17,15 @@ class _FakeBodyweight extends BodyweightController {
 
   @override
   Future<double?> build() async => kilograms;
+}
+
+class _FakeConnection extends BleConnection {
+  _FakeConnection(this.connection);
+
+  final BleConnectionState connection;
+
+  @override
+  BleConnectionState build() => connection;
 }
 
 const _hang = TimedItem(
@@ -80,11 +90,13 @@ Future<void> _pump(
   String? nextVideoLink,
   TargetPlatform platform = TargetPlatform.android,
   bool showDropOut = false,
+  BleConnectionState connection = BleConnectionState.connected,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         bleLastValueProvider.overrideWithValue(currentWeight),
+        connectionStateProvider.overrideWith(() => _FakeConnection(connection)),
         bodyweightProvider.overrideWith(() => _FakeBodyweight(bodyweight)),
       ],
       child: MaterialApp(
@@ -123,7 +135,108 @@ Future<void> _pump(
   await tester.pump();
 }
 
+/// The colour of the force level, which is the one ColoredBox sized to it.
+Color? _levelColor(WidgetTester tester) {
+  final level = tester
+      .widgetList<AnimatedContainer>(find.byType(AnimatedContainer))
+      .toList();
+  if (level.isEmpty) return null;
+  return (level.single.decoration as BoxDecoration?)?.color;
+}
+
+Color? _textColor(WidgetTester tester, String text) =>
+    tester.widgetList<Text>(find.text(text)).first.style?.color;
+
 void main() {
+  // One map from what the run is doing to its hue, which every part of the
+  // screen reads. See Krakoer/crimpy#158.
+  group('the phase colours', () {
+    testWidgets('fill the level in sage once the target is held', (
+      tester,
+    ) async {
+      await _pump(tester, item: _hang, currentWeight: 42);
+      expect(
+        _levelColor(tester),
+        CrimpyTheme.fillOn(CrimpyTheme.phaseColor(RunPhase.engaged)),
+      );
+    });
+
+    testWidgets('fill the level in ink below the target', (tester) async {
+      await _pump(tester, item: _hang, currentWeight: 30);
+      expect(
+        _levelColor(tester),
+        CrimpyTheme.fillOn(CrimpyTheme.phaseColor(RunPhase.armed)),
+      );
+    });
+
+    testWidgets('paint a rest calm, not green', (tester) async {
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 3),
+        nextItem: _hang,
+        secondsRemaining: 3,
+      );
+
+      final calm = CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.calm));
+      expect(_textColor(tester, 'REST'), calm);
+      expect(_textColor(tester, '3'), calm);
+      expect(_textColor(tester, 'SEC REST'), calm);
+      final ground = tester
+          .widgetList<ColoredBox>(find.byType(ColoredBox))
+          .map((box) => box.color);
+      expect(ground, contains(CrimpyTheme.phaseCalmGround));
+      expect(ground, isNot(contains(CrimpyTheme.onTarget)));
+    });
+
+    testWidgets('paint getting ready armed', (tester) async {
+      await _pump(tester, item: _hang, nextItem: _hang, isPreparation: true);
+
+      final armed = CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.armed));
+      expect(_textColor(tester, 'READY'), armed);
+      expect(_textColor(tester, 'PREPARATION'), armed);
+    });
+
+    testWidgets('raise the alarm when the sensor is lost mid-hang', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: _hang,
+        nextItem: const RestItem(durationSeconds: 3),
+        currentWeight: 34.2,
+        connection: BleConnectionState.disconnected,
+      );
+
+      expect(
+        _textColor(tester, 'SENSOR LOST'),
+        CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.alarm)),
+      );
+      // The last sample is stale, so the level empties rather than holding it.
+      expect(find.text('34.2'), findsNothing);
+      expect(find.text('NEXT'), findsNothing);
+    });
+
+    testWidgets('raise no alarm on a step that reads no sensor', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: _pullUps,
+        connection: BleConnectionState.disconnected,
+      );
+      expect(find.text('SENSOR LOST'), findsNothing);
+    });
+
+    testWidgets('leave the drop out flag out of the alarm red', (tester) async {
+      await _pump(tester, item: _hang, currentWeight: 10, showDropOut: true);
+
+      final flag = tester.widget<IconButton>(
+        find.widgetWithIcon(IconButton, Icons.flag_outlined),
+      );
+      expect(flag.color, CrimpyTheme.control);
+    });
+  });
+
   group('what the tank is scaled against', () {
     test('is the prescribed load when there is one', () {
       expect(tankScaleWeight(targetWeight: 42, bodyweight: 72), 42);
