@@ -94,12 +94,34 @@ class HangPrescription {
     final kilograms = [for (final hang in hangs) hang.kilograms];
     if (kilograms.contains(null)) return 'Varies by rep';
     final range = _range(kilograms.cast<double>(), formatKilograms);
-    final percents = [for (final hang in hangs) hang.percentOfMax];
-    if (percents.contains(null) ||
-        !hangs.every((hang) => _readsAgainstMax(hang.load!))) {
-      return '$range kg';
+    final source = _sourceRange(hangs, results);
+    return source == null ? '$range kg' : '$range kg ($source)';
+  }
+
+  /// The percentages a varying load comes from, when every row reads against
+  /// the same thing: "20-30% max", "70-80% BW", "70-80% Weighted hang". Null
+  /// when the rows mix sources, which a single range cannot say.
+  static String? _sourceRange(
+    List<ResolvedHang> hangs,
+    AssessmentResults results,
+  ) {
+    final loads = [for (final hang in hangs) hang.load!];
+    if (loads.every(_readsAgainstMax)) {
+      final percents = [for (final hang in hangs) hang.percentOfMax];
+      if (percents.contains(null)) return null;
+      return '${_range(percents.cast<double>(), formatPercent)}% max';
     }
-    return '$range kg (${_range(percents.cast<double>(), _percent)}% max)';
+    final first = loads.first;
+    final shared = loads.every(
+      (load) =>
+          load.unit == first.unit && load.assessmentId == first.assessmentId,
+    );
+    if (!shared) return null;
+    final name = first.unit == 'percent_bw'
+        ? 'BW'
+        : results.labelOf(first.assessmentId!);
+    final values = [for (final load in loads) load.value];
+    return '${_range(values, formatPercent)}% $name';
   }
 
   static String _single(ResolvedHang hang, AssessmentResults results) {
@@ -128,8 +150,6 @@ class HangPrescription {
     final high = format(sorted.last);
     return low == high ? low : '$low-$high';
   }
-
-  static String _percent(double value) => value.round().toString();
 }
 
 /// A load, kilograms first and then the percentage they come from:
@@ -143,17 +163,19 @@ String loadInKilogramsFirst(
   double? percentOfMax,
   AssessmentResults results = AssessmentResults.none,
 }) {
-  String percent(double value) => value.round().toString();
   final source = load.unit == 'percent_bw'
-      ? '${percent(load.value)}% BW'
+      ? '${formatPercent(load.value)}% BW'
       : load.isAssessmentRelative
       ? load.assessmentId == BuiltinAssessmentIds.maxForce
-            ? '${percent(load.value)}% max'
-            : '${percent(load.value)}% ${results.labelOf(load.assessmentId!)}'
+            ? '${formatPercent(load.value)}% max'
+            : '${formatPercent(load.value)}% ${results.labelOf(load.assessmentId!)}'
       : percentOfMax != null
-      ? '${percent(percentOfMax)}% max'
+      ? '${formatPercent(percentOfMax)}% max'
       : null;
   if (kilograms == null) return source ?? load.label(results: results);
   final weight = '${formatKilograms(kilograms)} kg';
   return source == null ? weight : '$weight ($source)';
 }
+
+/// A percentage as the prescription writes it, to the whole percent.
+String formatPercent(double value) => value.round().toString();

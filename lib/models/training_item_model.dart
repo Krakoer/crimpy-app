@@ -495,11 +495,8 @@ class TrainingItem {
     double? bodyweightKg,
     AssessmentResults results = AssessmentResults.none,
   }) {
-    final first = loads?.firstOrNull;
-    if (loadIsMax || (first?.isMax ?? false)) return 'MAX';
-    if (first == null || first.isBodyweight) return null;
-    if (_isPlainBodyweightExercise(first)) return null;
-    return first.label(bodyweightKg: bodyweightKg, results: results);
+    if (loadIsMax || (loads?.firstOrNull?.isMax ?? false)) return 'MAX';
+    return shownLoad?.label(bodyweightKg: bodyweightKg, results: results);
   }
 
   /// The first rep's load, or null when it is bodyweight, unset or a

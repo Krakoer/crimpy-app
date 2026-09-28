@@ -187,6 +187,68 @@ void main() {
       expect(prescription.load, '8-12 kg (20-30% max)');
     });
 
+    test('a varying load keeps the percentage it comes from', () {
+      TrainingItem varying(List<Load> loads) => _hang(
+        type: TrainingItemType.repeater,
+        hand: HangboardHand.both,
+        granularity: HangboardGranularity.perRep,
+        reps: 2,
+        loads: loads,
+      );
+      expect(
+        _of(
+          varying(const [
+            Load(value: 70, unit: 'percent_bw'),
+            Load(value: 80, unit: 'percent_bw'),
+          ]),
+          bodyweightKg: 70,
+        )!.load,
+        '49-56 kg (70-80% BW)',
+      );
+      const weightedHang = 'a9b8c7d6-0000-0000-0000-000000000003';
+      expect(
+        _of(
+          varying(const [
+            Load(
+              value: 70,
+              unit: percentAssessmentUnit,
+              assessmentId: weightedHang,
+              fallback: 20,
+            ),
+            Load(
+              value: 80,
+              unit: percentAssessmentUnit,
+              assessmentId: weightedHang,
+              fallback: 20,
+            ),
+          ]),
+          // Never done, so both rows take the coach fallback.
+          results: const AssessmentResults(
+            {},
+            definitions: {
+              weightedHang: AssessmentDefinition(
+                id: weightedHang,
+                label: 'Weighted hang',
+                unit: AssessmentUnit.kilograms,
+              ),
+            },
+          ),
+        )!.load,
+        '20 kg (70-80% Weighted hang)',
+      );
+      // Rows that read against different things cannot share one range.
+      expect(
+        _of(
+          varying(const [
+            Load(value: 70, unit: 'percent_bw'),
+            Load(value: 60, unit: 'kg'),
+          ]),
+          bodyweightKg: 70,
+        )!.load,
+        '49-60 kg',
+      );
+    });
+
     test('a max effort and a bodyweight hang say what they are', () {
       expect(_of(_hang(loadIsMax: true))!.load, 'Max effort');
       expect(_of(_hang(loads: const [Load.bodyweight]))!.load, 'Bodyweight');
