@@ -6,11 +6,13 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/format.dart';
 import 'package:crimpy/utils/override_labels.dart';
 import 'package:crimpy/utils/program_completion.dart';
+import 'package:crimpy/utils/training_intensity.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/log_session_screen.dart';
+import 'package:crimpy/views/widgets/primary_action_bar.dart';
 import 'package:crimpy/views/widgets/start_training_run.dart';
 import 'package:crimpy/views/screens/trainings/programs/widgets/program_widgets.dart';
 import 'package:crimpy/views/widgets/training_item_tile.dart';
@@ -121,6 +123,8 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                   overrideByItem,
                   bodyweight,
                   results,
+                  ref.watch(trainingIntensityRaterProvider).value?.maxForce ??
+                      MaxForceReference.none,
                 ),
               ],
             ],
@@ -280,6 +284,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     Map<String, SessionOverride> overrideByItem,
     double? bodyweightKg,
     AssessmentResults results,
+    MaxForceReference maxForce,
   ) {
     bool tuned(TrainingItem item) {
       final override = overrideByItem[item.id];
@@ -290,6 +295,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       items,
       bodyweightKg: bodyweightKg,
       results: results,
+      maxForce: maxForce,
       accentColorOf: (item) => tuned(item) ? CrimpyTheme.overrideMark : null,
       extraOf: (item) => tuned(item)
           ? [
@@ -379,25 +385,15 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       session,
       date: session.scheduledDate(program, weekNumber) ?? DateTime.now(),
     );
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-        CrimpyTheme.spaceLg,
-        CrimpyTheme.spaceMd,
-        CrimpyTheme.spaceLg,
-        CrimpyTheme.spaceLg,
-      ),
-      decoration: const BoxDecoration(
-        color: CrimpyTheme.bgPrimary,
-        border: Border(top: BorderSide(color: CrimpyTheme.outline, width: 2)),
-      ),
-      child: SizedBox(
-        width: double.infinity,
-        child: done
-            ? _doneButton()
-            : logOnly
-            ? _logButton(context)
-            : _startButton(context, ref, training, results),
-      ),
+    return PrimaryActionBar(
+      child: done
+          ? _doneButton()
+          : logOnly
+          ? _logButton(context)
+          : StartTrainingButton(
+              training: training,
+              onPressed: () => _startRun(context, ref, training, results),
+            ),
     );
   }
 
@@ -425,24 +421,6 @@ class ScheduledTrainingScreen extends ConsumerWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _startButton(
-    BuildContext context,
-    WidgetRef ref,
-    Training training,
-    AssessmentResults results,
-  ) {
-    return ElevatedButton.icon(
-      onPressed: () => _startRun(context, ref, training, results),
-      icon: const Icon(Icons.play_arrow),
-      label: const Text('START TRAINING'),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: CrimpyTheme.fillOn(CrimpyTheme.action),
-        foregroundColor: CrimpyTheme.bgPrimary,
-        padding: const EdgeInsets.symmetric(vertical: CrimpyTheme.spaceLg),
       ),
     );
   }

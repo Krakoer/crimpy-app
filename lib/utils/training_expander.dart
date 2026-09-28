@@ -104,6 +104,17 @@ int trainingDurationSeconds(
   results: results,
 ).fold(0, (sum, item) => sum + item.durationSeconds);
 
+/// Timed duration of one item of a training, in seconds, as
+/// [trainingDurationSeconds] counts it. Read on its own, so a step nested in a
+/// circuit counts one pass through it rather than every cycle of the circuit.
+int itemDurationSeconds(
+  TrainingItem item, {
+  AssessmentResults results = AssessmentResults.none,
+}) => trainingDurationSeconds(
+  Training(id: '', title: '', items: [item]),
+  results: results,
+);
+
 void _expandItem(
   TrainingItem item,
   List<TrainingExecutionItem> out,

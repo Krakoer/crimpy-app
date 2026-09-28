@@ -17,9 +17,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// they decline. Loads set in percent of the body weight also need one, so it
 /// is asked for when still missing.
 ///
-/// Shared by every entry point that starts a training the athlete did not write
-/// themselves, so a scheduled session and an assessment run on their own terms
-/// ask the same questions.
+/// Shared by every entry point that starts a training, so a scheduled session,
+/// a training from the library and an assessment run on their own terms ask
+/// the same questions.
+///
+/// [replaceCurrentRoute] puts the run in place of the screen it was started
+/// from, so the end of the run goes back past it.
 Future<void> startTrainingRun(
   BuildContext context,
   WidgetRef ref,
@@ -28,6 +31,7 @@ Future<void> startTrainingRun(
   String? trainingId,
   String? programSessionId,
   AssessmentResults results = AssessmentResults.none,
+  bool replaceCurrentRoute = false,
 }) async {
   bool isConnected() =>
       ref.read(connectionStateProvider) == BleConnectionState.connected;
@@ -89,17 +93,21 @@ Future<void> startTrainingRun(
   }
   if (!context.mounted) return;
   ref.read(bleSessionProvider.notifier).reset();
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (_) => PlayTrainingScreen(
-        training,
-        useSensor: useSensor,
-        activity: activity,
-        trainingId: trainingId,
-        programSessionId: programSessionId,
-        bodyweightKg: bodyweight,
-        results: measured,
-      ),
+  final route = MaterialPageRoute<void>(
+    builder: (_) => PlayTrainingScreen(
+      training,
+      useSensor: useSensor,
+      activity: activity,
+      trainingId: trainingId,
+      programSessionId: programSessionId,
+      bodyweightKg: bodyweight,
+      results: measured,
     ),
   );
+  final navigator = Navigator.of(context);
+  if (replaceCurrentRoute) {
+    navigator.pushReplacement(route);
+  } else {
+    navigator.push(route);
+  }
 }
