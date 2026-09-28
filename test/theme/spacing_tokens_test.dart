@@ -190,7 +190,7 @@ List<(String, int)> spacingNumbers(String source) {
 /// A number compared against, such as the `6` of `d == 6 ? 0 : gap`, counts
 /// something rather than spacing it, and a token in its place would compare
 /// an index with a size.
-final RegExp comparisonBefore = RegExp(r'(==|!=|<=|>=|<|>|%)\s*$');
+final RegExp comparisonBefore = RegExp(r'(==|!=|<=|>=|(?<!=)>|<|%)\s*$');
 final RegExp comparisonAfter = RegExp(r'^\s*(==|!=|<=|>=|<|>|%)');
 
 bool isComparedAt(String text, int start, int end) =>
@@ -263,6 +263,11 @@ void main() {
     expect(numbersIn('EdgeInsets.only(right: d == 6 ? 0 : 4)'), ['4']);
     expect(numbersIn('EdgeInsets.only(left: i < 2 ? 8 : 0)'), ['8']);
     expect(numbersIn('EdgeInsets.only(left: 3 != i ? 8 : 0)'), ['8']);
+    expect(numbersIn('SizedBox(height: switch (d) { A => 8, _ => 4 })'), [
+      '8',
+      '4',
+    ]);
+    expect(numbersIn('EdgeInsets.all(foo<double>(8))'), ['8']);
     expect(numbersIn('SizedBox(child: Text("16"))'), isEmpty);
     expect(numbersIn('// EdgeInsets.all(16)'), isEmpty);
     expect(numbersIn('SizedBox.shrink()'), isEmpty);
