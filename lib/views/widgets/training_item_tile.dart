@@ -15,7 +15,11 @@ String trainingItemDetail(
   double? bodyweightKg,
   AssessmentResults results = AssessmentResults.none,
 }) {
-  final load = item.loadLabel(bodyweightKg: bodyweightKg, results: results);
+  final load = _exerciseLoad(
+    item,
+    bodyweightKg: bodyweightKg,
+    results: results,
+  );
   final reps = item.effectiveReps(results);
   final duration = item.effectiveDuration(results);
   // An item is either rep-based or time-based, never both. An AMRAP is
@@ -60,6 +64,25 @@ String trainingItemDetail(
     case TrainingItemType.free:
       return duration != null ? formatExactLength(duration) : '';
   }
+}
+
+/// An exercise's load in the words the hang rows use, kilograms first, so one
+/// screen does not state loads two ways. See [loadInKilogramsFirst].
+String? _exerciseLoad(
+  TrainingItem item, {
+  double? bodyweightKg,
+  required AssessmentResults results,
+}) {
+  if (item.loadIsMax || (item.loads?.firstOrNull?.isMax ?? false)) {
+    return 'MAX';
+  }
+  final load = item.shownLoad;
+  if (load == null) return null;
+  return loadInKilogramsFirst(
+    load,
+    kilograms: load.kilograms(bodyweightKg: bodyweightKg, results: results),
+    results: results,
+  );
 }
 
 /// Coach comment attached to a training item, e.g. "right leg".

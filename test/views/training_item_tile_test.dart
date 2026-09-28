@@ -229,4 +229,33 @@ void main() {
     expect(find.text('Frog'), findsOneWidget);
     expect(find.byType(TrainingItemProtocol), findsNothing);
   });
+
+  test('an exercise states its load kilograms first, as a hang does', () {
+    const weighted = TrainingItem(
+      id: 'e',
+      type: TrainingItemType.exercise,
+      position: 0,
+      reps: 5,
+      loads: [Load(value: 80, unit: 'percent_bw')],
+    );
+    expect(
+      trainingItemDetail(weighted, bodyweightKg: 70),
+      '5 reps - 56 kg (80% BW)',
+    );
+    expect(trainingItemDetail(weighted), '5 reps - 80% BW');
+    // A movement at the whole bodyweight is just the movement.
+    expect(
+      trainingItemDetail(
+        const TrainingItem(
+          id: 'p',
+          type: TrainingItemType.exercise,
+          position: 0,
+          reps: 5,
+          loads: [Load(value: 100, unit: 'percent_bw')],
+        ),
+        bodyweightKg: 70,
+      ),
+      '5 reps',
+    );
+  });
 }

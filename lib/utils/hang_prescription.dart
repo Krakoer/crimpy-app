@@ -102,26 +102,16 @@ class HangPrescription {
     return '$range kg (${_range(percents.cast<double>(), _percent)}% max)';
   }
 
-  /// The load of one row, kilograms first and then the percentage they come
-  /// from: "13 kg (65% max)", "56 kg (80% BW)". A load with no kilograms to
-  /// hit says what it is instead.
   static String _single(ResolvedHang hang, AssessmentResults results) {
     final load = hang.load;
     if (hang.isMax) return 'Max effort';
     if (load == null || load.isBodyweight) return 'Bodyweight';
-    final kilograms = hang.kilograms;
-    // The percentage the coach set wins, since it is where the kilograms come
-    // from. A load set in kilograms reads against the athlete's max instead.
-    final source = load.unit == 'percent_bw'
-        ? '${_percent(load.value)}% BW'
-        : !_readsAgainstMax(load)
-        ? '${_percent(load.value)}% ${results.labelOf(load.assessmentId!)}'
-        : hang.percentOfMax != null
-        ? '${_percent(hang.percentOfMax!)}% max'
-        : null;
-    if (kilograms == null) return source ?? load.label(results: results);
-    final weight = '${formatKilograms(kilograms)} kg';
-    return source == null ? weight : '$weight ($source)';
+    return loadInKilogramsFirst(
+      load,
+      kilograms: hang.kilograms,
+      percentOfMax: hang.percentOfMax,
+      results: results,
+    );
   }
 
   /// Whether the percentage a load is shown with is one of the athlete's max:
@@ -140,4 +130,30 @@ class HangPrescription {
   }
 
   static String _percent(double value) => value.round().toString();
+}
+
+/// A load, kilograms first and then the percentage they come from:
+/// "13 kg (65% max)", "56 kg (80% BW)", "20 kg (80% Weighted hang)". The
+/// percentage the coach set wins, since it is where the kilograms come from; a
+/// load set in kilograms reads against [percentOfMax] when there is one. A load
+/// with no kilograms to hit yet says the percentage alone.
+String loadInKilogramsFirst(
+  Load load, {
+  required double? kilograms,
+  double? percentOfMax,
+  AssessmentResults results = AssessmentResults.none,
+}) {
+  String percent(double value) => value.round().toString();
+  final source = load.unit == 'percent_bw'
+      ? '${percent(load.value)}% BW'
+      : load.isAssessmentRelative
+      ? load.assessmentId == BuiltinAssessmentIds.maxForce
+            ? '${percent(load.value)}% max'
+            : '${percent(load.value)}% ${results.labelOf(load.assessmentId!)}'
+      : percentOfMax != null
+      ? '${percent(percentOfMax)}% max'
+      : null;
+  if (kilograms == null) return source ?? load.label(results: results);
+  final weight = '${formatKilograms(kilograms)} kg';
+  return source == null ? weight : '$weight ($source)';
 }

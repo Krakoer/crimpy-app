@@ -502,6 +502,16 @@ class TrainingItem {
     return first.label(bodyweightKg: bodyweightKg, results: results);
   }
 
+  /// The first rep's load, or null when it is bodyweight, unset or a
+  /// movement carrying the bodyweight and nothing more. Read by the screens
+  /// that state a load in their own words, see [loadLabel] for the rest.
+  Load? get shownLoad {
+    final first = loads?.firstOrNull;
+    if (first == null || first.isBodyweight || first.isMax) return null;
+    if (_isPlainBodyweightExercise(first)) return null;
+    return first;
+  }
+
   /// Whether the load this item shows only becomes kilograms once an assessment
   /// has been done. A reader with no results to resolve against, such as a
   /// session read back long after it was played, would otherwise be shown the
