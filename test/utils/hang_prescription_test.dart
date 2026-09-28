@@ -206,35 +206,44 @@ void main() {
         '49-56 kg (70-80% BW)',
       );
       const weightedHang = 'a9b8c7d6-0000-0000-0000-000000000003';
+      const definitions = {
+        weightedHang: AssessmentDefinition(
+          id: weightedHang,
+          label: 'Weighted hang',
+          unit: AssessmentUnit.kilograms,
+        ),
+      };
+      final ofWeightedHang = varying(const [
+        Load(
+          value: 70,
+          unit: percentAssessmentUnit,
+          assessmentId: weightedHang,
+          fallback: 20,
+        ),
+        Load(
+          value: 80,
+          unit: percentAssessmentUnit,
+          assessmentId: weightedHang,
+          fallback: 20,
+        ),
+      ]);
       expect(
         _of(
-          varying(const [
-            Load(
-              value: 70,
-              unit: percentAssessmentUnit,
-              assessmentId: weightedHang,
-              fallback: 20,
-            ),
-            Load(
-              value: 80,
-              unit: percentAssessmentUnit,
-              assessmentId: weightedHang,
-              fallback: 20,
-            ),
-          ]),
-          // Never done, so both rows take the coach fallback.
-          results: const AssessmentResults(
-            {},
-            definitions: {
-              weightedHang: AssessmentDefinition(
-                id: weightedHang,
-                label: 'Weighted hang',
-                unit: AssessmentUnit.kilograms,
-              ),
-            },
-          ),
+          ofWeightedHang,
+          results: const AssessmentResults({
+            weightedHang: AssessmentHandValues(right: 30, left: 30),
+          }, definitions: definitions),
         )!.load,
-        '20 kg (70-80% Weighted hang)',
+        '21-24 kg (70-80% Weighted hang)',
+      );
+      // Never done, so both rows take the one coach fallback, and a spread
+      // of percentages beside a single weight would claim one it lacks.
+      expect(
+        _of(
+          ofWeightedHang,
+          results: const AssessmentResults({}, definitions: definitions),
+        )!.load,
+        '20 kg',
       );
       // Rows that read against different things cannot share one range.
       expect(

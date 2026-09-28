@@ -495,9 +495,13 @@ class TrainingItem {
     double? bodyweightKg,
     AssessmentResults results = AssessmentResults.none,
   }) {
-    if (loadIsMax || (loads?.firstOrNull?.isMax ?? false)) return 'MAX';
+    if (showsMax) return 'MAX';
     return shownLoad?.label(bodyweightKg: bodyweightKg, results: results);
   }
+
+  /// Whether the item is shown as done at maximum effort, set on the item or
+  /// on its first rep.
+  bool get showsMax => loadIsMax || (loads?.firstOrNull?.isMax ?? false);
 
   /// The first rep's load, or null when it is bodyweight, unset or a
   /// movement carrying the bodyweight and nothing more. Read by the screens

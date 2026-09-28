@@ -73,9 +73,7 @@ String? _exerciseLoad(
   double? bodyweightKg,
   required AssessmentResults results,
 }) {
-  if (item.loadIsMax || (item.loads?.firstOrNull?.isMax ?? false)) {
-    return 'MAX';
-  }
+  if (item.showsMax) return 'MAX';
   final load = item.shownLoad;
   if (load == null) return null;
   return loadInKilogramsFirst(

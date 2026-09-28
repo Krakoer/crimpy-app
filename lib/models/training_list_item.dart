@@ -16,6 +16,10 @@ class TrainingListItem {
   /// it resolves to a percentage of one.
   final TrainingIntensity? intensity;
 
+  /// What a duration set as a percentage of an assessment resolves against,
+  /// so the card's length is the one the training's detail and run give.
+  final AssessmentResults results;
+
   TrainingListItem._({
     this.training,
     this.builtinTraining,
@@ -23,12 +27,14 @@ class TrainingListItem {
     required this.missingAssessments,
     required this.isPinned,
     this.intensity,
+    this.results = AssessmentResults.none,
   });
 
   /// Create a regular training item.
   factory TrainingListItem.regular(
     Training training, {
     TrainingIntensity? intensity,
+    AssessmentResults results = AssessmentResults.none,
   }) {
     return TrainingListItem._(
       training: training,
@@ -36,6 +42,7 @@ class TrainingListItem {
       missingAssessments: [],
       isPinned: training.isFavorite,
       intensity: intensity,
+      results: results,
     );
   }
 
@@ -47,6 +54,7 @@ class TrainingListItem {
     Training? generatedTraining,
     bool isPinned, {
     TrainingIntensity? intensity,
+    AssessmentResults results = AssessmentResults.none,
   }) {
     return TrainingListItem._(
       builtinTraining: builtinTraining,
@@ -55,6 +63,7 @@ class TrainingListItem {
       missingAssessments: missingAssessments,
       isPinned: isPinned,
       intensity: intensity,
+      results: results,
     );
   }
 
@@ -67,7 +76,7 @@ class TrainingListItem {
   Duration get totalDuration {
     final t = training;
     if (t == null) return Duration.zero;
-    return Duration(seconds: trainingDurationSeconds(t));
+    return Duration(seconds: trainingDurationSeconds(t, results: results));
   }
 
   String get id => training?.id ?? builtinTraining?.id ?? '';

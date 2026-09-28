@@ -260,7 +260,12 @@ class TrainingIntensityRater {
   TrainingIntensity? rate(Training training) => peakIntensity(
     training,
     maxForce: maxForce,
-    results: results.withDefinitions(training.referencedAssessments),
+    results: resultsFor(training),
     bodyweightKg: bodyweightKg,
   );
+
+  /// The athlete's results, read against the assessments [training] names as
+  /// well, which is what resolves its loads, durations and reps.
+  AssessmentResults resultsFor(Training training) =>
+      results.withDefinitions(training.referencedAssessments);
 }

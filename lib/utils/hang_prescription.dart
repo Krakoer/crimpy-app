@@ -93,7 +93,12 @@ class HangPrescription {
     if (single.length == 1) return single.single;
     final kilograms = [for (final hang in hangs) hang.kilograms];
     if (kilograms.contains(null)) return 'Varies by rep';
-    final range = _range(kilograms.cast<double>(), formatKilograms);
+    final weights = kilograms.cast<double>();
+    final range = _range(weights, formatKilograms);
+    // One weight read off several percentages is the coach fallback standing
+    // in for an assessment not yet done, and a range of percentages beside it
+    // would claim a spread the weight does not have.
+    if (weights.map(formatKilograms).toSet().length == 1) return '$range kg';
     final source = _sourceRange(hangs, results);
     return source == null ? '$range kg' : '$range kg ($source)';
   }

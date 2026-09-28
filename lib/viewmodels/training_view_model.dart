@@ -366,6 +366,7 @@ List<TrainingListItem> _buildTrainingList({
         (training) => TrainingListItem.regular(
           training,
           intensity: intensityOf(training),
+          results: rater.resultsFor(training),
         ),
       )
       .toList();
@@ -391,6 +392,9 @@ List<TrainingListItem> _buildTrainingList({
       result.training,
       catalog.pinnedIds.contains(builtin.id),
       intensity: intensityOf(result.training),
+      results: result.training == null
+          ? AssessmentResults.none
+          : rater.resultsFor(result.training!),
     );
   }).toList();
 
