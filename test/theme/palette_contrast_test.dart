@@ -65,6 +65,9 @@ const Map<String, (Color, String)> mirroredWebTokens = {
   '--pl-tx': (CrimpyTheme.accentPurpleText, '#735f7b'),
   '--rd-tx': (CrimpyTheme.statusErrorText, '#ac4747'),
   '--bl-tx': (CrimpyTheme.accentBlueText, '#4b698a'),
+  // The portal's on-target mark, which the app's onTarget holds so a rep reads
+  // the same on both. See Krakoer/crimpy#158.
+  '--gn': (CrimpyTheme.accentSage, '#6b8f71'),
 };
 
 /// Every accent the app writes a label in on a tint of that same accent, with
@@ -77,6 +80,7 @@ const List<(String, Color)> tintedAccents = [
   ('workout purple', CrimpyTheme.accentPurple),
   ('other blue', CrimpyTheme.accentBlue),
   ('success green', CrimpyTheme.statusSuccess),
+  ('on target sage', CrimpyTheme.accentSage),
   ('error red', CrimpyTheme.statusError),
   ('warning gold', CrimpyTheme.statusWarning),
 ];
@@ -173,10 +177,11 @@ final Map<String, Color> scannedAccents = {
   'farOffTarget': CrimpyTheme.farOffTarget,
   'improvement': CrimpyTheme.improvement,
   'achieved': CrimpyTheme.achieved,
-  'phaseRest': CrimpyTheme.phaseRest,
-  'phasePreparation': CrimpyTheme.phasePreparation,
+  'phaseCalm': CrimpyTheme.phaseCalm,
+  'phaseArmed': CrimpyTheme.phaseArmed,
+  'phaseEngaged': CrimpyTheme.phaseEngaged,
+  'phaseAlarm': CrimpyTheme.phaseAlarm,
   'runPrompt': CrimpyTheme.runPrompt,
-  'tankOnTarget': CrimpyTheme.tankOnTarget,
   'pullCue': CrimpyTheme.pullCue,
   'measuring': CrimpyTheme.measuring,
   'measureSettled': CrimpyTheme.measureSettled,
@@ -1169,6 +1174,100 @@ void main() {
             'neutral under its floor on an accent ground:\n'
             '${offences.join('\n')}',
       );
+    });
+  });
+
+  // The run screen reads its phases through phaseColor, which the sweeps above
+  // cannot see into, so what it paints is measured here directly: the words and
+  // the countdown in each phase's text form, on the white strip and on the calm
+  // ground, and the level in each phase's fill under the white force figure.
+  group('run phases', () {
+    const grounds = {
+      'bgPrimary': CrimpyTheme.bgPrimary,
+      'phaseCalmGround': CrimpyTheme.phaseCalmGround,
+    };
+    for (final phase in RunPhase.values) {
+      for (final ground in grounds.entries) {
+        test('${phase.name} reads as text on ${ground.key}', () {
+          expectClearsFloor(
+            '${phase.name} text on ${ground.key}',
+            CrimpyTheme.textOn(CrimpyTheme.phaseColor(phase)),
+            ground.value,
+          );
+        });
+      }
+    }
+
+    for (final phase in [RunPhase.armed, RunPhase.engaged]) {
+      test('the ${phase.name} level carries white', () {
+        expectClearsFloor(
+          'white on the ${phase.name} level',
+          CrimpyTheme.textOnFill,
+          CrimpyTheme.fillOn(CrimpyTheme.phaseColor(phase)),
+        );
+      });
+    }
+
+    test('the muted voice of a hang does not fit the calm ground', () {
+      // Why the tank writes its muted labels in textSecondary during a rest.
+      // If this ever passes, the calm palette can go back to textMutedSmall.
+      expect(
+        contrastRatio(CrimpyTheme.textMutedSmall, CrimpyTheme.phaseCalmGround),
+        lessThan(contrastFloor),
+      );
+    });
+
+    test('the neutrals the tank writes read on the calm ground', () {
+      for (final entry in {
+        'textPrimary': CrimpyTheme.textPrimary,
+        'textSecondary': CrimpyTheme.textSecondary,
+        'goalColor': CrimpyTheme.goalColor,
+        'protocolColor': CrimpyTheme.protocolColor,
+      }.entries) {
+        expectClearsFloor(
+          '${entry.key} on phaseCalmGround',
+          entry.value,
+          CrimpyTheme.phaseCalmGround,
+        );
+      }
+    });
+
+    test('each phase has a hue of its own', () {
+      final hues = RunPhase.values.map(CrimpyTheme.phaseColor).toSet();
+      expect(hues, hasLength(RunPhase.values.length));
+    });
+
+    test('green on the run screen means on target and nothing else', () {
+      expect(CrimpyTheme.phaseEngaged, CrimpyTheme.onTarget);
+    });
+
+    test('the run screen names no red but the alarm', () {
+      final source = File(
+        'lib/views/screens/trainings/play_training_screen/layouts/'
+        'full_tank_layout.dart',
+      ).readAsStringSync();
+      for (final red in [
+        'statusError',
+        'statusErrorText',
+        'destructive',
+        'farOffTarget',
+      ]) {
+        expect(
+          source.contains('CrimpyTheme.$red'),
+          isFalse,
+          reason:
+              'the run screen paints CrimpyTheme.$red, and red there is '
+              'the alarm alone: ask phaseColor(RunPhase.alarm) instead',
+        );
+      }
+    });
+
+    test('red on the run screen is the alarm alone', () {
+      expect(CrimpyTheme.phaseAlarm, CrimpyTheme.statusError);
+      final others = RunPhase.values
+          .where((phase) => phase != RunPhase.alarm)
+          .map(CrimpyTheme.phaseColor);
+      expect(others, isNot(contains(CrimpyTheme.statusError)));
     });
   });
 }
