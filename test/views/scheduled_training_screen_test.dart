@@ -233,7 +233,8 @@ void main() {
         connection: BleConnectionState.disconnected,
       );
 
-      await tester.tap(find.text('START TRAINING'));
+      // The button says what tapping it does next.
+      await tester.tap(find.text('CONNECT AND START'));
       await tester.pumpAndSettle();
 
       expect(find.text('Force sensor'), findsOneWidget);

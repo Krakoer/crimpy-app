@@ -10,7 +10,20 @@ import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// A plank the athlete has held for 120 s, measured in seconds.
+const _plank = AssessmentDefinition(
+  id: 'a9b8c7d6-0000-0000-0000-000000000009',
+  label: 'Plank',
+  unit: AssessmentUnit.seconds,
+);
+
 final _history = [
+  AssessmentModel(
+    id: 'plank',
+    date: DateTime(2026, 1, 1),
+    definition: _plank,
+    rightValue: 120,
+  ),
   AssessmentModel(
     id: 'mvc',
     date: DateTime(2026, 1, 1),
@@ -57,7 +70,8 @@ ProviderContainer _container(BodyweightController Function() bodyweight) =>
       retry: (retryCount, error) => null,
       overrides: [
         trainingLibraryProvider.overrideWith(
-          (ref) async => (trainings: [_bodyweightHang], truncated: false),
+          (ref) async =>
+              (trainings: [_bodyweightHang, _halfPlank], truncated: false),
         ),
         assessmentHistoryProvider.overrideWith((ref) async => _history),
         builtinTrainingCatalogProvider.overrideWith(
@@ -74,6 +88,27 @@ ProviderContainer _container(BodyweightController Function() bodyweight) =>
         bodyweightProvider.overrideWith(bodyweight),
       ],
     );
+
+/// Half the athlete's plank, which is 60 s against their result and 10 s on
+/// the coach fallback.
+final _halfPlank = Training(
+  id: 'plank',
+  title: 'Half plank',
+  items: [
+    TrainingItem(
+      id: 'p',
+      type: TrainingItemType.exercise,
+      position: 0,
+      variableTargets: {
+        'duration': VariableTarget(
+          assessmentId: _plank.id,
+          percent: 50,
+          fallback: 10,
+        ),
+      },
+    ),
+  ],
+);
 
 TrainingListItem _named(List<TrainingListItem> items, String name) =>
     items.firstWhere((item) => item.name == name);
@@ -112,5 +147,18 @@ void main() {
 
     expect(_named(all, 'Bodyweight hang').intensity, isNull);
     expect(_named(all, 'Max Force').intensity, isNotNull);
+  });
+
+  // The card's length is the one the detail header and the run give, so a
+  // duration set against an assessment resolves against the athlete's result.
+  test('the card length resolves a duration against the results', () async {
+    final items = await _container(
+      () => _Bodyweight(60),
+    ).read(allTrainingsProvider.future);
+
+    expect(
+      _named(items, 'Half plank').totalDuration,
+      const Duration(seconds: 60),
+    );
   });
 }

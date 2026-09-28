@@ -2,6 +2,9 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/duration_format.dart';
+import 'package:crimpy/utils/hang_prescription.dart';
+import 'package:crimpy/utils/training_expander.dart';
+import 'package:crimpy/utils/training_intensity.dart';
 import 'package:crimpy/utils/video_link.dart';
 import 'package:crimpy/views/widgets/exercise_video_link.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +15,11 @@ String trainingItemDetail(
   double? bodyweightKg,
   AssessmentResults results = AssessmentResults.none,
 }) {
-  final load = item.loadLabel(bodyweightKg: bodyweightKg, results: results);
+  final load = _exerciseLoad(
+    item,
+    bodyweightKg: bodyweightKg,
+    results: results,
+  );
   final reps = item.effectiveReps(results);
   final duration = item.effectiveDuration(results);
   // An item is either rep-based or time-based, never both. An AMRAP is
@@ -32,10 +39,10 @@ String trainingItemDetail(
           '${formatExactLength(item.worktimeSeconds ?? 7)} on / '
           '${formatExactLength(item.restSeconds ?? 3)} off';
     case TrainingItemType.hangboardRep:
+      // The load is on a line of its own, see [HangPrescription].
       return [
         if (reps != null) '$reps reps',
         '${formatExactLength(item.worktimeSeconds ?? 7)} on / ${formatExactLength(item.restSeconds ?? 3)} off',
-        if (load != null) load,
       ].join(' - ');
     case TrainingItemType.exercise:
       return [if (amount != null) amount, if (load != null) load].join(' - ');
@@ -57,6 +64,23 @@ String trainingItemDetail(
     case TrainingItemType.free:
       return duration != null ? formatExactLength(duration) : '';
   }
+}
+
+/// An exercise's load in the words the hang rows use, kilograms first, so one
+/// screen does not state loads two ways. See [loadInKilogramsFirst].
+String? _exerciseLoad(
+  TrainingItem item, {
+  double? bodyweightKg,
+  required AssessmentResults results,
+}) {
+  if (item.showsMax) return 'MAX';
+  final load = item.shownLoad;
+  if (load == null) return null;
+  return loadInKilogramsFirst(
+    load,
+    kilograms: load.kilograms(bodyweightKg: bodyweightKg, results: results),
+    results: results,
+  );
 }
 
 /// Coach comment attached to a training item, e.g. "right leg".
@@ -193,9 +217,10 @@ class TrainingItemProtocol extends StatelessWidget {
   );
 }
 
-/// One row of a training breakdown: position, title, its numbers, what the
-/// block is for and the coach comment when there is one. [extra] holds screen
-/// specific decorations such as the program override chips.
+/// One row of a training breakdown: position, title, its numbers, what a hang
+/// is set up on and at what load, what the block is for and the coach comment
+/// when there is one. [extra] holds screen specific decorations such as the
+/// program override chips.
 class TrainingItemTile extends StatelessWidget {
   final TrainingItem item;
   final int number;
@@ -210,6 +235,13 @@ class TrainingItemTile extends StatelessWidget {
   /// assessment; the tile shows their fallback until it is done.
   final AssessmentResults results;
 
+  /// The athlete's max per grip and hand, which a load set in kilograms is
+  /// shown as a percentage of.
+  final MaxForceReference maxForce;
+
+  /// How long the item runs, in seconds, shown beside its title when set.
+  final int? lengthSeconds;
+
   const TrainingItemTile({
     required this.item,
     required this.number,
@@ -217,6 +249,8 @@ class TrainingItemTile extends StatelessWidget {
     this.extra = const [],
     this.bodyweightKg,
     this.results = AssessmentResults.none,
+    this.maxForce = MaxForceReference.none,
+    this.lengthSeconds,
     super.key,
   });
 
@@ -227,6 +261,13 @@ class TrainingItemTile extends StatelessWidget {
       bodyweightKg: bodyweightKg,
       results: results,
     );
+    final prescription = HangPrescription.of(
+      item,
+      maxForce: maxForce,
+      results: results,
+      bodyweightKg: bodyweightKg,
+    );
+    final length = lengthSeconds;
     final comment = item.comment?.trim() ?? '';
     final goal = item.goal?.trim() ?? '';
     final protocol = item.protocol?.trim() ?? '';
@@ -259,11 +300,27 @@ class TrainingItemTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                trainingItemTitle(item),
-                style: CrimpyTheme.titleSmall.copyWith(
-                  color: CrimpyTheme.textPrimary,
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      trainingItemTitle(item),
+                      style: CrimpyTheme.titleSmall.copyWith(
+                        color: CrimpyTheme.textPrimary,
+                      ),
+                    ),
+                  ),
+                  if (length != null && length > 0) ...[
+                    const SizedBox(width: CrimpyTheme.spaceSm),
+                    Text(
+                      formatLength(Duration(seconds: length)),
+                      style: CrimpyTheme.tabular(
+                        CrimpyTheme.bodySmall,
+                      ).copyWith(color: CrimpyTheme.textSecondary),
+                    ),
+                  ],
+                ],
               ),
               if (detail.isNotEmpty) ...[
                 const SizedBox(height: CrimpyTheme.spaceXs),
@@ -271,6 +328,23 @@ class TrainingItemTile extends StatelessWidget {
                   detail,
                   style: CrimpyTheme.bodySmall.copyWith(
                     color: CrimpyTheme.textSecondary,
+                  ),
+                ),
+              ],
+              if (prescription != null) ...[
+                const SizedBox(height: CrimpyTheme.spaceXs),
+                Text(
+                  prescription.setup,
+                  style: CrimpyTheme.bodySmall.copyWith(
+                    color: CrimpyTheme.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: CrimpyTheme.spaceXs),
+                Text(
+                  prescription.load,
+                  style: CrimpyTheme.tabular(CrimpyTheme.bodySmall).copyWith(
+                    color: CrimpyTheme.textPrimary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -320,6 +394,7 @@ List<Widget> buildTrainingItemTiles(
   int depth = 0,
   double? bodyweightKg,
   AssessmentResults results = AssessmentResults.none,
+  MaxForceReference maxForce = MaxForceReference.none,
   Color? Function(TrainingItem item)? accentColorOf,
   List<Widget> Function(TrainingItem item)? extraOf,
 }) {
@@ -339,6 +414,12 @@ List<Widget> buildTrainingItemTiles(
           extra: extraOf?.call(item) ?? const [],
           bodyweightKg: bodyweightKg,
           results: results,
+          maxForce: maxForce,
+          // A nested item runs once per pass of the block it sits in, so only
+          // a top level one has a length of its own that adds up to the whole.
+          lengthSeconds: depth == 0
+              ? itemDurationSeconds(item, results: results)
+              : null,
         ),
       ),
     );
@@ -349,6 +430,7 @@ List<Widget> buildTrainingItemTiles(
           depth: depth + 1,
           bodyweightKg: bodyweightKg,
           results: results,
+          maxForce: maxForce,
           accentColorOf: accentColorOf,
           extraOf: extraOf,
         ),

@@ -1,17 +1,25 @@
 import 'package:crimpy/models/assessment_model.dart';
-import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/models/common.dart';
+import 'package:crimpy/models/training.dart';
+import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/duration_format.dart';
+import 'package:crimpy/utils/training_expander.dart';
+import 'package:crimpy/utils/training_intensity.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
+import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
+import 'package:crimpy/viewmodels/training_view_model.dart';
+import 'package:crimpy/views/widgets/intensity_badge.dart';
+import 'package:crimpy/views/widgets/primary_action_bar.dart';
+import 'package:crimpy/views/widgets/section_widgets.dart';
+import 'package:crimpy/views/widgets/start_training_run.dart';
+import 'package:crimpy/views/widgets/training_item_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:crimpy/models/training.dart';
-import 'package:crimpy/viewmodels/assessments_view_model.dart';
-import 'package:crimpy/viewmodels/ble_view_model.dart';
-import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
-import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
-import 'package:crimpy/views/widgets/bodyweight_dialog.dart';
-import 'package:crimpy/views/widgets/training_item_tile.dart';
-import 'package:crimpy/views/widgets/section_widgets.dart';
-import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+/// A training the athlete is about to run, stated the way they will set up for
+/// it: how long it takes and how hard it is, then each block with its hand,
+/// grip, edge and load, and Start pinned under it all. See Krakoer/crimpy#163.
 class TrainingDetailScreen extends ConsumerWidget {
   final Training template;
 
@@ -21,28 +29,6 @@ class TrainingDetailScreen extends ConsumerWidget {
   final String? trainingId;
 
   const TrainingDetailScreen(this.template, {this.trainingId, super.key});
-
-  /// Starts the run, asking for the body weight first when the training is
-  /// loaded in percent of it and none is known yet.
-  Future<void> _startRun(
-    BuildContext context,
-    WidgetRef ref,
-    AssessmentResults results,
-  ) async {
-    final bodyweight = await resolveBodyweight(context, ref, template);
-    if (!context.mounted) return;
-    ref.read(bleSessionProvider.notifier).reset();
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (ctx) => PlayTrainingScreen(
-          template,
-          trainingId: trainingId,
-          bodyweightKg: bodyweight,
-          results: results,
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,6 +41,11 @@ class TrainingDetailScreen extends ConsumerWidget {
     final results =
         (ref.watch(assessmentResultsProvider).value ?? AssessmentResults.none)
             .withDefinitions(template.referencedAssessments);
+    final rater = ref.watch(trainingIntensityRaterProvider).value;
+    final intensity = rater?.rate(template);
+    final length = Duration(
+      seconds: trainingDurationSeconds(template, results: results),
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(template.title)),
@@ -62,6 +53,8 @@ class TrainingDetailScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
           children: [
+            _Summary(length: length, intensity: intensity),
+            const SizedBox(height: CrimpyTheme.spaceLg),
             if (goal.isNotEmpty) ...[
               const SectionLabel('Goal'),
               const SizedBox(height: CrimpyTheme.spaceSm),
@@ -81,18 +74,66 @@ class TrainingDetailScreen extends ConsumerWidget {
                 template.items,
                 bodyweightKg: bodyweightKg,
                 results: results,
+                maxForce: rater?.maxForce ?? MaxForceReference.none,
               ),
             ],
           ],
         ),
       ),
-      floatingActionButton: IconButton(
-        onPressed:
-            ref.watch(connectionStateProvider) != BleConnectionState.connected
-            ? null
-            : () => _startRun(context, ref, results),
-        icon: Icon(Icons.play_arrow),
+      bottomNavigationBar: SafeArea(
+        child: PrimaryActionBar(
+          child: StartTrainingButton(
+            training: template,
+            onPressed: () => startTrainingRun(
+              context,
+              ref,
+              template,
+              activity: SessionActivity.hangboard,
+              trainingId: trainingId,
+              results: results,
+              replaceCurrentRoute: true,
+            ),
+          ),
+        ),
       ),
+    );
+  }
+}
+
+/// How long the training runs and how hard it is, as its card on the list
+/// says it.
+class _Summary extends StatelessWidget {
+  final Duration length;
+  final TrainingIntensity? intensity;
+
+  const _Summary({required this.length, required this.intensity});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: CrimpyTheme.spaceMd,
+      runSpacing: CrimpyTheme.spaceXs,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              FontAwesomeIcons.stopwatch,
+              color: CrimpyTheme.textMutedSmall,
+              size: 16,
+            ),
+            const SizedBox(width: CrimpyTheme.spaceSm),
+            Text(
+              formatLength(length),
+              style: CrimpyTheme.tabular(
+                CrimpyTheme.body,
+              ).copyWith(color: CrimpyTheme.textPrimary),
+            ),
+          ],
+        ),
+        if (intensity != null) IntensityBadge(intensity!),
+      ],
     );
   }
 }
