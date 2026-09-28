@@ -105,8 +105,9 @@ class CrimpyTheme {
   // escalate (the intensity of a training, Krakoer/crimpy#166) takes steel,
   // ink or sage from here, or a hue of its own, and never the alarm's red. The
   // roles that name these are the RUN PHASES in the ROLES section, and
-  // [phaseColor] is the one map every part of the run screen reads.
-  // See Krakoer/crimpy#158.
+  // [phaseColor] is the one map every part of the run screen reads, and the
+  // assessment run screens read it too, so a colour means the same thing on
+  // every screen the athlete pulls on. See Krakoer/crimpy#158 and #176.
 
   /// Sage, the green the web portal marks a rep that held its target with: it
   /// is --gn in crimpy-frontend/src/routes/layout.css. 3.63:1 on white, so it is
@@ -334,9 +335,6 @@ class CrimpyTheme {
     RunPhase.alarm => phaseAlarm,
   };
 
-  /// The cue to pull during an assessment run.
-  static const Color pullCue = accentYellow;
-
   /// A reading not yet where the test wants it: still settling, not started,
   /// or outside its zone.
   static const Color measuring = accentYellow;
@@ -344,8 +342,9 @@ class CrimpyTheme {
   /// A reading where the test wants it: settled, started, inside its zone.
   static const Color measureSettled = accentGreen;
 
-  /// The band a test asks the load to stay inside.
-  static const Color targetZone = accentYellow;
+  /// The band a test asks the load to stay inside. It is where the load is on
+  /// target, so it holds the engaged phase's sage. See Krakoer/crimpy#176.
+  static const Color targetZone = phaseEngaged;
 
   /// A sensor that is connected.
   static const Color sensorConnected = accentYellow;
@@ -353,8 +352,10 @@ class CrimpyTheme {
   /// A sensor that is being connected to.
   static const Color sensorConnecting = textPrimary;
 
-  /// The live force trace of an assessment run.
-  static const Color forceTrace = accentYellow;
+  /// The live force trace of an assessment run with no target to hold. It is
+  /// the working ink of the armed phase: sage would claim a target that is not
+  /// there. See Krakoer/crimpy#176.
+  static const Color forceTrace = phaseArmed;
 
   /// The left hand's series in a chart.
   static const Color leftHand = accentOrange;

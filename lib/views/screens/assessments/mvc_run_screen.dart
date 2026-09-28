@@ -2,10 +2,13 @@ import 'dart:math';
 
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/assessment_tutorials.dart';
+import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/reps.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
+import 'package:crimpy/views/screens/assessments/assessment_cue_box.dart';
+import 'package:crimpy/views/screens/assessments/assessment_run_phase.dart';
 import 'package:crimpy/views/screens/assessments/post_assessment_screen.dart';
 import 'package:crimpy/views/widgets/assessment_tutorial_dialog.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +23,17 @@ import 'package:intl/intl.dart';
 class MvcRunScreen extends ConsumerStatefulWidget {
   final List<TrainingExecutionItem> reps;
   final AssessmentType type;
-  const MvcRunScreen({required this.reps, super.key, required this.type});
+
+  /// The run's clock, which a test sets by hand.
+  @visibleForTesting
+  final CrimpyWatch? watch;
+
+  const MvcRunScreen({
+    required this.reps,
+    super.key,
+    required this.type,
+    this.watch,
+  });
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _MvcRunScreenState();
@@ -53,6 +66,13 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
 
   late WorkoutTimer timer = WorkoutTimer(
     items: widget.reps,
+    watch: widget.watch,
+    // The countdown repaints on its own. The force readings used to be the
+    // only thing rebuilding the screen, so a lost sensor froze the seconds
+    // under its alarm while the run went on counting.
+    onSecondChange: () {
+      if (mounted) setState(() {});
+    },
     onNextRep: (_) {
       _recordMaxForFinishedStep();
       // Reset session stats for next rep.
@@ -143,10 +163,25 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
     setState(() => timer.play());
   }
 
+  /// What the cue box asks for on the current step.
+  String _prompt(RunPhase phase) {
+    if (phase == RunPhase.alarm) return 'No sensor';
+    if (timer.currentItem is! RestItem) return 'Pull!';
+    return "Pulling with ${timer.currentItemIndex == 0 ? "right" : "left"} hand in";
+  }
+
   @override
   Widget build(BuildContext context) {
+    final sensorLost =
+        ref.watch(connectionStateProvider) != BleConnectionState.connected;
+    final phase = assessmentStepPhase(
+      steps: widget.reps,
+      stepIndex: timer.currentItemIndex,
+      sensorLost: sensorLost,
+    );
     // Last BLE value to print on screen & compute the height of the colored box.
-    final lastValue = ref.watch(bleLastValueProvider) ?? 0;
+    // A lost sensor leaves its last sample behind, which is not a reading.
+    final lastValue = sensorLost ? 0.0 : ref.watch(bleLastValueProvider) ?? 0;
     // BLE session stats to watch the max value and compute the height of the max bar.
     final bleSession = ref.watch(bleSessionProvider);
     // Height of the screen
@@ -206,6 +241,9 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
         }
       },
       child: Scaffold(
+        backgroundColor: phase == RunPhase.calm
+            ? CrimpyTheme.phaseCalmGround
+            : null,
         appBar: AppBar(
           title: Text("Max Force Test"),
           actions: [
@@ -267,7 +305,9 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
                       shape: BoxShape.rectangle,
                       color: timer.currentItem is RestItem
                           ? Colors.transparent
-                          : CrimpyTheme.pullCue.withValues(alpha: 0.5),
+                          : CrimpyTheme.phaseColor(
+                              phase,
+                            ).withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -275,54 +315,10 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
               // Box of text to show the user the action to do (rest or pull).
               Positioned(
                 top: 230,
-                // No Opacity wrapper. It composited the white label and the
-                // darkened fill together, so fillOn bought 2.80:1 rather than
-                // the 4.93:1 it measures alone, still under the 3:1 these large
-                // labels answer to. The box has a hard border and a shadow and
-                // was not relying on the fade.
-                child: Container(
-                  width: 200,
-                  padding: EdgeInsets.all(CrimpyTheme.spaceSm),
-                  decoration: CrimpyTheme.raised.copyWith(
-                    color: CrimpyTheme.fillOn(CrimpyTheme.pullCue),
-                  ),
-                  child: timer.currentItem is! RestItem
-                      ? Column(
-                          children: [
-                            Text(
-                              "Pull!",
-                              style: CrimpyTheme.headline.copyWith(
-                                color: CrimpyTheme.textOnFill,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            Text(
-                              "${timer.currentItemRemaining}",
-                              style: CrimpyTheme.numerals(
-                                48,
-                              ).copyWith(color: CrimpyTheme.textOnFill),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        )
-                      : Column(
-                          children: [
-                            Text(
-                              "Pulling with ${timer.currentItemIndex == 0 ? "right" : "left"} hand in",
-                              style: CrimpyTheme.headline.copyWith(
-                                color: CrimpyTheme.textOnFill,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            Text(
-                              "${timer.currentItemRemaining}",
-                              style: CrimpyTheme.numerals(
-                                48,
-                              ).copyWith(color: CrimpyTheme.textOnFill),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
+                child: AssessmentCueBox(
+                  phase: phase,
+                  prompt: _prompt(phase),
+                  secondsRemaining: timer.currentItemRemaining,
                 ),
               ),
               // If on an active rep, show the max bar with max value.

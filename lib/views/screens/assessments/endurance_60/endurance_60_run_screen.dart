@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:clock/clock.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/endurance_hold.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
+import 'package:crimpy/views/screens/assessments/assessment_run_phase.dart';
 import 'package:crimpy/views/screens/assessments/post_assessment_screen.dart';
 import 'package:crimpy/views/widgets/assessment_tutorial_dialog.dart';
 import 'package:crimpy/views/widgets/workout_lifecycle.dart';
@@ -42,8 +45,8 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
   bool _assessmentStarted = false;
   bool _assessmentEnded = false;
 
-  // Stopwatch for elapsed time
-  final Stopwatch _stopwatch = Stopwatch();
+  // Stopwatch for elapsed time, from the clock a test can fake.
+  final Stopwatch _stopwatch = clock.stopwatch();
   Timer? _timer;
 
   // Computed values
@@ -103,8 +106,32 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
   }
 
   void _checkAssessmentState() {
+    final now = clock.now();
+    // A lost sensor leaves its last sample behind, which says nothing about the
+    // hold any more. A hold under way ends on that sample, keeping the time it
+    // covers; one not yet started waits for the sensor rather than starting
+    // on a stale reading.
+    if (ref.read(connectionStateProvider) != BleConnectionState.connected) {
+      if (_assessmentStarted && !_assessmentEnded) {
+        final lastSample = ref
+            .read(bleDataStreamProvider.notifier)
+            .getData()
+            .lastOrNull;
+        _endAssessment(
+          held: heldUntilLastSample(
+            elapsed: _stopwatch.elapsed,
+            now: now,
+            lastSampleAt: lastSample?.timestamp,
+          ),
+          sensorLost: true,
+        );
+      } else {
+        _isInTargetZone = false;
+        _targetZoneEntryTime = null;
+      }
+      return;
+    }
     final lastValue = ref.read(bleDataStreamProvider.notifier).lastValue() ?? 0;
-    final now = DateTime.now();
     final isInZone = lastValue >= _minForce && lastValue <= _maxForce;
 
     if (isInZone && !_isInTargetZone) {
@@ -144,7 +171,9 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
     });
   }
 
-  void _endAssessment() async {
+  /// Ends the hold. [held] is the time it lasted when that is not what the
+  /// stopwatch says, which is the case when the sensor was lost.
+  void _endAssessment({Duration? held, bool sensorLost = false}) async {
     if (_assessmentEnded) return;
 
     setState(() {
@@ -153,7 +182,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
     });
 
     // Calculate duration in seconds
-    final durationSeconds = _stopwatch.elapsed.inMilliseconds / 1000;
+    final durationSeconds = (held ?? _stopwatch.elapsed).inMilliseconds / 1000;
 
     // Get previous value
     final previousValue = await ref
@@ -192,6 +221,10 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
             saveAssessment: saveAssessment,
             saveTraining: saveSession,
             saveReps: [],
+            notice: sensorLost
+                ? 'The sensor was lost during the hold, so the time stops '
+                      'at its last reading.'
+                : null,
           ),
         ),
       );
@@ -209,6 +242,11 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
   Widget build(BuildContext context) {
     final lastValue = ref.watch(bleLastValueProvider) ?? 0;
     final bleData = ref.watch(bleDataStreamProvider);
+    final phase = enduranceHoldPhase(
+      inZone: _isInTargetZone,
+      sensorLost:
+          ref.watch(connectionStateProvider) != BleConnectionState.connected,
+    );
 
     return PopScope(
       canPop: false,
@@ -334,7 +372,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                         xValueMapper: (BleDataPoint p, _) => p.timestamp,
                         highValueMapper: (_, __) => _maxForce,
                         lowValueMapper: (_, __) => _minForce,
-                        color: CrimpyTheme.targetZone.withValues(alpha: 0.3),
+                        color: CrimpyTheme.tintOf(CrimpyTheme.targetZone),
                         borderColor: CrimpyTheme.targetZone,
                         borderWidth: 2,
                         animationDuration: 0,
@@ -344,12 +382,13 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                         dataSource: data,
                         xValueMapper: (BleDataPoint p, _) => p.timestamp,
                         yValueMapper: (BleDataPoint p, _) => p.value,
-                        color: _isInTargetZone
-                            ? CrimpyTheme.markOn(CrimpyTheme.measureSettled)
-                            // The same series, held to the same 3:1 floor.
-                            : CrimpyTheme.markOn(
-                                CrimpyTheme.measuring,
-                              ).withValues(alpha: 0.8),
+                        // Sage inside the band, ink outside it, held to the
+                        // 3:1 floor of a data line on white.
+                        color: CrimpyTheme.markOn(
+                          CrimpyTheme.phaseColor(
+                            _isInTargetZone ? RunPhase.engaged : RunPhase.armed,
+                          ),
+                        ),
                         width: 3,
                         markerSettings: const MarkerSettings(isVisible: false),
                         animationDuration: 0,
@@ -367,17 +406,22 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
                 child: Container(
                   padding: EdgeInsets.all(CrimpyTheme.spaceLg),
                   decoration: CrimpyTheme.raised.copyWith(
-                    // The label on this box is white. The alpha is gone as well as the
-                    // hue darkened: at 0.9 even the darkened gold only reaches 4.03:1,
-                    // and the bare accents read 2.06:1 and 3.33:1 under white.
-                    color: _assessmentStarted
-                        ? CrimpyTheme.fillOn(CrimpyTheme.measureSettled)
-                        : CrimpyTheme.fillOn(CrimpyTheme.measuring),
+                    // The label on this box is white, so the phase is laid
+                    // in the form of it that carries white, with no alpha.
+                    color: CrimpyTheme.fillOn(CrimpyTheme.phaseColor(phase)),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (!_assessmentStarted)
+                      if (phase == RunPhase.alarm)
+                        Text(
+                          'No sensor',
+                          style: CrimpyTheme.titleLarge.copyWith(
+                            color: CrimpyTheme.textOnFill,
+                          ),
+                          textAlign: TextAlign.center,
+                        )
+                      else if (!_assessmentStarted)
                         Text(
                           'Hold 60% MVC for 1s to start',
                           style: CrimpyTheme.titleLarge.copyWith(
