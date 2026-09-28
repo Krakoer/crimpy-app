@@ -1168,4 +1168,55 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  // The level cut the clocks and the countdown in two where its edge crossed
+  // them. It stops under the header instead. See Krakoer/crimpy#161.
+  group('the header', () {
+    // The copy of the tank content drawn over the level, clipped to it.
+    final clippedCopy = find.byWidgetPredicate(
+      (widget) => widget is ClipRect && widget.clipper != null,
+    );
+    Future<void> expectLevelUnderHeader(WidgetTester tester) async {
+      final level = tester.getRect(find.byType(AnimatedContainer));
+      final clip = tester.widget<ClipRect>(clippedCopy);
+      final tank = tester.getRect(clippedCopy);
+      final clipTop = tank.top + clip.clipper!.getClip(tank.size).top;
+
+      for (final text in ['ELAPSED', '4:12', 'LEFT', '1:58', '5', 'SEC']) {
+        final foot = tester.getRect(find.text(text).first).bottom;
+        expect(level.top, greaterThanOrEqualTo(foot), reason: text);
+        expect(clipTop, greaterThanOrEqualTo(foot), reason: text);
+      }
+      expect(clipTop, level.top);
+    }
+
+    testWidgets('stays clear of the level on a full tank', (tester) async {
+      await _pump(tester, item: _hang, currentWeight: 400);
+      await expectLevelUnderHeader(tester);
+    });
+
+    testWidgets('stays clear of it under the back button', (tester) async {
+      await _pump(
+        tester,
+        item: _hang,
+        currentWeight: 400,
+        platform: TargetPlatform.iOS,
+      );
+      await expectLevelUnderHeader(tester);
+    });
+
+    testWidgets('leaves a level under the header where it was', (tester) async {
+      await _pump(tester, item: _hang, currentWeight: 21);
+
+      final level = tester.getRect(find.byType(AnimatedContainer));
+      final tankHeight = tester.getSize(clippedCopy).height;
+      expect(
+        level.height,
+        closeTo(
+          tankFillFraction(currentWeight: 21, scaleWeight: 42) * tankHeight,
+          0.01,
+        ),
+      );
+    });
+  });
 }

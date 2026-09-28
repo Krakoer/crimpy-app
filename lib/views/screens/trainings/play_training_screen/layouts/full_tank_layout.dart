@@ -30,6 +30,45 @@ double repContextCardHeight(double scale) => (56 * scale).clamp(44.0, 72.0);
 /// Gap between the foot of the tank and the set and rep card.
 const double _repContextCardBottom = 16;
 
+/// Where the header, the clocks and the countdown across the top of the tank,
+/// starts. Lower where the platform needs a back button in the corner.
+const double _headerTop = 14;
+const double _headerTopUnderBackButton = 58;
+
+/// The countdown in the corner, sized for a count under a minute. A count of a
+/// minute or more is set smaller, so this is the tallest it gets.
+const double _countdownNumeralSize = 92;
+const double _countdownNumeralHeight = 0.9;
+
+/// Room left between the foot of the header and the highest the level rises.
+const double _headerClearance = 8;
+
+double _lineHeight(TextStyle style) => style.fontSize! * style.height!;
+
+/// Whether the platform leaves the athlete no way back out of the workout on
+/// its own, the app bar being gone in this design.
+bool _needsBackButton(BuildContext context) =>
+    Theme.of(context).platform == TargetPlatform.iOS;
+
+/// Depth of the band across the top of the tank that holds the clocks and the
+/// countdown. The level stops under it, so the figures the athlete reads there
+/// are never cut in two by its edge. Sized from the tallest countdown rather
+/// than the running one, so the ceiling does not jump when a long hang drops
+/// under a minute. See Krakoer/crimpy#161.
+double tankHeaderDepth({required double scale, required bool backButton}) {
+  final countdownFoot =
+      _headerTop +
+      (_countdownNumeralSize * _countdownNumeralHeight +
+              _lineHeight(CrimpyTheme.capsLabel)) *
+          scale;
+  final clocksFoot =
+      (backButton ? _headerTopUnderBackButton : _headerTop) +
+      (_lineHeight(CrimpyTheme.capsLabel) +
+              _lineHeight(CrimpyTheme.titleLarge)) *
+          scale;
+  return max(countdownFoot, clocksFoot) + _headerClearance * scale;
+}
+
 /// Height the target sits at, as a fraction of the tank. It is where the fill
 /// mapping puts the target, so the level lands on the notch exactly when the
 /// target is met.
@@ -288,7 +327,18 @@ class FullTankLayout extends ConsumerWidget {
       builder: (context, constraints) {
         final tankHeight = max(0.0, constraints.maxHeight - controlStripHeight);
         final scale = tankHeight / _referenceTankHeight;
-        final fillHeight = fillFraction * tankHeight;
+        // The level never rises into the header, whatever the reading.
+        final fillHeight = min(
+          fillFraction * tankHeight,
+          max(
+            0.0,
+            tankHeight -
+                tankHeaderDepth(
+                  scale: scale,
+                  backButton: _needsBackButton(context),
+                ),
+          ),
+        );
 
         Widget content(_TankPalette palette) => _TankContent(
           layout: this,
@@ -470,11 +520,6 @@ class _TankContent extends StatelessWidget {
 
   double _s(double size) => size * scale;
 
-  /// Whether the platform leaves the athlete no way back out of the workout
-  /// on its own, the app bar being gone in this design.
-  bool _needsBackButton(BuildContext context) =>
-      Theme.of(context).platform == TargetPlatform.iOS;
-
   /// A style of the scale, grown or shrunk with the tank the phone gave.
   TextStyle _scaledStyle(
     TextStyle style, {
@@ -534,12 +579,14 @@ class _TankContent extends StatelessWidget {
           ),
         Positioned(
           left: 16,
-          top: _needsBackButton(context) ? 58 : 14,
+          top: _needsBackButton(context)
+              ? _headerTopUnderBackButton
+              : _headerTop,
           right: 16 + _s(140),
           child: _topLeftBlock(),
         ),
         if (cornerCountdown)
-          Positioned(right: 16, top: 14, child: _countdown()),
+          Positioned(right: 16, top: _headerTop, child: _countdown()),
         if (state == _TankState.sensorWork)
           ..._forceReadout()
         else
@@ -715,9 +762,9 @@ class _TankContent extends StatelessWidget {
               ? '$seconds'
               : '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
           style: _numeralStyle(
-            seconds < 60 ? 92 : 64,
+            seconds < 60 ? _countdownNumeralSize : 64,
             color: color,
-            height: 0.9,
+            height: _countdownNumeralHeight,
           ),
         ),
         Text(
