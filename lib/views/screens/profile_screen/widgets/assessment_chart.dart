@@ -57,14 +57,15 @@ class _ForceChartState extends State<ForceChart> {
       (DateTime(date.year, date.month, date.day), value),
   ];
 
-  LineSeries<(DateTime, double), DateTime> _line(
+  LineSeries<(DateTime, double), num> _line(
     String name,
     List<(DateTime, double)> data,
     SeriesStroke stroke,
-  ) => LineSeries<(DateTime, double), DateTime>(
+    DateTime first,
+  ) => LineSeries<(DateTime, double), num>(
     name: name,
     dataSource: data,
-    xValueMapper: (point, _) => point.$1,
+    xValueMapper: (point, _) => dayOffset(first, point.$1),
     yValueMapper: (point, _) => point.$2,
     color: widget.seriesColor,
     width: 2,
@@ -102,16 +103,7 @@ class _ForceChartState extends State<ForceChart> {
     }
 
     final dates = allData.map((point) => point.$1).toList()..sort();
-    final spanDays =
-        DateTime.utc(dates.last.year, dates.last.month, dates.last.day)
-            .difference(
-              DateTime.utc(
-                dates.first.year,
-                dates.first.month,
-                dates.first.day,
-              ),
-            )
-            .inDays;
+    final spanDays = dayOffset(dates.first, dates.last);
     final range = valueAxisRange(
       allData.map((point) => point.$2),
       widget.unit,
@@ -124,15 +116,23 @@ class _ForceChartState extends State<ForceChart> {
           Padding(
             padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
             child: SfCartesianChart(
-              primaryXAxis: DateTimeAxis(
+              // Whole days since the first tested day rather than a date axis:
+              // its labels start at the minimum and are written by calendar
+              // arithmetic, so the first and the last day are both labelled and
+              // a clock change cannot move one onto the wrong date.
+              primaryXAxis: NumericAxis(
                 majorGridLines: const MajorGridLines(width: 0),
                 axisLine: const AxisLine(width: 0),
-                intervalType: DateTimeIntervalType.days,
                 interval: dateLabelInterval(spanDays).toDouble(),
-                dateFormat: DateFormat.MMMd(),
                 labelStyle: TextStyle(color: CrimpyTheme.textPrimary),
-                minimum: dates.first,
-                maximum: dates.last,
+                axisLabelFormatter: (details) => ChartAxisLabel(
+                  DateFormat.MMMd().format(
+                    dayAt(dates.first, details.value.round()),
+                  ),
+                  details.textStyle,
+                ),
+                minimum: 0,
+                maximum: spanDays.toDouble(),
                 rangePadding: ChartRangePadding.none,
                 edgeLabelPlacement: EdgeLabelPlacement.shift,
                 plotOffset: 8,
@@ -149,13 +149,14 @@ class _ForceChartState extends State<ForceChart> {
                 ),
                 labelStyle: TextStyle(color: CrimpyTheme.textPrimary),
               ),
-              series: <LineSeries<(DateTime, double), DateTime>>[
+              series: <LineSeries<(DateTime, double), num>>[
                 if (widget.perHand && leftData.isNotEmpty)
-                  _line('Left Hand', leftData, SeriesStroke.solid),
+                  _line('Left Hand', leftData, SeriesStroke.solid, dates.first),
                 _line(
                   widget.perHand ? 'Right Hand' : 'Result',
                   rightData,
                   widget.perHand ? SeriesStroke.dashed : SeriesStroke.solid,
+                  dates.first,
                 ),
               ],
             ),

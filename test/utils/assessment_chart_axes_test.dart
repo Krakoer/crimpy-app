@@ -69,6 +69,14 @@ void main() {
       ));
     });
 
+    test('takes floating point noise on a step as the step', () {
+      expect(valueAxisRange([20, 25.000000000001], AssessmentUnit.kilograms), (
+        min: 20.0,
+        max: 25.0,
+        interval: 1.0,
+      ));
+    });
+
     test('never starts under zero', () {
       expect(valueAxisRange([0, 2], AssessmentUnit.kilograms), (
         min: 0.0,
@@ -92,6 +100,20 @@ void main() {
     test('labels only the two ends of a span nothing divides', () {
       expect(dateLabelInterval(7), 7);
       expect(dateLabelInterval(1), 1);
+    });
+  });
+
+  group('dayOffset and dayAt', () {
+    test('count calendar days across the autumn clock change', () {
+      final first = DateTime(2026, 10, 12, 9);
+      expect(dayOffset(first, DateTime(2026, 11, 1, 20)), 20);
+      expect(dayAt(first, 15), DateTime(2026, 10, 27));
+    });
+
+    test('count calendar days across the spring clock change', () {
+      final first = DateTime(2026, 3, 16, 1);
+      expect(dayOffset(first, DateTime(2026, 4, 5, 23)), 20);
+      expect(dayAt(first, 20), DateTime(2026, 4, 5));
     });
   });
 

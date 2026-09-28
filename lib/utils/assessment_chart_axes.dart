@@ -17,6 +17,16 @@ double minimumAxisSpan(AssessmentUnit unit) => switch (unit) {
   AssessmentUnit.repetitions => 5,
 };
 
+/// A quotient a hair off a whole number from floating point (1.2 / 0.1 is
+/// 11.999999999999998) taken as that whole number before a floor or a ceiling,
+/// so a value sitting on a step is not pushed a whole step out. Far too fine to
+/// swallow a real excess: 25.0004 kg over 5 is 5.00008, and still widens the
+/// axis. The portal snaps the same way.
+double _snapped(double quotient) {
+  final whole = quotient.roundToDouble();
+  return (quotient - whole).abs() < 1e-9 ? whole : quotient;
+}
+
 /// The most gaps between labels an axis carries, so at most six labels.
 const int _maximumLabelGaps = 5;
 
@@ -43,9 +53,12 @@ int _niceMultiple(double atLeast) {
 ) {
   if (values.isEmpty) return null;
   final step = minimumAxisSpan(unit);
-  final low = math.max(0.0, (values.reduce(math.min) / step).floor() * step);
+  final low = math.max(
+    0.0,
+    _snapped(values.reduce(math.min) / step).floor() * step,
+  );
   final high = math.max(
-    (values.reduce(math.max) / step).ceil() * step,
+    _snapped(values.reduce(math.max) / step).ceil() * step,
     low + step,
   );
   final steps = ((high - low) / step).round();
@@ -56,13 +69,27 @@ int _niceMultiple(double atLeast) {
     multiple = _niceMultiple(multiple + 1.0)
   ) {
     final interval = step * multiple;
-    final min = (low / interval).floor() * interval;
-    final max = (high / interval).ceil() * interval;
+    final min = _snapped(low / interval).floor() * interval;
+    final max = _snapped(high / interval).ceil() * interval;
     if (((max - min) / interval).round() <= _maximumLabelGaps) {
       return (min: min, max: max, interval: interval);
     }
   }
 }
+
+/// Whole calendar days from the day [first] falls on to the day [at] falls on.
+/// The date axis counts these rather than instants, and writes its labels back
+/// by calendar arithmetic, so a clock change cannot shift a label onto the
+/// wrong day. The portal plots its date axis the same way.
+int dayOffset(DateTime first, DateTime at) => DateTime.utc(
+  at.year,
+  at.month,
+  at.day,
+).difference(DateTime.utc(first.year, first.month, first.day)).inDays;
+
+/// The calendar day [offset] days after the day [first] falls on.
+DateTime dayAt(DateTime first, int offset) =>
+    DateTime(first.year, first.month, first.day + offset);
 
 /// The gap in days between the date axis's labels, so the first and the last
 /// tested day are both labelled: the widest of a quarter, a third or a half of
