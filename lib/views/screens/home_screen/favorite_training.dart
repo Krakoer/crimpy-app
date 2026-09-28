@@ -26,115 +26,113 @@ class FavoriteTrainingList extends ConsumerWidget {
       // pull refetching the list leaves it on screen instead of collapsing the
       // card to a spinner and back.
       child: switch (pinned) {
-        AsyncValue(:final value?) => SizedBox(
-          height: 200,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                // The favourites are filtered out of the same capped library,
-                // and the cut is alphabetical rather than favourite aware, so a
-                // favourite titled late in the alphabet drops off this card
-                // with nothing else on the home screen to say why. Compact
-                // because the card is 200dp tall and this scrolls with the
-                // list rather than taking height from it.
-                const TruncatedLibraryNotice(compact: true),
-                // ListView for favorite trainings (regular favorites + favorited builtins).
-                ListView.builder(
-                  shrinkWrap: true,
-                  primary: false,
-                  itemCount: value.length,
-                  itemBuilder: (context, index) {
-                    final item = value[index];
-                    // Skip unavailable builtin trainings
-                    if (!item.isAvailable) return SizedBox.shrink();
+        // Sized to the list rather than held at a fixed height: this card
+        // leads the home screen, and a fixed box scrolled its own list and
+        // cut the "Pin a training" button off under the fold of the card.
+        // The home screen scrolls, so a long list is reached from there.
+        // See Krakoer/crimpy#165.
+        AsyncValue(:final value?) => Column(
+          children: [
+            // The favourites are filtered out of the same capped library,
+            // and the cut is alphabetical rather than favourite aware, so a
+            // favourite titled late in the alphabet drops off this card
+            // with nothing else on the home screen to say why. Compact
+            // so it does not push the favourites down the screen.
+            const TruncatedLibraryNotice(compact: true),
+            // ListView for favorite trainings (regular favorites + favorited builtins).
+            ListView.builder(
+              shrinkWrap: true,
+              primary: false,
+              // The home screen does the scrolling; a list that took the drag
+              // itself would stop the page under a finger on a favourite.
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: value.length,
+              itemBuilder: (context, index) {
+                final item = value[index];
+                // Skip unavailable builtin trainings
+                if (!item.isAvailable) return SizedBox.shrink();
 
-                    // Favorite training Card.
-                    return CrimpyCards.training(
-                      raised: true,
-                      padding: EdgeInsets.all(0),
-                      child: ListTile(
-                        // On tap, show the details to allow the user to start the training.
-                        onTap: () {
-                          if (item.training != null) {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (ctx) => TrainingDetailScreen(
-                                  item.training!,
-                                  trainingId: item.isBuiltin
-                                      ? null
-                                      : item.training!.id,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        title: Text(
-                          item.name,
-                          style: CrimpyTheme.titleSmall.copyWith(
-                            color: CrimpyTheme.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Icon(
-                              FontAwesomeIcons.stopwatch,
-                              color: CrimpyTheme.textFaint,
-                              size: 17,
+                // Favorite training Card.
+                return CrimpyCards.training(
+                  raised: true,
+                  padding: EdgeInsets.all(0),
+                  child: ListTile(
+                    // On tap, show the details to allow the user to start the training.
+                    onTap: () {
+                      if (item.training != null) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (ctx) => TrainingDetailScreen(
+                              item.training!,
+                              trainingId: item.isBuiltin
+                                  ? null
+                                  : item.training!.id,
                             ),
-                            SizedBox(width: CrimpyTheme.spaceSm),
-                            Text(formatLength(item.totalDuration)),
-                            if (item.intensity != null) ...[
-                              const SizedBox(width: CrimpyTheme.spaceMd),
-                              IntensityBadge(item.intensity!),
-                            ],
-                          ],
-                        ),
+                          ),
+                        );
+                      }
+                    },
+                    title: Text(
+                      item.name,
+                      style: CrimpyTheme.titleSmall.copyWith(
+                        color: CrimpyTheme.textPrimary,
+                        fontWeight: FontWeight.bold,
                       ),
-                    );
-                  },
-                ),
-                SizedBox(height: CrimpyTheme.spaceSm),
-                // Button to show the dialog to manage favorite trainings.
-                DottedBorder(
-                  options: RoundedRectDottedBorderOptions(
-                    borderPadding: EdgeInsets.all(CrimpyTheme.spaceXs),
-                    dashPattern: [10, 5],
-                    strokeWidth: 2,
-                    radius: CrimpyTheme.corner,
-                    color: CrimpyTheme.textPrimary.withValues(alpha: 0.5),
-                  ),
-                  child: InkWell(
-                    onTap: () => showDialog(
-                      context: context,
-                      builder: (ctx) => PinTrainingDialog(),
                     ),
-                    child: Container(
-                      padding: EdgeInsets.all(CrimpyTheme.spaceLg),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add,
-                            color: CrimpyTheme.textPrimary,
-                            size: 30,
-                          ),
-                          SizedBox(width: CrimpyTheme.spaceSm),
-                          Text(
-                            "Pin a training",
-                            style: CrimpyTheme.title.copyWith(
-                              color: CrimpyTheme.textPrimary,
-                            ),
-                          ),
+                    subtitle: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          FontAwesomeIcons.stopwatch,
+                          color: CrimpyTheme.textFaint,
+                          size: 17,
+                        ),
+                        SizedBox(width: CrimpyTheme.spaceSm),
+                        Text(formatLength(item.totalDuration)),
+                        if (item.intensity != null) ...[
+                          const SizedBox(width: CrimpyTheme.spaceMd),
+                          IntensityBadge(item.intensity!),
                         ],
-                      ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                );
+              },
             ),
-          ),
+            SizedBox(height: CrimpyTheme.spaceSm),
+            // Button to show the dialog to manage favorite trainings.
+            DottedBorder(
+              options: RoundedRectDottedBorderOptions(
+                borderPadding: EdgeInsets.all(CrimpyTheme.spaceXs),
+                dashPattern: [10, 5],
+                strokeWidth: 2,
+                radius: CrimpyTheme.corner,
+                color: CrimpyTheme.textPrimary.withValues(alpha: 0.5),
+              ),
+              child: InkWell(
+                onTap: () => showDialog(
+                  context: context,
+                  builder: (ctx) => PinTrainingDialog(),
+                ),
+                child: Container(
+                  padding: EdgeInsets.all(CrimpyTheme.spaceLg),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add, color: CrimpyTheme.textPrimary, size: 30),
+                      SizedBox(width: CrimpyTheme.spaceSm),
+                      Text(
+                        "Pin a training",
+                        style: CrimpyTheme.title.copyWith(
+                          color: CrimpyTheme.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         AsyncValue(:final error?) => Center(
           child: Column(

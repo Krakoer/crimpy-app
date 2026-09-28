@@ -76,7 +76,12 @@ void main() {
     // Logging comes last on the home screen and is kept to one row, so it
     // never outweighs the trainings above it. See Krakoer/crimpy#165.
     await _pump(tester, const Scaffold(body: LogSessionButtons()));
+    // A 360dp phone, the narrowest the app is laid out for, where five
+    // buttons across would overflow if they did not fit.
+    tester.view.physicalSize = const Size(360, 800);
+    await tester.pumpAndSettle();
 
+    expect(tester.takeException(), isNull);
     final rows = SessionActivity.values
         .map((activity) => find.byTooltip('Log ${activity.displayName}'))
         .map((button) => tester.getCenter(button).dy)

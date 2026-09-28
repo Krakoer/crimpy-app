@@ -55,7 +55,6 @@ const Map<String, Map<String, String>> offScale = {
     '40': 'empty state: whitespace around the not-planned message',
   },
   'lib/views/screens/home_screen/favorite_training.dart': {
-    '200': 'the favorite card height',
     '300': 'the empty state illustration box',
   },
   'lib/views/screens/profile_screen/widgets/bodyweight_card.dart': {
