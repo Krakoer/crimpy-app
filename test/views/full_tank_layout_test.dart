@@ -10,6 +10,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../support/roboto.dart';
+
 class _FakeBodyweight extends BodyweightController {
   _FakeBodyweight(this.kilograms);
 
@@ -1170,53 +1172,136 @@ void main() {
   });
 
   // The level cut the clocks and the countdown in two where its edge crossed
-  // them. It stops under the header instead. See Krakoer/crimpy#161.
+  // them. It stops under the header instead, as the header is drawn: with the
+  // phone's text scale, the grip lines and the notes of the step. See
+  // Krakoer/crimpy#161.
   group('the header', () {
-    // The copy of the tank content drawn over the level, clipped to it.
-    final clippedCopy = find.byWidgetPredicate(
-      (widget) => widget is ClipRect && widget.clipper != null,
-    );
-    Future<void> expectLevelUnderHeader(WidgetTester tester) async {
-      final level = tester.getRect(find.byType(AnimatedContainer));
-      final clip = tester.widget<ClipRect>(clippedCopy);
-      final tank = tester.getRect(clippedCopy);
-      final clipTop = tank.top + clip.clipper!.getClip(tank.size).top;
+    setUpAll(loadRoboto);
 
-      for (final text in ['ELAPSED', '4:12', 'LEFT', '1:58', '5', 'SEC']) {
-        final foot = tester.getRect(find.text(text).first).bottom;
-        expect(level.top, greaterThanOrEqualTo(foot), reason: text);
-        expect(clipTop, greaterThanOrEqualTo(foot), reason: text);
-      }
-      expect(clipTop, level.top);
-    }
+    const goal = 'Max strength';
+    const protocol = 'To failure or 10s';
+    const comment = 'Shoulders engaged';
 
-    testWidgets('stays clear of the level on a full tank', (tester) async {
-      await _pump(tester, item: _hang, currentWeight: 400);
-      await expectLevelUnderHeader(tester);
-    });
+    const headerTexts = [
+      'ELAPSED',
+      '4:12',
+      'LEFT',
+      '1:58',
+      '5',
+      'SEC',
+      'BOTH HANDS',
+      '3FD - 20mm',
+    ];
+    const noteTexts = ['MAX STRENGTH', 'PROTOCOL', protocol, comment];
 
-    testWidgets('stays clear of it under the back button', (tester) async {
+    Future<void> pumpFullTank(
+      WidgetTester tester, {
+      required Size phone,
+      required TargetPlatform platform,
+      double textScale = 1,
+      bool notes = false,
+    }) async {
+      tester.view.physicalSize = phone;
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = textScale;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       await _pump(
         tester,
         item: _hang,
         currentWeight: 400,
-        platform: TargetPlatform.iOS,
+        platform: platform,
+        goal: notes ? goal : null,
+        protocol: notes ? protocol : null,
+        comment: notes ? comment : null,
       );
-      await expectLevelUnderHeader(tester);
-    });
+    }
+
+    double levelTop(WidgetTester tester) =>
+        tester.getRect(find.byType(AnimatedContainer)).top;
+
+    void expectAboveLevel(WidgetTester tester, List<String> texts) {
+      final top = levelTop(tester);
+      for (final text in texts) {
+        final foot = tester.getRect(find.text(text).first).bottom;
+        expect(top, greaterThanOrEqualTo(foot), reason: text);
+      }
+    }
+
+    Rect tankRect(WidgetTester tester) => tester.getRect(
+      find
+          .ancestor(
+            of: find.byType(AnimatedContainer),
+            matching: find.byType(CustomMultiChildLayout),
+          )
+          .first,
+    );
+
+    const android = (TargetPlatform.android, Size(412, 843));
+    const iOS = (TargetPlatform.iOS, Size(393, 759));
+
+    for (final (platform, phone, textScale, notes) in [
+      (android.$1, android.$2, 1.0, false),
+      (android.$1, android.$2, 1.3, false),
+      (android.$1, android.$2, 1.0, true),
+      (iOS.$1, iOS.$2, 1.0, false),
+      (iOS.$1, iOS.$2, 1.3, false),
+    ]) {
+      testWidgets(
+        'stays clear of a full level on ${platform.name} at text scale '
+        '$textScale${notes ? ', with the notes of the step' : ''}',
+        (tester) async {
+          await pumpFullTank(
+            tester,
+            phone: phone,
+            platform: platform,
+            textScale: textScale,
+            notes: notes,
+          );
+          expectAboveLevel(tester, [...headerTexts, if (notes) ...noteTexts]);
+        },
+      );
+    }
+
+    // A header this deep reaches past the notch, and the level still has to
+    // be able to reach the target. It stops at the notch, and what it crosses
+    // is drawn over it in the colours that read there.
+    for (final (platform, phone, textScale, notes) in [
+      (android.$1, android.$2, 1.3, true),
+      (iOS.$1, iOS.$2, 1.0, true),
+    ]) {
+      testWidgets(
+        'still lets the level reach the notch on ${platform.name} at text '
+        'scale $textScale${notes ? ', with the notes of the step' : ''}',
+        (tester) async {
+          await pumpFullTank(
+            tester,
+            phone: phone,
+            platform: platform,
+            textScale: textScale,
+            notes: notes,
+          );
+
+          final tank = tankRect(tester);
+          final notch = tank.bottom - tank.height * targetNotchFraction;
+          expect(levelTop(tester), closeTo(notch, 0.01));
+        },
+      );
+    }
 
     testWidgets('leaves a level under the header where it was', (tester) async {
       await _pump(tester, item: _hang, currentWeight: 21);
 
       final level = tester.getRect(find.byType(AnimatedContainer));
-      final tankHeight = tester.getSize(clippedCopy).height;
+      final tank = tankRect(tester);
       expect(
         level.height,
         closeTo(
-          tankFillFraction(currentWeight: 21, scaleWeight: 42) * tankHeight,
+          tankFillFraction(currentWeight: 21, scaleWeight: 42) * tank.height,
           0.01,
         ),
       );
+      expect(level.bottom, tank.bottom);
     });
   });
 }

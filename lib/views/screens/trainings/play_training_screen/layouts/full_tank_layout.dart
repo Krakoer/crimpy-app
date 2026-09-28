@@ -43,31 +43,10 @@ const double _countdownNumeralHeight = 0.9;
 /// Room left between the foot of the header and the highest the level rises.
 const double _headerClearance = 8;
 
-double _lineHeight(TextStyle style) => style.fontSize! * style.height!;
-
 /// Whether the platform leaves the athlete no way back out of the workout on
 /// its own, the app bar being gone in this design.
 bool _needsBackButton(BuildContext context) =>
     Theme.of(context).platform == TargetPlatform.iOS;
-
-/// Depth of the band across the top of the tank that holds the clocks and the
-/// countdown. The level stops under it, so the figures the athlete reads there
-/// are never cut in two by its edge. Sized from the tallest countdown rather
-/// than the running one, so the ceiling does not jump when a long hang drops
-/// under a minute. See Krakoer/crimpy#161.
-double tankHeaderDepth({required double scale, required bool backButton}) {
-  final countdownFoot =
-      _headerTop +
-      (_countdownNumeralSize * _countdownNumeralHeight +
-              _lineHeight(CrimpyTheme.capsLabel)) *
-          scale;
-  final clocksFoot =
-      (backButton ? _headerTopUnderBackButton : _headerTop) +
-      (_lineHeight(CrimpyTheme.capsLabel) +
-              _lineHeight(CrimpyTheme.titleLarge)) *
-          scale;
-  return max(countdownFoot, clocksFoot) + _headerClearance * scale;
-}
 
 /// Height the target sits at, as a fraction of the tank. It is where the fill
 /// mapping puts the target, so the level lands on the notch exactly when the
@@ -327,68 +306,78 @@ class FullTankLayout extends ConsumerWidget {
       builder: (context, constraints) {
         final tankHeight = max(0.0, constraints.maxHeight - controlStripHeight);
         final scale = tankHeight / _referenceTankHeight;
-        // The level never rises into the header, whatever the reading.
-        final fillHeight = min(
-          fillFraction * tankHeight,
-          max(
-            0.0,
-            tankHeight -
-                tankHeaderDepth(
-                  scale: scale,
-                  backButton: _needsBackButton(context),
-                ),
-          ),
-        );
+        final fillHeight = fillFraction * tankHeight;
 
-        Widget content(_TankPalette palette) => _TankContent(
+        Widget content(_TankPalette palette, _TankPart part) => _TankContent(
           layout: this,
           state: state,
+          part: part,
           palette: palette,
           tankHeight: tankHeight,
           scale: scale,
           currentWeight: currentWeight,
           notchLabel: notchLabel,
         );
+        final groundPalette = state == _TankState.rest
+            ? _TankPalette.overCalm
+            : _TankPalette.overTank;
 
-        final tank = Stack(
-          fit: StackFit.expand,
+        // The header is laid out on its own so the level can be stopped
+        // under it, as it is drawn: with the text scale the phone asks for,
+        // the grip lines, and whatever goal, protocol or comment the step
+        // carries. See Krakoer/crimpy#161.
+        final tank = CustomMultiChildLayout(
+          delegate: _TankLayoutDelegate(
+            level: fillHeight,
+            levelFloor: tankHeight * targetNotchFraction,
+            headerClearance: _headerClearance * scale,
+          ),
           children: [
-            ColoredBox(
-              color: state == _TankState.rest
-                  ? CrimpyTheme.phaseCalmGround
-                  : CrimpyTheme.bgPrimary,
+            LayoutId(
+              id: _TankSlot.ground,
+              child: ColoredBox(
+                color: state == _TankState.rest
+                    ? CrimpyTheme.phaseCalmGround
+                    : CrimpyTheme.bgPrimary,
+              ),
+            ),
+            LayoutId(
+              id: _TankSlot.body,
+              child: content(groundPalette, _TankPart.body),
+            ),
+            LayoutId(
+              id: _TankSlot.header,
+              child: content(groundPalette, _TankPart.header),
             ),
             if (fillHeight > 0)
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: SizedBox(
-                  height: fillHeight,
-                  width: double.infinity,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    // The level carries the force figure in white, so it is
-                    // filled with the form of its phase that carries white.
-                    color: CrimpyTheme.fillOn(
-                      CrimpyTheme.phaseColor(
-                        loadDropped
-                            ? RunPhase.alarm
-                            : onTarget
-                            ? RunPhase.engaged
-                            : RunPhase.armed,
-                      ),
+              LayoutId(
+                id: _TankSlot.level,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  // The level carries the force figure in white, so it is
+                  // filled with the form of its phase that carries white.
+                  color: CrimpyTheme.fillOn(
+                    CrimpyTheme.phaseColor(
+                      loadDropped
+                          ? RunPhase.alarm
+                          : onTarget
+                          ? RunPhase.engaged
+                          : RunPhase.armed,
+                    ),
+                  ),
+                  // The whole tank again in the colours that read on the
+                  // level, laid out at the tank's size and pinned to its foot
+                  // so it lands in register with the copy under it, and cut
+                  // to the level.
+                  child: ClipRect(
+                    child: OverflowBox(
+                      alignment: Alignment.bottomCenter,
+                      minHeight: tankHeight,
+                      maxHeight: tankHeight,
+                      child: content(_TankPalette.overFill, _TankPart.whole),
                     ),
                   ),
                 ),
-              ),
-            content(
-              state == _TankState.rest
-                  ? _TankPalette.overCalm
-                  : _TankPalette.overTank,
-            ),
-            if (fillHeight > 0)
-              ClipRect(
-                clipper: _FillClipper(fillHeight),
-                child: content(_TankPalette.overFill),
               ),
           ],
         );
@@ -499,6 +488,9 @@ String describeExecutionItem(TrainingExecutionItem item) => switch (item) {
 class _TankContent extends StatelessWidget {
   final FullTankLayout layout;
   final _TankState state;
+
+  /// Which part of the tank content this copy draws.
+  final _TankPart part;
   final _TankPalette palette;
   final double tankHeight;
   final double scale;
@@ -511,6 +503,7 @@ class _TankContent extends StatelessWidget {
   const _TankContent({
     required this.layout,
     required this.state,
+    required this.part,
     required this.palette,
     required this.tankHeight,
     required this.scale,
@@ -543,27 +536,52 @@ class _TankContent extends StatelessWidget {
   ).copyWith(color: color);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => switch (part) {
+    _TankPart.header => _header(context),
+    _TankPart.body => Stack(fit: StackFit.expand, children: _body(context)),
+    _TankPart.whole => Stack(
+      fit: StackFit.expand,
+      children: [
+        ..._body(context),
+        Positioned(left: 0, top: 0, right: 0, child: _header(context)),
+      ],
+    ),
+  };
+
+  /// The clocks, the countdown in the corner and what sits under the clocks,
+  /// across the top of the tank. Sized to what it draws, which is what the
+  /// level is stopped under.
+  Widget _header(BuildContext context) {
     // A step with no sensor puts its countdown in the middle of the screen, and
     // a self paced one has none.
     final cornerCountdown =
         state != _TankState.timed && state != _TankState.confirm;
+    final backButton = _needsBackButton(context);
+    final countdownRoom = 16 + _s(140);
 
     return Stack(
-      fit: StackFit.expand,
       children: [
-        if (notchLabel != null)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: tankHeight * targetNotchFraction,
-            height: 2,
-            child: ColoredBox(color: palette.notch),
+        Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            top: backButton ? _headerTopUnderBackButton : _headerTop,
+            right: countdownRoom,
+          ),
+          child: _topLeftBlock(),
+        ),
+        if (cornerCountdown)
+          Align(
+            alignment: Alignment.topRight,
+            heightFactor: 1,
+            child: Padding(
+              padding: const EdgeInsets.only(top: _headerTop, right: 16),
+              child: _countdown(),
+            ),
           ),
         // Without an app bar, a platform with no hardware back button needs
         // something to leave the workout with. It goes through the same
         // confirmation the back gesture does.
-        if (_needsBackButton(context))
+        if (backButton)
           Positioned(
             left: 0,
             top: 0,
@@ -577,39 +595,40 @@ class _TankContent extends StatelessWidget {
               padding: EdgeInsets.zero,
             ),
           ),
-        Positioned(
-          left: 16,
-          top: _needsBackButton(context)
-              ? _headerTopUnderBackButton
-              : _headerTop,
-          right: 16 + _s(140),
-          child: _topLeftBlock(),
-        ),
-        if (cornerCountdown)
-          Positioned(right: 16, top: _headerTop, child: _countdown()),
-        if (state == _TankState.sensorWork)
-          ..._forceReadout()
-        else
-          Positioned.fill(
-            child: Padding(
-              // Kept clear of the set and rep card, which is opaque and would
-              // otherwise hide the foot of a tall block.
-              padding: EdgeInsets.fromLTRB(
-                16,
-                14,
-                16,
-                layout.repContext == null
-                    ? 14
-                    : _repContextCardBottom +
-                          repContextCardHeight(scale) +
-                          _s(12),
-              ),
-              child: Center(child: _centerBlock(context)),
-            ),
-          ),
       ],
     );
   }
+
+  /// Everything in the tank under the header: the notch and what the middle
+  /// of the tank holds.
+  List<Widget> _body(BuildContext context) => [
+    if (notchLabel != null)
+      Positioned(
+        left: 0,
+        right: 0,
+        bottom: tankHeight * targetNotchFraction,
+        height: 2,
+        child: ColoredBox(color: palette.notch),
+      ),
+    if (state == _TankState.sensorWork)
+      ..._forceReadout()
+    else
+      Positioned.fill(
+        child: Padding(
+          // Kept clear of the set and rep card, which is opaque and would
+          // otherwise hide the foot of a tall block.
+          padding: EdgeInsets.fromLTRB(
+            16,
+            14,
+            16,
+            layout.repContext == null
+                ? 14
+                : _repContextCardBottom + repContextCardHeight(scale) + _s(12),
+          ),
+          child: Center(child: _centerBlock(context)),
+        ),
+      ),
+  ];
 
   Widget _topLeftBlock() {
     final rep = layout.item is TimedItem ? layout.item as TimedItem : null;
@@ -1139,20 +1158,57 @@ String gripLine(GripPosition gripPosition, int? edgeSizeMm) => [
   if (edgeSizeMm != null) '${edgeSizeMm}mm',
 ].join(' - ');
 
-/// Keeps the inverted copy of the tank content to the part of the screen the
-/// force level covers.
-class _FillClipper extends CustomClipper<Rect> {
-  final double fillHeight;
+/// What a copy of the tank content draws. The copy over the level draws the
+/// whole of it, since a level stopped at the notch under a deep header can
+/// still reach the foot of the header.
+enum _TankPart { header, body, whole }
 
-  const _FillClipper(this.fillHeight);
+/// The children the tank is laid out in.
+enum _TankSlot { ground, body, header, level }
+
+/// Lays the tank out: the ground and the body across the whole of it, the
+/// header across the top at the height it draws, and the level up from the
+/// foot. The level stops [headerClearance] under the header, so no figure the
+/// header holds is ever cut in two by its edge, but never under [levelFloor],
+/// so a header too deep for the tank still lets the level reach the notch.
+class _TankLayoutDelegate extends MultiChildLayoutDelegate {
+  final double level;
+  final double levelFloor;
+  final double headerClearance;
+
+  _TankLayoutDelegate({
+    required this.level,
+    required this.levelFloor,
+    required this.headerClearance,
+  });
 
   @override
-  Rect getClip(Size size) =>
-      Rect.fromLTRB(0, size.height - fillHeight, size.width, size.height);
+  void performLayout(Size size) {
+    for (final slot in [_TankSlot.ground, _TankSlot.body]) {
+      layoutChild(slot, BoxConstraints.tight(size));
+      positionChild(slot, Offset.zero);
+    }
+    final header = layoutChild(_TankSlot.header, BoxConstraints.loose(size));
+    positionChild(_TankSlot.header, Offset.zero);
+
+    if (!hasChild(_TankSlot.level)) return;
+    final ceiling = max(
+      size.height - header.height - headerClearance,
+      levelFloor,
+    );
+    final height = min(level, ceiling).clamp(0.0, size.height);
+    layoutChild(
+      _TankSlot.level,
+      BoxConstraints.tight(Size(size.width, height)),
+    );
+    positionChild(_TankSlot.level, Offset(0, size.height - height));
+  }
 
   @override
-  bool shouldReclip(_FillClipper oldClipper) =>
-      oldClipper.fillHeight != fillHeight;
+  bool shouldRelayout(_TankLayoutDelegate oldDelegate) =>
+      oldDelegate.level != level ||
+      oldDelegate.levelFloor != levelFloor ||
+      oldDelegate.headerClearance != headerClearance;
 }
 
 /// Set and rep of the running step, drawn as the paused card is so it belongs

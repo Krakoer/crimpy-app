@@ -1,28 +1,11 @@
-import 'dart:io';
-
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/views/screens/home_screen/history/widgets/week_histogram_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// The test font draws every glyph as a square as wide as it is tall, so a
-/// three letter day name wraps in a column Roboto fits it in, and a layout
-/// test would fail on text the phone never wraps. The Roboto the SDK ships is
-/// loaded instead, so the widths are the phone's.
-Future<void> loadRoboto() async {
-  final fonts =
-      '${Platform.environment['FLUTTER_ROOT']}'
-      '/bin/cache/artifacts/material_fonts';
-  final loader = FontLoader('Roboto');
-  for (final weight in ['Regular', 'Medium', 'Bold']) {
-    final bytes = File('$fonts/Roboto-$weight.ttf').readAsBytesSync();
-    loader.addFont(Future.value(ByteData.sublistView(bytes)));
-  }
-  await loader.load();
-}
+import '../support/roboto.dart';
 
 void main() {
   setUpAll(loadRoboto);
