@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:crimpy/models/assessment_model.dart';
@@ -580,6 +581,38 @@ Training _trainingWithLongNote() => Training(
   ],
 );
 
+/// A sensor whose samples the test writes itself, time of reading included,
+/// so a run can be driven through the load alarm's dwell without waiting.
+class _ScriptedSensor extends BleRepository {
+  final samples = StreamController<BleDataPoint>.broadcast();
+
+  @override
+  Stream<BleDataPoint> get dataStream => samples.stream;
+}
+
+class _ConnectedSensor extends BleConnection {
+  @override
+  BleConnectionState build() => BleConnectionState.connected;
+}
+
+/// Runs [training] against [sensor], connected, with the sensor in use.
+Future<void> _pumpConnectedRun(
+  WidgetTester tester,
+  Training training,
+  _ScriptedSensor sensor,
+) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        bleRepositoryProvider.overrideWithValue(sensor),
+        connectionStateProvider.overrideWith(_ConnectedSensor.new),
+      ],
+      child: MaterialApp(home: PlayTrainingScreen(training, useSensor: true)),
+    ),
+  );
+  await tester.pump();
+}
+
 Future<void> _skip(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.skip_next));
   await tester.pump();
@@ -787,6 +820,94 @@ void main() {
     // Its rest, which previews the step after it.
     expect(find.text('REST'), findsOneWidget);
     expect(find.text('Left leg'), findsOneWidget);
+  });
+
+  // See Krakoer/crimpy#175. Target 30 kg: fires under 27 kg, clears at 28.5.
+  testWidgets(
+    'a load held below the target raises the alarm until it is back',
+    (tester) async {
+      final sensor = _ScriptedSensor();
+      await _pumpConnectedRun(tester, _oneHang(), sensor);
+      await _skip(tester);
+
+      final start = DateTime(2026, 9, 28, 10);
+      void read(double kilograms, int milliseconds) => sensor.samples.add(
+        BleDataPoint(
+          kilograms,
+          start.add(Duration(milliseconds: milliseconds)),
+        ),
+      );
+
+      // Loading up: under the fire line for longer than the dwell, before
+      // ever reaching the target, raises nothing.
+      read(10, 0);
+      read(20, 400);
+      read(26, 800);
+      await tester.pump();
+      expect(find.text('BELOW TARGET'), findsNothing);
+
+      read(30, 1000);
+      read(20, 1100);
+      read(20, 1400);
+      await tester.pump();
+      expect(find.text('BELOW TARGET'), findsNothing);
+
+      read(20, 1600);
+      await tester.pump();
+      expect(find.text('BELOW TARGET'), findsOneWidget);
+
+      read(28, 1700);
+      await tester.pump();
+      expect(find.text('BELOW TARGET'), findsOneWidget);
+
+      read(28.5, 1800);
+      await tester.pump();
+      expect(find.text('BELOW TARGET'), findsNothing);
+    },
+  );
+
+  testWidgets('pausing puts the load alarm down, and resuming starts it over', (
+    tester,
+  ) async {
+    final sensor = _ScriptedSensor();
+    await _pumpConnectedRun(tester, _oneHang(), sensor);
+    await _skip(tester);
+
+    final start = DateTime(2026, 9, 28, 10);
+    void read(double kilograms, int milliseconds) => sensor.samples.add(
+      BleDataPoint(kilograms, start.add(Duration(milliseconds: milliseconds))),
+    );
+
+    read(30, 0);
+    read(20, 100);
+    read(20, 600);
+    await tester.pump();
+    expect(find.text('BELOW TARGET'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.pause));
+    await tester.pump();
+    expect(find.text('BELOW TARGET'), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.play_arrow));
+    await tester.pump();
+    // A fresh watch: under the line before getting back on target raises
+    // nothing, however long it lasts.
+    read(20, 5000);
+    read(20, 5600);
+    await tester.pump();
+    expect(find.text('BELOW TARGET'), findsNothing);
+
+    // Back on target, then a dip shorter than the dwell.
+    read(30, 6000);
+    read(20, 6100);
+    read(20, 6400);
+    await tester.pump();
+    expect(find.text('BELOW TARGET'), findsNothing);
+
+    // The watch is live again: held under for the whole dwell, it fires.
+    read(20, 6600);
+    await tester.pump();
+    expect(find.text('BELOW TARGET'), findsOneWidget);
   });
 
   // Samples taken while the run is suspended belong to no rep. Recording them

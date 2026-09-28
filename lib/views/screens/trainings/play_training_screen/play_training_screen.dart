@@ -10,6 +10,7 @@ import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
+import 'package:crimpy/viewmodels/load_drop_alarm_view_model.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen.dart';
 import 'package:crimpy/views/widgets/workout_lifecycle.dart';
 import 'package:crimpy/views/widgets/workout_timer.dart';
@@ -143,6 +144,8 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
       // Reset the session for average computation.
       ref.read(bleSessionProvider.notifier).reset();
+      // Called before the index moves, so the step being entered is the next.
+      ref.read(loadDropAlarmProvider.notifier).follow(timer.nextItem);
       setState(() {});
     },
     onFinished: () async {
@@ -179,6 +182,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
   void _start() {
     sensorRepository.resumeStreaming();
+    ref.read(loadDropAlarmProvider.notifier).follow(timer.currentItem);
     setState(timer.play);
   }
 
@@ -187,6 +191,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// the rep the pause interrupts.
   void _stop() {
     sensorRepository.pauseStreaming();
+    ref.read(loadDropAlarmProvider.notifier).follow(null);
     setState(timer.stop);
   }
 
@@ -371,6 +376,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
       showRemaining: _isFullyTimed,
       isPreparation: index == 0,
       isRunning: timer.isRunning,
+      loadBelowTarget: ref.watch(loadDropAlarmProvider),
       repContext: _currentContext(),
       goal: _goalOf(timer.currentItem),
       nextGoal: _goalOf(nextItem),

@@ -16,7 +16,8 @@ enum RunPhase {
   /// On target.
   engaged,
 
-  /// The sensor is lost mid-run.
+  /// Something is wrong mid-run: the sensor is lost, or the load of a hang
+  /// dropped below its target (Krakoer/crimpy#175).
   alarm,
 }
 
@@ -96,7 +97,8 @@ class CrimpyTheme {
   //   steel  calm     resting, between sets, paused
   //   ink    armed    getting ready, pulling but not yet on target
   //   sage   engaged  on target
-  //   red    alarm    something is wrong: the sensor is lost
+  //   red    alarm    something is wrong: the sensor is lost, or the load
+  //                    dropped below the target mid-hang
   //
   // Red is spent once, on the alarm, and statusError already holds it. The
   // moment it is decorative it stops working, so a new meaning that wants to
@@ -315,8 +317,9 @@ class CrimpyTheme {
   /// [onTarget], and the only green the run screen has.
   static const Color phaseEngaged = onTarget;
 
-  /// Something is wrong mid-run: the sensor is lost. The only red on the run
-  /// screen; nothing that is not an alarm may take it.
+  /// Something is wrong mid-run: the sensor is lost, or the load dropped below
+  /// the target. The only red on the run screen; nothing that is not an alarm
+  /// may take it.
   static const Color phaseAlarm = statusError;
 
   /// The run screen's instruction: which hand, which step, what load.

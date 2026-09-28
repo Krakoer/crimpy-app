@@ -79,6 +79,7 @@ Future<void> _pump(
   int secondsRemaining = 5,
   bool isPreparation = false,
   bool isRunning = true,
+  bool loadBelowTarget = false,
   String? repContext = 'SET 2/4 - REP 3/6',
   String? goal,
   String? nextGoal,
@@ -111,6 +112,7 @@ Future<void> _pump(
             showRemaining: true,
             isPreparation: isPreparation,
             isRunning: isRunning,
+            loadBelowTarget: loadBelowTarget,
             repContext: repContext,
             goal: goal,
             nextGoal: nextGoal,
@@ -238,6 +240,69 @@ void main() {
         connection: BleConnectionState.disconnected,
       );
       expect(find.text('NO SENSOR'), findsNothing);
+    });
+
+    // See Krakoer/crimpy#175.
+    testWidgets('raise the alarm when the load dropped below the target', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: _hang,
+        nextItem: const RestItem(durationSeconds: 3),
+        currentWeight: 30.5,
+        loadBelowTarget: true,
+      );
+
+      final alarm = CrimpyTheme.phaseColor(RunPhase.alarm);
+      expect(_levelColor(tester), CrimpyTheme.fillOn(alarm));
+      expect(_textColor(tester, 'BELOW TARGET'), CrimpyTheme.textOn(alarm));
+      // The force stays on screen: the athlete has to see how far under it is.
+      expect(find.text('30.5'), findsWidgets);
+      expect(find.text('NEXT'), findsNothing);
+    });
+
+    testWidgets('raise no load alarm on a paused run', (tester) async {
+      await _pump(
+        tester,
+        item: _hang,
+        currentWeight: 30,
+        isRunning: false,
+        loadBelowTarget: true,
+      );
+      expect(find.text('BELOW TARGET'), findsNothing);
+      expect(find.text('PAUSED'), findsWidgets);
+    });
+
+    testWidgets('raise no load alarm on a hang with no target load', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: _maxHang,
+        currentWeight: 30,
+        bodyweight: 70,
+        loadBelowTarget: true,
+      );
+      expect(find.text('BELOW TARGET'), findsNothing);
+      expect(
+        _levelColor(tester),
+        CrimpyTheme.fillOn(CrimpyTheme.phaseColor(RunPhase.armed)),
+      );
+    });
+
+    testWidgets('say NO SENSOR over a load alarm when the sensor is gone', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: _hang,
+        currentWeight: 30,
+        loadBelowTarget: true,
+        connection: BleConnectionState.disconnected,
+      );
+      expect(find.text('NO SENSOR'), findsOneWidget);
+      expect(find.text('BELOW TARGET'), findsNothing);
     });
 
     testWidgets('leave the drop out flag out of the alarm red', (tester) async {
