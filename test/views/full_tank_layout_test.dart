@@ -188,6 +188,19 @@ void main() {
       expect(ground, isNot(contains(CrimpyTheme.onTarget)));
     });
 
+    // textMutedSmall is under the text floor on the calm ground.
+    testWidgets('set the muted labels of a rest in textSecondary', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 3),
+        nextItem: _hang,
+      );
+      expect(_textColor(tester, 'ELAPSED'), CrimpyTheme.textSecondary);
+      expect(_textColor(tester, 'LEFT'), CrimpyTheme.textSecondary);
+    });
+
     testWidgets('paint getting ready armed', (tester) async {
       await _pump(tester, item: _hang, nextItem: _hang, isPreparation: true);
 
@@ -196,7 +209,7 @@ void main() {
       expect(_textColor(tester, 'PREPARATION'), armed);
     });
 
-    testWidgets('raise the alarm when the sensor is lost mid-hang', (
+    testWidgets('raise the alarm when a sensor step has no sensor', (
       tester,
     ) async {
       await _pump(
@@ -208,7 +221,7 @@ void main() {
       );
 
       expect(
-        _textColor(tester, 'SENSOR LOST'),
+        _textColor(tester, 'NO SENSOR'),
         CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.alarm)),
       );
       // The last sample is stale, so the level empties rather than holding it.
@@ -224,7 +237,7 @@ void main() {
         item: _pullUps,
         connection: BleConnectionState.disconnected,
       );
-      expect(find.text('SENSOR LOST'), findsNothing);
+      expect(find.text('NO SENSOR'), findsNothing);
     });
 
     testWidgets('leave the drop out flag out of the alarm red', (tester) async {

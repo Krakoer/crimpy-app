@@ -109,6 +109,20 @@ class _TankPalette {
     protocol: CrimpyTheme.protocolColor,
   );
 
+  /// What the tank is painted in over the calm ground of a rest. The muted
+  /// voice takes textSecondary there: textMutedSmall only clears the 4.5:1
+  /// floor on white and reads about 4.38:1 on the calm ground.
+  static final overCalm = _TankPalette(
+    force: CrimpyTheme.textPrimary,
+    secondary: CrimpyTheme.textSecondary,
+    accent: CrimpyTheme.textOn(CrimpyTheme.runPrompt),
+    muted: CrimpyTheme.textSecondary,
+    detail: CrimpyTheme.textSecondary,
+    notch: CrimpyTheme.outline,
+    goal: CrimpyTheme.goalColor,
+    protocol: CrimpyTheme.protocolColor,
+  );
+
   static const overFill = _TankPalette(
     force: CrimpyTheme.textOnFill,
     secondary: CrimpyTheme.textOnFillSecondary,
@@ -302,7 +316,11 @@ class FullTankLayout extends ConsumerWidget {
                   ),
                 ),
               ),
-            content(_TankPalette.overTank),
+            content(
+              state == _TankState.rest
+                  ? _TankPalette.overCalm
+                  : _TankPalette.overTank,
+            ),
             if (fillHeight > 0)
               ClipRect(
                 clipper: _FillClipper(fillHeight),
@@ -359,12 +377,14 @@ class FullTankLayout extends ConsumerWidget {
 
   /// What the run is doing, when the tank does not already say it. A working
   /// step has none: the level and the notch show the effort and whether the
-  /// target is met better than a word could. A lost sensor empties the level,
-  /// so that one is said.
+  /// target is met better than a word could. A sensor step with no sensor to
+  /// read empties the level, so that one is said. NO SENSOR rather than
+  /// SENSOR LOST: the run cannot tell a connection that dropped from one that
+  /// never opened.
   String? _stateWord({required bool sensorLost}) {
     if (isPreparation) return 'READY';
     if (!isRunning) return 'PAUSED';
-    if (sensorLost) return 'SENSOR LOST';
+    if (sensorLost) return 'NO SENSOR';
     if (item is RestItem) return 'REST';
     return null;
   }

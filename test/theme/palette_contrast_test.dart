@@ -1208,6 +1208,15 @@ void main() {
       });
     }
 
+    test('the muted voice of a hang does not fit the calm ground', () {
+      // Why the tank writes its muted labels in textSecondary during a rest.
+      // If this ever passes, the calm palette can go back to textMutedSmall.
+      expect(
+        contrastRatio(CrimpyTheme.textMutedSmall, CrimpyTheme.phaseCalmGround),
+        lessThan(contrastFloor),
+      );
+    });
+
     test('the neutrals the tank writes read on the calm ground', () {
       for (final entry in {
         'textPrimary': CrimpyTheme.textPrimary,
