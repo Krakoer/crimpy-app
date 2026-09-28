@@ -38,7 +38,7 @@ class ExerciseVideoButton extends StatelessWidget {
       ),
       style: TextButton.styleFrom(
         padding: EdgeInsets.symmetric(
-          horizontal: compact ? CrimpyTheme.spaceMd : CrimpyTheme.spaceMd,
+          horizontal: CrimpyTheme.spaceMd,
           vertical: compact ? CrimpyTheme.spaceSm : CrimpyTheme.spaceMd,
         ),
         minimumSize: Size.zero,

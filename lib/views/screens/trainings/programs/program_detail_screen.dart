@@ -439,6 +439,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
         final date = _dateForDay(d);
         final isSelected = d == selected;
         final isToday = isSameDay(date, today);
+        final isLastDay = d == 6;
         final dot = daySessions.isNotEmpty
             ? programSessionColor(daySessions.first.activity)
             : null;
@@ -447,7 +448,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
             onTap: () => setState(() => _selectedDay = d),
             child: Container(
               margin: EdgeInsets.only(
-                right: d == CrimpyTheme.spaceSm ? 0 : CrimpyTheme.spaceXs,
+                right: isLastDay ? 0 : CrimpyTheme.spaceXs,
               ),
               padding: const EdgeInsets.symmetric(
                 vertical: CrimpyTheme.spaceSm,

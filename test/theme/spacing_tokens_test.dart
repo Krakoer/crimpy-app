@@ -178,11 +178,24 @@ List<(String, int)> spacingNumbers(String source) {
   for (final (from, to) in spans) {
     for (final number in numberLiteral.allMatches(text.substring(from, to))) {
       if (double.parse(number.group(0)!) == 0) continue;
-      found.add((number.group(0)!, from + number.start));
+      final start = from + number.start;
+      final end = from + number.end;
+      if (isComparedAt(text, start, end)) continue;
+      found.add((number.group(0)!, start));
     }
   }
   return found;
 }
+
+/// A number compared against, such as the `6` of `d == 6 ? 0 : gap`, counts
+/// something rather than spacing it, and a token in its place would compare
+/// an index with a size.
+final RegExp comparisonBefore = RegExp(r'(==|!=|<=|>=|<|>|%)\s*$');
+final RegExp comparisonAfter = RegExp(r'^\s*(==|!=|<=|>=|<|>|%)');
+
+bool isComparedAt(String text, int start, int end) =>
+    comparisonBefore.hasMatch(text.substring(0, start)) ||
+    comparisonAfter.hasMatch(text.substring(end));
 
 bool isGenerated(String path) =>
     path.endsWith('.g.dart') || path.endsWith('.freezed.dart');
@@ -247,6 +260,9 @@ void main() {
     expect(numbersIn('const SizedBox(height: CrimpyTheme.spaceSm)'), isEmpty);
     expect(numbersIn('EdgeInsets.only(right: last ? 0 : gap)'), isEmpty);
     expect(numbersIn('EdgeInsets.zero'), isEmpty);
+    expect(numbersIn('EdgeInsets.only(right: d == 6 ? 0 : 4)'), ['4']);
+    expect(numbersIn('EdgeInsets.only(left: i < 2 ? 8 : 0)'), ['8']);
+    expect(numbersIn('EdgeInsets.only(left: 3 != i ? 8 : 0)'), ['8']);
     expect(numbersIn('SizedBox(child: Text("16"))'), isEmpty);
     expect(numbersIn('// EdgeInsets.all(16)'), isEmpty);
     expect(numbersIn('SizedBox.shrink()'), isEmpty);
