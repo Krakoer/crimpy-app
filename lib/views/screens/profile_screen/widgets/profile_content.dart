@@ -13,17 +13,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ProfileContent extends ConsumerWidget {
   final List<AssessmentModel> assessments;
-  final Color accentLeft;
-  final Color accentRight;
   final VoidCallback goToAssessments;
 
   const ProfileContent({
     super.key,
     required this.assessments,
-    required this.accentLeft,
-    required this.accentRight,
     required this.goToAssessments,
   });
+
+  /// The hue an assessment's chart and stat cards are drawn in: one per metric,
+  /// the hands told apart by line style rather than by colour.
+  static Color seriesColorOf(AssessmentDefinition definition) =>
+      switch (definition.protocol) {
+        AssessmentType.mvc => CrimpyTheme.maxForceSeries,
+        AssessmentType.criticalForce => CrimpyTheme.criticalForceSeries,
+        _ => CrimpyTheme.assessmentSeries,
+      };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -198,8 +203,7 @@ class ProfileContent extends ConsumerWidget {
           // Max Force Section with Grip Position Selection
           MvcGripPositionStatContent(
             mvcByGripPosition: mvcByGripPosition,
-            accentLeft: accentLeft,
-            accentRight: accentRight,
+            seriesColor: CrimpyTheme.maxForceSeries,
             onStartAssessment: goToAssessments,
           ),
 
@@ -211,8 +215,7 @@ class ProfileContent extends ConsumerWidget {
               // A single value assessment stores its number on the right, so
               // the one card and the one series read it from there.
               maxRight: assessed.best((a) => a.rightValue),
-              accentLeft: accentLeft,
-              accentRight: accentRight,
+              seriesColor: seriesColorOf(assessed.definition),
               leftData: assessed.series((a) => a.leftValue),
               rightData: assessed.series((a) => a.rightValue),
               unit: assessed.definition.unit,

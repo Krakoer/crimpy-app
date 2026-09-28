@@ -1,29 +1,38 @@
 import 'dart:math';
 
+import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/utils/assessment_chart_axes.dart';
+import 'package:crimpy/views/screens/profile_screen/widgets/series_swatch.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../../../../theme/crimpy_theme.dart';
 
+/// An assessment's history, in the metric's one hue: the left hand solid and
+/// the right dashed, the stat cards above it naming which is which. The value
+/// axis never spans less than [minimumAxisSpan] and the date axis runs from the
+/// first test to the last. A single tested day is a value, not a chart, and
+/// the stat cards already show it, so the chart only appears from the second.
+/// See Krakoer/crimpy#164.
 class ForceChart extends StatefulWidget {
   final List<(DateTime, double)> leftData;
   final List<(DateTime, double)> rightData;
-  final Color accentLeft;
-  final Color accentRight;
+  final Color seriesColor;
+  final AssessmentUnit unit;
   final VoidCallback onStartAssessment;
 
-  /// Hidden when a single series is drawn, since there are no hands to tell
-  /// apart and naming the one line "Right Hand" would misread the result.
-  final bool showLegend;
+  /// False for an assessment measured as a single number, which is stored on
+  /// the right and drawn as one solid line.
+  final bool perHand;
 
   const ForceChart({
     super.key,
     required this.leftData,
     required this.rightData,
-    required this.accentLeft,
-    required this.accentRight,
+    required this.seriesColor,
     required this.onStartAssessment,
-    this.showLegend = true,
+    this.unit = AssessmentUnit.kilograms,
+    this.perHand = true,
   });
 
   @override
@@ -43,18 +52,56 @@ class _ForceChartState extends State<ForceChart> {
     });
   }
 
+  static List<(DateTime, double)> _byDay(List<(DateTime, double)> data) => [
+    for (final (date, value) in data)
+      (DateTime(date.year, date.month, date.day), value),
+  ];
+
+  LineSeries<(DateTime, double), DateTime> _line(
+    String name,
+    List<(DateTime, double)> data,
+    SeriesStroke stroke,
+  ) => LineSeries<(DateTime, double), DateTime>(
+    name: name,
+    dataSource: data,
+    xValueMapper: (point, _) => point.$1,
+    yValueMapper: (point, _) => point.$2,
+    color: widget.seriesColor,
+    width: 2,
+    dashArray: stroke.chartDashArray,
+    markerSettings: MarkerSettings(
+      isVisible: true,
+      color: widget.seriesColor,
+      borderColor: widget.seriesColor,
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
-    // Merge left + right to compute overall domain
-    final allData = [...widget.leftData, ...widget.rightData].toList();
+    final isEmpty = widget.leftData.isEmpty && widget.rightData.isEmpty;
+    final leftData = isEmpty
+        ? const <(DateTime, double)>[]
+        : _byDay(widget.perHand ? widget.leftData : const []);
+    final rightData = isEmpty ? _generateFakeData() : _byDay(widget.rightData);
+    final allData = [...leftData, ...rightData];
 
-    // Round dates to day
-    List<(DateTime, double)> leftData = widget.leftData
-        .map((d) => (d.$1.copyWith(hour: 0, minute: 0, second: 0), d.$2))
-        .toList();
-    List<(DateTime, double)> rightData = widget.rightData
-        .map((d) => (d.$1.copyWith(hour: 0, minute: 0, second: 0), d.$2))
-        .toList();
+    if (!isEmpty && testedDays(allData.map((point) => point.$1)) < 2) {
+      return CrimpyCards.assessment(
+        child: Padding(
+          padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
+          child: Text(
+            'One test so far. The chart starts from the second.',
+            style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textSecondary),
+          ),
+        ),
+      );
+    }
+
+    final dates = allData.map((point) => point.$1).toList()..sort();
+    final range = valueAxisRange(
+      allData.map((point) => point.$2),
+      widget.unit,
+    )!;
 
     return CrimpyCards.assessment(
       child: Stack(
@@ -67,48 +114,38 @@ class _ForceChartState extends State<ForceChart> {
                 majorGridLines: const MajorGridLines(width: 0),
                 axisLine: const AxisLine(width: 0),
                 intervalType: DateTimeIntervalType.days,
-                dateFormat: DateFormat.MMMd(), // needs intl package
+                dateFormat: DateFormat.MMMd(),
                 labelStyle: TextStyle(color: CrimpyTheme.textPrimary),
-                rangePadding: ChartRangePadding.additional,
+                minimum: dates.first,
+                maximum: dates.last,
+                rangePadding: ChartRangePadding.none,
+                edgeLabelPlacement: EdgeLabelPlacement.shift,
+                plotOffset: 8,
               ),
               primaryYAxis: NumericAxis(
                 axisLine: const AxisLine(width: 0),
+                minimum: range.min,
+                maximum: range.max,
+                interval: range.interval,
+                rangePadding: ChartRangePadding.none,
                 majorGridLines: MajorGridLines(
                   width: 0.5,
                   color: CrimpyTheme.outlineSubtle,
                 ),
                 labelStyle: TextStyle(color: CrimpyTheme.textPrimary),
               ),
-              legend: Legend(
-                isVisible: widget.showLegend,
-                position: LegendPosition.bottom,
-              ),
               series: <LineSeries<(DateTime, double), DateTime>>[
-                if (widget.showLegend)
-                  LineSeries<(DateTime, double), DateTime>(
-                    name: "Left Hand",
-                    dataSource: allData.isEmpty
-                        ? _generateFakeData()
-                        : leftData,
-                    xValueMapper: (data, _) => data.$1,
-                    yValueMapper: (data, _) => data.$2,
-                    color: widget.accentLeft,
-                    width: 2,
-                    markerSettings: const MarkerSettings(isVisible: true),
-                  ),
-                LineSeries<(DateTime, double), DateTime>(
-                  name: widget.showLegend ? "Right Hand" : "Result",
-                  dataSource: allData.isEmpty ? _generateFakeData() : rightData,
-                  xValueMapper: (data, _) => data.$1,
-                  yValueMapper: (data, _) => data.$2,
-                  color: widget.accentRight,
-                  width: 2,
-                  markerSettings: const MarkerSettings(isVisible: true),
+                if (widget.perHand && leftData.isNotEmpty)
+                  _line('Left Hand', leftData, SeriesStroke.solid),
+                _line(
+                  widget.perHand ? 'Right Hand' : 'Result',
+                  rightData,
+                  widget.perHand ? SeriesStroke.dashed : SeriesStroke.solid,
                 ),
               ],
             ),
           ),
-          if (allData.isEmpty) ...[
+          if (isEmpty) ...[
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: CrimpyTheme.corners,

@@ -1,5 +1,6 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/assessment_chart.dart';
+import 'package:crimpy/views/screens/profile_screen/widgets/series_swatch.dart';
 import 'package:crimpy/views/widgets/section_widgets.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/stat_card.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +10,7 @@ class StatContent extends StatelessWidget {
   final String title;
   final double maxLeft;
   final double maxRight;
-  final Color accentLeft;
-  final Color accentRight;
+  final Color seriesColor;
   final List<(DateTime, double)> rightData;
   final List<(DateTime, double)> leftData;
   final VoidCallback onStartAssessment;
@@ -25,8 +25,7 @@ class StatContent extends StatelessWidget {
     required this.title,
     required this.maxLeft,
     required this.maxRight,
-    required this.accentLeft,
-    required this.accentRight,
+    required this.seriesColor,
     required this.leftData,
     required this.rightData,
     required this.onStartAssessment,
@@ -48,7 +47,7 @@ class StatContent extends StatelessWidget {
                 child: StatCard(
                   "Left Hand",
                   maxLeft == 0 ? "--" : formatAssessmentValue(maxLeft, unit),
-                  accentLeft,
+                  seriesColor,
                 ),
               ),
               const SizedBox(width: CrimpyTheme.spaceMd),
@@ -56,7 +55,8 @@ class StatContent extends StatelessWidget {
                 child: StatCard(
                   "Right Hand",
                   maxRight == 0 ? "--" : formatAssessmentValue(maxRight, unit),
-                  accentRight,
+                  seriesColor,
+                  stroke: SeriesStroke.dashed,
                 ),
               ),
             ],
@@ -65,16 +65,16 @@ class StatContent extends StatelessWidget {
           StatCard(
             "Best",
             maxRight == 0 ? "--" : formatAssessmentValue(maxRight, unit),
-            accentRight,
+            seriesColor,
           ),
         const SizedBox(height: CrimpyTheme.spaceLg),
         ForceChart(
           leftData: perHand ? leftData : const [],
           rightData: rightData,
-          accentLeft: accentLeft,
-          accentRight: accentRight,
+          seriesColor: seriesColor,
+          unit: unit,
           onStartAssessment: onStartAssessment,
-          showLegend: perHand,
+          perHand: perHand,
         ),
       ],
     );
