@@ -28,9 +28,15 @@ import 'package:crimpy/views/widgets/workout_timer.dart';
 class CriticalForceRunScreen extends ConsumerStatefulWidget {
   final List<TrainingExecutionItem> reps;
   final HandSide hand;
+
+  /// The run's clock, which a test sets by hand.
+  @visibleForTesting
+  final CrimpyWatch? watch;
+
   const CriticalForceRunScreen({
     required this.reps,
     required this.hand,
+    this.watch,
     super.key,
   });
 
@@ -45,6 +51,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
 
   late WorkoutTimer timer = WorkoutTimer(
     items: widget.reps,
+    watch: widget.watch,
     onSecondChange: () => setState(() => {}),
     onFinished: () async {
       final data = ref.read(bleDataStreamProvider.notifier).getData();

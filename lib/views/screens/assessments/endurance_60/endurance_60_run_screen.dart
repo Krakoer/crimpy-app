@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:clock/clock.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/endurance_hold.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/screens/assessments/assessment_run_phase.dart';
@@ -43,8 +45,8 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
   bool _assessmentStarted = false;
   bool _assessmentEnded = false;
 
-  // Stopwatch for elapsed time
-  final Stopwatch _stopwatch = Stopwatch();
+  // Stopwatch for elapsed time, from the clock a test can fake.
+  final Stopwatch _stopwatch = clock.stopwatch();
   Timer? _timer;
 
   // Computed values
@@ -104,8 +106,32 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
   }
 
   void _checkAssessmentState() {
+    final now = clock.now();
+    // A lost sensor leaves its last sample behind, which says nothing about the
+    // hold any more. A hold under way ends on that sample, keeping the time it
+    // covers; one not yet started waits for the sensor rather than starting
+    // on a stale reading.
+    if (ref.read(connectionStateProvider) != BleConnectionState.connected) {
+      if (_assessmentStarted && !_assessmentEnded) {
+        final lastSample = ref
+            .read(bleDataStreamProvider.notifier)
+            .getData()
+            .lastOrNull;
+        _endAssessment(
+          held: heldUntilLastSample(
+            elapsed: _stopwatch.elapsed,
+            now: now,
+            lastSampleAt: lastSample?.timestamp,
+          ),
+          sensorLost: true,
+        );
+      } else {
+        _isInTargetZone = false;
+        _targetZoneEntryTime = null;
+      }
+      return;
+    }
     final lastValue = ref.read(bleDataStreamProvider.notifier).lastValue() ?? 0;
-    final now = DateTime.now();
     final isInZone = lastValue >= _minForce && lastValue <= _maxForce;
 
     if (isInZone && !_isInTargetZone) {
@@ -145,7 +171,9 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
     });
   }
 
-  void _endAssessment() async {
+  /// Ends the hold. [held] is the time it lasted when that is not what the
+  /// stopwatch says, which is the case when the sensor was lost.
+  void _endAssessment({Duration? held, bool sensorLost = false}) async {
     if (_assessmentEnded) return;
 
     setState(() {
@@ -154,7 +182,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
     });
 
     // Calculate duration in seconds
-    final durationSeconds = _stopwatch.elapsed.inMilliseconds / 1000;
+    final durationSeconds = (held ?? _stopwatch.elapsed).inMilliseconds / 1000;
 
     // Get previous value
     final previousValue = await ref
@@ -193,6 +221,10 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
             saveAssessment: saveAssessment,
             saveTraining: saveSession,
             saveReps: [],
+            notice: sensorLost
+                ? 'The sensor was lost during the hold, so the time stops '
+                      'at its last reading.'
+                : null,
           ),
         ),
       );

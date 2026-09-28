@@ -23,7 +23,17 @@ import 'package:intl/intl.dart';
 class MvcRunScreen extends ConsumerStatefulWidget {
   final List<TrainingExecutionItem> reps;
   final AssessmentType type;
-  const MvcRunScreen({required this.reps, super.key, required this.type});
+
+  /// The run's clock, which a test sets by hand.
+  @visibleForTesting
+  final CrimpyWatch? watch;
+
+  const MvcRunScreen({
+    required this.reps,
+    super.key,
+    required this.type,
+    this.watch,
+  });
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _MvcRunScreenState();
@@ -56,6 +66,13 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
 
   late WorkoutTimer timer = WorkoutTimer(
     items: widget.reps,
+    watch: widget.watch,
+    // The countdown repaints on its own. The force readings used to be the
+    // only thing rebuilding the screen, so a lost sensor froze the seconds
+    // under its alarm while the run went on counting.
+    onSecondChange: () {
+      if (mounted) setState(() {});
+    },
     onNextRep: (_) {
       _recordMaxForFinishedStep();
       // Reset session stats for next rep.

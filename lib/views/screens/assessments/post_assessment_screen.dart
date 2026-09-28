@@ -19,6 +19,10 @@ class PostAssessmentScreen extends ConsumerWidget {
   final SessionModel saveTraining;
   final List<RepDataModel> saveReps;
 
+  /// Something the athlete has to know about how the result was taken, such
+  /// as a sensor lost during the test.
+  final String? notice;
+
   /// Screen to show the results of an assessment, and to allow the user to choose whether to save the results or discard them.
   ///
   /// - If both hands were tested, pass the right/left hand related values to `rightHandResults`/`leftHandResults`.
@@ -32,6 +36,7 @@ class PostAssessmentScreen extends ConsumerWidget {
     required this.saveAssessment,
     required this.saveReps,
     required this.saveTraining,
+    this.notice,
     super.key,
   });
 
@@ -86,6 +91,17 @@ class PostAssessmentScreen extends ConsumerWidget {
                 ),
               ),
               SizedBox(height: CrimpyTheme.spaceLg),
+              if (notice != null)
+                CrimpyCard(
+                  raised: false,
+                  backgroundColor: CrimpyTheme.bgWarning,
+                  child: Text(
+                    notice!,
+                    style: CrimpyTheme.bodyLarge.copyWith(
+                      color: CrimpyTheme.textOn(CrimpyTheme.statusWarning),
+                    ),
+                  ),
+                ),
               // Show the results cards for the provided hands.
               Column(
                 children: [
