@@ -1,3 +1,4 @@
+import 'package:crimpy/models/builtin_training.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_list_item.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
@@ -25,6 +26,7 @@ Future<void> _pumpDialog(
   required bool truncated,
   Size surface = const Size(360, 800),
   double textScale = 1.0,
+  List<TrainingListItem>? library,
 }) async {
   tester.view.physicalSize = surface;
   tester.view.devicePixelRatio = 1.0;
@@ -34,7 +36,9 @@ Future<void> _pumpDialog(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        allTrainingsProvider.overrideWith((ref) async => _library(30)),
+        allTrainingsProvider.overrideWith(
+          (ref) async => library ?? _library(30),
+        ),
         trainingLibraryTruncatedProvider.overrideWith((ref) async => truncated),
       ],
       child: MaterialApp(
@@ -169,5 +173,29 @@ void main() {
         );
       },
     );
+  });
+
+  // An athlete with no assessment on record gets the builtins, all locked.
+  // The dialog skips a locked one, so a list of only those used to leave it
+  // blank instead of saying how to unlock them.
+  testWidgets('says how to unlock trainings when every builtin is locked', (
+    tester,
+  ) async {
+    final locked = BuiltinTrainingModel(
+      id: 'max-force',
+      name: 'Max Force',
+      description: '',
+      requiredAssessments: const [],
+      trainingGenerator: (_, {customLoadRight, customLoadLeft}) => const [],
+      isAvailable: (_) => false,
+    );
+    await _pumpDialog(
+      tester,
+      truncated: false,
+      library: [TrainingListItem.builtin(locked, false, const [], null, false)],
+    );
+
+    expect(find.textContaining('Do an assessment to unlock'), findsOneWidget);
+    expect(find.text('Max Force'), findsNothing);
   });
 }

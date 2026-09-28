@@ -203,7 +203,10 @@ class PinTrainingDialog extends ConsumerWidget {
         AsyncValue(:final value?) => SizedBox(
           width: 300,
           height: 300,
-          child: value.isEmpty
+          // Builtins the athlete has not unlocked are in the list too, and
+          // are skipped below: a list holding only those would otherwise
+          // leave the dialog blank rather than say how to unlock them.
+          child: value.every((item) => !item.isAvailable)
               ? Center(
                   child: Text(
                     "You don't have any training available yet.\n\nDo an assessment to unlock personalised trainings, or create your own trainings in the trainings page!",
