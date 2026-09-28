@@ -83,17 +83,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       child: RefreshableColumn(
         padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
         child: Column(
+          // What to do today leads, one tap from starting it; how the week
+          // is going follows; logging what was done elsewhere comes last, so
+          // recording never weighs as much as training. See
+          // Krakoer/crimpy#165.
           children: [
-            // Today's scheduled training from the active program.
+            // Today: the program's training, the ask for next week a coach
+            // is waiting on, and the pinned trainings for everyone else.
             TodayTrainingCard(),
-            // Ask for next week before the coach has to guess it.
             NextWeekAvailabilityCard(),
-            // Weekly session histogram.
-            WeekHistogramCard(maxBarHeight: 75),
-            // Log session buttons.
-            LogSessionButtons(),
-            // Favorite training list.
             FavoriteTrainingList(),
+            // The week so far.
+            WeekHistogramCard(maxBarHeight: 75),
+            // Logging.
+            LogSessionButtons(),
           ],
         ),
       ),
