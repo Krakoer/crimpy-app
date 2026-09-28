@@ -1,6 +1,7 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/assessment_chart.dart';
+import 'package:crimpy/views/screens/profile_screen/widgets/series_swatch.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/stat_card.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:flutter/material.dart';
@@ -8,15 +9,13 @@ import 'package:crimpy/views/widgets/section_widgets.dart';
 
 class MvcGripPositionStatContent extends StatefulWidget {
   final Map<GripPosition, List<AssessmentModel>> mvcByGripPosition;
-  final Color accentLeft;
-  final Color accentRight;
+  final Color seriesColor;
   final VoidCallback onStartAssessment;
 
   const MvcGripPositionStatContent({
     super.key,
     required this.mvcByGripPosition,
-    required this.accentLeft,
-    required this.accentRight,
+    required this.seriesColor,
     required this.onStartAssessment,
   });
 
@@ -69,17 +68,24 @@ class _MvcGripPositionStatContentState
           SizedBox(height: CrimpyTheme.spaceMd),
           Row(
             children: [
-              Expanded(child: StatCard("Left Hand", "--", widget.accentLeft)),
+              Expanded(child: StatCard("Left Hand", "--", widget.seriesColor)),
               const SizedBox(width: CrimpyTheme.spaceMd),
-              Expanded(child: StatCard("Right Hand", "--", widget.accentRight)),
+              Expanded(
+                child: StatCard(
+                  "Right Hand",
+                  "--",
+                  widget.seriesColor,
+                  stroke: SeriesStroke.dashed,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: CrimpyTheme.spaceLg),
           ForceChart(
             leftData: [],
             rightData: [],
-            accentLeft: widget.accentLeft,
-            accentRight: widget.accentRight,
+            seriesColor: widget.seriesColor,
+            unit: AssessmentUnit.kilograms,
             onStartAssessment: widget.onStartAssessment,
           ),
         ],
@@ -161,7 +167,7 @@ class _MvcGripPositionStatContentState
                             0,
                         AssessmentUnit.kilograms,
                       ),
-                widget.accentLeft,
+                widget.seriesColor,
               ),
             ),
             const SizedBox(width: CrimpyTheme.spaceMd),
@@ -182,7 +188,8 @@ class _MvcGripPositionStatContentState
                             0,
                         AssessmentUnit.kilograms,
                       ),
-                widget.accentRight,
+                widget.seriesColor,
+                stroke: SeriesStroke.dashed,
               ),
             ),
           ],
@@ -197,8 +204,8 @@ class _MvcGripPositionStatContentState
               .where((a) => a.rightValue != null)
               .map<(DateTime, double)>((a) => (a.date, a.rightValue!))
               .toList(),
-          accentLeft: widget.accentLeft,
-          accentRight: widget.accentRight,
+          seriesColor: widget.seriesColor,
+          unit: AssessmentUnit.kilograms,
           onStartAssessment: widget.onStartAssessment,
         ),
       ],

@@ -376,11 +376,26 @@ class CrimpyTheme {
   /// there. See Krakoer/crimpy#176.
   static const Color forceTrace = phaseArmed;
 
-  /// The left hand's series in a chart.
-  static const Color leftHand = accentOrange;
+  // ---- ASSESSMENT SERIES ----
+  // One hue per metric on the profile's assessment charts, with the two hands
+  // of one metric told apart by line style: the left hand solid, the right
+  // dashed. The hands used to take the hangboard orange and the climbing
+  // yellow, two categories that mean something else everywhere else in the
+  // app. Max force is ink, the working baseline. Critical force is the blue,
+  // so the two stay apart wherever they are read together. The blue is only
+  // spent where no activity or training type colour shares the view, since it
+  // also means the "other" activity and the news mark: the profile shows
+  // neither. Anywhere that does, every metric takes ink. The portal follows the
+  // same rule with --tx and --bl. See Krakoer/crimpy#164.
 
-  /// The right hand's series in a chart.
-  static const Color rightHand = accentYellow;
+  /// The series of a max force chart, and its stat cards' swatches.
+  static const Color maxForceSeries = textPrimary;
+
+  /// The series of a critical force chart, and its stat cards' swatches.
+  static const Color criticalForceSeries = accentBlue;
+
+  /// The series of any other assessment's chart, and its stat cards' swatches.
+  static const Color assessmentSeries = textPrimary;
 
   /// A day the athlete planned to train on.
   static const Color planned = accentGreen;

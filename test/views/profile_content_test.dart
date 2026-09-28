@@ -1,10 +1,12 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/auth_models.dart' as auth_models;
+import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/profile_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 
 /// Signed out, so the bodyweight card stays away and the assessment sections are
 /// what the test is left looking at.
@@ -50,8 +52,6 @@ Future<void> _show(
         home: Scaffold(
           body: ProfileContent(
             assessments: assessments,
-            accentLeft: Colors.green,
-            accentRight: Colors.orange,
             goToAssessments: () {},
           ),
         ),
@@ -119,5 +119,106 @@ void main() {
     expect(find.text('Start Assessment'), findsWidgets);
     // A coach assessment has nothing to show until it is first done.
     expect(find.text('PULL UP PYRAMID'), findsNothing);
+  });
+
+  // A single test is a value: the stat cards show it, and a chart around one
+  // point would draw a trend that is not there. See Krakoer/crimpy#164.
+  testWidgets('shows one tested day as a value rather than a chart', (
+    tester,
+  ) async {
+    await _show(tester, [
+      _record(_pullUpPyramid, right: 14),
+      _record(_pullUpPyramid, right: 15, date: DateTime(2026, 8, 1, 18)),
+    ]);
+
+    expect(
+      find.text('One test so far. The chart starts from the second.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('charts an assessment from its second tested day', (
+    tester,
+  ) async {
+    await _show(tester, [
+      _record(_pullUpPyramid, right: 14),
+      _record(_pullUpPyramid, right: 15, date: DateTime(2026, 8, 20)),
+    ]);
+
+    final section = find.ancestor(
+      of: find.text('PULL UP PYRAMID'),
+      matching: find.byType(Column),
+    );
+    expect(
+      find.descendant(
+        of: section.first,
+        matching: find.byType(SfCartesianChart),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text('One test so far. The chart starts from the second.'),
+      findsNothing,
+    );
+  });
+
+  test('draws max and critical force in two hues', () {
+    Color hueOf(AssessmentType type) =>
+        ProfileContent.seriesColorOf(BuiltinAssessmentIds.definitionOf(type));
+
+    expect(hueOf(AssessmentType.mvc), CrimpyTheme.maxForceSeries);
+    expect(
+      hueOf(AssessmentType.criticalForce),
+      CrimpyTheme.criticalForceSeries,
+    );
+    expect(CrimpyTheme.maxForceSeries, isNot(CrimpyTheme.criticalForceSeries));
+    expect(
+      ProfileContent.seriesColorOf(_lockOff),
+      CrimpyTheme.assessmentSeries,
+    );
+  });
+
+  // The stat cards are the legend: left solid, right dashed, and the one line
+  // of a single value assessment solid. Swapping the strokes would make the
+  // legend say the opposite of the chart.
+  List<LineSeries> seriesOf(WidgetTester tester, String heading) {
+    final section = find.ancestor(
+      of: find.text(heading),
+      matching: find.byType(Column),
+    );
+    final chart = tester.widget<SfCartesianChart>(
+      find.descendant(
+        of: section.first,
+        matching: find.byType(SfCartesianChart),
+      ),
+    );
+    return chart.series.cast<LineSeries>();
+  }
+
+  testWidgets('draws the left hand solid and the right hand dashed', (
+    tester,
+  ) async {
+    await _show(tester, [
+      _record(_lockOff, right: 3, left: 6),
+      _record(_lockOff, right: 4, left: 7, date: DateTime(2026, 8, 20)),
+    ]);
+
+    final series = seriesOf(tester, 'ONE ARM LOCK OFF');
+    expect(series.map((line) => line.name), ['Left Hand', 'Right Hand']);
+    expect(series[0].dashArray, isNull);
+    expect(series[1].dashArray, [6, 4]);
+  });
+
+  testWidgets('draws a single value assessment as one solid line', (
+    tester,
+  ) async {
+    await _show(tester, [
+      _record(_pullUpPyramid, right: 14),
+      _record(_pullUpPyramid, right: 15, date: DateTime(2026, 8, 20)),
+    ]);
+
+    final series = seriesOf(tester, 'PULL UP PYRAMID');
+    expect(series.map((line) => line.name), ['Result']);
+    expect(series.single.dashArray, isNull);
   });
 }

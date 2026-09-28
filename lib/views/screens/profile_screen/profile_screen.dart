@@ -4,7 +4,6 @@ import 'package:crimpy/views/screens/profile_screen/widgets/profile_content.dart
 import 'package:flutter/material.dart';
 import 'package:crimpy/views/widgets/pull_to_refresh.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../theme/crimpy_theme.dart';
 
 class ClimbingProfileScreen extends ConsumerStatefulWidget {
   final VoidCallback goToAssessments;
@@ -26,9 +25,6 @@ class _ClimbingProfileScreenState extends ConsumerState<ClimbingProfileScreen>
     super.build(context);
     final asyncAssessments = ref.watch(assessmentsProvider(null));
 
-    final Color accentLeft = CrimpyTheme.leftHand;
-    final Color accentRight = CrimpyTheme.rightHand;
-
     return PullToRefresh(
       // The root, not the view of it this screen watches: refreshing the view
       // would rebuild it from the history already in hand and never ask again.
@@ -38,8 +34,6 @@ class _ClimbingProfileScreenState extends ConsumerState<ClimbingProfileScreen>
       child: switch (asyncAssessments) {
         AsyncValue(:final value?) => ProfileContent(
           assessments: value,
-          accentLeft: accentLeft,
-          accentRight: accentRight,
           goToAssessments: widget.goToAssessments,
         ),
         AsyncValue(:final error?) => () {
