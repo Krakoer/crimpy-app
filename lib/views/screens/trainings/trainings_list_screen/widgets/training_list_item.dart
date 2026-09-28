@@ -8,6 +8,7 @@ import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/views/screens/trainings/training_details_screen.dart';
 import 'package:crimpy/views/screens/trainings/training_creation_screen.dart';
 import 'package:crimpy/views/screens/trainings/trainings_list_screen/widgets/delete_training_dialog.dart';
+import 'package:crimpy/views/widgets/intensity_badge.dart';
 
 class TrainingListItemWidget extends ConsumerWidget {
   final TrainingListItem item;
@@ -68,26 +69,36 @@ class TrainingListItemWidget extends ConsumerWidget {
                   ),
                   const SizedBox(height: CrimpyTheme.spaceXs),
                 ],
-                // Duration info
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                // Duration and intensity. Wraps rather than clips, so on a
+                // narrow phone the badge drops to a line of its own.
+                Wrap(
+                  spacing: CrimpyTheme.spaceMd,
+                  runSpacing: CrimpyTheme.spaceXs,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Icon(
-                      FontAwesomeIcons.stopwatch,
-                      color: CrimpyTheme.textMutedSmall,
-                      size: 16,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          FontAwesomeIcons.stopwatch,
+                          color: CrimpyTheme.textMutedSmall,
+                          size: 16,
+                        ),
+                        const SizedBox(width: CrimpyTheme.spaceSm),
+                        Text(
+                          item.isAvailable
+                              ? formatLength(item.totalDuration)
+                              : 'Assessment required',
+                          style: CrimpyTheme.bodySmall.copyWith(
+                            color: item.isAvailable
+                                ? CrimpyTheme.textSecondary
+                                : CrimpyTheme.textMutedSmall,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: CrimpyTheme.spaceSm),
-                    Text(
-                      item.isAvailable
-                          ? formatLength(item.totalDuration)
-                          : 'Assessment required',
-                      style: CrimpyTheme.bodySmall.copyWith(
-                        color: item.isAvailable
-                            ? CrimpyTheme.textSecondary
-                            : CrimpyTheme.textMutedSmall,
-                      ),
-                    ),
+                    if (item.isAvailable && item.intensity != null)
+                      IntensityBadge(item.intensity!),
                   ],
                 ),
               ],

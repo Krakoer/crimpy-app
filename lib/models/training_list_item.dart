@@ -2,6 +2,7 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/builtin_training.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/utils/training_expander.dart';
+import 'package:crimpy/utils/training_intensity.dart';
 
 /// Represents a training item in the list that can be either regular or builtin.
 class TrainingListItem {
@@ -11,21 +12,30 @@ class TrainingListItem {
   final List<AssessmentRequirement> missingAssessments;
   final bool isPinned;
 
+  /// How hard the training is against the athlete's max, null when nothing in
+  /// it resolves to a percentage of one.
+  final TrainingIntensity? intensity;
+
   TrainingListItem._({
     this.training,
     this.builtinTraining,
     required this.isAvailable,
     required this.missingAssessments,
     required this.isPinned,
+    this.intensity,
   });
 
   /// Create a regular training item.
-  factory TrainingListItem.regular(Training training) {
+  factory TrainingListItem.regular(
+    Training training, {
+    TrainingIntensity? intensity,
+  }) {
     return TrainingListItem._(
       training: training,
       isAvailable: true,
       missingAssessments: [],
       isPinned: training.isFavorite,
+      intensity: intensity,
     );
   }
 
@@ -35,14 +45,16 @@ class TrainingListItem {
     bool isAvailable,
     List<AssessmentRequirement> missingAssessments,
     Training? generatedTraining,
-    bool isPinned,
-  ) {
+    bool isPinned, {
+    TrainingIntensity? intensity,
+  }) {
     return TrainingListItem._(
       builtinTraining: builtinTraining,
       training: generatedTraining,
       isAvailable: isAvailable,
       missingAssessments: missingAssessments,
       isPinned: isPinned,
+      intensity: intensity,
     );
   }
 

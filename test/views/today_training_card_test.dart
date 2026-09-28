@@ -1,8 +1,10 @@
 import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/utils/training_intensity.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
@@ -98,6 +100,10 @@ Future<void> _pump(
   WeekSession session, {
   Training training = _coreWork,
   AssessmentResults results = AssessmentResults.none,
+  TrainingIntensityRater rater = const TrainingIntensityRater(
+    maxForce: MaxForceReference.none,
+    results: AssessmentResults.none,
+  ),
 }) async {
   final program = _program();
   await tester.pumpWidget(
@@ -122,6 +128,7 @@ Future<void> _pump(
         ).overrideWith((ref) async => training),
         assessmentResultsProvider.overrideWith((ref) async => results),
         sessionsProvider.overrideWith(_NoSessions.new),
+        trainingIntensityRaterProvider.overrideWith((ref) async => rater),
       ],
       child: const MaterialApp(
         home: Scaffold(body: SingleChildScrollView(child: TodayTrainingCard())),
@@ -227,4 +234,108 @@ void main() {
 
     expect(find.text('30s'), findsOneWidget);
   });
+
+  group('intensity', () {
+    final rater = TrainingIntensityRater.fromHistory([
+      AssessmentModel(
+        id: 'mvc',
+        date: DateTime(2026, 1, 1),
+        definition: BuiltinAssessmentIds.definitionOf(AssessmentType.mvc),
+        rightValue: 40,
+        leftValue: 40,
+        gripPosition: GripPosition.halfCrimp,
+      ),
+    ]);
+
+    WeekSession hangSession({List<SessionOverride> overrides = const []}) =>
+        WeekSession(
+          id: 'week-session-1',
+          trainingId: _trainingId,
+          trainingTitle: 'Board strength',
+          trainingType: 'hangboard',
+          isEveryday: true,
+          position: 0,
+          overrides: overrides,
+        );
+
+    testWidgets('rates the training against the athlete max', (tester) async {
+      await _pump(tester, hangSession(), training: _hang, rater: rater);
+
+      expect(find.text('75% max'), findsOneWidget);
+    });
+
+    testWidgets('rates the training as the week prescribes it', (tester) async {
+      await _pump(
+        tester,
+        hangSession(
+          overrides: const [
+            SessionOverride(
+              id: 'override-1',
+              itemId: 'hang-1',
+              overrides: {
+                'loads': [
+                  {'value': 36, 'unit': 'kg'},
+                ],
+              },
+            ),
+          ],
+        ),
+        training: _hang,
+        rater: rater,
+      );
+
+      expect(find.text('90% max'), findsOneWidget);
+      expect(find.text('75% max'), findsNothing);
+    });
+
+    testWidgets('the row holds on a 320dp phone', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(320, 800);
+      addTearDown(tester.view.reset);
+
+      await _pump(
+        tester,
+        hangSession(
+          overrides: const [
+            SessionOverride(
+              id: 'override-1',
+              itemId: 'hang-1',
+              overrides: {
+                'loads': [
+                  {'value': 40, 'unit': 'kg'},
+                ],
+              },
+            ),
+          ],
+        ),
+        training: _hang,
+        rater: rater,
+      );
+
+      expect(find.text('100% max'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
 }
+
+/// A 30 kg right hand hang on a half crimp, ten reps of 7s.
+const _hang = Training(
+  id: _trainingId,
+  title: 'Board strength',
+  items: [
+    TrainingItem(
+      id: 'hang-1',
+      type: TrainingItemType.repeater,
+      position: 0,
+      cycles: 3,
+      reps: 10,
+      worktimeSeconds: 7,
+      restSeconds: 3,
+      hand: HangboardHand.right,
+      loads: [Load(value: 30, unit: 'kg')],
+      handPositions: [
+        ['HC'],
+      ],
+    ),
+  ],
+);

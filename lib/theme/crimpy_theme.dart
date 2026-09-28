@@ -335,6 +335,25 @@ class CrimpyTheme {
     RunPhase.alarm => phaseAlarm,
   };
 
+  // ---- TRAINING INTENSITY ----
+  // How hard a training is against the athlete's max, on its card. It escalates
+  // by weight and fill rather than by hue: light is the quiet voice, moderate
+  // the working ink, and near max is inverted, ink filled under white. Red is
+  // the alarm's alone and orange the primary action's, green already means on
+  // target, and steel means resting, so a hue here would say one of those. The
+  // percentage is always written out, so the tier survives greyscale. See
+  // Krakoer/crimpy#166.
+
+  /// A training at or under 30% of max: its outline and its figure.
+  static const Color intensityLight = textSecondary;
+
+  /// A training between 30% and 80% of max: its outline and its figure.
+  static const Color intensityModerate = textPrimary;
+
+  /// A training from 80% of max: the ground its figure is written on in
+  /// [textOnFill].
+  static const Color intensityNearMax = textPrimary;
+
   /// A reading not yet where the test wants it: still settling, not started,
   /// or outside its zone.
   static const Color measuring = accentYellow;
