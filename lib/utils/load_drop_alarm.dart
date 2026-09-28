@@ -5,7 +5,8 @@ const loadDropFireRatio = 0.90;
 
 /// Share of the target the load has to be back at for the alarm to clear. Set
 /// above [loadDropFireRatio] so a load wobbling around one line cannot flash
-/// the alarm on and off.
+/// the alarm on and off. The load has to reach it once in the rep before the
+/// alarm can fire at all.
 const loadDropClearRatio = 0.95;
 
 /// How long the load has to stay under [loadDropFireRatio] before the alarm
@@ -23,12 +24,15 @@ double loadDropTargetOf(TrainingExecutionItem? step) =>
     : 0;
 
 /// Whether the load of one rep has dropped below its target. Fed every sample
-/// of the rep, in order, with the time it was taken. See Krakoer/crimpy#175.
+/// of the rep, in order, with the time it was taken. Only a load that got on
+/// target can drop below it, so the alarm stays down while the athlete loads
+/// up, and through a rep that never reaches the target. See Krakoer/crimpy#175.
 class LoadDropAlarm {
   LoadDropAlarm(this.target) : assert(target > 0);
 
   final double target;
 
+  bool _reachedTarget = false;
   DateTime? _belowSince;
   bool _raised = false;
 
@@ -38,8 +42,11 @@ class LoadDropAlarm {
   /// raised after it.
   bool update(double load, DateTime at) {
     if (load >= target * loadDropClearRatio) {
+      _reachedTarget = true;
       _belowSince = null;
       _raised = false;
+    } else if (!_reachedTarget) {
+      return false;
     } else if (load < target * loadDropFireRatio) {
       final since = _belowSince ??= at;
       if (at.difference(since) >= loadDropDwell) _raised = true;

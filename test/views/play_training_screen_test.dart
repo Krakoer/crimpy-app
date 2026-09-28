@@ -841,20 +841,29 @@ void main() {
         ),
       );
 
-      read(20, 0);
-      read(20, 300);
+      // Loading up: under the fire line for longer than the dwell, before
+      // ever reaching the target, raises nothing.
+      read(10, 0);
+      read(20, 400);
+      read(26, 800);
       await tester.pump();
       expect(find.text('BELOW TARGET'), findsNothing);
 
-      read(20, 500);
+      read(30, 1000);
+      read(20, 1100);
+      read(20, 1400);
+      await tester.pump();
+      expect(find.text('BELOW TARGET'), findsNothing);
+
+      read(20, 1600);
       await tester.pump();
       expect(find.text('BELOW TARGET'), findsOneWidget);
 
-      read(28, 600);
+      read(28, 1700);
       await tester.pump();
       expect(find.text('BELOW TARGET'), findsOneWidget);
 
-      read(28.5, 700);
+      read(28.5, 1800);
       await tester.pump();
       expect(find.text('BELOW TARGET'), findsNothing);
     },
@@ -872,8 +881,9 @@ void main() {
       BleDataPoint(kilograms, start.add(Duration(milliseconds: milliseconds))),
     );
 
-    read(20, 0);
-    read(20, 500);
+    read(30, 0);
+    read(20, 100);
+    read(20, 600);
     await tester.pump();
     expect(find.text('BELOW TARGET'), findsOneWidget);
 
@@ -883,7 +893,10 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.play_arrow));
     await tester.pump();
-    read(20, 5000);
+    // A fresh watch: back on target, then a dip shorter than the dwell.
+    read(30, 5000);
+    read(20, 5100);
+    read(20, 5400);
     await tester.pump();
     expect(find.text('BELOW TARGET'), findsNothing);
   });
