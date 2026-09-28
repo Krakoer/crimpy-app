@@ -161,6 +161,11 @@ class FullTankLayout extends ConsumerWidget {
 
   final bool isRunning;
 
+  /// Whether the load of the running hang has dropped below its target long
+  /// enough to raise the alarm. The run screen decides it, from
+  /// `loadDropAlarmProvider`; the layout only paints it.
+  final bool loadBelowTarget;
+
   /// Set and rep of the running step, shown in the set and rep card.
   final String? repContext;
 
@@ -205,6 +210,7 @@ class FullTankLayout extends ConsumerWidget {
     required this.showRemaining,
     required this.isPreparation,
     required this.isRunning,
+    required this.loadBelowTarget,
     required this.repContext,
     required this.goal,
     required this.nextGoal,
@@ -240,8 +246,8 @@ class FullTankLayout extends ConsumerWidget {
     final targetWeight = rep?.targetLoad ?? 0;
     final paused = !isRunning && !isPreparation;
 
-    // A step that reads the sensor and has none to read is the one alarm the
-    // run screen raises. A step that reads nothing cannot lose it.
+    // A step that reads the sensor and has none to read raises the alarm. A
+    // step that reads nothing cannot lose it.
     final sensorLost =
         sensor &&
         ref.watch(connectionStateProvider) != BleConnectionState.connected;
@@ -264,6 +270,10 @@ class FullTankLayout extends ConsumerWidget {
         : 0.0;
     final onTarget =
         sensor && targetWeight > 0 && currentWeight >= targetWeight;
+    // The other alarm: a hang whose load dropped below its target. A paused
+    // run or a lost sensor has no load to judge, so it cannot raise it.
+    final loadDropped =
+        loadBelowTarget && sensor && targetWeight > 0 && !paused && !sensorLost;
     final fillFraction = tankFillFraction(
       currentWeight: currentWeight,
       scaleWeight: scaleWeight,
@@ -310,7 +320,11 @@ class FullTankLayout extends ConsumerWidget {
                     // filled with the form of its phase that carries white.
                     color: CrimpyTheme.fillOn(
                       CrimpyTheme.phaseColor(
-                        onTarget ? RunPhase.engaged : RunPhase.armed,
+                        loadDropped
+                            ? RunPhase.alarm
+                            : onTarget
+                            ? RunPhase.engaged
+                            : RunPhase.armed,
                       ),
                     ),
                   ),
@@ -357,10 +371,13 @@ class FullTankLayout extends ConsumerWidget {
               ),
             ),
             _ControlStrip(
-              stateWord: _stateWord(sensorLost: sensorLost),
-              stateColor: _stateColor(sensorLost: sensorLost),
+              stateWord: _stateWord(
+                sensorLost: sensorLost,
+                loadDropped: loadDropped,
+              ),
+              stateColor: _stateColor(alarm: sensorLost || loadDropped),
               detail: paused ? repContext : null,
-              nextStep: paused || sensorLost ? null : _nextStep,
+              nextStep: paused || sensorLost || loadDropped ? null : _nextStep,
               isRunning: isRunning,
               showConfirm: state == _TankState.confirm,
               onPlayPause: onPlayPause,
@@ -380,11 +397,13 @@ class FullTankLayout extends ConsumerWidget {
   /// target is met better than a word could. A sensor step with no sensor to
   /// read empties the level, so that one is said. NO SENSOR rather than
   /// SENSOR LOST: the run cannot tell a connection that dropped from one that
-  /// never opened.
-  String? _stateWord({required bool sensorLost}) {
+  /// never opened. A load that dropped below the target turns the level red
+  /// and says so as well, since red alone does not tell the athlete why.
+  String? _stateWord({required bool sensorLost, required bool loadDropped}) {
     if (isPreparation) return 'READY';
     if (!isRunning) return 'PAUSED';
     if (sensorLost) return 'NO SENSOR';
+    if (loadDropped) return 'BELOW TARGET';
     if (item is RestItem) return 'REST';
     return null;
   }
@@ -394,12 +413,12 @@ class FullTankLayout extends ConsumerWidget {
   /// which is large text and would pass at 3:1. It keeps the readable form of
   /// its phase anyway, which clears 4.5:1, so the word reads the same as the
   /// small labels around it. See Krakoer/crimpy#128.
-  Color _stateColor({required bool sensorLost}) {
+  Color _stateColor({required bool alarm}) {
     final phase = isPreparation
         ? RunPhase.armed
         : !isRunning
         ? RunPhase.calm
-        : sensorLost
+        : alarm
         ? RunPhase.alarm
         : RunPhase.calm;
     return CrimpyTheme.textOn(CrimpyTheme.phaseColor(phase));

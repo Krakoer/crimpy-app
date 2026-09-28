@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:crimpy/models/assessment_model.dart';
@@ -580,6 +581,38 @@ Training _trainingWithLongNote() => Training(
   ],
 );
 
+/// A sensor whose samples the test writes itself, time of reading included,
+/// so a run can be driven through the load alarm's dwell without waiting.
+class _ScriptedSensor extends BleRepository {
+  final samples = StreamController<BleDataPoint>.broadcast();
+
+  @override
+  Stream<BleDataPoint> get dataStream => samples.stream;
+}
+
+class _ConnectedSensor extends BleConnection {
+  @override
+  BleConnectionState build() => BleConnectionState.connected;
+}
+
+/// Runs [training] against [sensor], connected, with the sensor in use.
+Future<void> _pumpConnectedRun(
+  WidgetTester tester,
+  Training training,
+  _ScriptedSensor sensor,
+) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        bleRepositoryProvider.overrideWithValue(sensor),
+        connectionStateProvider.overrideWith(_ConnectedSensor.new),
+      ],
+      child: MaterialApp(home: PlayTrainingScreen(training, useSensor: true)),
+    ),
+  );
+  await tester.pump();
+}
+
 Future<void> _skip(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.skip_next));
   await tester.pump();
@@ -792,6 +825,69 @@ void main() {
   // Samples taken while the run is suspended belong to no rep. Recording them
   // dragged the average force of the rep the pause interrupted down towards
   // zero, since the athlete is off the board for the whole pause.
+  // See Krakoer/crimpy#175. Target 30 kg: fires under 27 kg, clears at 28.5.
+  testWidgets(
+    'a load held below the target raises the alarm until it is back',
+    (tester) async {
+      final sensor = _ScriptedSensor();
+      await _pumpConnectedRun(tester, _oneHang(), sensor);
+      await _skip(tester);
+
+      final start = DateTime(2026, 9, 28, 10);
+      void read(double kilograms, int milliseconds) => sensor.samples.add(
+        BleDataPoint(
+          kilograms,
+          start.add(Duration(milliseconds: milliseconds)),
+        ),
+      );
+
+      read(20, 0);
+      read(20, 300);
+      await tester.pump();
+      expect(find.text('BELOW TARGET'), findsNothing);
+
+      read(20, 500);
+      await tester.pump();
+      expect(find.text('BELOW TARGET'), findsOneWidget);
+
+      read(28, 600);
+      await tester.pump();
+      expect(find.text('BELOW TARGET'), findsOneWidget);
+
+      read(28.5, 700);
+      await tester.pump();
+      expect(find.text('BELOW TARGET'), findsNothing);
+    },
+  );
+
+  testWidgets('pausing puts the load alarm down, and resuming starts it over', (
+    tester,
+  ) async {
+    final sensor = _ScriptedSensor();
+    await _pumpConnectedRun(tester, _oneHang(), sensor);
+    await _skip(tester);
+
+    final start = DateTime(2026, 9, 28, 10);
+    void read(double kilograms, int milliseconds) => sensor.samples.add(
+      BleDataPoint(kilograms, start.add(Duration(milliseconds: milliseconds))),
+    );
+
+    read(20, 0);
+    read(20, 500);
+    await tester.pump();
+    expect(find.text('BELOW TARGET'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.pause));
+    await tester.pump();
+    expect(find.text('BELOW TARGET'), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.play_arrow));
+    await tester.pump();
+    read(20, 5000);
+    await tester.pump();
+    expect(find.text('BELOW TARGET'), findsNothing);
+  });
+
   testWidgets('pausing the run stops recording sensor samples', (tester) async {
     final bleRepository = BleRepository();
     await _pumpRun(tester, _stretchingCircuit(), bleRepository: bleRepository);
