@@ -799,8 +799,8 @@ class _TankContent extends StatelessWidget {
         child: ClipRect(
           child: CustomMultiChildLayout(
             delegate: _HangNotesLayoutDelegate(
-              gapUnderTarget: _s(12),
-              gapBetweenNotes: _s(8),
+              gapBeforeGoal: _s(12),
+              gapBeforeNote: _s(8),
             ),
             children: [
               if (notchLabel != null)
@@ -1232,12 +1232,14 @@ enum _HangNoteSlot { target, goal, protocol, comment }
 /// then the goal. The protocol is the stop rule the hang is resolved by, so it
 /// goes last; a note the lower tank cannot hold even on its own is clipped.
 class _HangNotesLayoutDelegate extends MultiChildLayoutDelegate {
-  final double gapUnderTarget;
-  final double gapBetweenNotes;
+  /// Room above the goal, which heads the notes and sits apart from the
+  /// target, and above each of the others.
+  final double gapBeforeGoal;
+  final double gapBeforeNote;
 
   _HangNotesLayoutDelegate({
-    required this.gapUnderTarget,
-    required this.gapBetweenNotes,
+    required this.gapBeforeGoal,
+    required this.gapBeforeNote,
   });
 
   static const _notes = [
@@ -1261,12 +1263,12 @@ class _HangNotesLayoutDelegate extends MultiChildLayoutDelegate {
     };
     final targetHeight = sizes[_HangNoteSlot.target]?.height ?? 0;
 
-    double heightOf(Set<_HangNoteSlot> notes) => notes.isEmpty
-        ? targetHeight
-        : targetHeight +
-              gapUnderTarget +
-              (notes.length - 1) * gapBetweenNotes +
-              notes.fold(0.0, (sum, slot) => sum + sizes[slot]!.height);
+    double gapBefore(_HangNoteSlot slot) =>
+        slot == _HangNoteSlot.goal ? gapBeforeGoal : gapBeforeNote;
+    double heightOf(Set<_HangNoteSlot> notes) => notes.fold(
+      targetHeight,
+      (sum, slot) => sum + gapBefore(slot) + sizes[slot]!.height,
+    );
 
     final shown = <_HangNoteSlot>{};
     for (final slot in _keptLongest.where(sizes.containsKey)) {
@@ -1282,7 +1284,6 @@ class _HangNotesLayoutDelegate extends MultiChildLayoutDelegate {
       centre(_HangNoteSlot.target, top);
       top += targetHeight;
     }
-    var first = true;
     for (final slot in _notes.where(sizes.containsKey)) {
       if (!shown.contains(slot)) {
         // Laid out all the same, as every child has to be, and put past the
@@ -1290,8 +1291,7 @@ class _HangNotesLayoutDelegate extends MultiChildLayoutDelegate {
         positionChild(slot, Offset(0, size.height));
         continue;
       }
-      top += first ? gapUnderTarget : gapBetweenNotes;
-      first = false;
+      top += gapBefore(slot);
       centre(slot, top);
       top += sizes[slot]!.height;
     }
@@ -1299,8 +1299,8 @@ class _HangNotesLayoutDelegate extends MultiChildLayoutDelegate {
 
   @override
   bool shouldRelayout(_HangNotesLayoutDelegate oldDelegate) =>
-      oldDelegate.gapUnderTarget != gapUnderTarget ||
-      oldDelegate.gapBetweenNotes != gapBetweenNotes;
+      oldDelegate.gapBeforeGoal != gapBeforeGoal ||
+      oldDelegate.gapBeforeNote != gapBeforeNote;
 }
 
 /// Set and rep of the running step, drawn as the paused card is so it belongs

@@ -1215,6 +1215,7 @@ void main() {
       required TargetPlatform platform,
       double textScale = 1,
       bool notes = false,
+      bool withGoal = true,
       double currentWeight = 400,
       String? repContext = 'SET 2/4 - REP 3/6',
     }) async {
@@ -1229,7 +1230,7 @@ void main() {
         currentWeight: currentWeight,
         platform: platform,
         repContext: repContext,
-        goal: notes ? goal : null,
+        goal: notes && withGoal ? goal : null,
         protocol: notes ? protocol : null,
         comment: notes ? comment : null,
       );
@@ -1423,6 +1424,52 @@ void main() {
           expect(clip, lessThanOrEqualTo(cardTop(tester)));
           expect(shown(protocol), isTrue);
           if (shown(comment)) expect(shown(goal.toUpperCase()), isTrue);
+          // Pinned where it is known: on the small phone the comment goes at
+          // 1.5, and the goal after it at 2.0.
+          if (phone == iPhoneSE) {
+            expect(shown(comment), isFalse);
+            expect(shown(goal.toUpperCase()), textScale < 2);
+          }
+        });
+      }
+    }
+
+    // A hang with no goal starts its notes with the rule, set as close under
+    // the target as a note under the goal would be.
+    for (final (platform, phone) in [
+      (TargetPlatform.android, pixel),
+      (TargetPlatform.iOS, iPhoneSE),
+    ]) {
+      for (final textScale in [1.0, 1.3]) {
+        testWidgets('sets the rule of a hang with no goal under the target on '
+            '${named(platform, phone, textScale)}', (tester) async {
+          await pumpFullTank(
+            tester,
+            phone: phone,
+            platform: platform,
+            textScale: textScale,
+            notes: true,
+            withGoal: false,
+          );
+          expect(tester.takeException(), isNull);
+
+          final scale = tankRect(tester).height / 624;
+          final targetFoot = tester
+              .getRect(find.text('TARGET 42 kg').first)
+              .bottom;
+          expect(
+            tester.getRect(find.text('PROTOCOL').first).top,
+            closeTo(targetFoot + 8 * scale, 0.01),
+          );
+          final commentRect = tester.getRect(find.text(comment).first);
+          expect(
+            commentRect.top,
+            closeTo(
+              tester.getRect(find.text(protocol).first).bottom + 8 * scale,
+              0.01,
+            ),
+          );
+          expect(commentRect.bottom, lessThanOrEqualTo(cardTop(tester)));
         });
       }
     }
