@@ -87,6 +87,21 @@ double tankFillFraction({
   return min(1.0, currentWeight / scaleWeight * targetNotchFraction);
 }
 
+/// The count of a running step: bare seconds under a minute, the fastest
+/// thing to read mid hang, and minutes and seconds from a minute up, the way
+/// every other length on the run screen reads. See Krakoer/crimpy#160.
+String countdownText(int seconds) =>
+    seconds < 60 ? '$seconds' : formatClock(Duration(seconds: seconds));
+
+/// Size the countdown of a rest is set at, before the tank scales it. As large
+/// as a tank of the reference height holds with what comes next under it; a
+/// count too wide for the tank is shrunk to its width.
+const double _restCountdownSize = 220;
+
+/// Seconds at the end of a rest the countdown is marked for, the ones the
+/// beeps count down.
+const int _restClosingSeconds = 3;
+
 /// What the tank draws, which is what the running step is.
 enum _TankState { preparation, sensorWork, rest, timed, confirm }
 
@@ -579,8 +594,11 @@ class _TankContent extends StatelessWidget {
   Widget _header(BuildContext context) {
     // A step with no sensor puts its countdown in the middle of the screen, and
     // a self paced one has none.
+    // A step with no sensor puts its countdown in the middle of the screen, and
+    // a self paced one has none. A rest makes its countdown the middle of the
+    // screen: it is the one number the athlete waits on. See Krakoer/crimpy#160.
     final cornerCountdown =
-        state != _TankState.timed && state != _TankState.confirm;
+        state == _TankState.preparation || state == _TankState.sensorWork;
     final backButton = _needsBackButton(context);
     final countdownRoom = 16 + _s(140);
 
@@ -746,22 +764,18 @@ class _TankContent extends StatelessWidget {
     ],
   );
 
-  /// Seconds left, without minutes or colon under a minute. A hang is counted
-  /// in seconds and a bare numeral is the fastest thing to read.
+  /// The count of the running step in the corner, as [countdownText] writes
+  /// it. A minute or more is set smaller, so it still fits the corner.
   Widget _countdown(BuildContext context) {
     final seconds = layout.secondsRemaining;
-    final resting = state == _TankState.rest;
-    final calm = CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.calm));
-    final color = resting ? calm : palette.force;
+    final color = palette.force;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          seconds < 60
-              ? '$seconds'
-              : '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
+          countdownText(seconds),
           style: _numeralStyle(
             seconds < 60 ? _countdownNumeralSize : 64,
             color: color,
@@ -786,11 +800,8 @@ class _TankContent extends StatelessWidget {
           ),
         ),
         Text(
-          resting ? 'SEC REST' : 'SEC',
-          style: _scaledStyle(
-            CrimpyTheme.capsLabel,
-            color: resting ? calm : palette.secondary,
-          ),
+          seconds < 60 ? 'SEC' : 'TO GO',
+          style: _scaledStyle(CrimpyTheme.capsLabel, color: palette.secondary),
         ),
       ],
     );
@@ -905,7 +916,7 @@ class _TankContent extends StatelessWidget {
 
   Widget _centerBlock(BuildContext context) => switch (state) {
     _TankState.preparation => _preparationBlock(),
-    _TankState.rest => _nextStepBlock(),
+    _TankState.rest => _restBlock(),
     _TankState.timed => _timedBlock(),
     _TankState.confirm => _confirmBlock(context),
     _TankState.sensorWork => const SizedBox.shrink(),
@@ -964,21 +975,55 @@ class _TankContent extends StatelessWidget {
         '${rep.edgeSizeMm == null ? '' : ', ${rep.edgeSizeMm}mm'}.';
   }
 
-  Widget _nextStepBlock() {
+  /// A rest, or the break between two sets: the time left before the athlete
+  /// goes again, as large as the tank allows, and what they go into under it,
+  /// smaller. It is the one number they wait on, read from wherever they
+  /// stepped back to. See Krakoer/crimpy#160.
+  ///
+  /// The last three seconds are the ones the beeps count down, and the count
+  /// turns from calm to ready for them, the colour a preparation is painted
+  /// in, so the eye gets the warning the ear does.
+  Widget _restBlock() {
+    final seconds = layout.secondsRemaining;
+    final closing = seconds <= _restClosingSeconds;
+    final color = CrimpyTheme.textOn(
+      CrimpyTheme.phaseColor(closing ? RunPhase.armed : RunPhase.calm),
+    );
+
+    return _column([
+      _countdownNumeral(
+        countdownText(seconds),
+        _numeralStyle(_restCountdownSize, color: color, height: 0.9),
+      ),
+      SizedBox(height: _s(6)),
+      Text(
+        closing
+            ? 'GET READY'
+            : seconds < 60
+            ? 'SEC REST'
+            : 'OF REST',
+        style: _scaledStyle(CrimpyTheme.capsLabel, color: color),
+      ),
+      SizedBox(height: _s(20)),
+      ..._nextStepPreview(),
+    ]);
+  }
+
+  /// What the rest leads into, under its countdown and smaller than it.
+  List<Widget> _nextStepPreview() {
     final next = layout.nextItem;
     if (next == null) {
-      return Text(
-        'LAST REST',
-        style: _scaledStyle(
-          CrimpyTheme.capsHeadline,
-          color: CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.calm)),
+      return [
+        Text(
+          'LAST REST',
+          style: _scaledStyle(CrimpyTheme.capsLabel, color: palette.secondary),
         ),
-      );
+      ];
     }
     final rep = next is TimedItem ? next : null;
     final hang = rep?.isHang ?? false;
 
-    return _column([
+    return [
       Text(
         'NEXT',
         style: _scaledStyle(CrimpyTheme.capsLabel, color: palette.secondary),
@@ -987,30 +1032,29 @@ class _TankContent extends StatelessWidget {
         SizedBox(height: _s(8)),
         _goalLine(layout.nextGoal!),
       ],
-      SizedBox(height: _s(14)),
+      SizedBox(height: _s(8)),
       Text(
         hang
             ? rep!.handSide.displayName
             : describeExecutionItem(next).toUpperCase(),
         textAlign: TextAlign.center,
-        // The largest type in the block, so the step it names is what needs
-        // bounding most: a long exercise name wraps at the capsHeadline size and
-        // would otherwise push the block past the tank.
+        // A long exercise name wraps, and would otherwise push the block past
+        // the tank.
         maxLines: _stepTitleMaxLines,
         overflow: TextOverflow.ellipsis,
-        style: _scaledStyle(CrimpyTheme.capsHeadline, color: palette.force),
+        style: _scaledStyle(CrimpyTheme.title, color: palette.force),
       ),
       if (rep != null) ...[
-        SizedBox(height: _s(14)),
+        SizedBox(height: _s(6)),
         Text(
           [
             if (rep.targetLoad > 0) '${formatKilograms(rep.targetLoad)} kg',
             formatClock(Duration(seconds: rep.durationSeconds)),
           ].join(' - '),
-          style: _scaledStyle(CrimpyTheme.titleLarge, color: palette.accent),
+          style: _scaledStyle(CrimpyTheme.titleSmall, color: palette.accent),
         ),
         if (hang) ...[
-          SizedBox(height: _s(14)),
+          SizedBox(height: _s(6)),
           Text(
             gripLine(rep.gripPosition, rep.edgeSizeMm),
             style: _scaledStyle(CrimpyTheme.body, color: palette.secondary),
@@ -1038,8 +1082,22 @@ class _TankContent extends StatelessWidget {
         SizedBox(height: _s(10)),
         ExerciseVideoButton(layout.nextVideoLink, compact: true),
       ],
-    ]);
+    ];
   }
+
+  /// A countdown set as a display number in the middle of the tank. Display
+  /// sized already, so it does not grow with the text size: the room it would
+  /// take goes to the notes around it (Krakoer/crimpy#181). A count too wide
+  /// for the tank, a long one in minutes on a narrow phone, is shrunk to it
+  /// rather than broken across lines, and its line keeps its height whichever
+  /// form it is in, so the block does not move when a count crosses a minute.
+  Widget _countdownNumeral(String text, TextStyle style) => SizedBox(
+    height: style.fontSize! * style.height!,
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(text, textScaler: TextScaler.noScaling, style: style),
+    ),
+  );
 
   Widget _timedBlock() {
     final rep = layout.item as TimedItem;
@@ -1085,13 +1143,9 @@ class _TankContent extends StatelessWidget {
         ),
       ],
       SizedBox(height: _s(8)),
-      Text(
-        '${layout.secondsRemaining}',
-        // Display sized already, and the one thing in the block that does not
-        // need to grow to be read: the room it would take at a large text size
-        // goes to the notes instead. See Krakoer/crimpy#181.
-        textScaler: TextScaler.noScaling,
-        style: _numeralStyle(
+      _countdownNumeral(
+        countdownText(layout.secondsRemaining),
+        _numeralStyle(
           150,
           color: palette.force,
           height: 0.9,
@@ -1101,7 +1155,7 @@ class _TankContent extends StatelessWidget {
       ),
       SizedBox(height: _s(8)),
       Text(
-        'SEC LEFT',
+        layout.secondsRemaining < 60 ? 'SEC LEFT' : 'TO GO',
         style: _scaledStyle(CrimpyTheme.capsLabel, color: palette.secondary),
       ),
       if (rep.targetLoad > 0) ...[
