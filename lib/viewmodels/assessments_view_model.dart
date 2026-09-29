@@ -202,6 +202,31 @@ class Assessments extends _$Assessments {
     }
   }
 
+  /// Adds results to a session already stored, such as a Max Force kept from a
+  /// pull of the training just saved.
+  ///
+  /// Unlike [saveAssessment] it writes no session and replaces nothing: a
+  /// result kept from a training sits beside the day's test rather than
+  /// standing in for it, and the session it names stays what it was, so it
+  /// never counts as the day's assessment.
+  Future<void> addResultsToSession(
+    List<AssessmentResultModel> results,
+    String sessionId,
+  ) async {
+    final keepAlive = ref.keepAlive();
+    final repository = ref.read(assessmentRepositoryProvider);
+    try {
+      for (final result in results) {
+        await repository.saveAssessment(result, sessionId);
+      }
+    } finally {
+      // Dropped whether or not every write landed: the ones before a failure
+      // are stored, and the history has to show them.
+      if (ref.mounted) ref.invalidate(assessmentHistoryProvider);
+      keepAlive.close();
+    }
+  }
+
   /// Returns the last assessment result for a given hand.
   /// If `gripPosition` is provided, only assessments with that grip position will be considered.
   /// Only call this method on a family keyed to an assessment.
@@ -221,6 +246,8 @@ class Assessments extends _$Assessments {
   }
 
   /// Retuns the id of the assessment that has been done the same day with the same hand and grip position, if any.
+  /// Only a test counts: a result kept from a training is not a run of the
+  /// test, so a test taken later that day does not erase it.
   /// Only call this method on a family keyed to an assessment.
   Future<String?> getSameDayAssessment({
     HandSide? handSide,
@@ -236,7 +263,7 @@ class Assessments extends _$Assessments {
       assessmentId: assessmentId,
       handSide: handSide,
       gripPosition: gripPosition,
-    )).lastOrNull;
+    )).where((a) => a.origin == AssessmentOrigin.test).lastOrNull;
     if (prevAssessment == null) {
       return null;
     }
