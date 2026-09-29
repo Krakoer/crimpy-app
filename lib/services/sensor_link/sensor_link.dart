@@ -1,5 +1,9 @@
 import 'package:crimpy/models/ble_data_model.dart';
 
+/// How long a connection attempt waits for a device that does not answer,
+/// unless the caller asks for less.
+const defaultSensorConnectTimeout = Duration(seconds: 35);
+
 /// The transport between the app and a force sensor: the Bluetooth adapter,
 /// scanning, and one open connection at a time. The repository above it owns
 /// decoding, calibration and connection bookkeeping, so a link only moves
@@ -16,8 +20,12 @@ abstract class SensorLink {
 
   /// Connects to [device] and subscribes to its force characteristic. Null when
   /// the device does not carry that characteristic. Throws when the connection
-  /// itself fails.
-  Future<SensorChannel?> open(SensorDevice device);
+  /// itself fails, including when the device does not answer within
+  /// [timeout], as a remembered sensor that is off or out of range does not.
+  Future<SensorChannel?> open(
+    SensorDevice device, {
+    Duration timeout = defaultSensorConnectTimeout,
+  });
 }
 
 /// One open connection to a sensor.

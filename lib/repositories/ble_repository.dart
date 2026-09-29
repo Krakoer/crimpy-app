@@ -2,16 +2,23 @@ import 'dart:async';
 import 'dart:typed_data';
 import '../models/ble_data_model.dart';
 import '../database/database.dart';
+import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/sensor_preset.dart';
+import 'package:crimpy/repositories/sensor_memory_repository.dart';
 import 'package:crimpy/services/sensor_link/flutter_blue_plus_sensor_link.dart';
 import 'package:crimpy/services/sensor_link/sensor_link.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BleRepository {
-  BleRepository({SensorLink? link})
-    : _link = link ?? FlutterBluePlusSensorLink();
+  BleRepository({SensorLink? link, SensorMemoryRepository? memory})
+    : _link = link ?? FlutterBluePlusSensorLink(),
+      _memory = memory ?? SharedPreferencesSensorMemory();
 
   final SensorLink _link;
+
+  /// Where the sensor connected last is remembered, whichever screen
+  /// connected it.
+  final SensorMemoryRepository _memory;
 
   // ------------------------------------- BLE DEVICE -------------------------------------
   /// Whether the Bluetooth adapter is on, starting with the current state.
@@ -55,10 +62,14 @@ class BleRepository {
 
   Future<List<SensorDevice>> scanForDevices() => _link.scan();
 
-  Future<bool> connectToDevice(SensorDevice device) async {
+  /// Connects to [device], giving up after [timeout] when it does not answer.
+  Future<bool> connectToDevice(
+    SensorDevice device, {
+    Duration timeout = defaultSensorConnectTimeout,
+  }) async {
     try {
       _connectionStateController.add(BleConnectionState.connecting);
-      final channel = await _link.open(device);
+      final channel = await _link.open(device, timeout: timeout);
       if (channel == null) {
         _device = null;
         _connectionStateController.add(BleConnectionState.disconnected);
@@ -82,12 +93,23 @@ class BleRepository {
       _characteristicSubscription = channel.notifications.listen(
         handleRawSample,
       );
+      await _rememberSensor(device);
       return true;
     } catch (e) {
       _device = null;
       _channel = null;
       _connectionStateController.add(BleConnectionState.failed);
       return false;
+    }
+  }
+
+  /// A sensor that connected is connected, even if the device could not
+  /// store it for next time.
+  Future<void> _rememberSensor(SensorDevice device) async {
+    try {
+      await _memory.remember(device);
+    } catch (e) {
+      AppLoggerHelper.warning("Could not remember the sensor: $e");
     }
   }
 

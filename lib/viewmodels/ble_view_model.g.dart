@@ -8,6 +8,58 @@ part of 'ble_view_model.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Where the athlete's sensor, or the lack of one, is remembered.
+
+@ProviderFor(sensorMemory)
+const sensorMemoryProvider = SensorMemoryProvider._();
+
+/// Where the athlete's sensor, or the lack of one, is remembered.
+
+final class SensorMemoryProvider
+    extends
+        $FunctionalProvider<
+          SensorMemoryRepository,
+          SensorMemoryRepository,
+          SensorMemoryRepository
+        >
+    with $Provider<SensorMemoryRepository> {
+  /// Where the athlete's sensor, or the lack of one, is remembered.
+  const SensorMemoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'sensorMemoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$sensorMemoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<SensorMemoryRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SensorMemoryRepository create(Ref ref) {
+    return sensorMemory(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SensorMemoryRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SensorMemoryRepository>(value),
+    );
+  }
+}
+
+String _$sensorMemoryHash() => r'2fa8724f1c8bae0c78cd8af0af1d90be9c0b7535';
+
 /// Main provider, gives access to the BLE repository.
 
 @ProviderFor(bleRepository)
@@ -52,7 +104,7 @@ final class BleRepositoryProvider
   }
 }
 
-String _$bleRepositoryHash() => r'5666f37b2ee5ce82affa5503bb53ce9bda6d32f0';
+String _$bleRepositoryHash() => r'c82d362e43378c9d7de87fd7a552e5cdf3f84483';
 
 /// Whether the Bluetooth adapter is on. Allows to turn it on.
 
@@ -148,7 +200,7 @@ final class BleConnectionProvider
   }
 }
 
-String _$bleConnectionHash() => r'a104aa4e60007c4eb06a93ea482665554fa495de';
+String _$bleConnectionHash() => r'4d16c7e99680fab40488b3e891a16ee54eacc399';
 
 /// Returns the BLE connection state. Allows to (dis)connect to/from a BLE device.
 
@@ -164,6 +216,63 @@ abstract class _$BleConnection extends $Notifier<BleConnectionState> {
             as $ClassProviderElement<
               AnyNotifier<BleConnectionState, BleConnectionState>,
               BleConnectionState,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
+
+/// The athlete's sensor as this device remembers it, or that they have none.
+/// Reread whenever a sensor connects, since connecting one remembers it.
+
+@ProviderFor(SensorOwnershipController)
+const sensorOwnershipProvider = SensorOwnershipControllerProvider._();
+
+/// The athlete's sensor as this device remembers it, or that they have none.
+/// Reread whenever a sensor connects, since connecting one remembers it.
+final class SensorOwnershipControllerProvider
+    extends $AsyncNotifierProvider<SensorOwnershipController, SensorOwnership> {
+  /// The athlete's sensor as this device remembers it, or that they have none.
+  /// Reread whenever a sensor connects, since connecting one remembers it.
+  const SensorOwnershipControllerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'sensorOwnershipProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$sensorOwnershipControllerHash();
+
+  @$internal
+  @override
+  SensorOwnershipController create() => SensorOwnershipController();
+}
+
+String _$sensorOwnershipControllerHash() =>
+    r'337639f7bd19d04e7c21f984cff4c1299033d4de';
+
+/// The athlete's sensor as this device remembers it, or that they have none.
+/// Reread whenever a sensor connects, since connecting one remembers it.
+
+abstract class _$SensorOwnershipController
+    extends $AsyncNotifier<SensorOwnership> {
+  FutureOr<SensorOwnership> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<AsyncValue<SensorOwnership>, SensorOwnership>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<SensorOwnership>, SensorOwnership>,
+              AsyncValue<SensorOwnership>,
               Object?,
               Object?
             >;

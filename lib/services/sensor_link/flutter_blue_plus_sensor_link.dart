@@ -49,9 +49,12 @@ class FlutterBluePlusSensorLink extends SensorLink {
   }
 
   @override
-  Future<SensorChannel?> open(SensorDevice sensor) async {
+  Future<SensorChannel?> open(
+    SensorDevice sensor, {
+    Duration timeout = defaultSensorConnectTimeout,
+  }) async {
     final device = BluetoothDevice.fromId(sensor.id);
-    await device.connect();
+    await device.connect(timeout: timeout);
 
     // A sensor left connected at the OS level stops advertising, so a
     // connection that fails half way is dropped or the next scan misses it.

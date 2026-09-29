@@ -8,7 +8,10 @@ import 'package:flutter_test/flutter_test.dart';
 /// characteristic.
 class _LinkWithoutForceCharacteristic extends SimulatedSensorLink {
   @override
-  Future<SensorChannel?> open(SensorDevice device) async => null;
+  Future<SensorChannel?> open(
+    SensorDevice device, {
+    Duration timeout = defaultSensorConnectTimeout,
+  }) async => null;
 }
 
 void main() {

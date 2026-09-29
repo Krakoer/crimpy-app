@@ -77,6 +77,28 @@ class SensorDevice {
   const SensorDevice({required this.id, required this.name});
 }
 
+/// What the app remembers of the athlete's sensor, so a run does not ask the
+/// same question every day.
+sealed class SensorOwnership {
+  const SensorOwnership();
+}
+
+/// Nothing remembered yet: a run asks whether the athlete has a sensor.
+class SensorOwnershipUnknown extends SensorOwnership {
+  const SensorOwnershipUnknown();
+}
+
+/// The athlete said they have no sensor: runs start without one, unasked.
+class NoSensorOwned extends SensorOwnership {
+  const NoSensorOwned();
+}
+
+/// The last sensor connected on this device, which a run connects to directly.
+class RememberedSensor extends SensorOwnership {
+  final SensorDevice device;
+  const RememberedSensor(this.device);
+}
+
 /// Connection state enum
 enum BleConnectionState { disconnected, connecting, connected, failed }
 

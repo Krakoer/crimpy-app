@@ -51,9 +51,20 @@ class SimulatedSensorLink extends SensorLink {
     return [device];
   }
 
+  /// Opens [device] when it is the simulator. Any other device, such as one
+  /// remembered from a real sensor, is never in range: the attempt waits out
+  /// [timeout] and fails, as it would against the hardware.
   @override
-  Future<SensorChannel?> open(SensorDevice device) async =>
-      SimulatedSensorChannel(samplePeriod: samplePeriod);
+  Future<SensorChannel?> open(
+    SensorDevice device, {
+    Duration timeout = defaultSensorConnectTimeout,
+  }) async {
+    if (device.id != SimulatedSensorLink.device.id) {
+      await Future.delayed(timeout);
+      throw TimeoutException('${device.name} is not in range', timeout);
+    }
+    return SimulatedSensorChannel(samplePeriod: samplePeriod);
+  }
 }
 
 /// Replays [SimulatedHangProfile] as notification frames, every
