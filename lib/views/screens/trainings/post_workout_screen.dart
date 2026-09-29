@@ -405,24 +405,22 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
             // must not leave the athlete on a screen whose button would store
             // it a second time.
             if (trainingSessionId != null && keptMaxForces.isNotEmpty) {
-              try {
-                await ref
-                    .read(
-                      assessmentsProvider(
-                        BuiltinAssessmentIds.maxForce,
-                      ).notifier,
-                    )
-                    .addResultsToSession(keptMaxForces, trainingSessionId);
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Training saved, but the new Max Force was not: $e',
+              final failed = await ref
+                  .read(
+                    assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier,
+                  )
+                  .addResultsToSession(keptMaxForces, trainingSessionId);
+              if (failed.isNotEmpty && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      unsavedMaxForceMessage(
+                        failed,
+                        saved: keptMaxForces.length - failed.length,
                       ),
                     ),
-                  );
-                }
+                  ),
+                );
               }
             }
             if (context.mounted) {
@@ -523,4 +521,24 @@ class _BlocksOnTarget extends StatelessWidget {
       ),
     );
   }
+}
+
+/// What the review says when some of the Max Forces the athlete ticked could
+/// not be stored: which hand and grip did not land, and that the rest did, so
+/// the athlete does not redo a pull that is already on file.
+String unsavedMaxForceMessage(
+  List<AssessmentResultModel> failed, {
+  required int saved,
+}) {
+  final names = failed
+      .map(
+        (result) =>
+            '${result.hand?.label.toLowerCase() ?? 'max'}'
+            '${result.gripPosition == null ? '' : ', ${result.gripPosition!.displayName}'}',
+      )
+      .join(' and ');
+  final kept = saved == 0
+      ? ''
+      : ' The other ${saved == 1 ? 'one was' : '$saved were'} saved.';
+  return 'Training saved, but the new Max Force ($names) was not.$kept';
 }

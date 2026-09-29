@@ -143,4 +143,33 @@ void main() {
     expect(result.gripPosition, GripPosition.threeFinger);
     expect(result.origin, AssessmentOrigin.training);
   });
+
+  // Percent loads resolve against the latest result for the hand, whatever
+  // the grip. A pull that beats its own grip's max but not that value would
+  // lower every percent of max load once saved, so it is not offered.
+  test('offers nothing a save would make the loads easier with', () {
+    final offers = MaxForceOffer.fromPulls(
+      [_pull(33, grip: GripPosition.openHand)],
+      [
+        _maxForce(march, right: 30, grip: GripPosition.openHand),
+        _maxForce(june, right: 45),
+      ],
+    );
+
+    expect(offers, isEmpty);
+  });
+
+  test('offers a pull that also beats the value loads resolve against', () {
+    final offers = MaxForceOffer.fromPulls(
+      [_pull(46, grip: GripPosition.openHand)],
+      [
+        _maxForce(march, right: 30, grip: GripPosition.openHand),
+        _maxForce(june, right: 45),
+      ],
+    );
+
+    expect(offers.single.gripPosition, GripPosition.openHand);
+    // Up from its own grip's max, which is what it is a new max of.
+    expect(offers.single.onFileKg, 30);
+  });
 }

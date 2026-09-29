@@ -14,6 +14,9 @@ import 'package:flutter_test/flutter_test.dart';
 class _SlowAssessmentRepository extends AssessmentRepository {
   final List<AssessmentResultModel> saved = [];
   final List<String> deleted = [];
+
+  /// A hand whose result the store refuses to write.
+  HandSide? refusing;
   List<AssessmentModel> stored = const [];
   int reads = 0;
 
@@ -23,6 +26,9 @@ class _SlowAssessmentRepository extends AssessmentRepository {
     String sessionId,
   ) async {
     await Future<void>.delayed(Duration.zero);
+    if (refusing != null && assessment.hand == refusing) {
+      throw Exception('refused');
+    }
     saved.add(assessment);
     return 'a-1';
   }
@@ -240,4 +246,32 @@ void main() {
       expect(repository.reads, greaterThan(readsBefore));
     },
   );
+
+  test('a result that fails to land does not stop the others', () async {
+    final repository = _SlowAssessmentRepository()..refusing = HandSide.left;
+    final container = ProviderContainer.test(
+      overrides: [
+        assessmentRepositoryProvider.overrideWithValue(repository),
+        sessionsProvider.overrideWith(_CapturingSessions.new),
+      ],
+    );
+
+    final failed = await container
+        .read(assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier)
+        .addResultsToSession([
+          AssessmentResultModel(
+            assessmentId: BuiltinAssessmentIds.maxForce,
+            leftValue: 42,
+            origin: AssessmentOrigin.training,
+          ),
+          AssessmentResultModel(
+            assessmentId: BuiltinAssessmentIds.maxForce,
+            rightValue: 43,
+            origin: AssessmentOrigin.training,
+          ),
+        ], 'training-session');
+
+    expect(failed.single.leftValue, 42);
+    expect(repository.saved.single.rightValue, 43);
+  });
 }

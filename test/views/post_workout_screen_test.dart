@@ -1006,13 +1006,20 @@ class MaxForceHistory extends Assessments {
   @override
   Future<List<AssessmentModel>> build(String? assessmentId) async => history;
 
+  /// The hand whose result the store refuses, to show a partial save.
+  HandSide? refusing;
+
   @override
-  Future<void> addResultsToSession(
+  Future<List<AssessmentResultModel>> addResultsToSession(
     List<AssessmentResultModel> results,
     String sessionId,
   ) async {
     added = results;
     addedTo = sessionId;
+    return [
+      for (final result in results)
+        if (result.hand == refusing) result,
+    ];
   }
 }
 
@@ -1054,13 +1061,17 @@ void _maxForceOfferTests() {
             BuiltinAssessmentIds.maxForce,
           ).overrideWith(() => maxForce),
         ],
+        // Under a scaffold of its own, standing for the screen the review
+        // returns to, which is where a snackbar raised on the way out shows.
         child: MaterialApp(
-          home: Navigator(
-            onGenerateRoute: (_) => MaterialPageRoute(
-              builder: (_) => PostWorkoutScreen(
-                template: template,
-                results: const [],
-                measuredPulls: pulls,
+          home: Scaffold(
+            body: Navigator(
+              onGenerateRoute: (_) => MaterialPageRoute(
+                builder: (_) => PostWorkoutScreen(
+                  template: template,
+                  results: const [],
+                  measuredPulls: pulls,
+                ),
               ),
             ),
           ),
@@ -1121,6 +1132,23 @@ void _maxForceOfferTests() {
     expect(result.origin, AssessmentOrigin.training);
   });
 
+  testWidgets('says which kept Max Force did not land', (tester) async {
+    final (_, maxForce) = await pump(tester);
+    maxForce.refusing = HandSide.right;
+
+    await tester.ensureVisible(find.byType(Checkbox));
+    await tester.tap(find.byType(Checkbox));
+    await tester.pumpAndSettle();
+    await save(tester, 'Save training');
+
+    expect(
+      find.text(
+        'Training saved, but the new Max Force (right hand, Half Crimp) was not.',
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('is not offered on the run of an assessment', (tester) async {
     final sessions = CapturingSessions();
     await tester.pumpWidget(
@@ -1150,5 +1178,25 @@ void _maxForceOfferTests() {
     await tester.pumpAndSettle();
 
     expect(find.text('New Max Force'), findsNothing);
+  });
+
+  test('a partial save names what did not land and says the rest did', () {
+    final failed = [
+      AssessmentResultModel(
+        assessmentId: BuiltinAssessmentIds.maxForce,
+        leftValue: 42,
+        gripPosition: GripPosition.halfCrimp,
+      ),
+    ];
+
+    expect(
+      unsavedMaxForceMessage(failed, saved: 1),
+      'Training saved, but the new Max Force (left hand, Half Crimp) was not. '
+      'The other one was saved.',
+    );
+    expect(
+      unsavedMaxForceMessage(failed, saved: 0),
+      'Training saved, but the new Max Force (left hand, Half Crimp) was not.',
+    );
   });
 }

@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:crimpy/models/assessment_model.dart';
 
 /// The results the athlete has for one assessment, oldest first, with what that
@@ -17,6 +18,51 @@ class AssessedHistory {
         0,
         (previous, value) => value > previous ? value : previous,
       );
+
+  /// The last result that measured one side, which is not always the newest
+  /// row: a pull kept from a training carries only the hand that pulled it,
+  /// and the other hand still stands at its own last measurement.
+  AssessmentModel? lastOn(double? Function(AssessmentModel) side) =>
+      records.lastWhereOrNull((record) => side(record) != null);
+
+  /// The line a card names the latest results with: each side's last value,
+  /// marked when it is a pull kept from a training rather than a test, and how
+  /// long ago the newest of them was measured. Null when nothing was measured.
+  ///
+  /// An assessment that is not measured per hand stores its single number on
+  /// the right, so it reads back without a hand in front of it: "R: 12 reps"
+  /// would claim a right hand for a test that has no sides.
+  String? lastResultLine(DateTime now) {
+    final unit = definition.unit;
+    String value(AssessmentModel record, double measured) =>
+        '${formatAssessmentValue(measured, unit)}'
+        '${record.origin == AssessmentOrigin.training ? ' (training)' : ''}';
+
+    final right = lastOn((record) => record.rightValue);
+    final left = definition.perHand
+        ? lastOn((record) => record.leftValue)
+        : null;
+    final shown = [right, left].whereType<AssessmentModel>().toList();
+    if (shown.isEmpty) return records.isEmpty ? null : _ago(records.last, now);
+    final newest = shown.reduce((a, b) => b.date.isAfter(a.date) ? b : a);
+
+    final parts = definition.perHand
+        ? <String>[
+            if (right != null) 'R: ${value(right, right.rightValue!)}',
+            if (left != null) 'L: ${value(left, left.leftValue!)}',
+          ]
+        : <String>[value(right!, right.rightValue!)];
+    return '${parts.join('  ')}  ${_ago(newest, now)}';
+  }
+
+  static String _ago(AssessmentModel record, DateTime now) {
+    final days = now.difference(record.date).inDays;
+    return days == 0
+        ? 'today'
+        : days == 1
+        ? '1d ago'
+        : '${days}d ago';
+  }
 
   /// The measured points on one side, for a chart.
   List<(DateTime, double)> series(double? Function(AssessmentModel) side) => [

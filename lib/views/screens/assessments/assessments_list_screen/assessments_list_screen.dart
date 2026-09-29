@@ -141,33 +141,8 @@ class _AssessmentsScreenState extends ConsumerState<AssessmentsScreen>
       ],
     );
 
-    String? lastResultFor(String assessmentId) {
-      final assessed = history[assessmentId];
-      final last = assessed?.records.lastOrNull;
-      if (assessed == null || last == null) return null;
-      final diff = DateTime.now().difference(last.date);
-      final timeAgo = diff.inDays == 0
-          ? 'today'
-          : diff.inDays == 1
-          ? '1d ago'
-          : '${diff.inDays}d ago';
-      final unit = assessed.definition.unit;
-      // An assessment that is not measured per hand stores its single number on
-      // the right, so it reads back without a hand in front of it: "R: 12 reps"
-      // would claim a right hand for a test that has no sides.
-      final parts = assessed.definition.perHand
-          ? <String>[
-              if (last.rightValue != null)
-                'R: ${formatAssessmentValue(last.rightValue!, unit)}',
-              if (last.leftValue != null)
-                'L: ${formatAssessmentValue(last.leftValue!, unit)}',
-            ]
-          : <String>[
-              if (last.rightValue != null)
-                formatAssessmentValue(last.rightValue!, unit),
-            ];
-      return parts.isEmpty ? timeAgo : '${parts.join('  ')}  $timeAgo';
-    }
+    String? lastResultFor(String assessmentId) =>
+        history[assessmentId]?.lastResultLine(DateTime.now());
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

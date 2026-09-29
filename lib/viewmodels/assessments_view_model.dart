@@ -209,16 +209,27 @@ class Assessments extends _$Assessments {
   /// result kept from a training sits beside the day's test rather than
   /// standing in for it, and the session it names stays what it was, so it
   /// never counts as the day's assessment.
-  Future<void> addResultsToSession(
+  ///
+  /// Each result is written on its own, and one that fails does not stop the
+  /// others. Answers with the ones that failed, empty when all of them landed,
+  /// so the caller can say which were not saved rather than that none were.
+  Future<List<AssessmentResultModel>> addResultsToSession(
     List<AssessmentResultModel> results,
     String sessionId,
   ) async {
     final keepAlive = ref.keepAlive();
     final repository = ref.read(assessmentRepositoryProvider);
+    final failed = <AssessmentResultModel>[];
     try {
       for (final result in results) {
-        await repository.saveAssessment(result, sessionId);
+        try {
+          await repository.saveAssessment(result, sessionId);
+        } catch (e) {
+          AppLoggerHelper.error('Failed to add a result to $sessionId: $e');
+          failed.add(result);
+        }
       }
+      return failed;
     } finally {
       // Dropped whether or not every write landed: the ones before a failure
       // are stored, and the history has to show them.

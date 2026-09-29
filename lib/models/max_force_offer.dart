@@ -60,11 +60,21 @@ class MaxForceOffer {
   ///
   /// A pull stands for a Max Force only when it was measured the way the test
   /// measures one: a single hand, on the test's edge. A two handed hang is not
-  /// a one hand max whatever it reads. It is compared with the latest result on
-  /// file for the same hand and grip, which is the one percentage loads resolve
-  /// against, and offered only when it beats it by what the screen can show:
-  /// "40.0 kg, up from 40.0 kg" would be no news. With nothing on file there
-  /// is nothing to beat, and no offer.
+  /// a one hand max whatever it reads.
+  ///
+  /// It has to beat two numbers, each by what the screen can show ("40.0 kg,
+  /// up from 40.0 kg" would be no news):
+  ///
+  /// - the latest result for the same hand and grip, which is what it is a new
+  ///   max of, and what the card says it is up from;
+  /// - the value percentage loads resolve against, which is the latest result
+  ///   for the hand whatever the grip it was measured on (see
+  ///   [AssessmentResults.value]). Saving a pull under that would make every
+  ///   percent of max prescription easier, the stale max problem this offer
+  ///   exists to fix.
+  ///
+  /// With nothing on file for the hand and grip there is nothing to beat, and
+  /// no offer.
   ///
   /// One offer per hand and grip, the hardest pull of the run.
   static List<MaxForceOffer> fromPulls(
@@ -80,10 +90,16 @@ class MaxForceOffer {
       if (best == null || pull.peakKg > best) hardest[key] = pull.peakKg;
     }
 
+    final loadsResolveAgainst = AssessmentResults.fromHistory(maxForceHistory);
     final offers = <MaxForceOffer>[];
     for (final MapEntry(key: (hand, grip), value: peak) in hardest.entries) {
       final onFile = _latestOnFile(maxForceHistory, hand, grip);
       if (onFile == null || _tenths(peak) <= _tenths(onFile)) continue;
+      final resolved = loadsResolveAgainst.value(
+        BuiltinAssessmentIds.maxForce,
+        handSide: hand,
+      );
+      if (resolved != null && _tenths(peak) <= _tenths(resolved)) continue;
       offers.add(
         MaxForceOffer(
           hand: hand,
