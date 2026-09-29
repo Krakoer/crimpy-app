@@ -13,6 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/roboto.dart';
+import '../theme/palette_contrast_test.dart' show contrastFloor, contrastRatio;
 
 class _FakeBodyweight extends BodyweightController {
   _FakeBodyweight(this.kilograms);
@@ -194,12 +195,15 @@ void main() {
       expect(ground, isNot(contains(CrimpyTheme.onTarget)));
     });
 
-    // The last three seconds are the ones the beeps count down. The count
-    // turns the colour of getting ready for them, which is ink: red is the
-    // alarm's and orange the primary action's. See Krakoer/crimpy#160.
+    // The last three seconds are the ones the beeps count down. The whole
+    // tank turns the fill of getting ready for them, the one a pull fills it
+    // with before the target, and the count is written in white on it: a
+    // change read from the wall, where a change of the count's colour alone
+    // was not. Red is the alarm's and orange the primary action's. See
+    // Krakoer/crimpy#160.
     for (final seconds in [3, 2, 1]) {
-      testWidgets('mark the last three seconds of a rest as getting ready, at '
-          '$seconds', (tester) async {
+      testWidgets('turn the tank ready for the last three seconds of a rest, '
+          'at $seconds', (tester) async {
         await _pump(
           tester,
           item: const RestItem(durationSeconds: 30),
@@ -207,17 +211,55 @@ void main() {
           secondsRemaining: seconds,
         );
 
-        final armed = CrimpyTheme.textOn(
+        final ready = CrimpyTheme.fillOn(
           CrimpyTheme.phaseColor(RunPhase.armed),
         );
-        expect(_textColor(tester, '$seconds'), armed);
-        expect(_textColor(tester, 'GET READY'), armed);
+        final ground = tester
+            .widgetList<ColoredBox>(find.byType(ColoredBox))
+            .map((box) => box.color);
+        expect(ground, contains(ready));
+        expect(ground, isNot(contains(CrimpyTheme.phaseCalmGround)));
+        expect(_textColor(tester, '$seconds'), CrimpyTheme.textOnFill);
+        expect(_textColor(tester, 'GET READY'), CrimpyTheme.textOnFill);
+        expect(
+          contrastRatio(CrimpyTheme.textOnFill, ready),
+          greaterThanOrEqualTo(contrastFloor),
+        );
+        expect(
+          contrastRatio(ready, CrimpyTheme.phaseCalmGround),
+          greaterThan(3),
+          reason: 'the change of ground is what is seen from the wall',
+        );
         expect(find.text('SEC REST'), findsNothing);
-        // The ground stays calm: it is still a rest.
+        // What comes next is still read on it.
+        expect(_textColor(tester, 'NEXT'), CrimpyTheme.textOnFillSecondary);
+      });
+    }
+
+    // A rest that leads into nothing has nothing to get ready for, and a
+    // paused one is not counting down.
+    for (final (name, nextItem, isRunning) in [
+      ('the last rest of a run', null, true),
+      ('a paused rest', _hang as TrainingExecutionItem?, false),
+    ]) {
+      testWidgets('leave $name calm in its last three seconds', (tester) async {
+        await _pump(
+          tester,
+          item: const RestItem(durationSeconds: 30),
+          nextItem: nextItem,
+          secondsRemaining: 2,
+          isRunning: isRunning,
+        );
+
         final ground = tester
             .widgetList<ColoredBox>(find.byType(ColoredBox))
             .map((box) => box.color);
         expect(ground, contains(CrimpyTheme.phaseCalmGround));
+        expect(find.text('GET READY'), findsNothing);
+        expect(
+          _textColor(tester, '2'),
+          CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.calm)),
+        );
       });
     }
 

@@ -347,7 +347,9 @@ class FullTankLayout extends ConsumerWidget {
           currentWeight: currentWeight,
           notchLabel: notchLabel,
         );
-        final groundPalette = state == _TankState.rest
+        final groundPalette = _restClosing
+            ? _TankPalette.overFill
+            : state == _TankState.rest
             ? _TankPalette.overCalm
             : _TankPalette.overTank;
 
@@ -370,7 +372,9 @@ class FullTankLayout extends ConsumerWidget {
             LayoutId(
               id: _TankSlot.ground,
               child: ColoredBox(
-                color: state == _TankState.rest
+                color: _restClosing
+                    ? CrimpyTheme.fillOn(CrimpyTheme.phaseColor(RunPhase.armed))
+                    : state == _TankState.rest
                     ? CrimpyTheme.phaseCalmGround
                     : CrimpyTheme.bgPrimary,
               ),
@@ -505,6 +509,20 @@ class FullTankLayout extends ConsumerWidget {
   /// The step coming up, which a working step has the strip to itself for. A
   /// preparation and a rest fill the middle of the tank with what is next
   /// already, so their strip stays down to the one word.
+  /// Whether a running rest is in the last seconds before the next step, the
+  /// ones the beeps count down. The whole tank turns the fill of getting
+  /// ready for them, the colour a pull fills it with before the target, so
+  /// the warning reads from the wall as well as the beeps do: the athlete is
+  /// about to take the load again. Not on the last rest of a run, which leads
+  /// into nothing, nor while paused, when nothing is coming. See
+  /// Krakoer/crimpy#160.
+  bool get _restClosing =>
+      item is RestItem &&
+      !isPreparation &&
+      isRunning &&
+      nextItem != null &&
+      secondsRemaining <= _restClosingSeconds;
+
   String? get _nextStep {
     if (isPreparation || item is RestItem || nextItem == null) return null;
     return describeExecutionItem(nextItem!);
@@ -592,8 +610,6 @@ class _TankContent extends StatelessWidget {
   /// across the top of the tank. Sized to what it draws, which is what the
   /// level is stopped under.
   Widget _header(BuildContext context) {
-    // A step with no sensor puts its countdown in the middle of the screen, and
-    // a self paced one has none.
     // A step with no sensor puts its countdown in the middle of the screen, and
     // a self paced one has none. A rest makes its countdown the middle of the
     // screen: it is the one number the athlete waits on. See Krakoer/crimpy#160.
@@ -980,15 +996,15 @@ class _TankContent extends StatelessWidget {
   /// smaller. It is the one number they wait on, read from wherever they
   /// stepped back to. See Krakoer/crimpy#160.
   ///
-  /// The last three seconds are the ones the beeps count down, and the count
-  /// turns from calm to ready for them, the colour a preparation is painted
-  /// in, so the eye gets the warning the ear does.
+  /// Over the last seconds of the rest the tank turns the fill of getting
+  /// ready, see FullTankLayout._restClosing, and the count reads GET READY
+  /// in the colour that reads on it.
   Widget _restBlock() {
     final seconds = layout.secondsRemaining;
-    final closing = seconds <= _restClosingSeconds;
-    final color = CrimpyTheme.textOn(
-      CrimpyTheme.phaseColor(closing ? RunPhase.armed : RunPhase.calm),
-    );
+    final closing = layout._restClosing;
+    final color = closing
+        ? palette.force
+        : CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.calm));
 
     return _column([
       _countdownNumeral(
