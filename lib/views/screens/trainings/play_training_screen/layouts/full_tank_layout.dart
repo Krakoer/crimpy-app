@@ -30,6 +30,20 @@ double repContextCardHeight(double scale) => (56 * scale).clamp(44.0, 72.0);
 /// Gap between the foot of the tank and the set and rep card.
 const double _repContextCardBottom = 16;
 
+/// Room kept clear at the foot of the tank, for the set and rep card when
+/// there is one. The card is opaque and would otherwise hide what runs under
+/// it.
+double _bottomReserve({required bool hasCard, required double scale}) => hasCard
+    ? _repContextCardBottom + repContextCardHeight(scale) + 12 * scale
+    : 14;
+
+/// Room around the block a step without the sensor holds in the middle of the
+/// tank: its inset from the sides and the top of the tank, which is where it
+/// is centred from, and its gap under the header, which it never goes above.
+const double _centreBlockInset = 16;
+const double _centreBlockTop = 14;
+const double _centreBlockGapUnderHeader = 12;
+
 /// Where the header, the clocks and the countdown across the top of the tank,
 /// starts. Lower where the platform needs a back button in the corner.
 const double _headerTop = 14;
@@ -331,6 +345,11 @@ class FullTankLayout extends ConsumerWidget {
             level: fillHeight,
             levelFloor: tankHeight * targetNotchFraction,
             headerClearance: _headerClearance * scale,
+            centreGapUnderHeader: _centreBlockGapUnderHeader * scale,
+            bottomReserve: _bottomReserve(
+              hasCard: repContext != null,
+              scale: scale,
+            ),
           ),
           children: [
             LayoutId(
@@ -349,6 +368,11 @@ class FullTankLayout extends ConsumerWidget {
               id: _TankSlot.header,
               child: content(groundPalette, _TankPart.header),
             ),
+            if (!sensor)
+              LayoutId(
+                id: _TankSlot.centre,
+                child: content(groundPalette, _TankPart.centre),
+              ),
             if (fillHeight > 0)
               LayoutId(
                 id: _TankSlot.level,
@@ -538,6 +562,7 @@ class _TankContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) => switch (part) {
     _TankPart.header => _header(context),
+    _TankPart.centre => _fittedCentreBlock(context),
     _TankPart.body => Stack(fit: StackFit.expand, children: _body(context)),
     _TankPart.whole => Stack(
       fit: StackFit.expand,
@@ -599,8 +624,24 @@ class _TankContent extends StatelessWidget {
     );
   }
 
-  /// Everything in the tank under the header: the notch and what the middle
-  /// of the tank holds.
+  /// The block in the middle of the tank at the width it is given, shrunk
+  /// whole to the height it is given when it is taller: at a large text size
+  /// the room between the header and the set and rep card can be less than
+  /// the block needs, and it is scaled down rather than run under either. See
+  /// Krakoer/crimpy#181.
+  Widget _fittedCentreBlock(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => FittedBox(
+      fit: BoxFit.scaleDown,
+      child: SizedBox(
+        width: constraints.maxWidth,
+        child: Center(child: _centerBlock(context)),
+      ),
+    ),
+  );
+
+  /// Everything in the tank under the header on a sensor step: the notch and
+  /// the force. Every other step holds a block in the middle instead, laid
+  /// out under the header.
   List<Widget> _body(BuildContext context) => [
     if (notchLabel != null)
       Positioned(
@@ -610,17 +651,7 @@ class _TankContent extends StatelessWidget {
         height: 2,
         child: ColoredBox(color: palette.notch),
       ),
-    if (state == _TankState.sensorWork)
-      ..._forceReadout()
-    else
-      Positioned.fill(
-        child: Padding(
-          // Kept clear of the set and rep card, which is opaque and would
-          // otherwise hide the foot of a tall block.
-          padding: EdgeInsets.fromLTRB(16, 14, 16, _bottomReserve),
-          child: Center(child: _centerBlock(context)),
-        ),
-      ),
+    if (state == _TankState.sensorWork) ..._forceReadout(),
   ];
 
   Widget _topLeftBlock() {
@@ -795,7 +826,10 @@ class _TankContent extends StatelessWidget {
         left: 16,
         right: 16,
         top: tankHeight * 0.56,
-        bottom: _bottomReserve,
+        bottom: _bottomReserve(
+          hasCard: layout.repContext != null,
+          scale: scale,
+        ),
         child: ClipRect(
           child: CustomMultiChildLayout(
             delegate: _HangNotesLayoutDelegate(
@@ -851,13 +885,6 @@ class _TankContent extends StatelessWidget {
         ),
       ),
   ];
-
-  /// Room kept clear at the foot of the tank, for the set and rep card when
-  /// there is one. The card is opaque and would otherwise hide what runs
-  /// under it.
-  double get _bottomReserve => layout.repContext == null
-      ? 14
-      : _repContextCardBottom + repContextCardHeight(scale) + _s(12);
 
   Widget _centerBlock(BuildContext context) => switch (state) {
     _TankState.preparation => _preparationBlock(),
@@ -1043,6 +1070,10 @@ class _TankContent extends StatelessWidget {
       SizedBox(height: _s(8)),
       Text(
         '${layout.secondsRemaining}',
+        // Display sized already, and the one thing in the block that does not
+        // need to grow to be read: the room it would take at a large text size
+        // goes to the notes instead. See Krakoer/crimpy#181.
+        textScaler: TextScaler.noScaling,
         style: _numeralStyle(
           150,
           color: palette.force,
@@ -1172,26 +1203,37 @@ String gripLine(GripPosition gripPosition, int? edgeSizeMm) => [
 
 /// What a copy of the tank content draws. The copy over the level draws the
 /// whole of it, since a level stopped at the notch under a deep header can
-/// still reach the foot of the header.
-enum _TankPart { header, body, whole }
+/// still reach the foot of the header. Only a sensor step has a level, and it
+/// has no centre block, so the whole of it is the body and the header.
+enum _TankPart { header, body, centre, whole }
 
 /// The children the tank is laid out in.
-enum _TankSlot { ground, body, header, level }
+enum _TankSlot { ground, body, header, centre, level }
 
 /// Lays the tank out: the ground and the body across the whole of it, the
 /// header across the top at the height it draws, and the level up from the
 /// foot. The level stops [headerClearance] under the header, so no figure the
 /// header holds is ever cut in two by its edge, but never under [levelFloor],
 /// so a header too deep for the tank still lets the level reach the notch.
+///
+/// The centre block of a step without the sensor is centred between the top
+/// of the tank and the set and rep card, as it always was, but never above
+/// [centreGapUnderHeader] under the header: where the two would meet it is
+/// pushed down, and where it is taller than the room between them it is
+/// shrunk to it.
 class _TankLayoutDelegate extends MultiChildLayoutDelegate {
   final double level;
   final double levelFloor;
   final double headerClearance;
+  final double centreGapUnderHeader;
+  final double bottomReserve;
 
   _TankLayoutDelegate({
     required this.level,
     required this.levelFloor,
     required this.headerClearance,
+    required this.centreGapUnderHeader,
+    required this.bottomReserve,
   });
 
   @override
@@ -1202,6 +1244,26 @@ class _TankLayoutDelegate extends MultiChildLayoutDelegate {
     }
     final header = layoutChild(_TankSlot.header, BoxConstraints.loose(size));
     positionChild(_TankSlot.header, Offset.zero);
+
+    if (hasChild(_TankSlot.centre)) {
+      final roomTop = header.height + centreGapUnderHeader;
+      final roomBottom = max(roomTop, size.height - bottomReserve);
+      final block = layoutChild(
+        _TankSlot.centre,
+        BoxConstraints(
+          maxWidth: max(0.0, size.width - 2 * _centreBlockInset),
+          maxHeight: roomBottom - roomTop,
+        ),
+      );
+      final centred = (_centreBlockTop + roomBottom - block.height) / 2;
+      positionChild(
+        _TankSlot.centre,
+        Offset(
+          (size.width - block.width) / 2,
+          centred.clamp(roomTop, max(roomTop, roomBottom - block.height)),
+        ),
+      );
+    }
 
     if (!hasChild(_TankSlot.level)) return;
     final ceiling = max(
@@ -1220,7 +1282,9 @@ class _TankLayoutDelegate extends MultiChildLayoutDelegate {
   bool shouldRelayout(_TankLayoutDelegate oldDelegate) =>
       oldDelegate.level != level ||
       oldDelegate.levelFloor != levelFloor ||
-      oldDelegate.headerClearance != headerClearance;
+      oldDelegate.headerClearance != headerClearance ||
+      oldDelegate.centreGapUnderHeader != centreGapUnderHeader ||
+      oldDelegate.bottomReserve != bottomReserve;
 }
 
 /// What sits under the target on a hang, top to bottom.
