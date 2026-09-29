@@ -104,9 +104,15 @@ Future<bool> resolveSensorForRun(BuildContext context, WidgetRef ref) async {
   if (!context.mounted) return false;
 
   SensorDevice? notFound;
+  var bluetoothOff = false;
   switch (ownership) {
     case NoSensorOwned():
       return false;
+    case RememberedSensor(:final device) when !ref.read(bleAdapterOnProvider):
+      // Nothing can reach the sensor with the phone's Bluetooth off. The scan
+      // behind Connect offers to turn it on.
+      notFound = device;
+      bluetoothOff = true;
     case RememberedSensor(:final device):
       final result = await showDialog<RememberedSensorResult>(
         context: context,
@@ -128,7 +134,8 @@ Future<bool> resolveSensorForRun(BuildContext context, WidgetRef ref) async {
 
   final answer = await showDialog<_SensorAnswer>(
     context: context,
-    builder: (_) => _HaveSensorDialog(notFound: notFound),
+    builder: (_) =>
+        _HaveSensorDialog(notFound: notFound, bluetoothOff: bluetoothOff),
   );
   if (!context.mounted) return false;
   switch (answer) {
@@ -154,9 +161,12 @@ enum _SensorAnswer { connect, runWithout, noSensor }
 /// Asks whether the athlete has a sensor for this run. [notFound] is the
 /// remembered sensor that did not answer, when that is why it asks.
 class _HaveSensorDialog extends StatefulWidget {
-  const _HaveSensorDialog({this.notFound});
+  const _HaveSensorDialog({this.notFound, this.bluetoothOff = false});
 
   final SensorDevice? notFound;
+
+  /// Why [notFound] was not reached: the phone's Bluetooth is off.
+  final bool bluetoothOff;
 
   @override
   State<_HaveSensorDialog> createState() => _HaveSensorDialogState();
@@ -174,7 +184,12 @@ class _HaveSensorDialogState extends State<_HaveSensorDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (notFound != null)
+          if (notFound != null && widget.bluetoothOff)
+            Text(
+              "Bluetooth is off, so ${notFound.name} cannot be reached. "
+              "Connect to turn it on, or run without the sensor.",
+            )
+          else if (notFound != null)
             Text(
               'Could not reach ${notFound.name}. Check that it is on and '
               'nearby, or pick it again from the list.',

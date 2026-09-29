@@ -11,7 +11,8 @@ class SensorOwnershipTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(sensorOwnershipProvider.notifier);
-    final ownership = ref.watch(sensorOwnershipProvider).value;
+    final stored = ref.watch(sensorOwnershipProvider);
+    final ownership = stored.value;
     final (title, subtitle, action, onPressed) = switch (ownership) {
       RememberedSensor(:final device) => (
         device.name,
@@ -36,7 +37,12 @@ class SensorOwnershipTile extends ConsumerWidget {
       leading: const Icon(Icons.bluetooth),
       title: Text(title),
       subtitle: Text(subtitle),
-      trailing: TextButton(onPressed: onPressed, child: Text(action)),
+      // Only once something was read: a read still loading, or failed, says
+      // nothing about a sensor this would forget.
+      trailing: TextButton(
+        onPressed: stored.hasValue ? onPressed : null,
+        child: Text(action),
+      ),
     );
   }
 }

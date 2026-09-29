@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Remembers, on the device, the athlete's sensor or that they have none.
 abstract class SensorMemoryRepository {
   Future<SensorOwnership> read();
+
+  /// Fires once a change has been stored, whoever made it, so what is shown
+  /// can be read again after the write rather than racing it.
+  Stream<void> get changes;
 
   /// Remembers [device] as the athlete's sensor, which also means they have
   /// one.
@@ -26,6 +32,11 @@ class SharedPreferencesSensorMemory extends SensorMemoryRepository {
     Future<SharedPreferences> Function()? preferences,
   }) : _preferences = preferences ?? SharedPreferences.getInstance;
 
+  final _changes = StreamController<void>.broadcast();
+
+  @override
+  Stream<void> get changes => _changes.stream;
+
   @override
   Future<SensorOwnership> read() async {
     final prefs = await _preferences();
@@ -45,6 +56,7 @@ class SharedPreferencesSensorMemory extends SensorMemoryRepository {
     await prefs.setString(_idKey, device.id);
     await prefs.setString(_nameKey, device.name);
     await prefs.remove(_noSensorKey);
+    _changes.add(null);
   }
 
   @override
@@ -53,6 +65,7 @@ class SharedPreferencesSensorMemory extends SensorMemoryRepository {
     await prefs.remove(_idKey);
     await prefs.remove(_nameKey);
     await prefs.setBool(_noSensorKey, true);
+    _changes.add(null);
   }
 
   @override
@@ -61,5 +74,6 @@ class SharedPreferencesSensorMemory extends SensorMemoryRepository {
     await prefs.remove(_idKey);
     await prefs.remove(_nameKey);
     await prefs.remove(_noSensorKey);
+    _changes.add(null);
   }
 }

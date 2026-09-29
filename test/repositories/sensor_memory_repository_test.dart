@@ -50,6 +50,19 @@ void main() {
       expect(await memory.read(), isA<NoSensorOwned>());
     });
 
+    test('says when a change is stored', () async {
+      final memory = SharedPreferencesSensorMemory();
+      var changes = 0;
+      memory.changes.listen((_) => changes++);
+
+      await memory.remember(sensor);
+      await memory.rememberNoSensor();
+      await memory.forget();
+      await pumpEventQueue();
+
+      expect(changes, 3);
+    });
+
     test('forgetting goes back to asking', () async {
       final memory = SharedPreferencesSensorMemory();
       await memory.remember(sensor);

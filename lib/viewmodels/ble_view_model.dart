@@ -79,7 +79,8 @@ class BleConnection extends _$BleConnection {
 }
 
 /// The athlete's sensor as this device remembers it, or that they have none.
-/// Reread whenever a sensor connects, since connecting one remembers it.
+/// Reread whenever that changes, including when a sensor connects, since
+/// connecting one remembers it.
 @Riverpod(keepAlive: true, name: 'sensorOwnershipProvider')
 class SensorOwnershipController extends _$SensorOwnershipController {
   late SensorMemoryRepository _memory;
@@ -87,24 +88,18 @@ class SensorOwnershipController extends _$SensorOwnershipController {
   @override
   Future<SensorOwnership> build() {
     _memory = ref.watch(sensorMemoryProvider);
-    ref.listen(connectionStateProvider, (previous, next) {
-      if (next == BleConnectionState.connected &&
-          previous != BleConnectionState.connected) {
-        ref.invalidateSelf();
-      }
-    });
+    final subscription = _memory.changes.listen((_) => ref.invalidateSelf());
+    ref.onDispose(subscription.cancel);
     return _memory.read();
   }
 
   Future<void> rememberNoSensor() async {
     await _memory.rememberNoSensor();
-    ref.invalidateSelf();
     await future;
   }
 
   Future<void> forget() async {
     await _memory.forget();
-    ref.invalidateSelf();
     await future;
   }
 }

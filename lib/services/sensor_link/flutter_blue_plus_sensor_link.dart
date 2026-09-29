@@ -54,18 +54,23 @@ class FlutterBluePlusSensorLink extends SensorLink {
     Duration timeout = defaultSensorConnectTimeout,
   }) async {
     final device = BluetoothDevice.fromId(sensor.id);
+    final connecting = Stopwatch()..start();
     await device.connect(timeout: timeout);
 
     // A sensor left connected at the OS level stops advertising, so a
     // connection that fails half way is dropped or the next scan misses it.
+    // The timeout covers the whole opening: a sensor that links up and then
+    // stalls on discovery is as unreachable as one that never answers.
     try {
-      final characteristic = await _forceCharacteristic(device);
-      if (characteristic == null) {
-        await device.disconnect();
-        return null;
-      }
-      await characteristic.setNotifyValue(true);
-      return _FlutterBluePlusSensorChannel(device, characteristic);
+      return await () async {
+        final characteristic = await _forceCharacteristic(device);
+        if (characteristic == null) {
+          await device.disconnect();
+          return null;
+        }
+        await characteristic.setNotifyValue(true);
+        return _FlutterBluePlusSensorChannel(device, characteristic);
+      }().timeout(timeout - connecting.elapsed);
     } catch (_) {
       await device.disconnect();
       rethrow;

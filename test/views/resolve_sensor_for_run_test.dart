@@ -25,34 +25,44 @@ class _MemorySensorMemory extends SensorMemoryRepository {
   _MemorySensorMemory(this.ownership);
 
   SensorOwnership ownership;
+  final _changes = StreamController<void>.broadcast(sync: true);
+
+  @override
+  Stream<void> get changes => _changes.stream;
+
+  void _store(SensorOwnership stored) {
+    ownership = stored;
+    _changes.add(null);
+  }
 
   @override
   Future<SensorOwnership> read() async => ownership;
 
   @override
   Future<void> remember(SensorDevice device) async =>
-      ownership = RememberedSensor(device);
+      _store(RememberedSensor(device));
 
   @override
-  Future<void> rememberNoSensor() async => ownership = const NoSensorOwned();
+  Future<void> rememberNoSensor() async => _store(const NoSensorOwned());
 
   @override
-  Future<void> forget() async => ownership = const SensorOwnershipUnknown();
+  Future<void> forget() async => _store(const SensorOwnershipUnknown());
 }
 
 /// Connects to [reachable] only; any other device is out of range. Records
 /// the timeout each attempt was given.
 class _Link extends SensorLink {
-  _Link({this.reachable});
+  _Link({this.reachable, this.adapterOn = true});
 
   final SensorDevice? reachable;
+  final bool adapterOn;
   final timeouts = <Duration>[];
 
   /// Holds the connection open until completed, when set.
   Completer<void>? answering;
 
   @override
-  bool get isAdapterOn => true;
+  bool get isAdapterOn => adapterOn;
 
   @override
   Stream<bool> get adapterOnChanges => const Stream.empty();
@@ -97,10 +107,11 @@ void main() {
     WidgetTester tester,
     SensorOwnership ownership, {
     SensorDevice? reachable,
+    bool adapterOn = true,
   }) async {
     answer = null;
     memory = _MemorySensorMemory(ownership);
-    link = _Link(reachable: reachable);
+    link = _Link(reachable: reachable, adapterOn: adapterOn);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -176,6 +187,23 @@ void main() {
 
     expect(answer, isFalse);
     expect(memory.ownership, isA<RememberedSensor>());
+  });
+
+  testWidgets('says Bluetooth is off rather than blaming the sensor', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const RememberedSensor(_sensor),
+      reachable: _sensor,
+      adapterOn: false,
+    );
+
+    await start(tester);
+
+    expect(link.timeouts, isEmpty);
+    expect(find.textContaining('Bluetooth is off'), findsOneWidget);
+    expect(find.text('Connect'), findsOneWidget);
   });
 
   testWidgets('offers the scan when the remembered sensor is not found', (
@@ -337,5 +365,41 @@ void main() {
 
       expect(memory.ownership, isA<SensorOwnershipUnknown>());
     });
+  });
+
+  testWidgets('a sensor connected from anywhere is remembered for the run', (
+    tester,
+  ) async {
+    late ProviderContainer container;
+    memory = _MemorySensorMemory(const NoSensorOwned());
+    final repository = BleRepository(
+      link: _Link(reachable: _sensor),
+      memory: memory,
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sensorMemoryProvider.overrideWithValue(memory),
+          bleRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: Consumer(
+          builder: (context, ref, _) {
+            container = ProviderScope.containerOf(context);
+            ref.watch(sensorOwnershipProvider);
+            return const SizedBox();
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(container.read(sensorOwnershipProvider).value, isA<NoSensorOwned>());
+
+    await tester.runAsync(() => repository.connectToDevice(_sensor));
+    await tester.pumpAndSettle();
+
+    expect(
+      container.read(sensorOwnershipProvider).value,
+      isA<RememberedSensor>(),
+    );
   });
 }
