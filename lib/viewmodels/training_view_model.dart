@@ -19,6 +19,7 @@ import 'package:crimpy/repositories/builtin_training_repository.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/utils/training_intensity.dart';
+import 'package:crimpy/utils/training_totals.dart';
 
 part 'training_view_model.g.dart';
 
@@ -300,6 +301,25 @@ Future<SessionModel?> sessionWithData(Ref ref, String sessionId) {
   final trainingRepository = ref.watch(trainingRepositoryProvider);
   return trainingRepository.getSessionWithData(sessionId);
 }
+
+/// Every session the athlete has, each carrying all of its reps: the whole
+/// history, for the readers that add it up rather than list it.
+///
+/// Read after the session list and again whenever it changes, so a run saved,
+/// edited or deleted anywhere reaches the totals without each of those paths
+/// having to know they exist. Auto-disposed: it holds every rep ever recorded,
+/// and only the profile reads it.
+@riverpod
+Future<List<SessionModel>> sessionHistoryWithReps(Ref ref) async {
+  final repository = ref.watch(trainingRepositoryProvider);
+  await ref.watch(sessionsProvider.future);
+  return repository.getSessionHistoryWithReps();
+}
+
+/// The all-time totals of the profile, Krakoer/crimpy#150.
+@riverpod
+Future<TrainingTotals> trainingTotals(Ref ref) async =>
+    TrainingTotals.of(await ref.watch(sessionHistoryWithRepsProvider.future));
 
 /// The items a played session was run from, so its reps can be read block by
 /// block. Empty when the session was not played from a training, or when the
