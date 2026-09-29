@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/assessment_tutorials.dart';
@@ -101,7 +102,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
       // Create session model
       final saveSession = SessionModel(
         name:
-            "Critical Force assessment - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}",
+            "Critical Force assessment - ${DateFormat('dd/MM/yyyy').format(currentTrainingDay())}",
         isAssessment: true,
         origin: SessionOrigin.played,
       );

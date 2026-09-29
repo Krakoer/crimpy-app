@@ -60,6 +60,10 @@ SessionModel _unattached(String name, DateTime date) => SessionModel(
   date: date,
 );
 
+/// An evening on [day], well clear of the training day turn, for a session
+/// whose time of day is not what the test is about.
+DateTime _eveningOf(DateTime day) => DateTime(day.year, day.month, day.day, 18);
+
 void main() {
   test('day-of-week session is done when it was played that day', () {
     final program = _program();
@@ -68,7 +72,7 @@ void main() {
 
     expect(isScheduledTrainingDone([], program, 1, s, date: date), isFalse);
 
-    final sessions = [_answering(s.id, date)];
+    final sessions = [_answering(s.id, _eveningOf(date))];
     expect(
       isScheduledTrainingDone(sessions, program, 1, s, date: date),
       isTrue,
@@ -83,7 +87,7 @@ void main() {
     for (final origin in SessionOrigin.values) {
       expect(
         isScheduledTrainingDone(
-          [_answering(s.id, date, origin: origin)],
+          [_answering(s.id, _eveningOf(date), origin: origin)],
           program,
           1,
           s,
@@ -103,7 +107,7 @@ void main() {
     // Renaming the training cannot un-complete a run already played from it.
     expect(
       isScheduledTrainingDone(
-        [_answering(s.id, date, name: 'Renamed to something else')],
+        [_answering(s.id, _eveningOf(date), name: 'Renamed to something else')],
         program,
         1,
         s,
@@ -116,7 +120,7 @@ void main() {
     // not count even when it carries the training title verbatim.
     expect(
       isScheduledTrainingDone(
-        [_unattached('Max Hangs', date)],
+        [_unattached('Max Hangs', _eveningOf(date))],
         program,
         1,
         s,
@@ -128,7 +132,7 @@ void main() {
     // Nor does a longer name the title is a prefix of.
     expect(
       isScheduledTrainingDone(
-        [_unattached('Max Hangs - endurance', date)],
+        [_unattached('Max Hangs - endurance', _eveningOf(date))],
         program,
         1,
         s,
@@ -144,7 +148,7 @@ void main() {
     final evening = _daySession(id: 'slot-evening');
     final date = morning.scheduledDate(program, 1)!;
 
-    final sessions = [_answering(morning.id, date)];
+    final sessions = [_answering(morning.id, _eveningOf(date))];
 
     expect(
       isScheduledTrainingDone(sessions, program, 1, morning, date: date),
@@ -161,8 +165,8 @@ void main() {
     final s = _flexSession();
 
     final two = [
-      _answering(s.id, DateTime(2026, 6, 2)),
-      _answering(s.id, DateTime(2026, 6, 4)),
+      _answering(s.id, DateTime(2026, 6, 2, 18)),
+      _answering(s.id, DateTime(2026, 6, 4, 18)),
     ];
     expect(completionsInWeek(two, program, 1, s), 2);
     expect(
@@ -170,7 +174,7 @@ void main() {
       isFalse,
     );
 
-    final three = [...two, _answering(s.id, DateTime(2026, 6, 6))];
+    final three = [...two, _answering(s.id, DateTime(2026, 6, 6, 18))];
     expect(
       isScheduledTrainingDone(three, program, 1, s, date: DateTime(2026, 6, 6)),
       isTrue,
@@ -181,9 +185,9 @@ void main() {
     final program = _program();
     final s = _flexSession();
     final sessions = [
-      _unattached('Mobility', DateTime(2026, 6, 2)),
-      _unattached('Mobility', DateTime(2026, 6, 4)),
-      _unattached('Mobility', DateTime(2026, 6, 6)),
+      _unattached('Mobility', DateTime(2026, 6, 2, 18)),
+      _unattached('Mobility', DateTime(2026, 6, 4, 18)),
+      _unattached('Mobility', DateTime(2026, 6, 6, 18)),
     ];
 
     expect(completionsInWeek(sessions, program, 1, s), 0);
@@ -215,7 +219,76 @@ void main() {
     final program = _program();
     final s = _flexSession();
     // Week 1 is 1-7 Jun; this is week 2.
-    final sessions = [_answering(s.id, DateTime(2026, 6, 9))];
+    final sessions = [_answering(s.id, DateTime(2026, 6, 9, 18))];
     expect(completionsInWeek(sessions, program, 1, s), 0);
+  });
+
+  group('the training day turns at 04:00', () {
+    test('a run started at 23:55 counts for that evening', () {
+      final program = _program();
+      final s = _daySession();
+      final wednesday = s.scheduledDate(program, 1)!;
+      final lateStart = DateTime(2026, 6, 3, 23, 55);
+
+      expect(
+        isScheduledTrainingDone(
+          [_answering(s.id, lateStart)],
+          program,
+          1,
+          s,
+          date: wednesday,
+        ),
+        isTrue,
+      );
+    });
+
+    test('a run started after midnight still answers the evening before', () {
+      final program = _program();
+      final s = _daySession();
+      final wednesday = s.scheduledDate(program, 1)!;
+      final pastMidnight = [_answering(s.id, DateTime(2026, 6, 4, 0, 30))];
+
+      expect(
+        isScheduledTrainingDone(pastMidnight, program, 1, s, date: wednesday),
+        isTrue,
+      );
+      expect(
+        isScheduledTrainingDone(
+          pastMidnight,
+          program,
+          1,
+          s,
+          date: DateTime(2026, 6, 4),
+        ),
+        isFalse,
+      );
+    });
+
+    test('a run started at 04:00 belongs to the new day', () {
+      final program = _program();
+      final s = _daySession();
+      final wednesday = s.scheduledDate(program, 1)!;
+
+      expect(
+        isScheduledTrainingDone(
+          [_answering(s.id, DateTime(2026, 6, 4, 4))],
+          program,
+          1,
+          s,
+          date: wednesday,
+        ),
+        isFalse,
+      );
+    });
+
+    test('a Monday 02:00 run counts in the week it closes', () {
+      final program = _program();
+      final s = _flexSession();
+      // Week 1 is 1-7 Jun, so Monday 8 Jun at 02:00 is still its Sunday night.
+      final sessions = [_answering(s.id, DateTime(2026, 6, 8, 2))];
+
+      expect(completionsInWeek(sessions, program, 1, s), 1);
+      expect(completionsInWeek(sessions, program, 2, s), 0);
+    });
   });
 }

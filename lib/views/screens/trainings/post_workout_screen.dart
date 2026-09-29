@@ -1,3 +1,4 @@
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +18,12 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 class PostWorkoutScreen extends ConsumerStatefulWidget {
   final Training template;
   final List<RepDataModel> results;
+
+  /// When the run started, which dates the session. Carried from the run
+  /// rather than read off the clock at save: a training finished at 23:55 and
+  /// reviewed at 00:05 was run the evening before, and a review left open
+  /// through a phone call must not move the session by as long.
+  final DateTime startedAt;
 
   /// What the run recorded against the prescribed items as it was played: the
   /// reps an AMRAP turned out to be, and the rounds of an emom the athlete
@@ -45,6 +52,7 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
   const PostWorkoutScreen({
     required this.results,
     required this.template,
+    required this.startedAt,
     this.itemResults = const [],
     this.assessmentResults = AssessmentResults.none,
     this.bodyweightKg,
@@ -103,7 +111,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
   @override
   void initState() {
     _trainingNameController.text =
-        "${widget.template.title} - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}";
+        "${widget.template.title} - ${DateFormat('dd/MM/yyyy').format(trainingDayOf(widget.startedAt))}";
     super.initState();
   }
 
@@ -300,7 +308,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
             final assessment = _assessment;
             final session = SessionModel(
               name: _trainingNameController.text,
-              date: DateTime.now(),
+              date: widget.startedAt,
               notes: _noteController.text,
               // What marks the session as measuring something, which is how the
               // history and the coach portal label it.

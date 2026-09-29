@@ -178,7 +178,14 @@ List<ReminderOccurrence> planReminders({
     // The user asked for this one by hand, so it ignores the active weekdays a
     // scheduled reminder has to respect. It still stays quiet if the training
     // it was postponing has been logged in the meantime.
-    final labels = _labelsForDay(schedule, sessions, preferences, snoozedUntil);
+    // Asked of the training day it fires on: a reminder put off from 23:30 to
+    // 00:30 is still about the evening's training, not the next day's.
+    final labels = _labelsForDay(
+      schedule,
+      sessions,
+      preferences,
+      trainingDayOf(snoozedUntil),
+    );
     if (labels.isNotEmpty) {
       occurrences.add(
         ReminderOccurrence(

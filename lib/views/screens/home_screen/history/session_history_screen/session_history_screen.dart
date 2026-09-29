@@ -97,7 +97,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
     // Filter sessions by selected date if one is selected
     final filteredSessions = _selectedDate != null
         ? sessions.where((session) {
-            return DateUtils.isSameDay(session.date, _selectedDate);
+            return DateUtils.isSameDay(session.trainingDay, _selectedDate);
           }).toList()
         : sessions;
 
@@ -124,7 +124,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
     // Group sessions by date
     final Map<String, List<SessionModel>> groupedSessions = {};
     for (final session in filteredSessions) {
-      final dateKey = DateFormat('yyyy-MM-dd').format(session.date);
+      final dateKey = DateFormat('yyyy-MM-dd').format(session.trainingDay);
       if (!groupedSessions.containsKey(dateKey)) {
         groupedSessions[dateKey] = [];
       }
@@ -183,14 +183,14 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
           _currentFilter = const SessionFilter(isAssessment: false);
           break;
         case 'week':
-          final startOfWeek = getStartOfWeek(DateTime.now());
+          final startOfWeek = getStartOfWeek(currentTrainingDay());
           _currentFilter = SessionFilter(
             startDate: startOfWeek,
             endDate: addCalendarDays(startOfWeek, 7),
           );
           break;
         case 'month':
-          final now = DateTime.now();
+          final now = currentTrainingDay();
           _currentFilter = SessionFilter(
             startDate: DateTime(now.year, now.month, 1),
             endDate: DateTime(now.year, now.month + 1, 1),

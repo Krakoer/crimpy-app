@@ -1,3 +1,4 @@
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
@@ -167,7 +168,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: CrimpyTheme.spaceSm),
                         ScheduleStatusTag(
-                          status: scheduleStatusFor(date, DateTime.now()),
+                          status: scheduleStatusFor(date, currentTrainingDay()),
                         ),
                       ],
                     ),
@@ -351,7 +352,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
   /// Whether this session occurs today: an exact date match for day-of-week
   /// sessions, or the current week for everyday / times-per-week ones.
   bool _isScheduledToday() {
-    final today = DateTime.now();
+    final today = currentTrainingDay();
     switch (session.schedule) {
       case SessionSchedule.dayOfWeek:
         final date = session.scheduledDate(program, weekNumber);
@@ -383,7 +384,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
       program,
       weekNumber,
       session,
-      date: session.scheduledDate(program, weekNumber) ?? DateTime.now(),
+      date: session.scheduledDate(program, weekNumber) ?? currentTrainingDay(),
     );
     return PrimaryActionBar(
       child: done

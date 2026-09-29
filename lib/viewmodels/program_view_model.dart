@@ -1,3 +1,4 @@
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/repositories/program_repository.dart';
@@ -27,7 +28,7 @@ Future<List<Program>> programs(Ref ref) async {
 Future<Program?> activeProgram(Ref ref) async {
   final programs = await ref.watch(programsProvider.future);
   if (programs.isEmpty) return null;
-  final today = DateTime.now();
+  final today = currentTrainingDay();
   for (final program in programs) {
     if (program.isActiveOn(today)) return program;
   }
@@ -67,7 +68,7 @@ Future<Training> programTraining(
 Future<ActiveProgramWeek?> activeProgramWeek(Ref ref) async {
   final program = await ref.watch(activeProgramProvider.future);
   if (program == null) return null;
-  final today = DateTime.now();
+  final today = currentTrainingDay();
   if (!program.isActiveOn(today)) return null;
   final weekNumber = program.currentWeekNumber(today);
   final week = await ref.watch(
@@ -88,7 +89,10 @@ Future<List<TodayTraining>> todayTrainings(Ref ref) async {
   final active = await ref.watch(activeProgramWeekProvider.future);
   if (active == null) return [];
   // day_of_week is an offset from the program start, not a calendar weekday.
-  final offset = active.program.dayOffsetOf(active.weekNumber, DateTime.now());
+  final offset = active.program.dayOffsetOf(
+    active.weekNumber,
+    currentTrainingDay(),
+  );
   return active.week
       .sessionsOnDay(offset)
       .map(

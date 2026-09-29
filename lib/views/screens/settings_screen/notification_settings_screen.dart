@@ -1,3 +1,4 @@
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/models/notification_preferences.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/services/notification_service.dart';
@@ -280,7 +281,7 @@ class _FlexibleTrainings extends ConsumerWidget {
     if (schedule == null) return const SizedBox.shrink();
 
     final week = schedule.weekNumbered(
-      schedule.program.currentWeekNumber(DateTime.now()),
+      schedule.program.currentWeekNumber(currentTrainingDay()),
     );
     final flexible = week?.timesPerWeekSessions ?? const <WeekSession>[];
     if (flexible.isEmpty) return const SizedBox.shrink();
