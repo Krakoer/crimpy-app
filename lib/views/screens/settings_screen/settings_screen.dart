@@ -9,7 +9,7 @@ import 'package:crimpy/views/screens/availability/week_availability_screen.dart'
 import 'package:crimpy/views/screens/settings_screen/notification_settings_screen.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/debug_modal.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/reset_password_tile.dart';
-import 'package:crimpy/views/screens/settings_screen/widgets/run_cues_tile.dart';
+import 'package:crimpy/views/screens/settings_screen/widgets/run_cue_vibration_tile.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/sensor_settings_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

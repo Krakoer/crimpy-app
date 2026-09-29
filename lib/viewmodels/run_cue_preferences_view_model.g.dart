@@ -154,3 +154,58 @@ abstract class _$RunCueVibration extends $AsyncNotifier<bool> {
     element.handleValue(ref, created);
   }
 }
+
+/// What the run screen plays its cues through: the vibrations, heard only
+/// while the setting says so. The setting is asked at every cue, so one still
+/// loading when the run starts counts as off rather than buzzing an athlete
+/// who turned it off, and a change takes effect on the next cue.
+
+@ProviderFor(runCueHaptics)
+const runCueHapticsProvider = RunCueHapticsProvider._();
+
+/// What the run screen plays its cues through: the vibrations, heard only
+/// while the setting says so. The setting is asked at every cue, so one still
+/// loading when the run starts counts as off rather than buzzing an athlete
+/// who turned it off, and a change takes effect on the next cue.
+
+final class RunCueHapticsProvider
+    extends $FunctionalProvider<RunHaptics, RunHaptics, RunHaptics>
+    with $Provider<RunHaptics> {
+  /// What the run screen plays its cues through: the vibrations, heard only
+  /// while the setting says so. The setting is asked at every cue, so one still
+  /// loading when the run starts counts as off rather than buzzing an athlete
+  /// who turned it off, and a change takes effect on the next cue.
+  const RunCueHapticsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'runCueHapticsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$runCueHapticsHash();
+
+  @$internal
+  @override
+  $ProviderElement<RunHaptics> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  RunHaptics create(Ref ref) {
+    return runCueHaptics(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(RunHaptics value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<RunHaptics>(value),
+    );
+  }
+}
+
+String _$runCueHapticsHash() => r'44f28e02ab02ca3b89b1e802bcaaed1b04a3a89b';

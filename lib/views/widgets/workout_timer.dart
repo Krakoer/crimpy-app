@@ -137,7 +137,7 @@ class WorkoutTimer {
           _stopwatch.elapsedMilliseconds >=
               startCurrentRep + currentItemDuration * 1000) {
         if (currentItemIndex < items.length - 1) {
-          _cue(nextItem is RestItem ? RunCue.letGo : RunCue.pullStart);
+          _cueTransition();
         }
         _advance(() => startCurrentRep + currentItemDuration * 1000);
         advanced = true;
@@ -162,6 +162,17 @@ class WorkoutTimer {
       (cue == RunCue.countdown ? _playerBip : _playerBiiip)?.resume();
     }
     haptics?.play(cue);
+  }
+
+  /// Marks the step the run is about to enter. The beep is one tone for every
+  /// transition; the vibration tells an effort starting from a pull ending.
+  /// A rest running into another rest ends no pull, so it beeps and is not
+  /// felt as a let go.
+  void _cueTransition() {
+    final entersRest = nextItem is RestItem;
+    if (!entersRest) return _cue(RunCue.pullStart);
+    if (currentItem is! RestItem) return _cue(RunCue.letGo);
+    if (playSound) _playerBiiip?.resume();
   }
 
   /// Whether the second now ticking is one the countdown beeps on: the last

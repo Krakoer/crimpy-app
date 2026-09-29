@@ -4,7 +4,6 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/utils/training_expander.dart';
 import 'package:crimpy/utils/video_link.dart';
-import 'package:crimpy/services/run_haptics.dart';
 import 'package:crimpy/viewmodels/run_cue_preferences_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -140,12 +139,8 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     // the ground during a hangboard session.
     playSound: true,
     // The same cues, felt: a beep is easy to miss on a noisy wall or under
-    // music. Off while the setting has not loaded, rather than buzzing an
-    // athlete who turned it off.
-    haptics: GatedRunHaptics(
-      ref.read(runHapticsProvider),
-      enabled: () => ref.read(runCueVibrationProvider).value ?? false,
-    ),
+    // music.
+    haptics: ref.read(runCueHapticsProvider),
     // Set state each second to update the UI.
     onSecondChange: () => setState(() {}),
     onNextRep: (_) {

@@ -24,3 +24,13 @@ class RunCueVibration extends _$RunCueVibration {
     await ref.read(runCuePreferencesRepositoryProvider).setVibrates(vibrates);
   }
 }
+
+/// What the run screen plays its cues through: the vibrations, heard only
+/// while the setting says so. The setting is asked at every cue, so one still
+/// loading when the run starts counts as off rather than buzzing an athlete
+/// who turned it off, and a change takes effect on the next cue.
+@riverpod
+RunHaptics runCueHaptics(Ref ref) => GatedRunHaptics(
+  ref.watch(runHapticsProvider),
+  enabled: () => ref.read(runCueVibrationProvider).value ?? false,
+);

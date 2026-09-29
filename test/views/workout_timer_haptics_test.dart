@@ -79,6 +79,30 @@ void main() {
       ]);
     });
 
+    // An emom keeps a child's own rest ahead of the rest closing the round:
+    // the athlete is already off the board, so no let go is felt there.
+    test('a rest running into a rest is not felt as a let go', () {
+      final cues = cuesOver([
+        _pull(3),
+        RestItem(durationSeconds: 3),
+        RestItem(durationSeconds: 3),
+        _pull(3),
+      ]);
+
+      expect(cues, [
+        'countdown in pull 2',
+        'countdown in pull 1',
+        'letGo in pull 0',
+        'countdown in rest 2',
+        'countdown in rest 1',
+        'countdown in rest 2',
+        'countdown in rest 1',
+        'pullStart in rest 0',
+        'countdown in pull 2',
+        'countdown in pull 1',
+      ]);
+    });
+
     test('each cue has a pattern of its own', () {
       final patterns = RunCue.values
           .map((cue) => VibrationRunHaptics.patterns[cue]!.join(','))
