@@ -57,7 +57,97 @@ const _rest = RestItem(durationSeconds: 1);
 /// A 1 s lead-in, then four 2 s pulls with 1 s between them.
 const _reps = [_rest, _pull, _rest, _pull, _rest, _pull, _rest, _pull];
 
+/// Puts the run on screen with [samples] as the sensor.
+Future<State> _pumpRun(
+  WidgetTester tester,
+  ManualCrimpyWatch watch,
+  _HandFedSamples samples,
+) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        bleRepositoryProvider.overrideWithValue(BleRepository()),
+        connectionStateProvider.overrideWith(_Connected.new),
+        bleDataStreamProvider.overrideWith(() => samples),
+        assessmentsProvider.overrideWith(_NoHistory.new),
+      ],
+      child: MaterialApp(
+        home: CriticalForceRunScreen(
+          reps: [..._reps],
+          hand: HandSide.right,
+          watch: watch,
+        ),
+      ),
+    ),
+  );
+  return tester.state(find.byType(CriticalForceRunScreen));
+}
+
+/// Moves the run clock and the wall clock on together until the run clock
+/// reads [untilMs], feeding 10 kg in the pulls and 30 kg in the rests.
+Future<void> _runUntil(
+  WidgetTester tester,
+  ManualCrimpyWatch watch,
+  _HandFedSamples samples,
+  int untilMs,
+) async {
+  for (var ms = watch.elapsedMilliseconds; ms < untilMs; ms += 100) {
+    final inPull = ms >= 1000 && (ms - 1000) % 3000 <= 2000;
+    samples.points.add(BleDataPoint(inPull ? 10 : 30, clock.now()));
+    watch.advance(100);
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
+const _windowsOnTheBells = [
+  (start: 1000, end: 3000),
+  (start: 4000, end: 6000),
+  (start: 7000, end: 9000),
+  (start: 10000, end: 12000),
+];
+
 void main() {
+  testWidgets('a pause in a pull does not reach its window', (tester) async {
+    final watch = ManualCrimpyWatch();
+    final samples = _HandFedSamples();
+    final state = await _pumpRun(tester, watch, samples);
+
+    await _runUntil(tester, watch, samples, 4500);
+    // Back opens the leave dialog, which stops the run clock. The athlete
+    // hangs off the edge at 30 kg for 5 s meanwhile.
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    for (var i = 0; i < 50; i++) {
+      samples.points.add(BleDataPoint(30, clock.now()));
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    await tester.tap(find.text('Keep going'));
+    await tester.pump();
+    await _runUntil(tester, watch, samples, 12000);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // ignore: avoid_dynamic_calls
+    expect((state as dynamic).pullWindows, _windowsOnTheBells);
+    expect(find.text('10.00 kg'), findsOneWidget);
+    expect(find.textContaining('paused for 5 s'), findsOneWidget);
+  });
+
+  testWidgets('dismissing the leave dialog beside it keeps the run going', (
+    tester,
+  ) async {
+    final watch = ManualCrimpyWatch();
+    final state = await _pumpRun(tester, watch, _HandFedSamples());
+
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pump();
+
+    // ignore: avoid_dynamic_calls
+    expect((state as dynamic).timer.isRunning, isTrue);
+  });
+
   testWidgets('the pull windows sit on the bells and the force in them is '
       'the result', (tester) async {
     final watch = ManualCrimpyWatch();

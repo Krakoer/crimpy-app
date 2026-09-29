@@ -37,5 +37,18 @@ void main() {
 
       expect(log.runClockAt(at(1500)), 1500);
     });
+
+    test('adds up the pauses once the run clock passed a point', () {
+      final log = RunClockLog()
+        ..started(at(0), 0)
+        ..stopped(at(1000))
+        ..started(at(3000), 1000)
+        ..stopped(at(6000))
+        ..started(at(10000), 4000);
+
+      expect(log.pausedMsAfter(0), 6000);
+      // The pause at 1 s on the run clock came before the point.
+      expect(log.pausedMsAfter(2000), 4000);
+    });
   });
 }

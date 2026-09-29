@@ -145,6 +145,9 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                 data: data,
                 samples: samples,
                 results: results,
+                pausedSeconds: _pullWindows.isEmpty
+                    ? 0
+                    : _clockLog.pausedMsAfter(_pullWindows.first.start) ~/ 1000,
                 previousCriticalForce: previousCriticalForce,
                 saveAssessment: saveAssessment,
                 saveSession: saveSession,
@@ -250,10 +253,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
             ),
             actions: [
               TextButton(
-                onPressed: () {
-                  setState(_startClock);
-                  Navigator.of(context).pop(false);
-                },
+                onPressed: () => Navigator.of(context).pop(false),
                 child: Text('Keep going'),
               ),
               FilledButton(
@@ -265,9 +265,13 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
           ),
         );
 
-        // If user chose to leave, leave the workout.
+        // If user chose to leave, leave the workout. Any other way out of the
+        // dialog, a tap beside it included, keeps the run going, unless an
+        // interruption has already discarded it.
         if (shouldPop ?? false) {
           navigator.pop();
+        } else if (mounted && !_interrupted) {
+          setState(_startClock);
         }
       },
       child: Scaffold(

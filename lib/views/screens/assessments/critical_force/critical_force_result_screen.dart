@@ -20,11 +20,15 @@ class CriticalForceResultScreen extends ConsumerWidget {
   /// The readings on the analysis' time footing, for the trace.
   final List<CriticalForceSample> samples;
 
+  /// Whole seconds the run stood paused once the first pull had started.
+  final int pausedSeconds;
+
   const CriticalForceResultScreen({
     this.previousCriticalForce,
     required this.results,
     required this.data,
     required this.samples,
+    this.pausedSeconds = 0,
     required this.saveAssessment,
     required this.saveSession,
     required this.saveReps,
@@ -70,6 +74,20 @@ class CriticalForceResultScreen extends ConsumerWidget {
                 color: CrimpyTheme.textSecondary,
               ),
             ),
+            if (pausedSeconds > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: CrimpyTheme.spaceLg,
+                  vertical: CrimpyTheme.spaceXs,
+                ),
+                child: Text(
+                  "The test was paused for $pausedSeconds s. Extra rest lets the forearm recover, so this result may read high.",
+                  textAlign: TextAlign.center,
+                  style: CrimpyTheme.body.copyWith(
+                    color: CrimpyTheme.textSecondary,
+                  ),
+                ),
+              ),
             if (lateOff > 0)
               Padding(
                 padding: const EdgeInsets.symmetric(
