@@ -34,9 +34,10 @@ class CriticalForcePull {
   /// Fraction of the window covered by readings, 0 to 1.
   final double coverage;
 
-  /// Seconds spent on the edge during the rest after this pull, or null for
-  /// the final pull, which has no rest after it.
-  final double? restLoadSeconds;
+  /// Seconds the athlete stayed on the edge after the bell that ended this
+  /// pull, without letting go, or null for the final pull, which has no rest
+  /// after it. Taking the edge again later in the rest does not count.
+  final double? heldAfterBellSeconds;
 
   const CriticalForcePull({
     required this.index,
@@ -47,14 +48,14 @@ class CriticalForcePull {
     required this.endKg,
     required this.impulseKgS,
     required this.coverage,
-    required this.restLoadSeconds,
+    required this.heldAfterBellSeconds,
   });
 
   /// Whether the athlete stayed on the edge well into the rest after the bell.
   /// That force counts for nothing, and the rest it ate was not kept.
   bool get lateOff =>
-      restLoadSeconds != null &&
-      restLoadSeconds! > CriticalForceRules.restKeptLimitSeconds;
+      heldAfterBellSeconds != null &&
+      heldAfterBellSeconds! > CriticalForceRules.restKeptLimitSeconds;
 }
 
 /// Output of the Critical Force analysis over a recorded test.
@@ -76,9 +77,14 @@ class CriticalForceResults {
   /// Every pull run, in order.
   final List<CriticalForcePull> pulls;
 
-  /// 1-based, inclusive: the pulls [criticalForce] is the mean of.
+  /// 1-based, inclusive: the last pulls, which [criticalForce] is the mean
+  /// of.
   final int firstCountedPull;
   final int lastCountedPull;
+
+  /// How many of those pulls carried enough data to be averaged. Fewer than
+  /// the span holds when the sensor left holes in some of them.
+  final int averagedPullCount;
 
   const CriticalForceResults({
     required this.criticalForce,
@@ -88,6 +94,7 @@ class CriticalForceResults {
     required this.pulls,
     required this.firstCountedPull,
     required this.lastCountedPull,
+    required this.averagedPullCount,
   });
 
   /// How many pulls were held on into the following rest.
@@ -107,11 +114,12 @@ abstract final class CriticalForceRules {
   static const endForcePulls = 3;
   static const endWindowSeconds = 1.0;
 
-  /// On the edge, for counting load held into a rest, and the least a Critical
+  /// On the edge, for counting load held after the bell, and the least a Critical
   /// Force can be for the test to count as pulled at all.
   static const onEdgeKg = 2.0;
 
-  /// More than this spent on the edge during a rest means it was not kept.
+  /// Holding on for more than this after the bell means the rest was not
+  /// kept.
   static const restKeptLimitSeconds = 1.0;
 
   /// Readings further apart than this leave a hole that nothing is

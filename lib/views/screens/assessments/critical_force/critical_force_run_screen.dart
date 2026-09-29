@@ -5,13 +5,14 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
-import 'package:crimpy/models/critical_force_result.dart';
 import 'package:crimpy/utils/reps.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/utils/critical_force_analysis.dart';
+import 'package:crimpy/utils/run_clock_log.dart';
+import 'package:clock/clock.dart';
 import 'package:crimpy/views/screens/assessments/assessment_cue_box.dart';
 import 'package:crimpy/views/screens/assessments/assessment_run_phase.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/analysis_error_screen.dart';
@@ -50,30 +51,37 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
     with WorkoutLifecycleMixin {
   int get _totalPulls => widget.reps.whereType<TimedItem>().length;
 
-  /// The pulls run so far, as wall clock spans from the bell that started
-  /// each to the bell that ended it. The analysis sorts the readings into
-  /// these, so a paused clock cannot shift a window off the pull it belongs to.
-  final List<({DateTime start, DateTime end})> _pullSpans = [];
-  DateTime? _pullStartedAt;
+  /// The pulls run so far, on the run's clock in milliseconds: from the bell
+  /// that started each to the bell that ended it.
+  final List<({int start, int end})> _pullWindows = [];
+  int? _pullStartedAtMs;
 
-  /// The wall clock time at which the run's stopwatch read [stopwatchMs].
-  DateTime _wallTimeAt(int stopwatchMs) => DateTime.now().subtract(
-    Duration(milliseconds: timer.elapsedMilliseconds - stopwatchMs),
-  );
+  @visibleForTesting
+  List<({int start, int end})> get pullWindows => _pullWindows;
 
-  /// Records the bell at [stopwatchMs], between the step the run leaves and
-  /// the one it enters (null when the run ends).
-  void _recordBell(
-    int stopwatchMs, {
-    required TrainingExecutionItem? entering,
-  }) {
-    final at = _wallTimeAt(stopwatchMs);
-    final startedAt = _pullStartedAt;
+  /// Places each reading on the run's clock. The clock stops while a dialog is
+  /// open over the run, and what the sensor reads then belongs to no pull.
+  final _clockLog = RunClockLog();
+
+  void _startClock() {
+    _clockLog.started(clock.now(), timer.elapsedMilliseconds);
+    timer.play();
+  }
+
+  void _stopClock() {
+    timer.stop();
+    _clockLog.stopped(clock.now());
+  }
+
+  /// Records the bell at [atMs] on the run's clock, between the step the run
+  /// leaves and the one it enters (null when the run ends).
+  void _recordBell(int atMs, {required TrainingExecutionItem? entering}) {
+    final startedAt = _pullStartedAtMs;
     if (timer.currentItem is TimedItem && startedAt != null) {
-      _pullSpans.add((start: startedAt, end: at));
-      _pullStartedAt = null;
+      _pullWindows.add((start: startedAt, end: atMs));
+      _pullStartedAtMs = null;
     }
-    if (entering is TimedItem) _pullStartedAt = at;
+    if (entering is TimedItem) _pullStartedAtMs = atMs;
   }
 
   late WorkoutTimer timer = WorkoutTimer(
@@ -99,25 +107,14 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
       );
 
       try {
-        if (_pullSpans.isEmpty || data.isEmpty) {
-          throw const CriticalForceAnalysisException(
-            'No force was recorded during the test.',
-          );
-        }
-        // Every time is in seconds from the bell that started pull 1.
-        final origin = _pullSpans.first.start;
-        double secondsFromOrigin(DateTime at) =>
-            at.difference(origin).inMicroseconds / 1e6;
         final samples = [
           for (final point in data)
-            (t: secondsFromOrigin(point.timestamp), kg: point.value),
+            if (_clockLog.runClockAt(point.timestamp) case final atMs?)
+              (t: atMs / 1000, kg: point.value),
         ];
         final results = analyseCriticalForce(samples, [
-          for (final span in _pullSpans)
-            (
-              start: secondsFromOrigin(span.start),
-              end: secondsFromOrigin(span.end),
-            ),
+          for (final window in _pullWindows)
+            (start: window.start / 1000, end: window.end / 1000),
         ]);
         final criticalLoad = results.criticalForce;
         // Get previous critical force value
@@ -187,7 +184,8 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
   void initState() {
     super.initState();
     timer.init();
-    timer.play();
+    if (timer.currentItem is TimedItem) _pullStartedAtMs = 0;
+    _startClock();
   }
 
   @override
@@ -207,7 +205,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
   void onLeftForeground() {
     if (timer.finished || _interrupted) return;
     _interrupted = true;
-    timer.stop();
+    _stopClock();
     sensorRepository.pauseStreaming();
   }
 
@@ -240,9 +238,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
         if (res) {
           return;
         }
-        setState(() {
-          timer.stop();
-        });
+        setState(_stopClock);
         final NavigatorState navigator = Navigator.of(context);
         // Ask user if they want to leave assessment
         final shouldPop = await showDialog<bool>(
@@ -255,9 +251,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
             actions: [
               TextButton(
                 onPressed: () {
-                  setState(() {
-                    timer.play();
-                  });
+                  setState(_startClock);
                   Navigator.of(context).pop(false);
                 },
                 child: Text('Keep going'),
@@ -287,9 +281,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
               icon: Icon(Icons.help_outline),
               onPressed: () {
                 // Pause timer while showing tutorial
-                setState(() {
-                  timer.stop();
-                });
+                setState(_stopClock);
 
                 // Get grip position from first non-rest rep
                 final gripPosition = widget.reps
@@ -312,9 +304,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                   // An interruption discards the run, so closing the tutorial
                   // it was opened over must not put the clock back on.
                   if (mounted && !_interrupted) {
-                    setState(() {
-                      timer.play();
-                    });
+                    setState(_startClock);
                   }
                 });
               },

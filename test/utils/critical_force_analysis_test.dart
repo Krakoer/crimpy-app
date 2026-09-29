@@ -40,6 +40,7 @@ void main() {
       );
       expect(results.firstCountedPull, 19);
       expect(results.lastCountedPull, 24);
+      expect(results.averagedPullCount, 6);
       expect(results.pulls, hasLength(24));
     });
 
@@ -68,8 +69,23 @@ void main() {
       expect(results.pulls[19].lateOff, isTrue);
       expect(results.pulls[18].lateOff, isFalse);
       expect(results.lateOffCount, 1);
-      expect(results.pulls.last.restLoadSeconds, isNull);
+      expect(results.pulls.last.heldAfterBellSeconds, isNull);
+      expect(results.pulls[19].heldAfterBellSeconds, closeTo(2, 0.1));
     });
+
+    test(
+      'does not mark late off a pull whose edge is taken again for the next',
+      () {
+        // Every pull at 10 kg, let go at the bell, and the edge loaded from 1.5 s
+        // into each rest to set up for the next pull.
+        final results = analyseCriticalForce(
+          _trace(24, (t) => t % 10 <= 7 + 1e-9 || t % 10 >= 8.5 ? 10 : 0),
+          _windows(24),
+        );
+
+        expect(results.lateOffCount, 0);
+      },
+    );
 
     test('keeps each pull\'s mean, peak, end force and impulse', () {
       // Pull 1 ramps from 0 to 14 kg over its 7 s.
@@ -110,6 +126,8 @@ void main() {
 
       expect(results.pulls[23].meanKg, isNull);
       expect(results.criticalForce, closeTo(10, 0.05));
+      expect(results.averagedPullCount, 5);
+      expect(results.firstCountedPull, 19);
     });
 
     test('does not interpolate across a hole in the readings', () {

@@ -65,9 +65,7 @@ class CriticalForceResultScreen extends ConsumerWidget {
               ).copyWith(color: Theme.of(context).colorScheme.onSurface),
             ),
             Text(
-              results.firstCountedPull == results.lastCountedPull
-                  ? "Mean of pull ${results.lastCountedPull}"
-                  : "Mean of pulls ${results.firstCountedPull}-${results.lastCountedPull}",
+              _countedPullsLabel(results),
               style: CrimpyTheme.body.copyWith(
                 color: CrimpyTheme.textSecondary,
               ),
@@ -88,48 +86,52 @@ class CriticalForceResultScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-            SfCartesianChart(
-              plotAreaBorderWidth: 0,
-              series: <CartesianSeries>[
-                FastLineSeries<CriticalForceSample, double>(
-                  width: 2,
-                  dataSource: samples,
-                  xValueMapper: (CriticalForceSample sample, _) => sample.t,
-                  yValueMapper: (CriticalForceSample sample, _) => sample.kg,
+            // The chart takes what the numbers above leave, so the screen
+            // fits a small phone.
+            Expanded(
+              child: SfCartesianChart(
+                plotAreaBorderWidth: 0,
+                series: <CartesianSeries>[
+                  FastLineSeries<CriticalForceSample, double>(
+                    width: 2,
+                    dataSource: samples,
+                    xValueMapper: (CriticalForceSample sample, _) => sample.t,
+                    yValueMapper: (CriticalForceSample sample, _) => sample.kg,
+                  ),
+                  // Each pull's mean, in the middle of its window.
+                  ScatterSeries<CriticalForcePull, double>(
+                    dataSource: [
+                      for (final pull in results.pulls)
+                        if (pull.meanKg != null) pull,
+                    ],
+                    xValueMapper: (pull, _) => (pull.start + pull.end) / 2,
+                    yValueMapper: (pull, _) => pull.meanKg,
+                    markerSettings: MarkerSettings(isVisible: true),
+                  ),
+                  // Dashed line at the Critical Force, across the test.
+                  LineSeries<(double, double), double>(
+                    dataSource: [
+                      (results.pulls.first.start, results.criticalForce),
+                      (results.pulls.last.end, results.criticalForce),
+                    ],
+                    xValueMapper: (data, _) => data.$1,
+                    yValueMapper: (data, _) => data.$2,
+                    dashArray: <double>[5, 5],
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ],
+                primaryYAxis: NumericAxis(
+                  axisLine: AxisLine(color: Colors.transparent),
+                  majorGridLines: MajorGridLines(width: 0),
+                  majorTickLines: MajorTickLines(size: 0),
                 ),
-                // Each pull's mean, in the middle of its window.
-                ScatterSeries<CriticalForcePull, double>(
-                  dataSource: [
-                    for (final pull in results.pulls)
-                      if (pull.meanKg != null) pull,
-                  ],
-                  xValueMapper: (pull, _) => (pull.start + pull.end) / 2,
-                  yValueMapper: (pull, _) => pull.meanKg,
-                  markerSettings: MarkerSettings(isVisible: true),
+                primaryXAxis: NumericAxis(
+                  axisLine: AxisLine(color: Colors.transparent),
+                  majorTickLines: MajorTickLines(size: 0),
+                  majorGridLines: MajorGridLines(width: 0),
+                  autoScrollingMode: AutoScrollingMode.end,
+                  decimalPlaces: 0,
                 ),
-                // Dashed line at the Critical Force, across the test.
-                LineSeries<(double, double), double>(
-                  dataSource: [
-                    (results.pulls.first.start, results.criticalForce),
-                    (results.pulls.last.end, results.criticalForce),
-                  ],
-                  xValueMapper: (data, _) => data.$1,
-                  yValueMapper: (data, _) => data.$2,
-                  dashArray: <double>[5, 5],
-                  color: Theme.of(context).colorScheme.error,
-                ),
-              ],
-              primaryYAxis: NumericAxis(
-                axisLine: AxisLine(color: Colors.transparent),
-                majorGridLines: MajorGridLines(width: 0),
-                majorTickLines: MajorTickLines(size: 0),
-              ),
-              primaryXAxis: NumericAxis(
-                axisLine: AxisLine(color: Colors.transparent),
-                majorTickLines: MajorTickLines(size: 0),
-                majorGridLines: MajorGridLines(width: 0),
-                autoScrollingMode: AutoScrollingMode.end,
-                decimalPlaces: 0,
               ),
             ),
           ],
@@ -177,4 +179,14 @@ class CriticalForceResultScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Which pulls the Critical Force is the mean of, saying so when holes in the
+/// readings left some of them out.
+String _countedPullsLabel(CriticalForceResults results) {
+  final span = "pulls ${results.firstCountedPull}-${results.lastCountedPull}";
+  final spanLength = results.lastCountedPull - results.firstCountedPull + 1;
+  return results.averagedPullCount == spanLength
+      ? "Mean of $span"
+      : "Mean of ${results.averagedPullCount} of $span";
 }

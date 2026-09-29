@@ -76,6 +76,7 @@ CriticalForceResults analyseCriticalForce(
     pulls: pulls,
     firstCountedPull: firstCounted + 1,
     lastCountedPull: pulls.length,
+    averagedPullCount: countedMeans.length,
   );
 }
 
@@ -108,9 +109,9 @@ CriticalForcePull summarisePull(
     endKg: tailEnough && tail.covered > 0 ? tail.area / tail.covered : null,
     impulseKgS: whole.area,
     coverage: min(1, coverage),
-    restLoadSeconds: nextStart == null
+    heldAfterBellSeconds: nextStart == null
         ? null
-        : timeAbove(
+        : timeHeldFrom(
             CriticalForceRules.onEdgeKg,
             samples,
             window.end,
@@ -160,9 +161,10 @@ ForceIntegral integrate(
   return (area: area, covered: covered, peak: peak);
 }
 
-/// Seconds the linear force trace spends at or above [threshold] inside
-/// [from, to).
-double timeAbove(
+/// Seconds the linear force trace stays at or above [threshold] from [from]
+/// on, up to [to], before it first drops under it. A hole in the readings
+/// ends the count, since nothing says the athlete was still on the edge.
+double timeHeldFrom(
   double threshold,
   List<CriticalForceSample> samples,
   double from,
@@ -170,6 +172,7 @@ double timeAbove(
 ) {
   var seconds = 0.0;
   if (to <= from || samples.length < 2) return seconds;
+  var at = from;
   for (
     var i = max(0, _firstIndexNotBefore(samples, from) - 1);
     i + 1 < samples.length && samples[i].t < to;
@@ -178,13 +181,18 @@ double timeAbove(
     final a = samples[i];
     final b = samples[i + 1];
     final dt = b.t - a.t;
-    if (dt <= 0 || dt > CriticalForceRules.gapSeconds) continue;
-    final s = max(a.t, from);
+    if (b.t <= at) continue;
+    if (dt <= 0 || dt > CriticalForceRules.gapSeconds || a.t > at) break;
     final e = min(b.t, to);
-    if (e <= s) continue;
-    final ks = a.kg + (b.kg - a.kg) * (s - a.t) / dt;
+    final ks = a.kg + (b.kg - a.kg) * (at - a.t) / dt;
     final ke = a.kg + (b.kg - a.kg) * (e - a.t) / dt;
-    seconds += _fractionAbove(threshold, ks, ke) * (e - s);
+    if (ks < threshold) break;
+    if (ke < threshold) {
+      seconds += (e - at) * (ks - threshold) / (ks - ke);
+      break;
+    }
+    seconds += e - at;
+    at = e;
   }
   return seconds;
 }
@@ -199,14 +207,6 @@ double _areaAbove(double threshold, double ks, double ke, double duration) {
   final high = max(a, b);
   final fraction = high / (a.abs() + b.abs());
   return high * fraction * duration / 2;
-}
-
-double _fractionAbove(double threshold, double ks, double ke) {
-  final a = ks - threshold;
-  final b = ke - threshold;
-  if (a >= 0 && b >= 0) return 1;
-  if (a < 0 && b < 0) return 0;
-  return max(a, b) / (a.abs() + b.abs());
 }
 
 /// Binary search: the index of the first reading at or after [t].
