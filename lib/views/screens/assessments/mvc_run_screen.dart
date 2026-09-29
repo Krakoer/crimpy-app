@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:crimpy/models/ble_data_model.dart';
@@ -116,7 +117,7 @@ class _MvcRunScreenState extends ConsumerState<MvcRunScreen>
               ),
               saveTraining: SessionModel(
                 name:
-                    "MVC assessment (${_gripPosition.shortName}) - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}",
+                    "MVC assessment (${_gripPosition.shortName}) - ${DateFormat('dd/MM/yyyy').format(currentTrainingDay())}",
                 isAssessment: true,
                 origin: SessionOrigin.played,
               ),

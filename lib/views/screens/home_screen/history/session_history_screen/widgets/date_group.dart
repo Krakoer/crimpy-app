@@ -19,11 +19,9 @@ class DateGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isToday = DateUtils.isSameDay(date, DateTime.now());
-    final isYesterday = DateUtils.isSameDay(
-      date,
-      addCalendarDays(DateTime.now(), -1),
-    );
+    final today = currentTrainingDay();
+    final isToday = DateUtils.isSameDay(date, today);
+    final isYesterday = DateUtils.isSameDay(date, addCalendarDays(today, -1));
 
     String dateLabel;
     if (isToday) {

@@ -12,6 +12,9 @@ import 'package:crimpy/models/session.dart';
 /// enter into it. Renaming a training, two slots sharing a title, or a session
 /// played from the user's own library can no longer move the count.
 ///
+/// A session counts on its training day ([trainingDayOf]), not its calendar
+/// day, so a training started after midnight still answers the evening's slot.
+///
 /// Origin deliberately does not enter into it either. A slot whose training has
 /// nothing to step through is completed by hand, so a logged session answers a
 /// prescription just as a played one does. The server draws the line elsewhere:
@@ -30,22 +33,20 @@ int completionsInWeek(
 ) {
   final start = program.weekStart(weekNumber);
   final end = addCalendarDays(start, 7);
-  return sessions
-      .where(
-        (s) =>
-            _answers(s, scheduled.id) &&
-            !s.date.isBefore(start) &&
-            s.date.isBefore(end),
-      )
-      .length;
+  return sessions.where((s) {
+    if (!_answers(s, scheduled.id)) return false;
+    final day = s.trainingDay;
+    return !day.isBefore(start) && day.isBefore(end);
+  }).length;
 }
 
-/// Whether a session answering the slot [scheduledId] exists on [date]. Private
+/// Whether a session answering the slot [scheduledId] exists on the training
+/// day [date]. Private
 /// because a caller passing a training title instead would compile and silently
 /// report that nothing is ever done.
 bool _isDoneOn(List<SessionModel> sessions, String scheduledId, DateTime date) {
   return sessions.any(
-    (s) => _answers(s, scheduledId) && isSameDay(s.date, date),
+    (s) => _answers(s, scheduledId) && isSameDay(s.trainingDay, date),
   );
 }
 

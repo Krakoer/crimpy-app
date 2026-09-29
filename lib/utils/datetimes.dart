@@ -1,3 +1,5 @@
+import 'package:clock/clock.dart';
+
 /// [date] moved [days] calendar days, at local midnight.
 ///
 /// Counted in calendar days rather than by adding a Duration: a Duration is
@@ -6,6 +8,25 @@
 /// Use this anywhere a date is stepped by a whole number of days.
 DateTime addCalendarDays(DateTime date, int days) =>
     DateTime(date.year, date.month, date.day + days);
+
+/// The hour a training day turns over, local time. A session started before it
+/// belongs to the evening before: a hang begun at 23:47 and one begun at 00:20
+/// are the same night's training, and filing the second under the next morning
+/// scores one evening as two days and leaves the one the athlete trained on
+/// looking missed.
+const int trainingDayStartHour = 4;
+
+/// The training day [instant] belongs to, at local midnight: its calendar day,
+/// or the one before when it falls before [trainingDayStartHour].
+///
+/// Stepped with [addCalendarDays] rather than by subtracting hours, so a DST
+/// night neither loses nor gains the hour that decides it.
+DateTime trainingDayOf(DateTime instant) =>
+    addCalendarDays(instant, instant.hour < trainingDayStartHour ? -1 : 0);
+
+/// The training day it is now: what "today" means wherever the app asks what
+/// the athlete owes or has done today. Until 04:00 it is still yesterday.
+DateTime currentTrainingDay() => trainingDayOf(clock.now());
 
 /// Whole calendar days from [from] to [to], negative when [to] is earlier.
 ///
