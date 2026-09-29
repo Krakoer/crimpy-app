@@ -5,6 +5,7 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
+import 'package:crimpy/models/critical_force_result.dart';
 import 'package:crimpy/utils/reps.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
@@ -49,11 +50,45 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
     with WorkoutLifecycleMixin {
   int get _totalPulls => widget.reps.whereType<TimedItem>().length;
 
+  /// The pulls run so far, as wall clock spans from the bell that started
+  /// each to the bell that ended it. The analysis sorts the readings into
+  /// these, so a paused clock cannot shift a window off the pull it belongs to.
+  final List<({DateTime start, DateTime end})> _pullSpans = [];
+  DateTime? _pullStartedAt;
+
+  /// The wall clock time at which the run's stopwatch read [stopwatchMs].
+  DateTime _wallTimeAt(int stopwatchMs) => DateTime.now().subtract(
+    Duration(milliseconds: timer.elapsedMilliseconds - stopwatchMs),
+  );
+
+  /// Records the bell at [stopwatchMs], between the step the run leaves and
+  /// the one it enters (null when the run ends).
+  void _recordBell(
+    int stopwatchMs, {
+    required TrainingExecutionItem? entering,
+  }) {
+    final at = _wallTimeAt(stopwatchMs);
+    final startedAt = _pullStartedAt;
+    if (timer.currentItem is TimedItem && startedAt != null) {
+      _pullSpans.add((start: startedAt, end: at));
+      _pullStartedAt = null;
+    }
+    if (entering is TimedItem) _pullStartedAt = at;
+  }
+
   late WorkoutTimer timer = WorkoutTimer(
     items: widget.reps,
     watch: widget.watch,
     onSecondChange: () => setState(() => {}),
+    // Called on each bell before the run moves on, when the timer already
+    // holds the start of the step it enters.
+    onNextRep: (_) =>
+        _recordBell(timer.startCurrentRep, entering: timer.nextItem),
     onFinished: () async {
+      _recordBell(
+        timer.startCurrentRep + timer.currentItemDuration * 1000,
+        entering: null,
+      );
       final data = ref.read(bleDataStreamProvider.notifier).getData();
       // Create session model
       final saveSession = SessionModel(
@@ -64,14 +99,27 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
       );
 
       try {
-        // Calculate critical force from the data
-        final startTime = data[0].timestamp.millisecondsSinceEpoch;
-        final timestamps = data
-            .map((e) => (e.timestamp.millisecondsSinceEpoch - startTime) / 1000)
-            .toList();
-        final forces = data.map((e) => e.value).toList();
-        final results = analyseData(timestamps, forces, 7, 3, start: 9.5);
-        final criticalLoad = results.criticalLoad;
+        if (_pullSpans.isEmpty || data.isEmpty) {
+          throw const CriticalForceAnalysisException(
+            'No force was recorded during the test.',
+          );
+        }
+        // Every time is in seconds from the bell that started pull 1.
+        final origin = _pullSpans.first.start;
+        double secondsFromOrigin(DateTime at) =>
+            at.difference(origin).inMicroseconds / 1e6;
+        final samples = [
+          for (final point in data)
+            (t: secondsFromOrigin(point.timestamp), kg: point.value),
+        ];
+        final results = analyseCriticalForce(samples, [
+          for (final span in _pullSpans)
+            (
+              start: secondsFromOrigin(span.start),
+              end: secondsFromOrigin(span.end),
+            ),
+        ]);
+        final criticalLoad = results.criticalForce;
         // Get previous critical force value
         final previousCriticalForce = await ref
             .read(
@@ -98,6 +146,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
             MaterialPageRoute(
               builder: (context) => CriticalForceResultScreen(
                 data: data,
+                samples: samples,
                 results: results,
                 previousCriticalForce: previousCriticalForce,
                 saveAssessment: saveAssessment,
@@ -147,11 +196,11 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
     super.dispose();
   }
 
-  // Critical Force is the asymptote of the force decline under continuous
-  // pulling, so the fatigue curve is the measurement. Any extra rest lets the
-  // forearm recover and inflates the result, and the analysis cannot detect it:
-  // it models every interval as a fixed work + rest cycle and never looks at
-  // the real gap between pulls. An interrupted run is therefore discarded.
+  // Critical Force is where the force settles under continuous pulling, so the
+  // fatigue curve is the measurement. Any extra rest lets the forearm recover
+  // and inflates the result, and the analysis cannot detect it: it only reads
+  // the force inside each pull's window. An interrupted run is therefore
+  // discarded.
   var _interrupted = false;
 
   @override

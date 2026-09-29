@@ -364,25 +364,6 @@ class AssessmentModel {
   }
 }
 
-/// Output of the Critical Force analysis over a recorded session.
-class CriticalForceResults {
-  final List<double> tmeans;
-  final List<double> fmeans;
-  final List<double> eFmeans;
-  final double criticalLoad;
-  final double loadAsymptote;
-  final List<double> predictedForce;
-
-  CriticalForceResults({
-    required this.tmeans,
-    required this.fmeans,
-    required this.eFmeans,
-    required this.criticalLoad,
-    required this.loadAsymptote,
-    required this.predictedForce,
-  });
-}
-
 /// Builtin Assessment Model - similar to BuiltinTrainingModel
 /// Dynamically generates assessment trainings at runtime without DB storage
 class BuiltinAssessmentModel {

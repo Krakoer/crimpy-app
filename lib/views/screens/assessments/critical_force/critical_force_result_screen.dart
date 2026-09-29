@@ -1,5 +1,6 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/models/critical_force_result.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/assessments/post_assessment_screen.dart';
@@ -16,10 +17,14 @@ class CriticalForceResultScreen extends ConsumerWidget {
   final List<RepDataModel> saveReps;
   final List<BleDataPoint> data;
 
+  /// The readings on the analysis' time footing, for the trace.
+  final List<CriticalForceSample> samples;
+
   const CriticalForceResultScreen({
     this.previousCriticalForce,
     required this.results,
     required this.data,
+    required this.samples,
     required this.saveAssessment,
     required this.saveSession,
     required this.saveReps,
@@ -28,11 +33,7 @@ class CriticalForceResultScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final startTime = data[0].timestamp.millisecondsSinceEpoch;
-    final timestamps = data
-        .map((e) => (e.timestamp.millisecondsSinceEpoch - startTime) / 1000)
-        .toList();
-    final forces = data.map((e) => e.value).toList();
+    final lateOff = results.lateOffCount;
     return Scaffold(
       appBar: AppBar(title: Text("Critical Force assessment results")),
       body: SafeArea(
@@ -48,7 +49,7 @@ class CriticalForceResultScreen extends ConsumerWidget {
             SizedBox(height: CrimpyTheme.spaceLg),
             ResultCard(
               prevValue: previousCriticalForce,
-              newValue: results.criticalLoad,
+              newValue: results.criticalForce,
             ),
             SizedBox(height: CrimpyTheme.spaceLgPlus),
             Text(
@@ -58,38 +59,59 @@ class CriticalForceResultScreen extends ConsumerWidget {
               ),
             ),
             Text(
-              "${results.criticalLoad.toStringAsFixed(2)} kg",
+              "${results.criticalForce.toStringAsFixed(2)} kg",
               style: CrimpyTheme.numerals(
                 48,
               ).copyWith(color: Theme.of(context).colorScheme.onSurface),
             ),
+            Text(
+              results.firstCountedPull == results.lastCountedPull
+                  ? "Mean of pull ${results.lastCountedPull}"
+                  : "Mean of pulls ${results.firstCountedPull}-${results.lastCountedPull}",
+              style: CrimpyTheme.body.copyWith(
+                color: CrimpyTheme.textSecondary,
+              ),
+            ),
+            if (lateOff > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: CrimpyTheme.spaceLg,
+                  vertical: CrimpyTheme.spaceXs,
+                ),
+                child: Text(
+                  lateOff == 1
+                      ? "1 pull was held on after the bell. Force past the bell does not count."
+                      : "$lateOff pulls were held on after the bell. Force past the bell does not count.",
+                  textAlign: TextAlign.center,
+                  style: CrimpyTheme.body.copyWith(
+                    color: CrimpyTheme.textSecondary,
+                  ),
+                ),
+              ),
             SfCartesianChart(
               plotAreaBorderWidth: 0,
               series: <CartesianSeries>[
-                FastLineSeries<(double, double), double>(
+                FastLineSeries<CriticalForceSample, double>(
                   width: 2,
-                  dataSource: List.generate(
-                    timestamps.length,
-                    (index) => (timestamps[index], forces[index]),
-                  ),
-                  xValueMapper: ((double, double) data, _) => data.$1,
-                  yValueMapper: ((double, double) data, _) => data.$2,
+                  dataSource: samples,
+                  xValueMapper: (CriticalForceSample sample, _) => sample.t,
+                  yValueMapper: (CriticalForceSample sample, _) => sample.kg,
                 ),
-                // Print points on tmeans, fmeans
-                ScatterSeries<(double, double), double>(
-                  dataSource: List.generate(
-                    results.tmeans.length,
-                    (index) => (results.tmeans[index], results.fmeans[index]),
-                  ),
-                  xValueMapper: (data, _) => data.$1,
-                  yValueMapper: (data, _) => data.$2,
+                // Each pull's mean, in the middle of its window.
+                ScatterSeries<CriticalForcePull, double>(
+                  dataSource: [
+                    for (final pull in results.pulls)
+                      if (pull.meanKg != null) pull,
+                  ],
+                  xValueMapper: (pull, _) => (pull.start + pull.end) / 2,
+                  yValueMapper: (pull, _) => pull.meanKg,
                   markerSettings: MarkerSettings(isVisible: true),
                 ),
-                // Print dashed horizontal line at criticalLoad
+                // Dashed line at the Critical Force, across the test.
                 LineSeries<(double, double), double>(
                   dataSource: [
-                    (timestamps[0], results.criticalLoad),
-                    (timestamps.last, results.criticalLoad),
+                    (results.pulls.first.start, results.criticalForce),
+                    (results.pulls.last.end, results.criticalForce),
                   ],
                   xValueMapper: (data, _) => data.$1,
                   yValueMapper: (data, _) => data.$2,

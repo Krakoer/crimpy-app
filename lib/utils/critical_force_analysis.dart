@@ -1,267 +1,228 @@
-// From https://github.com/StuartLittlefair/PyTindeq/blob/main/laptop/src/analysis.py
+// The approach follows Get a Grip's critical force analysis
+// (https://github.com/plumbmybumb/get-a-grip, docs/CRITICAL_FORCE.md,
+// sections 3, 4 and 7): every number comes from the force inside each pull's
+// window, and Critical Force is the mean of the last six windows.
 import 'dart:math';
-import 'package:crimpy/models/assessment_model.dart';
 
-List<int> _getRaisingEdgesIndex(List<double> forces, {double threshold = 7}) {
-  List<int> raisingEdgesIndex = [];
-  for (int i = 1; i < forces.length; i++) {
-    if (forces[i] > threshold && forces[i - 1] <= threshold) {
-      raisingEdgesIndex.add(i);
-    }
-  }
-  return raisingEdgesIndex;
-}
+import 'package:crimpy/models/critical_force_result.dart';
 
-List<int> _getFallingEdgesIndex(List<double> forces, {double threshold = 7}) {
-  List<int> fallingEdgesIndex = [];
-  for (int i = 1; i < forces.length; i++) {
-    if (forces[i] <= threshold && forces[i - 1] > threshold) {
-      fallingEdgesIndex.add(i);
-    }
-  }
-  return fallingEdgesIndex;
-}
-
-List<double> _sigmaClippedStats(List<double> data) {
-  if (data.isEmpty) {
-    return [0.0, 0.0, 0.0];
+/// Computes Critical Force from a recorded test.
+///
+/// [samples] are the readings, sorted by time. [windows] are the pulls as the
+/// metronome ran them, in order, on the same time footing. The window is the
+/// pull: there is no force threshold to find one, and a pull that sags is
+/// recorded as low force, which is the truthful value in an all-out test.
+///
+/// Throws a [CriticalForceAnalysisException] when the last pulls carry too
+/// little data to average, or when nobody pulled.
+CriticalForceResults analyseCriticalForce(
+  List<CriticalForceSample> samples,
+  List<CriticalForceWindow> windows,
+) {
+  if (windows.isEmpty) {
+    throw const CriticalForceAnalysisException('No pull was run.');
   }
 
-  List<bool> mask = List.filled(data.length, true);
-  for (int i = 0; i < 5; i++) {
-    List<double> maskedData = data
-        .asMap()
-        .entries
-        .where((entry) => mask[entry.key])
-        .map((entry) => entry.value)
-        .toList();
+  final pulls = [
+    for (var i = 0; i < windows.length; i++)
+      summarisePull(
+        i,
+        samples,
+        windows[i],
+        nextStart: i + 1 < windows.length ? windows[i + 1].start : null,
+      ),
+  ];
 
-    if (maskedData.isEmpty) {
-      return [0.0, 0.0, 0.0];
-    }
-
-    double mean =
-        maskedData.fold(0.0, (prev, element) => prev + element) /
-        maskedData.length;
-
-    double std = _standardDeviation(maskedData);
-    if (std == 0.0) {
-      // All values are the same, no need to continue clipping
-      break;
-    }
-
-    mask = List.generate(
-      data.length,
-      (index) => (data[index] - mean).abs() < 4 * std,
+  final firstCounted = max(0, pulls.length - CriticalForceRules.countedPulls);
+  final countedMeans = pulls
+      .sublist(firstCounted)
+      .map((p) => p.meanKg)
+      .nonNulls
+      .toList();
+  if (countedMeans.length < CriticalForceRules.minValidCountedPulls) {
+    throw const CriticalForceAnalysisException(
+      'The sensor sent too little data during the last pulls to compute a '
+      'Critical Force.',
     );
-
-    // Ensure we don't mask everything
-    if (!mask.contains(true)) {
-      // If all points would be masked, revert to previous iteration
-      mask = List.filled(data.length, true);
-      break;
-    }
+  }
+  final criticalForce = _mean(countedMeans);
+  if (criticalForce < CriticalForceRules.onEdgeKg) {
+    throw const CriticalForceAnalysisException(
+      'No pull was recorded during the last pulls.',
+    );
   }
 
-  List<double> maskedData = data
-      .asMap()
-      .entries
-      .where((entry) => mask[entry.key])
-      .map((entry) => entry.value)
+  final endValues = pulls
+      .sublist(max(0, pulls.length - CriticalForceRules.endForcePulls))
+      .map((p) => p.endKg)
+      .nonNulls
       .toList();
 
-  if (maskedData.isEmpty) {
-    return [0.0, 0.0, 0.0];
-  }
-
-  double mean =
-      maskedData.fold(0.0, (prev, element) => prev + element) /
-      maskedData.length;
-  double median = _median(maskedData);
-  double std = _standardDeviation(maskedData);
-
-  // Debug output can be uncommented if needed
-  // print('DEBUG: _sigmaClippedStats: input=${data.length} points, output: mean=${mean.toStringAsFixed(2)}, median=${median.toStringAsFixed(2)}, std=${std.toStringAsFixed(2)}');
-
-  return [mean, median, std];
-}
-
-double _median(List<double> data) {
-  if (data.isEmpty) return 0.0;
-
-  List<double> sortedData = List.from(data);
-  sortedData.sort();
-  int midIndex = sortedData.length ~/ 2;
-  return sortedData.length.isEven
-      ? (sortedData[midIndex - 1] + sortedData[midIndex]) / 2
-      : sortedData[midIndex];
-}
-
-double _standardDeviation(List<double> data) {
-  if (data.isEmpty) return 0.0;
-
-  double mean = data.fold(0.0, (prev, element) => prev + element) / data.length;
-  double variance =
-      data.fold(0.0, (prev, element) => prev + pow(element - mean, 2)) /
-      data.length;
-  return sqrt(variance);
-}
-
-List<List<double>> _measureMeanLoads(
-  List<double> time,
-  List<double> forces, {
-  double threshold = 7,
-}) {
-  List<int> raisingEdgesIndex = _getRaisingEdgesIndex(
-    forces,
-    threshold: threshold,
-  );
-  List<int> fallingEdgesIndex = _getFallingEdgesIndex(
-    forces,
-    threshold: threshold,
-  );
-
-  List<double> meanLoads = [];
-  List<double> durations = [];
-  List<double> medianLoads = [];
-  List<double> meanTimes = [];
-  List<double> errs = [];
-
-  // Debug output can be uncommented if needed
-  // print('DEBUG: Processing ${raisingEdgesIndex.length} raising edges and ${fallingEdgesIndex.length} falling edges');
-  // print('DEBUG: Original raising edges: $raisingEdgesIndex');
-  // print('DEBUG: Original falling edges: $fallingEdgesIndex');
-
-  // If we have one more raising edge than falling edge, add the end as a falling edge
-  if (raisingEdgesIndex.length == fallingEdgesIndex.length + 1) {
-    fallingEdgesIndex.add(forces.length - 1);
-    // print('DEBUG: Added end of data as final falling edge: ${forces.length - 1}');
-  }
-
-  // Process each raising edge, finding the corresponding falling edge
-  for (var i = 0; i < raisingEdgesIndex.length; i++) {
-    var start = raisingEdgesIndex[i];
-    int end;
-
-    // Find the first falling edge that comes after this raising edge
-    int? correspondingFallingIndex;
-    for (int j = 0; j < fallingEdgesIndex.length; j++) {
-      if (fallingEdgesIndex[j] > start) {
-        correspondingFallingIndex = j;
-        break;
-      }
-    }
-
-    if (correspondingFallingIndex != null) {
-      end = fallingEdgesIndex[correspondingFallingIndex];
-    } else {
-      // No falling edge found, use end of data (common for final interval)
-      end = forces.length - 1;
-    }
-
-    // Debug output can be uncommented if needed
-    // print('DEBUG: Interval $i: start=$start, end=$end');
-
-    // Validate indices
-    if (start >= forces.length || end >= forces.length || start >= end) {
-      continue;
-    }
-
-    var duration = time[end] - time[start];
-
-    // Extract force data for this interval
-    List<double> intervalForces = forces.sublist(start, end + 1);
-
-    // Calculate statistics for this interval
-    List<double> stats = _sigmaClippedStats(intervalForces);
-
-    // Skip intervals with invalid statistics
-    if (stats[0] <= threshold) {
-      continue;
-    }
-
-    meanLoads.add(stats[0]);
-    durations.add(duration);
-    medianLoads.add(stats[1]);
-    meanTimes.add((time[start] + time[end]) / 2);
-    errs.add(stats[2]); // Add standard deviation as error
-  }
-
-  return [meanTimes, durations, meanLoads, medianLoads, errs];
-}
-
-CriticalForceResults analyseData(
-  List<double> t,
-  List<double> f,
-  double loadTime,
-  double restTime, {
-  bool interactive = false,
-  double start = 0,
-}) {
-  // Only keep data after start seconds
-  List<double> cutT = [];
-  List<double> cutF = [];
-  final startTime = t[0];
-  for (var i = 0; i < t.length; i++) {
-    if (t[i] - startTime >= start) {
-      cutT.add(t[i]);
-      cutF.add(f[i]);
-    }
-  }
-  List<List<double>> results = _measureMeanLoads(cutT, cutF);
-  List<double> tmeans = results[0];
-  List<double> durations = results[1];
-  List<double> fmeans = results[2];
-  List<double> eFmeans = results[4];
-  double factor = loadTime / (loadTime + restTime);
-  // Use last 4 intervals for load asymptote, or all intervals if fewer than 5
-  final asymptoteStartIndex = fmeans.length >= 5 ? fmeans.length - 5 : 0;
-  final asymptoteEndIndex = fmeans.length >= 5
-      ? fmeans.length - 1
-      : fmeans.length;
-  final asymptoteSublist = fmeans.sublist(
-    asymptoteStartIndex,
-    asymptoteEndIndex,
-  );
-
-  double loadAsymptote =
-      asymptoteSublist.reduce((a, b) => a + b) / asymptoteSublist.length;
-  double eLoadAsymptote = asymptoteSublist.length > 1
-      ? _standardDeviation(asymptoteSublist) / asymptoteSublist.length
-      : 0.0;
-  double criticalLoad = loadAsymptote * factor;
-  // ignore: unused_local_variable
-  double eCriticalLoad = criticalLoad * (eLoadAsymptote / loadAsymptote);
-  List<double> usedInEachInterval = [];
-  List<double> remaining = [];
-  for (int i = 0; i < fmeans.length; i++) {
-    usedInEachInterval.add(
-      (fmeans[i] - criticalLoad) * durations[i] -
-          criticalLoad * (loadTime + restTime - durations[i]),
-    );
-    remaining.add(usedInEachInterval[i]);
-    if (i > 0) remaining[i] += remaining[i - 1];
-  }
-  // ignore: unused_local_variable
-  double wprimeAlt = remaining.fold(0, (prev, element) => prev + element);
-  double alpha = _median(
-    List.generate(
-      fmeans.length,
-      (index) => (fmeans[index] - loadAsymptote) / remaining[index],
-    ),
-  );
-
-  List<double> predictedForce = [];
-  for (int i = 0; i < remaining.length; i++) {
-    predictedForce.add(loadAsymptote + alpha * remaining[i]);
+  var wPrime = 0.0;
+  for (final window in windows) {
+    wPrime += integrate(
+      samples,
+      window.start,
+      window.end,
+      above: criticalForce,
+    ).area;
   }
 
   return CriticalForceResults(
-    tmeans: tmeans,
-    fmeans: fmeans,
-    eFmeans: eFmeans,
-    criticalLoad: criticalLoad,
-    loadAsymptote: loadAsymptote,
-    predictedForce: predictedForce,
+    criticalForce: criticalForce,
+    wPrime: wPrime,
+    peakKg: pulls.map((p) => p.peakKg).reduce(max),
+    endForceKg: endValues.isEmpty ? null : _mean(endValues),
+    pulls: pulls,
+    firstCountedPull: firstCounted + 1,
+    lastCountedPull: pulls.length,
   );
 }
+
+/// One window's numbers. [nextStart] is when the following pull starts, which
+/// closes the rest after this one; null for the final pull.
+CriticalForcePull summarisePull(
+  int index,
+  List<CriticalForceSample> samples,
+  CriticalForceWindow window, {
+  double? nextStart,
+}) {
+  final length = window.end - window.start;
+  final whole = integrate(samples, window.start, window.end);
+  final tailStart = max(
+    window.start,
+    window.end - CriticalForceRules.endWindowSeconds,
+  );
+  final tail = integrate(samples, tailStart, window.end);
+  final coverage = length > 0 ? whole.covered / length : 0.0;
+  final tailEnough =
+      tail.covered >= (window.end - tailStart) * CriticalForceRules.minCoverage;
+  return CriticalForcePull(
+    index: index,
+    start: window.start,
+    end: window.end,
+    meanKg: coverage >= CriticalForceRules.minCoverage && whole.covered > 0
+        ? whole.area / whole.covered
+        : null,
+    peakKg: whole.peak,
+    endKg: tailEnough && tail.covered > 0 ? tail.area / tail.covered : null,
+    impulseKgS: whole.area,
+    coverage: min(1, coverage),
+    restLoadSeconds: nextStart == null
+        ? null
+        : timeAbove(
+            CriticalForceRules.onEdgeKg,
+            samples,
+            window.end,
+            nextStart,
+          ),
+  );
+}
+
+/// The area, covered time and peak of the force trace inside [from, to).
+typedef ForceIntegral = ({double area, double covered, double peak});
+
+/// Trapezoids between neighbouring readings, clipped to [from, to). With
+/// [above], only the area of the part over that line counts, crossings
+/// included. Two readings further apart than [CriticalForceRules.gapSeconds]
+/// leave a hole: no area and no coverage.
+ForceIntegral integrate(
+  List<CriticalForceSample> samples,
+  double from,
+  double to, {
+  double above = 0,
+}) {
+  var area = 0.0;
+  var covered = 0.0;
+  var peak = 0.0;
+  if (to <= from || samples.length < 2) {
+    return (area: area, covered: covered, peak: peak);
+  }
+  for (
+    var i = max(0, _firstIndexNotBefore(samples, from) - 1);
+    i + 1 < samples.length && samples[i].t < to;
+    i++
+  ) {
+    final a = samples[i];
+    final b = samples[i + 1];
+    final dt = b.t - a.t;
+    if (dt <= 0 || dt > CriticalForceRules.gapSeconds) continue;
+    final s = max(a.t, from);
+    final e = min(b.t, to);
+    if (e <= s) continue;
+    final ks = a.kg + (b.kg - a.kg) * (s - a.t) / dt;
+    final ke = a.kg + (b.kg - a.kg) * (e - a.t) / dt;
+    covered += e - s;
+    area += _areaAbove(above, ks, ke, e - s);
+    if (a.t >= from) peak = max(peak, a.kg);
+    if (b.t < to) peak = max(peak, b.kg);
+  }
+  return (area: area, covered: covered, peak: peak);
+}
+
+/// Seconds the linear force trace spends at or above [threshold] inside
+/// [from, to).
+double timeAbove(
+  double threshold,
+  List<CriticalForceSample> samples,
+  double from,
+  double to,
+) {
+  var seconds = 0.0;
+  if (to <= from || samples.length < 2) return seconds;
+  for (
+    var i = max(0, _firstIndexNotBefore(samples, from) - 1);
+    i + 1 < samples.length && samples[i].t < to;
+    i++
+  ) {
+    final a = samples[i];
+    final b = samples[i + 1];
+    final dt = b.t - a.t;
+    if (dt <= 0 || dt > CriticalForceRules.gapSeconds) continue;
+    final s = max(a.t, from);
+    final e = min(b.t, to);
+    if (e <= s) continue;
+    final ks = a.kg + (b.kg - a.kg) * (s - a.t) / dt;
+    final ke = a.kg + (b.kg - a.kg) * (e - a.t) / dt;
+    seconds += _fractionAbove(threshold, ks, ke) * (e - s);
+  }
+  return seconds;
+}
+
+/// The integral of max(0, F - threshold) over one linear segment.
+double _areaAbove(double threshold, double ks, double ke, double duration) {
+  final a = ks - threshold;
+  final b = ke - threshold;
+  if (a >= 0 && b >= 0) return (a + b) / 2 * duration;
+  if (a <= 0 && b <= 0) return 0;
+  // One crossing: only the triangle above the line counts.
+  final high = max(a, b);
+  final fraction = high / (a.abs() + b.abs());
+  return high * fraction * duration / 2;
+}
+
+double _fractionAbove(double threshold, double ks, double ke) {
+  final a = ks - threshold;
+  final b = ke - threshold;
+  if (a >= 0 && b >= 0) return 1;
+  if (a < 0 && b < 0) return 0;
+  return max(a, b) / (a.abs() + b.abs());
+}
+
+/// Binary search: the index of the first reading at or after [t].
+int _firstIndexNotBefore(List<CriticalForceSample> samples, double t) {
+  var lo = 0;
+  var hi = samples.length;
+  while (lo < hi) {
+    final mid = (lo + hi) ~/ 2;
+    if (samples[mid].t < t) {
+      lo = mid + 1;
+    } else {
+      hi = mid;
+    }
+  }
+  return lo;
+}
+
+double _mean(List<double> values) =>
+    values.reduce((a, b) => a + b) / values.length;
