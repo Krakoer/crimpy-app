@@ -20,6 +20,10 @@
          plugin; RECEIVE_BOOT_COMPLETED lets the pending reminders be restored
          after a reboot or an app update. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- The run screen's cues vibrate. The vibration plugin merges this in
+         too; it is declared here so dropping or swapping the plugin cannot
+         leave the haptics failing silently. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
     <application
         android:label="@string/app_name"
         android:name="${applicationName}"
