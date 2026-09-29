@@ -74,13 +74,13 @@ class AssessmentTutorials {
           icon: Icons.schedule,
           title: 'Duration',
           content:
-              'The test takes about 4 minutes, and it has to run start to finish in one go.',
+              'The test takes about 4 minutes, and it has to run in one go.',
         ),
         const TutorialSection(
           icon: Icons.timer,
           title: 'Protocol',
           content:
-              '24 all-out pulls of 7 seconds, each followed by 3 seconds of rest. Pull as hard as you can for the whole 7 seconds and let go at the bell: force pulled after the bell does not count.',
+              '24 all-out pulls of 7 seconds, each followed by 3 seconds of rest. After the countdown the test waits for you: your first pull starts it. Pull as hard as you can for the whole 7 seconds and let go at the bell: force pulled after the bell does not count. You can finish after pull 16; stopping before voids the test.',
         ),
         const TutorialSection(
           icon: Icons.psychology,

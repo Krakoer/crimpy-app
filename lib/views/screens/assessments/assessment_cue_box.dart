@@ -18,7 +18,9 @@ class AssessmentCueBox extends StatelessWidget {
 
   final RunPhase phase;
   final String prompt;
-  final int secondsRemaining;
+
+  /// Null when there is nothing to count down.
+  final int? secondsRemaining;
 
   @override
   Widget build(BuildContext context) {
@@ -35,13 +37,14 @@ class AssessmentCueBox extends StatelessWidget {
             style: CrimpyTheme.headline.copyWith(color: CrimpyTheme.textOnFill),
             textAlign: TextAlign.center,
           ),
-          Text(
-            '$secondsRemaining',
-            style: CrimpyTheme.numerals(
-              48,
-            ).copyWith(color: CrimpyTheme.textOnFill),
-            textAlign: TextAlign.center,
-          ),
+          if (secondsRemaining != null)
+            Text(
+              '$secondsRemaining',
+              style: CrimpyTheme.numerals(
+                48,
+              ).copyWith(color: CrimpyTheme.textOnFill),
+              textAlign: TextAlign.center,
+            ),
         ],
       ),
     );

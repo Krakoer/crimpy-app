@@ -49,6 +49,8 @@ void main() {
       expect(log.pausedMsAfter(0), 6000);
       // The pause at 1 s on the run clock came before the point.
       expect(log.pausedMsAfter(2000), 4000);
+      // Nor does the stop that ended right at the point.
+      expect(log.pausedMsAfter(1000), 4000);
     });
   });
 }
