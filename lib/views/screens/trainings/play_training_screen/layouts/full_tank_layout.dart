@@ -323,9 +323,9 @@ class FullTankLayout extends ConsumerWidget {
             : _TankPalette.overTank;
 
         // The header is laid out on its own so the level can be stopped
-        // under it, as it is drawn: with the text scale the phone asks for,
-        // the grip lines, and whatever goal, protocol or comment the step
-        // carries. See Krakoer/crimpy#161.
+        // under it, as it is drawn: with the text scale the phone asks for
+        // and the grip lines. The notes of a hang sit under the target, not
+        // in the header. See Krakoer/crimpy#161 and Krakoer/crimpy#180.
         final tank = CustomMultiChildLayout(
           delegate: _TankLayoutDelegate(
             level: fillHeight,
@@ -617,14 +617,7 @@ class _TankContent extends StatelessWidget {
         child: Padding(
           // Kept clear of the set and rep card, which is opaque and would
           // otherwise hide the foot of a tall block.
-          padding: EdgeInsets.fromLTRB(
-            16,
-            14,
-            16,
-            layout.repContext == null
-                ? 14
-                : _repContextCardBottom + repContextCardHeight(scale) + _s(12),
-          ),
+          padding: EdgeInsets.fromLTRB(16, 14, 16, _bottomReserve),
           child: Center(child: _centerBlock(context)),
         ),
       ),
@@ -660,33 +653,6 @@ class _TankContent extends StatelessWidget {
             style: _scaledStyle(CrimpyTheme.bodySmall, color: palette.detail),
           ),
         ],
-        // Only a sensor step has its middle taken by the force. Every other
-        // state carries the goal and the comment in the block it centers there.
-        // The hang is the step the goal matters most on, since a finger block
-        // is what the coach wrote one for, so it is not dropped here.
-        if (layout.goal != null && state == _TankState.sensorWork) ...[
-          SizedBox(height: _s(8)),
-          _goalLine(layout.goal!, align: TextAlign.start),
-        ],
-        // A hang is the step a stop rule is written for ("to failure or 40s"),
-        // so the rule is on screen while it runs. Two lines here, where the
-        // force has the middle of the tank.
-        if (layout.protocol != null && state == _TankState.sensorWork) ...[
-          SizedBox(height: _s(6)),
-          _protocolBlock(layout.protocol!, maxLines: 2, align: TextAlign.start),
-        ],
-        if (layout.comment != null && state == _TankState.sensorWork) ...[
-          SizedBox(height: _s(6)),
-          Text(
-            layout.comment!,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: _scaledStyle(
-              CrimpyTheme.bodySmall,
-              color: palette.secondary,
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -696,14 +662,9 @@ class _TankContent extends StatelessWidget {
   /// force level, so anything in it has to be bounded. The colour comes from
   /// the palette for that same reason, or the copy drawn over the fill would
   /// paint green on the dark green and disappear.
-  ///
-  /// [align] only decides where a goal that had to be cut short sits in the
-  /// leftover pixels. It does not place the line: a goal short enough to fit
-  /// shrink-wraps to its glyphs, so the block it sits in is what puts it left
-  /// or centre.
-  Widget _goalLine(String goal, {TextAlign align = TextAlign.center}) => Text(
+  Widget _goalLine(String goal) => Text(
     goal.toUpperCase(),
-    textAlign: align,
+    textAlign: TextAlign.center,
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
     style: _scaledStyle(CrimpyTheme.capsLabel, color: palette.goal),
@@ -714,22 +675,12 @@ class _TankContent extends StatelessWidget {
   /// a coach with more to say than fits writes it where the athlete reads it
   /// before starting, on the training breakdown, and reports against it after.
   ///
-  /// [maxLines] is the room the block it sits in has. [align] follows the block
-  /// it sits in, the way _goalLine's does: the corner block sets its content
-  /// from the left, and a rule long enough to wrap would otherwise centre its
-  /// label and its last line against left aligned copy above it.
+  /// [maxLines] is the room the block it sits in has.
   ///
   /// The colour comes from the palette for the reason the goal's does: the copy
   /// drawn over the fill would otherwise paint gold on gold and disappear.
-  Widget _protocolBlock(
-    String protocol, {
-    required int maxLines,
-    TextAlign align = TextAlign.center,
-  }) => Column(
+  Widget _protocolBlock(String protocol, {required int maxLines}) => Column(
     mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: align == TextAlign.start
-        ? CrossAxisAlignment.start
-        : CrossAxisAlignment.center,
     children: [
       Text(
         'PROTOCOL',
@@ -738,7 +689,7 @@ class _TankContent extends StatelessWidget {
       SizedBox(height: _s(3)),
       Text(
         protocol,
-        textAlign: align,
+        textAlign: TextAlign.center,
         maxLines: maxLines,
         overflow: TextOverflow.ellipsis,
         style: _scaledStyle(CrimpyTheme.body, color: palette.secondary),
@@ -835,17 +786,68 @@ class _TankContent extends StatelessWidget {
           ),
         ),
       ),
-      if (notchLabel != null)
-        line(
-          0.56,
-          Text(
-            notchLabel!,
-            textAlign: TextAlign.center,
-            style: _scaledStyle(CrimpyTheme.title, color: palette.secondary),
-          ),
+      // The lower tank is empty during a hang, and the level only ever
+      // crosses it in the colours that read on it, so the notes of the step
+      // sit there, under the target they are read against, rather than
+      // growing the header down into the notch and the force. See
+      // Krakoer/crimpy#180.
+      Positioned(
+        left: 16,
+        right: 16,
+        top: tankHeight * 0.56,
+        bottom: _bottomReserve,
+        child: Column(
+          children: [
+            if (notchLabel != null)
+              Text(
+                notchLabel!,
+                textAlign: TextAlign.center,
+                style: _scaledStyle(
+                  CrimpyTheme.title,
+                  color: palette.secondary,
+                ),
+              ),
+            ..._hangNotes(),
+          ],
         ),
+      ),
     ];
   }
+
+  /// The goal, the protocol and the comment of a hang, under the target. The
+  /// rule takes two lines, being what the hang is resolved by; the goal and
+  /// the comment take one each. That is what the lower tank has room for at
+  /// text scale 1.3 on a small phone. The whole of each is on the training
+  /// breakdown, read before the run.
+  List<Widget> _hangNotes() => [
+    if (layout.goal != null) ...[
+      SizedBox(height: _s(12)),
+      _goalLine(layout.goal!),
+    ],
+    // A hang is the step a stop rule is written for ("to failure or 40s"),
+    // so the rule is on screen while it runs.
+    if (layout.protocol != null) ...[
+      SizedBox(height: _s(8)),
+      _protocolBlock(layout.protocol!, maxLines: 2),
+    ],
+    if (layout.comment != null) ...[
+      SizedBox(height: _s(8)),
+      Text(
+        layout.comment!,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: _scaledStyle(CrimpyTheme.bodySmall, color: palette.secondary),
+      ),
+    ],
+  ];
+
+  /// Room kept clear at the foot of the tank, for the set and rep card when
+  /// there is one. The card is opaque and would otherwise hide what runs
+  /// under it.
+  double get _bottomReserve => layout.repContext == null
+      ? 14
+      : _repContextCardBottom + repContextCardHeight(scale) + _s(12);
 
   Widget _centerBlock(BuildContext context) => switch (state) {
     _TankState.preparation => _preparationBlock(),
