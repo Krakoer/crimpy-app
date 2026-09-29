@@ -89,8 +89,11 @@ class _LoadedTareDialogState extends ConsumerState<LoadedTareDialog> {
   bool _readingChanged = false;
   bool _closed = false;
 
+  /// Pops the prompt once, and only while it is the route on top: dismissed
+  /// from its barrier or by Back, it is still mounted through its exit, and a
+  /// disconnection then must not pop the tare dialog under it.
   void _close() {
-    if (_closed) return;
+    if (_closed || !(ModalRoute.of(context)?.isCurrent ?? false)) return;
     _closed = true;
     Navigator.of(context).pop();
   }
@@ -118,8 +121,17 @@ class _LoadedTareDialogState extends ConsumerState<LoadedTareDialog> {
     });
     final load = "${_check.loadKg.toStringAsFixed(1)} kg";
     final stale = _check.concern == TareConcern.stale;
+    // A sensor tared under load reads below zero once the load is off, and
+    // taring it again is the fix rather than the mistake.
+    final belowZero = _check.loadKg < 0;
     return AlertDialog(
-      title: Text(stale ? "No recent reading" : "The sensor is loaded"),
+      title: Text(
+        stale
+            ? "No recent reading"
+            : belowZero
+            ? "The sensor reads below zero"
+            : "The sensor is loaded",
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,6 +148,9 @@ class _LoadedTareDialogState extends ConsumerState<LoadedTareDialog> {
             stale
                 ? "The sensor has not sent a reading for a few seconds. "
                       "Taring now makes its last one, $load, the new zero."
+                : belowZero
+                ? "It reads $load, so it was probably tared with a load on "
+                      "it. Tare it again with nothing hanging on it."
                 : "It reads $load. Taring now makes that load the new zero, "
                       "and every reading after it is off by as much. Take "
                       "the load off the sensor first.",

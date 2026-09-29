@@ -15,11 +15,13 @@ import '../support/fake_sensor_link.dart';
 void main() {
   late FakeSensorLink link;
   late BleRepository repository;
+  late DateTime now;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     link = FakeSensorLink();
-    repository = BleRepository(link: link);
+    now = DateTime(2026, 9, 29, 12);
+    repository = BleRepository(link: link, clock: () => now);
   });
 
   Future<void> openTareDialog(WidgetTester tester) async {
@@ -132,5 +134,46 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Tare sensor'), findsNothing);
+  });
+
+  testWidgets('asks before taring a reading that stopped coming', (
+    tester,
+  ) async {
+    await openTareDialog(tester);
+    link.channel!.send(0.3);
+    now = now.add(const Duration(seconds: 3));
+
+    await tapTare(tester);
+
+    expect(find.text('No recent reading'), findsOneWidget);
+    expect(find.textContaining('its last one, 0.3 kg'), findsOneWidget);
+    expect(repository.tare, 0);
+  });
+
+  testWidgets('tells a sensor tared under load to tare again', (tester) async {
+    await openTareDialog(tester);
+    link.channel!.send(-20);
+
+    await tapTare(tester);
+
+    expect(find.text('The sensor reads below zero'), findsOneWidget);
+    expect(find.textContaining('Take the load off'), findsNothing);
+  });
+
+  testWidgets('a prompt dismissed from its barrier leaves the tare dialog', (
+    tester,
+  ) async {
+    await openTareDialog(tester);
+    link.channel!.send(20);
+    await tapTare(tester);
+
+    await tester.tapAt(const Offset(5, 5));
+    await tester.pump();
+    link.channel!.drop();
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tester.pumpAndSettle();
+
+    expect(find.text('The sensor is loaded'), findsNothing);
+    expect(find.text('Tare sensor'), findsOneWidget);
   });
 }
