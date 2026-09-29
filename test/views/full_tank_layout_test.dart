@@ -1235,6 +1235,22 @@ void main() {
       );
     }
 
+    double forceBaseline(WidgetTester tester) {
+      final figure = find.text('400').first;
+      final paragraph = tester.renderObject<RenderParagraph>(figure);
+      final painter = TextPainter(
+        text: paragraph.text,
+        textDirection: TextDirection.ltr,
+        textScaler: paragraph.textScaler,
+      )..layout();
+      addTearDown(painter.dispose);
+      final rect = tester.getRect(figure);
+      final drawnScale = rect.height / painter.height;
+      return rect.top +
+          painter.computeDistanceToActualBaseline(TextBaseline.alphabetic) *
+              drawnScale;
+    }
+
     double levelTop(WidgetTester tester) =>
         tester.getRect(find.byType(AnimatedContainer)).top;
 
@@ -1329,11 +1345,14 @@ void main() {
         );
         expect(tester.takeException(), isNull);
 
-        final targetFoot = tester
-            .getRect(find.text('TARGET 42 kg').first)
-            .bottom;
+        final target = tester.getRect(find.text('TARGET 42 kg').first);
+        final targetFoot = target.bottom;
         final forceFoot = footOf(tester, ['400', 'kg']);
         final card = cardTop(tester);
+        // The notes are placed off the target, so the target has to clear the
+        // force above it: the foot of the figure, which has no descender, is
+        // its baseline.
+        expect(target.top, greaterThanOrEqualTo(forceBaseline(tester)));
         for (final note in noteTexts) {
           final rect = tester.getRect(find.text(note).first);
           expect(rect.top, greaterThanOrEqualTo(targetFoot), reason: note);
@@ -1355,11 +1374,58 @@ void main() {
         repContext: null,
       );
       expect(tester.takeException(), isNull);
+      // The reserve kept at the foot of a tank with no card.
       expect(
         footOf(tester, noteTexts),
-        lessThanOrEqualTo(tankRect(tester).bottom),
+        lessThanOrEqualTo(tankRect(tester).bottom - 14),
       );
     });
+
+    // Past the text sizes the notes are held to, the lower tank cannot take
+    // them all. They are dropped rather than run under the opaque card: the
+    // comment first, then the goal, and the stop rule last.
+    for (final (platform, phone) in [
+      (TargetPlatform.android, pixel),
+      (TargetPlatform.android, iPhoneSE),
+      (TargetPlatform.iOS, iPhone15),
+      (TargetPlatform.iOS, iPhoneSE),
+    ]) {
+      for (final textScale in [1.5, 2.0]) {
+        testWidgets('drops notes rather than overflow on '
+            '${named(platform, phone, textScale)}', (tester) async {
+          await pumpFullTank(
+            tester,
+            phone: phone,
+            platform: platform,
+            textScale: textScale,
+            notes: true,
+          );
+          expect(tester.takeException(), isNull);
+
+          final clip = tester
+              .getRect(
+                find
+                    .ancestor(
+                      of: find.text(protocol).first,
+                      matching: find.byType(ClipRect),
+                    )
+                    .first,
+              )
+              .bottom;
+          bool shown(String note) =>
+              tester.getRect(find.text(note).first).top < clip;
+          for (final note in noteTexts) {
+            final rect = tester.getRect(find.text(note).first);
+            if (shown(note)) {
+              expect(rect.bottom, lessThanOrEqualTo(clip), reason: note);
+            }
+          }
+          expect(clip, lessThanOrEqualTo(cardTop(tester)));
+          expect(shown(protocol), isTrue);
+          if (shown(comment)) expect(shown(goal.toUpperCase()), isTrue);
+        });
+      }
+    }
 
     // The lower tank has room for a line of goal, two of rule and one of
     // comment at text scale 1.3 on a small phone. The rest of each is on the

@@ -796,19 +796,28 @@ class _TankContent extends StatelessWidget {
         right: 16,
         top: tankHeight * 0.56,
         bottom: _bottomReserve,
-        child: Column(
-          children: [
-            if (notchLabel != null)
-              Text(
-                notchLabel!,
-                textAlign: TextAlign.center,
-                style: _scaledStyle(
-                  CrimpyTheme.title,
-                  color: palette.secondary,
+        child: ClipRect(
+          child: CustomMultiChildLayout(
+            delegate: _HangNotesLayoutDelegate(
+              gapUnderTarget: _s(12),
+              gapBetweenNotes: _s(8),
+            ),
+            children: [
+              if (notchLabel != null)
+                LayoutId(
+                  id: _HangNoteSlot.target,
+                  child: Text(
+                    notchLabel!,
+                    textAlign: TextAlign.center,
+                    style: _scaledStyle(
+                      CrimpyTheme.title,
+                      color: palette.secondary,
+                    ),
+                  ),
                 ),
-              ),
-            ..._hangNotes(),
-          ],
+              ..._hangNotes(),
+            ],
+          ),
         ),
       ),
     ];
@@ -817,29 +826,30 @@ class _TankContent extends StatelessWidget {
   /// The goal, the protocol and the comment of a hang, under the target. The
   /// rule takes two lines, being what the hang is resolved by; the goal and
   /// the comment take one each. That is what the lower tank has room for at
-  /// text scale 1.3 on a small phone. The whole of each is on the training
-  /// breakdown, read before the run.
+  /// text scale 1.3 on a small phone; past it the notes are dropped rather
+  /// than run under the set and rep card, see _HangNotesLayoutDelegate. The
+  /// whole of each is on the training breakdown, read before the run.
   List<Widget> _hangNotes() => [
-    if (layout.goal != null) ...[
-      SizedBox(height: _s(12)),
-      _goalLine(layout.goal!),
-    ],
+    if (layout.goal != null)
+      LayoutId(id: _HangNoteSlot.goal, child: _goalLine(layout.goal!)),
     // A hang is the step a stop rule is written for ("to failure or 40s"),
     // so the rule is on screen while it runs.
-    if (layout.protocol != null) ...[
-      SizedBox(height: _s(8)),
-      _protocolBlock(layout.protocol!, maxLines: 2),
-    ],
-    if (layout.comment != null) ...[
-      SizedBox(height: _s(8)),
-      Text(
-        layout.comment!,
-        textAlign: TextAlign.center,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: _scaledStyle(CrimpyTheme.bodySmall, color: palette.secondary),
+    if (layout.protocol != null)
+      LayoutId(
+        id: _HangNoteSlot.protocol,
+        child: _protocolBlock(layout.protocol!, maxLines: 2),
       ),
-    ],
+    if (layout.comment != null)
+      LayoutId(
+        id: _HangNoteSlot.comment,
+        child: Text(
+          layout.comment!,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: _scaledStyle(CrimpyTheme.bodySmall, color: palette.secondary),
+        ),
+      ),
   ];
 
   /// Room kept clear at the foot of the tank, for the set and rep card when
@@ -1211,6 +1221,86 @@ class _TankLayoutDelegate extends MultiChildLayoutDelegate {
       oldDelegate.level != level ||
       oldDelegate.levelFloor != levelFloor ||
       oldDelegate.headerClearance != headerClearance;
+}
+
+/// What sits under the target on a hang, top to bottom.
+enum _HangNoteSlot { target, goal, protocol, comment }
+
+/// Lays the target and the notes of a hang out down the lower tank, centred.
+/// Where a large text size leaves too little room for all of them, notes are
+/// dropped rather than run under the set and rep card: the comment first,
+/// then the goal. The protocol is the stop rule the hang is resolved by, so it
+/// goes last; a note the lower tank cannot hold even on its own is clipped.
+class _HangNotesLayoutDelegate extends MultiChildLayoutDelegate {
+  final double gapUnderTarget;
+  final double gapBetweenNotes;
+
+  _HangNotesLayoutDelegate({
+    required this.gapUnderTarget,
+    required this.gapBetweenNotes,
+  });
+
+  static const _notes = [
+    _HangNoteSlot.goal,
+    _HangNoteSlot.protocol,
+    _HangNoteSlot.comment,
+  ];
+
+  static const _keptLongest = [
+    _HangNoteSlot.protocol,
+    _HangNoteSlot.goal,
+    _HangNoteSlot.comment,
+  ];
+
+  @override
+  void performLayout(Size size) {
+    final loose = BoxConstraints(maxWidth: size.width);
+    final sizes = <_HangNoteSlot, Size>{
+      for (final slot in _HangNoteSlot.values)
+        if (hasChild(slot)) slot: layoutChild(slot, loose),
+    };
+    final targetHeight = sizes[_HangNoteSlot.target]?.height ?? 0;
+
+    double heightOf(Set<_HangNoteSlot> notes) => notes.isEmpty
+        ? targetHeight
+        : targetHeight +
+              gapUnderTarget +
+              (notes.length - 1) * gapBetweenNotes +
+              notes.fold(0.0, (sum, slot) => sum + sizes[slot]!.height);
+
+    final shown = <_HangNoteSlot>{};
+    for (final slot in _keptLongest.where(sizes.containsKey)) {
+      if (shown.isNotEmpty && heightOf({...shown, slot}) > size.height) break;
+      shown.add(slot);
+    }
+
+    void centre(_HangNoteSlot slot, double top) =>
+        positionChild(slot, Offset((size.width - sizes[slot]!.width) / 2, top));
+
+    var top = 0.0;
+    if (sizes.containsKey(_HangNoteSlot.target)) {
+      centre(_HangNoteSlot.target, top);
+      top += targetHeight;
+    }
+    var first = true;
+    for (final slot in _notes.where(sizes.containsKey)) {
+      if (!shown.contains(slot)) {
+        // Laid out all the same, as every child has to be, and put past the
+        // foot of the clip.
+        positionChild(slot, Offset(0, size.height));
+        continue;
+      }
+      top += first ? gapUnderTarget : gapBetweenNotes;
+      first = false;
+      centre(slot, top);
+      top += sizes[slot]!.height;
+    }
+  }
+
+  @override
+  bool shouldRelayout(_HangNotesLayoutDelegate oldDelegate) =>
+      oldDelegate.gapUnderTarget != gapUnderTarget ||
+      oldDelegate.gapBetweenNotes != gapBetweenNotes;
 }
 
 /// Set and rep of the running step, drawn as the paused card is so it belongs
