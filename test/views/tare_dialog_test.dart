@@ -158,6 +158,12 @@ void main() {
 
     expect(find.text('The sensor reads below zero'), findsOneWidget);
     expect(find.textContaining('Take the load off'), findsNothing);
+
+    await tester.tap(find.text('Tare now'));
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tester.pumpAndSettle();
+
+    expect(repository.tare, closeTo(-20, 1e-4));
   });
 
   testWidgets('a prompt dismissed from its barrier leaves the tare dialog', (

@@ -159,10 +159,11 @@ class _LoadedTareDialogState extends ConsumerState<LoadedTareDialog> {
       ),
       actions: [
         TextButton(onPressed: _close, child: const Text("Cancel")),
+        // Below zero, taring is the fix the prompt recommends, not a risk.
         FilledButton(
-          style: CrimpyTheme.destructiveButton,
+          style: belowZero && !stale ? null : CrimpyTheme.destructiveButton,
           onPressed: _confirm,
-          child: const Text("Tare anyway"),
+          child: Text(belowZero && !stale ? "Tare now" : "Tare anyway"),
         ),
       ],
     );
