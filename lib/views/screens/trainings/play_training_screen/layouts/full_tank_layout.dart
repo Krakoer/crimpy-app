@@ -600,7 +600,7 @@ class _TankContent extends StatelessWidget {
             heightFactor: 1,
             child: Padding(
               padding: const EdgeInsets.only(top: _headerTop, right: 16),
-              child: _countdown(),
+              child: _countdown(context),
             ),
           ),
         // Without an app bar, a platform with no hardware back button needs
@@ -748,7 +748,7 @@ class _TankContent extends StatelessWidget {
 
   /// Seconds left, without minutes or colon under a minute. A hang is counted
   /// in seconds and a bare numeral is the fastest thing to read.
-  Widget _countdown() {
+  Widget _countdown(BuildContext context) {
     final seconds = layout.secondsRemaining;
     final resting = state == _TankState.rest;
     final calm = CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.calm));
@@ -771,11 +771,16 @@ class _TankContent extends StatelessWidget {
           // form is drawn, so the header, and the block laid out under it,
           // do not move when a count crosses the minute. See
           // Krakoer/crimpy#181.
+          // Built from the style the numeral is drawn in once it inherits
+          // the theme's font, or the strut would lay the line out in the
+          // engine's default font and move the digits within it.
           strutStyle: StrutStyle.fromTextStyle(
-            _numeralStyle(
-              _countdownNumeralSize,
-              color: color,
-              height: _countdownNumeralHeight,
+            DefaultTextStyle.of(context).style.merge(
+              _numeralStyle(
+                _countdownNumeralSize,
+                color: color,
+                height: _countdownNumeralHeight,
+              ),
             ),
             forceStrutHeight: true,
           ),

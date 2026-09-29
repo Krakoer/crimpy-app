@@ -1898,6 +1898,51 @@ void main() {
       });
     }
 
+    // The line the corner countdown keeps across the minute is laid out in
+    // the font the digits are drawn in, so they sit in it where they would
+    // with no line held at all.
+    for (final textScale in [1.0, 1.3, 2.0]) {
+      testWidgets('leaves the corner countdown on its own baseline at text '
+          'scale $textScale', (tester) async {
+        await pumpStep(
+          tester,
+          item: const RestItem(durationSeconds: 90),
+          isPreparation: false,
+          phone: pixel,
+          platform: TargetPlatform.android,
+          textScale: textScale,
+        );
+
+        final numeral = find.text('5');
+        final paragraph = tester.renderObject<RenderParagraph>(numeral);
+        final drawn = DefaultTextStyle.of(
+          tester.element(numeral),
+        ).style.merge(tester.widget<Text>(numeral).style);
+        final painter = TextPainter(
+          text: TextSpan(text: '5', style: drawn),
+          textDirection: TextDirection.ltr,
+          textScaler: paragraph.textScaler,
+        )..layout();
+        addTearDown(painter.dispose);
+
+        final checking = RenderObject.debugCheckingIntrinsics;
+        RenderObject.debugCheckingIntrinsics = true;
+        final double baseline;
+        try {
+          baseline = paragraph.getDistanceToBaseline(TextBaseline.alphabetic)!;
+        } finally {
+          RenderObject.debugCheckingIntrinsics = checking;
+        }
+        expect(
+          baseline,
+          closeTo(
+            painter.computeDistanceToActualBaseline(TextBaseline.alphabetic),
+            0.01,
+          ),
+        );
+      });
+    }
+
     // The countdown is display sized already. Grown with the text size it
     // took the room the notes needed.
     testWidgets('keeps the countdown at its size whatever the text size', (
