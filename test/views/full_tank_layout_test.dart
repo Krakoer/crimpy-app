@@ -7,12 +7,14 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/layouts/full_tank_layout.dart';
+import 'package:crimpy/views/widgets/exercise_video_link.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/roboto.dart';
+import '../theme/palette_contrast_test.dart' show contrastFloor, contrastRatio;
 
 class _FakeBodyweight extends BodyweightController {
   _FakeBodyweight(this.kilograms);
@@ -61,6 +63,8 @@ const _prescription =
 /// Longer than the running screen has lines for, so it is the case the paused
 /// card exists to answer.
 final _longNote = List.filled(12, _prescription).join(' ');
+
+const _demoVideo = 'https://youtu.be/abc';
 
 const _maxHang = TimedItem(
   label: 'Max hang',
@@ -178,20 +182,111 @@ void main() {
     testWidgets('paint a rest calm, not green', (tester) async {
       await _pump(
         tester,
-        item: const RestItem(durationSeconds: 3),
+        item: const RestItem(durationSeconds: 30),
         nextItem: _hang,
-        secondsRemaining: 3,
+        secondsRemaining: 5,
       );
 
       final calm = CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.calm));
       expect(_textColor(tester, 'REST'), calm);
-      expect(_textColor(tester, '3'), calm);
+      expect(_textColor(tester, '5'), calm);
       expect(_textColor(tester, 'SEC REST'), calm);
       final ground = tester
           .widgetList<ColoredBox>(find.byType(ColoredBox))
           .map((box) => box.color);
       expect(ground, contains(CrimpyTheme.phaseCalmGround));
       expect(ground, isNot(contains(CrimpyTheme.onTarget)));
+    });
+
+    // The last three seconds are the ones the beeps count down. The whole
+    // tank turns the fill of getting ready for them, the one a pull fills it
+    // with before the target, and the count is written in white on it: a
+    // change read from the wall, where a change of the count's colour alone
+    // was not. Red is the alarm's and orange the primary action's. See
+    // Krakoer/crimpy#160.
+    for (final seconds in [3, 2, 1]) {
+      testWidgets('turn the tank ready for the last three seconds of a rest, '
+          'at $seconds', (tester) async {
+        await _pump(
+          tester,
+          item: const RestItem(durationSeconds: 30),
+          nextItem: _hang,
+          secondsRemaining: seconds,
+          nextVideoLink: _demoVideo,
+        );
+
+        final ready = CrimpyTheme.fillOn(
+          CrimpyTheme.phaseColor(RunPhase.armed),
+        );
+        final ground = tester
+            .widgetList<ColoredBox>(find.byType(ColoredBox))
+            .map((box) => box.color);
+        expect(ground, contains(ready));
+        expect(ground, isNot(contains(CrimpyTheme.phaseCalmGround)));
+        expect(_textColor(tester, '$seconds'), CrimpyTheme.textOnFill);
+        expect(_textColor(tester, 'GET READY'), CrimpyTheme.textOnFill);
+        expect(
+          contrastRatio(CrimpyTheme.textOnFill, ready),
+          greaterThanOrEqualTo(contrastFloor),
+        );
+        expect(
+          contrastRatio(ready, CrimpyTheme.phaseCalmGround),
+          greaterThan(3),
+          reason: 'the change of ground is what is seen from the wall',
+        );
+        expect(find.text('SEC REST'), findsNothing);
+        // What comes next is still read on it. The demo is not offered: there
+        // is no time left to watch it, and its button is drawn for a light
+        // ground.
+        expect(_textColor(tester, 'NEXT'), CrimpyTheme.textOnFillSecondary);
+        expect(find.byType(ExerciseVideoButton), findsNothing);
+      });
+    }
+
+    // A rest that leads into nothing has nothing to get ready for, and a
+    // paused one is not counting down.
+    for (final (name, nextItem, isRunning) in [
+      ('the last rest of a run', null, true),
+      ('a paused rest', _hang as TrainingExecutionItem?, false),
+    ]) {
+      testWidgets('leave $name calm in its last three seconds', (tester) async {
+        await _pump(
+          tester,
+          item: const RestItem(durationSeconds: 30),
+          nextItem: nextItem,
+          secondsRemaining: 2,
+          isRunning: isRunning,
+        );
+
+        final ground = tester
+            .widgetList<ColoredBox>(find.byType(ColoredBox))
+            .map((box) => box.color);
+        expect(ground, contains(CrimpyTheme.phaseCalmGround));
+        expect(find.text('GET READY'), findsNothing);
+        expect(
+          _textColor(tester, '2'),
+          CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.calm)),
+        );
+      });
+    }
+
+    testWidgets('leave a rest unmarked before its last three seconds', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 30),
+        nextItem: _hang,
+        secondsRemaining: 4,
+        nextVideoLink: _demoVideo,
+      );
+
+      expect(
+        _textColor(tester, '4'),
+        CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.calm)),
+      );
+      expect(find.text('GET READY'), findsNothing);
+      expect(find.byType(ExerciseVideoButton), findsOneWidget);
     });
 
     // textMutedSmall is under the text floor on the calm ground.
@@ -525,9 +620,9 @@ void main() {
     testWidgets('a rest previews the step it leads into', (tester) async {
       await _pump(
         tester,
-        item: const RestItem(durationSeconds: 3),
+        item: const RestItem(durationSeconds: 30),
         nextItem: _hang,
-        secondsRemaining: 3,
+        secondsRemaining: 5,
       );
 
       expect(find.text('NEXT'), findsOneWidget);
@@ -801,7 +896,7 @@ void main() {
     testWidgets('cuts a long name short rather than overflowing the tank', (
       tester,
     ) async {
-      final longName = List.filled(20, 'overhang').join(' ');
+      final longName = List.filled(40, 'overhang').join(' ');
       await _pump(
         tester,
         item: const RestItem(durationSeconds: 3),
@@ -1818,10 +1913,7 @@ void main() {
           expect(
             block.top,
             greaterThanOrEqualTo(
-              headerFoot(
-                tester,
-                cornerCountdown: item is RestItem || isPreparation,
-              ),
+              headerFoot(tester, cornerCountdown: isPreparation),
             ),
           );
           expect(block.bottom, lessThanOrEqualTo(cardTop(tester)));
@@ -1906,7 +1998,7 @@ void main() {
           'scale $textScale', (tester) async {
         await pumpStep(
           tester,
-          item: const RestItem(durationSeconds: 90),
+          item: _hang,
           isPreparation: false,
           phone: pixel,
           platform: TargetPlatform.android,
@@ -1962,6 +2054,185 @@ void main() {
       }
 
       expect(await countdownHeight(1.3), await countdownHeight(1));
+    });
+  });
+
+  // During a rest the athlete has stepped back from the board and waits on
+  // one number. It is the largest thing on the screen, in the middle of it,
+  // with what comes next under it. See Krakoer/crimpy#160.
+  group('the rest countdown', () {
+    setUpAll(loadRoboto);
+
+    const nextHang = TimedItem(
+      label: 'Hang',
+      durationSeconds: 10,
+      targetLoad: 12,
+      handSide: HandSide.both,
+      gripPosition: GripPosition.halfCrimp,
+      collectSensorData: false,
+      edgeSizeMm: 20,
+      isHang: true,
+    );
+
+    Future<void> pumpRest(
+      WidgetTester tester, {
+      required Size phone,
+      required TargetPlatform platform,
+      double textScale = 1,
+      int secondsRemaining = 45,
+    }) async {
+      tester.view.physicalSize = phone;
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = textScale;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 180),
+        nextItem: nextHang,
+        secondsRemaining: secondsRemaining,
+        platform: platform,
+        nextGoal: 'Max strength',
+        nextProtocol: 'To failure or 10s. Past 10s add 2kg on the next set',
+        nextComment:
+            'Keep the shoulders engaged and breathe out on the way onto the '
+            'edge',
+      );
+    }
+
+    Rect tankRect(WidgetTester tester) => tester.getRect(
+      find
+          .descendant(
+            of: find.byType(FullTankLayout),
+            matching: find.byType(CustomMultiChildLayout),
+          )
+          .first,
+    );
+
+    const pixel = Size(412, 843);
+    const iPhone15 = Size(393, 759);
+    const iPhoneSE = Size(375, 647);
+
+    for (final (platform, phone, textScale) in const [
+      (TargetPlatform.android, pixel, 1.0),
+      (TargetPlatform.android, pixel, 1.3),
+      (TargetPlatform.android, iPhone15, 1.3),
+      (TargetPlatform.android, iPhoneSE, 1.3),
+      (TargetPlatform.iOS, iPhone15, 1.0),
+      (TargetPlatform.iOS, iPhone15, 1.3),
+      (TargetPlatform.iOS, pixel, 1.0),
+      (TargetPlatform.iOS, pixel, 1.3),
+      (TargetPlatform.iOS, iPhoneSE, 1.0),
+      (TargetPlatform.iOS, iPhoneSE, 1.3),
+    ]) {
+      testWidgets('is the largest thing on screen, centred, on '
+          '${platform.name} ${phone.width.toInt()}x${phone.height.toInt()} '
+          'at text scale $textScale', (tester) async {
+        await pumpRest(
+          tester,
+          phone: phone,
+          platform: platform,
+          textScale: textScale,
+        );
+        expect(tester.takeException(), isNull);
+
+        final count = tester.getRect(find.text('45'));
+        for (final text in tester.widgetList<Text>(find.byType(Text))) {
+          if (text.data == '45' || text.data == null) continue;
+          expect(
+            tester.getRect(find.text(text.data!).first).height,
+            lessThan(count.height),
+            reason: text.data,
+          );
+        }
+        final tank = tankRect(tester);
+        expect(count.center.dx, closeTo(tank.center.dx, 0.5));
+        // Out of the corner, and under the clocks.
+        final clocksFoot = tester.getRect(find.text('4:12')).bottom;
+        expect(count.top, greaterThan(clocksFoot));
+        // What comes next is under it.
+        expect(
+          tester.getRect(find.text('NEXT')).top,
+          greaterThan(count.bottom),
+        );
+      });
+    }
+
+    // A minute or more reads as minutes and seconds, like every other length
+    // on the run screen.
+    testWidgets('reads a minute or more as minutes and seconds', (
+      tester,
+    ) async {
+      await pumpRest(
+        tester,
+        phone: pixel,
+        platform: TargetPlatform.android,
+        secondsRemaining: 191,
+      );
+
+      expect(find.text('3:11'), findsOneWidget);
+      expect(find.text('OF REST'), findsOneWidget);
+      expect(find.text('191'), findsNothing);
+    });
+
+    // The longest count a rest can show still fits the width of the smallest
+    // phone at a large text size, shrunk rather than broken across lines.
+    testWidgets('fits a long count to the width of a small phone', (
+      tester,
+    ) async {
+      await pumpRest(
+        tester,
+        phone: iPhoneSE,
+        platform: TargetPlatform.iOS,
+        textScale: 1.3,
+        secondsRemaining: 3599,
+      );
+      expect(tester.takeException(), isNull);
+
+      final count = tester.getRect(find.text('59:59'));
+      final tank = tankRect(tester);
+      expect(count.left, greaterThanOrEqualTo(tank.left + 16));
+      expect(count.right, lessThanOrEqualTo(tank.right - 16));
+      final paragraph = tester.renderObject<RenderParagraph>(
+        find.text('59:59'),
+      );
+      expect(paragraph.didExceedMaxLines, isFalse);
+    });
+  });
+
+  // Every count and length on the run screen reads as minutes and seconds
+  // from a minute up. See Krakoer/crimpy#160.
+  group('a count of a minute or more', () {
+    testWidgets('reads m:ss in the middle of a timed step', (tester) async {
+      await _pump(tester, item: _pullUps, secondsRemaining: 125);
+
+      expect(find.text('2:05'), findsOneWidget);
+      expect(find.text('TO GO'), findsOneWidget);
+      expect(find.text('SEC LEFT'), findsNothing);
+    });
+
+    testWidgets('reads m:ss in the corner of a hang', (tester) async {
+      await _pump(tester, item: _hang, secondsRemaining: 75);
+
+      expect(find.text('1:15'), findsWidgets);
+      expect(find.text('TO GO'), findsWidgets);
+      expect(find.text('SEC'), findsNothing);
+    });
+
+    testWidgets('reads m:ss for a long rest coming up', (tester) async {
+      await _pump(
+        tester,
+        item: _hang,
+        nextItem: const RestItem(durationSeconds: 191),
+      );
+
+      expect(find.text('REST 3:11'), findsOneWidget);
+    });
+
+    test('is written as minutes and seconds', () {
+      expect(countdownText(59), '59');
+      expect(countdownText(60), '1:00');
+      expect(countdownText(191), '3:11');
     });
   });
 }

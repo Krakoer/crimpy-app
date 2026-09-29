@@ -141,12 +141,19 @@ class WorkoutTimer {
         // A rep change already reported itself from within _advance, and its
         // transition tone stands in for the countdown beep on that tick.
         onSecondChange?.call();
-        if (playSound && [2, 1].contains(currentItemRemaining)) {
+        if (playSound && beepsThisSecond) {
           _playerBip?.resume();
         }
       }
     });
   }
+
+  /// Whether the second now ticking is one the countdown beeps on: the last
+  /// two of a step, which warn that the next one is about to start. The last
+  /// rest of a run leads into nothing, so it counts down in silence.
+  bool get beepsThisSecond =>
+      [2, 1].contains(currentItemRemaining) &&
+      !(currentItem is RestItem && currentItemIndex >= items.length - 1);
 
   /// Moves to the next item, or finishes the workout when the current one is
   /// the last. `nextStart` gives the reference point the following rep counts
