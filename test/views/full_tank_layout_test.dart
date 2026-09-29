@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training_execution_model.dart';
@@ -1033,9 +1035,9 @@ void main() {
     });
 
     // A sensor step has its middle taken by the force, so the centered block
-    // draws nothing. The goal goes where the comment already goes for that
-    // state, since a finger block is exactly what a coach writes a goal for.
-    testWidgets('a sensor step carries it beside the grip, not in the middle', (
+    // draws nothing. The goal goes under the target with the rest of the
+    // notes, since a finger block is exactly what a coach writes a goal for.
+    testWidgets('a sensor step carries it under the target, not the header', (
       tester,
     ) async {
       await _pump(
@@ -1058,6 +1060,12 @@ void main() {
       expect(painted, {CrimpyTheme.goalColor, CrimpyTheme.textOnFill});
       expect(find.text('Keep the shoulders engaged'), findsWidgets);
       expect(find.text('34.2'), findsWidgets);
+      expect(
+        tester.getRect(find.text('RESI DOIGTS').first).top,
+        greaterThanOrEqualTo(
+          tester.getRect(find.text('TARGET 42 kg').first).bottom,
+        ),
+      );
     });
 
     testWidgets('a step with no goal shows none', (tester) async {
@@ -1173,14 +1181,21 @@ void main() {
 
   // The level cut the clocks and the countdown in two where its edge crossed
   // them. It stops under the header instead, as the header is drawn: with the
-  // phone's text scale, the grip lines and the notes of the step. See
-  // Krakoer/crimpy#161.
+  // phone's text scale and the grip lines. See Krakoer/crimpy#161. The notes
+  // of a hang used to grow the header past the notch and the force; they sit
+  // in the lower tank now, under the target. See Krakoer/crimpy#180.
   group('the header', () {
     setUpAll(loadRoboto);
 
-    const goal = 'Max strength';
-    const protocol = 'To failure or 10s';
-    const comment = 'Shoulders engaged';
+    // Each long enough to be cut short on any phone, so the line caps are
+    // what the layout is measured against.
+    const goal = 'Max strength, recruitment and finger stiffness';
+    const protocol =
+        'To failure or 10s. Past 10s add 2kg on the next set, under 6s take '
+        '2kg off, and stop the block after two misses in a row';
+    const comment =
+        'Keep the shoulders engaged all the way through and breathe out on '
+        'the way onto the edge, and do not let the elbows lock at any point';
 
     const headerTexts = [
       'ELAPSED',
@@ -1192,7 +1207,7 @@ void main() {
       'BOTH HANDS',
       '3FD - 20mm',
     ];
-    const noteTexts = ['MAX STRENGTH', 'PROTOCOL', protocol, comment];
+    final noteTexts = [goal.toUpperCase(), 'PROTOCOL', protocol, comment];
 
     Future<void> pumpFullTank(
       WidgetTester tester, {
@@ -1200,7 +1215,9 @@ void main() {
       required TargetPlatform platform,
       double textScale = 1,
       bool notes = false,
+      bool withGoal = true,
       double currentWeight = 400,
+      String? repContext = 'SET 2/4 - REP 3/6',
     }) async {
       tester.view.physicalSize = phone;
       tester.view.devicePixelRatio = 1;
@@ -1212,14 +1229,35 @@ void main() {
         item: _hang,
         currentWeight: currentWeight,
         platform: platform,
-        goal: notes ? goal : null,
+        repContext: repContext,
+        goal: notes && withGoal ? goal : null,
         protocol: notes ? protocol : null,
         comment: notes ? comment : null,
       );
     }
 
+    double forceBaseline(WidgetTester tester) {
+      final figure = find.text('400').first;
+      final paragraph = tester.renderObject<RenderParagraph>(figure);
+      final painter = TextPainter(
+        text: paragraph.text,
+        textDirection: TextDirection.ltr,
+        textScaler: paragraph.textScaler,
+      )..layout();
+      addTearDown(painter.dispose);
+      final rect = tester.getRect(figure);
+      final drawnScale = rect.height / painter.height;
+      return rect.top +
+          painter.computeDistanceToActualBaseline(TextBaseline.alphabetic) *
+              drawnScale;
+    }
+
     double levelTop(WidgetTester tester) =>
         tester.getRect(find.byType(AnimatedContainer)).top;
+
+    double footOf(WidgetTester tester, List<String> texts) => texts
+        .map((text) => tester.getRect(find.text(text).first).bottom)
+        .reduce(max);
 
     void expectAboveLevel(WidgetTester tester, List<String> texts) {
       final top = levelTop(tester);
@@ -1231,27 +1269,57 @@ void main() {
 
     Rect tankRect(WidgetTester tester) => tester.getRect(
       find
-          .ancestor(
-            of: find.byType(AnimatedContainer),
+          .descendant(
+            of: find.byType(FullTankLayout),
             matching: find.byType(CustomMultiChildLayout),
           )
           .first,
     );
 
-    const android = (TargetPlatform.android, Size(412, 843));
-    const iOS = (TargetPlatform.iOS, Size(393, 759));
+    double notchOf(WidgetTester tester) {
+      final tank = tankRect(tester);
+      return tank.bottom - tank.height * targetNotchFraction;
+    }
 
-    for (final (platform, phone, textScale, notes) in [
-      (android.$1, android.$2, 1.0, false),
-      (android.$1, android.$2, 1.3, false),
-      (android.$1, android.$2, 1.0, true),
-      (iOS.$1, iOS.$2, 1.0, false),
-      (iOS.$1, iOS.$2, 1.3, false),
-    ]) {
-      testWidgets(
-        'stays clear of a full level on ${platform.name} at text scale '
-        '$textScale${notes ? ', with the notes of the step' : ''}',
-        (tester) async {
+    double cardTop(WidgetTester tester) => tester
+        .getRect(
+          find
+              .ancestor(
+                of: find.text('SET 2/4 - REP 3/6'),
+                matching: find.byType(Container),
+              )
+              .first,
+        )
+        .top;
+
+    const pixel = Size(412, 843);
+    const iPhone15 = Size(393, 759);
+    const iPhoneSE = Size(375, 647);
+
+    // The phones and text scales the notes of a hang used to run into the
+    // notch on, and the ones they did not.
+    const layouts = [
+      (TargetPlatform.android, pixel, 1.0),
+      (TargetPlatform.android, pixel, 1.3),
+      (TargetPlatform.android, iPhone15, 1.3),
+      (TargetPlatform.android, iPhoneSE, 1.3),
+      (TargetPlatform.iOS, iPhone15, 1.0),
+      (TargetPlatform.iOS, iPhone15, 1.3),
+      (TargetPlatform.iOS, pixel, 1.0),
+      (TargetPlatform.iOS, pixel, 1.3),
+      (TargetPlatform.iOS, iPhoneSE, 1.0),
+      (TargetPlatform.iOS, iPhoneSE, 1.3),
+    ];
+
+    String named(TargetPlatform platform, Size phone, double textScale) =>
+        '${platform.name} ${phone.width.toInt()}x${phone.height.toInt()} at '
+        'text scale $textScale';
+
+    for (final (platform, phone, textScale) in layouts) {
+      for (final notes in [false, true]) {
+        testWidgets('stops a full level under the clocks and the grip on '
+            '${named(platform, phone, textScale)}'
+            '${notes ? ', with the notes of the step' : ''}', (tester) async {
           await pumpFullTank(
             tester,
             phone: phone,
@@ -1259,40 +1327,232 @@ void main() {
             textScale: textScale,
             notes: notes,
           );
-          expectAboveLevel(tester, [...headerTexts, if (notes) ...noteTexts]);
-        },
-      );
+          expectAboveLevel(tester, headerTexts);
+          // Stopped by the header, not held at the notch for want of room,
+          // and the notes of the step do not move it.
+          expect(levelTop(tester), lessThan(notchOf(tester)));
+          expect(levelTop(tester), lessThan(footOf(tester, headerTexts) + 16));
+        });
+      }
+
+      testWidgets('keeps the notes of a hang between the target and the card '
+          'on ${named(platform, phone, textScale)}', (tester) async {
+        await pumpFullTank(
+          tester,
+          phone: phone,
+          platform: platform,
+          textScale: textScale,
+          notes: true,
+        );
+        expect(tester.takeException(), isNull);
+
+        final target = tester.getRect(find.text('TARGET 42 kg').first);
+        final targetFoot = target.bottom;
+        final forceFoot = footOf(tester, ['400', 'kg']);
+        final card = cardTop(tester);
+        // The notes are placed off the target, so the target has to clear the
+        // force above it: the foot of the figure, which has no descender, is
+        // its baseline.
+        expect(target.top, greaterThanOrEqualTo(forceBaseline(tester)));
+        for (final note in noteTexts) {
+          final rect = tester.getRect(find.text(note).first);
+          expect(rect.top, greaterThanOrEqualTo(targetFoot), reason: note);
+          expect(rect.top, greaterThan(forceFoot), reason: note);
+          expect(rect.bottom, lessThanOrEqualTo(card), reason: note);
+        }
+      });
     }
 
-    // A header this deep reaches past the notch, and the level still has to
-    // be able to reach the target. It stops at the notch, and what it crosses
+    // Without a set and rep card the notes still end above the foot of the
+    // tank, where the controls start.
+    testWidgets('keeps the notes of a hang above the controls', (tester) async {
+      await pumpFullTank(
+        tester,
+        phone: iPhoneSE,
+        platform: TargetPlatform.iOS,
+        textScale: 1.3,
+        notes: true,
+        repContext: null,
+      );
+      expect(tester.takeException(), isNull);
+      // The reserve kept at the foot of a tank with no card.
+      expect(
+        footOf(tester, noteTexts),
+        lessThanOrEqualTo(tankRect(tester).bottom - 14),
+      );
+    });
+
+    // Past the text sizes the notes are held to, the lower tank cannot take
+    // them all. They are dropped rather than run under the opaque card: the
+    // comment first, then the goal, and the stop rule last.
+    for (final (platform, phone) in [
+      (TargetPlatform.android, pixel),
+      (TargetPlatform.android, iPhoneSE),
+      (TargetPlatform.iOS, iPhone15),
+      (TargetPlatform.iOS, iPhoneSE),
+    ]) {
+      for (final textScale in [1.5, 2.0]) {
+        testWidgets('drops notes rather than overflow on '
+            '${named(platform, phone, textScale)}', (tester) async {
+          await pumpFullTank(
+            tester,
+            phone: phone,
+            platform: platform,
+            textScale: textScale,
+            notes: true,
+          );
+          expect(tester.takeException(), isNull);
+
+          final clip = tester
+              .getRect(
+                find
+                    .ancestor(
+                      of: find.text(protocol).first,
+                      matching: find.byType(ClipRect),
+                    )
+                    .first,
+              )
+              .bottom;
+          bool shown(String note) =>
+              tester.getRect(find.text(note).first).top < clip;
+          for (final note in noteTexts) {
+            final rect = tester.getRect(find.text(note).first);
+            if (shown(note)) {
+              expect(rect.bottom, lessThanOrEqualTo(clip), reason: note);
+            }
+          }
+          expect(clip, lessThanOrEqualTo(cardTop(tester)));
+          expect(shown(protocol), isTrue);
+          if (shown(comment)) expect(shown(goal.toUpperCase()), isTrue);
+          // Pinned where it is known: on the small phone the comment goes at
+          // 1.5, and the goal after it at 2.0.
+          if (phone == iPhoneSE) {
+            expect(shown(comment), isFalse);
+            expect(shown(goal.toUpperCase()), textScale < 2);
+          }
+        });
+      }
+    }
+
+    // A hang with no goal starts its notes with the rule, set as close under
+    // the target as a note under the goal would be.
+    for (final (platform, phone) in [
+      (TargetPlatform.android, pixel),
+      (TargetPlatform.iOS, iPhoneSE),
+    ]) {
+      for (final textScale in [1.0, 1.3]) {
+        testWidgets('sets the rule of a hang with no goal under the target on '
+            '${named(platform, phone, textScale)}', (tester) async {
+          await pumpFullTank(
+            tester,
+            phone: phone,
+            platform: platform,
+            textScale: textScale,
+            notes: true,
+            withGoal: false,
+          );
+          expect(tester.takeException(), isNull);
+
+          final scale = tankRect(tester).height / 624;
+          final targetFoot = tester
+              .getRect(find.text('TARGET 42 kg').first)
+              .bottom;
+          expect(
+            tester.getRect(find.text('PROTOCOL').first).top,
+            closeTo(targetFoot + 8 * scale, 0.01),
+          );
+          final commentRect = tester.getRect(find.text(comment).first);
+          expect(
+            commentRect.top,
+            closeTo(
+              tester.getRect(find.text(protocol).first).bottom + 8 * scale,
+              0.01,
+            ),
+          );
+          expect(commentRect.bottom, lessThanOrEqualTo(cardTop(tester)));
+        });
+      }
+    }
+
+    // The lower tank has room for a line of goal, two of rule and one of
+    // comment at text scale 1.3 on a small phone. The rest of each is on the
+    // training breakdown.
+    testWidgets('holds the notes of a hang to what the lower tank fits', (
+      tester,
+    ) async {
+      await pumpFullTank(
+        tester,
+        phone: iPhoneSE,
+        platform: TargetPlatform.android,
+        textScale: 1.3,
+        notes: true,
+      );
+      for (final (note, lines) in [
+        (goal.toUpperCase(), 1),
+        (protocol, 2),
+        (comment, 1),
+      ]) {
+        final paragraph = tester.renderObject<RenderParagraph>(
+          find.text(note).first,
+        );
+        expect(paragraph.maxLines, lines, reason: note);
+        expect(paragraph.didExceedMaxLines, isTrue, reason: note);
+      }
+    });
+
+    // Only a hang has its middle taken by the force. A rest and a timed step
+    // keep the room they had for the notes.
+    testWidgets('leaves a rest preview its four lines of notes', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        item: const RestItem(durationSeconds: 60),
+        nextItem: _pullUps,
+        nextProtocol: protocol,
+        nextComment: comment,
+      );
+      for (final note in [protocol, comment]) {
+        expect(
+          tester.renderObject<RenderParagraph>(find.text(note)).maxLines,
+          4,
+          reason: note,
+        );
+      }
+    });
+
+    testWidgets('leaves a timed step its four lines of notes', (tester) async {
+      await _pump(tester, item: _pullUps, protocol: protocol, comment: comment);
+      for (final note in [protocol, comment]) {
+        expect(
+          tester.renderObject<RenderParagraph>(find.text(note)).maxLines,
+          4,
+          reason: note,
+        );
+      }
+    });
+
+    // A header deeper than the tank has room for above the notch still lets
+    // the level reach the target. It stops at the notch, and what it crosses
     // is drawn over it in the colours that read there.
-    for (final (platform, phone, textScale, notes) in [
-      (android.$1, android.$2, 1.3, true),
-      (iOS.$1, iOS.$2, 1.0, true),
-    ]) {
-      testWidgets(
-        'still lets the level reach the notch on ${platform.name} at text '
-        'scale $textScale${notes ? ', with the notes of the step' : ''}',
-        (tester) async {
-          await pumpFullTank(
-            tester,
-            phone: phone,
-            platform: platform,
-            textScale: textScale,
-            notes: notes,
-          );
-
-          final tank = tankRect(tester);
-          final notch = tank.bottom - tank.height * targetNotchFraction;
-          expect(levelTop(tester), closeTo(notch, 0.01));
-        },
+    testWidgets('still lets the level reach the notch under a deep header', (
+      tester,
+    ) async {
+      await pumpFullTank(
+        tester,
+        phone: iPhoneSE,
+        platform: TargetPlatform.iOS,
+        textScale: 2.2,
       );
-    }
+
+      final notch = notchOf(tester);
+      expect(footOf(tester, headerTexts), greaterThan(notch));
+      expect(levelTop(tester), closeTo(notch, 0.01));
+    });
 
     // The copy over the level is only readable if it lands exactly on the
     // copy under it, text for text.
-    void expectInRegister(WidgetTester tester) {
+    void expectInRegister(WidgetTester tester, {bool notes = true}) {
       final copies = <String, int>{};
       for (final text in tester.widgetList<Text>(find.byType(Text))) {
         final data = text.data;
@@ -1304,7 +1564,10 @@ void main() {
         for (final MapEntry(:key, :value) in copies.entries)
           if (value == 2) key,
       ];
-      expect(doubled, containsAll(['ELAPSED', 'BOTH HANDS', 'kg']));
+      expect(
+        doubled,
+        containsAll(['ELAPSED', 'BOTH HANDS', 'kg', if (notes) ...noteTexts]),
+      );
       for (final text in doubled) {
         expect(
           tester.getRect(find.text(text).at(1)),
@@ -1314,13 +1577,59 @@ void main() {
       }
     }
 
+    // The level rises through the notes on its way to the target, so they are
+    // drawn in both palettes, and the edge crossing them leaves each half in
+    // the colours that read on its side.
+    testWidgets('draws the notes over a level crossing them in register', (
+      tester,
+    ) async {
+      await pumpFullTank(
+        tester,
+        phone: pixel,
+        platform: TargetPlatform.android,
+        currentWeight: 0,
+        notes: true,
+      );
+      final notesTop = tester.getRect(find.text(goal.toUpperCase())).top;
+      final notesFoot = tester.getRect(find.text(comment)).bottom;
+      final tank = tankRect(tester);
+      final crossing = (notesTop + notesFoot) / 2;
+      // The weight whose level ends halfway down the notes.
+      final weight =
+          (tank.bottom - crossing) / tank.height / targetNotchFraction * 42;
+
+      await pumpFullTank(
+        tester,
+        phone: pixel,
+        platform: TargetPlatform.android,
+        currentWeight: weight,
+        notes: true,
+      );
+      expect(levelTop(tester), closeTo(crossing, 0.01));
+      expectInRegister(tester);
+      for (final (note, overTank) in [
+        (goal.toUpperCase(), CrimpyTheme.goalColor),
+        ('PROTOCOL', CrimpyTheme.protocolColor),
+        (comment, CrimpyTheme.textSecondary),
+      ]) {
+        expect(
+          tester.widgetList<Text>(find.text(note)).map((t) => t.style?.color),
+          [
+            overTank,
+            anyOf(CrimpyTheme.textOnFill, CrimpyTheme.textOnFillSecondary),
+          ],
+          reason: note,
+        );
+      }
+    });
+
     testWidgets('draws the copy over a level below the header in register', (
       tester,
     ) async {
       await pumpFullTank(
         tester,
-        phone: android.$2,
-        platform: android.$1,
+        phone: pixel,
+        platform: TargetPlatform.android,
         currentWeight: 30,
         notes: true,
       );
@@ -1330,8 +1639,13 @@ void main() {
     testWidgets('draws the copy over a level held at the notch in register', (
       tester,
     ) async {
-      await pumpFullTank(tester, phone: iOS.$2, platform: iOS.$1, notes: true);
-      expectInRegister(tester);
+      await pumpFullTank(
+        tester,
+        phone: iPhoneSE,
+        platform: TargetPlatform.iOS,
+        textScale: 2.2,
+      );
+      expectInRegister(tester, notes: false);
     });
 
     testWidgets('leaves a level under the header where it was', (tester) async {
