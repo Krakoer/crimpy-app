@@ -44,6 +44,7 @@ void main() {
     final repository = BleRepository(
       link: SimulatedSensorLink(
         scanDuration: Duration.zero,
+        connectDuration: Duration.zero,
         samplePeriod: const Duration(milliseconds: 5),
       ),
     );

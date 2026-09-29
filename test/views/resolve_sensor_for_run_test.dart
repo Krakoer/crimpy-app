@@ -52,17 +52,27 @@ class _MemorySensorMemory extends SensorMemoryRepository {
 /// Connects to [reachable] only; any other device is out of range. Records
 /// the timeout each attempt was given.
 class _Link extends SensorLink {
-  _Link({this.reachable, this.adapterOn = true});
+  _Link({this.reachable, this.adapterOn = true, bool? adapterReadsOn})
+    : adapterReadsOn = adapterReadsOn ?? adapterOn;
 
   final SensorDevice? reachable;
+
+  /// What the platform answers when asked.
   final bool adapterOn;
+
+  /// What the adapter reads before the platform was asked, which on a real
+  /// phone is off until then.
+  final bool adapterReadsOn;
   final timeouts = <Duration>[];
 
   /// Holds the connection open until completed, when set.
   Completer<void>? answering;
 
   @override
-  bool get isAdapterOn => adapterOn;
+  bool get isAdapterOn => adapterReadsOn;
+
+  @override
+  Future<bool> fetchAdapterOn() async => adapterOn;
 
   @override
   Stream<bool> get adapterOnChanges => const Stream.empty();
@@ -108,10 +118,15 @@ void main() {
     SensorOwnership ownership, {
     SensorDevice? reachable,
     bool adapterOn = true,
+    bool? adapterReadsOn,
   }) async {
     answer = null;
     memory = _MemorySensorMemory(ownership);
-    link = _Link(reachable: reachable, adapterOn: adapterOn);
+    link = _Link(
+      reachable: reachable,
+      adapterOn: adapterOn,
+      adapterReadsOn: adapterReadsOn,
+    );
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -204,6 +219,24 @@ void main() {
     expect(link.timeouts, isEmpty);
     expect(find.textContaining('Bluetooth is off'), findsOneWidget);
     expect(find.text('Connect'), findsOneWidget);
+  });
+
+  testWidgets('asks the platform rather than trusting a first read of off', (
+    tester,
+  ) async {
+    // On a cold launch the adapter reads off until the platform is asked.
+    await pump(
+      tester,
+      const RememberedSensor(_sensor),
+      reachable: _sensor,
+      adapterReadsOn: false,
+    );
+
+    await start(tester);
+
+    expect(answer, isTrue);
+    expect(link.timeouts, hasLength(1));
+    expect(find.textContaining('Bluetooth is off'), findsNothing);
   });
 
   testWidgets('offers the scan when the remembered sensor is not found', (

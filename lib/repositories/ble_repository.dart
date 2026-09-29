@@ -29,6 +29,8 @@ class BleRepository {
 
   bool get isAdapterOn => _link.isAdapterOn;
 
+  Future<bool> fetchAdapterOn() => _link.fetchAdapterOn();
+
   Future<void> turnAdapterOn() => _link.turnAdapterOn();
 
   final _connectionStateController =

@@ -76,7 +76,10 @@ void main() {
   test('connecting a sensor remembers it, whoever connected it', () async {
     final memory = SharedPreferencesSensorMemory();
     final repository = BleRepository(
-      link: SimulatedSensorLink(scanDuration: Duration.zero),
+      link: SimulatedSensorLink(
+        scanDuration: Duration.zero,
+        connectDuration: Duration.zero,
+      ),
       memory: memory,
     );
 

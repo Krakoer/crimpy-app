@@ -103,16 +103,18 @@ Future<bool> resolveSensorForRun(BuildContext context, WidgetRef ref) async {
   }
   if (!context.mounted) return false;
 
+  // Nothing can reach a sensor with the phone's Bluetooth off. The scan
+  // behind Connect offers to turn it on.
+  final bluetoothOff =
+      ownership is RememberedSensor && !await _bluetoothOn(ref);
+  if (!context.mounted) return false;
+
   SensorDevice? notFound;
-  var bluetoothOff = false;
   switch (ownership) {
     case NoSensorOwned():
       return false;
-    case RememberedSensor(:final device) when !ref.read(bleAdapterOnProvider):
-      // Nothing can reach the sensor with the phone's Bluetooth off. The scan
-      // behind Connect offers to turn it on.
+    case RememberedSensor(:final device) when bluetoothOff:
       notFound = device;
-      bluetoothOff = true;
     case RememberedSensor(:final device):
       final result = await showDialog<RememberedSensorResult>(
         context: context,
@@ -153,6 +155,21 @@ Future<bool> resolveSensorForRun(BuildContext context, WidgetRef ref) async {
       return false;
     case _SensorAnswer.runWithout || null:
       return false;
+  }
+}
+
+/// Whether the phone's Bluetooth is on, asked of the platform: the state held
+/// before anything asked reads off even when it is on. A platform that cannot
+/// say gets the benefit of the doubt, since the direct connect times out on
+/// its own.
+Future<bool> _bluetoothOn(WidgetRef ref) async {
+  try {
+    return await ref
+        .read(bleAdapterOnProvider.notifier)
+        .fetch()
+        .timeout(const Duration(seconds: 2));
+  } catch (_) {
+    return true;
   }
 }
 

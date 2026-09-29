@@ -49,6 +49,14 @@ class BleAdapterOn extends _$BleAdapterOn {
   }
 
   Future<void> turnOn() => _bleRepository.turnAdapterOn();
+
+  /// Asks the platform, which the first synchronous read may not have done
+  /// yet, and keeps the answer.
+  Future<bool> fetch() async {
+    final on = await _bleRepository.fetchAdapterOn();
+    if (ref.mounted) state = on;
+    return on;
+  }
 }
 
 /// Returns the BLE connection state. Allows to (dis)connect to/from a BLE device.
@@ -95,11 +103,13 @@ class SensorOwnershipController extends _$SensorOwnershipController {
 
   Future<void> rememberNoSensor() async {
     await _memory.rememberNoSensor();
+    ref.invalidateSelf();
     await future;
   }
 
   Future<void> forget() async {
     await _memory.forget();
+    ref.invalidateSelf();
     await future;
   }
 }

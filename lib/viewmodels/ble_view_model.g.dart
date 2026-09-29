@@ -141,7 +141,7 @@ final class BleAdapterOnProvider extends $NotifierProvider<BleAdapterOn, bool> {
   }
 }
 
-String _$bleAdapterOnHash() => r'66e05096a5d39cb2aa99fb7dadee0800604f6d08';
+String _$bleAdapterOnHash() => r'396746f68f641b25a32e5442696264cadc5e5e89';
 
 /// Whether the Bluetooth adapter is on. Allows to turn it on.
 
@@ -224,17 +224,20 @@ abstract class _$BleConnection extends $Notifier<BleConnectionState> {
 }
 
 /// The athlete's sensor as this device remembers it, or that they have none.
-/// Reread whenever a sensor connects, since connecting one remembers it.
+/// Reread whenever that changes, including when a sensor connects, since
+/// connecting one remembers it.
 
 @ProviderFor(SensorOwnershipController)
 const sensorOwnershipProvider = SensorOwnershipControllerProvider._();
 
 /// The athlete's sensor as this device remembers it, or that they have none.
-/// Reread whenever a sensor connects, since connecting one remembers it.
+/// Reread whenever that changes, including when a sensor connects, since
+/// connecting one remembers it.
 final class SensorOwnershipControllerProvider
     extends $AsyncNotifierProvider<SensorOwnershipController, SensorOwnership> {
   /// The athlete's sensor as this device remembers it, or that they have none.
-  /// Reread whenever a sensor connects, since connecting one remembers it.
+  /// Reread whenever that changes, including when a sensor connects, since
+  /// connecting one remembers it.
   const SensorOwnershipControllerProvider._()
     : super(
         from: null,
@@ -255,10 +258,11 @@ final class SensorOwnershipControllerProvider
 }
 
 String _$sensorOwnershipControllerHash() =>
-    r'337639f7bd19d04e7c21f984cff4c1299033d4de';
+    r'4ad955dd7d177b8cf13befc6b88c096c7d2196b5';
 
 /// The athlete's sensor as this device remembers it, or that they have none.
-/// Reread whenever a sensor connects, since connecting one remembers it.
+/// Reread whenever that changes, including when a sensor connects, since
+/// connecting one remembers it.
 
 abstract class _$SensorOwnershipController
     extends $AsyncNotifier<SensorOwnership> {

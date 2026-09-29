@@ -11,6 +11,11 @@ const defaultSensorConnectTimeout = Duration(seconds: 35);
 abstract class SensorLink {
   bool get isAdapterOn;
 
+  /// Whether the adapter is on, asked of the platform. Unlike [isAdapterOn],
+  /// which can read off before the platform has been asked once, this is the
+  /// real state.
+  Future<bool> fetchAdapterOn();
+
   /// Changes of [isAdapterOn] after the moment of listening.
   Stream<bool> get adapterOnChanges;
 
