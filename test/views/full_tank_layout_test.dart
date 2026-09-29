@@ -7,6 +7,7 @@ import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/layouts/full_tank_layout.dart';
+import 'package:crimpy/views/widgets/exercise_video_link.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,6 +63,8 @@ const _prescription =
 /// Longer than the running screen has lines for, so it is the case the paused
 /// card exists to answer.
 final _longNote = List.filled(12, _prescription).join(' ');
+
+const _demoVideo = 'https://youtu.be/abc';
 
 const _maxHang = TimedItem(
   label: 'Max hang',
@@ -209,6 +212,7 @@ void main() {
           item: const RestItem(durationSeconds: 30),
           nextItem: _hang,
           secondsRemaining: seconds,
+          nextVideoLink: _demoVideo,
         );
 
         final ready = CrimpyTheme.fillOn(
@@ -231,8 +235,11 @@ void main() {
           reason: 'the change of ground is what is seen from the wall',
         );
         expect(find.text('SEC REST'), findsNothing);
-        // What comes next is still read on it.
+        // What comes next is still read on it. The demo is not offered: there
+        // is no time left to watch it, and its button is drawn for a light
+        // ground.
         expect(_textColor(tester, 'NEXT'), CrimpyTheme.textOnFillSecondary);
+        expect(find.byType(ExerciseVideoButton), findsNothing);
       });
     }
 
@@ -271,6 +278,7 @@ void main() {
         item: const RestItem(durationSeconds: 30),
         nextItem: _hang,
         secondsRemaining: 4,
+        nextVideoLink: _demoVideo,
       );
 
       expect(
@@ -278,6 +286,7 @@ void main() {
         CrimpyTheme.textOn(CrimpyTheme.phaseColor(RunPhase.calm)),
       );
       expect(find.text('GET READY'), findsNothing);
+      expect(find.byType(ExerciseVideoButton), findsOneWidget);
     });
 
     // textMutedSmall is under the text floor on the calm ground.

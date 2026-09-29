@@ -262,4 +262,43 @@ void main() {
       expect(items.last.emom, isNull);
     });
   });
+
+  // The last two seconds of a step beep, to warn that the next one starts.
+  // The last rest of a run leads into nothing, so it has nothing to warn of.
+  // See Krakoer/crimpy#160.
+  group('WorkoutTimer countdown beeps', () {
+    bool beepsTwoSecondsBeforeTheEndOfTheRest(List<(int, bool)> spec) {
+      late bool beeps;
+      fakeAsync((async) {
+        final watch = ManualCrimpyWatch();
+        final timer = WorkoutTimer(items: stepsOf(spec), watch: watch);
+        timer.init();
+        timer.play();
+
+        // Into the rest, with two of its five seconds left.
+        final pullSeconds = spec.first.$2 ? 0 : spec.first.$1;
+        watch.advance((pullSeconds + 3) * 1000);
+        async.elapse(Duration(milliseconds: (pullSeconds + 3) * 1000));
+        expect(timer.currentItem, isA<RestItem>());
+        expect(timer.currentItemRemaining, 2);
+        beeps = timer.beepsThisSecond;
+        timer.timer.cancel();
+      });
+      return beeps;
+    }
+
+    test('beep before the step a rest leads into', () {
+      expect(
+        beepsTwoSecondsBeforeTheEndOfTheRest([(5, true), (3, false)]),
+        isTrue,
+      );
+    });
+
+    test('stay silent on the last rest of a run', () {
+      expect(
+        beepsTwoSecondsBeforeTheEndOfTheRest([(3, false), (5, true)]),
+        isFalse,
+      );
+    });
+  });
 }

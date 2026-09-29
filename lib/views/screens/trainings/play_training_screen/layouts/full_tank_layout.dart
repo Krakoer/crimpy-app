@@ -506,9 +506,6 @@ class FullTankLayout extends ConsumerWidget {
     return CrimpyTheme.textOn(CrimpyTheme.phaseColor(phase));
   }
 
-  /// The step coming up, which a working step has the strip to itself for. A
-  /// preparation and a rest fill the middle of the tank with what is next
-  /// already, so their strip stays down to the one word.
   /// Whether a running rest is in the last seconds before the next step, the
   /// ones the beeps count down. The whole tank turns the fill of getting
   /// ready for them, the colour a pull fills it with before the target, so
@@ -523,6 +520,9 @@ class FullTankLayout extends ConsumerWidget {
       nextItem != null &&
       secondsRemaining <= _restClosingSeconds;
 
+  /// The step coming up, which a working step has the strip to itself for. A
+  /// preparation and a rest fill the middle of the tank with what is next
+  /// already, so their strip stays down to the one word.
   String? get _nextStep {
     if (isPreparation || item is RestItem || nextItem == null) return null;
     return describeExecutionItem(nextItem!);
@@ -1094,7 +1094,10 @@ class _TankContent extends StatelessWidget {
           style: _scaledStyle(CrimpyTheme.body, color: palette.secondary),
         ),
       ],
-      if (isPlayableVideoLink(layout.nextVideoLink)) ...[
+      // Gone for the last seconds of the rest: there is no time left to
+      // watch it, and the button is drawn for a light ground, not the fill.
+      if (isPlayableVideoLink(layout.nextVideoLink) &&
+          !layout._restClosing) ...[
         SizedBox(height: _s(10)),
         ExerciseVideoButton(layout.nextVideoLink, compact: true),
       ],
