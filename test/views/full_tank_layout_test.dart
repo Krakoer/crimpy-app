@@ -1715,6 +1715,7 @@ void main() {
       required Size phone,
       required TargetPlatform platform,
       required double textScale,
+      int secondsRemaining = 5,
     }) async {
       tester.view.physicalSize = phone;
       tester.view.devicePixelRatio = 1;
@@ -1726,6 +1727,7 @@ void main() {
         item: item,
         nextItem: item is RestItem || isPreparation ? timedHang : null,
         isPreparation: isPreparation,
+        secondsRemaining: secondsRemaining,
         platform: platform,
         goal: goal,
         protocol: protocol,
@@ -1872,6 +1874,29 @@ void main() {
 
       expect(shrinkOf(tester, blockOf('SEC LEFT')), lessThan(1));
     });
+
+    // The countdown in the corner is set smaller from a minute up. The header
+    // it sits in keeps its height all the same, so the block under it does
+    // not jump when a rest crosses the minute.
+    for (final textScale in [1.0, 1.3]) {
+      testWidgets('holds a rest preview still as its count crosses a minute '
+          'at text scale $textScale', (tester) async {
+        Future<Rect> blockAt(int seconds) async {
+          await pumpStep(
+            tester,
+            item: const RestItem(durationSeconds: 90),
+            isPreparation: false,
+            phone: pixel,
+            platform: TargetPlatform.android,
+            textScale: textScale,
+            secondsRemaining: seconds,
+          );
+          return tester.getRect(blockOf('NEXT'));
+        }
+
+        expect(await blockAt(75), await blockAt(59));
+      });
+    }
 
     // The countdown is display sized already. Grown with the text size it
     // took the room the notes needed.

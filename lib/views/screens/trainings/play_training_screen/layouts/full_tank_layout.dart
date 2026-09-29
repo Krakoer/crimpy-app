@@ -767,6 +767,18 @@ class _TankContent extends StatelessWidget {
             color: color,
             height: _countdownNumeralHeight,
           ),
+          // The line keeps the height of the count under a minute whichever
+          // form is drawn, so the header, and the block laid out under it,
+          // do not move when a count crosses the minute. See
+          // Krakoer/crimpy#181.
+          strutStyle: StrutStyle.fromTextStyle(
+            _numeralStyle(
+              _countdownNumeralSize,
+              color: color,
+              height: _countdownNumeralHeight,
+            ),
+            forceStrutHeight: true,
+          ),
         ),
         Text(
           resting ? 'SEC REST' : 'SEC',
