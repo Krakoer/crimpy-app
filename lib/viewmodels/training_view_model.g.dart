@@ -698,10 +698,15 @@ final class SessionWithDataFamily extends $Family
 /// Every session the athlete has, each carrying all of its reps: the whole
 /// history, for the readers that add it up rather than list it.
 ///
-/// Read after the session list and again whenever it changes, so a run saved,
-/// edited or deleted anywhere reaches the totals without each of those paths
-/// having to know they exist. Auto-disposed: it holds every rep ever recorded,
-/// and only the profile reads it.
+/// Read on its own rather than after the session list, so a list that failed
+/// to load does not fail this with it, and a pull on the profile asks again for
+/// real. Read again whenever the list changes in what the history is made of,
+/// its sessions, their dates and their rep counts, so a run saved, edited or
+/// deleted anywhere reaches the totals without each of those paths having to
+/// know they exist. A change that leaves those alone, a coach reply marked read
+/// or the list fetched again on resume, does not download every rep again: it
+/// is the heaviest request the app makes. Auto-disposed: it holds every rep
+/// ever recorded, and only the profile reads it.
 
 @ProviderFor(sessionHistoryWithReps)
 const sessionHistoryWithRepsProvider = SessionHistoryWithRepsProvider._();
@@ -709,10 +714,15 @@ const sessionHistoryWithRepsProvider = SessionHistoryWithRepsProvider._();
 /// Every session the athlete has, each carrying all of its reps: the whole
 /// history, for the readers that add it up rather than list it.
 ///
-/// Read after the session list and again whenever it changes, so a run saved,
-/// edited or deleted anywhere reaches the totals without each of those paths
-/// having to know they exist. Auto-disposed: it holds every rep ever recorded,
-/// and only the profile reads it.
+/// Read on its own rather than after the session list, so a list that failed
+/// to load does not fail this with it, and a pull on the profile asks again for
+/// real. Read again whenever the list changes in what the history is made of,
+/// its sessions, their dates and their rep counts, so a run saved, edited or
+/// deleted anywhere reaches the totals without each of those paths having to
+/// know they exist. A change that leaves those alone, a coach reply marked read
+/// or the list fetched again on resume, does not download every rep again: it
+/// is the heaviest request the app makes. Auto-disposed: it holds every rep
+/// ever recorded, and only the profile reads it.
 
 final class SessionHistoryWithRepsProvider
     extends
@@ -727,10 +737,15 @@ final class SessionHistoryWithRepsProvider
   /// Every session the athlete has, each carrying all of its reps: the whole
   /// history, for the readers that add it up rather than list it.
   ///
-  /// Read after the session list and again whenever it changes, so a run saved,
-  /// edited or deleted anywhere reaches the totals without each of those paths
-  /// having to know they exist. Auto-disposed: it holds every rep ever recorded,
-  /// and only the profile reads it.
+  /// Read on its own rather than after the session list, so a list that failed
+  /// to load does not fail this with it, and a pull on the profile asks again for
+  /// real. Read again whenever the list changes in what the history is made of,
+  /// its sessions, their dates and their rep counts, so a run saved, edited or
+  /// deleted anywhere reaches the totals without each of those paths having to
+  /// know they exist. A change that leaves those alone, a coach reply marked read
+  /// or the list fetched again on resume, does not download every rep again: it
+  /// is the heaviest request the app makes. Auto-disposed: it holds every rep
+  /// ever recorded, and only the profile reads it.
   const SessionHistoryWithRepsProvider._()
     : super(
         from: null,
@@ -758,7 +773,7 @@ final class SessionHistoryWithRepsProvider
 }
 
 String _$sessionHistoryWithRepsHash() =>
-    r'516b8d9f3c9d90c6ac392bbbd39e6ca822c6f9c2';
+    r'b15754e41094423d275e41986a73abb30129f231';
 
 /// The all-time totals of the profile, Krakoer/crimpy#150.
 

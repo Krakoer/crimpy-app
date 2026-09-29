@@ -305,16 +305,35 @@ Future<SessionModel?> sessionWithData(Ref ref, String sessionId) {
 /// Every session the athlete has, each carrying all of its reps: the whole
 /// history, for the readers that add it up rather than list it.
 ///
-/// Read after the session list and again whenever it changes, so a run saved,
-/// edited or deleted anywhere reaches the totals without each of those paths
-/// having to know they exist. Auto-disposed: it holds every rep ever recorded,
-/// and only the profile reads it.
+/// Read on its own rather than after the session list, so a list that failed
+/// to load does not fail this with it, and a pull on the profile asks again for
+/// real. Read again whenever the list changes in what the history is made of,
+/// its sessions, their dates and their rep counts, so a run saved, edited or
+/// deleted anywhere reaches the totals without each of those paths having to
+/// know they exist. A change that leaves those alone, a coach reply marked read
+/// or the list fetched again on resume, does not download every rep again: it
+/// is the heaviest request the app makes. Auto-disposed: it holds every rep
+/// ever recorded, and only the profile reads it.
 @riverpod
-Future<List<SessionModel>> sessionHistoryWithReps(Ref ref) async {
+Future<List<SessionModel>> sessionHistoryWithReps(Ref ref) {
   final repository = ref.watch(trainingRepositoryProvider);
-  await ref.watch(sessionsProvider.future);
+  ref.listen(sessionsProvider, (previous, next) {
+    final before = _historyKey(previous?.value);
+    final after = _historyKey(next.value);
+    // From an answer to a different answer only: the list arriving for the
+    // first time, or failing, says nothing about a history read on its own.
+    if (before != null && after != null && before != after) {
+      ref.invalidateSelf();
+    }
+  });
   return repository.getSessionHistoryWithReps();
 }
+
+/// What the session list says about the history the totals are made of, null
+/// while it has no answer.
+String? _historyKey(List<SessionModel>? sessions) => sessions
+    ?.map((s) => '${s.id}@${s.date.microsecondsSinceEpoch}#${s.repCount}')
+    .join(',');
 
 /// The all-time totals of the profile, Krakoer/crimpy#150.
 @riverpod
