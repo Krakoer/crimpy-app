@@ -1,6 +1,7 @@
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/calibration/start_calibration_dialog.dart';
+import 'package:crimpy/views/widgets/ble/tare_dialog.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/create_sensor_config_dialog.dart';
 import 'package:crimpy/viewmodels/app_info_view_model.dart';
 import 'package:crimpy/viewmodels/coach_view_model.dart';
@@ -80,11 +81,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 onPressed:
                                     ref.watch(connectionStateProvider) ==
                                         BleConnectionState.connected
-                                    ? () {
-                                        ref
-                                            .read(bleConfigProvider.notifier)
-                                            .tare();
-                                      }
+                                    ? () => tareUnlessLoaded(context, ref)
                                     : null,
                                 child: Text("Tare"),
                               ),
