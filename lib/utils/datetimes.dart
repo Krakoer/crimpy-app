@@ -1,3 +1,5 @@
+import 'package:clock/clock.dart';
+
 /// [date] moved [days] calendar days, at local midnight.
 ///
 /// Counted in calendar days rather than by adding a Duration: a Duration is
@@ -24,7 +26,7 @@ DateTime trainingDayOf(DateTime instant) =>
 
 /// The training day it is now: what "today" means wherever the app asks what
 /// the athlete owes or has done today. Until 04:00 it is still yesterday.
-DateTime currentTrainingDay() => trainingDayOf(DateTime.now());
+DateTime currentTrainingDay() => trainingDayOf(clock.now());
 
 /// Whole calendar days from [from] to [to], negative when [to] is earlier.
 ///

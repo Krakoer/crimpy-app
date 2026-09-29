@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:clock/clock.dart';
+
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/session.dart';
@@ -968,6 +970,34 @@ void main() {
     expect(find.text('Leave the workout?'), findsNothing);
     expect(find.text('PAUSED'), findsNothing);
     expect(find.text('DONE'), findsOneWidget);
+  });
+
+  // The session is dated by when the run started. A pause, a resume or a slow
+  // finish must not move it, or a late run drifts onto the next training day.
+  testWidgets('hands the review the time play was first pressed', (
+    tester,
+  ) async {
+    var now = DateTime(2026, 9, 28, 23, 50);
+    await withClock(Clock(() => now), () async {
+      await _pumpRun(tester, _oneHang(), useSensor: false);
+
+      await tester.tap(find.byIcon(Icons.play_arrow));
+      await tester.pump();
+      now = DateTime(2026, 9, 28, 23, 55);
+      await tester.tap(find.byIcon(Icons.pause));
+      await tester.pump();
+      now = DateTime(2026, 9, 29, 0, 5);
+      await tester.tap(find.byIcon(Icons.play_arrow));
+      await tester.pump();
+      await _skip(tester);
+      await _skip(tester);
+      await tester.pumpAndSettle();
+    });
+
+    final review = tester.widget<PostWorkoutScreen>(
+      find.byType(PostWorkoutScreen),
+    );
+    expect(review.startedAt, DateTime(2026, 9, 28, 23, 50));
   });
 
   // A run started with "Run without" measures nothing, so the reps it records

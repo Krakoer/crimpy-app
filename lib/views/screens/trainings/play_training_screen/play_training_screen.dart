@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/layouts/full_tank_layout.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/open_reps_dialog.dart';
 import 'package:crimpy/models/assessment_model.dart';
@@ -161,9 +162,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         MaterialPageRoute(
           builder: (context) => PostWorkoutScreen(
             template: widget.training,
-            // A run skipped through without ever being played has no start,
-            // so it is dated by its finish, still frozen before the review.
-            startedAt: _startedAt ?? DateTime.now(),
+            // Only a run that finished without play ever being pressed has
+            // no start. It is dated by its finish, still frozen before the
+            // review.
+            startedAt: _startedAt ?? clock.now(),
             results: repResults,
             itemResults: itemResults,
             // The same results the run resolved its prescription against, so
@@ -189,7 +191,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   }
 
   void _start() {
-    _startedAt ??= DateTime.now();
+    _startedAt ??= clock.now();
     sensorRepository.resumeStreaming();
     ref.read(loadDropAlarmProvider.notifier).follow(timer.currentItem);
     setState(timer.play);
