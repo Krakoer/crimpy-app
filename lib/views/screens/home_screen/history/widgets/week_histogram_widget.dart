@@ -23,7 +23,7 @@ class WeekHistogramWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DateTime monday = startOfWeek ?? getStartOfWeek(DateTime.now());
+    final DateTime monday = startOfWeek ?? getStartOfWeek(currentTrainingDay());
 
     // Compute duration for each day of the week, grouped by session type
     final List<Map<SessionActivity, Duration>> durationsPerDay =
@@ -81,7 +81,7 @@ class WeekHistogramWidget extends StatelessWidget {
     // Format day name and duration
     final String dayName = DateFormat('E').format(day); // Mon, Tue, etc.
     final String durationText = formatLength(totalDuration);
-    final bool isToday = DateUtils.isSameDay(day, DateTime.now());
+    final bool isToday = DateUtils.isSameDay(day, currentTrainingDay());
 
     // Build stacked bar segments
     List<Widget> barSegments = [];
@@ -177,7 +177,7 @@ class WeekHistogramWidget extends StatelessWidget {
     );
 
     for (final entry in sessions) {
-      final DateTime entryDate = entry.date;
+      final DateTime entryDate = entry.trainingDay;
       final Duration entryDuration = Duration(seconds: entry.duration);
       final SessionActivity activity = entry.activity;
 

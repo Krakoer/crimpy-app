@@ -37,6 +37,10 @@ class CapturingSessions extends Sessions {
 
 const _training = Training(id: 't1', title: 'Mobility');
 
+/// When the runs under test started: an evening, so the day a session is
+/// filed under is not decided by the training day turn.
+final _runStartedAt = DateTime(2026, 9, 28, 18, 30);
+
 TrainingItem _item(String id) =>
     TrainingItem(id: id, type: TrainingItemType.hangboardRep, position: 0);
 
@@ -101,7 +105,8 @@ void main() {
 
     final saved = await _saveFrom(
       tester,
-      const PostWorkoutScreen(
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: _training,
         results: [],
         activity: SessionActivity.stretching,
@@ -114,6 +119,47 @@ void main() {
     expect(saved.origin, SessionOrigin.played);
   });
 
+  // The review is saved well after the run, sometimes past midnight: dating
+  // the session by the save would file an evening's training under the next
+  // day and leave the day it answered looking missed.
+  testWidgets('dates the session by when the run started, not by the save', (
+    tester,
+  ) async {
+    final sessions = CapturingSessions();
+    final lateEvening = DateTime(2026, 9, 28, 23, 55);
+
+    final saved = await _saveFrom(
+      tester,
+      PostWorkoutScreen(
+        startedAt: lateEvening,
+        template: _training,
+        results: [],
+      ),
+      sessions,
+    );
+
+    expect(saved.date, lateEvening);
+    expect(saved.name, 'Mobility - 28/09/2026');
+  });
+
+  testWidgets('names a run started past midnight after its training day', (
+    tester,
+  ) async {
+    final sessions = CapturingSessions();
+
+    final saved = await _saveFrom(
+      tester,
+      PostWorkoutScreen(
+        startedAt: DateTime(2026, 9, 29, 0, 20),
+        template: _training,
+        results: [],
+      ),
+      sessions,
+    );
+
+    expect(saved.name, 'Mobility - 28/09/2026');
+  });
+
   // The prompt this screen exists to carry: the anchor the athlete taps has to
   // reach the saved session, and skipping it has to leave the session unrated
   // rather than rated zero.
@@ -122,7 +168,11 @@ void main() {
 
     await _pumpFor(
       tester,
-      const PostWorkoutScreen(template: _training, results: []),
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
+        template: _training,
+        results: [],
+      ),
       sessions,
     );
 
@@ -146,7 +196,11 @@ void main() {
 
     await _pumpFor(
       tester,
-      const PostWorkoutScreen(template: _training, results: []),
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
+        template: _training,
+        results: [],
+      ),
       sessions,
     );
 
@@ -170,7 +224,11 @@ void main() {
 
     final saved = await _saveFrom(
       tester,
-      const PostWorkoutScreen(template: _training, results: []),
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
+        template: _training,
+        results: [],
+      ),
       sessions,
     );
 
@@ -190,7 +248,11 @@ void main() {
 
     final saved = await _saveFrom(
       tester,
-      PostWorkoutScreen(template: template, results: const []),
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
+        template: template,
+        results: const [],
+      ),
       sessions,
     );
 
@@ -204,7 +266,11 @@ void main() {
 
     final saved = await _saveFrom(
       tester,
-      const PostWorkoutScreen(template: _training, results: []),
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
+        template: _training,
+        results: [],
+      ),
       sessions,
     );
 
@@ -218,6 +284,7 @@ void main() {
     await _show(
       tester,
       PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: Training(id: 't1', title: 'Hangs', items: [_item('a')]),
         results: [
           // 18 kg is 90% of 20, so it is on target; 17 kg is not.
@@ -238,6 +305,7 @@ void main() {
     await _show(
       tester,
       PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: Training(
           id: 't1',
           title: 'Hangs',
@@ -263,6 +331,7 @@ void main() {
     await _show(
       tester,
       PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: Training(
           id: 't1',
           title: 'Hangs and mobility',
@@ -286,6 +355,7 @@ void main() {
     await _show(
       tester,
       PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: Training(id: 't1', title: 'Mobility', items: [_item('a')]),
         results: [_rep(index: 0, itemId: 'a', targetWeight: 0)],
       ),
@@ -300,7 +370,8 @@ void main() {
 
     final saved = await _saveFrom(
       tester,
-      const PostWorkoutScreen(
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: _training,
         results: [],
         trainingId: 't-1',
@@ -345,7 +416,8 @@ void _reviewPassTests() {
   testWidgets('asks about every prescribed step', (tester) async {
     await _show(
       tester,
-      const PostWorkoutScreen(
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: _reviewTraining,
         results: [],
         trainingId: 't-1',
@@ -372,7 +444,8 @@ void _reviewPassTests() {
         'following set.';
     await _show(
       tester,
-      const PostWorkoutScreen(
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: Training(
           id: 't2',
           title: 'Strength',
@@ -404,7 +477,8 @@ void _reviewPassTests() {
     const rule = 'To failure or 40s. Past 40s add 5kg.';
     await _show(
       tester,
-      const PostWorkoutScreen(
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: Training(
           id: 't3',
           title: 'Max hangs',
@@ -450,7 +524,8 @@ void _reviewPassTests() {
   testWidgets('shows no protocol block on a step without one', (tester) async {
     await _show(
       tester,
-      const PostWorkoutScreen(
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: _reviewTraining,
         results: [],
         trainingId: 't-1',
@@ -467,7 +542,8 @@ void _reviewPassTests() {
 
     await _pumpFor(
       tester,
-      const PostWorkoutScreen(
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: _reviewTraining,
         results: [],
         trainingId: 't-1',
@@ -504,7 +580,8 @@ void _reviewPassTests() {
 
     await _saveFrom(
       tester,
-      const PostWorkoutScreen(
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: _reviewTraining,
         results: [],
         trainingId: 't-1',
@@ -523,7 +600,8 @@ void _reviewPassTests() {
 
     await _pumpFor(
       tester,
-      const PostWorkoutScreen(
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: _reviewTraining,
         results: [],
         trainingId: 't-1',
@@ -551,7 +629,8 @@ void _reviewPassTests() {
 
     await _pumpFor(
       tester,
-      const PostWorkoutScreen(
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: _reviewTraining,
         results: [],
         trainingId: 't-1',
@@ -608,6 +687,7 @@ void _reviewPassTests() {
     await _show(
       tester,
       PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: relative,
         results: const [],
         trainingId: 't-1',
@@ -627,7 +707,8 @@ void _reviewPassTests() {
 
     await _pumpFor(
       tester,
-      const PostWorkoutScreen(
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: _reviewTraining,
         results: [],
         trainingId: 't-1',
@@ -666,7 +747,11 @@ void _reviewPassTests() {
 
     await _show(
       tester,
-      const PostWorkoutScreen(template: unnamed, results: []),
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
+        template: unnamed,
+        results: [],
+      ),
     );
 
     expect(find.text('How did each one go?'), findsNothing);
@@ -692,7 +777,11 @@ void _reviewPassTests() {
 
     await _pumpFor(
       tester,
-      const PostWorkoutScreen(template: unnamed, results: []),
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
+        template: unnamed,
+        results: [],
+      ),
       sessions,
     );
     await tester.tap(find.text('Save training'));
@@ -725,7 +814,14 @@ void _reviewPassTests() {
       ],
     );
 
-    await _show(tester, const PostWorkoutScreen(template: warmup, results: []));
+    await _show(
+      tester,
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
+        template: warmup,
+        results: [],
+      ),
+    );
 
     expect(find.text('How did each one go?'), findsNothing);
     expect(find.textContaining('nothing to note step by step'), findsOneWidget);
@@ -754,7 +850,11 @@ void _reviewPassTests() {
 
     await _pumpFor(
       tester,
-      const PostWorkoutScreen(template: builtin, results: []),
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
+        template: builtin,
+        results: [],
+      ),
       sessions,
     );
 
@@ -787,7 +887,8 @@ void _reviewPassTests() {
   ) async {
     await _show(
       tester,
-      const PostWorkoutScreen(
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: _reviewTraining,
         results: [],
         programSessionId: 'ps-1',
@@ -805,7 +906,8 @@ void _reviewPassTests() {
 
     await _pumpFor(
       tester,
-      const PostWorkoutScreen(
+      PostWorkoutScreen(
+        startedAt: _runStartedAt,
         template: _reviewTraining,
         results: [],
         trainingId: 't-1',
@@ -887,6 +989,7 @@ Future<CapturingAssessments> _answer(
         home: Navigator(
           onGenerateRoute: (_) => MaterialPageRoute(
             builder: (_) => PostWorkoutScreen(
+              startedAt: _runStartedAt,
               template: Training(
                 id: definition.trainingId ?? 't-assessment',
                 title: definition.label,
@@ -919,9 +1022,10 @@ void _assessmentQuestionTests() {
             _pullUpPyramid.id,
           ).overrideWith(CapturingAssessments.new),
         ],
-        child: const MaterialApp(
+        child: MaterialApp(
           home: PostWorkoutScreen(
-            template: Training(
+            startedAt: _runStartedAt,
+            template: const Training(
               id: 't-assessment',
               title: 'Pull up pyramid',
               assessment: _pullUpPyramid,
@@ -971,9 +1075,10 @@ void _assessmentQuestionTests() {
             _pullUpPyramid.id,
           ).overrideWith(() => assessments),
         ],
-        child: const MaterialApp(
+        child: MaterialApp(
           home: PostWorkoutScreen(
-            template: Training(
+            startedAt: _runStartedAt,
+            template: const Training(
               id: 't-assessment',
               title: 'Pull up pyramid',
               assessment: _pullUpPyramid,

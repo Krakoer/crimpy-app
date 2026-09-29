@@ -65,8 +65,16 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             if (adapterOn) ...[
               if (connectionState == BleConnectionState.connected)
                 _buildConnectedView()
-              else
+              else ...[
+                Text(
+                  'Connect with nothing hanging on the sensor, so it reads '
+                  'zero when it is tared.',
+                  style: CrimpyTheme.bodySmall.copyWith(
+                    color: CrimpyTheme.textSecondary,
+                  ),
+                ),
                 _buildScanView(),
+              ],
 
               const SizedBox(height: CrimpyTheme.spaceSm),
 

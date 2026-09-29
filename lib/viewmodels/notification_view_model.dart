@@ -1,3 +1,4 @@
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/models/coach_enrollment.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/cached_program_schedule.dart';
@@ -131,8 +132,10 @@ Future<CachedProgramSchedule?> programScheduleCache(Ref ref) async {
     }
 
     // A 14 day horizon starting mid week spans at most three Monday aligned
-    // weeks. Weeks the coach has not published yet come back null.
-    final firstWeek = program.currentWeekNumber(DateTime.now());
+    // weeks. Weeks the coach has not published yet come back null. Counted
+    // from the training day, the week the planner and the settings ask for:
+    // on a Monday before 04:00 that is still the week closing.
+    final firstWeek = program.currentWeekNumber(currentTrainingDay());
     final weeks = <Week>[];
     for (var number = firstWeek; number < firstWeek + 3; number++) {
       final week = await ref.watch(

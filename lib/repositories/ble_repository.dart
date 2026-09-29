@@ -2,16 +2,31 @@ import 'dart:async';
 import 'dart:typed_data';
 import '../models/ble_data_model.dart';
 import '../database/database.dart';
+import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/sensor_preset.dart';
+import 'package:crimpy/repositories/sensor_memory_repository.dart';
 import 'package:crimpy/services/sensor_link/flutter_blue_plus_sensor_link.dart';
 import 'package:crimpy/services/sensor_link/sensor_link.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BleRepository {
-  BleRepository({SensorLink? link})
-    : _link = link ?? FlutterBluePlusSensorLink();
+  BleRepository({
+    SensorLink? link,
+    SensorMemoryRepository? memory,
+    DateTime Function()? clock,
+  }) : _link = link ?? FlutterBluePlusSensorLink(),
+       _memory = memory ?? SharedPreferencesSensorMemory(),
+       _clock = clock ?? DateTime.now;
 
   final SensorLink _link;
+  final DateTime Function() _clock;
+
+  /// The current time, as the repository stamps its samples.
+  DateTime now() => _clock();
+
+  /// Where the sensor connected last is remembered, whichever screen
+  /// connected it.
+  final SensorMemoryRepository _memory;
 
   // ------------------------------------- BLE DEVICE -------------------------------------
   /// Whether the Bluetooth adapter is on, starting with the current state.
@@ -21,6 +36,8 @@ class BleRepository {
   }
 
   bool get isAdapterOn => _link.isAdapterOn;
+
+  Future<bool> fetchAdapterOn() => _link.fetchAdapterOn();
 
   Future<void> turnAdapterOn() => _link.turnAdapterOn();
 
@@ -55,10 +72,19 @@ class BleRepository {
 
   Future<List<SensorDevice>> scanForDevices() => _link.scan();
 
-  Future<bool> connectToDevice(SensorDevice device) async {
+  /// Counts the connections opened, so a reading can be told apart from one
+  /// taken on an earlier connection.
+  int connectionCount = 0;
+
+  /// Connects to [device], giving up after [timeout] when it does not answer.
+  Future<bool> connectToDevice(
+    SensorDevice device, {
+    Duration timeout = defaultSensorConnectTimeout,
+  }) async {
     try {
+      _forgetLastReading();
       _connectionStateController.add(BleConnectionState.connecting);
-      final channel = await _link.open(device);
+      final channel = await _link.open(device, timeout: timeout);
       if (channel == null) {
         _device = null;
         _connectionStateController.add(BleConnectionState.disconnected);
@@ -66,6 +92,7 @@ class BleRepository {
       }
       _device = device;
       _channel = channel;
+      connectionCount += 1;
 
       await _connectionSubscription?.cancel();
       _connectionSubscription = channel.connectionChanges.listen((connected) {
@@ -75,6 +102,7 @@ class BleRepository {
           _connectionStateController.add(BleConnectionState.disconnected);
           _device = null;
           _channel = null;
+          _forgetLastReading();
         }
       });
 
@@ -82,12 +110,23 @@ class BleRepository {
       _characteristicSubscription = channel.notifications.listen(
         handleRawSample,
       );
+      await _rememberSensor(device);
       return true;
     } catch (e) {
       _device = null;
       _channel = null;
       _connectionStateController.add(BleConnectionState.failed);
       return false;
+    }
+  }
+
+  /// A sensor that connected is connected, even if the device could not
+  /// store it for next time.
+  Future<void> _rememberSensor(SensorDevice device) async {
+    try {
+      await _memory.remember(device);
+    } catch (e) {
+      AppLoggerHelper.warning("Could not remember the sensor: $e");
     }
   }
 
@@ -99,6 +138,7 @@ class BleRepository {
     _connectionSubscription = null;
     await _characteristicSubscription?.cancel();
     _characteristicSubscription = null;
+    _forgetLastReading();
     await channel?.close();
     // Disposing the repository disconnects and closes the controller without
     // waiting for the disconnection to complete, so by the time we get here
@@ -133,6 +173,7 @@ class BleRepository {
     );
 
     lastOriginalValue = origValue;
+    lastOriginalValueAt = _clock();
 
     if (_streamDataOn) {
       _dataStreamController.add(BleDataPoint(calibratedValue, DateTime.now()));
@@ -179,6 +220,22 @@ class BleRepository {
 
   /// Holds the last raw (uncalibrated value). Used for calibration.
   double lastOriginalValue = double.nan;
+
+  /// When [lastOriginalValue] arrived, or null before the first sample of the
+  /// current connection.
+  DateTime? lastOriginalValueAt;
+
+  /// The last calibrated reading, as the sensor readout shows it: what a tare
+  /// would zero.
+  double get lastCalibratedValue =>
+      (lastOriginalValue - tare) * calibrationCoef;
+
+  /// A reading from the previous connection says nothing about the sensor on
+  /// the next one, so a tare must not pick it up.
+  void _forgetLastReading() {
+    lastOriginalValue = double.nan;
+    lastOriginalValueAt = null;
+  }
 
   /// Stores the mean of raw values since `calibrationOn` has been set to `true`.
   double _calibrationMean = 0;
