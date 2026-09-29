@@ -35,8 +35,8 @@ const double _repContextCardBottom = 16;
 const double _headerTop = 14;
 const double _headerTopUnderBackButton = 58;
 
-/// The countdown in the corner, sized for a count under a minute. A count of a
-/// minute or more is set smaller, so this is the tallest it gets.
+/// The countdown in the corner, at its size for a count under a minute. A
+/// count of a minute or more is set smaller.
 const double _countdownNumeralSize = 92;
 const double _countdownNumeralHeight = 0.9;
 

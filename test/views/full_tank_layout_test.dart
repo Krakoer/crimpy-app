@@ -1200,6 +1200,7 @@ void main() {
       required TargetPlatform platform,
       double textScale = 1,
       bool notes = false,
+      double currentWeight = 400,
     }) async {
       tester.view.physicalSize = phone;
       tester.view.devicePixelRatio = 1;
@@ -1209,7 +1210,7 @@ void main() {
       await _pump(
         tester,
         item: _hang,
-        currentWeight: 400,
+        currentWeight: currentWeight,
         platform: platform,
         goal: notes ? goal : null,
         protocol: notes ? protocol : null,
@@ -1288,6 +1289,50 @@ void main() {
         },
       );
     }
+
+    // The copy over the level is only readable if it lands exactly on the
+    // copy under it, text for text.
+    void expectInRegister(WidgetTester tester) {
+      final copies = <String, int>{};
+      for (final text in tester.widgetList<Text>(find.byType(Text))) {
+        final data = text.data;
+        if (data != null) {
+          copies.update(data, (n) => n + 1, ifAbsent: () => 1);
+        }
+      }
+      final doubled = [
+        for (final MapEntry(:key, :value) in copies.entries)
+          if (value == 2) key,
+      ];
+      expect(doubled, containsAll(['ELAPSED', 'BOTH HANDS', 'kg']));
+      for (final text in doubled) {
+        expect(
+          tester.getRect(find.text(text).at(1)),
+          tester.getRect(find.text(text).at(0)),
+          reason: text,
+        );
+      }
+    }
+
+    testWidgets('draws the copy over a level below the header in register', (
+      tester,
+    ) async {
+      await pumpFullTank(
+        tester,
+        phone: android.$2,
+        platform: android.$1,
+        currentWeight: 30,
+        notes: true,
+      );
+      expectInRegister(tester);
+    });
+
+    testWidgets('draws the copy over a level held at the notch in register', (
+      tester,
+    ) async {
+      await pumpFullTank(tester, phone: iOS.$2, platform: iOS.$1, notes: true);
+      expectInRegister(tester);
+    });
 
     testWidgets('leaves a level under the header where it was', (tester) async {
       await _pump(tester, item: _hang, currentWeight: 21);
