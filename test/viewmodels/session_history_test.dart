@@ -145,4 +145,23 @@ void main() {
 
     expect(history, hasLength(2));
   });
+
+  test('catches a change made while the list had no answer', () async {
+    repository = _FakeRepository([_session('s-1')])..listFails = true;
+    container = ProviderContainer.test(
+      overrides: [trainingRepositoryProvider.overrideWithValue(repository)],
+    );
+    container.listen(sessionHistoryWithRepsProvider, (_, _) {});
+    container.listen(sessionsProvider, (_, _) {});
+    await container.read(sessionHistoryWithRepsProvider.future);
+
+    repository.sessions = [_session('s-1'), _session('s-2')];
+    repository.listFails = false;
+    container.invalidate(sessionsProvider);
+    await container.read(sessionsProvider.future);
+    final history = await container.read(sessionHistoryWithRepsProvider.future);
+
+    expect(repository.historyReads, 2);
+    expect(history, hasLength(2));
+  });
 }

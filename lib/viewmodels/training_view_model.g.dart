@@ -700,13 +700,17 @@ final class SessionWithDataFamily extends $Family
 ///
 /// Read on its own rather than after the session list, so a list that failed
 /// to load does not fail this with it, and a pull on the profile asks again for
-/// real. Read again whenever the list changes in what the history is made of,
-/// its sessions, their dates and their rep counts, so a run saved, edited or
-/// deleted anywhere reaches the totals without each of those paths having to
-/// know they exist. A change that leaves those alone, a coach reply marked read
-/// or the list fetched again on resume, does not download every rep again: it
-/// is the heaviest request the app makes. Auto-disposed: it holds every rep
-/// ever recorded, and only the profile reads it.
+/// real. Read again whenever the list answers with a history other than the one
+/// read here, told apart by its sessions, their dates and their rep counts, so
+/// a run saved, edited or deleted anywhere reaches the totals without each of
+/// those paths having to know they exist. The list is compared with what was
+/// read rather than with its own previous answer, so a change made while it had
+/// no answer is still caught by its first one. A change that leaves the history
+/// alone, a coach reply marked read or the list fetched again on resume, does
+/// not download every rep again: it is the heaviest request the app makes.
+///
+/// Auto-disposed, although the profile that reads it is kept alive in the main
+/// pager, so in practice it lives from the first visit to the profile on.
 
 @ProviderFor(sessionHistoryWithReps)
 const sessionHistoryWithRepsProvider = SessionHistoryWithRepsProvider._();
@@ -716,13 +720,17 @@ const sessionHistoryWithRepsProvider = SessionHistoryWithRepsProvider._();
 ///
 /// Read on its own rather than after the session list, so a list that failed
 /// to load does not fail this with it, and a pull on the profile asks again for
-/// real. Read again whenever the list changes in what the history is made of,
-/// its sessions, their dates and their rep counts, so a run saved, edited or
-/// deleted anywhere reaches the totals without each of those paths having to
-/// know they exist. A change that leaves those alone, a coach reply marked read
-/// or the list fetched again on resume, does not download every rep again: it
-/// is the heaviest request the app makes. Auto-disposed: it holds every rep
-/// ever recorded, and only the profile reads it.
+/// real. Read again whenever the list answers with a history other than the one
+/// read here, told apart by its sessions, their dates and their rep counts, so
+/// a run saved, edited or deleted anywhere reaches the totals without each of
+/// those paths having to know they exist. The list is compared with what was
+/// read rather than with its own previous answer, so a change made while it had
+/// no answer is still caught by its first one. A change that leaves the history
+/// alone, a coach reply marked read or the list fetched again on resume, does
+/// not download every rep again: it is the heaviest request the app makes.
+///
+/// Auto-disposed, although the profile that reads it is kept alive in the main
+/// pager, so in practice it lives from the first visit to the profile on.
 
 final class SessionHistoryWithRepsProvider
     extends
@@ -739,13 +747,17 @@ final class SessionHistoryWithRepsProvider
   ///
   /// Read on its own rather than after the session list, so a list that failed
   /// to load does not fail this with it, and a pull on the profile asks again for
-  /// real. Read again whenever the list changes in what the history is made of,
-  /// its sessions, their dates and their rep counts, so a run saved, edited or
-  /// deleted anywhere reaches the totals without each of those paths having to
-  /// know they exist. A change that leaves those alone, a coach reply marked read
-  /// or the list fetched again on resume, does not download every rep again: it
-  /// is the heaviest request the app makes. Auto-disposed: it holds every rep
-  /// ever recorded, and only the profile reads it.
+  /// real. Read again whenever the list answers with a history other than the one
+  /// read here, told apart by its sessions, their dates and their rep counts, so
+  /// a run saved, edited or deleted anywhere reaches the totals without each of
+  /// those paths having to know they exist. The list is compared with what was
+  /// read rather than with its own previous answer, so a change made while it had
+  /// no answer is still caught by its first one. A change that leaves the history
+  /// alone, a coach reply marked read or the list fetched again on resume, does
+  /// not download every rep again: it is the heaviest request the app makes.
+  ///
+  /// Auto-disposed, although the profile that reads it is kept alive in the main
+  /// pager, so in practice it lives from the first visit to the profile on.
   const SessionHistoryWithRepsProvider._()
     : super(
         from: null,
@@ -773,7 +785,7 @@ final class SessionHistoryWithRepsProvider
 }
 
 String _$sessionHistoryWithRepsHash() =>
-    r'b15754e41094423d275e41986a73abb30129f231';
+    r'559fc578b01c6d6483799a730b5c7781c66e1be7';
 
 /// The all-time totals of the profile, Krakoer/crimpy#150.
 

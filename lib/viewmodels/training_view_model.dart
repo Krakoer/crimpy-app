@@ -307,26 +307,30 @@ Future<SessionModel?> sessionWithData(Ref ref, String sessionId) {
 ///
 /// Read on its own rather than after the session list, so a list that failed
 /// to load does not fail this with it, and a pull on the profile asks again for
-/// real. Read again whenever the list changes in what the history is made of,
-/// its sessions, their dates and their rep counts, so a run saved, edited or
-/// deleted anywhere reaches the totals without each of those paths having to
-/// know they exist. A change that leaves those alone, a coach reply marked read
-/// or the list fetched again on resume, does not download every rep again: it
-/// is the heaviest request the app makes. Auto-disposed: it holds every rep
-/// ever recorded, and only the profile reads it.
+/// real. Read again whenever the list answers with a history other than the one
+/// read here, told apart by its sessions, their dates and their rep counts, so
+/// a run saved, edited or deleted anywhere reaches the totals without each of
+/// those paths having to know they exist. The list is compared with what was
+/// read rather than with its own previous answer, so a change made while it had
+/// no answer is still caught by its first one. A change that leaves the history
+/// alone, a coach reply marked read or the list fetched again on resume, does
+/// not download every rep again: it is the heaviest request the app makes.
+///
+/// Auto-disposed, although the profile that reads it is kept alive in the main
+/// pager, so in practice it lives from the first visit to the profile on.
 @riverpod
-Future<List<SessionModel>> sessionHistoryWithReps(Ref ref) {
+Future<List<SessionModel>> sessionHistoryWithReps(Ref ref) async {
   final repository = ref.watch(trainingRepositoryProvider);
-  ref.listen(sessionsProvider, (previous, next) {
-    final before = _historyKey(previous?.value);
-    final after = _historyKey(next.value);
-    // From an answer to a different answer only: the list arriving for the
-    // first time, or failing, says nothing about a history read on its own.
-    if (before != null && after != null && before != after) {
+  String? readKey;
+  ref.listen(sessionsProvider, (_, next) {
+    final listedKey = _historyKey(next.value);
+    if (readKey != null && listedKey != null && listedKey != readKey) {
       ref.invalidateSelf();
     }
   });
-  return repository.getSessionHistoryWithReps();
+  final history = await repository.getSessionHistoryWithReps();
+  readKey = _historyKey(history);
+  return history;
 }
 
 /// What the session list says about the history the totals are made of, null
