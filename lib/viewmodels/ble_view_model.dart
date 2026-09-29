@@ -243,7 +243,25 @@ class BleConfigController extends _$BleConfigController {
     );
   }
 
-  /// Set the tare to the last BLE value.
+  /// What taring now would zero, or null when there is nothing to tare: no
+  /// sensor connected, or no reading from it yet.
+  TareCheck? checkTare() {
+    final sampledAt = _bleRepository.lastOriginalValueAt;
+    if (!_bleRepository.isConnected ||
+        sampledAt == null ||
+        _bleRepository.lastOriginalValue.isNaN) {
+      return null;
+    }
+    return TareCheck.of(
+      loadKg: _bleRepository.lastCalibratedValue,
+      readingAge: _bleRepository.now().difference(sampledAt),
+      connection: _bleRepository.connectionCount,
+    );
+  }
+
+  /// Set the tare to the last BLE value, unconditionally. Views go through
+  /// [checkTare] first so a loaded sensor is not zeroed without the athlete
+  /// agreeing to it.
   Future<void> tare() async {
     final tareValue = _bleRepository.lastOriginalValue;
     // If no value received by BLE, do nothing.
@@ -253,6 +271,21 @@ class BleConfigController extends _$BleConfigController {
 
     await _bleRepository.setTare(tareValue);
     ref.invalidateSelf();
+  }
+
+  /// Tares after the athlete confirmed [confirmed], once the reading is
+  /// checked again: a sensor that disconnected meanwhile cancels it, and a
+  /// reading that moved away from what they agreed to is put back to them.
+  Future<TareOutcome> tareConfirmed(TareCheck confirmed) async {
+    final current = checkTare();
+    if (current == null || current.connection != confirmed.connection) {
+      return const TareCancelled();
+    }
+    if (current.needsConfirmation && !confirmed.stillMatches(current)) {
+      return TareChanged(current);
+    }
+    await tare();
+    return const TareDone();
   }
 
   /// Starts a calibration session.

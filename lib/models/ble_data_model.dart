@@ -116,3 +116,87 @@ class BleSessionStats {
     this.nbPoints = 0,
   });
 }
+
+/// Why a tare should not go ahead without the athlete confirming it.
+enum TareConcern {
+  /// The sensor reads close enough to zero to be tared as it is.
+  none,
+
+  /// Something is still hanging on the sensor, so taring would zero it.
+  loaded,
+
+  /// The sensor has stopped sending readings, so the last one may not be what
+  /// it carries now.
+  stale,
+}
+
+/// What a tare would zero if it happened now: the reading it would take as
+/// the new zero, how old that reading is, and the connection it came from.
+class TareCheck {
+  /// A calibrated reading further from zero than this is a load, not noise.
+  static const loadedAboveKg = 2.0;
+
+  /// A reading older than this no longer tells what the sensor carries. The
+  /// firmware notifies about ten times a second.
+  static const staleAfter = Duration(seconds: 2);
+
+  /// The load the tare would zero, in calibrated kilograms.
+  final double loadKg;
+
+  final TareConcern concern;
+
+  /// Which connection the reading came from, so a confirmation given for one
+  /// connection is not applied to the next one.
+  final int connection;
+
+  const TareCheck({
+    required this.loadKg,
+    required this.concern,
+    required this.connection,
+  });
+
+  factory TareCheck.of({
+    required double loadKg,
+    required Duration readingAge,
+    required int connection,
+  }) => TareCheck(
+    loadKg: loadKg,
+    connection: connection,
+    concern: readingAge > staleAfter
+        ? TareConcern.stale
+        : loadKg.abs() > loadedAboveKg
+        ? TareConcern.loaded
+        : TareConcern.none,
+  );
+
+  bool get needsConfirmation => concern != TareConcern.none;
+
+  /// Whether a confirmation given for this check still holds for [current]:
+  /// the same connection, the same concern and about the same load.
+  bool stillMatches(TareCheck current) =>
+      current.connection == connection &&
+      current.concern == concern &&
+      (current.loadKg - loadKg).abs() <= loadedAboveKg;
+}
+
+/// What came of a confirmed tare.
+sealed class TareOutcome {
+  const TareOutcome();
+}
+
+/// The reading was zeroed.
+class TareDone extends TareOutcome {
+  const TareDone();
+}
+
+/// The sensor disconnected or has no reading left to zero.
+class TareCancelled extends TareOutcome {
+  const TareCancelled();
+}
+
+/// The reading moved away from what the athlete confirmed, so they are asked
+/// again about [check].
+class TareChanged extends TareOutcome {
+  final TareCheck check;
+  const TareChanged(this.check);
+}
