@@ -193,6 +193,11 @@ class SessionModel {
        ),
        date = date ?? DateTime.now();
 
+  /// The training day the session counts for, which is the day it started on
+  /// unless it started before [trainingDayStartHour]. History, the program
+  /// and the week all file it there, so they agree on which day it trained.
+  DateTime get trainingDay => trainingDayOf(date);
+
   /// Whether the coach has answered and the athlete has not opened it yet.
   bool get hasUnreadCoachReply => coachReply != null && !coachReplyRead;
 

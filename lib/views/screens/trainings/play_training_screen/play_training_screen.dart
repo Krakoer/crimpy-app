@@ -70,6 +70,11 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// the loads, the durations and the notes to them.
   final List<SessionItemResultModel> itemResults = [];
 
+  /// When the athlete first pressed play, which is when the session happened.
+  /// Frozen on that first press: a pause, a trip to the background or a long
+  /// review afterwards must not move the day the session is filed under.
+  DateTime? _startedAt;
+
   /// Duration of the preparation rest in seconds
   static const int _preparationDuration = 10;
 
@@ -156,6 +161,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         MaterialPageRoute(
           builder: (context) => PostWorkoutScreen(
             template: widget.training,
+            // A run skipped through without ever being played has no start,
+            // so it is dated by its finish, still frozen before the review.
+            startedAt: _startedAt ?? DateTime.now(),
             results: repResults,
             itemResults: itemResults,
             // The same results the run resolved its prescription against, so
@@ -181,6 +189,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   }
 
   void _start() {
+    _startedAt ??= DateTime.now();
     sensorRepository.resumeStreaming();
     ref.read(loadDropAlarmProvider.notifier).follow(timer.currentItem);
     setState(timer.play);

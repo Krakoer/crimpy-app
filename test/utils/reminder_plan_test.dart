@@ -170,9 +170,9 @@ void main() {
       'stops reminding a flexible session once its weekly target is met',
       () {
         final done = [
-          _answering('s3', DateTime(2026, 6, 1)),
-          _answering('s3', DateTime(2026, 6, 2)),
-          _answering('s3', DateTime(2026, 6, 3)),
+          _answering('s3', DateTime(2026, 6, 1, 18)),
+          _answering('s3', DateTime(2026, 6, 2, 18)),
+          _answering('s3', DateTime(2026, 6, 3, 18)),
         ];
 
         final plan = planReminders(
@@ -373,6 +373,30 @@ void main() {
   });
 
   group('snoozed reminders', () {
+    test('a snooze past midnight is about the evening it was put off from', () {
+      // Monday's Mobility is owed; the reminder is put off from 23:30 to 00:30.
+      final snoozedUntil = DateTime(2026, 6, 2, 0, 30);
+      final preferences = _enabled.copyWith(snoozedUntil: snoozedUntil);
+      final lateMonday = DateTime(2026, 6, 1, 23, 30);
+
+      final owed = planReminders(
+        preferences: preferences,
+        schedule: _schedule([_everydaySession]),
+        sessions: [],
+        from: lateMonday,
+      ).where((o) => o.isSnoozed);
+      expect(owed.single.when, snoozedUntil);
+
+      // Played at 00:10, which is still Monday night: nothing left to remind.
+      final playedPastMidnight = planReminders(
+        preferences: preferences,
+        schedule: _schedule([_everydaySession]),
+        sessions: [_answering('s2', DateTime(2026, 6, 2, 0, 10))],
+        from: DateTime(2026, 6, 2, 0, 15),
+      ).where((o) => o.isSnoozed);
+      expect(playedPastMidnight, isEmpty);
+    });
+
     test('adds one occurrence at the chosen hour', () {
       final plan = planReminders(
         preferences: _enabled.copyWith(
