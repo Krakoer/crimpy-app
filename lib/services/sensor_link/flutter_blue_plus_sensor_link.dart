@@ -18,10 +18,15 @@ class FlutterBluePlusSensorLink extends SensorLink {
       FlutterBluePlus.adapterStateNow == BluetoothAdapterState.on;
 
   /// [FlutterBluePlus.adapterStateNow] stays unknown until something listens
-  /// to the adapter state, which is what asks the platform.
+  /// to the adapter state, which is what asks the platform. Only a state known
+  /// to be off counts as off: one turning on, or one the platform could not
+  /// tell, is worth trying to connect on.
   @override
-  Future<bool> fetchAdapterOn() async =>
-      await FlutterBluePlus.adapterState.first == BluetoothAdapterState.on;
+  Future<bool> fetchAdapterOn() async => !const {
+    BluetoothAdapterState.off,
+    BluetoothAdapterState.turningOff,
+    BluetoothAdapterState.unavailable,
+  }.contains(await FlutterBluePlus.adapterState.first);
 
   @override
   Stream<bool> get adapterOnChanges => FlutterBluePlus.adapterState.map(

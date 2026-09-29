@@ -16,6 +16,7 @@ import 'package:crimpy/views/widgets/ble/connection_dialog.dart';
 import 'package:crimpy/views/widgets/primary_action_bar.dart';
 import 'package:crimpy/views/widgets/start_training_run.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -52,8 +53,15 @@ class _MemorySensorMemory extends SensorMemoryRepository {
 /// Connects to [reachable] only; any other device is out of range. Records
 /// the timeout each attempt was given.
 class _Link extends SensorLink {
-  _Link({this.reachable, this.adapterOn = true, bool? adapterReadsOn})
-    : adapterReadsOn = adapterReadsOn ?? adapterOn;
+  _Link({
+    this.reachable,
+    this.adapterOn = true,
+    bool? adapterReadsOn,
+    this.adapterAnswers = true,
+  }) : adapterReadsOn = adapterReadsOn ?? adapterOn;
+
+  /// Whether the platform answers when asked about the adapter.
+  final bool adapterAnswers;
 
   final SensorDevice? reachable;
 
@@ -72,7 +80,10 @@ class _Link extends SensorLink {
   bool get isAdapterOn => adapterReadsOn;
 
   @override
-  Future<bool> fetchAdapterOn() async => adapterOn;
+  Future<bool> fetchAdapterOn() async {
+    if (!adapterAnswers) throw PlatformException(code: 'no answer');
+    return adapterOn;
+  }
 
   @override
   Stream<bool> get adapterOnChanges => const Stream.empty();
@@ -119,6 +130,7 @@ void main() {
     SensorDevice? reachable,
     bool adapterOn = true,
     bool? adapterReadsOn,
+    bool adapterAnswers = true,
   }) async {
     answer = null;
     memory = _MemorySensorMemory(ownership);
@@ -126,6 +138,7 @@ void main() {
       reachable: reachable,
       adapterOn: adapterOn,
       adapterReadsOn: adapterReadsOn,
+      adapterAnswers: adapterAnswers,
     );
     await tester.pumpWidget(
       ProviderScope(
@@ -237,6 +250,23 @@ void main() {
     expect(answer, isTrue);
     expect(link.timeouts, hasLength(1));
     expect(find.textContaining('Bluetooth is off'), findsNothing);
+  });
+
+  testWidgets('tries the direct connect when the platform cannot say', (
+    tester,
+  ) async {
+    await pump(
+      tester,
+      const RememberedSensor(_sensor),
+      reachable: _sensor,
+      adapterOn: false,
+      adapterAnswers: false,
+    );
+
+    await start(tester);
+
+    expect(answer, isTrue);
+    expect(link.timeouts, hasLength(1));
   });
 
   testWidgets('offers the scan when the remembered sensor is not found', (
