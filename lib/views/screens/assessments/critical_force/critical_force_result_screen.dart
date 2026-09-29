@@ -152,6 +152,11 @@ class CriticalForceResultScreen extends ConsumerWidget {
                 ),
               ),
             ),
+            // Room for the save and discard buttons floating over the bottom,
+            // so they do not sit on the chart.
+            const SizedBox(
+              height: kMinInteractiveDimension + CrimpyTheme.spaceLg,
+            ),
           ],
         ),
       ),
