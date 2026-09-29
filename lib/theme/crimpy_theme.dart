@@ -277,6 +277,18 @@ class CrimpyTheme {
   /// A scheduled training that was done.
   static const Color done = statusSuccess;
 
+  /// A day of the consistency strip whose training was kept. Filled, and read
+  /// by its shape as much as by its colour.
+  static const Color dayKept = done;
+
+  /// A day of the consistency strip that owed training and got none: drawn
+  /// hollow, and never in a colour that scolds.
+  static const Color dayOwed = textSecondary;
+
+  /// A day of the consistency strip before the plan existed: a hairline, the
+  /// quietest mark the strip has.
+  static const Color dayUntracked = outlineSubtle;
+
   /// A rep that held its target load. The portal's sage, so a rep reads the
   /// same on the phone and in the coach's session detail; the run screen's
   /// [phaseEngaged] is this same meaning live.

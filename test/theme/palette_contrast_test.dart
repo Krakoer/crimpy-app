@@ -150,6 +150,7 @@ final Map<String, Color> scannedAccents = {
   'accentBlue': CrimpyTheme.accentBlue,
   'accentTeal': CrimpyTheme.accentTeal,
   'statusSuccess': CrimpyTheme.statusSuccess,
+  'dayKept': CrimpyTheme.dayKept,
   'statusError': CrimpyTheme.statusError,
   'statusWarning': CrimpyTheme.statusWarning,
   'statusInfo': CrimpyTheme.statusInfo,
