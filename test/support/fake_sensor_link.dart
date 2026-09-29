@@ -15,6 +15,9 @@ class FakeSensorLink extends SensorLink {
   bool get isAdapterOn => true;
 
   @override
+  Future<bool> fetchAdapterOn() async => true;
+
+  @override
   Stream<bool> get adapterOnChanges => const Stream.empty();
 
   @override
@@ -24,8 +27,10 @@ class FakeSensorLink extends SensorLink {
   Future<List<SensorDevice>> scan() async => [device];
 
   @override
-  Future<SensorChannel?> open(SensorDevice device) async =>
-      channel = FakeSensorChannel();
+  Future<SensorChannel?> open(
+    SensorDevice device, {
+    Duration timeout = defaultSensorConnectTimeout,
+  }) async => channel = FakeSensorChannel();
 }
 
 class FakeSensorChannel extends SensorChannel {

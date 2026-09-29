@@ -32,7 +32,7 @@ class PrimaryActionBar extends StatelessWidget {
 
 /// Starts a training, in the primary style. Says it will connect the sensor
 /// first when the training can be measured and none is connected, since that
-/// is what tapping it then does.
+/// is what tapping it then does, unless the athlete said they have none.
 class StartTrainingButton extends ConsumerWidget {
   final Training training;
   final VoidCallback onPressed;
@@ -47,11 +47,13 @@ class StartTrainingButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final connected =
         ref.watch(connectionStateProvider) == BleConnectionState.connected;
+    final hasNoSensor =
+        ref.watch(sensorOwnershipProvider).value is NoSensorOwned;
     return FilledButton.icon(
       onPressed: onPressed,
       icon: const Icon(Icons.play_arrow),
       label: Text(
-        training.canUseSensor && !connected
+        training.canUseSensor && !connected && !hasNoSensor
             ? 'CONNECT AND START'
             : 'START TRAINING',
       ),
