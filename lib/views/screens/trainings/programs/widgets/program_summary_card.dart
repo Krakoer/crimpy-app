@@ -1,3 +1,4 @@
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
@@ -59,8 +60,8 @@ class ProgramSummaryCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: CrimpyTheme.spaceLg),
                     WeekProgressBar(
-                      currentWeek: program.isActiveOn(DateTime.now())
-                          ? program.currentWeekNumber(DateTime.now())
+                      currentWeek: program.isActiveOn(currentTrainingDay())
+                          ? program.currentWeekNumber(currentTrainingDay())
                           : 0,
                       totalWeeks: program.durationWeeks ?? 1,
                     ),

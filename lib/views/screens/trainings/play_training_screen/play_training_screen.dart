@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/layouts/full_tank_layout.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/open_reps_dialog.dart';
 import 'package:crimpy/models/assessment_model.dart';
@@ -69,6 +70,11 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// dropped out of. No rep carries either, and the post workout screen adds
   /// the loads, the durations and the notes to them.
   final List<SessionItemResultModel> itemResults = [];
+
+  /// When the athlete first pressed play, which is when the session happened.
+  /// Frozen on that first press: a pause, a trip to the background or a long
+  /// review afterwards must not move the day the session is filed under.
+  DateTime? _startedAt;
 
   /// Duration of the preparation rest in seconds
   static const int _preparationDuration = 10;
@@ -156,6 +162,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         MaterialPageRoute(
           builder: (context) => PostWorkoutScreen(
             template: widget.training,
+            // Only a run that finished without play ever being pressed has
+            // no start. It is dated by its finish, still frozen before the
+            // review.
+            startedAt: _startedAt ?? clock.now(),
             results: repResults,
             itemResults: itemResults,
             // The same results the run resolved its prescription against, so
@@ -181,6 +191,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   }
 
   void _start() {
+    _startedAt ??= clock.now();
     sensorRepository.resumeStreaming();
     ref.read(loadDropAlarmProvider.notifier).follow(timer.currentItem);
     setState(timer.play);

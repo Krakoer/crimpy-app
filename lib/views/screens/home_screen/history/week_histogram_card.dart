@@ -25,7 +25,7 @@ class _HistoryScreenState extends ConsumerState<WeekHistogramCard> {
   @override
   Widget build(BuildContext context) {
     final startOfTheWeek = addCalendarDays(
-      getStartOfWeek(DateTime.now()),
+      getStartOfWeek(currentTrainingDay()),
       7 * _weekOffset,
     );
     // Get the sessions of the week

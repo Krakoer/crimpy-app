@@ -1,3 +1,4 @@
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
@@ -158,7 +159,7 @@ class ScheduledTrainingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final type = session.activity;
-    final status = scheduleStatusFor(date, DateTime.now());
+    final status = scheduleStatusFor(date, currentTrainingDay());
     final due = status == ScheduleStatus.due && !done;
     final surface = onTap != null || due
         ? CrimpyTheme.raised

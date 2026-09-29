@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:clock/clock.dart';
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/assessment_tutorials.dart';
 import 'package:crimpy/models/common.dart';
@@ -200,7 +201,7 @@ class _Endurance60RunScreenState extends ConsumerState<Endurance60RunScreen>
     // Create session model
     final saveSession = SessionModel(
       name:
-          "60% Endurance assessment - ${DateFormat('dd/MM/yyyy').format(DateTime.now())}",
+          "60% Endurance assessment - ${DateFormat('dd/MM/yyyy').format(currentTrainingDay())}",
       isAssessment: true,
       origin: SessionOrigin.played,
     );

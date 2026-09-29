@@ -36,8 +36,8 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedWeek = program.isActiveOn(DateTime.now())
-        ? program.currentWeekNumber(DateTime.now())
+    _selectedWeek = program.isActiveOn(currentTrainingDay())
+        ? program.currentWeekNumber(currentTrainingDay())
         : 1;
     if (_selectedWeek > _totalWeeks) _selectedWeek = 1;
   }
@@ -159,8 +159,8 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
           const Divider(thickness: 2, height: 2),
           const SizedBox(height: CrimpyTheme.spaceLg),
           WeekProgressBar(
-            currentWeek: program.isActiveOn(DateTime.now())
-                ? program.currentWeekNumber(DateTime.now())
+            currentWeek: program.isActiveOn(currentTrainingDay())
+                ? program.currentWeekNumber(currentTrainingDay())
                 : 0,
             totalWeeks: _totalWeeks,
           ),
@@ -228,8 +228,8 @@ class _ProgramDetailScreenState extends ConsumerState<ProgramDetailScreen> {
   }
 
   Widget _weekSelector(Set<int>? definedWeeks) {
-    final current = program.isActiveOn(DateTime.now())
-        ? program.currentWeekNumber(DateTime.now())
+    final current = program.isActiveOn(currentTrainingDay())
+        ? program.currentWeekNumber(currentTrainingDay())
         : 0;
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -330,7 +330,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
       data: (week) {
         if (week == null) return _notPlanned();
 
-        final today = DateTime.now();
+        final today = currentTrainingDay();
         // Each day carries its day-specific sessions plus the everyday ones.
         final byDay = {for (var d = 0; d < 7; d++) d: week.sessionsOnDay(d)};
         // day_of_week is an offset from the week start, so find today's column
@@ -432,7 +432,7 @@ class _WeekStripViewState extends ConsumerState<_WeekStripView> {
       addCalendarDays(widget.program.weekStart(widget.weekNumber), dayOfWeek);
 
   Widget _dayPicker(Map<int, List<WeekSession>> byDay, int selected) {
-    final today = DateTime.now();
+    final today = currentTrainingDay();
     return Row(
       children: List.generate(7, (d) {
         final daySessions = byDay[d]!;
@@ -720,7 +720,7 @@ class _CalendarRow extends ConsumerWidget {
       if (week != null)
         for (var d = 0; d < 7; d++) d: week.sessionsOnDay(d),
     };
-    final today = DateTime.now();
+    final today = currentTrainingDay();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
