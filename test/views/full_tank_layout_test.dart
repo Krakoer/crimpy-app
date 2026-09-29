@@ -1663,4 +1663,305 @@ void main() {
       expect(level.bottom, tank.bottom);
     });
   });
+
+  // The block a step without the sensor holds in the middle of the tank was
+  // centred over the whole of it, so at a large text size it slid under the
+  // clocks, and a tall one ran past the tank. It is laid out under the header
+  // now, above the set and rep card, and shrunk to fit where it has to be.
+  // See Krakoer/crimpy#181.
+  group('the centre block', () {
+    setUpAll(loadRoboto);
+
+    const goal = 'Max strength';
+    const protocol = 'To failure or 10s. Past 10s add 2kg on the next set';
+    const comment =
+        'Keep the shoulders engaged and breathe out on the way onto the edge';
+
+    const timedHang = TimedItem(
+      label: 'Hang',
+      durationSeconds: 10,
+      targetLoad: 12,
+      handSide: HandSide.both,
+      gripPosition: GripPosition.halfCrimp,
+      collectSensorData: false,
+      edgeSizeMm: 20,
+      isHang: true,
+    );
+
+    // Each step, with the text the block ends on.
+    final steps = <(String, TrainingExecutionItem, bool, String)>[
+      ('a timed step', _pullUps, false, 'SEC LEFT'),
+      ('a timed hang without the sensor', timedHang, false, 'SEC LEFT'),
+      (
+        'a self paced step',
+        const ConfirmItem(label: 'Dips', reps: 8),
+        false,
+        'Tap DONE when finished',
+      ),
+      (
+        'a self paced step with a long note',
+        ConfirmItem(label: 'Kilter', instructions: _longNote),
+        false,
+        'Tap DONE when finished',
+      ),
+      ('a rest', const RestItem(durationSeconds: 60), false, 'NEXT'),
+      ('the preparation', _pullUps, true, 'PREPARATION'),
+    ];
+
+    Future<void> pumpStep(
+      WidgetTester tester, {
+      required TrainingExecutionItem item,
+      required bool isPreparation,
+      required Size phone,
+      required TargetPlatform platform,
+      required double textScale,
+      int secondsRemaining = 5,
+    }) async {
+      tester.view.physicalSize = phone;
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = textScale;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await _pump(
+        tester,
+        item: item,
+        nextItem: item is RestItem || isPreparation ? timedHang : null,
+        isPreparation: isPreparation,
+        secondsRemaining: secondsRemaining,
+        platform: platform,
+        goal: goal,
+        protocol: protocol,
+        comment: comment,
+        nextGoal: goal,
+        nextProtocol: protocol,
+        nextComment: comment,
+      );
+    }
+
+    Finder blockOf(String lastText) => find
+        .ancestor(
+          of: find.text(lastText).last,
+          matching: find.byType(FittedBox),
+        )
+        .first;
+
+    /// How much the block is shrunk by, 1 where it is drawn at its size.
+    double shrinkOf(WidgetTester tester, Finder block) {
+      final fitted = tester.renderObject<RenderProxyBox>(block);
+      return tester.getRect(block).height / fitted.child!.size.height;
+    }
+
+    /// The foot of the clocks, and of the countdown in the corner on the
+    /// steps that have one there.
+    double headerFoot(WidgetTester tester, {required bool cornerCountdown}) =>
+        [
+              'ELAPSED',
+              '4:12',
+              'LEFT',
+              '1:58',
+              if (cornerCountdown) ...['5', 'SEC', 'SEC REST'],
+            ]
+            .where((text) => find.text(text).evaluate().isNotEmpty)
+            .map((text) => tester.getRect(find.text(text).first).bottom)
+            .reduce(max);
+
+    double cardTop(WidgetTester tester) => tester
+        .getRect(
+          find
+              .ancestor(
+                of: find.text('SET 2/4 - REP 3/6'),
+                matching: find.byType(Container),
+              )
+              .first,
+        )
+        .top;
+
+    const pixel = Size(412, 843);
+    const iPhone15 = Size(393, 759);
+    const iPhoneSE = Size(375, 647);
+
+    const layouts = [
+      (TargetPlatform.android, pixel, 1.0),
+      (TargetPlatform.android, pixel, 1.3),
+      (TargetPlatform.android, iPhone15, 1.3),
+      (TargetPlatform.android, iPhoneSE, 1.3),
+      (TargetPlatform.iOS, iPhone15, 1.0),
+      (TargetPlatform.iOS, iPhone15, 1.3),
+      (TargetPlatform.iOS, pixel, 1.0),
+      (TargetPlatform.iOS, pixel, 1.3),
+      (TargetPlatform.iOS, iPhoneSE, 1.0),
+      (TargetPlatform.iOS, iPhoneSE, 1.3),
+    ];
+
+    for (final (platform, phone, textScale) in [
+      ...layouts,
+      // Past the sizes it is held to, it still has to stay in the tank.
+      for (final platform in [TargetPlatform.android, TargetPlatform.iOS])
+        for (final phone in [pixel, iPhoneSE])
+          for (final textScale in [1.5, 2.0]) (platform, phone, textScale),
+    ]) {
+      for (final (name, item, isPreparation, lastText) in steps) {
+        testWidgets('keeps $name between the header and the card on '
+            '${platform.name} ${phone.width.toInt()}x${phone.height.toInt()} '
+            'at text scale $textScale', (tester) async {
+          await pumpStep(
+            tester,
+            item: item,
+            isPreparation: isPreparation,
+            phone: phone,
+            platform: platform,
+            textScale: textScale,
+          );
+          expect(tester.takeException(), isNull);
+
+          final block = tester.getRect(blockOf(lastText));
+          expect(
+            block.top,
+            greaterThanOrEqualTo(
+              headerFoot(
+                tester,
+                cornerCountdown: item is RestItem || isPreparation,
+              ),
+            ),
+          );
+          expect(block.bottom, lessThanOrEqualTo(cardTop(tester)));
+        });
+      }
+    }
+
+    // Where the block has the room, it is drawn at its size and where it
+    // always was: centred between the top of the tank and the card.
+    testWidgets('leaves a block that fits at its size and centred', (
+      tester,
+    ) async {
+      await pumpStep(
+        tester,
+        item: _pullUps,
+        isPreparation: false,
+        phone: pixel,
+        platform: TargetPlatform.android,
+        textScale: 1,
+      );
+
+      final block = blockOf('SEC LEFT');
+      expect(shrinkOf(tester, block), closeTo(1, 1e-9));
+      final tank = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(FullTankLayout),
+              matching: find.byType(CustomMultiChildLayout),
+            )
+            .first,
+      );
+      final roomFoot = cardTop(tester) - 12 * tank.height / 624;
+      expect(
+        tester.getRect(block).center.dy,
+        closeTo(tank.top + (14 + roomFoot - tank.top) / 2, 0.01),
+      );
+    });
+
+    // The one that does not fit is shrunk whole, rather than run under the
+    // clocks or the card.
+    testWidgets('shrinks a block taller than the room it has', (tester) async {
+      await pumpStep(
+        tester,
+        item: timedHang,
+        isPreparation: false,
+        phone: iPhoneSE,
+        platform: TargetPlatform.iOS,
+        textScale: 1.3,
+      );
+
+      expect(shrinkOf(tester, blockOf('SEC LEFT')), lessThan(1));
+    });
+
+    // The countdown in the corner is set smaller from a minute up. The header
+    // it sits in keeps its height all the same, so the block under it does
+    // not jump when a rest crosses the minute.
+    for (final textScale in [1.0, 1.3]) {
+      testWidgets('holds a rest preview still as its count crosses a minute '
+          'at text scale $textScale', (tester) async {
+        Future<Rect> blockAt(int seconds) async {
+          await pumpStep(
+            tester,
+            item: const RestItem(durationSeconds: 90),
+            isPreparation: false,
+            phone: pixel,
+            platform: TargetPlatform.android,
+            textScale: textScale,
+            secondsRemaining: seconds,
+          );
+          return tester.getRect(blockOf('NEXT'));
+        }
+
+        expect(await blockAt(75), await blockAt(59));
+      });
+    }
+
+    // The line the corner countdown keeps across the minute is laid out in
+    // the font the digits are drawn in, so they sit in it where they would
+    // with no line held at all.
+    for (final textScale in [1.0, 1.3, 2.0]) {
+      testWidgets('leaves the corner countdown on its own baseline at text '
+          'scale $textScale', (tester) async {
+        await pumpStep(
+          tester,
+          item: const RestItem(durationSeconds: 90),
+          isPreparation: false,
+          phone: pixel,
+          platform: TargetPlatform.android,
+          textScale: textScale,
+        );
+
+        final numeral = find.text('5');
+        final paragraph = tester.renderObject<RenderParagraph>(numeral);
+        final drawn = DefaultTextStyle.of(
+          tester.element(numeral),
+        ).style.merge(tester.widget<Text>(numeral).style);
+        final painter = TextPainter(
+          text: TextSpan(text: '5', style: drawn),
+          textDirection: TextDirection.ltr,
+          textScaler: paragraph.textScaler,
+        )..layout();
+        addTearDown(painter.dispose);
+
+        final checking = RenderObject.debugCheckingIntrinsics;
+        RenderObject.debugCheckingIntrinsics = true;
+        final double baseline;
+        try {
+          baseline = paragraph.getDistanceToBaseline(TextBaseline.alphabetic)!;
+        } finally {
+          RenderObject.debugCheckingIntrinsics = checking;
+        }
+        expect(
+          baseline,
+          closeTo(
+            painter.computeDistanceToActualBaseline(TextBaseline.alphabetic),
+            0.01,
+          ),
+        );
+      });
+    }
+
+    // The countdown is display sized already. Grown with the text size it
+    // took the room the notes needed.
+    testWidgets('keeps the countdown at its size whatever the text size', (
+      tester,
+    ) async {
+      Future<double> countdownHeight(double textScale) async {
+        await pumpStep(
+          tester,
+          item: _pullUps,
+          isPreparation: false,
+          phone: pixel,
+          platform: TargetPlatform.android,
+          textScale: textScale,
+        );
+        expect(shrinkOf(tester, blockOf('SEC LEFT')), closeTo(1, 1e-9));
+        return tester.getRect(find.text('5')).height;
+      }
+
+      expect(await countdownHeight(1.3), await countdownHeight(1));
+    });
+  });
 }
