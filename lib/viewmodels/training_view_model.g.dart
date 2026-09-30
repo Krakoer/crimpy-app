@@ -695,6 +695,142 @@ final class SessionWithDataFamily extends $Family
   String toString() => r'sessionWithDataProvider';
 }
 
+/// Every session the athlete has, each carrying all of its reps: the whole
+/// history, for the readers that add it up rather than list it.
+///
+/// Read on its own rather than after the session list, so a list that failed
+/// to load does not fail this with it, and a pull on the profile asks again for
+/// real. Read again whenever the list answers with a history other than the one
+/// read here, told apart by its sessions, their dates and their rep counts, so
+/// a run saved, edited or deleted anywhere reaches the totals without each of
+/// those paths having to know they exist. The list is compared with what was
+/// read rather than with its own previous answer, so a change made while it had
+/// no answer is still caught by its first one. A change that leaves the history
+/// alone, a coach reply marked read or the list fetched again on resume, does
+/// not download every rep again: it is the heaviest request the app makes.
+///
+/// Auto-disposed, although the profile that reads it is kept alive in the main
+/// pager, so in practice it lives from the first visit to the profile on.
+
+@ProviderFor(sessionHistoryWithReps)
+const sessionHistoryWithRepsProvider = SessionHistoryWithRepsProvider._();
+
+/// Every session the athlete has, each carrying all of its reps: the whole
+/// history, for the readers that add it up rather than list it.
+///
+/// Read on its own rather than after the session list, so a list that failed
+/// to load does not fail this with it, and a pull on the profile asks again for
+/// real. Read again whenever the list answers with a history other than the one
+/// read here, told apart by its sessions, their dates and their rep counts, so
+/// a run saved, edited or deleted anywhere reaches the totals without each of
+/// those paths having to know they exist. The list is compared with what was
+/// read rather than with its own previous answer, so a change made while it had
+/// no answer is still caught by its first one. A change that leaves the history
+/// alone, a coach reply marked read or the list fetched again on resume, does
+/// not download every rep again: it is the heaviest request the app makes.
+///
+/// Auto-disposed, although the profile that reads it is kept alive in the main
+/// pager, so in practice it lives from the first visit to the profile on.
+
+final class SessionHistoryWithRepsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<SessionModel>>,
+          List<SessionModel>,
+          FutureOr<List<SessionModel>>
+        >
+    with
+        $FutureModifier<List<SessionModel>>,
+        $FutureProvider<List<SessionModel>> {
+  /// Every session the athlete has, each carrying all of its reps: the whole
+  /// history, for the readers that add it up rather than list it.
+  ///
+  /// Read on its own rather than after the session list, so a list that failed
+  /// to load does not fail this with it, and a pull on the profile asks again for
+  /// real. Read again whenever the list answers with a history other than the one
+  /// read here, told apart by its sessions, their dates and their rep counts, so
+  /// a run saved, edited or deleted anywhere reaches the totals without each of
+  /// those paths having to know they exist. The list is compared with what was
+  /// read rather than with its own previous answer, so a change made while it had
+  /// no answer is still caught by its first one. A change that leaves the history
+  /// alone, a coach reply marked read or the list fetched again on resume, does
+  /// not download every rep again: it is the heaviest request the app makes.
+  ///
+  /// Auto-disposed, although the profile that reads it is kept alive in the main
+  /// pager, so in practice it lives from the first visit to the profile on.
+  const SessionHistoryWithRepsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'sessionHistoryWithRepsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$sessionHistoryWithRepsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<SessionModel>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<SessionModel>> create(Ref ref) {
+    return sessionHistoryWithReps(ref);
+  }
+}
+
+String _$sessionHistoryWithRepsHash() =>
+    r'559fc578b01c6d6483799a730b5c7781c66e1be7';
+
+/// The all-time totals of the profile, Krakoer/crimpy#150.
+
+@ProviderFor(trainingTotals)
+const trainingTotalsProvider = TrainingTotalsProvider._();
+
+/// The all-time totals of the profile, Krakoer/crimpy#150.
+
+final class TrainingTotalsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<TrainingTotals>,
+          TrainingTotals,
+          FutureOr<TrainingTotals>
+        >
+    with $FutureModifier<TrainingTotals>, $FutureProvider<TrainingTotals> {
+  /// The all-time totals of the profile, Krakoer/crimpy#150.
+  const TrainingTotalsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'trainingTotalsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$trainingTotalsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<TrainingTotals> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<TrainingTotals> create(Ref ref) {
+    return trainingTotals(ref);
+  }
+}
+
+String _$trainingTotalsHash() => r'c1eefc1309310cad26b259bf1c878beb6ea9c9b5';
+
 /// The items a played session was run from, so its reps can be read block by
 /// block. Empty when the session was not played from a training, or when the
 /// training has been deleted since.
