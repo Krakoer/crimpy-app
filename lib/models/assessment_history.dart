@@ -27,7 +27,8 @@ class AssessedHistory {
 
   /// The line a card names the latest results with: each side's last value,
   /// marked when it is a pull kept from a training rather than a test, and how
-  /// long ago the newest of them was measured. Null when nothing was measured.
+  /// long ago they were measured, once for both hands when that is the same
+  /// day and per hand otherwise. Null when nothing was measured.
   ///
   /// An assessment that is not measured per hand stores its single number on
   /// the right, so it reads back without a hand in front of it: "R: 12 reps"
@@ -45,6 +46,13 @@ class AssessedHistory {
     final shown = [right, left].whereType<AssessmentModel>().toList();
     if (shown.isEmpty) return records.isEmpty ? null : _ago(records.last, now);
     final newest = shown.reduce((a, b) => b.date.isAfter(a.date) ? b : a);
+
+    // Two hands measured on different days are dated each, or a value weeks
+    // old reads as measured with the newer one.
+    if (right != null && left != null && _ago(right, now) != _ago(left, now)) {
+      return 'R: ${value(right, right.rightValue!)} ${_ago(right, now)}  '
+          'L: ${value(left, left.leftValue!)} ${_ago(left, now)}';
+    }
 
     final parts = definition.perHand
         ? <String>[

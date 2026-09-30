@@ -540,5 +540,8 @@ String unsavedMaxForceMessage(
   final kept = saved == 0
       ? ''
       : ' The other ${saved == 1 ? 'one was' : '$saved were'} saved.';
-  return 'Training saved, but the new Max Force ($names) was not.$kept';
+  final subject = failed.length == 1
+      ? 'the new Max Force ($names) was'
+      : 'the new Max Forces ($names) were';
+  return 'Training saved, but $subject not.$kept';
 }

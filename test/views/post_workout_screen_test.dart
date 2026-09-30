@@ -1198,5 +1198,17 @@ void _maxForceOfferTests() {
       unsavedMaxForceMessage(failed, saved: 0),
       'Training saved, but the new Max Force (left hand, Half Crimp) was not.',
     );
+    expect(
+      unsavedMaxForceMessage([
+        ...failed,
+        AssessmentResultModel(
+          assessmentId: BuiltinAssessmentIds.maxForce,
+          rightValue: 43,
+          gripPosition: GripPosition.halfCrimp,
+        ),
+      ], saved: 0),
+      'Training saved, but the new Max Forces (left hand, Half Crimp and '
+      'right hand, Half Crimp) were not.',
+    );
   });
 }

@@ -32,7 +32,23 @@ void main() {
 
     expect(
       history.lastResultLine(now),
-      'R: 42.6 kg (training)  L: 38.4 kg  today',
+      'R: 42.6 kg (training) today  L: 38.4 kg 5d ago',
+    );
+  });
+
+  test('two hands measured the same day are dated once', () {
+    final history = AssessedHistory(
+      definition: _maxForce,
+      records: [
+        _result(DateTime(2026, 9, 24), right: 40.1, left: 38.4),
+        _result(now, right: 42.6, origin: AssessmentOrigin.training),
+        _result(now, left: 39.9, origin: AssessmentOrigin.training),
+      ],
+    );
+
+    expect(
+      history.lastResultLine(now),
+      'R: 42.6 kg (training)  L: 39.9 kg (training)  today',
     );
   });
 
