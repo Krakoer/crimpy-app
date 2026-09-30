@@ -106,8 +106,9 @@ abstract final class CriticalForceRules {
   /// Critical Force is the mean force of this many final pulls.
   static const countedPulls = 6;
 
-  /// Of those final pulls, at least this many need enough data to average. A
-  /// pull lost to the radio is not a pull the athlete failed.
+  /// Of those final pulls, at least this many need enough data to average,
+  /// or all of them in a test shorter than that. A pull lost to the radio is
+  /// not a pull the athlete failed.
   static const minValidCountedPulls = 4;
 
   /// End force: the last second of each of the last three pulls.

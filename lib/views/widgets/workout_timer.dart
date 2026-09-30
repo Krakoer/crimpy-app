@@ -246,6 +246,10 @@ class WorkoutTimer {
 
   int get elapsedMilliseconds => _stopwatch.elapsedMilliseconds;
 
+  /// Moves the run's clock forward by [millis] without running any step, for
+  /// a start that happened a moment before the run saw it.
+  void skipAhead(int millis) => _stopwatch.skip(millis);
+
   TrainingExecutionItem get currentItem {
     return items[currentItemIndex];
   }
