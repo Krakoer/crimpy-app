@@ -144,10 +144,10 @@ void main() {
     expect(result.origin, AssessmentOrigin.training);
   });
 
-  // Percent loads resolve against the latest result for the hand, whatever
-  // the grip. A pull that beats its own grip's max but not that value would
-  // lower every percent of max load once saved, so it is not offered.
-  test('offers nothing a save would make the loads easier with', () {
+  // Percent loads resolve against the max of their own grip, so a pull that
+  // beats its grip's max can only make that grip's loads harder, whatever a
+  // newer result on another grip says. See Krakoer/crimpy#182.
+  test('offers a pull that beats its own grip, below a newer other grip', () {
     final offers = MaxForceOffer.fromPulls(
       [_pull(33, grip: GripPosition.openHand)],
       [
@@ -156,7 +156,8 @@ void main() {
       ],
     );
 
-    expect(offers, isEmpty);
+    expect(offers.single.gripPosition, GripPosition.openHand);
+    expect(offers.single.onFileKg, 30);
   });
 
   test('offers a pull that also beats the value loads resolve against', () {

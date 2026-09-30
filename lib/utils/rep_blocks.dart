@@ -4,6 +4,8 @@ import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/utils/duration_format.dart';
 import 'package:crimpy/utils/format.dart';
+import 'package:crimpy/utils/hangboard_layout.dart';
+import 'package:crimpy/utils/training_expander.dart';
 
 /// The repeater settings that decide how a block of reps splits into sets.
 class RepeaterConfig {
@@ -200,6 +202,15 @@ bool _isBlock(TrainingItem item) =>
 
 /// Whether an item is a hang, which is worked for a time on a board rather than
 /// counted in repetitions.
+/// The hand an item's load is resolved for: the one hand a right or left hang
+/// is hung with, and the mean of both for any other, since a summary states one
+/// load for hands that take turns.
+HandSide _handResolvedFor(TrainingItem item) => switch (item.hand) {
+  HangboardHand.left => HandSide.left,
+  HangboardHand.right => HandSide.right,
+  _ => HandSide.both,
+};
+
 bool _isHang(TrainingItem item) =>
     item.type == TrainingItemType.repeater ||
     item.type == TrainingItemType.hangboardRep;
@@ -239,7 +250,18 @@ String? prescribedSummary(
   // the field without naming the target leaves them reporting against nothing.
   final load = results == null && item.loadReadsAgainstResults
       ? null
-      : item.loadLabel(bodyweightKg: bodyweightKg, results: resolved);
+      : item.loadLabel(
+          bodyweightKg: bodyweightKg,
+          results: resolved,
+          handSide: _isHang(item) ? _handResolvedFor(item) : null,
+          grip: _isHang(item)
+              ? gripFromStored(
+                  HangboardLayout.of(
+                    item,
+                  ).grip(0, 0, leftHand: item.hand == HangboardHand.left),
+                )
+              : null,
+        );
   final at = load == null ? '' : ' at $load';
 
   if (_isHang(item)) {
