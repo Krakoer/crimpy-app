@@ -50,14 +50,16 @@ class TodayTrainingCard extends ConsumerWidget {
             subtitle: program.name,
           );
         }
-        if (!program.isActiveOn(DateTime.now())) return const SizedBox.shrink();
+        if (!program.isActiveOn(currentTrainingDay())) {
+          return const SizedBox.shrink();
+        }
         return _ProgramTodayCard(program: program);
       },
     );
   }
 
   int _daysUntilStart(DateTime startDate) =>
-      calendarDaysBetween(DateTime.now(), startDate);
+      calendarDaysBetween(currentTrainingDay(), startDate);
 
   String _relativeStart(int days) {
     if (days == 1) return 'tomorrow';
@@ -145,7 +147,7 @@ class _ProgramTodayCard extends ConsumerWidget {
     final sessions = ref.watch(sessionsProvider).value ?? [];
     final offset = activeWeek.program.dayOffsetOf(
       activeWeek.weekNumber,
-      DateTime.now(),
+      currentTrainingDay(),
     );
     final today = activeWeek.week.sessionsOnDay(offset);
     final flex = activeWeek.week.timesPerWeekSessions;
@@ -278,7 +280,7 @@ class _TodayTrainingRow extends ConsumerWidget {
       program,
       weekNumber,
       session,
-      date: DateTime.now(),
+      date: currentTrainingDay(),
     );
     // Read off what the state holds, like everything else this card reads: a
     // pull reloads it and the duration would otherwise fall back mid gesture.

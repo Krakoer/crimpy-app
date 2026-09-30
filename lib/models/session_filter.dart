@@ -8,7 +8,10 @@ import 'package:crimpy/models/session.dart';
 /// it: the database and both repositories need it, and none of them should
 /// have to reach into the viewmodel layer for a domain type.
 class SessionFilter {
+  /// The first training day kept, at local midnight.
   final DateTime? startDate;
+
+  /// The training day the range stops before, at local midnight.
   final DateTime? endDate;
   final bool? isAssessment;
 
@@ -49,10 +52,13 @@ class SessionFilter {
     if (activities.isNotEmpty && !activities.contains(session.activity)) {
       return false;
     }
-    if (startDate != null && session.date.isBefore(startDate!)) {
+    // Read on the training day, the way the history files the session, so a
+    // range of whole days keeps what started past midnight on its last day
+    // and leaves out what started before 04:00 on the day after it.
+    if (startDate != null && session.trainingDay.isBefore(startDate!)) {
       return false;
     }
-    if (endDate != null && session.date.isAfter(endDate!)) {
+    if (endDate != null && !session.trainingDay.isBefore(endDate!)) {
       return false;
     }
     return true;

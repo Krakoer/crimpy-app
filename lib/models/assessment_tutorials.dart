@@ -61,7 +61,7 @@ class AssessmentTutorials {
           icon: Icons.info_outline,
           title: 'What is this test?',
           content:
-              'The Critical Force test determines your sustainable climbing intensity. You\'ll perform 4 efforts at different percentages of your MVC.',
+              'The Critical Force test measures the force you can keep producing once your forearm is fatigued. It is the mean force of your last 6 pulls, the same definition as Tindeq, Lattice and the published norms.',
         ),
         const TutorialSection(
           icon: Icons.fitness_center,
@@ -74,13 +74,13 @@ class AssessmentTutorials {
           icon: Icons.schedule,
           title: 'Duration',
           content:
-              'This test takes approximately 15-20 minutes. Make sure you have enough time and energy to complete all 4 efforts.',
+              'The test takes about 4 minutes, and it has to run start to finish in one go.',
         ),
         const TutorialSection(
           icon: Icons.timer,
           title: 'Protocol',
           content:
-              'You\'ll hang at 20%, 35%, 50%, and 60% of your MVC until failure. Hang as long as possible at each intensity with adequate rest between efforts.',
+              '24 all-out pulls of 7 seconds, each followed by 3 seconds of rest. Pull as hard as you can for the whole 7 seconds and let go at the bell: force pulled after the bell does not count.',
         ),
         const TutorialSection(
           icon: Icons.psychology,

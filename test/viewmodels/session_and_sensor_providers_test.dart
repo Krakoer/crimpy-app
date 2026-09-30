@@ -87,6 +87,26 @@ void main() {
     });
   });
 
+  group('SessionFilter', () {
+    // A week of whole days, Monday 1 June up to Monday 8 June.
+    final week = SessionFilter(
+      startDate: DateTime(2026, 6, 1),
+      endDate: DateTime(2026, 6, 8),
+    );
+
+    test('keeps a Sunday night session that started past midnight', () {
+      expect(week.matchesSession(sessionOn(DateTime(2026, 6, 8, 2))), isTrue);
+    });
+
+    test('leaves out the night before the range opens', () {
+      expect(week.matchesSession(sessionOn(DateTime(2026, 6, 1, 1))), isFalse);
+    });
+
+    test('stops before the day the range ends on', () {
+      expect(week.matchesSession(sessionOn(DateTime(2026, 6, 8, 9))), isFalse);
+    });
+  });
+
   group('bleLastValueProvider', () {
     /// Keeps a listener on the stream so the provider is not disposed while
     /// waiting for its first value.

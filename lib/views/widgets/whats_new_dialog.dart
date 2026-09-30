@@ -43,6 +43,11 @@ class WhatsNewDialog extends ConsumerWidget {
             const SizedBox(height: CrimpyTheme.spaceLg),
             _buildFeatureItem(
               context,
+              'Critical Force by the published definition',
+              'Critical Force is now the mean force of your last 6 pulls, as in Tindeq, Lattice and the research, and only force inside each 7 second pull counts. New results read about 40 % higher than the ones before, which are kept as they were and not recomputed.',
+            ),
+            _buildFeatureItem(
+              context,
               'Coach programs',
               'Follow the program your coach assigned you, week by week, with today\'s trainings on the home screen.',
             ),

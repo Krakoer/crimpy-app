@@ -17,6 +17,17 @@ class FlutterBluePlusSensorLink extends SensorLink {
   bool get isAdapterOn =>
       FlutterBluePlus.adapterStateNow == BluetoothAdapterState.on;
 
+  /// [FlutterBluePlus.adapterStateNow] stays unknown until something listens
+  /// to the adapter state, which is what asks the platform. Only a state known
+  /// to be off counts as off: one turning on, or one the platform could not
+  /// tell, is worth trying to connect on.
+  @override
+  Future<bool> fetchAdapterOn() async => !const {
+    BluetoothAdapterState.off,
+    BluetoothAdapterState.turningOff,
+    BluetoothAdapterState.unavailable,
+  }.contains(await FlutterBluePlus.adapterState.first);
+
   @override
   Stream<bool> get adapterOnChanges => FlutterBluePlus.adapterState.map(
     (state) => state == BluetoothAdapterState.on,
@@ -49,20 +60,28 @@ class FlutterBluePlusSensorLink extends SensorLink {
   }
 
   @override
-  Future<SensorChannel?> open(SensorDevice sensor) async {
+  Future<SensorChannel?> open(
+    SensorDevice sensor, {
+    Duration timeout = defaultSensorConnectTimeout,
+  }) async {
     final device = BluetoothDevice.fromId(sensor.id);
-    await device.connect();
+    final connecting = Stopwatch()..start();
+    await device.connect(timeout: timeout);
 
     // A sensor left connected at the OS level stops advertising, so a
     // connection that fails half way is dropped or the next scan misses it.
+    // The timeout covers the whole opening: a sensor that links up and then
+    // stalls on discovery is as unreachable as one that never answers.
     try {
-      final characteristic = await _forceCharacteristic(device);
-      if (characteristic == null) {
-        await device.disconnect();
-        return null;
-      }
-      await characteristic.setNotifyValue(true);
-      return _FlutterBluePlusSensorChannel(device, characteristic);
+      return await () async {
+        final characteristic = await _forceCharacteristic(device);
+        if (characteristic == null) {
+          await device.disconnect();
+          return null;
+        }
+        await characteristic.setNotifyValue(true);
+        return _FlutterBluePlusSensorChannel(device, characteristic);
+      }().timeout(timeout - connecting.elapsed);
     } catch (_) {
       await device.disconnect();
       rethrow;

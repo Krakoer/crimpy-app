@@ -22,6 +22,7 @@ const bool useSimulatedSensor =
 class SimulatedSensorLink extends SensorLink {
   SimulatedSensorLink({
     this.scanDuration = const Duration(seconds: 1),
+    this.connectDuration = const Duration(milliseconds: 1500),
     this.samplePeriod = const Duration(milliseconds: 100),
   });
 
@@ -33,11 +34,18 @@ class SimulatedSensorLink extends SensorLink {
   /// Long enough for the connection dialog to show that it is scanning.
   final Duration scanDuration;
 
+  /// About what a real sensor takes to connect, so a run starting on the
+  /// remembered sensor shows that it is connecting.
+  final Duration connectDuration;
+
   /// The firmware notifies about ten times a second.
   final Duration samplePeriod;
 
   @override
   bool get isAdapterOn => true;
+
+  @override
+  Future<bool> fetchAdapterOn() async => true;
 
   @override
   Stream<bool> get adapterOnChanges => const Stream.empty();
@@ -51,9 +59,21 @@ class SimulatedSensorLink extends SensorLink {
     return [device];
   }
 
+  /// Opens [device] when it is the simulator. Any other device, such as one
+  /// remembered from a real sensor, is never in range: the attempt waits out
+  /// [timeout] and fails, as it would against the hardware.
   @override
-  Future<SensorChannel?> open(SensorDevice device) async =>
-      SimulatedSensorChannel(samplePeriod: samplePeriod);
+  Future<SensorChannel?> open(
+    SensorDevice device, {
+    Duration timeout = defaultSensorConnectTimeout,
+  }) async {
+    if (device.id != SimulatedSensorLink.device.id) {
+      await Future.delayed(timeout);
+      throw TimeoutException('${device.name} is not in range', timeout);
+    }
+    await Future.delayed(connectDuration);
+    return SimulatedSensorChannel(samplePeriod: samplePeriod);
+  }
 }
 
 /// Replays [SimulatedHangProfile] as notification frames, every

@@ -51,6 +51,10 @@ class _FakeRepository extends TrainingRepository {
   Future<void> deleteTraining(String trainingId) => throw UnimplementedError();
 
   @override
+  Future<List<SessionModel>> getSessionHistoryWithReps() =>
+      throw UnimplementedError();
+
+  @override
   Future<SessionModel?> getSessionWithData(String sessionId) =>
       throw UnimplementedError();
 

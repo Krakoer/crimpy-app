@@ -1,6 +1,7 @@
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/calibration/start_calibration_dialog.dart';
+import 'package:crimpy/views/widgets/ble/tare_dialog.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/create_sensor_config_dialog.dart';
 import 'package:crimpy/viewmodels/app_info_view_model.dart';
 import 'package:crimpy/viewmodels/coach_view_model.dart';
@@ -9,6 +10,7 @@ import 'package:crimpy/views/screens/availability/week_availability_screen.dart'
 import 'package:crimpy/views/screens/settings_screen/notification_settings_screen.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/debug_modal.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/reset_password_tile.dart';
+import 'package:crimpy/views/screens/settings_screen/widgets/sensor_ownership_tile.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/sensor_settings_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,6 +50,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             child: SingleChildScrollView(
               child: Column(
                 children: [
+                  const SensorOwnershipTile(),
                   // Form for manually editting tare and calibration values.
                   Form(
                     key: _formKey,
@@ -80,11 +83,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                                 onPressed:
                                     ref.watch(connectionStateProvider) ==
                                         BleConnectionState.connected
-                                    ? () {
-                                        ref
-                                            .read(bleConfigProvider.notifier)
-                                            .tare();
-                                      }
+                                    ? () => tareUnlessLoaded(context, ref)
                                     : null,
                                 child: Text("Tare"),
                               ),

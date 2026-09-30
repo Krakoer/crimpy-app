@@ -1,5 +1,6 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/models/critical_force_result.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/assessments/post_assessment_screen.dart';
@@ -16,10 +17,18 @@ class CriticalForceResultScreen extends ConsumerWidget {
   final List<RepDataModel> saveReps;
   final List<BleDataPoint> data;
 
+  /// The readings on the analysis' time footing, for the trace.
+  final List<CriticalForceSample> samples;
+
+  /// Whole seconds the run stood paused once the first pull had started.
+  final int pausedSeconds;
+
   const CriticalForceResultScreen({
     this.previousCriticalForce,
     required this.results,
     required this.data,
+    required this.samples,
+    this.pausedSeconds = 0,
     required this.saveAssessment,
     required this.saveSession,
     required this.saveReps,
@@ -28,11 +37,7 @@ class CriticalForceResultScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final startTime = data[0].timestamp.millisecondsSinceEpoch;
-    final timestamps = data
-        .map((e) => (e.timestamp.millisecondsSinceEpoch - startTime) / 1000)
-        .toList();
-    final forces = data.map((e) => e.value).toList();
+    final lateOff = results.lateOffCount;
     return Scaffold(
       appBar: AppBar(title: Text("Critical Force assessment results")),
       body: SafeArea(
@@ -48,7 +53,7 @@ class CriticalForceResultScreen extends ConsumerWidget {
             SizedBox(height: CrimpyTheme.spaceLg),
             ResultCard(
               prevValue: previousCriticalForce,
-              newValue: results.criticalLoad,
+              newValue: results.criticalForce,
             ),
             SizedBox(height: CrimpyTheme.spaceLgPlus),
             Text(
@@ -58,57 +63,99 @@ class CriticalForceResultScreen extends ConsumerWidget {
               ),
             ),
             Text(
-              "${results.criticalLoad.toStringAsFixed(2)} kg",
+              "${results.criticalForce.toStringAsFixed(2)} kg",
               style: CrimpyTheme.numerals(
                 48,
               ).copyWith(color: Theme.of(context).colorScheme.onSurface),
             ),
-            SfCartesianChart(
-              plotAreaBorderWidth: 0,
-              series: <CartesianSeries>[
-                FastLineSeries<(double, double), double>(
-                  width: 2,
-                  dataSource: List.generate(
-                    timestamps.length,
-                    (index) => (timestamps[index], forces[index]),
-                  ),
-                  xValueMapper: ((double, double) data, _) => data.$1,
-                  yValueMapper: ((double, double) data, _) => data.$2,
-                ),
-                // Print points on tmeans, fmeans
-                ScatterSeries<(double, double), double>(
-                  dataSource: List.generate(
-                    results.tmeans.length,
-                    (index) => (results.tmeans[index], results.fmeans[index]),
-                  ),
-                  xValueMapper: (data, _) => data.$1,
-                  yValueMapper: (data, _) => data.$2,
-                  markerSettings: MarkerSettings(isVisible: true),
-                ),
-                // Print dashed horizontal line at criticalLoad
-                LineSeries<(double, double), double>(
-                  dataSource: [
-                    (timestamps[0], results.criticalLoad),
-                    (timestamps.last, results.criticalLoad),
-                  ],
-                  xValueMapper: (data, _) => data.$1,
-                  yValueMapper: (data, _) => data.$2,
-                  dashArray: <double>[5, 5],
-                  color: Theme.of(context).colorScheme.error,
-                ),
-              ],
-              primaryYAxis: NumericAxis(
-                axisLine: AxisLine(color: Colors.transparent),
-                majorGridLines: MajorGridLines(width: 0),
-                majorTickLines: MajorTickLines(size: 0),
+            Text(
+              _countedPullsLabel(results),
+              style: CrimpyTheme.body.copyWith(
+                color: CrimpyTheme.textSecondary,
               ),
-              primaryXAxis: NumericAxis(
-                axisLine: AxisLine(color: Colors.transparent),
-                majorTickLines: MajorTickLines(size: 0),
-                majorGridLines: MajorGridLines(width: 0),
-                autoScrollingMode: AutoScrollingMode.end,
-                decimalPlaces: 0,
+            ),
+            if (pausedSeconds > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: CrimpyTheme.spaceLg,
+                  vertical: CrimpyTheme.spaceXs,
+                ),
+                child: Text(
+                  "The test was paused for $pausedSeconds s. Extra rest lets the forearm recover, so this result may read high.",
+                  textAlign: TextAlign.center,
+                  style: CrimpyTheme.body.copyWith(
+                    color: CrimpyTheme.textSecondary,
+                  ),
+                ),
               ),
+            if (lateOff > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: CrimpyTheme.spaceLg,
+                  vertical: CrimpyTheme.spaceXs,
+                ),
+                child: Text(
+                  lateOff == 1
+                      ? "1 pull was held on after the bell. Force past the bell does not count."
+                      : "$lateOff pulls were held on after the bell. Force past the bell does not count.",
+                  textAlign: TextAlign.center,
+                  style: CrimpyTheme.body.copyWith(
+                    color: CrimpyTheme.textSecondary,
+                  ),
+                ),
+              ),
+            // The chart takes what the numbers above leave, so the screen
+            // fits a small phone.
+            Expanded(
+              child: SfCartesianChart(
+                plotAreaBorderWidth: 0,
+                series: <CartesianSeries>[
+                  FastLineSeries<CriticalForceSample, double>(
+                    width: 2,
+                    dataSource: samples,
+                    xValueMapper: (CriticalForceSample sample, _) => sample.t,
+                    yValueMapper: (CriticalForceSample sample, _) => sample.kg,
+                  ),
+                  // Each pull's mean, in the middle of its window.
+                  ScatterSeries<CriticalForcePull, double>(
+                    dataSource: [
+                      for (final pull in results.pulls)
+                        if (pull.meanKg != null) pull,
+                    ],
+                    xValueMapper: (pull, _) => (pull.start + pull.end) / 2,
+                    yValueMapper: (pull, _) => pull.meanKg,
+                    markerSettings: MarkerSettings(isVisible: true),
+                  ),
+                  // Dashed line at the Critical Force, across the test.
+                  LineSeries<(double, double), double>(
+                    dataSource: [
+                      (results.pulls.first.start, results.criticalForce),
+                      (results.pulls.last.end, results.criticalForce),
+                    ],
+                    xValueMapper: (data, _) => data.$1,
+                    yValueMapper: (data, _) => data.$2,
+                    dashArray: <double>[5, 5],
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ],
+                primaryYAxis: NumericAxis(
+                  axisLine: AxisLine(color: Colors.transparent),
+                  majorGridLines: MajorGridLines(width: 0),
+                  majorTickLines: MajorTickLines(size: 0),
+                ),
+                primaryXAxis: NumericAxis(
+                  axisLine: AxisLine(color: Colors.transparent),
+                  majorTickLines: MajorTickLines(size: 0),
+                  majorGridLines: MajorGridLines(width: 0),
+                  autoScrollingMode: AutoScrollingMode.end,
+                  decimalPlaces: 0,
+                ),
+              ),
+            ),
+            // Room for the save and discard buttons floating over the bottom,
+            // so they do not sit on the chart.
+            const SizedBox(
+              height: kMinInteractiveDimension + CrimpyTheme.spaceLg,
             ),
           ],
         ),
@@ -155,4 +202,14 @@ class CriticalForceResultScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Which pulls the Critical Force is the mean of, saying so when holes in the
+/// readings left some of them out.
+String _countedPullsLabel(CriticalForceResults results) {
+  final span = "pulls ${results.firstCountedPull}-${results.lastCountedPull}";
+  final spanLength = results.lastCountedPull - results.firstCountedPull + 1;
+  return results.averagedPullCount == spanLength
+      ? "Mean of $span"
+      : "Mean of ${results.averagedPullCount} of $span";
 }
