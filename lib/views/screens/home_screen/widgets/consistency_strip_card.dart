@@ -153,31 +153,33 @@ class _ConsistencyPainter extends CustomPainter {
       case ConsistencyMark.climbed:
         // A full disc with a peak cut out of it: a whole day, not a hangboard
         // one.
-        canvas.drawCircle(
-          center,
-          radius,
-          Paint()..color = CrimpyTheme.activityColor(SessionActivity.climbing),
-        );
         final peak = Path()
           ..moveTo(center.dx - radius * 0.55, center.dy + radius * 0.35)
           ..lineTo(center.dx, center.dy - radius * 0.45)
           ..lineTo(center.dx + radius * 0.55, center.dy + radius * 0.35)
           ..close();
-        canvas.drawPath(peak, Paint()..color = CrimpyTheme.bgPrimary);
+        canvas.drawPath(
+          _discWithout(center, radius, peak),
+          Paint()..color = CrimpyTheme.activityColor(SessionActivity.climbing),
+        );
       case ConsistencyMark.assessed:
         // A full disc bored through the middle, the way a test reads elsewhere.
-        canvas.drawCircle(
-          center,
-          radius,
+        final bore = Path()
+          ..addOval(Rect.fromCircle(center: center, radius: radius * 0.38));
+        canvas.drawPath(
+          _discWithout(center, radius, bore),
           Paint()..color = CrimpyTheme.assessmentColor,
-        );
-        canvas.drawCircle(
-          center,
-          radius * 0.38,
-          Paint()..color = CrimpyTheme.bgPrimary,
         );
     }
   }
+
+  /// A disc with [cutout] taken out of it, so the card shows through the hole
+  /// whatever it is painted with, the pressed highlight included.
+  Path _discWithout(Offset center, double radius, Path cutout) => Path.combine(
+    PathOperation.difference,
+    Path()..addOval(Rect.fromCircle(center: center, radius: radius)),
+    cutout,
+  );
 
   /// An under-tick rather than a ring: at 8 in the morning, nothing done yet
   /// today is not a failure, and a ring would read as one being pointed at.

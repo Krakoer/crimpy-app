@@ -285,9 +285,11 @@ class CrimpyTheme {
   /// hollow, and never in a colour that scolds.
   static const Color dayOwed = textSecondary;
 
-  /// A day of the consistency strip before the plan existed: a hairline, the
-  /// quietest mark the strip has.
-  static const Color dayUntracked = outlineSubtle;
+  /// A day of the consistency strip before the plan existed. Kept quiet by its
+  /// shape, a short line, rather than by a pale grey: it has to read as
+  /// something other than an empty cell, since what it says is that the day
+  /// was not missed.
+  static const Color dayUntracked = textSecondary;
 
   /// A rep that held its target load. The portal's sage, so a rep reads the
   /// same on the phone and in the coach's session detail; the run screen's
