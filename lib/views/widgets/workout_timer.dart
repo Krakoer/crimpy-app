@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:crimpy/models/training_execution_model.dart';
+import 'package:crimpy/services/run_haptics.dart';
 
 /// Wrapper around StopWatch that allows to skip time.
 class CrimpyWatch {
@@ -67,6 +68,7 @@ class WorkoutTimer {
     this.onFinished,
     required this.items,
     this.playSound = false,
+    this.haptics,
     CrimpyWatch? watch,
   }) : _stopwatch = watch ?? CrimpyWatch();
 
@@ -76,6 +78,10 @@ class WorkoutTimer {
   final Future<void> Function()? onFinished;
   final List<TrainingExecutionItem> items;
   final bool playSound;
+
+  /// Feels every cue the beeps mark, on the same ticks and under the same
+  /// rules. Null when the run does not vibrate.
+  final RunHaptics? haptics;
 
   final CrimpyWatch _stopwatch;
 
@@ -130,8 +136,8 @@ class WorkoutTimer {
       if (currentItem is! ConfirmItem &&
           _stopwatch.elapsedMilliseconds >=
               startCurrentRep + currentItemDuration * 1000) {
-        if (playSound && currentItemIndex < items.length - 1) {
-          _playerBiiip?.resume();
+        if (currentItemIndex < items.length - 1) {
+          _cueTransition();
         }
         _advance(() => startCurrentRep + currentItemDuration * 1000);
         advanced = true;
@@ -141,11 +147,32 @@ class WorkoutTimer {
         // A rep change already reported itself from within _advance, and its
         // transition tone stands in for the countdown beep on that tick.
         onSecondChange?.call();
-        if (playSound && beepsThisSecond) {
-          _playerBip?.resume();
+        if (beepsThisSecond) {
+          _cue(RunCue.countdown);
         }
       }
     });
+  }
+
+  /// Marks [cue] with its beep, when the run plays sound, and its vibration,
+  /// when it vibrates. The countdown has a beep of its own; both transitions
+  /// share the long tone, and only the vibration tells them apart.
+  void _cue(RunCue cue) {
+    if (playSound) {
+      (cue == RunCue.countdown ? _playerBip : _playerBiiip)?.resume();
+    }
+    haptics?.play(cue);
+  }
+
+  /// Marks the step the run is about to enter. The beep is one tone for every
+  /// transition; the vibration tells an effort starting from a pull ending.
+  /// A rest running into another rest ends no pull, so it beeps and is not
+  /// felt as a let go.
+  void _cueTransition() {
+    final entersRest = nextItem is RestItem;
+    if (!entersRest) return _cue(RunCue.pullStart);
+    if (currentItem is! RestItem) return _cue(RunCue.letGo);
+    if (playSound) _playerBiiip?.resume();
   }
 
   /// Whether the second now ticking is one the countdown beeps on: the last
