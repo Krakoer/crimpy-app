@@ -101,7 +101,8 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
   /// finds it, so none of it falls before the window.
   void _startOnFirstPull() {
     final waitStartedAt = _waitStartedAt;
-    if (!_waitingForFirstPull || waitStartedAt == null) return;
+    // A dialog over the run holds it, a pull under it included.
+    if (!_waitingForFirstPull || waitStartedAt == null || _dialogOpen) return;
     final data = ref.read(bleDataStreamProvider.notifier).getData();
     BleDataPoint? first;
     for (var i = data.length - 1; i >= 0; i--) {
@@ -115,8 +116,27 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
     timer.startCurrentRep = at;
     _pullStartedAtMs = at;
     _clockLog.started(first.timestamp, at);
+    // The run clock picks up from the reading, not from the tick that found
+    // it, so the bells stay on the windows the readings are sorted into.
+    final lag = clock.now().difference(first.timestamp).inMilliseconds;
+    timer.skipAhead(lag < 0 ? 0 : lag);
     timer.play();
     setState(() {});
+  }
+
+  /// Whether a dialog is open over the run, which holds its clock.
+  var _dialogOpen = false;
+
+  void _pauseForDialog() {
+    _dialogOpen = true;
+    _stopClock();
+  }
+
+  void _resumeAfterDialog() {
+    _dialogOpen = false;
+    // A pull made under the dialog does not start the test.
+    if (_waitingForFirstPull) _waitStartedAt = clock.now();
+    _startClock();
   }
 
   /// Whether the run has been finished, on the last bell or by hand.
@@ -332,23 +352,36 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
         if (res) {
           return;
         }
-        setState(_stopClock);
+        setState(_pauseForDialog);
         final NavigatorState navigator = Navigator.of(context);
+        final canFinish = _canFinishEarly;
+        final pullsRun = _pullWindows.length;
         // Ask user if they want to leave assessment
-        final shouldPop = await showDialog<bool>(
+        final choice = await showDialog<_LeaveChoice>(
           context: context,
           builder: (context) => AlertDialog(
             title: Text('Leave the workout?'),
             content: Text(
-              'If you leave this workout, you will lose your progress.',
+              canFinish
+                  ? 'If you leave this workout, you will lose your progress. '
+                        'You can finish it on the $pullsRun pulls already run '
+                        'instead.'
+                  : 'If you leave this workout, you will lose your progress.',
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
+                onPressed: () =>
+                    Navigator.of(context).pop(_LeaveChoice.keepGoing),
                 child: Text('Keep going'),
               ),
+              if (canFinish)
+                TextButton(
+                  onPressed: () =>
+                      Navigator.of(context).pop(_LeaveChoice.finish),
+                  child: Text('Finish'),
+                ),
               FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
+                onPressed: () => Navigator.of(context).pop(_LeaveChoice.leave),
                 style: CrimpyTheme.destructiveButton,
                 child: Text('Leave'),
               ),
@@ -359,10 +392,15 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
         // If user chose to leave, leave the workout. Any other way out of the
         // dialog, a tap beside it included, keeps the run going, unless an
         // interruption has already discarded it.
-        if (shouldPop ?? false) {
+        if (choice == _LeaveChoice.leave) {
           navigator.pop();
         } else if (mounted && !_interrupted) {
-          setState(_startClock);
+          _dialogOpen = false;
+          if (choice == _LeaveChoice.finish) {
+            _finishEarly();
+          } else {
+            setState(_resumeAfterDialog);
+          }
         }
       },
       child: Scaffold(
@@ -376,7 +414,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
               icon: Icon(Icons.help_outline),
               onPressed: () {
                 // Pause timer while showing tutorial
-                setState(_stopClock);
+                setState(_pauseForDialog);
 
                 // Get grip position from first non-rest rep
                 final gripPosition = widget.reps
@@ -399,7 +437,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                   // An interruption discards the run, so closing the tutorial
                   // it was opened over must not put the clock back on.
                   if (mounted && !_interrupted) {
-                    setState(_startClock);
+                    setState(_resumeAfterDialog);
                   }
                 });
               },
@@ -408,10 +446,7 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
           ],
         ),
         body: SafeArea(
-          // Filled whatever the graph draws, so the cue and the finish button
-          // keep their place before the first reading arrives.
           child: Stack(
-            fit: StackFit.expand,
             alignment: Alignment.bottomCenter,
             children: [
               // Box of text to show the user the action to do (rest or pull).
@@ -460,3 +495,6 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
     );
   }
 }
+
+/// How the athlete answered the leave dialog.
+enum _LeaveChoice { keepGoing, finish, leave }

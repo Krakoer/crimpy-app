@@ -24,7 +24,9 @@ class _HandFedSamples extends BleDataStream {
   final List<BleDataPoint> points = [];
 
   @override
-  Stream<List<BleDataPoint>> build() => const Stream.empty();
+  // One empty reading list, so the live graph lays out as it does on a
+  // phone once the sensor streams.
+  Stream<List<BleDataPoint>> build() => Stream.value(const []);
 
   @override
   double? lastValue() => points.lastOrNull?.value;
@@ -103,12 +105,11 @@ Future<void> _runUntil(
 }
 
 /// The athlete takes the edge while the test waits for the first pull. The
-/// reading lands on the tick that sees it, so the run clock starts right on
-/// it and the readings fed after it keep matching the run clock.
+/// reading arrives a tick before the run sees it, and the run clock has to
+/// pick up from the reading, so the readings fed after it keep matching it.
 Future<void> _pullToStart(WidgetTester tester, _HandFedSamples samples) async {
-  const tick = Duration(milliseconds: 100);
-  samples.points.add(BleDataPoint(10, clock.now().add(tick)));
-  await tester.pump(tick);
+  samples.points.add(BleDataPoint(10, clock.now()));
+  await tester.pump(const Duration(milliseconds: 100));
 }
 
 /// Runs the lead-in and starts pull 1 right as it ends.
@@ -244,6 +245,50 @@ void main() {
 
     expect(_waiting(state), isTrue);
     expect(_clockRunning(state), isFalse);
+  });
+
+  testWidgets('a pull under a dialog opened during the wait does not start '
+      'the test', (tester) async {
+    final watch = ManualCrimpyWatch();
+    final samples = _HandFedSamples();
+    final state = await _pumpRun(tester, watch, samples);
+
+    await _runUntil(tester, watch, samples, 1000);
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    samples.points.add(BleDataPoint(10, clock.now()));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(_waiting(state), isTrue);
+    expect(_clockRunning(state), isFalse);
+
+    await tester.tap(find.text('Keep going'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // The reading taken under the dialog does not count either.
+    expect(_waiting(state), isTrue);
+    await _pullToStart(tester, samples);
+    expect(_waiting(state), isFalse);
+  });
+
+  testWidgets('the leave dialog offers to finish once enough pulls have run', (
+    tester,
+  ) async {
+    final watch = ManualCrimpyWatch();
+    final samples = _HandFedSamples();
+    await _pumpRun(tester, watch, samples);
+
+    await _startTest(tester, watch, samples);
+    await _runUntil(tester, watch, samples, 7500);
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    await tester.tap(find.text('Finish'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.byType(CriticalForceResultScreen), findsOneWidget);
+    expect(find.text('Mean of pulls 1-2'), findsOneWidget);
   });
 
   testWidgets('the test can be finished by hand once enough pulls have run', (
