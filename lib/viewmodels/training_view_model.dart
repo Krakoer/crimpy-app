@@ -19,6 +19,7 @@ import 'package:crimpy/repositories/builtin_training_repository.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/utils/training_intensity.dart';
+import 'package:crimpy/utils/load_trends.dart';
 import 'package:crimpy/utils/training_totals.dart';
 
 part 'training_view_model.g.dart';
@@ -343,6 +344,12 @@ String? _historyKey(List<SessionModel>? sessions) => sessions
 @riverpod
 Future<TrainingTotals> trainingTotals(Ref ref) async =>
     TrainingTotals.of(await ref.watch(sessionHistoryWithRepsProvider.future));
+
+/// The load of each training the athlete has run at least twice with the
+/// sensor, grip by grip, for the history screen. Krakoer/crimpy#155.
+@riverpod
+Future<List<TrainingLoadTrend>> trainingLoadTrends(Ref ref) async =>
+    loadTrendsOf(await ref.watch(sessionHistoryWithRepsProvider.future));
 
 /// The items a played session was run from, so its reps can be read block by
 /// block. Empty when the session was not played from a training, or when the

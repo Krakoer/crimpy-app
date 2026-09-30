@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'widgets/calendar_card.dart';
 import 'widgets/date_group.dart';
+import 'widgets/load_trend_deck.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/error_state.dart';
 import 'package:crimpy/models/session_filter.dart';
@@ -71,7 +72,12 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
         child: PullToRefresh(
           onRefresh: () async {
             ref.invalidate(sessionsProvider);
-            await ref.read(filteredSessionsProvider(_currentFilter).future);
+            // The load trends read the history with its reps, which the list
+            // does not fetch again when it answers the same sessions.
+            await Future.wait([
+              ref.read(filteredSessionsProvider(_currentFilter).future),
+              ref.refresh(sessionHistoryWithRepsProvider.future),
+            ]);
           },
           // Matched on what the state holds rather than on which state it is,
           // so a pull keeps the history on screen instead of replacing it with
@@ -142,12 +148,21 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
       itemCount: sortedDates.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
-          return CalendarCard(
-            sessions: sessions,
-            calendarController: _calendarController,
-            selectedDate: _selectedDate,
-            onClearFilter: _clearDateFilter,
-            onDateTap: (date) => setState(() => _selectedDate = date),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              CalendarCard(
+                sessions: sessions,
+                calendarController: _calendarController,
+                selectedDate: _selectedDate,
+                onClearFilter: _clearDateFilter,
+                onDateTap: (date) => setState(() => _selectedDate = date),
+              ),
+              // Over the whole history, so it stays away while the list is
+              // narrowed to a day or to the assessments it leaves out.
+              if (_selectedDate == null && _currentFilter?.isAssessment != true)
+                const LoadTrendDeck(),
+            ],
           );
         }
 

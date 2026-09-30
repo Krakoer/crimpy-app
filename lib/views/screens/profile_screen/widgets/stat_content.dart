@@ -1,6 +1,6 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/assessment_chart.dart';
-import 'package:crimpy/views/screens/profile_screen/widgets/series_swatch.dart';
+import 'package:crimpy/views/widgets/series_swatch.dart';
 import 'package:crimpy/views/widgets/section_widgets.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/stat_card.dart';
 import 'package:flutter/material.dart';

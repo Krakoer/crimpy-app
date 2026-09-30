@@ -831,6 +831,56 @@ final class TrainingTotalsProvider
 
 String _$trainingTotalsHash() => r'c1eefc1309310cad26b259bf1c878beb6ea9c9b5';
 
+/// The load of each training the athlete has run at least twice with the
+/// sensor, grip by grip, for the history screen. Krakoer/crimpy#155.
+
+@ProviderFor(trainingLoadTrends)
+const trainingLoadTrendsProvider = TrainingLoadTrendsProvider._();
+
+/// The load of each training the athlete has run at least twice with the
+/// sensor, grip by grip, for the history screen. Krakoer/crimpy#155.
+
+final class TrainingLoadTrendsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<TrainingLoadTrend>>,
+          List<TrainingLoadTrend>,
+          FutureOr<List<TrainingLoadTrend>>
+        >
+    with
+        $FutureModifier<List<TrainingLoadTrend>>,
+        $FutureProvider<List<TrainingLoadTrend>> {
+  /// The load of each training the athlete has run at least twice with the
+  /// sensor, grip by grip, for the history screen. Krakoer/crimpy#155.
+  const TrainingLoadTrendsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'trainingLoadTrendsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$trainingLoadTrendsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<TrainingLoadTrend>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<TrainingLoadTrend>> create(Ref ref) {
+    return trainingLoadTrends(ref);
+  }
+}
+
+String _$trainingLoadTrendsHash() =>
+    r'845fb51d4a474053b5004cfee4392b286494afdb';
+
 /// The items a played session was run from, so its reps can be read block by
 /// block. Empty when the session was not played from a training, or when the
 /// training has been deleted since.
