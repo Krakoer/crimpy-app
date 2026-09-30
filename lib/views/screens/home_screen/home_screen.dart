@@ -6,6 +6,7 @@ import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/history/week_histogram_card.dart';
 import 'package:crimpy/views/screens/home_screen/favorite_training.dart';
+import 'package:crimpy/views/screens/home_screen/widgets/consistency_strip_card.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/log_session_buttons.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/next_week_availability_card.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/today_training_card.dart';
@@ -93,7 +94,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             TodayTrainingCard(),
             NextWeekAvailabilityCard(),
             FavoriteTrainingList(),
-            // The week so far.
+            // How the plan has been kept, then the week so far.
+            ConsistencyStripCard(),
             WeekHistogramCard(maxBarHeight: 75),
             // Logging.
             LogSessionButtons(),
