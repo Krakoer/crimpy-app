@@ -3,6 +3,8 @@ import 'package:crimpy/models/notification_preferences.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/habit_schedule.dart';
+import 'package:crimpy/viewmodels/habit_view_model.dart';
 import 'package:crimpy/viewmodels/notification_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:crimpy/views/widgets/section_widgets.dart';
@@ -11,8 +13,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 const _weekdayLabels = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
 /// Lets the user configure the daily reminder for the trainings their coach
-/// scheduled: when it fires, on which days, and which days the flexible
-/// "X times per week" trainings are reminded on.
+/// scheduled, or for their own weekly habits while no program runs: when it
+/// fires, on which days, and which days the flexible "X times per week"
+/// trainings are reminded on.
 class NotificationSettingsScreen extends ConsumerWidget {
   const NotificationSettingsScreen({super.key});
 
@@ -59,7 +62,8 @@ class _Content extends ConsumerWidget {
         SwitchListTile(
           title: const Text('Training reminders'),
           subtitle: const Text(
-            'A daily notification listing what your coach scheduled',
+            'A daily notification listing what your coach scheduled, or '
+            'your own habits when no program runs',
           ),
           value: enabled,
           onChanged: (value) => _setEnabled(context, ref, value),
@@ -278,21 +282,46 @@ class _FlexibleTrainings extends ConsumerWidget {
     // Read off what the state holds, so a pull running on another tab does not
     // take this section away while it reloads.
     final schedule = ref.watch(programScheduleCacheProvider).value;
-    if (schedule == null) return const SizedBox.shrink();
-
-    final week = schedule.weekNumbered(
-      schedule.program.currentWeekNumber(currentTrainingDay()),
-    );
-    final flexible = week?.timesPerWeekSessions ?? const <WeekSession>[];
+    final today = currentTrainingDay();
+    final List<({String trainingId, String title, int target})> flexible;
+    if (schedule != null && schedule.program.isActiveOn(today)) {
+      final week = schedule.weekNumbered(
+        schedule.program.currentWeekNumber(today),
+      );
+      flexible = [
+        for (final session
+            in week?.timesPerWeekSessions ?? const <WeekSession>[])
+          (
+            trainingId: session.trainingId,
+            title: session.trainingTitle,
+            target: session.timesPerWeek ?? 1,
+          ),
+      ];
+    } else {
+      // No program runs, so the habits counted per week are what the reminder
+      // spreads over the days.
+      flexible = [
+        for (final habit in perWeekHabits(
+          ref.watch(activeHabitsProvider).value ?? const [],
+        ))
+          (
+            trainingId: habit.trainingId,
+            title: habit.title,
+            target: habit.habit.timesPerWeek!,
+          ),
+      ];
+    }
     if (flexible.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _SectionTitle('Flexible trainings'),
-        for (final session in flexible)
+        for (final training in flexible)
           _FlexibleTrainingTile(
-            session: session,
+            trainingId: training.trainingId,
+            title: training.title,
+            target: training.target,
             preferences: preferences,
             enabled: preferences.enabled,
           ),
@@ -302,36 +331,39 @@ class _FlexibleTrainings extends ConsumerWidget {
 }
 
 class _FlexibleTrainingTile extends ConsumerWidget {
-  final WeekSession session;
+  final String trainingId;
+  final String title;
+  final int target;
   final NotificationPreferences preferences;
   final bool enabled;
 
   const _FlexibleTrainingTile({
-    required this.session,
+    required this.trainingId,
+    required this.title,
+    required this.target,
     required this.preferences,
     required this.enabled,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final target = session.timesPerWeek ?? 1;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ListTile(
           enabled: enabled,
-          title: Text(session.trainingTitle),
+          title: Text(title),
           subtitle: Text('$target x / week'),
         ),
         // A day the reminder never fires on cannot carry a flexible training
         // either: the plan drops it before it looks at these days.
         _WeekdaySelector(
-          selected: preferences.flexibleDaysFor(session.trainingId, target),
+          selected: preferences.flexibleDaysFor(trainingId, target),
           enabled: enabled,
           selectableDays: preferences.activeWeekdays,
           onChanged: (days) => ref
               .read(notificationPreferencesControllerProvider.notifier)
-              .setFlexibleDays(session.trainingId, days),
+              .setFlexibleDays(trainingId, days),
         ),
         const SizedBox(height: CrimpyTheme.spaceSm),
       ],

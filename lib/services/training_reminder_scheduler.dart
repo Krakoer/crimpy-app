@@ -1,10 +1,12 @@
 import 'package:crimpy/models/cached_program_schedule.dart';
 import 'package:crimpy/models/notification_preferences.dart';
 import 'package:crimpy/models/session.dart';
+import 'package:crimpy/models/training_habit.dart';
 import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/utils/reminder_plan.dart';
 
-/// Turns the current preferences, cached schedule and logged sessions into the
+/// Turns the current preferences, cached schedule, habits and logged sessions
+/// into the
 /// set of pending reminder notifications.
 class TrainingReminderScheduler {
   final NotificationService _notificationService;
@@ -15,6 +17,7 @@ class TrainingReminderScheduler {
     required NotificationPreferences preferences,
     required CachedProgramSchedule? schedule,
     required List<SessionModel> sessions,
+    List<ActiveHabit> habits = const [],
   }) async {
     if (!supportsTrainingReminders) return;
 
@@ -22,6 +25,7 @@ class TrainingReminderScheduler {
       preferences: preferences,
       schedule: schedule,
       sessions: sessions,
+      habits: habits,
       from: DateTime.now(),
     );
 

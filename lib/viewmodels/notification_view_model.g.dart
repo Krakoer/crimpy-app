@@ -364,20 +364,20 @@ final class ProgramScheduleCacheProvider
 String _$programScheduleCacheHash() =>
     r'2fa2cdda1c3502bcf79a6d29905cf88dfa3ea717';
 
-/// Rewrites the pending reminders whenever the settings, the program schedule
-/// or the logged sessions change. Watched by the app shell so it stays alive.
+/// Rewrites the pending reminders whenever the settings, the program schedule,
+/// the athlete's own habits or the logged sessions change. Watched by the app shell so it stays alive.
 
 @ProviderFor(trainingReminderSync)
 const trainingReminderSyncProvider = TrainingReminderSyncProvider._();
 
-/// Rewrites the pending reminders whenever the settings, the program schedule
-/// or the logged sessions change. Watched by the app shell so it stays alive.
+/// Rewrites the pending reminders whenever the settings, the program schedule,
+/// the athlete's own habits or the logged sessions change. Watched by the app shell so it stays alive.
 
 final class TrainingReminderSyncProvider
     extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
     with $FutureModifier<void>, $FutureProvider<void> {
-  /// Rewrites the pending reminders whenever the settings, the program schedule
-  /// or the logged sessions change. Watched by the app shell so it stays alive.
+  /// Rewrites the pending reminders whenever the settings, the program schedule,
+  /// the athlete's own habits or the logged sessions change. Watched by the app shell so it stays alive.
   const TrainingReminderSyncProvider._()
     : super(
         from: null,
@@ -404,7 +404,7 @@ final class TrainingReminderSyncProvider
 }
 
 String _$trainingReminderSyncHash() =>
-    r'32bce71c0d0bd94df566c00efbc2b3c7707dac0a';
+    r'dd76d6c58ef384fd2fed5617f7f5169cc70e8519';
 
 @ProviderFor(coachReplyAnnouncer)
 const coachReplyAnnouncerProvider = CoachReplyAnnouncerProvider._();

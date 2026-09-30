@@ -3,7 +3,9 @@ import 'package:crimpy/models/notification_preferences.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/utils/program_completion.dart';
+import 'package:crimpy/models/training_habit.dart';
 import 'package:crimpy/utils/datetimes.dart';
+import 'package:crimpy/utils/habit_schedule.dart';
 
 /// First notification id reserved for training reminders. Reminders own the
 /// whole block so rescheduling can clear it without touching anything else.
@@ -131,12 +133,51 @@ List<String> _labelsForDay(
   );
 }
 
+/// The athlete's own habits still owed on [day], for a day no program covers.
+List<String> _habitLabelsForDay(
+  List<ActiveHabit> habits,
+  List<SessionModel> sessions,
+  NotificationPreferences preferences,
+  DateTime day,
+) {
+  final weekday = day.weekday - DateTime.monday;
+  return [
+    for (final habit in habitsDueOn(habits, day))
+      if (!habitDoneOn(sessions, habit.habit, day)) habit.title,
+    for (final habit in perWeekHabits(habits))
+      if (preferences
+              .flexibleDaysFor(habit.trainingId, habit.habit.timesPerWeek!)
+              .contains(weekday) &&
+          !isHabitDone(sessions, habit.habit, day))
+        '${habit.title} '
+            '${habitCompletionsInWeek(sessions, habit.habit, day)}/'
+            '${habit.habit.timesPerWeek} this week',
+  ];
+}
+
+/// What [day] still owes: the program's trainings while it covers the day, the
+/// athlete's own habits otherwise. A program that has not started yet leaves
+/// the habits in charge until it does.
+List<String> _owedOn(
+  CachedProgramSchedule? schedule,
+  List<ActiveHabit> habits,
+  List<SessionModel> sessions,
+  NotificationPreferences preferences,
+  DateTime day,
+) {
+  if (schedule != null && schedule.program.isActiveOn(day)) {
+    return _labelsForDay(schedule, sessions, preferences, day);
+  }
+  return _habitLabelsForDay(habits, sessions, preferences, day);
+}
+
 String _titleFor(List<String> labels) => labels.length == 1
     ? '1 training today'
     : '${labels.length} trainings today';
 
 /// Every reminder to schedule over the next [horizonDays] days, from the
-/// cached program schedule and the sessions already logged.
+/// cached program schedule, the athlete's own habits and the sessions already
+/// logged.
 ///
 /// Days with nothing left to do produce no reminder at all, so a rest day or a
 /// day whose trainings are already logged stays silent.
@@ -145,20 +186,19 @@ List<ReminderOccurrence> planReminders({
   required CachedProgramSchedule? schedule,
   required List<SessionModel> sessions,
   required DateTime from,
+  List<ActiveHabit> habits = const [],
   int horizonDays = reminderHorizonDays,
 }) {
-  if (!preferences.enabled || schedule == null) return [];
+  if (!preferences.enabled || (schedule == null && habits.isEmpty)) return [];
 
-  final program = schedule.program;
   final times = preferences.times;
   final occurrences = <ReminderOccurrence>[];
 
   for (var offset = 0; offset < horizonDays; offset++) {
     final day = addCalendarDays(from, offset);
-    if (!program.isActiveOn(day)) continue;
     if (!preferences.activeWeekdays.contains(day.weekday - 1)) continue;
 
-    final labels = _labelsForDay(schedule, sessions, preferences, day);
+    final labels = _owedOn(schedule, habits, sessions, preferences, day);
     if (labels.isEmpty) continue;
 
     final title = _titleFor(labels);
@@ -180,8 +220,9 @@ List<ReminderOccurrence> planReminders({
     // it was postponing has been logged in the meantime.
     // Asked of the training day it fires on: a reminder put off from 23:30 to
     // 00:30 is still about the evening's training, not the next day's.
-    final labels = _labelsForDay(
+    final labels = _owedOn(
       schedule,
+      habits,
       sessions,
       preferences,
       trainingDayOf(snoozedUntil),

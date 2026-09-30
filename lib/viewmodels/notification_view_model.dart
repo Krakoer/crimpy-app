@@ -11,6 +11,7 @@ import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/services/training_reminder_scheduler.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/viewmodels/coach_view_model.dart';
+import 'package:crimpy/viewmodels/habit_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -161,8 +162,8 @@ Future<CachedProgramSchedule?> programScheduleCache(Ref ref) async {
   }
 }
 
-/// Rewrites the pending reminders whenever the settings, the program schedule
-/// or the logged sessions change. Watched by the app shell so it stays alive.
+/// Rewrites the pending reminders whenever the settings, the program schedule,
+/// the athlete's own habits or the logged sessions change. Watched by the app shell so it stays alive.
 @Riverpod(keepAlive: true)
 Future<void> trainingReminderSync(Ref ref) async {
   final preferences = await ref.watch(
@@ -183,6 +184,7 @@ Future<void> trainingReminderSync(Ref ref) async {
   }
 
   final schedule = await ref.watch(programScheduleCacheProvider.future);
+  final habits = await ref.watch(activeHabitsProvider.future);
   final sessions = await ref.watch(sessionsProvider.future);
 
   await ref
@@ -191,6 +193,7 @@ Future<void> trainingReminderSync(Ref ref) async {
         preferences: preferences,
         schedule: schedule,
         sessions: sessions,
+        habits: habits,
       );
   AppLoggerHelper.debug('Training reminders rescheduled');
 }

@@ -3,6 +3,8 @@ import 'package:crimpy/models/cached_program_schedule.dart';
 import 'package:crimpy/models/notification_preferences.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/session.dart';
+import 'package:crimpy/models/training.dart';
+import 'package:crimpy/models/training_habit.dart';
 import 'package:crimpy/utils/reminder_plan.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -82,7 +84,143 @@ const _enabled = NotificationPreferences(enabled: true);
 /// Monday of week 1, 06:00, before the default 08:00 reminder.
 final _mondayMorning = DateTime(2026, 6, 1, 6);
 
+ActiveHabit _habit(TrainingHabit habit, String title) =>
+    ActiveHabit(habit, Training(id: habit.trainingId, title: title));
+
+// Mondays and Thursdays, set before the horizon opens.
+final _hangsHabit = _habit(
+  TrainingHabit.onWeekdays(
+    trainingId: 'own-1',
+    weekdays: const {0, 3},
+    since: DateTime(2026, 5, 1),
+  ),
+  'My hangs',
+);
+
+final _mobilityHabit = _habit(
+  TrainingHabit.perWeek(
+    trainingId: 'own-2',
+    timesPerWeek: 2,
+    since: DateTime(2026, 5, 1),
+  ),
+  'My mobility',
+);
+
+SessionModel _ownRun(String trainingId, DateTime date) => SessionModel(
+  name: 'run',
+  isAssessment: false,
+  origin: SessionOrigin.played,
+  trainingId: trainingId,
+  date: date,
+);
+
 void main() {
+  group('planReminders with habits', () {
+    test('reminds a habit on its weekdays with no program at all', () {
+      final plan = planReminders(
+        preferences: _enabled,
+        schedule: null,
+        habits: [_hangsHabit],
+        sessions: const [],
+        from: _mondayMorning,
+        horizonDays: 7,
+      );
+      expect(plan.map((o) => o.when.day), [1, 4]);
+      expect(plan.first.body, 'My hangs');
+    });
+
+    test('stays quiet on a day the habit was done', () {
+      final plan = planReminders(
+        preferences: _enabled,
+        schedule: null,
+        habits: [_hangsHabit],
+        sessions: [_ownRun('own-1', DateTime(2026, 6, 1, 7))],
+        from: _mondayMorning,
+        horizonDays: 7,
+      );
+      expect(plan.map((o) => o.when.day), [4]);
+    });
+
+    test('reminds a per week habit on its days until the count is met', () {
+      // Two a week spread from Monday: Monday and Friday.
+      final open = planReminders(
+        preferences: _enabled,
+        schedule: null,
+        habits: [_mobilityHabit],
+        sessions: const [],
+        from: _mondayMorning,
+        horizonDays: 7,
+      );
+      expect(open.map((o) => o.when.day), [1, 5]);
+      expect(open.first.body, 'My mobility 0/2 this week');
+
+      final met = planReminders(
+        preferences: _enabled,
+        schedule: null,
+        habits: [_mobilityHabit],
+        sessions: [
+          _ownRun('own-2', DateTime(2026, 6, 1, 7)),
+          _ownRun('own-2', DateTime(2026, 6, 1, 7, 30)),
+        ],
+        from: _mondayMorning,
+        horizonDays: 7,
+      );
+      expect(met, isEmpty);
+    });
+
+    test('a program takes over from the day it starts', () {
+      // The program starts Monday 8 June; the habit had the week before.
+      final program = Program(
+        id: 'p',
+        coachId: 'c',
+        userId: 'u',
+        name: 'Block',
+        startDate: DateTime(2026, 6, 8),
+        durationWeeks: 6,
+        createdAt: DateTime(2026, 6, 1),
+        updatedAt: DateTime(2026, 6, 1),
+      );
+      final plan = planReminders(
+        preferences: _enabled,
+        schedule: _schedule([_daySession(dayOfWeek: 2)], program: program),
+        habits: [_hangsHabit],
+        sessions: const [],
+        from: _mondayMorning,
+        horizonDays: 14,
+      );
+      expect(
+        [for (final o in plan) '${o.when.day} ${o.body}'],
+        ['1 My hangs', '4 My hangs', '10 Max Hangs'],
+      );
+    });
+
+    test('a snooze with no program is asked of the habits', () {
+      final plan = planReminders(
+        preferences: _enabled.copyWith(
+          snoozedUntil: DateTime(2026, 6, 1, 19, 30),
+        ),
+        schedule: null,
+        habits: [_hangsHabit],
+        sessions: const [],
+        from: DateTime(2026, 6, 1, 19),
+      );
+      final snoozed = plan.where((o) => o.isSnoozed).toList();
+      expect(snoozed.single.body, 'My hangs');
+    });
+
+    test('plans nothing with neither a program nor a habit', () {
+      expect(
+        planReminders(
+          preferences: _enabled,
+          schedule: null,
+          sessions: const [],
+          from: _mondayMorning,
+        ),
+        isEmpty,
+      );
+    });
+  });
+
   group('planReminders', () {
     test('schedules a day-of-week session on its calendar day only', () {
       final plan = planReminders(
