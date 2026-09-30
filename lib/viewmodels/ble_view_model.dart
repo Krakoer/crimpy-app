@@ -4,6 +4,8 @@ import 'package:crimpy/models/config.dart';
 import 'package:crimpy/models/sensor_preset.dart';
 import '../models/ble_data_model.dart';
 import '../repositories/ble_repository.dart';
+import 'package:crimpy/repositories/sensor_memory_repository.dart';
+import 'package:crimpy/services/sensor_link/sensor_link.dart';
 import 'package:crimpy/services/sensor_link/simulated_sensor_link.dart';
 
 part 'ble_view_model.g.dart';
@@ -11,11 +13,16 @@ part 'ble_view_model.g.dart';
 /// Retry policy that gives up immediately.
 Duration? noRetry(int retryCount, Object error) => null;
 
+/// Where the athlete's sensor, or the lack of one, is remembered.
+@Riverpod(keepAlive: true)
+SensorMemoryRepository sensorMemory(Ref ref) => SharedPreferencesSensorMemory();
+
 /// Main provider, gives access to the BLE repository.
 @Riverpod(keepAlive: true)
 BleRepository bleRepository(Ref ref) {
   final repository = BleRepository(
     link: useSimulatedSensor ? SimulatedSensorLink() : null,
+    memory: ref.watch(sensorMemoryProvider),
   );
   // Loads the stored calibration in the background. Consumers that need the
   // persisted values wait on `configReady` instead of blocking creation here.
@@ -42,6 +49,14 @@ class BleAdapterOn extends _$BleAdapterOn {
   }
 
   Future<void> turnOn() => _bleRepository.turnAdapterOn();
+
+  /// Asks the platform, which the first synchronous read may not have done
+  /// yet, and keeps the answer.
+  Future<bool> fetch() async {
+    final on = await _bleRepository.fetchAdapterOn();
+    if (ref.mounted) state = on;
+    return on;
+  }
 }
 
 /// Returns the BLE connection state. Allows to (dis)connect to/from a BLE device.
@@ -61,10 +76,42 @@ class BleConnection extends _$BleConnection {
     return _bleRepository.currentConnectionState;
   }
 
-  Future<void> connectToDevice(SensorDevice device) =>
-      _bleRepository.connectToDevice(device);
+  /// Whether it connected, giving up after [timeout] when the device does
+  /// not answer.
+  Future<bool> connectToDevice(
+    SensorDevice device, {
+    Duration timeout = defaultSensorConnectTimeout,
+  }) => _bleRepository.connectToDevice(device, timeout: timeout);
 
   Future<void> disconnect() => _bleRepository.disconnect();
+}
+
+/// The athlete's sensor as this device remembers it, or that they have none.
+/// Reread whenever that changes, including when a sensor connects, since
+/// connecting one remembers it.
+@Riverpod(keepAlive: true, name: 'sensorOwnershipProvider')
+class SensorOwnershipController extends _$SensorOwnershipController {
+  late SensorMemoryRepository _memory;
+
+  @override
+  Future<SensorOwnership> build() {
+    _memory = ref.watch(sensorMemoryProvider);
+    final subscription = _memory.changes.listen((_) => ref.invalidateSelf());
+    ref.onDispose(subscription.cancel);
+    return _memory.read();
+  }
+
+  Future<void> rememberNoSensor() async {
+    await _memory.rememberNoSensor();
+    ref.invalidateSelf();
+    await future;
+  }
+
+  Future<void> forget() async {
+    await _memory.forget();
+    ref.invalidateSelf();
+    await future;
+  }
 }
 
 /// Returns the connected device info, if any.

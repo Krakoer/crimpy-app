@@ -1,7 +1,9 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/auth_models.dart' as auth_models;
 import 'package:crimpy/theme/crimpy_theme.dart';
+import 'package:crimpy/utils/training_totals.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
+import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/profile_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,11 +45,15 @@ AssessmentModel _record(
 
 Future<void> _show(
   WidgetTester tester,
-  List<AssessmentModel> assessments,
-) async {
+  List<AssessmentModel> assessments, {
+  TrainingTotals totals = TrainingTotals.none,
+}) async {
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [authStateProvider.overrideWith(SignedOutAuth.new)],
+      overrides: [
+        authStateProvider.overrideWith(SignedOutAuth.new),
+        trainingTotalsProvider.overrideWith((ref) async => totals),
+      ],
       child: MaterialApp(
         home: Scaffold(
           body: ProfileContent(
@@ -220,5 +226,74 @@ void main() {
     final series = seriesOf(tester, 'PULL UP PYRAMID');
     expect(series.map((line) => line.name), ['Result']);
     expect(series.single.dashArray, isNull);
+  });
+
+  group('all-time totals', () {
+    testWidgets('invites a first session when there is none', (tester) async {
+      await _show(tester, []);
+
+      expect(find.text('ALL-TIME TOTALS'), findsOneWidget);
+      expect(
+        find.text('Your totals start with your first session.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('states the totals and what the loads count', (tester) async {
+      await _show(
+        tester,
+        [],
+        totals: TrainingTotals(
+          sessions: 12,
+          daysTrained: 9,
+          pulls: 140,
+          weighedPulls: 120,
+          timeUnderTensionSeconds: 1500,
+          volumeKg: 2450,
+          heaviestPull: (kilograms: 41.5, date: DateTime(2026, 9, 14)),
+          since: DateTime(2026, 8, 3),
+        ),
+      );
+
+      expect(find.text('12'), findsOneWidget);
+      expect(find.text('9'), findsOneWidget);
+      expect(find.text('140'), findsOneWidget);
+      expect(find.text('25 min'), findsOneWidget);
+      expect(find.text('2,450 kg'), findsOneWidget);
+      expect(find.text('41.5 kg'), findsOneWidget);
+      expect(find.text('Sep 14, 2026'), findsOneWidget);
+      expect(find.text('Since Aug 3, 2026.'), findsOneWidget);
+      expect(
+        find.text(
+          'Volume and heaviest pull count only the pulls the sensor '
+          'measured: 120 of 140.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    // A history nothing weighed has no load to name, so the cell is dropped
+    // rather than stating a pull the athlete never made.
+    testWidgets('drops the heaviest pull when no pull was weighed', (
+      tester,
+    ) async {
+      await _show(
+        tester,
+        [],
+        totals: TrainingTotals(
+          sessions: 1,
+          daysTrained: 1,
+          pulls: 6,
+          weighedPulls: 0,
+          timeUnderTensionSeconds: 42,
+          volumeKg: 0,
+          heaviestPull: null,
+          since: DateTime(2026, 9, 20),
+        ),
+      );
+
+      expect(find.text('Heaviest pull'), findsNothing);
+      expect(find.text('Pulls'), findsOneWidget);
+    });
   });
 }

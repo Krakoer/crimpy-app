@@ -412,8 +412,16 @@ class ApiClient {
       (data as List<dynamic>? ?? const []).cast<Map<String, dynamic>>();
 
   // ----- Sessions -----
-  Future<List<Map<String, dynamic>>> getSessions() async {
-    final res = await get('/api/sessions');
+  /// The athlete's sessions. The cheap listing carries a rep count per row;
+  /// [includeReps] asks for the reps themselves on every row as well, which is
+  /// how the whole history is read in one request.
+  Future<List<Map<String, dynamic>>> getSessions({
+    bool includeReps = false,
+  }) async {
+    final res = await get(
+      '/api/sessions',
+      queryParameters: includeReps ? const {'include': 'reps'} : null,
+    );
     return _asList(res.data);
   }
 

@@ -5,6 +5,7 @@ import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
 import 'package:crimpy/repositories/ble_repository.dart';
+import 'package:crimpy/repositories/sensor_memory_repository.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/viewmodels/bodyweight_view_model.dart';
@@ -15,6 +16,7 @@ import 'package:crimpy/views/screens/trainings/programs/scheduled_training_scree
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../support/run_screen_plugins.dart';
 
@@ -138,6 +140,7 @@ Future<void> _pump(
   Training? training,
   BleConnectionState connection = BleConnectionState.disconnected,
 }) async {
+  SharedPreferences.setMockInitialValues({});
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -159,6 +162,8 @@ Future<void> _pump(
         // Always served, never built: the real provider reaches for the stored
         // calibration on creation, which no test binding can answer.
         bleRepositoryProvider.overrideWithValue(BleRepository()),
+        // Nothing remembered: the run asks about the sensor.
+        sensorMemoryProvider.overrideWithValue(SharedPreferencesSensorMemory()),
       ],
       child: MaterialApp(
         home: ScheduledTrainingScreen(

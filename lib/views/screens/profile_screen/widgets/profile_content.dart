@@ -8,6 +8,7 @@ import 'package:crimpy/views/screens/auth/registration_screen.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/bodyweight_card.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/mvc_grip_position_stat_content.dart';
 import 'package:crimpy/views/screens/profile_screen/widgets/stat_content.dart';
+import 'package:crimpy/views/screens/profile_screen/widgets/training_totals_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -199,6 +200,9 @@ class ProfileContent extends ConsumerWidget {
             const BodyweightCard(),
             const SizedBox(height: CrimpyTheme.spaceLg),
           ],
+
+          const TrainingTotalsCard(),
+          const SizedBox(height: CrimpyTheme.spaceXxl),
 
           // Max Force Section with Grip Position Selection
           MvcGripPositionStatContent(

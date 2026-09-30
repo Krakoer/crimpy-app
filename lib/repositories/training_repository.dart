@@ -41,6 +41,12 @@ abstract class TrainingRepository {
   Future<void> toggleFav(String trainingId);
   Future<void> deleteTraining(String trainingId);
   Future<List<SessionModel>> getAllSessionsWithReps({SessionFilter? filters});
+
+  /// Every session the athlete has, each carrying all of its reps, for the
+  /// readers of the whole history at once: the all-time totals of the profile.
+  /// Unlike [getAllSessionsWithReps], which the remote store answers with the
+  /// cheap listing, this is never answered without the reps.
+  Future<List<SessionModel>> getSessionHistoryWithReps();
   Future<SessionModel?> getSessionWithData(String sessionId);
 
   /// Saves a session with its reps and with the counts the run resolved for the
@@ -117,6 +123,11 @@ class LocalTrainingRepository extends TrainingRepository {
     }
     return result;
   }
+
+  /// The local listing already carries every rep.
+  @override
+  Future<List<SessionModel>> getSessionHistoryWithReps() =>
+      getAllSessionsWithReps();
 
   @override
   Future<SessionModel?> getSessionWithData(String sessionId) =>
@@ -258,6 +269,33 @@ class RemoteTrainingRepository extends TrainingRepository {
       result = result.where((s) => filters.matchesSession(s)).toList();
     }
     return result;
+  }
+
+  /// One request for the whole history: the listing asked to carry the reps
+  /// of every row, rather than a detail per session, which would also bring
+  /// every session's force samples along for nothing.
+  @override
+  Future<List<SessionModel>> getSessionHistoryWithReps() async {
+    final sessions = await _apiClient.getSessions(includeReps: true);
+    return [
+      for (final session in sessions)
+        SessionModel.fromJson(session, reps: _repsOfListedSession(session)),
+    ];
+  }
+
+  /// A row asked for with its reps always carries the list, empty when the
+  /// session holds none. A row without it comes from a server that does not
+  /// know the include yet, and reading it as a session with no reps would add
+  /// the whole history up to zeros.
+  static List<RepDataModel> _repsOfListedSession(Map<String, dynamic> session) {
+    final reps = session['rep_datas'];
+    if (reps is! List<dynamic>) {
+      throw const FormatException('The session listing carried no reps');
+    }
+    return reps
+        .cast<Map<String, dynamic>>()
+        .map(RepDataModel.fromJson)
+        .toList();
   }
 
   @override
