@@ -1,37 +1,14 @@
-import 'package:crimpy/logger.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/assessment_chart_axes.dart';
 import 'package:crimpy/utils/load_trends.dart';
-import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/widgets/day_line_chart.dart';
 import 'package:crimpy/views/widgets/section_widgets.dart';
 import 'package:crimpy/views/widgets/series_swatch.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 /// Whether the load of each training is moving, grip by grip: one card per
 /// training run at least twice with the sensor. Krakoer/crimpy#155.
-///
-/// Draws nothing until there is a trend to show, and nothing when the history
-/// with its reps cannot be read: the sessions below are the screen, and this
-/// is a reading of them rather than a part the athlete needs to go on.
-class LoadTrendDeck extends ConsumerWidget {
-  const LoadTrendDeck({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final trends = ref.watch(trainingLoadTrendsProvider);
-    if (trends case AsyncValue(:final error?, hasValue: false)) {
-      AppLoggerHelper.error('Failed to load the training load trends', error);
-    }
-    final value = trends.value;
-    if (value == null || value.isEmpty) return const SizedBox.shrink();
-    return LoadTrendList(trends: value);
-  }
-}
-
-/// The cards themselves, apart from where they are read from.
 class LoadTrendList extends StatelessWidget {
   final List<TrainingLoadTrend> trends;
 

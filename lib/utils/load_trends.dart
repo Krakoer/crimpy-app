@@ -6,7 +6,8 @@ import 'package:crimpy/utils/rep_blocks.dart';
 /// hung on. The same position on another edge is another load.
 typedef LoadGrip = ({GripPosition position, int? edgeSizeMm});
 
-/// One session's mean measured load on one grip.
+/// One session's mean measured load on one grip, dated by the training day the
+/// session belongs to, the day the history lists it under.
 typedef LoadPoint = ({DateTime date, double kilograms});
 
 /// The load of one training over time, grip by grip, Krakoer/crimpy#155.
@@ -81,7 +82,7 @@ List<TrainingLoadTrend> loadTrendsOf(List<SessionModel> history) {
       }
       for (final MapEntry(key: grip, value: loads) in byGrip.entries) {
         pointsByGrip.putIfAbsent(grip, () => []).add((
-          date: session.date,
+          date: session.trainingDay,
           kilograms: loads.reduce((a, b) => a + b) / loads.length,
         ));
       }

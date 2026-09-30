@@ -122,6 +122,21 @@ void main() {
     expect(trends.single.title, 'Max Hangs');
   });
 
+  // The history lists a run by its training day, which starts at 04:00, so a
+  // late run and one just past midnight are one day there and on the chart.
+  test('dates a point by the training day the history lists it under', () {
+    final trends = loadTrendsOf([
+      _run(DateTime(2026, 9, 8, 23), [_rep(20)]),
+      _run(DateTime(2026, 9, 9, 0, 30), [_rep(21)]),
+    ]);
+
+    final points = trends.single.grips.single.$2;
+    expect(points.map((p) => p.date), [
+      DateTime(2026, 9, 8),
+      DateTime(2026, 9, 8),
+    ]);
+  });
+
   test('leaves assessments to the profile', () {
     expect(
       loadTrendsOf([

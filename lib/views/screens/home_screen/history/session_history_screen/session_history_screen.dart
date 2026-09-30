@@ -1,3 +1,5 @@
+import 'package:crimpy/logger.dart';
+import 'package:crimpy/utils/load_trends.dart';
 import 'package:flutter/material.dart';
 import 'package:crimpy/views/widgets/pull_to_refresh.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,6 +31,11 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
   SessionFilter? _currentFilter;
   DateTime? _selectedDate;
 
+  /// The load trends read the whole history, so they stay away while the list
+  /// is narrowed to one day or to the assessments they leave out.
+  bool get _showsLoadTrends =>
+      _selectedDate == null && _currentFilter?.isAssessment != true;
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -38,6 +45,14 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final asyncSessions = ref.watch(filteredSessionsProvider(_currentFilter));
+    // Watched here rather than in the list item that shows them: the item is
+    // dropped once it scrolls out of the list, and with it the only listener,
+    // so scrolling back up would download every rep of the history again.
+    final trends = ref.watch(trainingLoadTrendsProvider);
+    if (trends case AsyncValue(:final error?, hasValue: false)) {
+      AppLoggerHelper.error('Failed to load the training load trends', error);
+    }
+    final loadTrends = trends.value ?? const <TrainingLoadTrend>[];
 
     return Scaffold(
       appBar: AppBar(
@@ -76,14 +91,15 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
             // does not fetch again when it answers the same sessions.
             await Future.wait([
               ref.read(filteredSessionsProvider(_currentFilter).future),
-              ref.refresh(sessionHistoryWithRepsProvider.future),
+              if (_showsLoadTrends)
+                ref.refresh(sessionHistoryWithRepsProvider.future),
             ]);
           },
           // Matched on what the state holds rather than on which state it is,
           // so a pull keeps the history on screen instead of replacing it with
           // the spinner the indicator is already showing.
           child: switch (asyncSessions) {
-            AsyncValue(:final value?) => _buildSessionList(value),
+            AsyncValue(:final value?) => _buildSessionList(value, loadTrends),
             AsyncValue(:final error?) => RefreshableColumn(
               child: ErrorState(
                 error: error.toString(),
@@ -99,7 +115,10 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
     );
   }
 
-  Widget _buildSessionList(List<SessionModel> sessions) {
+  Widget _buildSessionList(
+    List<SessionModel> sessions,
+    List<TrainingLoadTrend> loadTrends,
+  ) {
     // Filter sessions by selected date if one is selected
     final filteredSessions = _selectedDate != null
         ? sessions.where((session) {
@@ -158,10 +177,8 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
                 onClearFilter: _clearDateFilter,
                 onDateTap: (date) => setState(() => _selectedDate = date),
               ),
-              // Over the whole history, so it stays away while the list is
-              // narrowed to a day or to the assessments it leaves out.
-              if (_selectedDate == null && _currentFilter?.isAssessment != true)
-                const LoadTrendDeck(),
+              if (_showsLoadTrends && loadTrends.isNotEmpty)
+                LoadTrendList(trends: loadTrends),
             ],
           );
         }
