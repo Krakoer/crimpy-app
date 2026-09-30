@@ -127,6 +127,10 @@ class Assessments extends Table {
     const Constant(0),
   )(); // 0 = halfCrimp (default)
 
+  /// What produced the result, see [AssessmentOrigin]. Every row stored before
+  /// the distinction existed came from a test.
+  late final TextColumn origin = text().withDefault(const Constant('test'))();
+
   /// The id the API gave this row when the guest import put it on the server,
   /// null while it is only local. The import skips a row that carries one, so a
   /// run that failed partway can be retried without uploading, and duplicating,
@@ -951,6 +955,7 @@ class AppDatabase extends _$AppDatabase {
       assessmentId: Value(assessment.assessmentId),
       sessionId: Value(sessionId),
       gripPosition: Value(assessment.gripPosition?.index),
+      origin: Value(assessment.origin.apiValue),
       updatedAt: Value(DateTime.now()),
     );
 
@@ -1049,6 +1054,7 @@ class AppDatabase extends _$AppDatabase {
         gripPosition: assessment.gripPosition != null
             ? GripPosition.values[assessment.gripPosition!]
             : null,
+        origin: assessmentOriginFromApi(assessment.origin),
       );
     }).toList();
   }
@@ -1336,7 +1342,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1345,6 +1351,12 @@ class AppDatabase extends _$AppDatabase {
       await seedBuiltinAssessmentDefinitions(m.database);
     },
     onUpgrade: stepByStep(
+      from16To17: (m, schema) async {
+        // A result now says whether it came from a test or was kept from a
+        // training. Every one already stored came from a test, which is what
+        // the column's default fills in.
+        await m.addColumn(schema.assessments, schema.assessments.origin);
+      },
       from15To16: (m, schema) async {
         // The athlete now reports how much a session cost them. Every session
         // already stored reported nothing, which is exactly what a null column
@@ -1892,6 +1904,7 @@ extension AssessmentRowToModel on Assessment {
     gripPosition: gripPosition == null
         ? null
         : enumFromIndex<GripPosition?>(GripPosition.values, gripPosition, null),
+    origin: assessmentOriginFromApi(origin),
   );
 }
 

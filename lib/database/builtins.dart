@@ -24,7 +24,18 @@ const criticalForceWorkTime = 7;
 const criticalForceRestTime = 3;
 
 /// Seconds of rest before the first pull, giving the climber time to get set up.
+/// Once it runs out the test waits for the first pull to start pull 1.
 const criticalForceLeadInTime = 10;
+
+/// Force that starts pull 1 once the lead-in is over: above load cell drift
+/// and a resting hand, far below any all-out pull.
+const criticalForceStartKg = 4.0;
+
+/// Pulls after which the test can be finished by hand and still gives a
+/// result. Giles 2021 found the mean of the last 6 stable from about 159 s,
+/// which is 16 pulls. Debug builds run the short protocol, so they allow it
+/// sooner.
+const criticalForceMinPullsToFinish = kDebugMode ? 2 : 16;
 
 /// The Critical Force protocol: a lead-in rest, then a fixed number of pulls
 /// separated by a short rest, all on the single hand being assessed. The
@@ -77,7 +88,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
             handSide: HandSide.right,
             gripPosition: grip,
             collectSensorData: true,
-            edgeSizeMm: defaultEdgeSizeMm,
+            edgeSizeMm: BuiltinAssessmentIds.maxForceEdgeSizeMm,
           ),
           const RestItem(durationSeconds: 10),
           TimedItem(
@@ -87,7 +98,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
             handSide: HandSide.left,
             gripPosition: grip,
             collectSensorData: true,
-            edgeSizeMm: defaultEdgeSizeMm,
+            edgeSizeMm: BuiltinAssessmentIds.maxForceEdgeSizeMm,
           ),
         ],
       );

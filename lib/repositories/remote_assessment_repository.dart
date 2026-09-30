@@ -21,6 +21,7 @@ class RemoteAssessmentRepository extends AssessmentRepository {
       if (assessment.leftValue != null) 'left_value': assessment.leftValue,
       if (assessment.gripPosition != null)
         'grip_position': assessment.gripPosition!.index,
+      'origin': assessment.origin.apiValue,
     });
     return created['id'] as String;
   }
@@ -66,6 +67,7 @@ class RemoteAssessmentRepository extends AssessmentRepository {
           a['grip_position'] as num?,
           null,
         ),
+        origin: assessmentOriginFromApi(a['origin'] as String?),
       );
     }).toList();
 

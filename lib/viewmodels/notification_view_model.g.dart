@@ -362,7 +362,7 @@ final class ProgramScheduleCacheProvider
 }
 
 String _$programScheduleCacheHash() =>
-    r'29832590dca5a7027f237a51f578960dca44d269';
+    r'2fa2cdda1c3502bcf79a6d29905cf88dfa3ea717';
 
 /// Rewrites the pending reminders whenever the settings, the program schedule
 /// or the logged sessions change. Watched by the app shell so it stays alive.
