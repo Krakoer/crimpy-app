@@ -1,6 +1,7 @@
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/utils/consistency.dart';
 import 'package:crimpy/utils/datetimes.dart';
+import 'package:crimpy/viewmodels/habit_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -33,5 +34,22 @@ Future<List<ConsistencyDay>?> programConsistency(Ref ref) async {
     weeks: weeks,
     sessions: sessions,
     today: today,
+  );
+}
+
+/// What the home screen's strip draws: the program's last two weeks while a
+/// program covers today, the athlete's own habits otherwise, and null when
+/// there is neither, since there is then nothing to keep.
+@riverpod
+Future<List<ConsistencyDay>?> consistencyStrip(Ref ref) async {
+  final program = await ref.watch(programConsistencyProvider.future);
+  if (program != null) return program;
+  final habits = await ref.watch(activeHabitsProvider.future);
+  if (habits.isEmpty) return null;
+  final sessions = await ref.watch(sessionsProvider.future);
+  return habitConsistencyDays(
+    habits: habits,
+    sessions: sessions,
+    today: currentTrainingDay(),
   );
 }

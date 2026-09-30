@@ -1,7 +1,9 @@
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/session.dart';
+import 'package:crimpy/models/training_habit.dart';
 import 'package:crimpy/utils/datetimes.dart';
+import 'package:crimpy/utils/habit_schedule.dart';
 import 'package:crimpy/utils/program_completion.dart';
 
 /// How many days the home screen's consistency strip covers, ending today.
@@ -143,6 +145,68 @@ ConsistencyDay _programDay(
         )
         .length,
     trainedFlexible: onDay.any((s) => flexibleIds.contains(s.programSessionId)),
+    climbed: onDay.any((s) => s.activity == SessionActivity.climbing),
+    assessed: onDay.any((s) => s.isAssessment),
+  );
+}
+
+/// The last [consistencyStripDays] training days of the athlete's own
+/// [habits], oldest first and ending on [today], for a day no program covers.
+///
+/// A day before the earliest habit was set is before the plan. A day owes the
+/// habits due on its weekday that were already set by then; a habit counted
+/// per week is due on no day, so a session of it on a day owing nothing keeps
+/// that day, as a flexible program training does.
+List<ConsistencyDay> habitConsistencyDays({
+  required List<ActiveHabit> habits,
+  required List<SessionModel> sessions,
+  required DateTime today,
+}) {
+  final byDay = <DateTime, List<SessionModel>>{};
+  for (final session in sessions) {
+    byDay.putIfAbsent(session.trainingDay, () => []).add(session);
+  }
+  final firstSet = habits.isEmpty
+      ? null
+      : habits
+            .map((h) => h.habit.since)
+            .reduce((a, b) => a.isBefore(b) ? a : b);
+
+  return [
+    for (var back = consistencyStripDays - 1; back >= 0; back--)
+      _habitDay(
+        habits,
+        sessions,
+        byDay[addCalendarDays(today, -back)] ?? const [],
+        addCalendarDays(today, -back),
+        firstSet,
+      ),
+  ];
+}
+
+ConsistencyDay _habitDay(
+  List<ActiveHabit> habits,
+  List<SessionModel> sessions,
+  List<SessionModel> onDay,
+  DateTime day,
+  DateTime? firstSet,
+) {
+  if (firstSet == null || day.isBefore(firstSet)) {
+    return ConsistencyDay(day: day, tracked: false);
+  }
+  final owed = [
+    for (final habit in habitsDueOn(habits, day))
+      if (!day.isBefore(habit.habit.since)) habit,
+  ];
+  final perWeekIds = {
+    for (final habit in perWeekHabits(habits)) habit.trainingId,
+  };
+  return ConsistencyDay(
+    day: day,
+    tracked: true,
+    owed: owed.length,
+    done: owed.where((h) => habitDoneOn(sessions, h.habit, day)).length,
+    trainedFlexible: onDay.any((s) => perWeekIds.contains(s.trainingId)),
     climbed: onDay.any((s) => s.activity == SessionActivity.climbing),
     assessed: onDay.any((s) => s.isAssessment),
   );
