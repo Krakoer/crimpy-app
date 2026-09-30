@@ -7,6 +7,7 @@ import 'package:crimpy/models/builtin_training.dart';
 import 'package:crimpy/models/session_filter.dart';
 import 'package:crimpy/repositories/builtin_preferences_repository.dart';
 import 'package:crimpy/repositories/remote_assessment_repository.dart';
+import 'package:crimpy/viewmodels/habit_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
@@ -194,9 +195,22 @@ class Trainings extends _$Trainings {
   Future<void> updateTraining(Training training) =>
       _mutate(() => _trainingRepository.updateTraining(training));
 
-  /// Delete a training.
-  Future<void> deleteTraining(String trainingId) =>
-      _mutate(() => _trainingRepository.deleteTraining(trainingId));
+  /// Delete a training, and the habit it was, if any.
+  Future<void> deleteTraining(String trainingId) async {
+    await _mutate(() => _trainingRepository.deleteTraining(trainingId));
+    // A delete that failed leaves the training, and its habit with it.
+    if (!ref.mounted || state.hasError) return;
+    // After the delete and apart from it: the habit is device-local, and a
+    // failure to drop it must not read as the delete failing. One left behind
+    // is harmless, since the habits are joined against the library before use.
+    try {
+      await ref.read(trainingHabitsProvider.notifier).removeHabit(trainingId);
+    } catch (error) {
+      AppLoggerHelper.warning(
+        'Could not drop the habit of $trainingId: $error',
+      );
+    }
+  }
 }
 
 /// Returns the list of all sessions, and allows the creation of new sessions.
