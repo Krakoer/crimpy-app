@@ -79,6 +79,19 @@ void main() {
       expect(vibrator.cues, isEmpty);
     });
 
+    // The run holds its haptics for minutes and reads them long after the
+    // provider that built them could have been disposed.
+    test('still play long after they were read', () async {
+      final container = containerWith(true);
+      final haptics = container.read(runCueHapticsProvider);
+      await container.read(runCueVibrationProvider.future);
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await haptics.play(RunCue.letGo);
+
+      expect(vibrator.cues, [RunCue.letGo]);
+    });
+
     test('follow a change made mid-run', () async {
       final container = containerWith(true);
       final haptics = container.read(runCueHapticsProvider);

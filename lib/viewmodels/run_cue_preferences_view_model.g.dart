@@ -158,7 +158,9 @@ abstract class _$RunCueVibration extends $AsyncNotifier<bool> {
 /// What the run screen plays its cues through: the vibrations, heard only
 /// while the setting says so. The setting is asked at every cue, so one still
 /// loading when the run starts counts as off rather than buzzing an athlete
-/// who turned it off, and a change takes effect on the next cue.
+/// who turned it off, and a change takes effect on the next cue. Kept alive:
+/// the run holds the returned haptics for its whole length, and their gate
+/// reads through this provider's ref at every cue.
 
 @ProviderFor(runCueHaptics)
 const runCueHapticsProvider = RunCueHapticsProvider._();
@@ -166,7 +168,9 @@ const runCueHapticsProvider = RunCueHapticsProvider._();
 /// What the run screen plays its cues through: the vibrations, heard only
 /// while the setting says so. The setting is asked at every cue, so one still
 /// loading when the run starts counts as off rather than buzzing an athlete
-/// who turned it off, and a change takes effect on the next cue.
+/// who turned it off, and a change takes effect on the next cue. Kept alive:
+/// the run holds the returned haptics for its whole length, and their gate
+/// reads through this provider's ref at every cue.
 
 final class RunCueHapticsProvider
     extends $FunctionalProvider<RunHaptics, RunHaptics, RunHaptics>
@@ -174,14 +178,16 @@ final class RunCueHapticsProvider
   /// What the run screen plays its cues through: the vibrations, heard only
   /// while the setting says so. The setting is asked at every cue, so one still
   /// loading when the run starts counts as off rather than buzzing an athlete
-  /// who turned it off, and a change takes effect on the next cue.
+  /// who turned it off, and a change takes effect on the next cue. Kept alive:
+  /// the run holds the returned haptics for its whole length, and their gate
+  /// reads through this provider's ref at every cue.
   const RunCueHapticsProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'runCueHapticsProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -208,4 +214,4 @@ final class RunCueHapticsProvider
   }
 }
 
-String _$runCueHapticsHash() => r'44f28e02ab02ca3b89b1e802bcaaed1b04a3a89b';
+String _$runCueHapticsHash() => r'49719c1bd14d183c64d1389ca518a8cd1fb78845';

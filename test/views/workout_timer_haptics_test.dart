@@ -85,7 +85,7 @@ void main() {
       final cues = cuesOver([
         _pull(3),
         RestItem(durationSeconds: 3),
-        RestItem(durationSeconds: 3),
+        IntervalRestItem(durationSeconds: 3, intervalSeconds: 3),
         _pull(3),
       ]);
 
