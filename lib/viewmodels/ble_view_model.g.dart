@@ -604,7 +604,7 @@ final class BleConfigControllerProvider
 }
 
 String _$bleConfigControllerHash() =>
-    r'7cff50cb3aa7c6c7840e76f96b4e01e02128d6b3';
+    r'a4e48bb24c9cdccb7cb926532c1ed7e5f8751b76';
 
 /// Returns the current BLE config state (calibration coef and tare).
 /// Allows the config to be edited, either manually or through calibration.

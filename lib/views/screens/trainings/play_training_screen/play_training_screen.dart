@@ -6,6 +6,7 @@ import 'package:crimpy/models/max_force_offer.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/utils/training_expander.dart';
 import 'package:crimpy/utils/video_link.dart';
+import 'package:crimpy/viewmodels/run_cue_preferences_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/session.dart';
@@ -160,6 +161,9 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     // Audible 2-1 countdown + transition cue, useful when the phone is on
     // the ground during a hangboard session.
     playSound: true,
+    // The same cues, felt: a beep is easy to miss on a noisy wall or under
+    // music.
+    haptics: ref.read(runCueHapticsProvider),
     // Set state each second to update the UI.
     onSecondChange: () => setState(() {}),
     onNextRep: (_) {
@@ -204,6 +208,8 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   @override
   void initState() {
     super.initState();
+    // Loads the setting now, so it is there by the first cue.
+    ref.read(runCueVibrationProvider);
     timer.init();
     WakelockPlus.enable();
   }

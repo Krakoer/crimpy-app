@@ -144,7 +144,7 @@ final class ActiveProgramProvider
   }
 }
 
-String _$activeProgramHash() => r'c6889583eabeee98442543ae0e9b7539ee19b9f9';
+String _$activeProgramHash() => r'a4dba99d1ca20fdf14622d25c5217bc7cd8beacb';
 
 /// Week summaries for a program (empty in guest mode).
 
@@ -433,7 +433,7 @@ final class ActiveProgramWeekProvider
   }
 }
 
-String _$activeProgramWeekHash() => r'd2fc1d7ceb575fef5d153d2a19a750ac9e539ba4';
+String _$activeProgramWeekHash() => r'9afa8a205c8061697d4d00e599acd7afed53d0db';
 
 /// All trainings scheduled for today (day-of-week + everyday) in the active
 /// program. Empty on a rest day or with no active program.
@@ -482,7 +482,7 @@ final class TodayTrainingsProvider
   }
 }
 
-String _$todayTrainingsHash() => r'da42c1e34e1507e21c99f77379beeef84c5efb25';
+String _$todayTrainingsHash() => r'25d3bd669b03145778dfc3be4cdd8226c0acab56';
 
 /// The first training scheduled for today, or null on a rest day.
 
