@@ -2,6 +2,7 @@ import 'package:clock/clock.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/layouts/full_tank_layout.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/widgets/open_reps_dialog.dart';
 import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/max_force_offer.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/utils/training_expander.dart';
 import 'package:crimpy/utils/video_link.dart';
@@ -72,6 +73,10 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
   /// the loads, the durations and the notes to them.
   final List<SessionItemResultModel> itemResults = [];
 
+  /// The peak of every hang the sensor measured, which the review compares with
+  /// the Max Force on file.
+  final List<MeasuredPull> measuredPulls = [];
+
   /// When the athlete first pressed play, which is when the session happened.
   /// Frozen on that first press: a pause, a trip to the background or a long
   /// review afterwards must not move the day the session is filed under.
@@ -136,6 +141,18 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         trainingItemId: item.trainingItemId,
       ),
     );
+    if (timed != null &&
+        timed.isHang &&
+        timed.measured(sensorDelivered: sensorDelivered)) {
+      measuredPulls.add(
+        MeasuredPull(
+          hand: timed.handSide,
+          gripPosition: timed.gripPosition,
+          edgeSizeMm: timed.edgeSizeMm,
+          peakKg: sensorStats.max,
+        ),
+      );
+    }
   }
 
   // Setup the workout timer
@@ -172,6 +189,7 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
             startedAt: _startedAt ?? clock.now(),
             results: repResults,
             itemResults: itemResults,
+            measuredPulls: measuredPulls,
             // The same results the run resolved its prescription against, so
             // the review states the numbers the athlete was actually played.
             assessmentResults: widget.results.withDefinitions(

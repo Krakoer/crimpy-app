@@ -77,7 +77,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
             handSide: HandSide.right,
             gripPosition: grip,
             collectSensorData: true,
-            edgeSizeMm: defaultEdgeSizeMm,
+            edgeSizeMm: BuiltinAssessmentIds.maxForceEdgeSizeMm,
           ),
           const RestItem(durationSeconds: 10),
           TimedItem(
@@ -87,7 +87,7 @@ final List<BuiltinAssessmentModel> builtinAssessments = [
             handSide: HandSide.left,
             gripPosition: grip,
             collectSensorData: true,
-            edgeSizeMm: defaultEdgeSizeMm,
+            edgeSizeMm: BuiltinAssessmentIds.maxForceEdgeSizeMm,
           ),
         ],
       );

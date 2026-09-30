@@ -17,6 +17,10 @@ class BuiltinAssessmentIds {
   static const String maxForce = 'f7954158-63ba-4f0b-a125-6ef195fa6442';
   static const String endurance60 = '493acbdd-6fe7-4f25-987c-575ccf433293';
 
+  /// The edge the Max Force test is pulled on. A pull on any other edge is a
+  /// different measurement, so only one on this edge can stand for a new max.
+  static const int maxForceEdgeSizeMm = defaultEdgeSizeMm;
+
   static const Map<String, AssessmentType> protocols = {
     criticalForce: AssessmentType.criticalForce,
     maxForce: AssessmentType.mvc,
@@ -61,6 +65,25 @@ class BuiltinAssessmentIds {
 }
 
 enum AssessmentUnit { kilograms, seconds, repetitions }
+
+/// What produced a result: a run of the assessment itself, or a pull measured
+/// during an ordinary training that the athlete chose to keep because it beat
+/// the result on file. A coach reads the two differently, and a result kept
+/// from a training never replaces the day's test.
+enum AssessmentOrigin { test, training }
+
+extension AssessmentOriginApi on AssessmentOrigin {
+  /// How the origin travels to the API and the local database.
+  String get apiValue => name;
+}
+
+/// Reads an origin as the API and the local database spell it. Anything else,
+/// an absent value included, is a test, which is what every result recorded
+/// before the distinction existed was.
+AssessmentOrigin assessmentOriginFromApi(String? value) =>
+    value == AssessmentOrigin.training.apiValue
+    ? AssessmentOrigin.training
+    : AssessmentOrigin.test;
 
 /// The wire name of a unit, which is what assessment_definitions.unit holds.
 AssessmentUnit assessmentUnitFromApi(String? value) => switch (value) {
@@ -194,12 +217,14 @@ class AssessmentResultModel {
   final double? rightValue;
   final double? leftValue;
   final GripPosition? gripPosition;
+  final AssessmentOrigin origin;
 
   AssessmentResultModel({
     required this.assessmentId,
     this.rightValue,
     this.leftValue,
     this.gripPosition,
+    this.origin = AssessmentOrigin.test,
   });
 
   /// Get the hand of the assessment.
@@ -341,6 +366,7 @@ class AssessmentModel {
   final double? rightValue;
   final double? leftValue;
   final GripPosition? gripPosition;
+  final AssessmentOrigin origin;
 
   AssessmentModel({
     required this.id,
@@ -349,6 +375,7 @@ class AssessmentModel {
     this.rightValue,
     this.leftValue,
     this.gripPosition,
+    this.origin = AssessmentOrigin.test,
   });
 
   String get assessmentId => definition.id;

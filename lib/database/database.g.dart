@@ -1457,6 +1457,16 @@ class $AssessmentsTable extends Assessments
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _originMeta = const VerificationMeta('origin');
+  @override
+  late final GeneratedColumn<String> origin = GeneratedColumn<String>(
+    'origin',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('test'),
+  );
   static const VerificationMeta _serverIdMeta = const VerificationMeta(
     'serverId',
   );
@@ -1488,6 +1498,7 @@ class $AssessmentsTable extends Assessments
     leftValue,
     sessionId,
     gripPosition,
+    origin,
     serverId,
     updatedAt,
   ];
@@ -1546,6 +1557,12 @@ class $AssessmentsTable extends Assessments
         ),
       );
     }
+    if (data.containsKey('origin')) {
+      context.handle(
+        _originMeta,
+        origin.isAcceptableOrUnknown(data['origin']!, _originMeta),
+      );
+    }
     if (data.containsKey('server_id')) {
       context.handle(
         _serverIdMeta,
@@ -1591,6 +1608,10 @@ class $AssessmentsTable extends Assessments
         DriftSqlType.int,
         data['${effectivePrefix}grip_position'],
       ),
+      origin: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}origin'],
+      )!,
       serverId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}server_id'],
@@ -1620,6 +1641,10 @@ class Assessment extends DataClass implements Insertable<Assessment> {
   final String sessionId;
   final int? gripPosition;
 
+  /// What produced the result, see [AssessmentOrigin]. Every row stored before
+  /// the distinction existed came from a test.
+  final String origin;
+
   /// The id the API gave this row when the guest import put it on the server,
   /// null while it is only local. The import skips a row that carries one, so a
   /// run that failed partway can be retried without uploading, and duplicating,
@@ -1633,6 +1658,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     this.leftValue,
     required this.sessionId,
     this.gripPosition,
+    required this.origin,
     this.serverId,
     required this.updatedAt,
   });
@@ -1651,6 +1677,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     if (!nullToAbsent || gripPosition != null) {
       map['grip_position'] = Variable<int>(gripPosition);
     }
+    map['origin'] = Variable<String>(origin);
     if (!nullToAbsent || serverId != null) {
       map['server_id'] = Variable<String>(serverId);
     }
@@ -1672,6 +1699,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       gripPosition: gripPosition == null && nullToAbsent
           ? const Value.absent()
           : Value(gripPosition),
+      origin: Value(origin),
       serverId: serverId == null && nullToAbsent
           ? const Value.absent()
           : Value(serverId),
@@ -1691,6 +1719,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       leftValue: serializer.fromJson<double?>(json['leftValue']),
       sessionId: serializer.fromJson<String>(json['sessionId']),
       gripPosition: serializer.fromJson<int?>(json['gripPosition']),
+      origin: serializer.fromJson<String>(json['origin']),
       serverId: serializer.fromJson<String?>(json['serverId']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -1705,6 +1734,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       'leftValue': serializer.toJson<double?>(leftValue),
       'sessionId': serializer.toJson<String>(sessionId),
       'gripPosition': serializer.toJson<int?>(gripPosition),
+      'origin': serializer.toJson<String>(origin),
       'serverId': serializer.toJson<String?>(serverId),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -1717,6 +1747,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     Value<double?> leftValue = const Value.absent(),
     String? sessionId,
     Value<int?> gripPosition = const Value.absent(),
+    String? origin,
     Value<String?> serverId = const Value.absent(),
     DateTime? updatedAt,
   }) => Assessment(
@@ -1726,6 +1757,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     leftValue: leftValue.present ? leftValue.value : this.leftValue,
     sessionId: sessionId ?? this.sessionId,
     gripPosition: gripPosition.present ? gripPosition.value : this.gripPosition,
+    origin: origin ?? this.origin,
     serverId: serverId.present ? serverId.value : this.serverId,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -1743,6 +1775,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
       gripPosition: data.gripPosition.present
           ? data.gripPosition.value
           : this.gripPosition,
+      origin: data.origin.present ? data.origin.value : this.origin,
       serverId: data.serverId.present ? data.serverId.value : this.serverId,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -1757,6 +1790,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           ..write('leftValue: $leftValue, ')
           ..write('sessionId: $sessionId, ')
           ..write('gripPosition: $gripPosition, ')
+          ..write('origin: $origin, ')
           ..write('serverId: $serverId, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -1771,6 +1805,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
     leftValue,
     sessionId,
     gripPosition,
+    origin,
     serverId,
     updatedAt,
   );
@@ -1784,6 +1819,7 @@ class Assessment extends DataClass implements Insertable<Assessment> {
           other.leftValue == this.leftValue &&
           other.sessionId == this.sessionId &&
           other.gripPosition == this.gripPosition &&
+          other.origin == this.origin &&
           other.serverId == this.serverId &&
           other.updatedAt == this.updatedAt);
 }
@@ -1795,6 +1831,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
   final Value<double?> leftValue;
   final Value<String> sessionId;
   final Value<int?> gripPosition;
+  final Value<String> origin;
   final Value<String?> serverId;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -1805,6 +1842,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     this.leftValue = const Value.absent(),
     this.sessionId = const Value.absent(),
     this.gripPosition = const Value.absent(),
+    this.origin = const Value.absent(),
     this.serverId = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1816,6 +1854,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     this.leftValue = const Value.absent(),
     required String sessionId,
     this.gripPosition = const Value.absent(),
+    this.origin = const Value.absent(),
     this.serverId = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1828,6 +1867,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     Expression<double>? leftValue,
     Expression<String>? sessionId,
     Expression<int>? gripPosition,
+    Expression<String>? origin,
     Expression<String>? serverId,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -1839,6 +1879,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
       if (leftValue != null) 'left_value': leftValue,
       if (sessionId != null) 'session_id': sessionId,
       if (gripPosition != null) 'grip_position': gripPosition,
+      if (origin != null) 'origin': origin,
       if (serverId != null) 'server_id': serverId,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -1852,6 +1893,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     Value<double?>? leftValue,
     Value<String>? sessionId,
     Value<int?>? gripPosition,
+    Value<String>? origin,
     Value<String?>? serverId,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -1863,6 +1905,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
       leftValue: leftValue ?? this.leftValue,
       sessionId: sessionId ?? this.sessionId,
       gripPosition: gripPosition ?? this.gripPosition,
+      origin: origin ?? this.origin,
       serverId: serverId ?? this.serverId,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -1890,6 +1933,9 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
     if (gripPosition.present) {
       map['grip_position'] = Variable<int>(gripPosition.value);
     }
+    if (origin.present) {
+      map['origin'] = Variable<String>(origin.value);
+    }
     if (serverId.present) {
       map['server_id'] = Variable<String>(serverId.value);
     }
@@ -1911,6 +1957,7 @@ class AssessmentsCompanion extends UpdateCompanion<Assessment> {
           ..write('leftValue: $leftValue, ')
           ..write('sessionId: $sessionId, ')
           ..write('gripPosition: $gripPosition, ')
+          ..write('origin: $origin, ')
           ..write('serverId: $serverId, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -7748,6 +7795,7 @@ typedef $$AssessmentsTableCreateCompanionBuilder =
       Value<double?> leftValue,
       required String sessionId,
       Value<int?> gripPosition,
+      Value<String> origin,
       Value<String?> serverId,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -7760,6 +7808,7 @@ typedef $$AssessmentsTableUpdateCompanionBuilder =
       Value<double?> leftValue,
       Value<String> sessionId,
       Value<int?> gripPosition,
+      Value<String> origin,
       Value<String?> serverId,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -7801,6 +7850,11 @@ class $$AssessmentsTableFilterComposer
 
   ColumnFilters<int> get gripPosition => $composableBuilder(
     column: $table.gripPosition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get origin => $composableBuilder(
+    column: $table.origin,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7854,6 +7908,11 @@ class $$AssessmentsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get origin => $composableBuilder(
+    column: $table.origin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get serverId => $composableBuilder(
     column: $table.serverId,
     builder: (column) => ColumnOrderings(column),
@@ -7897,6 +7956,9 @@ class $$AssessmentsTableAnnotationComposer
     column: $table.gripPosition,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get origin =>
+      $composableBuilder(column: $table.origin, builder: (column) => column);
 
   GeneratedColumn<String> get serverId =>
       $composableBuilder(column: $table.serverId, builder: (column) => column);
@@ -7942,6 +8004,7 @@ class $$AssessmentsTableTableManager
                 Value<double?> leftValue = const Value.absent(),
                 Value<String> sessionId = const Value.absent(),
                 Value<int?> gripPosition = const Value.absent(),
+                Value<String> origin = const Value.absent(),
                 Value<String?> serverId = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -7952,6 +8015,7 @@ class $$AssessmentsTableTableManager
                 leftValue: leftValue,
                 sessionId: sessionId,
                 gripPosition: gripPosition,
+                origin: origin,
                 serverId: serverId,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -7964,6 +8028,7 @@ class $$AssessmentsTableTableManager
                 Value<double?> leftValue = const Value.absent(),
                 required String sessionId,
                 Value<int?> gripPosition = const Value.absent(),
+                Value<String> origin = const Value.absent(),
                 Value<String?> serverId = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -7974,6 +8039,7 @@ class $$AssessmentsTableTableManager
                 leftValue: leftValue,
                 sessionId: sessionId,
                 gripPosition: gripPosition,
+                origin: origin,
                 serverId: serverId,
                 updatedAt: updatedAt,
                 rowid: rowid,

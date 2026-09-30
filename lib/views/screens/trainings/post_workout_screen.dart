@@ -6,6 +6,8 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/assessment_model.dart';
+import 'package:crimpy/models/max_force_offer.dart';
+import 'package:crimpy/views/widgets/max_force_offer_card.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen/widgets/assessment_answer_fields.dart';
@@ -31,6 +33,10 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
   /// is what turns it into a line per exercise.
   final List<SessionItemResultModel> itemResults;
 
+  /// The peak of every hang the run measured, so one that beat the Max Force
+  /// on file can be offered as a new one.
+  final List<MeasuredPull> measuredPulls;
+
   /// The athlete's own numbers the prescription was read against, carried over
   /// from the run so a step prescribed as a percentage of an assessment is
   /// reviewed against the number it was actually played at, not its fallback.
@@ -54,6 +60,7 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
     required this.template,
     required this.startedAt,
     this.itemResults = const [],
+    this.measuredPulls = const [],
     this.assessmentResults = AssessmentResults.none,
     this.bodyweightKg,
     this.activity = SessionActivity.hangboard,
@@ -104,6 +111,10 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
   /// that way if they skip it: the prompt is not a gate on saving, and the edit
   /// screen takes the answer later.
   SessionRpeAnswer _rpe = SessionRpeAnswer.none;
+
+  /// The new Max Forces the athlete ticked. None to begin with: an offer is
+  /// only ever saved on the athlete's say so.
+  final Set<MaxForceOffer> _acceptedMaxForces = {};
 
   /// The assessment this run answers, when the training played is one.
   AssessmentDefinition? get _assessment => widget.template.assessment;
@@ -157,6 +168,17 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
               if (onTargetCount(block.reps) case final count?)
                 (label: block.label, count: count),
           ];
+
+    // Offered after an ordinary training only. A run of an assessment records
+    // its own result, and a pull taken while measuring something else is not
+    // what the athlete came to test.
+    final maxForceHistory =
+        _assessment == null && widget.measuredPulls.isNotEmpty
+        ? ref.watch(assessmentsProvider(BuiltinAssessmentIds.maxForce)).value
+        : null;
+    final maxForceOffers = maxForceHistory == null
+        ? const <MaxForceOffer>[]
+        : MaxForceOffer.fromPulls(widget.measuredPulls, maxForceHistory);
 
     return PopScope(
       canPop: false,
@@ -263,6 +285,18 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                           ),
                           const SizedBox(height: CrimpyTheme.spaceLg),
                         ],
+                        if (maxForceOffers.isNotEmpty) ...[
+                          MaxForceOfferCard(
+                            offers: maxForceOffers,
+                            accepted: _acceptedMaxForces,
+                            onChanged: (offer, accept) => setState(
+                              () => accept
+                                  ? _acceptedMaxForces.add(offer)
+                                  : _acceptedMaxForces.remove(offer),
+                            ),
+                          ),
+                          const SizedBox(height: CrimpyTheme.spaceLg),
+                        ],
                         SessionRpePicker(
                           answer: _rpe,
                           onChanged: (answer) => setState(() => _rpe = answer),
@@ -327,9 +361,17 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
               rpe: _rpe.rpe,
               rpeFailed: _rpe.failed,
             );
+            // Read off what is still on screen, so an offer ticked and then
+            // taken back by a refreshed history is not saved.
+            final keptMaxForces = [
+              for (final offer in maxForceOffers)
+                if (_acceptedMaxForces.contains(offer))
+                  offer.toResult(AssessmentOrigin.training),
+            ];
+            String? trainingSessionId;
             try {
               if (assessment == null) {
-                await ref
+                trainingSessionId = await ref
                     .read(sessionsProvider.notifier)
                     .saveSession(
                       session,
@@ -365,6 +407,29 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                 );
               }
               return;
+            }
+            // Written against the training once it is stored, and apart from
+            // it: the training is saved whatever happens here, so a failure
+            // must not leave the athlete on a screen whose button would store
+            // it a second time.
+            if (trainingSessionId != null && keptMaxForces.isNotEmpty) {
+              final failed = await ref
+                  .read(
+                    assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier,
+                  )
+                  .addResultsToSession(keptMaxForces, trainingSessionId);
+              if (failed.isNotEmpty && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      unsavedMaxForceMessage(
+                        failed,
+                        saved: keptMaxForces.length - failed.length,
+                      ),
+                    ),
+                  ),
+                );
+              }
             }
             if (context.mounted) {
               Navigator.of(context).pop();
@@ -464,4 +529,27 @@ class _BlocksOnTarget extends StatelessWidget {
       ),
     );
   }
+}
+
+/// What the review says when some of the Max Forces the athlete ticked could
+/// not be stored: which hand and grip did not land, and that the rest did, so
+/// the athlete does not redo a pull that is already on file.
+String unsavedMaxForceMessage(
+  List<AssessmentResultModel> failed, {
+  required int saved,
+}) {
+  final names = failed
+      .map(
+        (result) =>
+            '${result.hand?.label.toLowerCase() ?? 'max'}'
+            '${result.gripPosition == null ? '' : ', ${result.gripPosition!.displayName}'}',
+      )
+      .join(' and ');
+  final kept = saved == 0
+      ? ''
+      : ' The other ${saved == 1 ? 'one was' : '$saved were'} saved.';
+  final subject = failed.length == 1
+      ? 'the new Max Force ($names) was'
+      : 'the new Max Forces ($names) were';
+  return 'Training saved, but $subject not.$kept';
 }
