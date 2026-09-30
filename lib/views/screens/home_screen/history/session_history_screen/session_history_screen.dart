@@ -132,6 +132,7 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
       return RefreshableColumn(
         padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             CalendarCard(
               sessions: sessions,
@@ -140,6 +141,10 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
               onClearFilter: _clearDateFilter,
               onDateTap: (date) => setState(() => _selectedDate = date),
             ),
+            // Over the whole history, so a filter that empties the list does
+            // not take the trends with it.
+            if (_showsLoadTrends && loadTrends.isNotEmpty)
+              LoadTrendList(trends: loadTrends),
             EmptyState(selectedDate: _selectedDate),
           ],
         ),

@@ -137,6 +137,32 @@ void main() {
     ]);
   });
 
+  // A reading below zero is a sensor tared under load, not a load: a mean over
+  // it would draw under the chart's baseline and read as a loss.
+  test('leaves out a reading at or below zero', () {
+    final trends = loadTrendsOf([
+      _run(DateTime(2026, 9, 8), [_rep(20), _rep(-0.6)]),
+      _run(DateTime(2026, 9, 12), [_rep(-1.2)]),
+      _run(DateTime(2026, 9, 14), [_rep(21)]),
+    ]);
+
+    final points = trends.single.grips.single.$2;
+    expect(points.map((p) => p.kilograms), [20, 21]);
+  });
+
+  // A run's name is free text the athlete may change before saving it.
+  test('names a training the library holds by its own title', () {
+    final trends = loadTrendsOf(
+      [
+        _run(DateTime(2026, 9, 8), [_rep(20)]),
+        _run(DateTime(2026, 9, 12), [_rep(21)], name: 'Felt heavy today'),
+      ],
+      trainingTitles: const {'repeaters': 'Repeaters 20mm'},
+    );
+
+    expect(trends.single.title, 'Repeaters 20mm');
+  });
+
   test('leaves assessments to the profile', () {
     expect(
       loadTrendsOf([

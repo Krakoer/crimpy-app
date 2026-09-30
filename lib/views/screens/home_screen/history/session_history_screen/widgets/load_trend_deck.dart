@@ -8,11 +8,33 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 /// Whether the load of each training is moving, grip by grip: one card per
-/// training run at least twice with the sensor. Krakoer/crimpy#155.
-class LoadTrendList extends StatelessWidget {
+/// training run at least twice with the sensor, side by side, the next one
+/// peeking in, so the section stays one card tall above the list the screen
+/// is for however many trainings there are. Krakoer/crimpy#155.
+class LoadTrendList extends StatefulWidget {
   final List<TrainingLoadTrend> trends;
 
   const LoadTrendList({required this.trends, super.key});
+
+  /// Tall enough for a card whose grips run past the width, its chart and its
+  /// two notes. A card set in a larger font scrolls inside it rather than
+  /// pushing the list down.
+  static const double deckHeight = 480;
+
+  @override
+  State<LoadTrendList> createState() => _LoadTrendListState();
+}
+
+class _LoadTrendListState extends State<LoadTrendList> {
+  late final _pages = PageController(
+    viewportFraction: widget.trends.length > 1 ? 0.9 : 1,
+  );
+
+  @override
+  void dispose() {
+    _pages.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) => Column(
@@ -20,8 +42,28 @@ class LoadTrendList extends StatelessWidget {
     children: [
       const SectionHeading('Load per grip'),
       const SizedBox(height: CrimpyTheme.headingGap),
-      for (final trend in trends)
-        TrainingLoadTrendCard(key: ValueKey(trend.key), trend: trend),
+      SizedBox(
+        height: LoadTrendList.deckHeight,
+        child: PageView.builder(
+          controller: _pages,
+          padEnds: false,
+          itemCount: widget.trends.length,
+          itemBuilder: (context, index) {
+            final trend = widget.trends[index];
+            return Padding(
+              padding: EdgeInsets.only(
+                right: index == widget.trends.length - 1
+                    ? 0
+                    : CrimpyTheme.spaceSm,
+              ),
+              child: TrainingLoadTrendCard(
+                key: ValueKey(trend.key),
+                trend: trend,
+              ),
+            );
+          },
+        ),
+      ),
       const SizedBox(height: CrimpyTheme.spaceLg),
     ],
   );
@@ -53,62 +95,76 @@ class _TrainingLoadTrendCardState extends State<TrainingLoadTrendCard> {
 
     return CrimpyCards.stats(
       margin: CrimpyTheme.cardMargin,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            widget.trend.title,
-            style: CrimpyTheme.titleSmall.copyWith(
-              color: CrimpyTheme.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: CrimpyTheme.spaceSm),
-          Wrap(
-            spacing: CrimpyTheme.spaceSm,
-            runSpacing: CrimpyTheme.spaceSm,
-            children: [
-              for (final (grip, _) in grips)
-                ChoiceChip(
-                  label: Text(loadGripLabel(grip)),
-                  selected: grip == selected.$1,
-                  onSelected: (_) => setState(() => _selected = grip),
-                ),
-            ],
-          ),
-          const SizedBox(height: CrimpyTheme.spaceMd),
-          if (testedDays(points.map((point) => point.date)) < 2)
-            _Note(
-              'One day on this grip so far, at '
-              '${points.last.kilograms.toStringAsFixed(1)} kg. The line starts '
-              'from the second.',
-            )
-          else ...[
-            SizedBox(
-              height: _chartHeight,
-              child: DayLineChart(
-                color: CrimpyTheme.trainingLoadSeries,
-                series: [
-                  (name: 'Mean load', data: data, stroke: SeriesStroke.solid),
-                ],
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.trend.title,
+              style: CrimpyTheme.titleSmall.copyWith(
+                color: CrimpyTheme.textPrimary,
+                fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: CrimpyTheme.spaceSm),
-            Text(
-              loadTrendNote(points, DateFormat.MMMd().format),
-              style: CrimpyTheme.body.copyWith(color: CrimpyTheme.textPrimary),
+            // One row that scrolls, so a training hung on many grips keeps the
+            // card the height of the deck.
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                spacing: CrimpyTheme.spaceSm,
+                children: [
+                  for (final (grip, _) in grips)
+                    ChoiceChip(
+                      label: Text(loadGripLabel(grip)),
+                      selected: grip == selected.$1,
+                      onSelected: (_) => setState(() => _selected = grip),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: CrimpyTheme.spaceMd),
+            if (testedDays(points.map((point) => point.date)) < 2)
+              _Note(
+                'One day on this grip so far, at '
+                '${_meanOf(points).toStringAsFixed(1)} kg. The line starts '
+                'from the second.',
+              )
+            else ...[
+              SizedBox(
+                height: _chartHeight,
+                child: DayLineChart(
+                  color: CrimpyTheme.trainingLoadSeries,
+                  series: [
+                    (name: 'Mean load', data: data, stroke: SeriesStroke.solid),
+                  ],
+                ),
+              ),
+              const SizedBox(height: CrimpyTheme.spaceSm),
+              Text(
+                loadTrendNote(points, DateFormat.MMMd().format),
+                style: CrimpyTheme.body.copyWith(
+                  color: CrimpyTheme.textPrimary,
+                ),
+              ),
+            ],
+            const SizedBox(height: CrimpyTheme.spaceXs),
+            const _Note(
+              'Mean load per session, over the pulls the sensor measured.',
             ),
           ],
-          const SizedBox(height: CrimpyTheme.spaceXs),
-          const _Note(
-            'Mean load per session, over the pulls the sensor measured.',
-          ),
-        ],
+        ),
       ),
     );
   }
 
   static const double _chartHeight = 200;
+
+  /// The day's load, when every session of the grip fell on one day: the mean
+  /// of its sessions rather than the last of them.
+  static double _meanOf(List<LoadPoint> points) =>
+      points.map((point) => point.kilograms).reduce((a, b) => a + b) /
+      points.length;
 }
 
 class _Note extends StatelessWidget {

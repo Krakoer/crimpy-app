@@ -348,8 +348,23 @@ Future<TrainingTotals> trainingTotals(Ref ref) async =>
 /// The load of each training the athlete has run at least twice with the
 /// sensor, grip by grip, for the history screen. Krakoer/crimpy#155.
 @riverpod
-Future<List<TrainingLoadTrend>> trainingLoadTrends(Ref ref) async =>
-    loadTrendsOf(await ref.watch(sessionHistoryWithRepsProvider.future));
+Future<List<TrainingLoadTrend>> trainingLoadTrends(Ref ref) async {
+  final history = ref.watch(sessionHistoryWithRepsProvider.future);
+  // Named by the library where it can: a run's own name is free text the
+  // athlete may have changed. A library that cannot be read only costs that.
+  final library = ref
+      .watch(trainingLibraryProvider.future)
+      .then<List<Training>>(
+        (library) => library.trainings,
+        onError: (_) => const <Training>[],
+      );
+  return loadTrendsOf(
+    await history,
+    trainingTitles: {
+      for (final training in await library) training.id: training.title,
+    },
+  );
+}
 
 /// The items a played session was run from, so its reps can be read block by
 /// block. Empty when the session was not played from a training, or when the

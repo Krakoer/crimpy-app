@@ -16,7 +16,9 @@ class TrainingLoadTrend {
   /// carry when they name none, which is a builtin's case.
   final String key;
 
-  /// The name of the training, as its latest run carries it.
+  /// The name of the training: the library's, when the training is one the
+  /// athlete can read, and otherwise the name its latest run carries, less the
+  /// date a run is saved with.
   final String title;
 
   /// Each grip the training was weighed on, most weighed first, with one point
@@ -57,11 +59,14 @@ String _trainingKey(SessionModel session) =>
 /// is left out rather than averaged in as a zero. The mean rather than the
 /// peak: it is what the fingers absorbed. Assessments are left out, since the
 /// profile already charts them.
-List<TrainingLoadTrend> loadTrendsOf(List<SessionModel> history) {
+List<TrainingLoadTrend> loadTrendsOf(
+  List<SessionModel> history, {
+  Map<String, String> trainingTitles = const {},
+}) {
   final sessionsByTraining = <String, List<SessionModel>>{};
   for (final session in history) {
     if (session.isAssessment) continue;
-    if (weighedReps(session.reps ?? const []).isEmpty) continue;
+    if (_loadedReps(session).isEmpty) continue;
     sessionsByTraining
         .putIfAbsent(_trainingKey(session), () => [])
         .add(session);
@@ -76,7 +81,7 @@ List<TrainingLoadTrend> loadTrendsOf(List<SessionModel> history) {
     final pointsByGrip = <LoadGrip, List<LoadPoint>>{};
     for (final session in sessions) {
       final byGrip = <LoadGrip, List<double>>{};
-      for (final rep in weighedReps(session.reps!)) {
+      for (final rep in _loadedReps(session)) {
         final grip = (position: rep.gripPosition, edgeSizeMm: rep.edgeSizeMm);
         byGrip.putIfAbsent(grip, () => []).add(rep.averageWeight);
       }
@@ -94,7 +99,9 @@ List<TrainingLoadTrend> loadTrendsOf(List<SessionModel> history) {
       sessions.last.date,
       TrainingLoadTrend(
         key: key,
-        title: _trainingName(sessions.last),
+        title:
+            trainingTitles[sessions.last.trainingId] ??
+            _trainingName(sessions.last),
         grips: grips,
       ),
     ));
@@ -103,6 +110,14 @@ List<TrainingLoadTrend> loadTrendsOf(List<SessionModel> history) {
   trends.sort((a, b) => b.$1.compareTo(a.$1));
   return [for (final (_, trend) in trends) trend];
 }
+
+/// The reps of a session that put a load on the sensor: the weighed ones
+/// (Krakoer/crimpy#25 to #30), less a reading at or below zero, which is a
+/// sensor tared under load rather than a load the fingers took. A mean over
+/// it would draw under the chart's baseline and call the drop a loss.
+List<RepDataModel> _loadedReps(SessionModel session) => weighedReps(
+  session.reps ?? const [],
+).where((rep) => rep.averageWeight > 0).toList();
 
 /// A grip as a chip names it: "Half Crimp 20 mm".
 String loadGripLabel(LoadGrip grip) => grip.edgeSizeMm == null
