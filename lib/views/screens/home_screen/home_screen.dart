@@ -7,6 +7,7 @@ import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/history/week_histogram_card.dart';
 import 'package:crimpy/views/screens/home_screen/favorite_training.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/consistency_strip_card.dart';
+import 'package:crimpy/views/screens/home_screen/widgets/habit_today_card.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/log_session_buttons.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/next_week_availability_card.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/today_training_card.dart';
@@ -92,6 +93,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             // Today: the program's training, the ask for next week a coach
             // is waiting on, and the pinned trainings for everyone else.
             TodayTrainingCard(),
+            // The athlete's own habits, while no program covers today.
+            HabitTodayCard(),
             NextWeekAvailabilityCard(),
             FavoriteTrainingList(),
             // How the plan has been kept, then the week so far.
