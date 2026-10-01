@@ -429,6 +429,42 @@ void main() {
       );
     }
 
+    test('a result keeps its details, and one without reads as none', () async {
+      final sessionId = await trainings.saveSession(
+        SessionModel(
+          name: 'Critical Force',
+          isAssessment: true,
+          origin: SessionOrigin.played,
+          date: DateTime(2026, 3, 1),
+        ),
+        [],
+      );
+      await assessments.saveAssessment(
+        AssessmentResultModel(
+          assessmentId: BuiltinAssessmentIds.criticalForce,
+          rightValue: 18,
+          details: const {'w_prime_kg_s': 512.4, 'end_force_kg': null},
+        ),
+        sessionId,
+      );
+      await saveOn(DateTime(2026, 3, 2), right: 40);
+
+      final stored = await assessments.getAssessments();
+      final criticalForce = stored.singleWhere(
+        (a) => a.assessmentId == BuiltinAssessmentIds.criticalForce,
+      );
+      expect(criticalForce.details, {
+        'w_prime_kg_s': 512.4,
+        'end_force_kg': null,
+      });
+      expect(
+        stored
+            .singleWhere((a) => a.assessmentId == BuiltinAssessmentIds.maxForce)
+            .details,
+        isNull,
+      );
+    });
+
     test('getLastValueForHand returns the most recent result', () async {
       await saveOn(DateTime(2026, 1, 1), right: 30);
       await saveOn(DateTime(2026, 2, 1), right: 42);

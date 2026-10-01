@@ -1,6 +1,9 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/critical_force_result.dart';
+import 'package:crimpy/models/max_force_offer.dart';
+import 'package:crimpy/views/widgets/max_force_offer_card.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/assessments/post_assessment_screen.dart';
@@ -9,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
-class CriticalForceResultScreen extends ConsumerWidget {
+class CriticalForceResultScreen extends ConsumerStatefulWidget {
   final double? previousCriticalForce;
   final CriticalForceResults results;
   final AssessmentResultModel saveAssessment;
@@ -23,12 +26,21 @@ class CriticalForceResultScreen extends ConsumerWidget {
   /// Whole seconds the run stood paused once the first pull had started.
   final int pausedSeconds;
 
+  /// The hand, grip and edge the test was pulled with, which its share of max
+  /// and the Max Force its hardest pull may beat are read on.
+  final HandSide hand;
+  final GripPosition gripPosition;
+  final int? edgeSizeMm;
+
   const CriticalForceResultScreen({
     this.previousCriticalForce,
     required this.results,
     required this.data,
     required this.samples,
     this.pausedSeconds = 0,
+    required this.hand,
+    required this.gripPosition,
+    required this.edgeSizeMm,
     required this.saveAssessment,
     required this.saveSession,
     required this.saveReps,
@@ -36,52 +48,110 @@ class CriticalForceResultScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CriticalForceResultScreen> createState() =>
+      _CriticalForceResultScreenState();
+}
+
+class _CriticalForceResultScreenState
+    extends ConsumerState<CriticalForceResultScreen> {
+  /// The new Max Force the athlete ticked. None to begin with: the hardest
+  /// pull is offered, never saved without a tap.
+  final Set<MaxForceOffer> _acceptedMaxForces = {};
+
+  CriticalForceResults get results => widget.results;
+
+  @override
+  Widget build(BuildContext context) {
     final lateOff = results.lateOffCount;
+    final maxForceHistory = ref
+        .watch(assessmentsProvider(BuiltinAssessmentIds.maxForce))
+        .value;
+    // The Max Force on file for this hand and grip, which the Critical Force
+    // is read as a share of. A test's own hardest pull is not one: it is
+    // offered below instead.
+    final maxOnFile = maxForceHistory == null
+        ? null
+        : MaxForceOffer.latestOnFile(
+            maxForceHistory,
+            widget.hand,
+            widget.gripPosition,
+          );
+    final shareOfMax = maxOnFile == null || maxOnFile <= 0
+        ? null
+        : (results.criticalForce / maxOnFile * 100).round();
+    final maxForceOffers = maxForceHistory == null
+        ? const <MaxForceOffer>[]
+        : MaxForceOffer.fromPulls([
+            MeasuredPull(
+              hand: widget.hand,
+              gripPosition: widget.gripPosition,
+              edgeSizeMm: widget.edgeSizeMm,
+              peakKg: results.peakKg,
+            ),
+          ], maxForceHistory);
     return Scaffold(
       appBar: AppBar(title: Text("Critical Force assessment results")),
       body: SafeArea(
-        child: Column(
+        child: ListView(
           children: [
             SizedBox(height: CrimpyTheme.spaceLgPlus),
             Text(
               "Great job!",
+              textAlign: TextAlign.center,
               style: CrimpyTheme.headline.copyWith(
                 color: CrimpyTheme.textPrimary,
               ),
             ),
             SizedBox(height: CrimpyTheme.spaceLg),
             ResultCard(
-              prevValue: previousCriticalForce,
+              prevValue: widget.previousCriticalForce,
               newValue: results.criticalForce,
             ),
             SizedBox(height: CrimpyTheme.spaceLgPlus),
             Text(
               "Critical force:",
+              textAlign: TextAlign.center,
               style: CrimpyTheme.headline.copyWith(
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             Text(
               "${results.criticalForce.toStringAsFixed(2)} kg",
+              textAlign: TextAlign.center,
               style: CrimpyTheme.numerals(
                 48,
               ).copyWith(color: Theme.of(context).colorScheme.onSurface),
             ),
+            if (shareOfMax != null)
+              Text(
+                "$shareOfMax % of your max",
+                textAlign: TextAlign.center,
+                style: CrimpyTheme.title.copyWith(
+                  color: CrimpyTheme.textPrimary,
+                ),
+              ),
             Text(
-              _countedPullsLabel(results),
+              "W' ${results.wPrime.round()} kg.s",
+              textAlign: TextAlign.center,
               style: CrimpyTheme.body.copyWith(
                 color: CrimpyTheme.textSecondary,
               ),
             ),
-            if (pausedSeconds > 0)
+            Text(
+              _countedPullsLabel(results),
+              textAlign: TextAlign.center,
+              style: CrimpyTheme.body.copyWith(
+                color: CrimpyTheme.textSecondary,
+              ),
+            ),
+            if (widget.pausedSeconds > 0)
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: CrimpyTheme.spaceLg,
                   vertical: CrimpyTheme.spaceXs,
                 ),
                 child: Text(
-                  "The test was paused for $pausedSeconds s. Extra rest lets the forearm recover, so this result may read high.",
+                  "The test was paused for ${widget.pausedSeconds} s. Extra rest lets the forearm recover, so this result may read high.",
                   textAlign: TextAlign.center,
                   style: CrimpyTheme.body.copyWith(
                     color: CrimpyTheme.textSecondary,
@@ -104,15 +174,14 @@ class CriticalForceResultScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-            // The chart takes what the numbers above leave, so the screen
-            // fits a small phone.
-            Expanded(
+            SizedBox(
+              height: 280,
               child: SfCartesianChart(
                 plotAreaBorderWidth: 0,
                 series: <CartesianSeries>[
                   FastLineSeries<CriticalForceSample, double>(
                     width: 2,
-                    dataSource: samples,
+                    dataSource: widget.samples,
                     xValueMapper: (CriticalForceSample sample, _) => sample.t,
                     yValueMapper: (CriticalForceSample sample, _) => sample.kg,
                   ),
@@ -152,6 +221,27 @@ class CriticalForceResultScreen extends ConsumerWidget {
                 ),
               ),
             ),
+            if (maxForceOffers.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: CrimpyTheme.spaceLg,
+                ),
+                child: MaxForceOfferCard(
+                  offers: maxForceOffers,
+                  accepted: _acceptedMaxForces,
+                  onChanged: (offer, accept) => setState(
+                    () => accept
+                        ? _acceptedMaxForces.add(offer)
+                        : _acceptedMaxForces.remove(offer),
+                  ),
+                  intro:
+                      'The hardest pull of this test beat your Max Force on file.',
+                  note:
+                      'Optional. A ticked pull is saved as your Max Force, marked '
+                      'as kept from this test rather than measured by a Max '
+                      'Force test.',
+                ),
+              ),
             // Room for the save and discard buttons floating over the bottom,
             // so they do not sit on the chart.
             const SizedBox(
@@ -165,18 +255,26 @@ class CriticalForceResultScreen extends ConsumerWidget {
         children: [
           TextButton(
             onPressed: () async {
+              // Read off what is still on screen, so an offer ticked and then
+              // taken back by a refreshed history is not saved.
+              final keptMaxForces = [
+                for (final offer in maxForceOffers)
+                  if (_acceptedMaxForces.contains(offer))
+                    offer.toResult(AssessmentOrigin.training),
+              ];
+              final String sessionId;
               try {
-                await ref
+                sessionId = await ref
                     .read(
                       assessmentsProvider(
                         BuiltinAssessmentIds.criticalForce,
                       ).notifier,
                     )
                     .saveAssessment(
-                      saveAssessment,
-                      saveSession,
-                      saveReps,
-                      data: data,
+                      widget.saveAssessment,
+                      widget.saveSession,
+                      widget.saveReps,
+                      data: widget.data,
                     );
               } catch (e) {
                 if (context.mounted) {
@@ -185,6 +283,31 @@ class CriticalForceResultScreen extends ConsumerWidget {
                   );
                 }
                 return;
+              }
+              // Written against the test once it is stored, and apart from
+              // it: the test is saved whatever happens here, so a failure must
+              // not leave the athlete on a screen that would store it twice.
+              if (keptMaxForces.isNotEmpty) {
+                final failed = await ref
+                    .read(
+                      assessmentsProvider(
+                        BuiltinAssessmentIds.maxForce,
+                      ).notifier,
+                    )
+                    .addResultsToSession(keptMaxForces, sessionId);
+                if (failed.isNotEmpty && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        unsavedMaxForceMessage(
+                          failed,
+                          saved: keptMaxForces.length - failed.length,
+                          alongside: 'Critical Force',
+                        ),
+                      ),
+                    ),
+                  );
+                }
               }
               if (context.mounted) {
                 Navigator.of(context).pop();

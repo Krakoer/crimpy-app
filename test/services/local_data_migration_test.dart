@@ -604,6 +604,41 @@ void main() {
       expect(assessments.saved.single.rightValue, 42.3);
     });
 
+    // A Critical Force keeps its W' and per pull numbers beside the value. A
+    // guest import that dropped them would leave the server result bare.
+    test('sends a result with the details it was stored with', () async {
+      final sessionId = await db.saveSession(playedSession(), [rep()]);
+      await db.saveAssessment(
+        AssessmentResultModel(
+          assessmentId: BuiltinAssessmentIds.criticalForce,
+          rightValue: 18,
+          gripPosition: GripPosition.halfCrimp,
+          details: const {
+            'w_prime_kg_s': 512.4,
+            'pulls': [
+              {'mean_kg': 18.0, 'late_off': false},
+            ],
+          },
+        ),
+        sessionId,
+      );
+
+      final assessments = _FakeRemoteAssessments();
+      expect(
+        await migrationWith(
+          _FakeRemoteTrainings(),
+          assessments: assessments,
+        ).uploadAll(_userId),
+        0,
+      );
+
+      final details = assessments.saved.single.details!;
+      expect(details['w_prime_kg_s'], 512.4);
+      expect(details['pulls'], [
+        {'mean_kg': 18.0, 'late_off': false},
+      ]);
+    });
+
     test(
       'retries a result kept from a training on a session already up',
       () async {

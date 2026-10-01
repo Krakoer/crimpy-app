@@ -22,6 +22,7 @@ import 'generated/schema_v11.dart' as v11;
 import 'generated/schema_v13.dart' as v13;
 import 'generated/schema_v14.dart' as v14;
 import 'generated/schema_v16.dart' as v16;
+import 'generated/schema_v17.dart' as v17;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -1019,6 +1020,52 @@ void main() {
       final results = await db.getAssessments();
       expect(results.single.origin, AssessmentOrigin.test);
       expect(results.single.rightValue, 40);
+      await db.close();
+    });
+  });
+  group('v17 to v18 data migration', () {
+    // A result can now carry what its test measured beyond the value. Every
+    // one stored before has none, and keeps its value and origin.
+    test('a result stored before the details has none', () async {
+      final schema = await verifier.schemaAt(17);
+      final oldDb = v17.DatabaseAtV17(schema.newConnection());
+      await oldDb
+          .into(oldDb.sessions)
+          .insert(
+            const v17.SessionsData(
+              id: 's-1',
+              name: 'Critical Force',
+              notes: '',
+              date: 1700000000,
+              dataPath: '',
+              isAssessment: 1,
+              activity: 0,
+              origin: 'played',
+              duration: 240,
+              rpeFailed: 0,
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb
+          .into(oldDb.assessments)
+          .insert(
+            const v17.AssessmentsData(
+              id: 'a-1',
+              assessmentId: BuiltinAssessmentIds.criticalForce,
+              rightValue: 14,
+              sessionId: 's-1',
+              gripPosition: 0,
+              origin: 'test',
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb.close();
+
+      final db = AppDatabase(schema.newConnection());
+      final results = await db.getAssessments();
+      expect(results.single.details, equals(null));
+      expect(results.single.rightValue, 14);
+      expect(results.single.origin, AssessmentOrigin.test);
       await db.close();
     });
   });

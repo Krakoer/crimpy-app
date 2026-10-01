@@ -131,6 +131,11 @@ class Assessments extends Table {
   /// the distinction existed came from a test.
   late final TextColumn origin = text().withDefault(const Constant('test'))();
 
+  /// What the test measured beyond the value, as the JSON object the API
+  /// stores beside it (see [AssessmentResultModel.details]), null when it has
+  /// none.
+  late final TextColumn details = text().nullable()();
+
   /// The id the API gave this row when the guest import put it on the server,
   /// null while it is only local. The import skips a row that carries one, so a
   /// run that failed partway can be retried without uploading, and duplicating,
@@ -956,6 +961,7 @@ class AppDatabase extends _$AppDatabase {
       sessionId: Value(sessionId),
       gripPosition: Value(assessment.gripPosition?.index),
       origin: Value(assessment.origin.apiValue),
+      details: Value(encodeAssessmentDetails(assessment.details)),
       updatedAt: Value(DateTime.now()),
     );
 
@@ -1055,6 +1061,7 @@ class AppDatabase extends _$AppDatabase {
             ? GripPosition.values[assessment.gripPosition!]
             : null,
         origin: assessmentOriginFromApi(assessment.origin),
+        details: decodeAssessmentDetails(assessment.details),
       );
     }).toList();
   }
@@ -1342,7 +1349,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -1351,6 +1358,12 @@ class AppDatabase extends _$AppDatabase {
       await seedBuiltinAssessmentDefinitions(m.database);
     },
     onUpgrade: stepByStep(
+      from17To18: (m, schema) async {
+        // A result can now carry what its test measured beyond the value, such
+        // as a Critical Force's W'. Every one already stored has none, which is
+        // what a null column says.
+        await m.addColumn(schema.assessments, schema.assessments.details);
+      },
       from16To17: (m, schema) async {
         // A result now says whether it came from a test or was kept from a
         // training. Every one already stored came from a test, which is what
@@ -1905,7 +1918,24 @@ extension AssessmentRowToModel on Assessment {
         ? null
         : enumFromIndex<GripPosition?>(GripPosition.values, gripPosition, null),
     origin: assessmentOriginFromApi(origin),
+    details: decodeAssessmentDetails(details),
   );
+}
+
+/// A result's details as the column stores them.
+String? encodeAssessmentDetails(Map<String, Object?>? details) =>
+    details == null ? null : jsonEncode(details);
+
+/// A result's details as the column stored them, or null when there are none
+/// or they no longer read as an object.
+Map<String, Object?>? decodeAssessmentDetails(String? stored) {
+  if (stored == null) return null;
+  try {
+    final decoded = jsonDecode(stored);
+    return decoded is Map<String, Object?> ? decoded : null;
+  } on FormatException {
+    return null;
+  }
 }
 
 /// Maps a stored sensor calibration row onto the domain model.

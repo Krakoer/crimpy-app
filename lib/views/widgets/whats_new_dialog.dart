@@ -48,6 +48,11 @@ class WhatsNewDialog extends ConsumerWidget {
             ),
             _buildFeatureItem(
               context,
+              'Critical Force as a share of your max',
+              'The result says what share of your Max Force on the same grip it is, and your W\', the reserve you spend above it. When the hardest pull of the test beats your Max Force, you can keep it as a new one.',
+            ),
+            _buildFeatureItem(
+              context,
               'Critical Force starts on your first pull',
               'After the countdown the test waits for you to take the edge, so a late start no longer costs you part of pull 1. You can also finish after pull 16 and keep the result.',
             ),

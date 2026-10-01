@@ -53,6 +53,9 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
     with WorkoutLifecycleMixin {
   int get _totalPulls => widget.reps.whereType<TimedItem>().length;
 
+  /// A pull of the protocol, which says the grip and edge the test is run on.
+  TimedItem get _pull => widget.reps.whereType<TimedItem>().first;
+
   /// The pulls run so far, on the run's clock in milliseconds: from the bell
   /// that started each to the bell that ended it.
   final List<({int start, int end})> _pullWindows = [];
@@ -229,6 +232,14 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
         assessmentId: BuiltinAssessmentIds.criticalForce,
         rightValue: widget.hand.isRightHand ? criticalLoad : null,
         leftValue: !widget.hand.isRightHand ? criticalLoad : null,
+        // Recorded on the grip it was pulled on, which its share of a Max
+        // Force is read against. Left out, the result fell to the default
+        // grip whatever the test ran on.
+        gripPosition: _pull.gripPosition,
+        details: results.toDetails(
+          workSeconds: criticalForceWorkTime,
+          restSeconds: criticalForceRestTime,
+        ),
       );
       // Create rep models
       final saveReps = buildRepsData(
@@ -249,6 +260,9 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
                   ? 0
                   : _clockLog.pausedMsAfter(_pullWindows.first.start) ~/ 1000,
               previousCriticalForce: previousCriticalForce,
+              hand: widget.hand,
+              gripPosition: _pull.gripPosition,
+              edgeSizeMm: _pull.edgeSizeMm,
               saveAssessment: saveAssessment,
               saveSession: saveSession,
               saveReps: saveReps,

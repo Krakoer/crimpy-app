@@ -93,7 +93,7 @@ class MaxForceOffer {
     final loadsResolveAgainst = AssessmentResults.fromHistory(maxForceHistory);
     final offers = <MaxForceOffer>[];
     for (final MapEntry(key: (hand, grip), value: peak) in hardest.entries) {
-      final onFile = _latestOnFile(maxForceHistory, hand, grip);
+      final onFile = latestOnFile(maxForceHistory, hand, grip);
       if (onFile == null || _tenths(peak) <= _tenths(onFile)) continue;
       final resolved = loadsResolveAgainst.value(
         BuiltinAssessmentIds.maxForce,
@@ -118,7 +118,9 @@ class MaxForceOffer {
     return offers;
   }
 
-  static double? _latestOnFile(
+  /// The latest Max Force on file for [hand] and [grip], or null when there is
+  /// none.
+  static double? latestOnFile(
     List<AssessmentModel> history,
     HandSide hand,
     GripPosition grip,

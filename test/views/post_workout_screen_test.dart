@@ -2,6 +2,7 @@
 // A fake notifier exists to be read from: capturing what the code under test
 // handed it is the whole point, and none of it is API that ships.
 
+import 'package:crimpy/views/widgets/max_force_offer_card.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/max_force_offer.dart';
@@ -949,7 +950,7 @@ class CapturingAssessments extends Assessments {
   Future<List<AssessmentModel>> build(String? assessmentId) async => [];
 
   @override
-  Future<void> saveAssessment(
+  Future<String> saveAssessment(
     AssessmentResultModel assessmentModel,
     SessionModel session,
     List<RepDataModel> reps, {
@@ -958,6 +959,7 @@ class CapturingAssessments extends Assessments {
   }) async {
     savedResult = assessmentModel;
     savedSession = session;
+    return 'saved-session';
   }
 }
 

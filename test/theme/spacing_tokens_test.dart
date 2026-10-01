@@ -37,6 +37,8 @@ const Map<String, Map<String, String>> offScale = {
         '20': 'run screen proportions',
         '28': 'run screen proportions',
       },
+  'lib/views/screens/assessments/critical_force/critical_force_result_screen.dart':
+      {'280': 'chart geometry: the trace height, a size not a gap'},
   'lib/views/screens/assessments/mvc_run_screen.dart': {
     '0.75': 'the gauge target line sits at a fraction of the bar height',
     '2': 'the gauge target line is 2dp thick',
