@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:crimpy/models/training_execution_model.dart';
@@ -6,11 +7,24 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// The calls the timer made, per player, and when they are all in: every
+/// player it created has been handed its source.
+typedef RecordedPlayerCalls = ({
+  Map<String, List<MethodCall>> callsByPlayer,
+  Future<void> sourcesSet,
+});
+
 /// Stands in for the audioplayers native side and records, per player, the
 /// calls the timer makes. Each source reports itself prepared as a real player
 /// would, and assets are copied into a scratch directory before being played.
-Map<String, List<MethodCall>> recordPlayerCalls() {
+///
+/// That copy is real file IO, done by audioplayers' asset cache before it sends
+/// the source. It completes outside the event queue a test can pump, so how
+/// many turns of the queue it takes depends on the machine's load: the source
+/// is waited for by name rather than by pumping.
+RecordedPlayerCalls recordPlayerCalls({required int players}) {
   final callsByPlayer = <String, List<MethodCall>>{};
+  final sourcesSet = Completer<void>();
   final eventSinks = <String, MockStreamHandlerEventSink>{};
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
@@ -21,8 +35,8 @@ Map<String, List<MethodCall>> recordPlayerCalls() {
   messenger.setMockMethodCallHandler(pathProvider, (_) async => scratch.path);
   addTearDown(() => messenger.setMockMethodCallHandler(pathProvider, null));
 
-  const players = MethodChannel('xyz.luan/audioplayers');
-  messenger.setMockMethodCallHandler(players, (call) async {
+  const playersChannel = MethodChannel('xyz.luan/audioplayers');
+  messenger.setMockMethodCallHandler(playersChannel, (call) async {
     final playerId = (call.arguments as Map)['playerId'] as String;
     callsByPlayer.putIfAbsent(playerId, () => []).add(call);
     if (call.method == 'create') {
@@ -40,24 +54,33 @@ Map<String, List<MethodCall>> recordPlayerCalls() {
         'event': 'audio.onPrepared',
         'value': true,
       });
+      final withSource = callsByPlayer.values.where(
+        (calls) => calls.any((c) => c.method == 'setSourceUrl'),
+      );
+      if (withSource.length == players && !sourcesSet.isCompleted) {
+        sourcesSet.complete();
+      }
     }
     return null;
   });
-  addTearDown(() => messenger.setMockMethodCallHandler(players, null));
+  addTearDown(() => messenger.setMockMethodCallHandler(playersChannel, null));
 
   const global = MethodChannel('xyz.luan/audioplayers.global');
   messenger.setMockMethodCallHandler(global, (_) async => null);
   addTearDown(() => messenger.setMockMethodCallHandler(global, null));
 
-  return callsByPlayer;
+  return (callsByPlayer: callsByPlayer, sourcesSet: sourcesSet.future);
 }
+
+/// The timer's two players, a short and a long beep.
+const _beepPlayers = 2;
 
 Future<Map<String, List<MethodCall>>> playerCallsOn(
   TargetPlatform platform,
 ) async {
   debugDefaultTargetPlatformOverride = platform;
   addTearDown(() => debugDefaultTargetPlatformOverride = null);
-  final callsByPlayer = recordPlayerCalls();
+  final recorded = recordPlayerCalls(players: _beepPlayers);
 
   final timer = WorkoutTimer(
     items: [RestItem(durationSeconds: 5)],
@@ -68,9 +91,14 @@ Future<Map<String, List<MethodCall>>> playerCallsOn(
     timer.dispose();
     await pumpEventQueue();
   });
-  await pumpEventQueue();
+  // Bounded, so a timer that never sets a source fails here with a reason
+  // rather than hanging the suite. The bound is far past any real copy.
+  await recorded.sourcesSet.timeout(
+    const Duration(seconds: 30),
+    onTimeout: () => fail('The beeps were never given their sources'),
+  );
 
-  return callsByPlayer;
+  return recorded.callsByPlayer;
 }
 
 /// The audio context a player was given, provided it came before its source:
@@ -89,7 +117,7 @@ void main() {
     test('request no audio focus on Android so music keeps playing', () async {
       final callsByPlayer = await playerCallsOn(TargetPlatform.android);
 
-      expect(callsByPlayer, hasLength(2));
+      expect(callsByPlayer, hasLength(_beepPlayers));
       for (final calls in callsByPlayer.values) {
         expect(contextBeforeSource(calls)?['audioFocus'], 0);
       }
@@ -98,7 +126,7 @@ void main() {
     test('mix with other apps on iOS instead of interrupting them', () async {
       final callsByPlayer = await playerCallsOn(TargetPlatform.iOS);
 
-      expect(callsByPlayer, hasLength(2));
+      expect(callsByPlayer, hasLength(_beepPlayers));
       for (final calls in callsByPlayer.values) {
         final context = contextBeforeSource(calls);
         expect(context?['category'], 'playback');
