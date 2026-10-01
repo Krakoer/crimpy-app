@@ -48,6 +48,11 @@ class WhatsNewDialog extends ConsumerWidget {
             ),
             _buildFeatureItem(
               context,
+              'Critical Force starts on your first pull',
+              'After the countdown the test waits for you to take the edge, so a late start no longer costs you part of pull 1. You can also finish after pull 16 and keep the result.',
+            ),
+            _buildFeatureItem(
+              context,
               'Coach programs',
               'Follow the program your coach assigned you, week by week, with today\'s trainings on the home screen.',
             ),
