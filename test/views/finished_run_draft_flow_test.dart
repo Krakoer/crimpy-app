@@ -1,3 +1,7 @@
+// ignore_for_file: avoid_public_notifier_properties
+// A fake notifier exists to be read from: what the screen handed it is what the
+// test checks, and none of it ships.
+
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/finished_run_draft.dart';
 import 'package:crimpy/models/session.dart';
