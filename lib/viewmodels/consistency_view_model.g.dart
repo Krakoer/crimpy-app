@@ -59,7 +59,7 @@ final class ProgramConsistencyProvider
 }
 
 String _$programConsistencyHash() =>
-    r'3f424c7cca5f9978d96b6e5baf542fef78a1e669';
+    r'30bcf6740919007fba77b7403c5469c0157a7e5a';
 
 /// What the home screen's strip draws: the program's last two weeks while a
 /// program covers today, the athlete's own habits otherwise, and null when
@@ -111,4 +111,4 @@ final class ConsistencyStripProvider
   }
 }
 
-String _$consistencyStripHash() => r'4542428f88472e6b7497d36becb585bdd0d21319';
+String _$consistencyStripHash() => r'9645ead0123aa2364340a2c1236fa39398015c2d';

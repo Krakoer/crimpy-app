@@ -6,8 +6,7 @@ import 'package:crimpy/services/notification_service.dart';
 import 'package:crimpy/utils/reminder_plan.dart';
 
 /// Turns the current preferences, cached schedule, habits and logged sessions
-/// into the
-/// set of pending reminder notifications.
+/// into the set of pending reminder notifications.
 class TrainingReminderScheduler {
   final NotificationService _notificationService;
 

@@ -526,7 +526,7 @@ final class TrainingsProvider
   Trainings create() => Trainings();
 }
 
-String _$trainingsHash() => r'966d489a95c0425f343ed0947ecb473bc0d9f966';
+String _$trainingsHash() => r'd4e59bb6b9479cd598d648e431dbe99d348318e2';
 
 /// Returns all trainings and allows creating, updating, and deleting them.
 

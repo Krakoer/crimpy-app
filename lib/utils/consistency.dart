@@ -157,10 +157,16 @@ ConsistencyDay _programDay(
 /// habits due on its weekday that were already set by then; a habit counted
 /// per week is due on no day, so a session of it on a day owing nothing keeps
 /// that day, as a flexible program training does.
+///
+/// A day a coach's [program] covered is drawn the way the program strip draws
+/// it, from [programWeeks]: the program took precedence over the habits that
+/// day, so they owed nothing on it.
 List<ConsistencyDay> habitConsistencyDays({
   required List<ActiveHabit> habits,
   required List<SessionModel> sessions,
   required DateTime today,
+  Program? program,
+  Map<int, Week> programWeeks = const {},
 }) {
   final byDay = <DateTime, List<SessionModel>>{};
   for (final session in sessions) {
@@ -174,13 +180,22 @@ List<ConsistencyDay> habitConsistencyDays({
 
   return [
     for (var back = consistencyStripDays - 1; back >= 0; back--)
-      _habitDay(
-        habits,
-        sessions,
-        byDay[addCalendarDays(today, -back)] ?? const [],
-        addCalendarDays(today, -back),
-        firstSet,
-      ),
+      if (programCovers(program, addCalendarDays(today, -back)))
+        _programDay(
+          program!,
+          programWeeks,
+          sessions,
+          byDay[addCalendarDays(today, -back)] ?? const [],
+          addCalendarDays(today, -back),
+        )
+      else
+        _habitDay(
+          habits,
+          sessions,
+          byDay[addCalendarDays(today, -back)] ?? const [],
+          addCalendarDays(today, -back),
+          firstSet,
+        ),
   ];
 }
 
@@ -199,7 +214,8 @@ ConsistencyDay _habitDay(
       if (!day.isBefore(habit.habit.since)) habit,
   ];
   final perWeekIds = {
-    for (final habit in perWeekHabits(habits)) habit.trainingId,
+    for (final habit in perWeekHabits(habits))
+      if (!day.isBefore(habit.habit.since)) habit.trainingId,
   };
   return ConsistencyDay(
     day: day,

@@ -2,8 +2,8 @@ import 'package:crimpy/models/cached_program_schedule.dart';
 import 'package:crimpy/models/notification_preferences.dart';
 import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/session.dart';
-import 'package:crimpy/utils/program_completion.dart';
 import 'package:crimpy/models/training_habit.dart';
+import 'package:crimpy/utils/program_completion.dart';
 import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/utils/habit_schedule.dart';
 

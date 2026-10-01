@@ -163,7 +163,8 @@ Future<CachedProgramSchedule?> programScheduleCache(Ref ref) async {
 }
 
 /// Rewrites the pending reminders whenever the settings, the program schedule,
-/// the athlete's own habits or the logged sessions change. Watched by the app shell so it stays alive.
+/// the athlete's own habits or the logged sessions change. Watched by the app
+/// shell so it stays alive.
 @Riverpod(keepAlive: true)
 Future<void> trainingReminderSync(Ref ref) async {
   final preferences = await ref.watch(

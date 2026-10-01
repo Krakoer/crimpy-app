@@ -17,6 +17,24 @@ Future<List<ConsistencyDay>?> programConsistency(Ref ref) async {
   final today = currentTrainingDay();
   if (program == null || !program.isActiveOn(today)) return null;
 
+  final weeks = await _weeksInStrip(ref, program, today);
+  final sessions = await ref.watch(sessionsProvider.future);
+
+  return programConsistencyDays(
+    program: program,
+    weeks: weeks,
+    sessions: sessions,
+    today: today,
+  );
+}
+
+/// The published weeks of [program] that the strip ending on [today] reaches,
+/// by number.
+Future<Map<int, Week>> _weeksInStrip(
+  Ref ref,
+  Program program,
+  DateTime today,
+) async {
   final first = addCalendarDays(today, -(consistencyStripDays - 1));
   final weekNumbers = {
     for (var day = first; !day.isAfter(today); day = addCalendarDays(day, 1))
@@ -27,14 +45,7 @@ Future<List<ConsistencyDay>?> programConsistency(Ref ref) async {
     final week = await ref.watch(weekDetailProvider(program.id, number).future);
     if (week != null) weeks[number] = week;
   }
-  final sessions = await ref.watch(sessionsProvider.future);
-
-  return programConsistencyDays(
-    program: program,
-    weeks: weeks,
-    sessions: sessions,
-    today: today,
-  );
+  return weeks;
 }
 
 /// What the home screen's strip draws: the program's last two weeks while a
@@ -46,10 +57,19 @@ Future<List<ConsistencyDay>?> consistencyStrip(Ref ref) async {
   if (program != null) return program;
   final habits = await ref.watch(activeHabitsProvider.future);
   if (habits.isEmpty) return null;
+  final today = currentTrainingDay();
+  // The latest program, ended or still to start: the days it covered inside
+  // the window are drawn as it decided them, not scored against the habits it
+  // took precedence over.
+  final lastProgram = await ref.watch(activeProgramProvider.future);
   final sessions = await ref.watch(sessionsProvider.future);
   return habitConsistencyDays(
     habits: habits,
     sessions: sessions,
-    today: currentTrainingDay(),
+    today: today,
+    program: lastProgram,
+    programWeeks: lastProgram == null
+        ? const {}
+        : await _weeksInStrip(ref, lastProgram, today),
   );
 }
