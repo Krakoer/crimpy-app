@@ -1,4 +1,4 @@
-import 'package:crimpy/views/screens/profile_screen/widgets/series_swatch.dart';
+import 'package:crimpy/views/widgets/series_swatch.dart';
 import 'package:flutter/material.dart';
 import '../../../../theme/crimpy_theme.dart';
 

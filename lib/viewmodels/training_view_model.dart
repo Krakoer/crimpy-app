@@ -19,6 +19,7 @@ import 'package:crimpy/repositories/builtin_training_repository.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/utils/training_intensity.dart';
+import 'package:crimpy/utils/load_trends.dart';
 import 'package:crimpy/utils/training_totals.dart';
 
 part 'training_view_model.g.dart';
@@ -343,6 +344,27 @@ String? _historyKey(List<SessionModel>? sessions) => sessions
 @riverpod
 Future<TrainingTotals> trainingTotals(Ref ref) async =>
     TrainingTotals.of(await ref.watch(sessionHistoryWithRepsProvider.future));
+
+/// The load of each training the athlete has run at least twice with the
+/// sensor, grip by grip, for the history screen. Krakoer/crimpy#155.
+@riverpod
+Future<List<TrainingLoadTrend>> trainingLoadTrends(Ref ref) async {
+  final history = ref.watch(sessionHistoryWithRepsProvider.future);
+  // Named by the library where it can: a run's own name is free text the
+  // athlete may have changed. A library that cannot be read only costs that.
+  final library = ref
+      .watch(trainingLibraryProvider.future)
+      .then<List<Training>>(
+        (library) => library.trainings,
+        onError: (_) => const <Training>[],
+      );
+  return loadTrendsOf(
+    await history,
+    trainingTitles: {
+      for (final training in await library) training.id: training.title,
+    },
+  );
+}
 
 /// The items a played session was run from, so its reps can be read block by
 /// block. Empty when the session was not played from a training, or when the

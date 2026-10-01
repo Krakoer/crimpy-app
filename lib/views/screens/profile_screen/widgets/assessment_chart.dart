@@ -2,10 +2,9 @@ import 'dart:math';
 
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/utils/assessment_chart_axes.dart';
-import 'package:crimpy/views/screens/profile_screen/widgets/series_swatch.dart';
+import 'package:crimpy/views/widgets/series_swatch.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:crimpy/views/widgets/day_line_chart.dart';
 import '../../../../theme/crimpy_theme.dart';
 
 /// An assessment's history, in the metric's one hue: the left hand solid and
@@ -52,31 +51,6 @@ class _ForceChartState extends State<ForceChart> {
     });
   }
 
-  static List<(DateTime, double)> _byDay(List<(DateTime, double)> data) => [
-    for (final (date, value) in data)
-      (DateTime(date.year, date.month, date.day), value),
-  ];
-
-  LineSeries<(DateTime, double), num> _line(
-    String name,
-    List<(DateTime, double)> data,
-    SeriesStroke stroke,
-    DateTime first,
-  ) => LineSeries<(DateTime, double), num>(
-    name: name,
-    dataSource: data,
-    xValueMapper: (point, _) => dayOffset(first, point.$1),
-    yValueMapper: (point, _) => point.$2,
-    color: widget.seriesColor,
-    width: 2,
-    dashArray: stroke.chartDashArray,
-    markerSettings: MarkerSettings(
-      isVisible: true,
-      color: widget.seriesColor,
-      borderColor: widget.seriesColor,
-    ),
-  );
-
   @override
   Widget build(BuildContext context) {
     final isEmpty = widget.leftData.isEmpty && widget.rightData.isEmpty;
@@ -86,11 +60,11 @@ class _ForceChartState extends State<ForceChart> {
         ? const <(DateTime, double)>[]
         : isEmpty
         ? _generateFakeData()
-        : _byDay(widget.leftData);
-    final rightData = isEmpty ? _generateFakeData() : _byDay(widget.rightData);
-    final allData = [...leftData, ...rightData];
+        : widget.leftData;
+    final rightData = isEmpty ? _generateFakeData() : widget.rightData;
 
-    if (!isEmpty && testedDays(allData.map((point) => point.$1)) < 2) {
+    if (!isEmpty &&
+        testedDays([...leftData, ...rightData].map((point) => point.$1)) < 2) {
       return CrimpyCards.assessment(
         child: Padding(
           padding: const EdgeInsets.all(CrimpyTheme.spaceLg),
@@ -102,61 +76,28 @@ class _ForceChartState extends State<ForceChart> {
       );
     }
 
-    final dates = allData.map((point) => point.$1).toList()..sort();
-    final spanDays = dayOffset(dates.first, dates.last);
-    final range = valueAxisRange(
-      allData.map((point) => point.$2),
-      widget.unit,
-    )!;
-
     return CrimpyCards.assessment(
       child: Stack(
         alignment: Alignment.center,
         children: [
           Padding(
             padding: const EdgeInsets.all(CrimpyTheme.spaceMd),
-            child: SfCartesianChart(
-              // Whole days since the first tested day rather than a date axis:
-              // its labels start at the minimum and are written by calendar
-              // arithmetic, so the first and the last day are both labelled and
-              // a clock change cannot move one onto the wrong date.
-              primaryXAxis: NumericAxis(
-                majorGridLines: const MajorGridLines(width: 0),
-                axisLine: const AxisLine(width: 0),
-                interval: dateLabelInterval(spanDays).toDouble(),
-                labelStyle: TextStyle(color: CrimpyTheme.textPrimary),
-                axisLabelFormatter: (details) => ChartAxisLabel(
-                  DateFormat.MMMd().format(
-                    dayAt(dates.first, details.value.round()),
+            child: DayLineChart(
+              color: widget.seriesColor,
+              unit: widget.unit,
+              series: [
+                if (widget.perHand)
+                  (
+                    name: 'Left Hand',
+                    data: leftData,
+                    stroke: SeriesStroke.solid,
                   ),
-                  details.textStyle,
-                ),
-                minimum: 0,
-                maximum: spanDays.toDouble(),
-                rangePadding: ChartRangePadding.none,
-                edgeLabelPlacement: EdgeLabelPlacement.shift,
-                plotOffset: 8,
-              ),
-              primaryYAxis: NumericAxis(
-                axisLine: const AxisLine(width: 0),
-                minimum: range.min,
-                maximum: range.max,
-                interval: range.interval,
-                rangePadding: ChartRangePadding.none,
-                majorGridLines: MajorGridLines(
-                  width: 0.5,
-                  color: CrimpyTheme.outlineSubtle,
-                ),
-                labelStyle: TextStyle(color: CrimpyTheme.textPrimary),
-              ),
-              series: <LineSeries<(DateTime, double), num>>[
-                if (widget.perHand && leftData.isNotEmpty)
-                  _line('Left Hand', leftData, SeriesStroke.solid, dates.first),
-                _line(
-                  widget.perHand ? 'Right Hand' : 'Result',
-                  rightData,
-                  widget.perHand ? SeriesStroke.dashed : SeriesStroke.solid,
-                  dates.first,
+                (
+                  name: widget.perHand ? 'Right Hand' : 'Result',
+                  data: rightData,
+                  stroke: widget.perHand
+                      ? SeriesStroke.dashed
+                      : SeriesStroke.solid,
                 ),
               ],
             ),
