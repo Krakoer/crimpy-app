@@ -879,7 +879,7 @@ final class TrainingLoadTrendsProvider
 }
 
 String _$trainingLoadTrendsHash() =>
-    r'845fb51d4a474053b5004cfee4392b286494afdb';
+    r'20c8e331774d8314481cb960b2e6858c5ccfb34f';
 
 /// The items a played session was run from, so its reps can be read block by
 /// block. Empty when the session was not played from a training, or when the

@@ -1,3 +1,4 @@
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
 import 'package:crimpy/utils/assessment_chart_axes.dart';
 import 'package:crimpy/utils/load_trends.dart';
@@ -87,11 +88,11 @@ class _TrainingLoadTrendCardState extends State<TrainingLoadTrendCard> {
     // A grip no longer in the trend, after a run was deleted, falls back to the
     // most weighed one rather than to nothing.
     final selected = grips.firstWhere(
-      (entry) => entry.$1 == _selected,
+      (entry) => entry.grip == _selected,
       orElse: () => grips.first,
     );
-    final points = selected.$2;
-    final data = [for (final point in points) (point.date, point.kilograms)];
+    final hands = selected.hands;
+    final namesHands = hands.length > 1;
 
     return CrimpyCards.stats(
       margin: CrimpyTheme.cardMargin,
@@ -114,21 +115,21 @@ class _TrainingLoadTrendCardState extends State<TrainingLoadTrendCard> {
               child: Row(
                 spacing: CrimpyTheme.spaceSm,
                 children: [
-                  for (final (grip, _) in grips)
+                  for (final entry in grips)
                     ChoiceChip(
-                      label: Text(loadGripLabel(grip)),
-                      selected: grip == selected.$1,
-                      onSelected: (_) => setState(() => _selected = grip),
+                      label: Text(loadGripLabel(entry.grip)),
+                      selected: entry == selected,
+                      onSelected: (_) => setState(() => _selected = entry.grip),
                     ),
                 ],
               ),
             ),
             const SizedBox(height: CrimpyTheme.spaceMd),
-            if (testedDays(points.map((point) => point.date)) < 2)
+            if (testedDays(selected.points.map((point) => point.date)) < 2)
               _Note(
                 'One day on this grip so far, at '
-                '${_meanOf(points).toStringAsFixed(1)} kg. The line starts '
-                'from the second.',
+                '${_dayLoads(hands, namesHands)}. The line starts from the '
+                'second.',
               )
             else ...[
               SizedBox(
@@ -136,17 +137,49 @@ class _TrainingLoadTrendCardState extends State<TrainingLoadTrendCard> {
                 child: DayLineChart(
                   color: CrimpyTheme.trainingLoadSeries,
                   series: [
-                    (name: 'Mean load', data: data, stroke: SeriesStroke.solid),
+                    for (final (hand, points) in hands)
+                      (
+                        name: hand.label,
+                        data: [
+                          for (final point in points)
+                            (point.date, point.kilograms),
+                        ],
+                        stroke: _strokeOf(hand),
+                      ),
                   ],
                 ),
               ),
               const SizedBox(height: CrimpyTheme.spaceSm),
-              Text(
-                loadTrendNote(points, DateFormat.MMMd().format),
-                style: CrimpyTheme.body.copyWith(
-                  color: CrimpyTheme.textPrimary,
+              for (final (hand, points) in hands)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: CrimpyTheme.spaceXs),
+                  child: Row(
+                    children: [
+                      // The swatch says which line the sentence is about, the
+                      // way the profile's stat cards name their hands.
+                      if (namesHands) ...[
+                        SeriesSwatch(
+                          color: CrimpyTheme.trainingLoadSeries,
+                          stroke: _strokeOf(hand),
+                        ),
+                        const SizedBox(width: CrimpyTheme.spaceSm),
+                      ],
+                      Expanded(
+                        child: Text(
+                          points.length < 2
+                              ? '${hand.label}: one session so far.'
+                              : namesHands
+                              ? '${hand.label}: '
+                                    '${loadTrendNote(points, DateFormat.MMMd().format)}'
+                              : loadTrendNote(points, DateFormat.MMMd().format),
+                          style: CrimpyTheme.body.copyWith(
+                            color: CrimpyTheme.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
             ],
             const SizedBox(height: CrimpyTheme.spaceXs),
             const _Note(
@@ -160,11 +193,21 @@ class _TrainingLoadTrendCardState extends State<TrainingLoadTrendCard> {
 
   static const double _chartHeight = 200;
 
-  /// The day's load, when every session of the grip fell on one day: the mean
-  /// of its sessions rather than the last of them.
-  static double _meanOf(List<LoadPoint> points) =>
-      points.map((point) => point.kilograms).reduce((a, b) => a + b) /
-      points.length;
+  /// The left hand solid and the right dashed, as the profile draws them
+  /// (Krakoer/crimpy#164); a hang on both hands at once is one solid line.
+  static SeriesStroke _strokeOf(HandSide hand) =>
+      hand == HandSide.right ? SeriesStroke.dashed : SeriesStroke.solid;
+
+  /// The day's load per hand, when every session of the grip fell on one day:
+  /// the mean of its sessions rather than the last of them.
+  static String _dayLoads(
+    List<(HandSide, List<LoadPoint>)> hands,
+    bool namesHands,
+  ) => [
+    for (final (hand, points) in hands)
+      '${(points.map((p) => p.kilograms).reduce((a, b) => a + b) / points.length).toStringAsFixed(1)} kg'
+          '${namesHands ? ' (${hand.label.toLowerCase()})' : ''}',
+  ].join(', ');
 }
 
 class _Note extends StatelessWidget {

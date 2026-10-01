@@ -10,6 +10,28 @@ typedef LoadGrip = ({GripPosition position, int? edgeSizeMm});
 /// session belongs to, the day the history lists it under.
 typedef LoadPoint = ({DateTime date, double kilograms});
 
+/// One grip of a training's trend: a line per hand it was weighed with, so a
+/// session that weighed one hand only is not averaged with the sessions that
+/// weighed both into a point that tracks which hand ran (Krakoer/crimpy#185).
+class LoadGripTrend {
+  final LoadGrip grip;
+
+  /// Each hand the grip was weighed with, left, right, then both hands at
+  /// once, with one point per session that weighed it, oldest first.
+  final List<(HandSide, List<LoadPoint>)> hands;
+
+  /// How many sessions weighed this grip on any hand.
+  final int sessions;
+
+  const LoadGripTrend({
+    required this.grip,
+    required this.hands,
+    required this.sessions,
+  });
+
+  Iterable<LoadPoint> get points => hands.expand((hand) => hand.$2);
+}
+
 /// The load of one training over time, grip by grip, Krakoer/crimpy#155.
 class TrainingLoadTrend {
   /// What the trend is keyed by: the training played, or the name the runs
@@ -21,9 +43,8 @@ class TrainingLoadTrend {
   /// date a run is saved with.
   final String title;
 
-  /// Each grip the training was weighed on, most weighed first, with one point
-  /// per session that weighed it, oldest first.
-  final List<(LoadGrip, List<LoadPoint>)> grips;
+  /// Each grip the training was weighed on, most weighed first.
+  final List<LoadGripTrend> grips;
 
   const TrainingLoadTrend({
     required this.key,
@@ -78,23 +99,42 @@ List<TrainingLoadTrend> loadTrendsOf(
     if (sessions.length < 2) continue;
     sessions.sort((a, b) => a.date.compareTo(b.date));
 
-    final pointsByGrip = <LoadGrip, List<LoadPoint>>{};
+    final pointsByGrip = <LoadGrip, Map<HandSide, List<LoadPoint>>>{};
+    final sessionsByGrip = <LoadGrip, int>{};
     for (final session in sessions) {
-      final byGrip = <LoadGrip, List<double>>{};
+      final loadsByGrip = <LoadGrip, Map<HandSide, List<double>>>{};
       for (final rep in _loadedReps(session)) {
         final grip = (position: rep.gripPosition, edgeSizeMm: rep.edgeSizeMm);
-        byGrip.putIfAbsent(grip, () => []).add(rep.averageWeight);
+        loadsByGrip
+            .putIfAbsent(grip, () => {})
+            .putIfAbsent(rep.handSide, () => [])
+            .add(rep.averageWeight);
       }
-      for (final MapEntry(key: grip, value: loads) in byGrip.entries) {
-        pointsByGrip.putIfAbsent(grip, () => []).add((
-          date: session.trainingDay,
-          kilograms: loads.reduce((a, b) => a + b) / loads.length,
-        ));
+      for (final MapEntry(key: grip, value: byHand) in loadsByGrip.entries) {
+        sessionsByGrip.update(grip, (n) => n + 1, ifAbsent: () => 1);
+        for (final MapEntry(key: hand, value: loads) in byHand.entries) {
+          pointsByGrip
+              .putIfAbsent(grip, () => {})
+              .putIfAbsent(hand, () => [])
+              .add((
+                date: session.trainingDay,
+                kilograms: loads.reduce((a, b) => a + b) / loads.length,
+              ));
+        }
       }
     }
 
-    final grips = pointsByGrip.entries.map((e) => (e.key, e.value)).toList()
-      ..sort((a, b) => b.$2.length.compareTo(a.$2.length));
+    final grips = [
+      for (final MapEntry(key: grip, value: byHand) in pointsByGrip.entries)
+        LoadGripTrend(
+          grip: grip,
+          hands: [
+            for (final hand in _handOrder)
+              if (byHand[hand] case final points?) (hand, points),
+          ],
+          sessions: sessionsByGrip[grip]!,
+        ),
+    ]..sort((a, b) => b.sessions.compareTo(a.sessions));
     trends.add((
       sessions.last.date,
       TrainingLoadTrend(
@@ -118,6 +158,9 @@ List<TrainingLoadTrend> loadTrendsOf(
 List<RepDataModel> _loadedReps(SessionModel session) => weighedReps(
   session.reps ?? const [],
 ).where((rep) => rep.averageWeight > 0).toList();
+
+/// The order a grip's hands are drawn and stated in.
+const _handOrder = [HandSide.left, HandSide.right, HandSide.both];
 
 /// A grip as a chip names it: "Half Crimp 20 mm".
 String loadGripLabel(LoadGrip grip) => grip.edgeSizeMm == null

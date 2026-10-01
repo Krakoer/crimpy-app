@@ -31,11 +31,17 @@ final _trend = TrainingLoadTrend(
   key: 'repeaters',
   title: 'Repeaters 20mm',
   grips: [
-    (
-      (position: GripPosition.halfCrimp, edgeSizeMm: 20),
-      [
-        (date: DateTime(2026, 9, 8), kilograms: 20.0),
-        (date: DateTime(2026, 9, 19), kilograms: 21.4),
+    LoadGripTrend(
+      grip: (position: GripPosition.halfCrimp, edgeSizeMm: 20),
+      sessions: 2,
+      hands: [
+        (
+          HandSide.right,
+          [
+            (date: DateTime(2026, 9, 8), kilograms: 20.0),
+            (date: DateTime(2026, 9, 19), kilograms: 21.4),
+          ],
+        ),
       ],
     ),
   ],

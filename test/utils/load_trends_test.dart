@@ -7,6 +7,7 @@ RepDataModel _rep(
   double averageWeight, {
   GripPosition grip = GripPosition.halfCrimp,
   int? edge = 20,
+  HandSide hand = HandSide.right,
   bool isRest = false,
   bool targetUnmeasured = false,
   double targetWeight = 20,
@@ -15,7 +16,7 @@ RepDataModel _rep(
   duration: 7,
   index: 0,
   isRest: isRest,
-  handSide: HandSide.right,
+  handSide: hand,
   targetWeight: targetWeight,
   gripPosition: grip,
   edgeSizeMm: edge,
@@ -59,9 +60,9 @@ void main() {
       _run(DateTime(2026, 9, 12), [_rep(22)]),
     ]);
 
-    final (grip, points) = trends.single.grips.single;
-    expect(grip, (position: GripPosition.halfCrimp, edgeSizeMm: 20));
-    expect(points.map((p) => p.kilograms), [20, 22]);
+    final grip = trends.single.grips.single;
+    expect(grip.grip, (position: GripPosition.halfCrimp, edgeSizeMm: 20));
+    expect(grip.points.map((p) => p.kilograms), [20, 22]);
   });
 
   // Krakoer/crimpy#25 to #30: a rep the sensor never weighed is left out, not
@@ -76,7 +77,7 @@ void main() {
       _run(DateTime(2026, 9, 12), [_rep(21)]),
     ]);
 
-    final points = trends.single.grips.single.$2;
+    final points = trends.single.grips.single.points;
     expect(points.map((p) => p.kilograms), [20, 21]);
   });
 
@@ -95,12 +96,30 @@ void main() {
     expect(trends.map((t) => t.key), ['max', 'repeaters']);
     final repeaters = trends.last.grips;
     // The most weighed grip first.
-    expect(repeaters.first.$1, (
+    expect(repeaters.first.grip, (
       position: GripPosition.halfCrimp,
       edgeSizeMm: 20,
     ));
     expect(repeaters, hasLength(3));
-    expect(trends.first.grips.single.$2.map((p) => p.kilograms), [32, 33]);
+    expect(trends.first.grips.single.points.map((p) => p.kilograms), [32, 33]);
+  });
+
+  // Krakoer/crimpy#185: a session that weighed one hand only must not move a
+  // line that averages both, so each hand keeps a line of its own.
+  test('keeps each hand of a grip on a line of its own', () {
+    final trends = loadTrendsOf([
+      _run(DateTime(2026, 9, 8), [
+        _rep(20, hand: HandSide.left),
+        _rep(24, hand: HandSide.right),
+      ]),
+      _run(DateTime(2026, 9, 12), [_rep(25, hand: HandSide.right)]),
+    ]);
+
+    final grip = trends.single.grips.single;
+    expect(grip.sessions, 2);
+    expect(grip.hands.map((hand) => hand.$1), [HandSide.left, HandSide.right]);
+    expect(grip.hands.first.$2.map((p) => p.kilograms), [20]);
+    expect(grip.hands.last.$2.map((p) => p.kilograms), [24, 25]);
   });
 
   test('reads the runs of a builtin as one training by their name', () {
@@ -130,7 +149,7 @@ void main() {
       _run(DateTime(2026, 9, 9, 0, 30), [_rep(21)]),
     ]);
 
-    final points = trends.single.grips.single.$2;
+    final points = trends.single.grips.single.points;
     expect(points.map((p) => p.date), [
       DateTime(2026, 9, 8),
       DateTime(2026, 9, 8),
@@ -146,7 +165,7 @@ void main() {
       _run(DateTime(2026, 9, 14), [_rep(21)]),
     ]);
 
-    final points = trends.single.grips.single.$2;
+    final points = trends.single.grips.single.points;
     expect(points.map((p) => p.kilograms), [20, 21]);
   });
 

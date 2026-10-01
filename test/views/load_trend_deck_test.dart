@@ -2,6 +2,7 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/utils/load_trends.dart';
 import 'package:crimpy/views/screens/home_screen/history/session_history_screen/widgets/load_trend_deck.dart';
 import 'package:crimpy/views/widgets/day_line_chart.dart';
+import 'package:crimpy/views/widgets/series_swatch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,14 +13,46 @@ TrainingLoadTrend _trend() => TrainingLoadTrend(
   key: 'repeaters',
   title: 'Repeaters 20mm',
   grips: [
-    (
-      _halfCrimp,
-      [
-        (date: DateTime(2026, 9, 8), kilograms: 20.0),
-        (date: DateTime(2026, 9, 19), kilograms: 21.4),
+    LoadGripTrend(
+      grip: _halfCrimp,
+      sessions: 2,
+      hands: [
+        (
+          HandSide.right,
+          [
+            (date: DateTime(2026, 9, 8), kilograms: 20.0),
+            (date: DateTime(2026, 9, 19), kilograms: 21.4),
+          ],
+        ),
       ],
     ),
-    (_openHand, [(date: DateTime(2026, 9, 12), kilograms: 15.0)]),
+    LoadGripTrend(
+      grip: _openHand,
+      sessions: 1,
+      hands: [
+        (HandSide.right, [(date: DateTime(2026, 9, 12), kilograms: 15.0)]),
+      ],
+    ),
+    LoadGripTrend(
+      grip: (position: GripPosition.threeFinger, edgeSizeMm: 20),
+      sessions: 2,
+      hands: [
+        (
+          HandSide.left,
+          [
+            (date: DateTime(2026, 9, 8), kilograms: 18.0),
+            (date: DateTime(2026, 9, 19), kilograms: 18.2),
+          ],
+        ),
+        (
+          HandSide.right,
+          [
+            (date: DateTime(2026, 9, 8), kilograms: 19.0),
+            (date: DateTime(2026, 9, 19), kilograms: 20.5),
+          ],
+        ),
+      ],
+    ),
   ],
 );
 
@@ -70,5 +103,26 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('draws a line per hand and states each of them', (tester) async {
+    await _show(tester);
+
+    await tester.tap(find.text('3-Finger Drag 20 mm'));
+    await tester.pumpAndSettle();
+
+    final chart = tester.widget<DayLineChart>(find.byType(DayLineChart));
+    expect(chart.series.map((line) => line.name), ['Left Hand', 'Right Hand']);
+    expect(chart.series.map((line) => line.stroke), [
+      SeriesStroke.solid,
+      SeriesStroke.dashed,
+    ]);
+    expect(
+      find.text(
+        'Left Hand: Within half a kilo since Sep 8: grip noise, not progress.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Right Hand: Up 1.5 kg since Sep 8.'), findsOneWidget);
   });
 }
