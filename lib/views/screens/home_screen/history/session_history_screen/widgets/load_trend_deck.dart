@@ -51,17 +51,17 @@ class _LoadTrendListState extends State<LoadTrendList> {
           itemCount: widget.trends.length,
           itemBuilder: (context, index) {
             final trend = widget.trends[index];
-            return Padding(
-              padding: EdgeInsets.only(
-                right: index == widget.trends.length - 1
-                    ? 0
-                    : CrimpyTheme.spaceSm,
-              ),
-              child: TrainingLoadTrendCard(
-                key: ValueKey(trend.key),
-                trend: trend,
-              ),
+            final card = TrainingLoadTrendCard(
+              key: ValueKey(trend.key),
+              trend: trend,
             );
+            // A gap before the next card only: the last one ends on the edge.
+            return index == widget.trends.length - 1
+                ? card
+                : Padding(
+                    padding: const EdgeInsets.only(right: CrimpyTheme.spaceSm),
+                    child: card,
+                  );
           },
         ),
       ),
