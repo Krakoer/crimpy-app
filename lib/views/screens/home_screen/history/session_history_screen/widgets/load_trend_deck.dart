@@ -166,8 +166,11 @@ class _TrainingLoadTrendCardState extends State<TrainingLoadTrendCard> {
                       ],
                       Expanded(
                         child: Text(
-                          points.length < 2
-                              ? '${hand.label}: one session so far.'
+                          // One day is a value rather than a trend, for one
+                          // hand as for the whole grip (Krakoer/crimpy#164).
+                          testedDays(points.map((point) => point.date)) < 2
+                              ? '${hand.label}: one day so far, at '
+                                    '${_dayLoads([(hand, points)], false)}.'
                               : namesHands
                               ? '${hand.label}: '
                                     '${loadTrendNote(points, DateFormat.MMMd().format)}'

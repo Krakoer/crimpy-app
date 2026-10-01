@@ -125,4 +125,49 @@ void main() {
     );
     expect(find.text('Right Hand: Up 1.5 kg since Sep 8.'), findsOneWidget);
   });
+
+  testWidgets('states a hand weighed on one day as a value', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: LoadTrendList(
+              trends: [
+                TrainingLoadTrend(
+                  key: 'alternate',
+                  title: 'Alternate hangs',
+                  grips: [
+                    LoadGripTrend(
+                      grip: _halfCrimp,
+                      sessions: 2,
+                      hands: [
+                        (
+                          HandSide.left,
+                          [
+                            (date: DateTime(2026, 9, 8), kilograms: 18.0),
+                            (date: DateTime(2026, 9, 8), kilograms: 19.0),
+                          ],
+                        ),
+                        (
+                          HandSide.right,
+                          [
+                            (date: DateTime(2026, 9, 8), kilograms: 20.0),
+                            (date: DateTime(2026, 9, 12), kilograms: 21.0),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Left Hand: one day so far, at 18.5 kg.'), findsOneWidget);
+    expect(find.text('Right Hand: Up 1.0 kg since Sep 8.'), findsOneWidget);
+  });
 }

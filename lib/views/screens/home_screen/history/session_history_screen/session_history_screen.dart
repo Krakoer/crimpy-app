@@ -144,7 +144,12 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
             // Over the whole history, so a filter that empties the list does
             // not take the trends with it.
             if (_showsLoadTrends && loadTrends.isNotEmpty)
-              LoadTrendList(trends: loadTrends),
+              LoadTrendList(
+                // A deck that gains or loses its second card is built again,
+                // so the next card peeks in only when there is one.
+                key: ValueKey(loadTrends.length > 1),
+                trends: loadTrends,
+              ),
             EmptyState(selectedDate: _selectedDate),
           ],
         ),
@@ -183,7 +188,12 @@ class _SessionHistoryScreenState extends ConsumerState<SessionHistoryScreen> {
                 onDateTap: (date) => setState(() => _selectedDate = date),
               ),
               if (_showsLoadTrends && loadTrends.isNotEmpty)
-                LoadTrendList(trends: loadTrends),
+                LoadTrendList(
+                  // A deck that gains or loses its second card is built again,
+                  // so the next card peeks in only when there is one.
+                  key: ValueKey(loadTrends.length > 1),
+                  trends: loadTrends,
+                ),
             ],
           );
         }
