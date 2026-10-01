@@ -1,4 +1,8 @@
 import 'package:crimpy/models/coach_enrollment.dart';
+import 'package:crimpy/models/finished_run_draft.dart';
+import 'package:crimpy/viewmodels/finished_run_draft_view_model.dart';
+import 'package:crimpy/views/screens/assessments/critical_force/critical_force_result_screen.dart';
+import 'package:crimpy/views/screens/trainings/post_workout_screen.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/services/notification_service.dart';
@@ -23,6 +27,7 @@ import '../viewmodels/training_view_model.dart';
 import 'widgets/ble/connection_dialog.dart';
 import 'widgets/coach_notification_dialog.dart';
 import 'widgets/whats_new_dialog.dart';
+import 'widgets/unsaved_run_dialog.dart';
 
 class _NavItem extends StatelessWidget {
   final IconData icon;
@@ -94,6 +99,9 @@ class _MainPageState extends ConsumerState<MainPage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // First: a run the app died on is the one thing here the athlete would
+      // lose by answering the other dialogs first.
+      await _offerUnsavedRun();
       await _checkForUpdates();
       // After the release notes rather than beside them: both are dialogs, and
       // the athlete should not be answering two of them at once.
@@ -250,6 +258,53 @@ class _MainPageState extends ConsumerState<MainPage>
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text(notificationsBlockedMessage)));
+  }
+
+  /// Offers back a run that finished and whose review was never saved, because
+  /// the app died on it. Asked on a cold start only, from this page's first
+  /// frame: a resume finds the review still on screen. Krakoer/crimpy#146.
+  Future<void> _offerUnsavedRun() async {
+    final FinishedRunDraft? draft;
+    try {
+      draft = await ref.read(unsavedFinishedRunProvider.future);
+    } catch (error) {
+      AppLoggerHelper.error('Could not read the unsaved run', error);
+      return;
+    }
+    if (draft == null || !mounted) return;
+    final repository = ref.read(finishedRunDraftRepositoryProvider);
+
+    final Widget review;
+    try {
+      review = switch (draft) {
+        TrainingReviewDraft() => PostWorkoutScreen.fromDraft(draft),
+        CriticalForceResultDraft() => CriticalForceResultScreen.fromDraft(
+          draft,
+        ),
+      };
+    } catch (error) {
+      // A Critical Force run whose readings no longer analyse has no result to
+      // show, so there is nothing to offer back.
+      AppLoggerHelper.error('Dropping an unsaved run it cannot show', error);
+      await forgetFinishedRun(repository);
+      return;
+    }
+    if (!mounted) return;
+
+    final wanted = await showDialog<bool>(
+      context: context,
+      // A stray tap beside it must neither lose the run nor open it.
+      barrierDismissible: false,
+      builder: (context) => UnsavedRunDialog(draft: draft!),
+    );
+    if (!mounted) return;
+    if (wanted == true) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (context) => review));
+    } else if (wanted == false) {
+      await forgetFinishedRun(repository);
+    }
   }
 
   /// Check if the app has been updated and show the "What's New" dialog

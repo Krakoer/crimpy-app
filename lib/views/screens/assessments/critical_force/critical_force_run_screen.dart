@@ -20,6 +20,8 @@ import 'package:crimpy/views/screens/assessments/critical_force/analysis_error_s
 import 'package:crimpy/views/screens/assessments/critical_force/critical_force_result_screen.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/minimalist_graph.dart';
 import 'package:crimpy/views/widgets/assessment_tutorial_dialog.dart';
+import 'package:crimpy/models/finished_run_draft.dart';
+import 'package:crimpy/viewmodels/finished_run_draft_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -139,21 +141,33 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
           // picked when starting the run.
           handSide: widget.hand,
         );
+        // Kept on the device before the result is shown, so the app dying on
+        // the result screen does not take the run with it. Krakoer/crimpy#146.
+        final draft = CriticalForceResultDraft(
+          owner: await ref.read(runDraftOwnerProvider.future),
+          data: data,
+          samples: samples,
+          pullWindows: [
+            for (final window in _pullWindows)
+              (start: window.start / 1000, end: window.end / 1000),
+          ],
+          pausedSeconds: _pullWindows.isEmpty
+              ? 0
+              : _clockLog.pausedMsAfter(_pullWindows.first.start) ~/ 1000,
+          previousCriticalForce: previousCriticalForce,
+          saveAssessment: saveAssessment,
+          saveSession: saveSession,
+          saveReps: saveReps,
+        );
+        await keepFinishedRun(
+          ref.read(finishedRunDraftRepositoryProvider),
+          draft,
+        );
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => CriticalForceResultScreen(
-                data: data,
-                samples: samples,
-                results: results,
-                pausedSeconds: _pullWindows.isEmpty
-                    ? 0
-                    : _clockLog.pausedMsAfter(_pullWindows.first.start) ~/ 1000,
-                previousCriticalForce: previousCriticalForce,
-                saveAssessment: saveAssessment,
-                saveSession: saveSession,
-                saveReps: saveReps,
-              ),
+              builder: (context) =>
+                  CriticalForceResultScreen.fromDraft(draft, results: results),
             ),
           );
         }

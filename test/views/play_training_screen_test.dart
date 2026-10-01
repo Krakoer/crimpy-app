@@ -18,6 +18,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/run_screen_plugins.dart';
+import '../support/run_drafts.dart';
 
 Training _stretchingCircuit() => const Training(
   id: 't1',
@@ -463,6 +464,7 @@ Future<void> _pumpRun(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        ...runDraftOverrides(),
         // Always served, never built: the real provider reaches for the stored
         // calibration on creation, which no test binding can answer, and the
         // screen reads the repository whether or not it runs with the sensor.
@@ -606,6 +608,7 @@ Future<void> _pumpConnectedRun(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        ...runDraftOverrides(),
         bleRepositoryProvider.overrideWithValue(sensor),
         connectionStateProvider.overrideWith(_ConnectedSensor.new),
       ],

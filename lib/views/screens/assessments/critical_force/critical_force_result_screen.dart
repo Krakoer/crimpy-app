@@ -1,6 +1,9 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/critical_force_result.dart';
+import 'package:crimpy/models/finished_run_draft.dart';
+import 'package:crimpy/utils/critical_force_analysis.dart';
+import 'package:crimpy/viewmodels/finished_run_draft_view_model.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/assessments/post_assessment_screen.dart';
@@ -34,6 +37,28 @@ class CriticalForceResultScreen extends ConsumerWidget {
     required this.saveReps,
     super.key,
   });
+
+  /// The result of a finished run as it was kept on the device, which is how
+  /// every run reaches this screen: straight from the run, and again on the
+  /// next launch when the app died before the result was saved. [results] is
+  /// the analysis the run already made; a resumed run makes it again, on the
+  /// same readings.
+  CriticalForceResultScreen.fromDraft(
+    CriticalForceResultDraft draft, {
+    CriticalForceResults? results,
+    Key? key,
+  }) : this(
+         key: key,
+         previousCriticalForce: draft.previousCriticalForce,
+         results:
+             results ?? analyseCriticalForce(draft.samples, draft.pullWindows),
+         data: draft.data,
+         samples: draft.samples,
+         pausedSeconds: draft.pausedSeconds,
+         saveAssessment: draft.saveAssessment,
+         saveSession: draft.saveSession,
+         saveReps: draft.saveReps,
+       );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -186,6 +211,11 @@ class CriticalForceResultScreen extends ConsumerWidget {
                 }
                 return;
               }
+              // Stored, so the copy kept in case the app died here goes. A save
+              // that failed keeps it.
+              await forgetFinishedRun(
+                ref.read(finishedRunDraftRepositoryProvider),
+              );
               if (context.mounted) {
                 Navigator.of(context).pop();
               }
@@ -194,8 +224,11 @@ class CriticalForceResultScreen extends ConsumerWidget {
           ),
           TextButton(
             child: Text("Discard"),
-            onPressed: () {
-              Navigator.of(context).pop();
+            onPressed: () async {
+              await forgetFinishedRun(
+                ref.read(finishedRunDraftRepositoryProvider),
+              );
+              if (context.mounted) Navigator.of(context).pop();
             },
           ),
         ],
