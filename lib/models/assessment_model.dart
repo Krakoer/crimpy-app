@@ -361,8 +361,8 @@ class AssessmentResults {
   /// With a [grip], each hand reads the last value measured on that grip, and
   /// falls back to the last one on any grip when that grip was never measured
   /// on that hand, which is how the intensity rater's MaxForceReference reads
-  /// a max. Testing an open
-  /// hand after a half crimp then leaves the half crimp loads where they were.
+  /// a max. Testing an open hand after a half crimp then leaves the half crimp
+  /// loads where they were.
   ///
   /// An assessment that is not measured per hand stores its single number on the
   /// right, so asking for no hand averages one value and returns it unchanged.

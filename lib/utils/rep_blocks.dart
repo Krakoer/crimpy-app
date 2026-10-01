@@ -200,8 +200,6 @@ typedef ReportedItem = ({
 bool _isBlock(TrainingItem item) =>
     item.type == TrainingItemType.emom || item.type == TrainingItemType.circuit;
 
-/// Whether an item is a hang, which is worked for a time on a board rather than
-/// counted in repetitions.
 /// The hand an item's load is resolved for: the one hand a right or left hang
 /// is hung with, and the mean of both for any other, since a summary states one
 /// load for hands that take turns.
@@ -211,6 +209,8 @@ HandSide _handResolvedFor(TrainingItem item) => switch (item.hand) {
   _ => HandSide.both,
 };
 
+/// Whether an item is a hang, which is worked for a time on a board rather than
+/// counted in repetitions.
 bool _isHang(TrainingItem item) =>
     item.type == TrainingItemType.repeater ||
     item.type == TrainingItemType.hangboardRep;

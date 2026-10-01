@@ -160,7 +160,7 @@ void main() {
     expect(offers.single.onFileKg, 30);
   });
 
-  test('offers a pull that also beats the value loads resolve against', () {
+  test('offers a pull that beats both grips, up from its own', () {
     final offers = MaxForceOffer.fromPulls(
       [_pull(46, grip: GripPosition.openHand)],
       [

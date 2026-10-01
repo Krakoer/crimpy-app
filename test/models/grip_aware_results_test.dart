@@ -3,6 +3,7 @@ import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/utils/override_labels.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/utils/training_expander.dart';
 import 'package:crimpy/utils/training_intensity.dart';
@@ -161,5 +162,48 @@ void main() {
 
   test('the review states the load the run hung', () {
     expect(prescribedSummary(_hang('halfCrimp'), results), contains('36'));
+  });
+
+  test('a repeater reads each rep against the grip of that rep', () {
+    final steps = expandTrainingItems(
+      Training(
+        id: 't',
+        title: 'Two grips',
+        items: [
+          TrainingItem(
+            id: 'r',
+            type: TrainingItemType.repeater,
+            position: 0,
+            hand: HangboardHand.right,
+            cycles: 1,
+            reps: 2,
+            worktimeSeconds: 7,
+            restSeconds: 3,
+            granularity: HangboardGranularity.perRep,
+            loads: const [_eightyPercentOfMax, _eightyPercentOfMax],
+            handPositions: const [
+              ['HC', 'OH'],
+            ],
+          ),
+        ],
+      ),
+      results: results,
+    );
+
+    final hangs = steps.whereType<TimedItem>().toList();
+    expect(hangs.map((h) => h.targetLoad), [36, 24]);
+  });
+
+  test('a week override chip reads the load on the hang it overrides', () {
+    final labels = overrideChipLabels(
+      {
+        'loads': [_eightyPercentOfMax.toJson()],
+      },
+      results: results,
+      bodyweightKg: null,
+      item: _hang('halfCrimp'),
+    );
+
+    expect(labels.single, contains('(36 kg)'));
   });
 }

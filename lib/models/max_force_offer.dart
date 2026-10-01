@@ -67,7 +67,10 @@ class MaxForceOffer {
   /// what it is a new max of, what the card says it is up from, and, since
   /// percentage loads resolve against the max of their own grip (see
   /// [AssessmentResults.value]), what every percent of max hang on that grip
-  /// reads against: saving it can only make those harder.
+  /// reads against: saving it can only make those harder. A grip the athlete
+  /// never tested reads the latest result on any grip instead, so saving a pull
+  /// can still move those loads, either way. That is the trade-off
+  /// Krakoer/crimpy#182 settled on: comparing against the same grip alone.
   ///
   /// With nothing on file for the hand and grip there is nothing to beat, and
   /// no offer.
