@@ -73,6 +73,7 @@ dependencies:
   # plugin 8.7.0 this project is on. Unpin it with the toolchain bump, not on
   # its own.
   url_launcher_android: 6.3.14
+  vibration: ^3.2.1
 
 dev_dependencies:
   sentry_dart_plugin: ^3.2.1

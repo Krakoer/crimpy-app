@@ -21,6 +21,7 @@ import 'generated/schema_v9.dart' as v9;
 import 'generated/schema_v11.dart' as v11;
 import 'generated/schema_v13.dart' as v13;
 import 'generated/schema_v14.dart' as v14;
+import 'generated/schema_v16.dart' as v16;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -974,6 +975,50 @@ void main() {
       expect(session.prescriptionJson, null);
       // The link the reps are read through has to survive the added column.
       expect(session.trainingId, 't-1');
+      await db.close();
+    });
+  });
+  group('v16 to v17 data migration', () {
+    // A result now says whether it came from a test or was kept from a
+    // training. Every one stored before the distinction came from a test.
+    test('a result stored before the origin reads as a test', () async {
+      final schema = await verifier.schemaAt(16);
+      final oldDb = v16.DatabaseAtV16(schema.newConnection());
+      await oldDb
+          .into(oldDb.sessions)
+          .insert(
+            const v16.SessionsData(
+              id: 's-1',
+              name: 'Max Force',
+              notes: '',
+              date: 1700000000,
+              dataPath: '',
+              isAssessment: 1,
+              activity: 0,
+              origin: 'played',
+              duration: 30,
+              rpeFailed: 0,
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb
+          .into(oldDb.assessments)
+          .insert(
+            const v16.AssessmentsData(
+              id: 'a-1',
+              assessmentId: BuiltinAssessmentIds.maxForce,
+              rightValue: 40,
+              sessionId: 's-1',
+              gripPosition: 0,
+              updatedAt: 1700000000,
+            ),
+          );
+      await oldDb.close();
+
+      final db = AppDatabase(schema.newConnection());
+      final results = await db.getAssessments();
+      expect(results.single.origin, AssessmentOrigin.test);
+      expect(results.single.rightValue, 40);
       await db.close();
     });
   });

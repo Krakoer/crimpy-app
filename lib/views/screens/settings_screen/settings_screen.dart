@@ -10,6 +10,7 @@ import 'package:crimpy/views/screens/availability/week_availability_screen.dart'
 import 'package:crimpy/views/screens/settings_screen/notification_settings_screen.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/debug_modal.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/reset_password_tile.dart';
+import 'package:crimpy/views/screens/settings_screen/widgets/run_cue_vibration_tile.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/sensor_ownership_tile.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/sensor_settings_list.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
@@ -169,6 +170,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       ),
                     ],
                   ),
+                  const RunCueVibrationTile(),
                   // Only for a coached athlete: with no coach there is nobody
                   // for the week to be sent to.
                   if (ref.watch(coachEnrollmentProvider).value != null)

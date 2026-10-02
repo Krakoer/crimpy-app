@@ -173,6 +173,19 @@ void main() {
       expect(results.lastCountedPull, 4);
     });
 
+    test(
+      'averages a test finished before its fourth pull on all its pulls',
+      () {
+        final results = analyseCriticalForce(
+          _trace(3, _square((_) => 10)),
+          _windows(3),
+        );
+
+        expect(results.criticalForce, closeTo(10, 0.01));
+        expect(results.averagedPullCount, 3);
+      },
+    );
+
     test('sorts the readings into the windows it is given', () {
       // A clock paused for 5 s during the rest after pull 1.
       final windows = <CriticalForceWindow>[

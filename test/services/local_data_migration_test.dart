@@ -155,6 +155,7 @@ class _FakeRemoteAssessments implements AssessmentRepository {
   /// half succeeded can be retried in a test.
   int refusals;
   final List<String> savedSessionIds = [];
+  final List<AssessmentResultModel> saved = [];
   int _next = 0;
 
   _FakeRemoteAssessments({this.refusals = 0});
@@ -169,6 +170,7 @@ class _FakeRemoteAssessments implements AssessmentRepository {
       throw Exception('refused assessment');
     }
     savedSessionIds.add(sessionId);
+    saved.add(assessment);
     return 'server-assessment-${_next++}';
   }
 
@@ -571,6 +573,71 @@ void main() {
       // fresh one and not an empty string.
       expect(accepting.savedSessionIds, [remote.sessionIds.single]);
     });
+
+    // A Max Force kept from a pull of a training sits on the training, which
+    // is not an assessment session. It has to go up with its origin, or the
+    // wipe that follows a clean import loses it.
+    test('sends a Max Force kept from a training with its origin', () async {
+      final sessionId = await db.saveSession(playedSession(), [rep()]);
+      await db.saveAssessment(
+        AssessmentResultModel(
+          assessmentId: BuiltinAssessmentIds.maxForce,
+          rightValue: 42.3,
+          gripPosition: GripPosition.halfCrimp,
+          origin: AssessmentOrigin.training,
+        ),
+        sessionId,
+      );
+
+      final remote = _FakeRemoteTrainings();
+      final assessments = _FakeRemoteAssessments();
+      expect(
+        await migrationWith(
+          remote,
+          assessments: assessments,
+        ).uploadAll(_userId),
+        0,
+      );
+
+      expect(assessments.savedSessionIds, [remote.sessionIds.single]);
+      expect(assessments.saved.single.origin, AssessmentOrigin.training);
+      expect(assessments.saved.single.rightValue, 42.3);
+    });
+
+    test(
+      'retries a result kept from a training on a session already up',
+      () async {
+        final sessionId = await db.saveSession(playedSession(), [rep()]);
+        await db.saveAssessment(
+          AssessmentResultModel(
+            assessmentId: BuiltinAssessmentIds.maxForce,
+            leftValue: 39,
+            origin: AssessmentOrigin.training,
+          ),
+          sessionId,
+        );
+
+        final remote = _FakeRemoteTrainings();
+        expect(
+          await migrationWith(
+            remote,
+            assessments: _FakeRemoteAssessments(refusals: 1),
+          ).uploadAll(_userId),
+          1,
+        );
+        final accepting = _FakeRemoteAssessments();
+        expect(
+          await migrationWith(
+            remote,
+            assessments: accepting,
+          ).uploadAll(_userId),
+          0,
+        );
+
+        expect(remote.postedSessions, hasLength(1));
+        expect(accepting.saved.single.origin, AssessmentOrigin.training);
+      },
+    );
 
     test('counts only what is left when asked what is pending', () async {
       final local = await saveLocalTraining();

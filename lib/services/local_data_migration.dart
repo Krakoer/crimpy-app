@@ -119,11 +119,11 @@ class LocalDataMigration {
     for (final row in await _database.getAllSessions()) {
       final importedSessionId = row.serverId;
       if (importedSessionId != null) {
-        // Already on the server from an earlier run. Only its assessments can
+        // Already on the server from an earlier run. Only its results can
         // still be outstanding, and they are keyed on the session id it got.
-        if (row.isAssessment) {
-          failures += await _uploadAssessmentsFor(row.id, importedSessionId);
-        }
+        // Asked of every session, not only of an assessment: a Max Force kept
+        // from a pull of a training sits on the training.
+        failures += await _uploadAssessmentsFor(row.id, importedSessionId);
         continue;
       }
 
@@ -221,9 +221,7 @@ class LocalDataMigration {
           itemResults: itemResults,
         );
         await _database.markSessionImported(row.id, serverSessionId);
-        if (row.isAssessment) {
-          failures += await _uploadAssessmentsFor(row.id, serverSessionId);
-        }
+        failures += await _uploadAssessmentsFor(row.id, serverSessionId);
       } catch (e) {
         failures++;
         AppLoggerHelper.error('Failed to import session ${row.id}: $e');

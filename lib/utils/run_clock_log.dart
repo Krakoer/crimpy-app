@@ -30,14 +30,14 @@ class RunClockLog {
     return null;
   }
 
-  /// How long the run clock stood stopped once it had passed [runClockMs], in
-  /// milliseconds.
+  /// How long the run clock stood stopped after it had passed [runClockMs], in
+  /// milliseconds. A stop that ended right at [runClockMs] came before it.
   int pausedMsAfter(int runClockMs) {
     var paused = 0;
     for (var i = 0; i + 1 < _stretches.length; i++) {
       final stoppedAt = _stretches[i].wallEnd;
       final resumed = _stretches[i + 1];
-      if (stoppedAt == null || resumed.runClockStartMs < runClockMs) continue;
+      if (stoppedAt == null || resumed.runClockStartMs <= runClockMs) continue;
       paused += resumed.wallStart.difference(stoppedAt).inMilliseconds;
     }
     return paused;

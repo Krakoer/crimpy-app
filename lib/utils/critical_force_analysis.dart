@@ -39,7 +39,9 @@ CriticalForceResults analyseCriticalForce(
       .map((p) => p.meanKg)
       .nonNulls
       .toList();
-  if (countedMeans.length < CriticalForceRules.minValidCountedPulls) {
+  final countedSpan = pulls.length - firstCounted;
+  if (countedMeans.length <
+      min(CriticalForceRules.minValidCountedPulls, countedSpan)) {
     throw const CriticalForceAnalysisException(
       'The sensor sent too little data during the last pulls to compute a '
       'Critical Force.',

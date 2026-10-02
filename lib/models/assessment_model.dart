@@ -17,6 +17,10 @@ class BuiltinAssessmentIds {
   static const String maxForce = 'f7954158-63ba-4f0b-a125-6ef195fa6442';
   static const String endurance60 = '493acbdd-6fe7-4f25-987c-575ccf433293';
 
+  /// The edge the Max Force test is pulled on. A pull on any other edge is a
+  /// different measurement, so only one on this edge can stand for a new max.
+  static const int maxForceEdgeSizeMm = defaultEdgeSizeMm;
+
   static const Map<String, AssessmentType> protocols = {
     criticalForce: AssessmentType.criticalForce,
     maxForce: AssessmentType.mvc,
@@ -61,6 +65,25 @@ class BuiltinAssessmentIds {
 }
 
 enum AssessmentUnit { kilograms, seconds, repetitions }
+
+/// What produced a result: a run of the assessment itself, or a pull measured
+/// during an ordinary training that the athlete chose to keep because it beat
+/// the result on file. A coach reads the two differently, and a result kept
+/// from a training never replaces the day's test.
+enum AssessmentOrigin { test, training }
+
+extension AssessmentOriginApi on AssessmentOrigin {
+  /// How the origin travels to the API and the local database.
+  String get apiValue => name;
+}
+
+/// Reads an origin as the API and the local database spell it. Anything else,
+/// an absent value included, is a test, which is what every result recorded
+/// before the distinction existed was.
+AssessmentOrigin assessmentOriginFromApi(String? value) =>
+    value == AssessmentOrigin.training.apiValue
+    ? AssessmentOrigin.training
+    : AssessmentOrigin.test;
 
 /// The wire name of a unit, which is what assessment_definitions.unit holds.
 AssessmentUnit assessmentUnitFromApi(String? value) => switch (value) {
@@ -194,12 +217,14 @@ class AssessmentResultModel {
   final double? rightValue;
   final double? leftValue;
   final GripPosition? gripPosition;
+  final AssessmentOrigin origin;
 
   AssessmentResultModel({
     required this.assessmentId,
     this.rightValue,
     this.leftValue,
     this.gripPosition,
+    this.origin = AssessmentOrigin.test,
   });
 
   /// Get the hand of the assessment.
@@ -238,11 +263,20 @@ class AssessmentHandValues {
 class AssessmentResults {
   final Map<String, AssessmentHandValues> lastById;
 
+  /// The same latest values, kept apart per grip the result was pulled on, so
+  /// a hang reads the max of its own grip rather than of whatever grip was
+  /// tested last. A result with no grip only counts in [lastById].
+  final Map<String, Map<GripPosition, AssessmentHandValues>> lastByGrip;
+
   /// What each assessment is, so a percentage can be unit checked and named
   /// without a lookup table the app would have to keep in step with the server.
   final Map<String, AssessmentDefinition> definitions;
 
-  const AssessmentResults(this.lastById, {this.definitions = const {}});
+  const AssessmentResults(
+    this.lastById, {
+    this.definitions = const {},
+    this.lastByGrip = const {},
+  });
 
   /// No assessment data at all, so every assessment-relative value resolves to
   /// the fallback the coach set.
@@ -258,6 +292,7 @@ class AssessmentResults {
     final chronological = [...assessments]
       ..sort((a, b) => a.date.compareTo(b.date));
     final last = <String, AssessmentHandValues>{};
+    final byGrip = <String, Map<GripPosition, AssessmentHandValues>>{};
     final known = <String, AssessmentDefinition>{
       for (final definition in definitions) definition.id: definition,
     };
@@ -268,11 +303,20 @@ class AssessmentResults {
         right: assessment.rightValue,
         left: assessment.leftValue,
       );
+      final grip = assessment.gripPosition;
+      if (grip != null) {
+        final grips = byGrip.putIfAbsent(assessment.assessmentId, () => {});
+        grips[grip] = (grips[grip] ?? const AssessmentHandValues())
+            .withMeasured(
+              right: assessment.rightValue,
+              left: assessment.leftValue,
+            );
+      }
       // A result carries its own definition, so the history alone is enough to
       // name and format every assessment it mentions.
       known.putIfAbsent(assessment.assessmentId, () => assessment.definition);
     }
-    return AssessmentResults(last, definitions: known);
+    return AssessmentResults(last, definitions: known, lastByGrip: byGrip);
   }
 
   /// The same results, read against [extra] as well.
@@ -288,6 +332,7 @@ class AssessmentResults {
     if (extra.isEmpty) return this;
     return AssessmentResults(
       lastById,
+      lastByGrip: lastByGrip,
       definitions: {
         ...definitions,
         for (final definition in extra) definition.id: definition,
@@ -313,18 +358,27 @@ class AssessmentResults {
   /// both hands when no hand is asked for. Null when that hand has never been
   /// measured, so the coach fallback applies rather than the other hand number.
   ///
+  /// With a [grip], each hand reads the last value measured on that grip, and
+  /// falls back to the last one on any grip when that grip was never measured
+  /// on that hand, which is how the intensity rater's MaxForceReference reads
+  /// a max. Testing an open hand after a half crimp then leaves the half crimp
+  /// loads where they were.
+  ///
   /// An assessment that is not measured per hand stores its single number on the
   /// right, so asking for no hand averages one value and returns it unchanged.
-  double? value(String assessmentId, {HandSide? handSide}) {
+  double? value(String assessmentId, {HandSide? handSide, GripPosition? grip}) {
     final last = lastById[assessmentId];
     if (last == null) return null;
+    final onGrip = grip == null ? null : lastByGrip[assessmentId]?[grip];
+    final right = onGrip?.right ?? last.right;
+    final left = onGrip?.left ?? last.left;
     switch (handSide) {
       case HandSide.right:
-        return last.right;
+        return right;
       case HandSide.left:
-        return last.left;
+        return left;
       default:
-        final values = [last.right, last.left].whereType<double>().toList();
+        final values = [right, left].whereType<double>().toList();
         if (values.isEmpty) return null;
         return values.reduce((a, b) => a + b) / values.length;
     }
@@ -341,6 +395,7 @@ class AssessmentModel {
   final double? rightValue;
   final double? leftValue;
   final GripPosition? gripPosition;
+  final AssessmentOrigin origin;
 
   AssessmentModel({
     required this.id,
@@ -349,6 +404,7 @@ class AssessmentModel {
     this.rightValue,
     this.leftValue,
     this.gripPosition,
+    this.origin = AssessmentOrigin.test,
   });
 
   String get assessmentId => definition.id;
