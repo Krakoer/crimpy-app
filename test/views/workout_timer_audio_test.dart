@@ -92,9 +92,10 @@ Future<Map<String, List<MethodCall>>> playerCallsOn(
     await pumpEventQueue();
   });
   // Bounded, so a timer that never sets a source fails here with a reason
-  // rather than hanging the suite. The bound is far past any real copy.
+  // rather than hanging the suite. The bound is far past any real copy, and
+  // under the test's own 30 s timeout, so the reason is the error reported.
   await recorded.sourcesSet.timeout(
-    const Duration(seconds: 30),
+    const Duration(seconds: 10),
     onTimeout: () => fail('The beeps were never given their sources'),
   );
 

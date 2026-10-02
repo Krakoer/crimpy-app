@@ -4,6 +4,7 @@ import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/utils/training_intensity.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
@@ -21,14 +22,17 @@ class _NoSessions extends Sessions {
 const _programId = 'program-1';
 const _trainingId = 'training-1';
 
+/// A program starting on the training day it is now, which is what the card
+/// reads as today: until 04:00 that is still yesterday, so a calendar date
+/// would start the program tomorrow for a run between midnight and 04:00.
 Program _program() {
-  final today = DateTime.now();
+  final today = currentTrainingDay();
   return Program(
     id: _programId,
     coachId: 'coach-1',
     userId: 'user-1',
     name: 'Winter block',
-    startDate: DateTime(today.year, today.month, today.day),
+    startDate: today,
     durationWeeks: 4,
     createdAt: today,
     updatedAt: today,
