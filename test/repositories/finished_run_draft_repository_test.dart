@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:crimpy/models/finished_run_draft.dart';
@@ -65,19 +66,18 @@ void main() {
   });
 
   group('unsavedFinishedRun', () {
-    ProviderContainer containerFor(String owner) => ProviderContainer.test(
-      overrides: [
-        finishedRunDraftRepositoryProvider.overrideWithValue(repository),
-        runDraftOwnerProvider.overrideWith((ref) async => owner),
-      ],
-    );
+    ProviderSubscription<Future<String>> ownerIs(String owner) =>
+        ProviderContainer.test(
+          overrides: [runDraftOwnerProvider.overrideWith((ref) async => owner)],
+        ).listen(runDraftOwnerProvider.future, (_, _) {});
 
     test('offers the draft to the athlete who ran it', () async {
       await repository.write(_draft('user-1'));
 
-      final offered = await containerFor(
-        'user-1',
-      ).read(unsavedFinishedRunProvider.future);
+      final offered = await unsavedFinishedRun(
+        owner: ownerIs('user-1'),
+        repository: repository,
+      );
 
       expect(offered?.title, 'Repeaters');
     });
@@ -87,12 +87,41 @@ void main() {
     test('keeps the draft of someone else without offering it', () async {
       await repository.write(_draft('user-1'));
 
-      final offered = await containerFor(
-        FinishedRunDraft.guestOwner,
-      ).read(unsavedFinishedRunProvider.future);
+      final offered = await unsavedFinishedRun(
+        owner: ownerIs(FinishedRunDraft.guestOwner),
+        repository: repository,
+      );
 
       expect(offered, isNull);
       expect(await repository.read(), isNotNull);
+    });
+
+    // On a cold start the sign in settles while the launch is already asking
+    // for the draft, and nothing else holds on to the answer: it must still
+    // come back rather than fail on a provider that was rebuilt or let go.
+    test('offers the draft when the owner settles late', () async {
+      await repository.write(_draft('user-1'));
+      final settled = Completer<void>();
+      final container = ProviderContainer.test(
+        overrides: [
+          finishedRunDraftRepositoryProvider.overrideWithValue(repository),
+          runDraftOwnerProvider.overrideWith((ref) async {
+            await settled.future;
+            return 'user-1';
+          }),
+        ],
+      );
+
+      final offered = unsavedFinishedRun(
+        owner: container.listen(runDraftOwnerProvider.future, (_, _) {}),
+        repository: repository,
+      );
+      await pumpEventQueue();
+      container.invalidate(runDraftOwnerProvider);
+      await pumpEventQueue();
+      settled.complete();
+
+      expect((await offered)?.title, 'Repeaters');
     });
   });
 }

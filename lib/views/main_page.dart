@@ -266,7 +266,10 @@ class _MainPageState extends ConsumerState<MainPage>
   Future<void> _offerUnsavedRun() async {
     final FinishedRunDraft? draft;
     try {
-      draft = await ref.read(unsavedFinishedRunProvider.future);
+      draft = await unsavedFinishedRun(
+        owner: ref.listenManual(runDraftOwnerProvider.future, (_, _) {}),
+        repository: ref.read(finishedRunDraftRepositoryProvider),
+      );
     } catch (error) {
       AppLoggerHelper.error('Could not read the unsaved run', error);
       return;

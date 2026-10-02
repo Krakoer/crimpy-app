@@ -2,6 +2,8 @@ import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/finished_run_draft.dart';
 import 'package:crimpy/repositories/finished_run_draft_repository.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    show ProviderSubscription;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'finished_run_draft_view_model.g.dart';
@@ -25,12 +27,22 @@ Future<String> runDraftOwner(Ref ref) async {
 /// to whoever is using the app now. A draft of someone else is left where it
 /// is rather than offered or dropped, so it is still there when they sign back
 /// in.
-@riverpod
-Future<FinishedRunDraft?> unsavedFinishedRun(Ref ref) async {
-  final owner = await ref.watch(runDraftOwnerProvider.future);
-  final draft = await ref.read(finishedRunDraftRepositoryProvider).read();
-  if (draft == null || draft.owner != owner) return null;
-  return draft;
+///
+/// Read once, by a launch, while the sign in may still be settling. [owner]
+/// listens to [runDraftOwnerProvider] until the answer is in, so a sign in that
+/// settles again meanwhile rebuilds it and the answer names the right owner; a
+/// bare read would wait on a build that was thrown away. Closed once read.
+Future<FinishedRunDraft?> unsavedFinishedRun({
+  required ProviderSubscription<Future<String>> owner,
+  required FinishedRunDraftRepository repository,
+}) async {
+  try {
+    final draft = await repository.read();
+    if (draft == null || draft.owner != await owner.read()) return null;
+    return draft;
+  } finally {
+    owner.close();
+  }
 }
 
 /// Keeps [draft] on the device before its review is shown. A write that fails
