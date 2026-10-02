@@ -162,6 +162,7 @@ List<ResolvedHang> resolveHangs(
               bodyweightKg: bodyweightKg,
               results: results,
               handSide: hand,
+              grip: grip,
             );
       hangs.add(
         ResolvedHang(
