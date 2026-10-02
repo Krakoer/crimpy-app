@@ -81,9 +81,14 @@ class VariableTarget {
     AssessmentResults results, {
     required AssessmentUnit expects,
     HandSide? handSide,
+    GripPosition? grip,
   }) {
     if (results.unitOf(assessmentId) != expects) return fallback;
-    final measured = results.value(assessmentId, handSide: handSide);
+    final measured = results.value(
+      assessmentId,
+      handSide: handSide,
+      grip: grip,
+    );
     return measured == null ? fallback : measured * percent / 100;
   }
 }
@@ -138,7 +143,8 @@ class Load {
   bool get needsBodyweight => !isBodyweight && unit == 'percent_bw';
 
   /// The load in kilograms, the unit the sensor measures. An assessment-relative
-  /// load resolves against [results] and falls back to the coach value when the
+  /// load resolves against [results], on the [grip] the load is hung with when
+  /// the athlete has a result on it, and falls back to the coach value when the
   /// athlete has never done that assessment. Null when there is no number to
   /// hit: a max effort rep, a plain bodyweight hang, a load set as a percentage
   /// of a bodyweight that is not known yet, or a unit the app does not read.
@@ -148,6 +154,7 @@ class Load {
     double? bodyweightKg,
     AssessmentResults results = AssessmentResults.none,
     HandSide? handSide,
+    GripPosition? grip,
   }) {
     if (isMax || isBodyweight) return null;
     if (isAssessmentRelative) {
@@ -155,7 +162,12 @@ class Load {
         assessmentId: assessmentId!,
         percent: value,
         fallback: fallback ?? 0.0,
-      ).resolve(results, expects: AssessmentUnit.kilograms, handSide: handSide);
+      ).resolve(
+        results,
+        expects: AssessmentUnit.kilograms,
+        handSide: handSide,
+        grip: grip,
+      );
     }
     return switch (unit) {
       'percent_bw' => bodyweightKg == null ? null : bodyweightKg * value / 100,
@@ -172,12 +184,13 @@ class Load {
     double? bodyweightKg,
     AssessmentResults results = AssessmentResults.none,
     HandSide? handSide,
+    GripPosition? grip,
   }) {
     if (isMax) return 'MAX';
     if (isBodyweight) return 'BW';
     if (isAssessmentRelative) {
       final name = results.labelOf(assessmentId!);
-      final kg = kilograms(results: results, handSide: handSide);
+      final kg = kilograms(results: results, handSide: handSide, grip: grip);
       final base = '${_format(value)}% $name';
       return kg == null ? base : '$base (${_format(kg)} kg)';
     }
@@ -490,13 +503,22 @@ class TrainingItem {
       load.unit == 'percent_bw' &&
       load.value == 100;
 
-  /// First-rep load shown to the user, or null when bodyweight / unset.
+  /// First-rep load shown to the user, or null when bodyweight / unset. A hang
+  /// passes the [handSide] and the [grip] its first rep is hung with, so a
+  /// percentage of max reads as the run resolves it.
   String? loadLabel({
     double? bodyweightKg,
     AssessmentResults results = AssessmentResults.none,
+    HandSide? handSide,
+    GripPosition? grip,
   }) {
     if (showsMax) return 'MAX';
-    return shownLoad?.label(bodyweightKg: bodyweightKg, results: results);
+    return shownLoad?.label(
+      bodyweightKg: bodyweightKg,
+      results: results,
+      handSide: handSide,
+      grip: grip,
+    );
   }
 
   /// Whether the item is shown as done at maximum effort, set on the item or

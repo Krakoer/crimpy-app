@@ -1,6 +1,9 @@
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/utils/duration_format.dart';
+import 'package:crimpy/utils/hangboard_layout.dart';
+import 'package:crimpy/utils/training_expander.dart';
 
 /// The keys that carry no chip of their own because another key already says
 /// what they mean. The max effort marker mirrors the load units and only ever
@@ -16,15 +19,43 @@ typedef _ChipLabel =
       dynamic value,
       AssessmentResults results,
       double? bodyweightKg,
+      TrainingItem? item,
     );
 
-/// A chip summarises the whole override, so it shows the first row only.
-String _loads(dynamic raw, AssessmentResults results, double? bodyweightKg) {
+/// A chip summarises the whole override, so it shows the first row only. With
+/// the [item] as the week plays it, a percentage of an assessment reads on the
+/// hand and the grip that first row is hung with, the way the run resolves it;
+/// [leftHand] is set for the left hand's own loads.
+String _loads(
+  dynamic raw,
+  AssessmentResults results,
+  double? bodyweightKg,
+  TrainingItem? item, {
+  bool leftHand = false,
+}) {
   final first = raw is List ? raw.firstOrNull : null;
   if (first is! Map<String, dynamic>) return '';
-  return Load.fromJson(
-    first,
-  ).label(results: results, bodyweightKg: bodyweightKg);
+  final hung =
+      item != null &&
+      (item.type == TrainingItemType.repeater ||
+          item.type == TrainingItemType.hangboardRep);
+  final readsLeft = leftHand || item?.hand == HangboardHand.left;
+  return Load.fromJson(first).label(
+    results: results,
+    bodyweightKg: bodyweightKg,
+    handSide: !hung
+        ? null
+        : readsLeft
+        ? HandSide.left
+        : item.hand == HangboardHand.right
+        ? HandSide.right
+        : null,
+    grip: hung
+        ? gripFromStored(
+            HangboardLayout.of(item).grip(0, 0, leftHand: readsLeft),
+          )
+        : null,
+  );
 }
 
 String _list(dynamic raw) => raw is List ? raw.join('/') : '';
@@ -53,7 +84,12 @@ String _hand(dynamic raw) => switch (raw) {
 /// percentage of nothing. An assessment neither the athlete results nor the
 /// training carry a definition for reads as a percentage of "assessment", the
 /// word the app already uses for one it cannot name, rather than as a raw id.
-String _variableTargets(dynamic raw, AssessmentResults results, double? _) {
+String _variableTargets(
+  dynamic raw,
+  AssessmentResults results,
+  double? _,
+  TrainingItem? __,
+) {
   final targets = parseVariableTargets(raw);
   if (targets.isEmpty) return 'NO PERCENTAGE';
   return targets.entries
@@ -73,21 +109,23 @@ String _variableTargets(dynamic raw, AssessmentResults results, double? _) {
 /// and this map forgets would otherwise reach the athlete as raw JSON, which is
 /// how "REPS_IS_MAX true" nearly shipped.
 final Map<String, _ChipLabel> _labels = {
-  'loads': (v, results, bw) => 'LOAD ${_loads(v, results, bw)}',
-  'left_loads': (v, results, bw) => 'LEFT ${_loads(v, results, bw)}',
-  'reps': (v, _, __) => 'REPS $v',
-  'reps_is_max': (v, _, __) => v == true ? 'AMRAP' : 'FIXED REPS',
-  'duration': (v, _, __) => 'TIME ${formatExactLength(v as int)}',
-  'cycles': (v, _, __) => 'CYCLES $v',
-  'interval_seconds': (v, _, __) => 'EVERY ${formatExactLength(v as int)}',
-  'cycle_rest_seconds': (v, _, __) =>
+  'loads': (v, results, bw, item) => 'LOAD ${_loads(v, results, bw, item)}',
+  'left_loads': (v, results, bw, item) =>
+      'LEFT ${_loads(v, results, bw, item, leftHand: true)}',
+  'reps': (v, _, __, ___) => 'REPS $v',
+  'reps_is_max': (v, _, __, ___) => v == true ? 'AMRAP' : 'FIXED REPS',
+  'duration': (v, _, __, ___) => 'TIME ${formatExactLength(v as int)}',
+  'cycles': (v, _, __, ___) => 'CYCLES $v',
+  'interval_seconds': (v, _, __, ___) => 'EVERY ${formatExactLength(v as int)}',
+  'cycle_rest_seconds': (v, _, __, ___) =>
       'CYCLE REST ${formatExactLength(v as int)}',
-  'rest_seconds': (v, _, __) => 'REST ${formatExactLength(v as int)}',
-  'hb_worktime_seconds': (v, _, __) => 'WORK ${formatExactLength(v as int)}',
-  'edge_sizes_mm': (v, _, __) => 'EDGE ${_list(v)}mm',
-  'hand_positions': (v, _, __) => 'GRIP ${_grips(v)}',
-  'hand': (v, _, __) => _hand(v),
-  'granularity': (v, _, __) => 'LAYOUT ${'$v'.toUpperCase()}',
+  'rest_seconds': (v, _, __, ___) => 'REST ${formatExactLength(v as int)}',
+  'hb_worktime_seconds': (v, _, __, ___) =>
+      'WORK ${formatExactLength(v as int)}',
+  'edge_sizes_mm': (v, _, __, ___) => 'EDGE ${_list(v)}mm',
+  'hand_positions': (v, _, __, ___) => 'GRIP ${_grips(v)}',
+  'hand': (v, _, __, ___) => _hand(v),
+  'granularity': (v, _, __, ___) => 'LAYOUT ${'$v'.toUpperCase()}',
   'variable_targets': _variableTargets,
 };
 
@@ -107,10 +145,14 @@ Set<String> get labelledOverrideKeys => {
 /// rather than defaulted: a screen that left it out would still render, just
 /// saying "75% assessment" where it could name the reference, and nothing would
 /// fail. Passing [AssessmentResults.none] says that was meant.
+///
+/// [item] is the item as the week plays it, overrides merged, which is what a
+/// percentage load is read against the hand and grip of.
 List<String> overrideChipLabels(
   Map<String, dynamic> overrides, {
   required AssessmentResults results,
   required double? bodyweightKg,
+  TrainingItem? item,
 }) {
   final labels = <String>[];
   overrides.forEach((key, value) {
@@ -119,7 +161,7 @@ List<String> overrideChipLabels(
     labels.add(
       label == null
           ? '${key.toUpperCase()} $value'
-          : label(value, results, bodyweightKg),
+          : label(value, results, bodyweightKg, item),
     );
   });
   return labels;

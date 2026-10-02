@@ -411,6 +411,10 @@ class CrimpyTheme {
   /// The series of any other assessment's chart, and its stat cards' swatches.
   static const Color assessmentSeries = textPrimary;
 
+  /// The line of a training's load per grip on the history, which sits beside
+  /// the calendar's activity colours and so takes ink. See Krakoer/crimpy#155.
+  static const Color trainingLoadSeries = textPrimary;
+
   /// A day the athlete planned to train on.
   static const Color planned = accentGreen;
 
