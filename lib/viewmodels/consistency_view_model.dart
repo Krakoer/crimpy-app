@@ -58,18 +58,31 @@ Future<List<ConsistencyDay>?> consistencyStrip(Ref ref) async {
   final habits = await ref.watch(activeHabitsProvider.future);
   if (habits.isEmpty) return null;
   final today = currentTrainingDay();
-  // The latest program, ended or still to start: the days it covered inside
-  // the window are drawn as it decided them, not scored against the habits it
-  // took precedence over.
-  final lastProgram = await ref.watch(activeProgramProvider.future);
+  // Every program that covered a day of the window, ended or not: those days
+  // are drawn as the program decided them, not scored against the habits it
+  // took precedence over. Not only the latest one, since a coach often queues
+  // the next program before the last one ends.
+  final first = addCalendarDays(today, -(consistencyStripDays - 1));
+  final programs = [
+    for (final program in await ref.watch(programsProvider.future))
+      if (_coversAnyDay(program, first, today)) program,
+  ];
   final sessions = await ref.watch(sessionsProvider.future);
   return habitConsistencyDays(
     habits: habits,
     sessions: sessions,
     today: today,
-    program: lastProgram,
-    programWeeks: lastProgram == null
-        ? const {}
-        : await _weeksInStrip(ref, lastProgram, today),
+    programs: programs,
+    programWeeks: {
+      for (final program in programs)
+        program.id: await _weeksInStrip(ref, program, today),
+    },
   );
+}
+
+bool _coversAnyDay(Program program, DateTime first, DateTime last) {
+  for (var day = first; !day.isAfter(last); day = addCalendarDays(day, 1)) {
+    if (program.isActiveOn(day)) return true;
+  }
+  return false;
 }

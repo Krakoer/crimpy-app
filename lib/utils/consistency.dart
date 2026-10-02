@@ -158,15 +158,16 @@ ConsistencyDay _programDay(
 /// per week is due on no day, so a session of it on a day owing nothing keeps
 /// that day, as a flexible program training does.
 ///
-/// A day a coach's [program] covered is drawn the way the program strip draws
-/// it, from [programWeeks]: the program took precedence over the habits that
-/// day, so they owed nothing on it.
+/// A day one of the coach's [programs] covered is drawn the way the program
+/// strip draws it, from that program's weeks in [programWeeks] (by program id):
+/// the program took precedence over the habits that day, so they owed nothing
+/// on it.
 List<ConsistencyDay> habitConsistencyDays({
   required List<ActiveHabit> habits,
   required List<SessionModel> sessions,
   required DateTime today,
-  Program? program,
-  Map<int, Week> programWeeks = const {},
+  List<Program> programs = const [],
+  Map<String, Map<int, Week>> programWeeks = const {},
 }) {
   final byDay = <DateTime, List<SessionModel>>{};
   for (final session in sessions) {
@@ -178,24 +179,25 @@ List<ConsistencyDay> habitConsistencyDays({
             .map((h) => h.habit.since)
             .reduce((a, b) => a.isBefore(b) ? a : b);
 
+  ConsistencyDay dayOf(DateTime day) {
+    final onDay = byDay[day] ?? const <SessionModel>[];
+    for (final program in programs) {
+      if (programCovers(program, day)) {
+        return _programDay(
+          program,
+          programWeeks[program.id] ?? const {},
+          sessions,
+          onDay,
+          day,
+        );
+      }
+    }
+    return _habitDay(habits, sessions, onDay, day, firstSet);
+  }
+
   return [
     for (var back = consistencyStripDays - 1; back >= 0; back--)
-      if (programCovers(program, addCalendarDays(today, -back)))
-        _programDay(
-          program!,
-          programWeeks,
-          sessions,
-          byDay[addCalendarDays(today, -back)] ?? const [],
-          addCalendarDays(today, -back),
-        )
-      else
-        _habitDay(
-          habits,
-          sessions,
-          byDay[addCalendarDays(today, -back)] ?? const [],
-          addCalendarDays(today, -back),
-          firstSet,
-        ),
+      dayOf(addCalendarDays(today, -back)),
   ];
 }
 

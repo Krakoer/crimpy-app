@@ -34,8 +34,12 @@ final _hangs = ActiveHabit(
 );
 
 // A coach's program from Monday 14 September, owing one training each Monday.
-Program _program({required DateTime start, int durationWeeks = 2}) => Program(
-  id: 'p',
+Program _program({
+  required DateTime start,
+  int durationWeeks = 2,
+  String id = 'p',
+}) => Program(
+  id: id,
   coachId: 'c',
   userId: 'u',
   name: 'Block',
@@ -45,13 +49,13 @@ Program _program({required DateTime start, int durationWeeks = 2}) => Program(
   updatedAt: start,
 );
 
-Week _week(int number) => Week(
-  id: 'w$number',
-  programId: 'p',
+Week _week(int number, [String programId = 'p']) => Week(
+  id: '$programId-w$number',
+  programId: programId,
   weekNumber: number,
   sessions: [
     WeekSession(
-      id: 'mon-$number',
+      id: '$programId-mon-$number',
       trainingId: 'program-training',
       trainingTitle: 'Max Hangs',
       trainingType: 'crimpy',
@@ -72,18 +76,21 @@ SessionModel _run(DateTime date, {String? trainingId, String? slot}) =>
     );
 
 Future<List<ConsistencyDay>?> _strip({
-  Program? program,
+  List<Program> programs = const [],
   List<ActiveHabit> habits = const [],
   List<SessionModel> sessions = const [],
 }) => withClock(Clock.fixed(_now), () async {
   final container = ProviderContainer.test(
     overrides: [
-      activeProgramProvider.overrideWith((ref) async => program),
-      for (var number = 1; number <= 6; number++)
-        weekDetailProvider(
-          'p',
-          number,
-        ).overrideWith((ref) async => _week(number)),
+      // Through the real choice of the active program: newest start first,
+      // as the backend lists them.
+      programsProvider.overrideWith((ref) async => programs),
+      for (final id in ['p', 'next'])
+        for (var number = 1; number <= 6; number++)
+          weekDetailProvider(
+            id,
+            number,
+          ).overrideWith((ref) async => _week(number, id)),
       sessionsProvider.overrideWith(() => _FixedSessions(sessions)),
       activeHabitsProvider.overrideWith((ref) async => habits),
     ],
@@ -97,7 +104,7 @@ ConsistencyDay _on(List<ConsistencyDay> days, int septemberDay) =>
 void main() {
   test('draws the program while one covers today, habits or not', () async {
     final days = await _strip(
-      program: _program(start: DateTime(2026, 9, 21)),
+      programs: [_program(start: DateTime(2026, 9, 21))],
       habits: [_hangs],
     );
 
@@ -125,9 +132,9 @@ void main() {
     // The program ran 14-27 September and the athlete followed it, leaving
     // the hangs habit aside as the app told them to.
     final days = await _strip(
-      program: _program(start: DateTime(2026, 9, 14)),
+      programs: [_program(start: DateTime(2026, 9, 14))],
       habits: [_hangs],
-      sessions: [_run(DateTime(2026, 9, 21, 18), slot: 'mon-2')],
+      sessions: [_run(DateTime(2026, 9, 21, 18), slot: 'p-mon-2')],
     );
 
     // Monday 21: the program's training was done, so the day was kept,
@@ -141,10 +148,53 @@ void main() {
     expect(_on(days, 28).mark, ConsistencyMark.missed);
   });
 
+  test('draws an ended program\'s days even once the coach has queued '
+      'the next one', () async {
+    final days = await _strip(
+      programs: [
+        _program(id: 'next', start: DateTime(2026, 10, 12)),
+        _program(start: DateTime(2026, 9, 14)),
+      ],
+      habits: [_hangs],
+      sessions: [_run(DateTime(2026, 9, 21, 18), slot: 'p-mon-2')],
+    );
+
+    expect(_on(days!, 21).mark, ConsistencyMark.kept);
+    expect(_on(days, 23).mark, ConsistencyMark.rest);
+    expect(_on(days, 28).mark, ConsistencyMark.missed);
+  });
+
+  test('draws each day from the program that covered it', () async {
+    // One program ran 14-20 September, the next one 21-27.
+    final days = await _strip(
+      programs: [
+        _program(id: 'next', start: DateTime(2026, 9, 21), durationWeeks: 1),
+        _program(start: DateTime(2026, 9, 14), durationWeeks: 1),
+      ],
+      habits: [
+        ActiveHabit(
+          TrainingHabit.onWeekdays(
+            trainingId: 'hangs',
+            weekdays: const {0, 2, 3},
+            since: DateTime(2026, 9, 1),
+          ),
+          const Training(id: 'hangs', title: 'Hangs'),
+        ),
+      ],
+      sessions: [_run(DateTime(2026, 9, 21, 18), slot: 'next-mon-1')],
+    );
+
+    expect(_on(days!, 21).mark, ConsistencyMark.kept);
+    // Thursday 17 is a habit day, but the first program covered it and owed
+    // nothing on it.
+    expect(_on(days, 17).mark, ConsistencyMark.rest);
+    expect(_on(days, 23).mark, ConsistencyMark.rest);
+  });
+
   test('draws nothing with neither a program nor a habit', () async {
     expect(await _strip(), isNull);
     expect(
-      await _strip(program: _program(start: DateTime(2026, 8, 3))),
+      await _strip(programs: [_program(start: DateTime(2026, 8, 3))]),
       isNull,
     );
   });
