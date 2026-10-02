@@ -26,7 +26,7 @@ Future<String> runDraftOwner(Ref ref) async {
 /// The draft a launch offers back: the one left on the device, when it belongs
 /// to whoever is using the app now. A draft of someone else is left where it
 /// is rather than offered or dropped, so it is still there when they sign back
-/// in.
+/// in, unless a run finished meanwhile took its place.
 ///
 /// Read once, by a launch, while the sign in may still be settling. [owner]
 /// listens to [runDraftOwnerProvider] until the answer is in, so a sign in that
@@ -42,6 +42,19 @@ Future<FinishedRunDraft?> unsavedFinishedRun({
     return draft;
   } finally {
     owner.close();
+  }
+}
+
+/// Who the run that just finished belongs to, or null when that cannot be
+/// told. The run then goes to its review without being kept: ending a run must
+/// not hang on the sign in, and a draft filed under a guessed owner could be
+/// offered to the wrong athlete.
+Future<String?> finishedRunOwner(Future<String> owner) async {
+  try {
+    return await owner;
+  } catch (error) {
+    AppLoggerHelper.error('Could not tell who ran the finished run', error);
+    return null;
   }
 }
 

@@ -124,4 +124,18 @@ void main() {
       expect((await offered)?.title, 'Repeaters');
     });
   });
+
+  group('finishedRunOwner', () {
+    test('names the athlete who ran it', () async {
+      expect(await finishedRunOwner(Future.value('user-1')), 'user-1');
+    });
+
+    // The run still reaches its review, only without being kept.
+    test('is null when the sign in cannot tell', () async {
+      expect(
+        await finishedRunOwner(Future.error(StateError('no auth'))),
+        isNull,
+      );
+    });
+  });
 }

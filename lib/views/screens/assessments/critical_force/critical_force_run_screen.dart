@@ -242,8 +242,13 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
       );
       // Kept on the device before the result is shown, so the app dying on
       // the result screen does not take the run with it. Krakoer/crimpy#146.
+      final owner = await finishedRunOwner(
+        ref.read(runDraftOwnerProvider.future),
+      );
       final draft = CriticalForceResultDraft(
-        owner: await ref.read(runDraftOwnerProvider.future),
+        // Only kept below when the owner is known; the result itself never
+        // reads it.
+        owner: owner ?? FinishedRunDraft.guestOwner,
         data: data,
         samples: samples,
         pullWindows: [
@@ -258,10 +263,12 @@ class _CriticalForceRunScreenState extends ConsumerState<CriticalForceRunScreen>
         saveSession: saveSession,
         saveReps: saveReps,
       );
-      await keepFinishedRun(
-        ref.read(finishedRunDraftRepositoryProvider),
-        draft,
-      );
+      if (owner != null) {
+        await keepFinishedRun(
+          ref.read(finishedRunDraftRepositoryProvider),
+          draft,
+        );
+      }
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(

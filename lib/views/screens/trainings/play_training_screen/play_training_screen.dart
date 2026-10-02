@@ -182,8 +182,13 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
 
       // Kept on the device before the review is shown, so the app dying on the
       // review does not take the run with it. Krakoer/crimpy#146.
+      final owner = await finishedRunOwner(
+        ref.read(runDraftOwnerProvider.future),
+      );
       final draft = TrainingReviewDraft(
-        owner: await ref.read(runDraftOwnerProvider.future),
+        // Only kept below when the owner is known; the review itself never
+        // reads it.
+        owner: owner ?? FinishedRunDraft.guestOwner,
         template: widget.training,
         // Only a run that finished without play ever being pressed has no
         // start. It is dated by its finish, still frozen before the review.
@@ -201,10 +206,12 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
         trainingId: widget.trainingId,
         programSessionId: widget.programSessionId,
       );
-      await keepFinishedRun(
-        ref.read(finishedRunDraftRepositoryProvider),
-        draft,
-      );
+      if (owner != null) {
+        await keepFinishedRun(
+          ref.read(finishedRunDraftRepositoryProvider),
+          draft,
+        );
+      }
 
       if (!mounted) return;
       Navigator.of(context).pushReplacement(

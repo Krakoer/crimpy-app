@@ -13,7 +13,9 @@ abstract class FinishedRunDraftRepository {
   /// launch never fails over it.
   Future<FinishedRunDraft?> read();
 
-  /// Keeps [draft], in place of any earlier one.
+  /// Keeps [draft], in place of any earlier one. There is one draft per
+  /// device, whoever it belongs to: a draft of another athlete, which a launch
+  /// leaves unoffered, is lost once someone else finishes a run here.
   Future<void> write(FinishedRunDraft draft);
 
   /// Forgets the draft, once its run is saved or discarded.

@@ -2,12 +2,15 @@
 // A fake notifier exists to be read from: what the screen handed it is what the
 // test checks, and none of it ships.
 
+import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
+import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/finished_run_draft.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
-import 'package:crimpy/repositories/finished_run_draft_repository.dart';
+import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/finished_run_draft_view_model.dart';
+import 'package:crimpy/views/screens/assessments/critical_force/critical_force_result_screen.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen.dart';
 import 'package:crimpy/views/widgets/unsaved_run_dialog.dart';
@@ -15,22 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Holds the draft in memory, so the screens can be checked for when they
-/// forget it.
-class _MemoryDrafts extends FinishedRunDraftRepository {
-  FinishedRunDraft? draft;
-
-  _MemoryDrafts(this.draft);
-
-  @override
-  Future<FinishedRunDraft?> read() async => draft;
-
-  @override
-  Future<void> write(FinishedRunDraft draft) async => this.draft = draft;
-
-  @override
-  Future<void> clear() async => draft = null;
-}
+import '../support/run_drafts.dart';
 
 class _Sessions extends Sessions {
   _Sessions({this.fails = false});
@@ -63,7 +51,7 @@ final _draft = TrainingReviewDraft(
 
 Future<void> _pump(
   WidgetTester tester,
-  _MemoryDrafts drafts,
+  MemoryRunDrafts drafts,
   _Sessions sessions,
 ) => tester.pumpWidget(
   ProviderScope(
@@ -81,9 +69,82 @@ Future<void> _pump(
   ),
 );
 
+/// Stores the Critical Force result, or fails to, as the result screen's save
+/// asks it to.
+class _CriticalForceStore extends Assessments {
+  _CriticalForceStore({this.fails = false});
+
+  final bool fails;
+  AssessmentResultModel? saved;
+
+  @override
+  Future<List<AssessmentModel>> build(String? assessmentId) async => const [];
+
+  @override
+  Future<void> saveAssessment(
+    AssessmentResultModel assessmentModel,
+    SessionModel session,
+    List<RepDataModel> reps, {
+    List<BleDataPoint>? data,
+    List<SessionItemResultModel> itemResults = const [],
+  }) async {
+    if (fails) throw Exception('offline');
+    saved = assessmentModel;
+  }
+}
+
+/// Four 7 s pulls at 20 kg with 3 s off between them, read at 10 Hz.
+final _criticalForceDraft = CriticalForceResultDraft(
+  owner: 'user-1',
+  saveAssessment: AssessmentResultModel(
+    assessmentId: BuiltinAssessmentIds.criticalForce,
+    leftValue: 20,
+  ),
+  saveSession: SessionModel(
+    name: 'Critical force assessment - 28/09/2026',
+    date: DateTime(2026, 9, 28, 18, 30),
+    isAssessment: true,
+    origin: SessionOrigin.played,
+  ),
+  saveReps: const [],
+  data: const [],
+  samples: [
+    for (var tenths = 0; tenths < 400; tenths++)
+      (t: tenths / 10, kg: tenths % 100 < 70 ? 20.0 : 0.0),
+  ],
+  pullWindows: [
+    for (var pull = 0; pull < 4; pull++)
+      (start: pull * 10.0, end: pull * 10.0 + 7),
+  ],
+);
+
+/// Pushes the result over an empty screen, as the run does, so it can be left.
+Future<void> _pumpResult(
+  WidgetTester tester,
+  MemoryRunDrafts drafts,
+  _CriticalForceStore store,
+) async {
+  final navigator = GlobalKey<NavigatorState>();
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        assessmentsProvider.overrideWith(() => store),
+        finishedRunDraftRepositoryProvider.overrideWithValue(drafts),
+      ],
+      child: MaterialApp(navigatorKey: navigator, home: const Scaffold()),
+    ),
+  );
+  navigator.currentState!.push(
+    MaterialPageRoute<void>(
+      builder: (_) => CriticalForceResultScreen.fromDraft(_criticalForceDraft),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('forgets the draft once the run is saved', (tester) async {
-    final drafts = _MemoryDrafts(_draft);
+    final drafts = MemoryRunDrafts(_draft);
     final sessions = _Sessions();
     await _pump(tester, drafts, sessions);
 
@@ -97,7 +158,7 @@ void main() {
   });
 
   testWidgets('keeps the draft when the save fails', (tester) async {
-    final drafts = _MemoryDrafts(_draft);
+    final drafts = MemoryRunDrafts(_draft);
     await _pump(tester, drafts, _Sessions(fails: true));
 
     await tester.tap(find.text('Save training'));
@@ -109,7 +170,7 @@ void main() {
   testWidgets('forgets the draft when the athlete leaves without saving', (
     tester,
   ) async {
-    final drafts = _MemoryDrafts(_draft);
+    final drafts = MemoryRunDrafts(_draft);
     await _pump(tester, drafts, _Sessions());
 
     final navigator = tester.state<NavigatorState>(find.byType(Navigator).last);
@@ -124,7 +185,7 @@ void main() {
   testWidgets('keeps the draft while the athlete keeps reviewing', (
     tester,
   ) async {
-    final drafts = _MemoryDrafts(_draft);
+    final drafts = MemoryRunDrafts(_draft);
     await _pump(tester, drafts, _Sessions());
 
     final navigator = tester.state<NavigatorState>(find.byType(Navigator).last);
@@ -134,6 +195,53 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(drafts.draft, same(_draft));
+  });
+
+  group('the Critical Force result', () {
+    testWidgets('forgets the draft once the result is saved', (tester) async {
+      final drafts = MemoryRunDrafts(_criticalForceDraft);
+      final store = _CriticalForceStore();
+      await _pumpResult(tester, drafts, store);
+
+      await tester.tap(find.text('Save new result'));
+      await tester.pumpAndSettle();
+
+      expect(store.saved, isNotNull);
+      expect(drafts.draft, isNull);
+    });
+
+    testWidgets('keeps the draft when the save fails', (tester) async {
+      final drafts = MemoryRunDrafts(_criticalForceDraft);
+      await _pumpResult(tester, drafts, _CriticalForceStore(fails: true));
+
+      await tester.tap(find.text('Save new result'));
+      await tester.pumpAndSettle();
+
+      expect(drafts.draft, same(_criticalForceDraft));
+    });
+
+    testWidgets('forgets the draft when it is discarded', (tester) async {
+      final drafts = MemoryRunDrafts(_criticalForceDraft);
+      await _pumpResult(tester, drafts, _CriticalForceStore());
+
+      await tester.tap(find.text('Discard'));
+      await tester.pumpAndSettle();
+
+      expect(drafts.draft, isNull);
+    });
+
+    // Back was a discard before the draft existed, and still is: a result
+    // left that way is not offered again on the next launch.
+    testWidgets('forgets the draft when the athlete goes back', (tester) async {
+      final drafts = MemoryRunDrafts(_criticalForceDraft);
+      await _pumpResult(tester, drafts, _CriticalForceStore());
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CriticalForceResultScreen), findsNothing);
+      expect(drafts.draft, isNull);
+    });
   });
 
   group('UnsavedRunDialog', () {

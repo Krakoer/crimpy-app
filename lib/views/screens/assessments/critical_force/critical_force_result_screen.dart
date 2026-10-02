@@ -63,175 +63,181 @@ class CriticalForceResultScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lateOff = results.lateOffCount;
-    return Scaffold(
-      appBar: AppBar(title: Text("Critical Force assessment results")),
-      body: SafeArea(
-        child: Column(
+    final drafts = ref.read(finishedRunDraftRepositoryProvider);
+    // Leaving the result any way but its save discards it, the back arrow and
+    // the system back included, so the copy kept in case the app died here
+    // goes with it. A save that failed and is then left is discarded too.
+    return PopScope(
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) forgetFinishedRun(drafts);
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text("Critical Force assessment results")),
+        body: SafeArea(
+          child: Column(
+            children: [
+              SizedBox(height: CrimpyTheme.spaceLgPlus),
+              Text(
+                "Great job!",
+                style: CrimpyTheme.headline.copyWith(
+                  color: CrimpyTheme.textPrimary,
+                ),
+              ),
+              SizedBox(height: CrimpyTheme.spaceLg),
+              ResultCard(
+                prevValue: previousCriticalForce,
+                newValue: results.criticalForce,
+              ),
+              SizedBox(height: CrimpyTheme.spaceLgPlus),
+              Text(
+                "Critical force:",
+                style: CrimpyTheme.headline.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              Text(
+                "${results.criticalForce.toStringAsFixed(2)} kg",
+                style: CrimpyTheme.numerals(
+                  48,
+                ).copyWith(color: Theme.of(context).colorScheme.onSurface),
+              ),
+              Text(
+                _countedPullsLabel(results),
+                style: CrimpyTheme.body.copyWith(
+                  color: CrimpyTheme.textSecondary,
+                ),
+              ),
+              if (pausedSeconds > 0)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: CrimpyTheme.spaceLg,
+                    vertical: CrimpyTheme.spaceXs,
+                  ),
+                  child: Text(
+                    "The test was paused for $pausedSeconds s. Extra rest lets the forearm recover, so this result may read high.",
+                    textAlign: TextAlign.center,
+                    style: CrimpyTheme.body.copyWith(
+                      color: CrimpyTheme.textSecondary,
+                    ),
+                  ),
+                ),
+              if (lateOff > 0)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: CrimpyTheme.spaceLg,
+                    vertical: CrimpyTheme.spaceXs,
+                  ),
+                  child: Text(
+                    lateOff == 1
+                        ? "1 pull was held on after the bell. Force past the bell does not count."
+                        : "$lateOff pulls were held on after the bell. Force past the bell does not count.",
+                    textAlign: TextAlign.center,
+                    style: CrimpyTheme.body.copyWith(
+                      color: CrimpyTheme.textSecondary,
+                    ),
+                  ),
+                ),
+              // The chart takes what the numbers above leave, so the screen
+              // fits a small phone.
+              Expanded(
+                child: SfCartesianChart(
+                  plotAreaBorderWidth: 0,
+                  series: <CartesianSeries>[
+                    FastLineSeries<CriticalForceSample, double>(
+                      width: 2,
+                      dataSource: samples,
+                      xValueMapper: (CriticalForceSample sample, _) => sample.t,
+                      yValueMapper: (CriticalForceSample sample, _) =>
+                          sample.kg,
+                    ),
+                    // Each pull's mean, in the middle of its window.
+                    ScatterSeries<CriticalForcePull, double>(
+                      dataSource: [
+                        for (final pull in results.pulls)
+                          if (pull.meanKg != null) pull,
+                      ],
+                      xValueMapper: (pull, _) => (pull.start + pull.end) / 2,
+                      yValueMapper: (pull, _) => pull.meanKg,
+                      markerSettings: MarkerSettings(isVisible: true),
+                    ),
+                    // Dashed line at the Critical Force, across the test.
+                    LineSeries<(double, double), double>(
+                      dataSource: [
+                        (results.pulls.first.start, results.criticalForce),
+                        (results.pulls.last.end, results.criticalForce),
+                      ],
+                      xValueMapper: (data, _) => data.$1,
+                      yValueMapper: (data, _) => data.$2,
+                      dashArray: <double>[5, 5],
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ],
+                  primaryYAxis: NumericAxis(
+                    axisLine: AxisLine(color: Colors.transparent),
+                    majorGridLines: MajorGridLines(width: 0),
+                    majorTickLines: MajorTickLines(size: 0),
+                  ),
+                  primaryXAxis: NumericAxis(
+                    axisLine: AxisLine(color: Colors.transparent),
+                    majorTickLines: MajorTickLines(size: 0),
+                    majorGridLines: MajorGridLines(width: 0),
+                    autoScrollingMode: AutoScrollingMode.end,
+                    decimalPlaces: 0,
+                  ),
+                ),
+              ),
+              // Room for the save and discard buttons floating over the bottom,
+              // so they do not sit on the chart.
+              const SizedBox(
+                height: kMinInteractiveDimension + CrimpyTheme.spaceLg,
+              ),
+            ],
+          ),
+        ),
+        floatingActionButton: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            SizedBox(height: CrimpyTheme.spaceLgPlus),
-            Text(
-              "Great job!",
-              style: CrimpyTheme.headline.copyWith(
-                color: CrimpyTheme.textPrimary,
-              ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  await ref
+                      .read(
+                        assessmentsProvider(
+                          BuiltinAssessmentIds.criticalForce,
+                        ).notifier,
+                      )
+                      .saveAssessment(
+                        saveAssessment,
+                        saveSession,
+                        saveReps,
+                        data: data,
+                      );
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error saving assessment: $e')),
+                    );
+                  }
+                  return;
+                }
+                // Stored, so the copy kept in case the app died here goes. A save
+                // that failed keeps it.
+                await forgetFinishedRun(drafts);
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              },
+              child: Text("Save new result"),
             ),
-            SizedBox(height: CrimpyTheme.spaceLg),
-            ResultCard(
-              prevValue: previousCriticalForce,
-              newValue: results.criticalForce,
-            ),
-            SizedBox(height: CrimpyTheme.spaceLgPlus),
-            Text(
-              "Critical force:",
-              style: CrimpyTheme.headline.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            Text(
-              "${results.criticalForce.toStringAsFixed(2)} kg",
-              style: CrimpyTheme.numerals(
-                48,
-              ).copyWith(color: Theme.of(context).colorScheme.onSurface),
-            ),
-            Text(
-              _countedPullsLabel(results),
-              style: CrimpyTheme.body.copyWith(
-                color: CrimpyTheme.textSecondary,
-              ),
-            ),
-            if (pausedSeconds > 0)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: CrimpyTheme.spaceLg,
-                  vertical: CrimpyTheme.spaceXs,
-                ),
-                child: Text(
-                  "The test was paused for $pausedSeconds s. Extra rest lets the forearm recover, so this result may read high.",
-                  textAlign: TextAlign.center,
-                  style: CrimpyTheme.body.copyWith(
-                    color: CrimpyTheme.textSecondary,
-                  ),
-                ),
-              ),
-            if (lateOff > 0)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: CrimpyTheme.spaceLg,
-                  vertical: CrimpyTheme.spaceXs,
-                ),
-                child: Text(
-                  lateOff == 1
-                      ? "1 pull was held on after the bell. Force past the bell does not count."
-                      : "$lateOff pulls were held on after the bell. Force past the bell does not count.",
-                  textAlign: TextAlign.center,
-                  style: CrimpyTheme.body.copyWith(
-                    color: CrimpyTheme.textSecondary,
-                  ),
-                ),
-              ),
-            // The chart takes what the numbers above leave, so the screen
-            // fits a small phone.
-            Expanded(
-              child: SfCartesianChart(
-                plotAreaBorderWidth: 0,
-                series: <CartesianSeries>[
-                  FastLineSeries<CriticalForceSample, double>(
-                    width: 2,
-                    dataSource: samples,
-                    xValueMapper: (CriticalForceSample sample, _) => sample.t,
-                    yValueMapper: (CriticalForceSample sample, _) => sample.kg,
-                  ),
-                  // Each pull's mean, in the middle of its window.
-                  ScatterSeries<CriticalForcePull, double>(
-                    dataSource: [
-                      for (final pull in results.pulls)
-                        if (pull.meanKg != null) pull,
-                    ],
-                    xValueMapper: (pull, _) => (pull.start + pull.end) / 2,
-                    yValueMapper: (pull, _) => pull.meanKg,
-                    markerSettings: MarkerSettings(isVisible: true),
-                  ),
-                  // Dashed line at the Critical Force, across the test.
-                  LineSeries<(double, double), double>(
-                    dataSource: [
-                      (results.pulls.first.start, results.criticalForce),
-                      (results.pulls.last.end, results.criticalForce),
-                    ],
-                    xValueMapper: (data, _) => data.$1,
-                    yValueMapper: (data, _) => data.$2,
-                    dashArray: <double>[5, 5],
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                ],
-                primaryYAxis: NumericAxis(
-                  axisLine: AxisLine(color: Colors.transparent),
-                  majorGridLines: MajorGridLines(width: 0),
-                  majorTickLines: MajorTickLines(size: 0),
-                ),
-                primaryXAxis: NumericAxis(
-                  axisLine: AxisLine(color: Colors.transparent),
-                  majorTickLines: MajorTickLines(size: 0),
-                  majorGridLines: MajorGridLines(width: 0),
-                  autoScrollingMode: AutoScrollingMode.end,
-                  decimalPlaces: 0,
-                ),
-              ),
-            ),
-            // Room for the save and discard buttons floating over the bottom,
-            // so they do not sit on the chart.
-            const SizedBox(
-              height: kMinInteractiveDimension + CrimpyTheme.spaceLg,
+            TextButton(
+              child: Text("Discard"),
+              onPressed: () async {
+                await forgetFinishedRun(drafts);
+                if (context.mounted) Navigator.of(context).pop();
+              },
             ),
           ],
         ),
-      ),
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          TextButton(
-            onPressed: () async {
-              try {
-                await ref
-                    .read(
-                      assessmentsProvider(
-                        BuiltinAssessmentIds.criticalForce,
-                      ).notifier,
-                    )
-                    .saveAssessment(
-                      saveAssessment,
-                      saveSession,
-                      saveReps,
-                      data: data,
-                    );
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error saving assessment: $e')),
-                  );
-                }
-                return;
-              }
-              // Stored, so the copy kept in case the app died here goes. A save
-              // that failed keeps it.
-              await forgetFinishedRun(
-                ref.read(finishedRunDraftRepositoryProvider),
-              );
-              if (context.mounted) {
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text("Save new result"),
-          ),
-          TextButton(
-            child: Text("Discard"),
-            onPressed: () async {
-              await forgetFinishedRun(
-                ref.read(finishedRunDraftRepositoryProvider),
-              );
-              if (context.mounted) Navigator.of(context).pop();
-            },
-          ),
-        ],
       ),
     );
   }
