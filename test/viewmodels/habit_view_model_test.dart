@@ -2,6 +2,7 @@
 import 'package:crimpy/models/auth_models.dart' as auth_models;
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_habit.dart';
+import 'package:crimpy/repositories/training_repository.dart';
 import 'package:crimpy/viewmodels/auth_view_model.dart';
 import 'package:crimpy/viewmodels/habit_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
@@ -23,6 +24,28 @@ class _FixedTrainings extends Trainings {
 
   @override
   Future<List<Training>> build() async => trainings;
+}
+
+/// Holds a library and deletes from it, or fails to when [failing].
+class _LibraryRepository implements TrainingRepository {
+  _LibraryRepository(this.ids);
+  List<String> ids;
+  bool failing = false;
+
+  @override
+  Future<TrainingLibrary> getAllTrainings() async => (
+    trainings: [for (final id in ids) Training(id: id, title: 'Training $id')],
+    truncated: false,
+  );
+
+  @override
+  Future<void> deleteTraining(String trainingId) async {
+    if (failing) throw Exception('offline');
+    ids = [...ids]..remove(trainingId);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 final _user = auth_models.User(
@@ -106,5 +129,46 @@ void main() {
     expect(active.map((h) => h.trainingId), ['a']);
     // Named as the library names it now.
     expect(active.single.title, 'Hangs, renamed');
+  });
+
+  group('deleting a training', () {
+    Future<ProviderContainer> library(_LibraryRepository repository) async {
+      final container = ProviderContainer.test(
+        overrides: [
+          authStateProvider.overrideWith(() => _FakeAuthState(_user)),
+          trainingRepositoryProvider.overrideWithValue(repository),
+        ],
+      );
+      await container.read(trainingsProvider.future);
+      await container.read(trainingHabitsProvider.future);
+      final habits = container.read(trainingHabitsProvider.notifier);
+      await habits.setHabit(_habitOf('a'));
+      await habits.setHabit(_habitOf('b'));
+      return container;
+    }
+
+    test('drops the habit it was', () async {
+      final container = await library(_LibraryRepository(['a', 'b']));
+
+      await container.read(trainingsProvider.notifier).deleteTraining('a');
+
+      expect(
+        container.read(trainingHabitsProvider).value!.map((h) => h.trainingId),
+        ['b'],
+      );
+    });
+
+    test('keeps the habit when the delete fails', () async {
+      final repository = _LibraryRepository(['a', 'b'])..failing = true;
+      final container = await library(repository);
+
+      await container.read(trainingsProvider.notifier).deleteTraining('a');
+
+      expect(container.read(trainingsProvider).hasError, isTrue);
+      expect(
+        container.read(trainingHabitsProvider).value!.map((h) => h.trainingId),
+        ['a', 'b'],
+      );
+    });
   });
 }
