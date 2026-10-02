@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:intl/intl.dart';
+
 import 'package:crimpy/database/database.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
@@ -8,6 +10,7 @@ import 'package:crimpy/models/training.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/repositories/bodyweight_repository.dart';
 import 'package:crimpy/utils/bounded_parallel.dart';
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/utils/rep_blocks.dart';
 import 'package:crimpy/models/session_filter.dart';
 
@@ -388,6 +391,7 @@ class RemoteTrainingRepository extends TrainingRepository {
       'name': session.name,
       'notes': session.notes ?? '',
       'date': session.date.toUtc().toIso8601String(),
+      'training_day': _apiTrainingDay(session),
       'is_assessment': session.isAssessment,
       'activity': session.activity.index,
       'origin': session.origin.apiValue,
@@ -447,8 +451,10 @@ class RemoteTrainingRepository extends TrainingRepository {
       'duration': session.duration,
       // A played session keeps the date its run gave it, so only a logged one
       // sends one. Omitted, the server leaves the stored date alone.
-      if (!session.origin.isPlayed)
+      if (!session.origin.isPlayed) ...{
         'date': session.date.toUtc().toIso8601String(),
+        'training_day': _apiTrainingDay(session),
+      },
       // Always sent, and always as a pair, because this is the path an RPE is
       // given or taken back on: the server leaves the stored answer alone only
       // when a request mentions neither field, which would make clearing one
@@ -469,3 +475,11 @@ class RemoteTrainingRepository extends TrainingRepository {
     await _apiClient.markCoachReplyRead(sessionId);
   }
 }
+
+/// The day [session] counts for, as the API stores it. Only the device knows
+/// the zone the athlete trained in, so it is worked out here and sent rather
+/// than left to the server, which can only apply the 04:00 rule in UTC. Read
+/// on the local clock whatever zone the date arrived in, so a session the
+/// local store hands back in UTC still files under the athlete's own day.
+String _apiTrainingDay(SessionModel session) =>
+    DateFormat('yyyy-MM-dd').format(trainingDayOf(session.date.toLocal()));
