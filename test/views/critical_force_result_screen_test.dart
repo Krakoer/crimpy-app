@@ -1,5 +1,7 @@
 // ignore_for_file: avoid_public_notifier_properties
 
+import 'dart:async';
+
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
@@ -15,6 +17,9 @@ import 'package:flutter_test/flutter_test.dart';
 class _CriticalForceStore extends Assessments {
   AssessmentResultModel? saved;
 
+  /// When set, the save waits on it, as a slow network would.
+  Completer<void>? gate;
+
   @override
   Future<List<AssessmentModel>> build(String? assessmentId) async => const [];
 
@@ -26,6 +31,7 @@ class _CriticalForceStore extends Assessments {
     List<BleDataPoint>? data,
     List<SessionItemResultModel> itemResults = const [],
   }) async {
+    await gate?.future;
     saved = assessmentModel;
     return 'cf-session';
   }
@@ -37,6 +43,10 @@ class _MaxForceStore extends Assessments {
   List<AssessmentResultModel>? added;
   String? addedTo;
 
+  /// Whether the provider was still alive when the kept max was written: a
+  /// disposed one has dropped it.
+  bool? aliveWhenAdded;
+
   _MaxForceStore(this.history);
 
   @override
@@ -47,6 +57,7 @@ class _MaxForceStore extends Assessments {
     List<AssessmentResultModel> results,
     String sessionId,
   ) async {
+    aliveWhenAdded = ref.mounted;
     added = results;
     addedTo = sessionId;
     return const [];
@@ -89,13 +100,14 @@ Future<(_CriticalForceStore, _MaxForceStore)> _pump(
   WidgetTester tester, {
   required List<AssessmentModel> maxForces,
   double peak = 38,
+  Completer<void>? gate,
 }) async {
   // Wide enough for the result card in the test font, which is wider than
   // the app's.
   tester.view.physicalSize = const Size(1200, 2400);
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.reset);
-  final criticalForce = _CriticalForceStore();
+  final criticalForce = _CriticalForceStore()..gate = gate;
   final maxForce = _MaxForceStore(maxForces);
   final results = _results(peak: peak);
   await tester.pumpWidget(
@@ -214,6 +226,41 @@ void main() {
     expect(kept.rightValue, 43.2);
     expect(kept.gripPosition, GripPosition.halfCrimp);
     expect(kept.origin, AssessmentOrigin.training);
+  });
+
+  testWidgets('a kept max is still written when the athlete leaves mid save', (
+    tester,
+  ) async {
+    final gate = Completer<void>();
+    final (_, maxForce) = await _pump(
+      tester,
+      maxForces: [_maxForce(40, GripPosition.halfCrimp)],
+      peak: 43.2,
+      gate: gate,
+    );
+    await tester.ensureVisible(find.byType(Checkbox));
+    await tester.tap(find.byType(Checkbox));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Save new result'));
+    await tester.tap(find.text('Save new result'));
+    await tester.pump();
+
+    // The athlete leaves while the test is still being stored.
+    unawaited(
+      tester
+          .state<NavigatorState>(find.byType(Navigator).last)
+          .pushReplacement(
+            MaterialPageRoute<void>(builder: (_) => const SizedBox()),
+          ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(CriticalForceResultScreen), findsNothing);
+
+    gate.complete();
+    await tester.pumpAndSettle();
+
+    expect(maxForce.added?.single.rightValue, 43.2);
+    expect(maxForce.aliveWhenAdded, isTrue);
   });
 
   testWidgets('a skipped offer saves only the test', (tester) async {

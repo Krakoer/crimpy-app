@@ -374,70 +374,72 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
               assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier,
             );
             final release = keptMaxForces.isEmpty ? null : maxForces.holdOpen();
-            String? trainingSessionId;
             try {
-              if (assessment == null) {
-                trainingSessionId = await ref
-                    .read(sessionsProvider.notifier)
-                    .saveSession(
-                      session,
-                      widget.results,
-                      itemResults: _reportedItemResults,
-                    );
-              } else {
-                // Goes through the assessment notifier rather than saving the
-                // session alone: it writes the session first and the result
-                // against it, replaces an answer given earlier the same day, and
-                // refreshes what the next prescribed run resolves against.
-                final right = parseAnswer(_rightAnswerController.text);
-                final left = assessment.perHand
-                    ? parseAnswer(_leftAnswerController.text)
-                    : null;
-                await ref
-                    .read(assessmentsProvider(assessment.id).notifier)
-                    .saveAssessment(
-                      AssessmentResultModel(
-                        assessmentId: assessment.id,
-                        rightValue: right,
-                        leftValue: left,
-                      ),
-                      session,
-                      widget.results,
-                      itemResults: _reportedItemResults,
-                    );
+              String? trainingSessionId;
+              try {
+                if (assessment == null) {
+                  trainingSessionId = await ref
+                      .read(sessionsProvider.notifier)
+                      .saveSession(
+                        session,
+                        widget.results,
+                        itemResults: _reportedItemResults,
+                      );
+                } else {
+                  // Goes through the assessment notifier rather than saving the
+                  // session alone: it writes the session first and the result
+                  // against it, replaces an answer given earlier the same day, and
+                  // refreshes what the next prescribed run resolves against.
+                  final right = parseAnswer(_rightAnswerController.text);
+                  final left = assessment.perHand
+                      ? parseAnswer(_leftAnswerController.text)
+                      : null;
+                  await ref
+                      .read(assessmentsProvider(assessment.id).notifier)
+                      .saveAssessment(
+                        AssessmentResultModel(
+                          assessmentId: assessment.id,
+                          rightValue: right,
+                          leftValue: left,
+                        ),
+                        session,
+                        widget.results,
+                        itemResults: _reportedItemResults,
+                      );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error saving training: $e')),
+                  );
+                }
+                return;
               }
-            } catch (e) {
-              release?.call();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error saving training: $e')),
+              // Written against the training once it is stored, and apart from
+              // it: the training is saved whatever happens here, so a failure
+              // must not leave the athlete on a screen whose button would store
+              // it a second time.
+              if (trainingSessionId != null && keptMaxForces.isNotEmpty) {
+                final failed = await maxForces.addResultsToSession(
+                  keptMaxForces,
+                  trainingSessionId,
                 );
-              }
-              return;
-            }
-            // Written against the training once it is stored, and apart from
-            // it: the training is saved whatever happens here, so a failure
-            // must not leave the athlete on a screen whose button would store
-            // it a second time.
-            if (trainingSessionId != null && keptMaxForces.isNotEmpty) {
-              final failed = await maxForces.addResultsToSession(
-                keptMaxForces,
-                trainingSessionId,
-              );
-              if (failed.isNotEmpty && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      unsavedMaxForceMessage(
-                        failed,
-                        saved: keptMaxForces.length - failed.length,
+                if (failed.isNotEmpty && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        unsavedMaxForceMessage(
+                          failed,
+                          saved: keptMaxForces.length - failed.length,
+                        ),
                       ),
                     ),
-                  ),
-                );
+                  );
+                }
               }
+            } finally {
+              release?.call();
             }
-            release?.call();
             if (context.mounted) {
               Navigator.of(context).pop();
             }
