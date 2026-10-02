@@ -4,6 +4,7 @@ import 'package:crimpy/models/program_model.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/utils/training_intensity.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
@@ -22,7 +23,10 @@ const _programId = 'program-1';
 const _trainingId = 'training-1';
 
 Program _program() {
-  final today = DateTime.now();
+  // The training day, not the calendar date: between midnight and 04:00 the
+  // card still reads yesterday, and a program starting on the calendar date
+  // would not have started yet.
+  final today = currentTrainingDay();
   return Program(
     id: _programId,
     coachId: 'coach-1',
