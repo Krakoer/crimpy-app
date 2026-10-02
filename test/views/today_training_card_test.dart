@@ -9,6 +9,7 @@ import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:crimpy/views/screens/home_screen/widgets/today_training_card.dart';
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,7 +23,9 @@ const _programId = 'program-1';
 const _trainingId = 'training-1';
 
 Program _program() {
-  final today = DateTime.now();
+  // The program starts on the training day the card reads as today, which is
+  // still yesterday until 04:00 (#152).
+  final today = currentTrainingDay();
   return Program(
     id: _programId,
     coachId: 'coach-1',
