@@ -307,6 +307,7 @@ class ScheduledTrainingScreen extends ConsumerWidget {
                   overrideByItem[item.id]!.overrides,
                   results,
                   bodyweightKg,
+                  item,
                 ),
               ),
             ]
@@ -320,11 +321,13 @@ class ScheduledTrainingScreen extends ConsumerWidget {
     Map<String, dynamic> overrides,
     AssessmentResults results,
     double? bodyweightKg,
+    TrainingItem item,
   ) {
     final entries = overrideChipLabels(
       overrides,
       results: results,
       bodyweightKg: bodyweightKg,
+      item: item,
     );
 
     return entries

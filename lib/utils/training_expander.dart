@@ -425,6 +425,7 @@ void _expandHangboardRep(
             bodyweightKg: ctx.bodyweightKg,
             results: ctx.results,
             handSide: handSide,
+            grip: gripFromStored(layout.grip(0, 0, leftHand: leftHand)),
           ) ??
       0.0;
 
@@ -494,6 +495,9 @@ void _expandRepeater(
                 bodyweightKg: ctx.bodyweightKg,
                 results: ctx.results,
                 handSide: side,
+                grip: gripFromStored(
+                  layout.grip(cycle, rep, leftHand: leftHand),
+                ),
               ) ??
           0.0,
       handSide: side,
