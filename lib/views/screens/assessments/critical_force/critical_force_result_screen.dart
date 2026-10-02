@@ -60,6 +60,59 @@ class _CriticalForceResultScreenState
 
   CriticalForceResults get results => widget.results;
 
+  /// Stores the test, then the maxes kept from it on its session, apart from
+  /// it: the test is saved whatever happens to them, so a failure must not
+  /// leave the athlete on a screen that would store it twice. [maxForces] is
+  /// read before the first await, since the screen may be gone after it.
+  Future<void> _save(
+    BuildContext context,
+    Assessments maxForces,
+    List<AssessmentResultModel> keptMaxForces,
+  ) async {
+    final String sessionId;
+    try {
+      sessionId = await ref
+          .read(
+            assessmentsProvider(BuiltinAssessmentIds.criticalForce).notifier,
+          )
+          .saveAssessment(
+            widget.saveAssessment,
+            widget.saveSession,
+            widget.saveReps,
+            data: widget.data,
+          );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving assessment: $e')));
+      }
+      return;
+    }
+    if (keptMaxForces.isNotEmpty) {
+      final failed = await maxForces.addResultsToSession(
+        keptMaxForces,
+        sessionId,
+      );
+      if (failed.isNotEmpty && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              unsavedMaxForceMessage(
+                failed,
+                saved: keptMaxForces.length - failed.length,
+                alongside: 'Critical Force',
+              ),
+            ),
+          ),
+        );
+      }
+    }
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final lateOff = results.lateOffCount;
@@ -262,55 +315,18 @@ class _CriticalForceResultScreenState
                   if (_acceptedMaxForces.contains(offer))
                     offer.toResult(AssessmentOrigin.training),
               ];
-              final String sessionId;
+              // Taken before the first await: the athlete can leave while the
+              // test is saved, and the kept max is still written after it.
+              final maxForces = ref.read(
+                assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier,
+              );
+              final release = keptMaxForces.isEmpty
+                  ? null
+                  : maxForces.holdOpen();
               try {
-                sessionId = await ref
-                    .read(
-                      assessmentsProvider(
-                        BuiltinAssessmentIds.criticalForce,
-                      ).notifier,
-                    )
-                    .saveAssessment(
-                      widget.saveAssessment,
-                      widget.saveSession,
-                      widget.saveReps,
-                      data: widget.data,
-                    );
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error saving assessment: $e')),
-                  );
-                }
-                return;
-              }
-              // Written against the test once it is stored, and apart from
-              // it: the test is saved whatever happens here, so a failure must
-              // not leave the athlete on a screen that would store it twice.
-              if (keptMaxForces.isNotEmpty) {
-                final failed = await ref
-                    .read(
-                      assessmentsProvider(
-                        BuiltinAssessmentIds.maxForce,
-                      ).notifier,
-                    )
-                    .addResultsToSession(keptMaxForces, sessionId);
-                if (failed.isNotEmpty && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        unsavedMaxForceMessage(
-                          failed,
-                          saved: keptMaxForces.length - failed.length,
-                          alongside: 'Critical Force',
-                        ),
-                      ),
-                    ),
-                  );
-                }
-              }
-              if (context.mounted) {
-                Navigator.of(context).pop();
+                await _save(context, maxForces, keptMaxForces);
+              } finally {
+                release?.call();
               }
             },
             child: Text("Save new result"),

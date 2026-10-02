@@ -368,6 +368,12 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                 if (_acceptedMaxForces.contains(offer))
                   offer.toResult(AssessmentOrigin.training),
             ];
+            // Taken before the first await: the athlete can leave while the
+            // training is saved, and the kept max is still written after it.
+            final maxForces = ref.read(
+              assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier,
+            );
+            final release = keptMaxForces.isEmpty ? null : maxForces.holdOpen();
             String? trainingSessionId;
             try {
               if (assessment == null) {
@@ -401,6 +407,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                     );
               }
             } catch (e) {
+              release?.call();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Error saving training: $e')),
@@ -413,11 +420,10 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
             // must not leave the athlete on a screen whose button would store
             // it a second time.
             if (trainingSessionId != null && keptMaxForces.isNotEmpty) {
-              final failed = await ref
-                  .read(
-                    assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier,
-                  )
-                  .addResultsToSession(keptMaxForces, trainingSessionId);
+              final failed = await maxForces.addResultsToSession(
+                keptMaxForces,
+                trainingSessionId,
+              );
               if (failed.isNotEmpty && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -431,6 +437,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                 );
               }
             }
+            release?.call();
             if (context.mounted) {
               Navigator.of(context).pop();
             }

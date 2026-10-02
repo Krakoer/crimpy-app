@@ -315,5 +315,16 @@ void main() {
     expect(find.byType(CriticalForceResultScreen), findsOneWidget);
     expect(find.text('10.00 kg'), findsOneWidget);
     expect(find.text('Mean of pulls 1-3'), findsOneWidget);
+
+    // What is saved carries the grip pulled on and what the test measured
+    // beyond its value, one entry per pull run.
+    final saved = tester
+        .widget<CriticalForceResultScreen>(
+          find.byType(CriticalForceResultScreen),
+        )
+        .saveAssessment;
+    expect(saved.gripPosition, GripPosition.halfCrimp);
+    expect(saved.details!['w_prime_kg_s'], isA<num>());
+    expect(saved.details!['pulls'], hasLength(3));
   });
 }
