@@ -59,4 +59,56 @@ final class ProgramConsistencyProvider
 }
 
 String _$programConsistencyHash() =>
-    r'3f424c7cca5f9978d96b6e5baf542fef78a1e669';
+    r'30bcf6740919007fba77b7403c5469c0157a7e5a';
+
+/// What the home screen's strip draws: the program's last two weeks while a
+/// program covers today, the athlete's own habits otherwise, and null when
+/// there is neither, since there is then nothing to keep.
+
+@ProviderFor(consistencyStrip)
+const consistencyStripProvider = ConsistencyStripProvider._();
+
+/// What the home screen's strip draws: the program's last two weeks while a
+/// program covers today, the athlete's own habits otherwise, and null when
+/// there is neither, since there is then nothing to keep.
+
+final class ConsistencyStripProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<ConsistencyDay>?>,
+          List<ConsistencyDay>?,
+          FutureOr<List<ConsistencyDay>?>
+        >
+    with
+        $FutureModifier<List<ConsistencyDay>?>,
+        $FutureProvider<List<ConsistencyDay>?> {
+  /// What the home screen's strip draws: the program's last two weeks while a
+  /// program covers today, the athlete's own habits otherwise, and null when
+  /// there is neither, since there is then nothing to keep.
+  const ConsistencyStripProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'consistencyStripProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$consistencyStripHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<ConsistencyDay>?> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<ConsistencyDay>?> create(Ref ref) {
+    return consistencyStrip(ref);
+  }
+}
+
+String _$consistencyStripHash() => r'a1eef5ff06317893401c56d2b9cb4f26d1a823db';

@@ -25,7 +25,7 @@ class ConsistencyStripCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Read off what the state holds, so a pull keeps the strip on screen
     // rather than dropping it for the length of the fetch.
-    final days = ref.watch(programConsistencyProvider).value;
+    final days = ref.watch(consistencyStripProvider).value;
     if (days == null || days.isEmpty) return const SizedBox.shrink();
     return ConsistencyStrip(
       days: days,

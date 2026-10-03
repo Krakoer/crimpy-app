@@ -13,6 +13,7 @@ import 'package:crimpy/views/widgets/primary_action_bar.dart';
 import 'package:crimpy/views/widgets/section_widgets.dart';
 import 'package:crimpy/views/widgets/start_training_run.dart';
 import 'package:crimpy/views/widgets/training_item_tile.dart';
+import 'package:crimpy/views/screens/trainings/widgets/habit_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -55,6 +56,12 @@ class TrainingDetailScreen extends ConsumerWidget {
           children: [
             _Summary(length: length, intensity: intensity),
             const SizedBox(height: CrimpyTheme.spaceLg),
+            // Only a training of the athlete's own: a builtin runs with no id,
+            // so none of its sessions could ever count for the habit.
+            if (trainingId case final id?) ...[
+              HabitSection(trainingId: id),
+              const SizedBox(height: CrimpyTheme.spaceLg),
+            ],
             if (goal.isNotEmpty) ...[
               const SectionLabel('Goal'),
               const SizedBox(height: CrimpyTheme.spaceSm),

@@ -13,6 +13,8 @@ import 'package:crimpy/views/screens/settings_screen/widgets/reset_password_tile
 import 'package:crimpy/views/screens/settings_screen/widgets/run_cue_vibration_tile.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/sensor_ownership_tile.dart';
 import 'package:crimpy/views/screens/settings_screen/widgets/sensor_settings_list.dart';
+import 'package:crimpy/viewmodels/auth_view_model.dart';
+import 'package:crimpy/viewmodels/habit_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
@@ -185,19 +187,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         ),
                       ),
                     ),
-                  // Reminders only exist for coach-assigned programs, and only
-                  // on the platforms that can deliver a scheduled notification.
-                  // Read off what the state holds: a pull on another tab
-                  // reloads the program, and through asData this row, the only
-                  // way into the reminder settings, would be gone while it ran
-                  // and stay gone if it failed.
+                  // Reminders exist for a coach-assigned program or for the
+                  // athlete's own habits, and only on the platforms that can
+                  // deliver a scheduled notification. Not for a guest: the
+                  // reminder settings belong to an account and are wiped while
+                  // nobody is signed in. Read off what the state holds: a pull
+                  // on another tab reloads the program, and through asData
+                  // this row, the only way into the reminder settings, would be
+                  // gone while it ran and stay gone if it failed.
                   if (supportsTrainingReminders &&
-                      ref.watch(activeProgramProvider).value != null)
+                      ref.watch(isAuthenticatedProvider) &&
+                      (ref.watch(activeProgramProvider).value != null ||
+                          (ref.watch(activeHabitsProvider).value ?? const [])
+                              .isNotEmpty))
                     ListTile(
                       leading: const Icon(Icons.notifications_none),
                       title: const Text('Training reminders'),
                       subtitle: const Text(
-                        'Get reminded of the trainings your coach scheduled',
+                        'Get reminded of what your coach scheduled, or of '
+                        'your own habits',
                       ),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () => Navigator.of(context).push(
