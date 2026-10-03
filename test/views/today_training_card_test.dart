@@ -22,17 +22,17 @@ class _NoSessions extends Sessions {
 const _programId = 'program-1';
 const _trainingId = 'training-1';
 
+/// A program starting on the training day it is now, which is what the card
+/// reads as today: until 04:00 that is still yesterday, so a calendar date
+/// would start the program tomorrow for a run between midnight and 04:00.
 Program _program() {
-  // The training day, not the calendar date: between midnight and 04:00 the
-  // card still reads yesterday, and a program starting on the calendar date
-  // would not have started yet.
   final today = currentTrainingDay();
   return Program(
     id: _programId,
     coachId: 'coach-1',
     userId: 'user-1',
     name: 'Winter block',
-    startDate: DateTime(today.year, today.month, today.day),
+    startDate: today,
     durationWeeks: 4,
     createdAt: today,
     updatedAt: today,
