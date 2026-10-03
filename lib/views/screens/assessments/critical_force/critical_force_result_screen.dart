@@ -1,3 +1,4 @@
+import 'package:crimpy/database/builtins.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
@@ -56,25 +57,47 @@ class CriticalForceResultScreen extends ConsumerStatefulWidget {
   /// next launch when the app died before the result was saved. [results] is
   /// the analysis the run already made; a resumed run makes it again, on the
   /// same readings.
-  CriticalForceResultScreen.fromDraft(
+  ///
+  /// A draft kept before the details were stored is saved with the ones the
+  /// re-analysis gives, on the grip the screen reads it on, so what is stored
+  /// is what the athlete saw.
+  factory CriticalForceResultScreen.fromDraft(
     CriticalForceResultDraft draft, {
     CriticalForceResults? results,
     Key? key,
-  }) : this(
-         key: key,
-         previousCriticalForce: draft.previousCriticalForce,
-         results:
-             results ?? analyseCriticalForce(draft.samples, draft.pullWindows),
-         data: draft.data,
-         samples: draft.samples,
-         pausedSeconds: draft.pausedSeconds,
-         hand: draft.hand,
-         gripPosition: draft.gripPosition,
-         edgeSizeMm: draft.edgeSizeMm,
-         saveAssessment: draft.saveAssessment,
-         saveSession: draft.saveSession,
-         saveReps: draft.saveReps,
-       );
+  }) {
+    final analysed =
+        results ?? analyseCriticalForce(draft.samples, draft.pullWindows);
+    final kept = draft.saveAssessment;
+    return CriticalForceResultScreen(
+      key: key,
+      previousCriticalForce: draft.previousCriticalForce,
+      results: analysed,
+      data: draft.data,
+      samples: draft.samples,
+      pausedSeconds: draft.pausedSeconds,
+      hand: draft.hand,
+      gripPosition: draft.gripPosition,
+      edgeSizeMm: draft.edgeSizeMm,
+      saveAssessment: kept.details != null && kept.gripPosition != null
+          ? kept
+          : AssessmentResultModel(
+              assessmentId: kept.assessmentId,
+              rightValue: kept.rightValue,
+              leftValue: kept.leftValue,
+              origin: kept.origin,
+              gripPosition: draft.gripPosition,
+              details:
+                  kept.details ??
+                  analysed.toDetails(
+                    workSeconds: criticalForceWorkTime,
+                    restSeconds: criticalForceRestTime,
+                  ),
+            ),
+      saveSession: draft.saveSession,
+      saveReps: draft.saveReps,
+    );
+  }
 
   @override
   ConsumerState<CriticalForceResultScreen> createState() =>
@@ -86,6 +109,10 @@ class _CriticalForceResultScreenState
   /// The new Max Force the athlete ticked. None to begin with: the hardest
   /// pull is offered, never saved without a tap.
   final Set<MaxForceOffer> _acceptedMaxForces = {};
+
+  /// Set while the result is being saved, so a second tap does not store the
+  /// test, and the max kept from it, twice.
+  bool _saving = false;
 
   CriticalForceResults get results => widget.results;
 
@@ -349,28 +376,34 @@ class _CriticalForceResultScreenState
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             TextButton(
-              onPressed: () async {
-                // Read off what is still on screen, so an offer ticked and then
-                // taken back by a refreshed history is not saved.
-                final keptMaxForces = [
-                  for (final offer in maxForceOffers)
-                    if (_acceptedMaxForces.contains(offer))
-                      offer.toResult(AssessmentOrigin.training),
-                ];
-                // Taken before the first await: the athlete can leave while the
-                // test is saved, and the kept max is still written after it.
-                final maxForces = ref.read(
-                  assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier,
-                );
-                final release = keptMaxForces.isEmpty
-                    ? null
-                    : maxForces.holdOpen();
-                try {
-                  await _save(context, maxForces, keptMaxForces, drafts);
-                } finally {
-                  release?.call();
-                }
-              },
+              onPressed: _saving
+                  ? null
+                  : () async {
+                      setState(() => _saving = true);
+                      // Read off what is still on screen, so an offer ticked and then
+                      // taken back by a refreshed history is not saved.
+                      final keptMaxForces = [
+                        for (final offer in maxForceOffers)
+                          if (_acceptedMaxForces.contains(offer))
+                            offer.toResult(AssessmentOrigin.training),
+                      ];
+                      // Taken before the first await: the athlete can leave while the
+                      // test is saved, and the kept max is still written after it.
+                      final maxForces = ref.read(
+                        assessmentsProvider(
+                          BuiltinAssessmentIds.maxForce,
+                        ).notifier,
+                      );
+                      final release = keptMaxForces.isEmpty
+                          ? null
+                          : maxForces.holdOpen();
+                      try {
+                        await _save(context, maxForces, keptMaxForces, drafts);
+                      } finally {
+                        release?.call();
+                        if (mounted) setState(() => _saving = false);
+                      }
+                    },
               child: Text("Save new result"),
             ),
             TextButton(

@@ -1,11 +1,14 @@
 // ignore_for_file: avoid_public_notifier_properties
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/critical_force_result.dart';
+import 'package:crimpy/models/finished_run_draft.dart';
+import 'package:crimpy/utils/critical_force_analysis.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/assessments/critical_force/critical_force_result_screen.dart';
@@ -22,6 +25,9 @@ class _CriticalForceStore extends Assessments {
   /// When set, the save waits on it, as a slow network would.
   Completer<void>? gate;
 
+  /// How many times the save was asked for.
+  int saves = 0;
+
   @override
   Future<List<AssessmentModel>> build(String? assessmentId) async => const [];
 
@@ -33,7 +39,11 @@ class _CriticalForceStore extends Assessments {
     List<BleDataPoint>? data,
     List<SessionItemResultModel> itemResults = const [],
   }) async {
+    saves++;
+    // Held for the save, as the real notifier holds itself.
+    final keepAlive = ref.keepAlive();
     await gate?.future;
+    keepAlive.close();
     saved = assessmentModel;
     return 'cf-session';
   }
@@ -49,6 +59,9 @@ class _MaxForceStore extends Assessments {
   /// disposed one has dropped it.
   bool? aliveWhenAdded;
 
+  /// How many times kept maxes were added.
+  int adds = 0;
+
   _MaxForceStore(this.history);
 
   @override
@@ -60,6 +73,7 @@ class _MaxForceStore extends Assessments {
     String sessionId,
   ) async {
     aliveWhenAdded = ref.mounted;
+    adds++;
     added = results;
     addedTo = sessionId;
     return const [];
@@ -264,6 +278,176 @@ void main() {
 
     expect(maxForce.added?.single.rightValue, 43.2);
     expect(maxForce.aliveWhenAdded, isTrue);
+  });
+
+  testWidgets('a double tap on save stores the test and its kept max once', (
+    tester,
+  ) async {
+    final gate = Completer<void>();
+    final (criticalForce, maxForce) = await _pump(
+      tester,
+      maxForces: [_maxForce(40, GripPosition.halfCrimp)],
+      peak: 43.2,
+      gate: gate,
+    );
+    await tester.ensureVisible(find.byType(Checkbox));
+    await tester.tap(find.byType(Checkbox));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Save new result'));
+    await tester.tap(find.text('Save new result'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('Save new result'), warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 500));
+
+    gate.complete();
+    await tester.pumpAndSettle();
+
+    expect(criticalForce.saves, 1);
+    expect(maxForce.adds, 1);
+  });
+
+  testWidgets('a run kept on the device saves what a fresh one would', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 2400);
+    tester.view.devicePixelRatio = 2;
+    addTearDown(tester.view.reset);
+    // Four 7 s pulls at 20 kg, the first peaking at 26 kg, read at 10 Hz.
+    final samples = [
+      for (var tenths = 0; tenths < 400; tenths++)
+        (
+          t: tenths / 10,
+          kg: tenths % 100 >= 70
+              ? 0.0
+              : tenths == 30
+              ? 26.0
+              : 20.0,
+        ),
+    ];
+    final windows = [
+      for (var pull = 0; pull < 4; pull++)
+        (start: pull * 10.0, end: pull * 10.0 + 7),
+    ];
+    final details = analyseCriticalForce(
+      samples,
+      windows,
+    ).toDetails(workSeconds: 7, restSeconds: 3);
+    final kept = CriticalForceResultDraft(
+      owner: 'user-1',
+      hand: HandSide.right,
+      edgeSizeMm: BuiltinAssessmentIds.maxForceEdgeSizeMm,
+      saveAssessment: AssessmentResultModel(
+        assessmentId: BuiltinAssessmentIds.criticalForce,
+        rightValue: 20,
+        gripPosition: GripPosition.halfCrimp,
+        details: details,
+      ),
+      saveSession: SessionModel(
+        name: 'Critical force assessment',
+        date: DateTime(2026, 9, 28, 18, 30),
+        isAssessment: true,
+        origin: SessionOrigin.played,
+      ),
+      saveReps: const [],
+      data: const [],
+      samples: samples,
+      pullWindows: windows,
+    );
+    // As the next launch reads it back from the file.
+    final resumed =
+        FinishedRunDraft.fromJson(
+              jsonDecode(jsonEncode(kept.toJson())) as Map<String, dynamic>,
+            )
+            as CriticalForceResultDraft;
+    expect(resumed.hand, HandSide.right);
+    expect(resumed.gripPosition, GripPosition.halfCrimp);
+    expect(resumed.edgeSizeMm, BuiltinAssessmentIds.maxForceEdgeSizeMm);
+
+    final criticalForce = _CriticalForceStore();
+    final maxForce = _MaxForceStore([_maxForce(22, GripPosition.halfCrimp)]);
+    final drafts = MemoryRunDrafts(resumed);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          assessmentsProvider(
+            BuiltinAssessmentIds.criticalForce,
+          ).overrideWith(() => criticalForce),
+          assessmentsProvider(
+            BuiltinAssessmentIds.maxForce,
+          ).overrideWith(() => maxForce),
+          ...runDraftOverrides(drafts),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: Navigator(
+              onGenerateRoute: (_) => MaterialPageRoute(
+                builder: (_) => CriticalForceResultScreen.fromDraft(resumed),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('% of your max'), findsOneWidget);
+    expect(find.text('New Max Force'), findsOneWidget);
+    await tester.ensureVisible(find.byType(Checkbox));
+    await tester.tap(find.byType(Checkbox));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Save new result'));
+    await _save(tester);
+
+    expect(criticalForce.saves, 1);
+    expect(criticalForce.saved!.details, details);
+    expect(criticalForce.saved!.gripPosition, GripPosition.halfCrimp);
+    expect(criticalForce.saved!.rightValue, 20);
+    expect(maxForce.added!.single.rightValue, 26);
+    expect(maxForce.added!.single.gripPosition, GripPosition.halfCrimp);
+    expect(drafts.draft, isNull);
+  });
+
+  testWidgets('a run kept before its details were fills them in on save', (
+    tester,
+  ) async {
+    final samples = [
+      for (var tenths = 0; tenths < 400; tenths++)
+        (t: tenths / 10, kg: tenths % 100 < 70 ? 20.0 : 0.0),
+    ];
+    final windows = [
+      for (var pull = 0; pull < 4; pull++)
+        (start: pull * 10.0, end: pull * 10.0 + 7),
+    ];
+    final old = CriticalForceResultDraft(
+      owner: 'user-1',
+      hand: HandSide.right,
+      edgeSizeMm: BuiltinAssessmentIds.maxForceEdgeSizeMm,
+      saveAssessment: AssessmentResultModel(
+        assessmentId: BuiltinAssessmentIds.criticalForce,
+        rightValue: 20,
+      ),
+      saveSession: SessionModel(
+        name: 'Critical force assessment',
+        isAssessment: true,
+        origin: SessionOrigin.played,
+      ),
+      saveReps: const [],
+      data: const [],
+      samples: samples,
+      pullWindows: windows,
+    );
+
+    final saved = CriticalForceResultScreen.fromDraft(old).saveAssessment;
+
+    expect(
+      saved.details,
+      analyseCriticalForce(
+        samples,
+        windows,
+      ).toDetails(workSeconds: 7, restSeconds: 3),
+    );
+    expect(saved.gripPosition, GripPosition.halfCrimp);
+    expect(saved.rightValue, 20);
   });
 
   testWidgets('a skipped offer saves only the test', (tester) async {

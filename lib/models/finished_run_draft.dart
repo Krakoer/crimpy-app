@@ -196,7 +196,9 @@ class CriticalForceResultDraft extends FinishedRunDraft {
       if (saveAssessment.details != null) 'details': saveAssessment.details,
     },
     'hand': hand.name,
-    if (edgeSizeMm != null) 'edge_size_mm': edgeSizeMm,
+    // Written even when null, so a draft without an edge reads back without
+    // one rather than as a draft kept before the edge was.
+    'edge_size_mm': edgeSizeMm,
     'session': {
       'name': saveSession.name,
       'date': saveSession.date.toUtc().toIso8601String(),
@@ -232,9 +234,9 @@ class CriticalForceResultDraft extends FinishedRunDraft {
         final String name => HandSide.values.byName(name),
         _ => rightValue != null ? HandSide.right : HandSide.left,
       },
-      edgeSizeMm:
-          (json['edge_size_mm'] as num?)?.toInt() ??
-          BuiltinAssessmentIds.maxForceEdgeSizeMm,
+      edgeSizeMm: json.containsKey('edge_size_mm')
+          ? (json['edge_size_mm'] as num?)?.toInt()
+          : BuiltinAssessmentIds.maxForceEdgeSizeMm,
       previousCriticalForce: (json['previous_critical_force'] as num?)
           ?.toDouble(),
       saveAssessment: AssessmentResultModel(
