@@ -81,7 +81,7 @@ class _CriticalForceStore extends Assessments {
   Future<List<AssessmentModel>> build(String? assessmentId) async => const [];
 
   @override
-  Future<void> saveAssessment(
+  Future<String> saveAssessment(
     AssessmentResultModel assessmentModel,
     SessionModel session,
     List<RepDataModel> reps, {
@@ -90,12 +90,15 @@ class _CriticalForceStore extends Assessments {
   }) async {
     if (fails) throw Exception('offline');
     saved = assessmentModel;
+    return 'cf-session';
   }
 }
 
 /// Four 7 s pulls at 20 kg with 3 s off between them, read at 10 Hz.
 final _criticalForceDraft = CriticalForceResultDraft(
   owner: 'user-1',
+  hand: HandSide.left,
+  edgeSizeMm: BuiltinAssessmentIds.maxForceEdgeSizeMm,
   saveAssessment: AssessmentResultModel(
     assessmentId: BuiltinAssessmentIds.criticalForce,
     leftValue: 20,
@@ -128,7 +131,14 @@ Future<void> _pumpResult(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        assessmentsProvider.overrideWith(() => store),
+        assessmentsProvider(
+          BuiltinAssessmentIds.criticalForce,
+        ).overrideWith(() => store),
+        // The Max Force history the result reads its share against, apart
+        // from the store the save goes to.
+        assessmentsProvider(
+          BuiltinAssessmentIds.maxForce,
+        ).overrideWith(_CriticalForceStore.new),
         finishedRunDraftRepositoryProvider.overrideWithValue(drafts),
       ],
       child: MaterialApp(navigatorKey: navigator, home: const Scaffold()),

@@ -389,74 +389,82 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                 if (_acceptedMaxForces.contains(offer))
                   offer.toResult(AssessmentOrigin.training),
             ];
-            String? trainingSessionId;
-            try {
-              if (assessment == null) {
-                trainingSessionId = await ref
-                    .read(sessionsProvider.notifier)
-                    .saveSession(
-                      session,
-                      widget.results,
-                      itemResults: _reportedItemResults,
-                    );
-              } else {
-                // Goes through the assessment notifier rather than saving the
-                // session alone: it writes the session first and the result
-                // against it, replaces an answer given earlier the same day, and
-                // refreshes what the next prescribed run resolves against.
-                final right = parseAnswer(_rightAnswerController.text);
-                final left = assessment.perHand
-                    ? parseAnswer(_leftAnswerController.text)
-                    : null;
-                await ref
-                    .read(assessmentsProvider(assessment.id).notifier)
-                    .saveAssessment(
-                      AssessmentResultModel(
-                        assessmentId: assessment.id,
-                        rightValue: right,
-                        leftValue: left,
-                      ),
-                      session,
-                      widget.results,
-                      itemResults: _reportedItemResults,
-                    );
-              }
-            } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error saving training: $e')),
-                );
-              }
-              return;
-            }
-            // The run is stored, so the copy kept in case the app died on this
-            // screen goes. Only now: a save that failed keeps it, and the Max
-            // Forces below are extras the run does not wait on.
-            await forgetFinishedRun(
-              ref.read(finishedRunDraftRepositoryProvider),
+            // Taken before the first await: the athlete can leave while the
+            // training is saved, and the kept max is still written after it.
+            final maxForces = ref.read(
+              assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier,
             );
-            // Written against the training once it is stored, and apart from
-            // it: the training is saved whatever happens here, so a failure
-            // must not leave the athlete on a screen whose button would store
-            // it a second time.
-            if (trainingSessionId != null && keptMaxForces.isNotEmpty) {
-              final failed = await ref
-                  .read(
-                    assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier,
-                  )
-                  .addResultsToSession(keptMaxForces, trainingSessionId);
-              if (failed.isNotEmpty && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      unsavedMaxForceMessage(
-                        failed,
-                        saved: keptMaxForces.length - failed.length,
+            final drafts = ref.read(finishedRunDraftRepositoryProvider);
+            final release = keptMaxForces.isEmpty ? null : maxForces.holdOpen();
+            try {
+              String? trainingSessionId;
+              try {
+                if (assessment == null) {
+                  trainingSessionId = await ref
+                      .read(sessionsProvider.notifier)
+                      .saveSession(
+                        session,
+                        widget.results,
+                        itemResults: _reportedItemResults,
+                      );
+                } else {
+                  // Goes through the assessment notifier rather than saving the
+                  // session alone: it writes the session first and the result
+                  // against it, replaces an answer given earlier the same day, and
+                  // refreshes what the next prescribed run resolves against.
+                  final right = parseAnswer(_rightAnswerController.text);
+                  final left = assessment.perHand
+                      ? parseAnswer(_leftAnswerController.text)
+                      : null;
+                  await ref
+                      .read(assessmentsProvider(assessment.id).notifier)
+                      .saveAssessment(
+                        AssessmentResultModel(
+                          assessmentId: assessment.id,
+                          rightValue: right,
+                          leftValue: left,
+                        ),
+                        session,
+                        widget.results,
+                        itemResults: _reportedItemResults,
+                      );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error saving training: $e')),
+                  );
+                }
+                return;
+              }
+              // The run is stored, so the copy kept in case the app died on
+              // this screen goes. Only now: a save that failed keeps it, and the
+              // Max Forces below are extras the run does not wait on.
+              await forgetFinishedRun(drafts);
+              // Written against the training once it is stored, and apart from
+              // it: the training is saved whatever happens here, so a failure
+              // must not leave the athlete on a screen whose button would store
+              // it a second time.
+              if (trainingSessionId != null && keptMaxForces.isNotEmpty) {
+                final failed = await maxForces.addResultsToSession(
+                  keptMaxForces,
+                  trainingSessionId,
+                );
+                if (failed.isNotEmpty && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        unsavedMaxForceMessage(
+                          failed,
+                          saved: keptMaxForces.length - failed.length,
+                        ),
                       ),
                     ),
-                  ),
-                );
+                  );
+                }
               }
+            } finally {
+              release?.call();
             }
             if (context.mounted) {
               Navigator.of(context).pop();
@@ -556,27 +564,4 @@ class _BlocksOnTarget extends StatelessWidget {
       ),
     );
   }
-}
-
-/// What the review says when some of the Max Forces the athlete ticked could
-/// not be stored: which hand and grip did not land, and that the rest did, so
-/// the athlete does not redo a pull that is already on file.
-String unsavedMaxForceMessage(
-  List<AssessmentResultModel> failed, {
-  required int saved,
-}) {
-  final names = failed
-      .map(
-        (result) =>
-            '${result.hand?.label.toLowerCase() ?? 'max'}'
-            '${result.gripPosition == null ? '' : ', ${result.gripPosition!.displayName}'}',
-      )
-      .join(' and ');
-  final kept = saved == 0
-      ? ''
-      : ' The other ${saved == 1 ? 'one was' : '$saved were'} saved.';
-  final subject = failed.length == 1
-      ? 'the new Max Force ($names) was'
-      : 'the new Max Forces ($names) were';
-  return 'Training saved, but $subject not.$kept';
 }

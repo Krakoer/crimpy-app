@@ -219,12 +219,18 @@ class AssessmentResultModel {
   final GripPosition? gripPosition;
   final AssessmentOrigin origin;
 
+  /// What the test measured beyond the value, as a JSON object whose shape
+  /// belongs to the assessment: for a Critical Force, its W', the end force of
+  /// its last pulls and one entry per pull. Null on every other result.
+  final Map<String, Object?>? details;
+
   AssessmentResultModel({
     required this.assessmentId,
     this.rightValue,
     this.leftValue,
     this.gripPosition,
     this.origin = AssessmentOrigin.test,
+    this.details,
   });
 
   /// Get the hand of the assessment.
@@ -397,6 +403,10 @@ class AssessmentModel {
   final GripPosition? gripPosition;
   final AssessmentOrigin origin;
 
+  /// What the test measured beyond the value, see
+  /// [AssessmentResultModel.details].
+  final Map<String, Object?>? details;
+
   AssessmentModel({
     required this.id,
     required this.date,
@@ -405,6 +415,7 @@ class AssessmentModel {
     this.leftValue,
     this.gripPosition,
     this.origin = AssessmentOrigin.test,
+    this.details,
   });
 
   String get assessmentId => definition.id;

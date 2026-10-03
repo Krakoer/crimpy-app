@@ -142,8 +142,16 @@ class Assessments extends _$Assessments {
         .toList();
   }
 
+  /// Keeps this list alive until the returned release is called, for a caller
+  /// that writes to it after an await its screen may not outlive: the athlete
+  /// can leave while an earlier save is still running, and only that screen
+  /// watched it.
+  void Function() holdOpen() => ref.keepAlive().close;
+
   /// Save the assessment into the database. If the assessment has already been done today, the previous results will be deleted.
-  Future<void> saveAssessment(
+  /// Answers with the id of the session it wrote, which a result kept from
+  /// the same run is added to.
+  Future<String> saveAssessment(
     AssessmentResultModel assessmentModel,
     SessionModel session,
     List<RepDataModel> reps, {
@@ -156,7 +164,7 @@ class Assessments extends _$Assessments {
     // ref below it fails on a disposed ref, losing the measurement.
     final keepAlive = ref.keepAlive();
     try {
-      await _writeAssessment(
+      return await _writeAssessment(
         assessmentModel,
         session,
         reps,
@@ -168,7 +176,7 @@ class Assessments extends _$Assessments {
     }
   }
 
-  Future<void> _writeAssessment(
+  Future<String> _writeAssessment(
     AssessmentResultModel assessmentModel,
     SessionModel session,
     List<RepDataModel> reps, {
@@ -200,6 +208,7 @@ class Assessments extends _$Assessments {
       // all of them from one read, and leaves the training library alone.
       ref.invalidate(assessmentHistoryProvider);
     }
+    return sessionId;
   }
 
   /// Adds results to a session already stored, such as a Max Force kept from a

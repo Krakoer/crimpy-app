@@ -22,6 +22,7 @@ class RemoteAssessmentRepository extends AssessmentRepository {
       if (assessment.gripPosition != null)
         'grip_position': assessment.gripPosition!.index,
       'origin': assessment.origin.apiValue,
+      if (assessment.details != null) 'details': assessment.details,
     });
     return created['id'] as String;
   }
@@ -68,6 +69,9 @@ class RemoteAssessmentRepository extends AssessmentRepository {
           null,
         ),
         origin: assessmentOriginFromApi(a['origin'] as String?),
+        details: a['details'] is Map
+            ? Map<String, Object?>.from(a['details'] as Map)
+            : null,
       );
     }).toList();
 

@@ -85,3 +85,28 @@ class MaxForceOfferCard extends StatelessWidget {
     );
   }
 }
+
+/// What a review says when some of the Max Forces the athlete ticked could
+/// not be stored: which hand and grip did not land, and that the rest did, so
+/// the athlete does not redo a pull that is already on file. [alongside] names
+/// what was saved with them, which did land.
+String unsavedMaxForceMessage(
+  List<AssessmentResultModel> failed, {
+  required int saved,
+  String alongside = 'Training',
+}) {
+  final names = failed
+      .map(
+        (result) =>
+            '${result.hand?.label.toLowerCase() ?? 'max'}'
+            '${result.gripPosition == null ? '' : ', ${result.gripPosition!.displayName}'}',
+      )
+      .join(' and ');
+  final kept = saved == 0
+      ? ''
+      : ' The other ${saved == 1 ? 'one was' : '$saved were'} saved.';
+  final subject = failed.length == 1
+      ? 'the new Max Force ($names) was'
+      : 'the new Max Forces ($names) were';
+  return '$alongside saved, but $subject not.$kept';
+}

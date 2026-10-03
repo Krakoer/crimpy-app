@@ -186,6 +186,28 @@ void main() {
       },
     );
 
+    test('keeps W\', the end force and every pull in its details', () {
+      final results = analyseCriticalForce(
+        _trace(12, _square((pull) => pull < 2 ? 30 : 10)),
+        _windows(12),
+      );
+
+      final details = results.toDetails(workSeconds: 7, restSeconds: 3);
+
+      expect(details['definition'], 'last6');
+      expect(details['protocol'], '7:3x12');
+      expect(details['w_prime_kg_s'], closeTo(280, 0.01));
+      expect(details['end_force_kg'], closeTo(10, 0.01));
+      expect(details['first_counted_pull'], 7);
+      expect(details['averaged_pull_count'], 6);
+      final pulls = details['pulls']! as List;
+      expect(pulls, hasLength(12));
+      expect((pulls.first as Map)['mean_kg'], closeTo(30, 0.01));
+      expect((pulls.last as Map)['held_after_bell_s'], isNull);
+      expect(CriticalForceResults.wPrimeOf(details), closeTo(280, 0.01));
+      expect(CriticalForceResults.wPrimeOf(null), isNull);
+    });
+
     test('sorts the readings into the windows it is given', () {
       // A clock paused for 5 s during the rest after pull 1.
       final windows = <CriticalForceWindow>[

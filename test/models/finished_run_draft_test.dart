@@ -8,6 +8,7 @@ import 'package:crimpy/models/max_force_offer.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/models/training_item_model.dart';
+import 'package:crimpy/utils/critical_force_analysis.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen/widgets/item_review_fields.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -66,6 +67,19 @@ RepDataModel _rep(int index, {bool unmeasured = false}) => RepDataModel(
   trainingItemId: 'hang-1',
   targetUnmeasured: unmeasured,
 );
+
+/// What a real Critical Force stores beyond its value: four 7 s pulls at
+/// 20 kg, analysed as the run analyses them.
+final _realDetails = analyseCriticalForce(
+  [
+    for (var tenths = 0; tenths < 400; tenths++)
+      (t: tenths / 10, kg: tenths % 100 < 70 ? 20.0 : 0.0),
+  ],
+  [
+    for (var pull = 0; pull < 4; pull++)
+      (start: pull * 10.0, end: pull * 10.0 + 7),
+  ],
+).toDetails(workSeconds: 7, restSeconds: 3);
 
 T _roundTrip<T extends FinishedRunDraft>(T draft) =>
     FinishedRunDraft.fromJson(
@@ -204,9 +218,13 @@ void main() {
     final draft = CriticalForceResultDraft(
       owner: FinishedRunDraft.guestOwner,
       previousCriticalForce: 18.2,
+      hand: HandSide.left,
+      edgeSizeMm: 20,
       saveAssessment: AssessmentResultModel(
         assessmentId: BuiltinAssessmentIds.criticalForce,
         leftValue: 19.4,
+        gripPosition: GripPosition.threeFinger,
+        details: _realDetails,
       ),
       saveSession: SessionModel(
         name: 'Critical force assessment - 28/09/2026',
@@ -239,6 +257,66 @@ void main() {
     expect(back.samples, draft.samples);
     expect(back.pullWindows, draft.pullWindows);
     expect(back.pausedSeconds, 12);
+    expect(back.hand, HandSide.left);
+    expect(back.edgeSizeMm, 20);
+    expect(back.gripPosition, GripPosition.threeFinger);
+    expect(back.saveAssessment.details, _realDetails);
+  });
+
+  test('a Critical Force draft without an edge reads back without one', () {
+    final draft = CriticalForceResultDraft(
+      owner: 'user-1',
+      hand: HandSide.right,
+      edgeSizeMm: null,
+      saveAssessment: AssessmentResultModel(
+        assessmentId: BuiltinAssessmentIds.criticalForce,
+        rightValue: 19.4,
+      ),
+      saveSession: SessionModel(
+        name: 'Critical force assessment',
+        date: DateTime(2026, 9, 28, 18),
+        isAssessment: true,
+        origin: SessionOrigin.played,
+      ),
+      saveReps: const [],
+      data: const [],
+      samples: const [],
+      pullWindows: const [],
+    );
+
+    expect(_roundTrip(draft).edgeSizeMm, isNull);
+  });
+
+  test('a Critical Force draft kept before the grip and hand reads them back '
+      'from its value', () {
+    final json =
+        CriticalForceResultDraft(
+            owner: 'user-1',
+            hand: HandSide.right,
+            edgeSizeMm: null,
+            saveAssessment: AssessmentResultModel(
+              assessmentId: BuiltinAssessmentIds.criticalForce,
+              rightValue: 19.4,
+            ),
+            saveSession: SessionModel(
+              name: 'Critical force assessment',
+              date: DateTime(2026, 9, 28, 18),
+              isAssessment: true,
+              origin: SessionOrigin.played,
+            ),
+            saveReps: const [],
+            data: const [],
+            samples: const [],
+            pullWindows: const [],
+          ).toJson()
+          ..remove('hand')
+          ..remove('edge_size_mm');
+
+    final back = FinishedRunDraft.fromJson(json) as CriticalForceResultDraft;
+
+    expect(back.hand, HandSide.right);
+    expect(back.gripPosition, GripPosition.halfCrimp);
+    expect(back.edgeSizeMm, BuiltinAssessmentIds.maxForceEdgeSizeMm);
   });
 
   test('refuses a draft written by another version of the app', () {

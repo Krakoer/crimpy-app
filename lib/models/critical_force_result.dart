@@ -99,6 +99,46 @@ class CriticalForceResults {
 
   /// How many pulls were held on into the following rest.
   int get lateOffCount => pulls.where((p) => p.lateOff).length;
+
+  /// What the result stores beside the Critical Force (Krakoer/crimpy#145):
+  /// W', the end force of the last pulls and the numbers of every pull, so
+  /// they can be shown later and another definition recomputed from them.
+  /// [workSeconds] and [restSeconds] name the protocol the pulls were run on.
+  Map<String, Object?> toDetails({
+    required int workSeconds,
+    required int restSeconds,
+  }) => {
+    'definition': 'last${CriticalForceRules.countedPulls}',
+    'protocol': '$workSeconds:${restSeconds}x${pulls.length}',
+    'w_prime_kg_s': _rounded(wPrime),
+    'end_force_kg': _roundedOrNull(endForceKg),
+    'peak_kg': _rounded(peakKg),
+    'first_counted_pull': firstCountedPull,
+    'last_counted_pull': lastCountedPull,
+    'averaged_pull_count': averagedPullCount,
+    'pulls': [
+      for (final pull in pulls)
+        {
+          'mean_kg': _roundedOrNull(pull.meanKg),
+          'peak_kg': _rounded(pull.peakKg),
+          'end_kg': _roundedOrNull(pull.endKg),
+          'impulse_kg_s': _rounded(pull.impulseKgS),
+          'coverage': _rounded(pull.coverage),
+          'held_after_bell_s': _roundedOrNull(pull.heldAfterBellSeconds),
+          'late_off': pull.lateOff,
+        },
+    ],
+  };
+
+  /// The W' a stored result carries in its details, or null when it has none.
+  static double? wPrimeOf(Map<String, Object?>? details) {
+    final value = details?['w_prime_kg_s'];
+    return value is num ? value.toDouble() : null;
+  }
+
+  static double _rounded(double value) => (value * 100).round() / 100;
+  static double? _roundedOrNull(double? value) =>
+      value == null ? null : _rounded(value);
 }
 
 /// Every tunable of the Critical Force analysis, named once.

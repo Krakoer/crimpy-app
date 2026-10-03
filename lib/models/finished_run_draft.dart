@@ -151,8 +151,19 @@ class CriticalForceResultDraft extends FinishedRunDraft {
   final List<CriticalForceWindow> pullWindows;
   final int pausedSeconds;
 
+  /// The hand and edge the test was pulled with, which its share of max and
+  /// the Max Force its hardest pull may beat are read on. The grip is the
+  /// one the result is recorded on.
+  final HandSide hand;
+  final int? edgeSizeMm;
+
+  GripPosition get gripPosition =>
+      saveAssessment.gripPosition ?? GripPosition.halfCrimp;
+
   const CriticalForceResultDraft({
     required super.owner,
+    required this.hand,
+    required this.edgeSizeMm,
     required this.saveAssessment,
     required this.saveSession,
     required this.saveReps,
@@ -180,7 +191,14 @@ class CriticalForceResultDraft extends FinishedRunDraft {
         'right_value': saveAssessment.rightValue,
       if (saveAssessment.leftValue != null)
         'left_value': saveAssessment.leftValue,
+      if (saveAssessment.gripPosition != null)
+        'grip_position': saveAssessment.gripPosition!.name,
+      if (saveAssessment.details != null) 'details': saveAssessment.details,
     },
+    'hand': hand.name,
+    // Written even when null, so a draft without an edge reads back without
+    // one rather than as a draft kept before the edge was.
+    'edge_size_mm': edgeSizeMm,
     'session': {
       'name': saveSession.name,
       'date': saveSession.date.toUtc().toIso8601String(),
@@ -206,14 +224,28 @@ class CriticalForceResultDraft extends FinishedRunDraft {
       for (final pair in (raw as List<dynamic>).cast<List<dynamic>>())
         ((pair[0] as num).toDouble(), (pair[1] as num).toDouble()),
     ];
+    final rightValue = (assessment['right_value'] as num?)?.toDouble();
+    final grip = assessment['grip_position'] as String?;
     return CriticalForceResultDraft(
       owner: owner,
+      // A draft kept before these were stored: the hand its value is on, and
+      // the protocol's own edge.
+      hand: switch (json['hand']) {
+        final String name => HandSide.values.byName(name),
+        _ => rightValue != null ? HandSide.right : HandSide.left,
+      },
+      edgeSizeMm: json.containsKey('edge_size_mm')
+          ? (json['edge_size_mm'] as num?)?.toInt()
+          : BuiltinAssessmentIds.maxForceEdgeSizeMm,
       previousCriticalForce: (json['previous_critical_force'] as num?)
           ?.toDouble(),
       saveAssessment: AssessmentResultModel(
         assessmentId: assessment['assessment_id'] as String,
-        rightValue: (assessment['right_value'] as num?)?.toDouble(),
+        rightValue: rightValue,
         leftValue: (assessment['left_value'] as num?)?.toDouble(),
+        gripPosition: grip == null ? null : GripPosition.values.byName(grip),
+        details: (assessment['details'] as Map<String, dynamic>?)
+            ?.cast<String, Object?>(),
       ),
       saveSession: SessionModel(
         name: session['name'] as String,
