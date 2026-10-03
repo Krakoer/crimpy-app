@@ -13,6 +13,7 @@ import 'package:crimpy/views/widgets/workout_timer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../support/run_drafts.dart';
 
 class _Connected extends BleConnection {
   @override
@@ -69,6 +70,7 @@ Future<State> _pumpRun(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        ...runDraftOverrides(),
         bleRepositoryProvider.overrideWithValue(BleRepository()),
         connectionStateProvider.overrideWith(_Connected.new),
         bleDataStreamProvider.overrideWith(() => samples),

@@ -16,6 +16,7 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../support/run_drafts.dart';
 
 class CapturingSessions extends Sessions {
   SessionModel? saved;
@@ -64,7 +65,10 @@ RepDataModel _rep({
 
 Future<void> _show(WidgetTester tester, Widget screen) => tester.pumpWidget(
   ProviderScope(
-    overrides: [sessionsProvider.overrideWith(CapturingSessions.new)],
+    overrides: [
+      ...runDraftOverrides(),
+      sessionsProvider.overrideWith(CapturingSessions.new),
+    ],
     child: MaterialApp(home: screen),
   ),
 );
@@ -77,7 +81,10 @@ Future<void> _pumpFor(
   CapturingSessions sessions,
 ) => tester.pumpWidget(
   ProviderScope(
-    overrides: [sessionsProvider.overrideWith(() => sessions)],
+    overrides: [
+      ...runDraftOverrides(),
+      sessionsProvider.overrideWith(() => sessions),
+    ],
     child: MaterialApp(
       home: Navigator(
         onGenerateRoute: (_) => MaterialPageRoute(builder: (_) => screen),
@@ -987,6 +994,7 @@ Future<CapturingAssessments> _answer(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        ...runDraftOverrides(),
         assessmentsProvider(definition.id).overrideWith(() => assessments),
       ],
       child: MaterialApp(
@@ -1022,6 +1030,7 @@ void _assessmentQuestionTests() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          ...runDraftOverrides(),
           assessmentsProvider(
             _pullUpPyramid.id,
           ).overrideWith(CapturingAssessments.new),
@@ -1075,6 +1084,7 @@ void _assessmentQuestionTests() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          ...runDraftOverrides(),
           assessmentsProvider(
             _pullUpPyramid.id,
           ).overrideWith(() => assessments),
@@ -1163,6 +1173,7 @@ void _maxForceOfferTests() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          ...runDraftOverrides(),
           sessionsProvider.overrideWith(() => sessions),
           assessmentsProvider(
             BuiltinAssessmentIds.maxForce,
@@ -1262,6 +1273,7 @@ void _maxForceOfferTests() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          ...runDraftOverrides(),
           sessionsProvider.overrideWith(() => sessions),
           assessmentsProvider(
             BuiltinAssessmentIds.maxForce,

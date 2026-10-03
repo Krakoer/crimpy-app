@@ -1,4 +1,6 @@
 import 'package:crimpy/utils/datetimes.dart';
+import 'package:crimpy/models/finished_run_draft.dart';
+import 'package:crimpy/viewmodels/finished_run_draft_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,6 +70,24 @@ class PostWorkoutScreen extends ConsumerStatefulWidget {
     this.programSessionId,
     super.key,
   });
+
+  /// The review of a finished run as it was kept on the device, which is how
+  /// every run reaches this screen: straight from the run, and again on the
+  /// next launch when the app died before the review was saved.
+  PostWorkoutScreen.fromDraft(TrainingReviewDraft draft, {Key? key})
+    : this(
+        key: key,
+        template: draft.template,
+        results: draft.results,
+        startedAt: draft.startedAt,
+        itemResults: draft.itemResults,
+        measuredPulls: draft.measuredPulls,
+        assessmentResults: draft.assessmentResults,
+        bodyweightKg: draft.bodyweightKg,
+        activity: draft.activity,
+        trainingId: draft.trainingId,
+        programSessionId: draft.programSessionId,
+      );
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -209,6 +229,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
         );
 
         if (shouldPop ?? false) {
+          await forgetFinishedRun(ref.read(finishedRunDraftRepositoryProvider));
           navigator.pop();
         }
       },
@@ -373,6 +394,7 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
             final maxForces = ref.read(
               assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier,
             );
+            final drafts = ref.read(finishedRunDraftRepositoryProvider);
             final release = keptMaxForces.isEmpty ? null : maxForces.holdOpen();
             try {
               String? trainingSessionId;
@@ -415,6 +437,10 @@ class _PostWorkoutScreenState extends ConsumerState<PostWorkoutScreen> {
                 }
                 return;
               }
+              // The run is stored, so the copy kept in case the app died on
+              // this screen goes. Only now: a save that failed keeps it, and the
+              // Max Forces below are extras the run does not wait on.
+              await forgetFinishedRun(drafts);
               // Written against the training once it is stored, and apart from
               // it: the training is saved whatever happens here, so a failure
               // must not leave the athlete on a screen whose button would store

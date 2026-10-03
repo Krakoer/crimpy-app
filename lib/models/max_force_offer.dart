@@ -16,6 +16,24 @@ class MeasuredPull {
     required this.edgeSizeMm,
     required this.peakKg,
   });
+
+  factory MeasuredPull.fromJson(Map<String, dynamic> json) => MeasuredPull(
+    hand: handSideFromApi(json['hand'] as String),
+    gripPosition: enumFromIndex(
+      GripPosition.values,
+      json['grip_position'] as num?,
+      GripPosition.halfCrimp,
+    ),
+    edgeSizeMm: (json['edge_size_mm'] as num?)?.toInt(),
+    peakKg: (json['peak_kg'] as num).toDouble(),
+  );
+
+  Map<String, dynamic> toJson() => {
+    'hand': hand.apiValue,
+    'grip_position': gripPosition.index,
+    if (edgeSizeMm != null) 'edge_size_mm': edgeSizeMm,
+    'peak_kg': peakKg,
+  };
 }
 
 /// A pull that beat the athlete's Max Force on file for its hand and grip,

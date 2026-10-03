@@ -13,6 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../support/run_drafts.dart';
+
 /// The Critical Force notifier, capturing the test it is asked to save.
 class _CriticalForceStore extends Assessments {
   AssessmentResultModel? saved;
@@ -119,6 +121,7 @@ Future<(_CriticalForceStore, _MaxForceStore)> _pump(
         assessmentsProvider(
           BuiltinAssessmentIds.maxForce,
         ).overrideWith(() => maxForce),
+        ...runDraftOverrides(),
       ],
       child: MaterialApp(
         home: Scaffold(

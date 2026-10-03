@@ -7,6 +7,8 @@ import 'package:crimpy/models/training_execution_model.dart';
 import 'package:crimpy/utils/training_expander.dart';
 import 'package:crimpy/utils/video_link.dart';
 import 'package:crimpy/viewmodels/run_cue_preferences_view_model.dart';
+import 'package:crimpy/models/finished_run_draft.dart';
+import 'package:crimpy/viewmodels/finished_run_draft_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:crimpy/models/session.dart';
@@ -178,28 +180,43 @@ class _PlayTrainingScreenState extends ConsumerState<PlayTrainingScreen>
     onFinished: () async {
       _recordFinishedItem();
 
+      // Kept on the device before the review is shown, so the app dying on the
+      // review does not take the run with it. Krakoer/crimpy#146.
+      final owner = await finishedRunOwner(
+        ref.read(runDraftOwnerProvider.future),
+      );
+      final draft = TrainingReviewDraft(
+        // Only kept below when the owner is known; the review itself never
+        // reads it.
+        owner: owner ?? FinishedRunDraft.guestOwner,
+        template: widget.training,
+        // Only a run that finished without play ever being pressed has no
+        // start. It is dated by its finish, still frozen before the review.
+        startedAt: _startedAt ?? clock.now(),
+        results: repResults,
+        itemResults: itemResults,
+        measuredPulls: measuredPulls,
+        // The same results the run resolved its prescription against, so the
+        // review states the numbers the athlete was actually played.
+        assessmentResults: widget.results.withDefinitions(
+          widget.training.referencedAssessments,
+        ),
+        bodyweightKg: widget.bodyweightKg,
+        activity: widget.activity,
+        trainingId: widget.trainingId,
+        programSessionId: widget.programSessionId,
+      );
+      if (owner != null) {
+        await keepFinishedRun(
+          ref.read(finishedRunDraftRepositoryProvider),
+          draft,
+        );
+      }
+
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => PostWorkoutScreen(
-            template: widget.training,
-            // Only a run that finished without play ever being pressed has
-            // no start. It is dated by its finish, still frozen before the
-            // review.
-            startedAt: _startedAt ?? clock.now(),
-            results: repResults,
-            itemResults: itemResults,
-            measuredPulls: measuredPulls,
-            // The same results the run resolved its prescription against, so
-            // the review states the numbers the athlete was actually played.
-            assessmentResults: widget.results.withDefinitions(
-              widget.training.referencedAssessments,
-            ),
-            bodyweightKg: widget.bodyweightKg,
-            activity: widget.activity,
-            trainingId: widget.trainingId,
-            programSessionId: widget.programSessionId,
-          ),
+          builder: (context) => PostWorkoutScreen.fromDraft(draft),
         ),
       );
     },

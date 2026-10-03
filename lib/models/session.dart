@@ -470,6 +470,21 @@ class RepDataModel {
     targetUnmeasured: json['target_unmeasured'] as bool? ?? false,
   );
 
+  /// The rep in the shape [RepDataModel.fromJson] reads, so a rep kept on the
+  /// device before it is saved reads back as it was recorded.
+  Map<String, dynamic> toJson() => {
+    'average_weight': averageWeight,
+    'duration': duration,
+    'index': index,
+    'is_rest': isRest,
+    'hand': handSide.apiValue,
+    'target_weight': targetWeight,
+    'grip_position': gripPosition.index,
+    if (edgeSizeMm != null) 'edge_size_mm': edgeSizeMm,
+    if (trainingItemId != null) 'training_item_id': trainingItemId,
+    'target_unmeasured': targetUnmeasured,
+  };
+
   /// The same rep played from [trainingItemId], or from no item when it is
   /// null. The guest import rewrites the local item id into the one the server
   /// minted, and drops the link when the item is no longer there to rewrite.

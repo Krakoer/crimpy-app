@@ -2,9 +2,13 @@ import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
 import 'package:crimpy/models/critical_force_result.dart';
+import 'package:crimpy/models/finished_run_draft.dart';
 import 'package:crimpy/models/max_force_offer.dart';
+import 'package:crimpy/utils/critical_force_analysis.dart';
+import 'package:crimpy/viewmodels/finished_run_draft_view_model.dart';
 import 'package:crimpy/views/widgets/max_force_offer_card.dart';
 import 'package:crimpy/models/session.dart';
+import 'package:crimpy/repositories/finished_run_draft_repository.dart';
 import 'package:crimpy/viewmodels/assessments_view_model.dart';
 import 'package:crimpy/views/screens/assessments/post_assessment_screen.dart';
 import 'package:crimpy/theme/crimpy_theme.dart';
@@ -47,6 +51,31 @@ class CriticalForceResultScreen extends ConsumerStatefulWidget {
     super.key,
   });
 
+  /// The result of a finished run as it was kept on the device, which is how
+  /// every run reaches this screen: straight from the run, and again on the
+  /// next launch when the app died before the result was saved. [results] is
+  /// the analysis the run already made; a resumed run makes it again, on the
+  /// same readings.
+  CriticalForceResultScreen.fromDraft(
+    CriticalForceResultDraft draft, {
+    CriticalForceResults? results,
+    Key? key,
+  }) : this(
+         key: key,
+         previousCriticalForce: draft.previousCriticalForce,
+         results:
+             results ?? analyseCriticalForce(draft.samples, draft.pullWindows),
+         data: draft.data,
+         samples: draft.samples,
+         pausedSeconds: draft.pausedSeconds,
+         hand: draft.hand,
+         gripPosition: draft.gripPosition,
+         edgeSizeMm: draft.edgeSizeMm,
+         saveAssessment: draft.saveAssessment,
+         saveSession: draft.saveSession,
+         saveReps: draft.saveReps,
+       );
+
   @override
   ConsumerState<CriticalForceResultScreen> createState() =>
       _CriticalForceResultScreenState();
@@ -68,6 +97,7 @@ class _CriticalForceResultScreenState
     BuildContext context,
     Assessments maxForces,
     List<AssessmentResultModel> keptMaxForces,
+    FinishedRunDraftRepository drafts,
   ) async {
     final String sessionId;
     try {
@@ -89,6 +119,9 @@ class _CriticalForceResultScreenState
       }
       return;
     }
+    // Stored, so the copy kept in case the app died here goes. A save that
+    // failed keeps it.
+    await forgetFinishedRun(drafts);
     if (keptMaxForces.isNotEmpty) {
       final failed = await maxForces.addResultsToSession(
         keptMaxForces,
@@ -142,202 +175,213 @@ class _CriticalForceResultScreenState
               peakKg: results.peakKg,
             ),
           ], maxForceHistory);
-    return Scaffold(
-      appBar: AppBar(title: Text("Critical Force assessment results")),
-      body: SafeArea(
-        child: ListView(
-          children: [
-            SizedBox(height: CrimpyTheme.spaceLgPlus),
-            Text(
-              "Great job!",
-              textAlign: TextAlign.center,
-              style: CrimpyTheme.headline.copyWith(
-                color: CrimpyTheme.textPrimary,
-              ),
-            ),
-            SizedBox(height: CrimpyTheme.spaceLg),
-            ResultCard(
-              prevValue: widget.previousCriticalForce,
-              newValue: results.criticalForce,
-            ),
-            SizedBox(height: CrimpyTheme.spaceLgPlus),
-            Text(
-              "Critical force:",
-              textAlign: TextAlign.center,
-              style: CrimpyTheme.headline.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            Text(
-              "${results.criticalForce.toStringAsFixed(2)} kg",
-              textAlign: TextAlign.center,
-              style: CrimpyTheme.numerals(
-                48,
-              ).copyWith(color: Theme.of(context).colorScheme.onSurface),
-            ),
-            if (shareOfMax != null)
+    final drafts = ref.read(finishedRunDraftRepositoryProvider);
+    // Leaving the result any way but its save discards it, the back arrow and
+    // the system back included, so the copy kept in case the app died here
+    // goes with it. A save that failed and is then left is discarded too.
+    return PopScope(
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) forgetFinishedRun(drafts);
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text("Critical Force assessment results")),
+        body: SafeArea(
+          child: ListView(
+            children: [
+              SizedBox(height: CrimpyTheme.spaceLgPlus),
               Text(
-                "$shareOfMax % of your max",
+                "Great job!",
                 textAlign: TextAlign.center,
-                style: CrimpyTheme.title.copyWith(
+                style: CrimpyTheme.headline.copyWith(
                   color: CrimpyTheme.textPrimary,
                 ),
               ),
-            Text(
-              "W' ${results.wPrime.round()} kg.s",
-              textAlign: TextAlign.center,
-              style: CrimpyTheme.body.copyWith(
-                color: CrimpyTheme.textSecondary,
+              SizedBox(height: CrimpyTheme.spaceLg),
+              ResultCard(
+                prevValue: widget.previousCriticalForce,
+                newValue: results.criticalForce,
               ),
-            ),
-            Text(
-              _countedPullsLabel(results),
-              textAlign: TextAlign.center,
-              style: CrimpyTheme.body.copyWith(
-                color: CrimpyTheme.textSecondary,
-              ),
-            ),
-            if (widget.pausedSeconds > 0)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: CrimpyTheme.spaceLg,
-                  vertical: CrimpyTheme.spaceXs,
+              SizedBox(height: CrimpyTheme.spaceLgPlus),
+              Text(
+                "Critical force:",
+                textAlign: TextAlign.center,
+                style: CrimpyTheme.headline.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
-                child: Text(
-                  "The test was paused for ${widget.pausedSeconds} s. Extra rest lets the forearm recover, so this result may read high.",
+              ),
+              Text(
+                "${results.criticalForce.toStringAsFixed(2)} kg",
+                textAlign: TextAlign.center,
+                style: CrimpyTheme.numerals(
+                  48,
+                ).copyWith(color: Theme.of(context).colorScheme.onSurface),
+              ),
+              if (shareOfMax != null)
+                Text(
+                  "$shareOfMax % of your max",
                   textAlign: TextAlign.center,
-                  style: CrimpyTheme.body.copyWith(
-                    color: CrimpyTheme.textSecondary,
+                  style: CrimpyTheme.title.copyWith(
+                    color: CrimpyTheme.textPrimary,
+                  ),
+                ),
+              Text(
+                "W' ${results.wPrime.round()} kg.s",
+                textAlign: TextAlign.center,
+                style: CrimpyTheme.body.copyWith(
+                  color: CrimpyTheme.textSecondary,
+                ),
+              ),
+              Text(
+                _countedPullsLabel(results),
+                textAlign: TextAlign.center,
+                style: CrimpyTheme.body.copyWith(
+                  color: CrimpyTheme.textSecondary,
+                ),
+              ),
+              if (widget.pausedSeconds > 0)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: CrimpyTheme.spaceLg,
+                    vertical: CrimpyTheme.spaceXs,
+                  ),
+                  child: Text(
+                    "The test was paused for ${widget.pausedSeconds} s. Extra rest lets the forearm recover, so this result may read high.",
+                    textAlign: TextAlign.center,
+                    style: CrimpyTheme.body.copyWith(
+                      color: CrimpyTheme.textSecondary,
+                    ),
+                  ),
+                ),
+              if (lateOff > 0)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: CrimpyTheme.spaceLg,
+                    vertical: CrimpyTheme.spaceXs,
+                  ),
+                  child: Text(
+                    lateOff == 1
+                        ? "1 pull was held on after the bell. Force past the bell does not count."
+                        : "$lateOff pulls were held on after the bell. Force past the bell does not count.",
+                    textAlign: TextAlign.center,
+                    style: CrimpyTheme.body.copyWith(
+                      color: CrimpyTheme.textSecondary,
+                    ),
+                  ),
+                ),
+              SizedBox(
+                height: 280,
+                child: SfCartesianChart(
+                  plotAreaBorderWidth: 0,
+                  series: <CartesianSeries>[
+                    FastLineSeries<CriticalForceSample, double>(
+                      width: 2,
+                      dataSource: widget.samples,
+                      xValueMapper: (CriticalForceSample sample, _) => sample.t,
+                      yValueMapper: (CriticalForceSample sample, _) =>
+                          sample.kg,
+                    ),
+                    // Each pull's mean, in the middle of its window.
+                    ScatterSeries<CriticalForcePull, double>(
+                      dataSource: [
+                        for (final pull in results.pulls)
+                          if (pull.meanKg != null) pull,
+                      ],
+                      xValueMapper: (pull, _) => (pull.start + pull.end) / 2,
+                      yValueMapper: (pull, _) => pull.meanKg,
+                      markerSettings: MarkerSettings(isVisible: true),
+                    ),
+                    // Dashed line at the Critical Force, across the test.
+                    LineSeries<(double, double), double>(
+                      dataSource: [
+                        (results.pulls.first.start, results.criticalForce),
+                        (results.pulls.last.end, results.criticalForce),
+                      ],
+                      xValueMapper: (data, _) => data.$1,
+                      yValueMapper: (data, _) => data.$2,
+                      dashArray: <double>[5, 5],
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ],
+                  primaryYAxis: NumericAxis(
+                    axisLine: AxisLine(color: Colors.transparent),
+                    majorGridLines: MajorGridLines(width: 0),
+                    majorTickLines: MajorTickLines(size: 0),
+                  ),
+                  primaryXAxis: NumericAxis(
+                    axisLine: AxisLine(color: Colors.transparent),
+                    majorTickLines: MajorTickLines(size: 0),
+                    majorGridLines: MajorGridLines(width: 0),
+                    autoScrollingMode: AutoScrollingMode.end,
+                    decimalPlaces: 0,
                   ),
                 ),
               ),
-            if (lateOff > 0)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: CrimpyTheme.spaceLg,
-                  vertical: CrimpyTheme.spaceXs,
-                ),
-                child: Text(
-                  lateOff == 1
-                      ? "1 pull was held on after the bell. Force past the bell does not count."
-                      : "$lateOff pulls were held on after the bell. Force past the bell does not count.",
-                  textAlign: TextAlign.center,
-                  style: CrimpyTheme.body.copyWith(
-                    color: CrimpyTheme.textSecondary,
+              if (maxForceOffers.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: CrimpyTheme.spaceLg,
+                  ),
+                  child: MaxForceOfferCard(
+                    offers: maxForceOffers,
+                    accepted: _acceptedMaxForces,
+                    onChanged: (offer, accept) => setState(
+                      () => accept
+                          ? _acceptedMaxForces.add(offer)
+                          : _acceptedMaxForces.remove(offer),
+                    ),
+                    intro:
+                        'The hardest pull of this test beat your Max Force on file.',
+                    note:
+                        'Optional. A ticked pull is saved as your Max Force, marked '
+                        'as kept from this test rather than measured by a Max '
+                        'Force test.',
                   ),
                 ),
+              // Room for the save and discard buttons floating over the bottom,
+              // so they do not sit on the chart.
+              const SizedBox(
+                height: kMinInteractiveDimension + CrimpyTheme.spaceLg,
               ),
-            SizedBox(
-              height: 280,
-              child: SfCartesianChart(
-                plotAreaBorderWidth: 0,
-                series: <CartesianSeries>[
-                  FastLineSeries<CriticalForceSample, double>(
-                    width: 2,
-                    dataSource: widget.samples,
-                    xValueMapper: (CriticalForceSample sample, _) => sample.t,
-                    yValueMapper: (CriticalForceSample sample, _) => sample.kg,
-                  ),
-                  // Each pull's mean, in the middle of its window.
-                  ScatterSeries<CriticalForcePull, double>(
-                    dataSource: [
-                      for (final pull in results.pulls)
-                        if (pull.meanKg != null) pull,
-                    ],
-                    xValueMapper: (pull, _) => (pull.start + pull.end) / 2,
-                    yValueMapper: (pull, _) => pull.meanKg,
-                    markerSettings: MarkerSettings(isVisible: true),
-                  ),
-                  // Dashed line at the Critical Force, across the test.
-                  LineSeries<(double, double), double>(
-                    dataSource: [
-                      (results.pulls.first.start, results.criticalForce),
-                      (results.pulls.last.end, results.criticalForce),
-                    ],
-                    xValueMapper: (data, _) => data.$1,
-                    yValueMapper: (data, _) => data.$2,
-                    dashArray: <double>[5, 5],
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                ],
-                primaryYAxis: NumericAxis(
-                  axisLine: AxisLine(color: Colors.transparent),
-                  majorGridLines: MajorGridLines(width: 0),
-                  majorTickLines: MajorTickLines(size: 0),
-                ),
-                primaryXAxis: NumericAxis(
-                  axisLine: AxisLine(color: Colors.transparent),
-                  majorTickLines: MajorTickLines(size: 0),
-                  majorGridLines: MajorGridLines(width: 0),
-                  autoScrollingMode: AutoScrollingMode.end,
-                  decimalPlaces: 0,
-                ),
-              ),
+            ],
+          ),
+        ),
+        floatingActionButton: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            TextButton(
+              onPressed: () async {
+                // Read off what is still on screen, so an offer ticked and then
+                // taken back by a refreshed history is not saved.
+                final keptMaxForces = [
+                  for (final offer in maxForceOffers)
+                    if (_acceptedMaxForces.contains(offer))
+                      offer.toResult(AssessmentOrigin.training),
+                ];
+                // Taken before the first await: the athlete can leave while the
+                // test is saved, and the kept max is still written after it.
+                final maxForces = ref.read(
+                  assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier,
+                );
+                final release = keptMaxForces.isEmpty
+                    ? null
+                    : maxForces.holdOpen();
+                try {
+                  await _save(context, maxForces, keptMaxForces, drafts);
+                } finally {
+                  release?.call();
+                }
+              },
+              child: Text("Save new result"),
             ),
-            if (maxForceOffers.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: CrimpyTheme.spaceLg,
-                ),
-                child: MaxForceOfferCard(
-                  offers: maxForceOffers,
-                  accepted: _acceptedMaxForces,
-                  onChanged: (offer, accept) => setState(
-                    () => accept
-                        ? _acceptedMaxForces.add(offer)
-                        : _acceptedMaxForces.remove(offer),
-                  ),
-                  intro:
-                      'The hardest pull of this test beat your Max Force on file.',
-                  note:
-                      'Optional. A ticked pull is saved as your Max Force, marked '
-                      'as kept from this test rather than measured by a Max '
-                      'Force test.',
-                ),
-              ),
-            // Room for the save and discard buttons floating over the bottom,
-            // so they do not sit on the chart.
-            const SizedBox(
-              height: kMinInteractiveDimension + CrimpyTheme.spaceLg,
+            TextButton(
+              child: Text("Discard"),
+              onPressed: () async {
+                await forgetFinishedRun(drafts);
+                if (context.mounted) Navigator.of(context).pop();
+              },
             ),
           ],
         ),
-      ),
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          TextButton(
-            onPressed: () async {
-              // Read off what is still on screen, so an offer ticked and then
-              // taken back by a refreshed history is not saved.
-              final keptMaxForces = [
-                for (final offer in maxForceOffers)
-                  if (_acceptedMaxForces.contains(offer))
-                    offer.toResult(AssessmentOrigin.training),
-              ];
-              // Taken before the first await: the athlete can leave while the
-              // test is saved, and the kept max is still written after it.
-              final maxForces = ref.read(
-                assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier,
-              );
-              final release = keptMaxForces.isEmpty
-                  ? null
-                  : maxForces.holdOpen();
-              try {
-                await _save(context, maxForces, keptMaxForces);
-              } finally {
-                release?.call();
-              }
-            },
-            child: Text("Save new result"),
-          ),
-          TextButton(
-            child: Text("Discard"),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
       ),
     );
   }
