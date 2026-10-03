@@ -13,11 +13,15 @@ import 'package:crimpy/services/video_launcher.dart';
 import 'package:crimpy/viewmodels/ble_view_model.dart';
 import 'package:crimpy/views/screens/trainings/play_training_screen/play_training_screen.dart';
 import 'package:crimpy/views/screens/trainings/post_workout_screen.dart';
+import 'package:crimpy/models/finished_run_draft.dart';
+import 'package:crimpy/viewmodels/finished_run_draft_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/run_screen_plugins.dart';
+import '../support/run_drafts.dart';
 
 Training _stretchingCircuit() => const Training(
   id: 't1',
@@ -451,6 +455,7 @@ Future<void> _pumpRun(
   bool liveSensorStats = false,
   AssessmentResults results = AssessmentResults.none,
   double? bodyweightKg,
+  List<Override>? draftOverrides,
 }) async {
   final screen = MaterialApp(
     home: PlayTrainingScreen(
@@ -463,6 +468,7 @@ Future<void> _pumpRun(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        ...draftOverrides ?? runDraftOverrides(),
         // Always served, never built: the real provider reaches for the stored
         // calibration on creation, which no test binding can answer, and the
         // screen reads the repository whether or not it runs with the sensor.
@@ -606,6 +612,7 @@ Future<void> _pumpConnectedRun(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        ...runDraftOverrides(),
         bleRepositoryProvider.overrideWithValue(sensor),
         connectionStateProvider.overrideWith(_ConnectedSensor.new),
       ],
@@ -998,6 +1005,49 @@ void main() {
       find.byType(PostWorkoutScreen),
     );
     expect(review.startedAt, DateTime(2026, 9, 28, 23, 50));
+  });
+
+  // #146: the run is on the device before its review shows, so the app dying
+  // on the review does not lose it.
+  testWidgets('a finished run is kept before its review', (tester) async {
+    final drafts = MemoryRunDrafts();
+    await _pumpRun(
+      tester,
+      _oneHang(),
+      draftOverrides: runDraftOverrides(drafts),
+    );
+
+    await _skip(tester);
+    await _skip(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PostWorkoutScreen), findsOneWidget);
+    expect(drafts.draft, isA<TrainingReviewDraft>());
+  });
+
+  // Ending a run must not hang on the sign in, and a draft filed under a
+  // guessed owner could be offered to the wrong athlete.
+  testWidgets('a run whose owner cannot be told reaches its review unkept', (
+    tester,
+  ) async {
+    final drafts = MemoryRunDrafts();
+    await _pumpRun(
+      tester,
+      _oneHang(),
+      draftOverrides: [
+        finishedRunDraftRepositoryProvider.overrideWithValue(drafts),
+        runDraftOwnerProvider.overrideWith(
+          (ref) async => throw StateError('no sign in'),
+        ),
+      ],
+    );
+
+    await _skip(tester);
+    await _skip(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PostWorkoutScreen), findsOneWidget);
+    expect(drafts.draft, isNull);
   });
 
   // A run started with "Run without" measures nothing, so the reps it records

@@ -12,6 +12,7 @@ import 'package:crimpy/views/widgets/assessment_tutorial_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import '../support/run_drafts.dart';
 
 List<TrainingExecutionItem> _pullThenRest() => const [
   TimedItem(
@@ -35,7 +36,10 @@ Future<void> _pumpRun(
 ) async {
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [bleRepositoryProvider.overrideWithValue(bleRepository)],
+      overrides: [
+        ...runDraftOverrides(),
+        bleRepositoryProvider.overrideWithValue(bleRepository),
+      ],
       child: MaterialApp(home: screen),
     ),
   );
@@ -51,7 +55,10 @@ Future<void> _pumpPushedRun(
 ) async {
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [bleRepositoryProvider.overrideWithValue(bleRepository)],
+      overrides: [
+        ...runDraftOverrides(),
+        bleRepositoryProvider.overrideWithValue(bleRepository),
+      ],
       child: MaterialApp(
         home: Builder(
           builder: (context) => TextButton(
