@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
@@ -74,13 +75,50 @@ class _CapturingSessions extends Sessions {
   }
 }
 
-SessionModel _session() => SessionModel(
+SessionModel _session({DateTime? date}) => SessionModel(
   name: 'Max pull ups',
-  date: DateTime(2026, 9, 18),
+  date: date ?? DateTime(2026, 9, 18, 10),
   isAssessment: true,
   activity: SessionActivity.hangboard,
   origin: SessionOrigin.played,
 );
+
+AssessmentModel _maxForce(
+  String id,
+  DateTime date, {
+  AssessmentOrigin origin = AssessmentOrigin.test,
+}) => AssessmentModel(
+  id: id,
+  date: date,
+  definition: BuiltinAssessmentIds.definitionOf(AssessmentType.mvc),
+  rightValue: 40,
+  origin: origin,
+);
+
+/// Records a Max Force whose session started at [at], with the clock there
+/// too, as a run finished at that moment would.
+Future<void> _recordMaxForceAt(ProviderContainer container, DateTime at) =>
+    withClock(
+      Clock.fixed(at),
+      () => container
+          .read(assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier)
+          .saveAssessment(
+            AssessmentResultModel(
+              assessmentId: BuiltinAssessmentIds.maxForce,
+              rightValue: 41,
+            ),
+            _session(date: at),
+            const [],
+          ),
+    );
+
+ProviderContainer _containerOver(_SlowAssessmentRepository repository) =>
+    ProviderContainer.test(
+      overrides: [
+        assessmentRepositoryProvider.overrideWithValue(repository),
+        sessionsProvider.overrideWith(_CapturingSessions.new),
+      ],
+    );
 
 void main() {
   test('a result is saved through an assessment nothing is listening to', () async {
@@ -141,7 +179,7 @@ void main() {
       ..stored = [
         AssessmentModel(
           id: 'earlier',
-          date: DateTime.now(),
+          date: DateTime(2026, 9, 18, 9),
           definition: const AssessmentDefinition(
             id: 'a-coach',
             label: 'Max pull ups',
@@ -178,7 +216,7 @@ void main() {
         ..stored = [
           AssessmentModel(
             id: 'kept',
-            date: DateTime.now(),
+            date: DateTime(2026, 9, 18, 9),
             definition: BuiltinAssessmentIds.definitionOf(AssessmentType.mvc),
             rightValue: 42,
             origin: AssessmentOrigin.training,
@@ -213,7 +251,7 @@ void main() {
         ..stored = [
           AssessmentModel(
             id: 'morning-test',
-            date: DateTime.now(),
+            date: DateTime(2026, 9, 18, 9),
             definition: BuiltinAssessmentIds.definitionOf(AssessmentType.mvc),
             rightValue: 40,
           ),
@@ -273,5 +311,110 @@ void main() {
 
     expect(failed.single.leftValue, 42);
     expect(repository.saved.single.rightValue, 43);
+  });
+
+  group('the day a test replaces is the training day', () {
+    test('a retest at 01:00 replaces the test taken at 23:00', () async {
+      // The training day turns at 04:00, so both runs are the same evening's.
+      final repository = _SlowAssessmentRepository()
+        ..stored = [_maxForce('evening', DateTime(2026, 9, 28, 23))];
+
+      await _recordMaxForceAt(
+        _containerOver(repository),
+        DateTime(2026, 9, 29, 1),
+      );
+
+      expect(repository.deleted, ['evening']);
+      expect(repository.saved, hasLength(1));
+    });
+
+    test('a test at 04:00 keeps the one taken at 03:59', () async {
+      final repository = _SlowAssessmentRepository()
+        ..stored = [_maxForce('night', DateTime(2026, 9, 29, 3, 59))];
+
+      await _recordMaxForceAt(
+        _containerOver(repository),
+        DateTime(2026, 9, 29, 4),
+      );
+
+      expect(repository.deleted, isEmpty);
+      expect(repository.saved, hasLength(1));
+    });
+
+    test(
+      'a retest at 01:00 leaves a max kept from a training untouched',
+      () async {
+        // Kept after the evening's test, so it is the last result: only the
+        // test it sits beside is replaced.
+        final repository = _SlowAssessmentRepository()
+          ..stored = [
+            _maxForce('evening', DateTime(2026, 9, 28, 23)),
+            _maxForce(
+              'kept',
+              DateTime(2026, 9, 28, 23, 30),
+              origin: AssessmentOrigin.training,
+            ),
+          ];
+
+        await _recordMaxForceAt(
+          _containerOver(repository),
+          DateTime(2026, 9, 29, 1),
+        );
+
+        expect(repository.deleted, ['evening']);
+      },
+    );
+
+    test('the redo prompt asks by the training day too', () async {
+      // The list screen asks before a run whether one is to be replaced, with
+      // no session yet, so it measures against now.
+      final repository = _SlowAssessmentRepository()
+        ..stored = [_maxForce('evening', DateTime(2026, 9, 28, 23))];
+      final notifier = _containerOver(
+        repository,
+      ).read(assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier);
+
+      expect(
+        await withClock(
+          Clock.fixed(DateTime(2026, 9, 29, 1)),
+          notifier.getSameDayAssessment,
+        ),
+        'evening',
+      );
+      expect(
+        await withClock(
+          Clock.fixed(DateTime(2026, 9, 29, 4)),
+          notifier.getSameDayAssessment,
+        ),
+        isNull,
+      );
+    });
+
+    test('a run resumed the next day replaces its own day\'s test', () async {
+      // A draft keeps the session it was run in, so its result is filed on
+      // that day and must not erase the test taken since.
+      final repository = _SlowAssessmentRepository()
+        ..stored = [
+          _maxForce('yesterday', DateTime(2026, 9, 28, 18)),
+          _maxForce('today', DateTime(2026, 9, 29, 10)),
+        ];
+      final container = _containerOver(repository);
+
+      await withClock(
+        Clock.fixed(DateTime(2026, 9, 29, 12)),
+        () => container
+            .read(assessmentsProvider(BuiltinAssessmentIds.maxForce).notifier)
+            .saveAssessment(
+              AssessmentResultModel(
+                assessmentId: BuiltinAssessmentIds.maxForce,
+                rightValue: 41,
+              ),
+              _session(date: DateTime(2026, 9, 28, 20)),
+              const [],
+            ),
+      );
+
+      expect(repository.deleted, ['yesterday']);
+    });
   });
 }
