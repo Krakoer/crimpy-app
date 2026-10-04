@@ -2,11 +2,11 @@ import 'package:crimpy/database/builtins.dart';
 import 'package:crimpy/logger.dart';
 import 'package:crimpy/models/ble_data_model.dart';
 import 'package:crimpy/models/common.dart';
-import 'package:flutter/material.dart';
 import 'package:crimpy/models/assessment_model.dart';
 import 'package:crimpy/models/session.dart';
 import 'package:crimpy/models/training.dart';
 import 'package:crimpy/repositories/assessment_repository.dart';
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/viewmodels/program_view_model.dart';
 import 'package:crimpy/viewmodels/training_view_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -183,10 +183,13 @@ class Assessments extends _$Assessments {
     List<BleDataPoint>? data,
     List<SessionItemResultModel> itemResults = const [],
   }) async {
-    // First, delete same-day assessment if any.
+    // First, delete the test recorded the same training day, if any.
+    // Measured against the day the new result is filed on, its session's,
+    // rather than now: a run resumed from a draft keeps the day it was run.
     final prevAssessmentId = await getSameDayAssessment(
       handSide: assessmentModel.hand,
       gripPosition: assessmentModel.gripPosition,
+      at: session.date,
     );
     if (prevAssessmentId != null) {
       await _assessmentRepository.deleteAssessment(prevAssessmentId);
@@ -265,13 +268,21 @@ class Assessments extends _$Assessments {
     );
   }
 
-  /// Retuns the id of the assessment that has been done the same day with the same hand and grip position, if any.
+  /// Returns the id of the test result recorded on the same training day as
+  /// [at] (now when omitted) with the same hand and grip position, if any.
+  ///
+  /// The day is the training day, which turns at [trainingDayStartHour] as
+  /// everywhere else in the app: a test at 23:00 and a retest at 01:00 are the
+  /// same evening's, so the retest replaces the first rather than standing
+  /// beside it as another day's.
+  ///
   /// Only a test counts: a result kept from a training is not a run of the
   /// test, so a test taken later that day does not erase it.
   /// Only call this method on a family keyed to an assessment.
   Future<String?> getSameDayAssessment({
     HandSide? handSide,
     GripPosition? gripPosition,
+    DateTime? at,
   }) async {
     if (assessmentId == null) {
       AppLoggerHelper.warning(
@@ -279,20 +290,19 @@ class Assessments extends _$Assessments {
       );
       return "";
     }
-    final prevAssessment = (await _assessmentRepository.getAssessments(
-      assessmentId: assessmentId,
-      handSide: handSide,
-      gripPosition: gripPosition,
-    )).where((a) => a.origin == AssessmentOrigin.test).lastOrNull;
-    if (prevAssessment == null) {
-      return null;
-    }
-
-    // If session is the same day, delete the last assessment
-    if (DateUtils.isSameDay(prevAssessment.date, DateTime.now())) {
-      return prevAssessment.id;
-    }
-
-    return null;
+    final day = at == null ? currentTrainingDay() : trainingDayOf(at.toLocal());
+    final prevAssessment =
+        (await _assessmentRepository.getAssessments(
+              assessmentId: assessmentId,
+              handSide: handSide,
+              gripPosition: gripPosition,
+            ))
+            .where(
+              (a) =>
+                  a.origin == AssessmentOrigin.test &&
+                  trainingDayOf(a.date.toLocal()) == day,
+            )
+            .lastOrNull;
+    return prevAssessment?.id;
   }
 }
