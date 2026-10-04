@@ -1,3 +1,4 @@
+import 'package:clock/clock.dart';
 import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/services/api_client.dart';
 import 'package:crimpy/utils/datetimes.dart';
@@ -65,7 +66,9 @@ class _WindowedApiClient extends ApiClient {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  final thisWeek = getStartOfWeek(DateTime.now());
+  // The training day's week, as the provider reads it: on a Monday before
+  // 04:00 it is still last week.
+  final thisWeek = getStartOfWeek(currentTrainingDay());
   final inTwoWeeks = addCalendarDays(thisWeek, 14);
   // Far enough ahead that no editable window reaches it. The screen cannot
   // open it today, but a list pinned to an older day can be asked for it.
@@ -93,6 +96,17 @@ void main() {
       expect(held.window.to, inTwoWeeks);
       expect(api.calls.single.from, formatWeekStart(thisWeek));
       expect(api.calls.single.to, formatWeekStart(inTwoWeeks));
+    });
+
+    test('keeps the week being finished until Monday 04:00', () async {
+      await withClock(Clock.fixed(DateTime(2026, 10, 5, 1, 30)), () async {
+        final api = _WindowedApiClient({});
+
+        final held = await (await notifier(api)).future;
+
+        expect(held.window.from, DateTime(2026, 9, 28));
+        expect(api.calls.single.from, '2026-09-28');
+      });
     });
 
     test('reads a declared week inside the window off the list', () async {

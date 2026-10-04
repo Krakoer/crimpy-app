@@ -22,7 +22,7 @@ class NextWeekAvailabilityCard extends ConsumerWidget {
     final enrollment = ref.watch(coachEnrollmentProvider);
     if (enrollment.value == null) return const SizedBox.shrink();
 
-    final nextWeek = getStartOfNextWeek(DateTime.now());
+    final nextWeek = getStartOfNextWeek(currentTrainingDay());
     // The declared dates rather than the editable weeks: this card only asks
     // whether next week was answered, and the week list is windowed, so a week
     // it did not fetch would read here as never declared.
