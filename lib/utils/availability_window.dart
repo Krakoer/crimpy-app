@@ -21,9 +21,10 @@ class AvailabilityWindow {
     : from = getStartOfWeek(from),
       to = getStartOfWeek(to);
 
-  /// The weeks the availability screen can edit, as of [now].
-  factory AvailabilityWindow.editable(DateTime now) {
-    final from = getStartOfWeek(now);
+  /// The weeks the availability screen can edit, as of the training day
+  /// [today]: the week turns over on Monday at 04:00, as the day does.
+  factory AvailabilityWindow.editable(DateTime today) {
+    final from = getStartOfWeek(today);
     return AvailabilityWindow(
       from: from,
       to: addCalendarDays(from, (editableAvailabilityWeeks - 1) * 7),

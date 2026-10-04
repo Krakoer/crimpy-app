@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:clock/clock.dart';
 import 'package:crimpy/models/week_availability.dart';
 import 'package:crimpy/utils/availability_window.dart';
+import 'package:crimpy/utils/datetimes.dart';
 import 'package:crimpy/viewmodels/availability_view_model.dart';
 import 'package:crimpy/views/screens/availability/week_availability_screen.dart';
 import 'package:flutter/material.dart';
@@ -496,4 +498,45 @@ void main() {
       expect(find.text(name), findsOneWidget);
     }
   });
+
+  // A week turns over on Monday at 04:00, as a training day does. Just after
+  // midnight on a Monday the athlete is still finishing the week before, so
+  // that is this week and the one starting today is the one to declare.
+  testWidgets('at 01:30 on a Monday the week being finished is this week', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await withClock(Clock.fixed(DateTime(2026, 10, 5, 1, 30)), () async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            myAvailabilityProvider.overrideWith(_EmptyWeeksAvailability.new),
+          ],
+          child: const MaterialApp(home: WeekAvailabilityScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('This week (28/9)'), findsOneWidget);
+      final next = tester.widget<ChoiceChip>(
+        find.widgetWithText(ChoiceChip, 'Next week (5/10)'),
+      );
+      expect(next.selected, isTrue);
+    });
+  });
+}
+
+/// No week declared anywhere, whichever week the screen asks for.
+class _EmptyWeeksAvailability extends MyAvailability {
+  @override
+  Future<AvailabilityWeeks> build() async => (
+    weeks: const <WeekAvailability>[],
+    window: AvailabilityWindow.editable(currentTrainingDay()),
+  );
+
+  @override
+  Future<({WeekAvailability week, bool declared})> weekOf(
+    DateTime monday,
+  ) async => (week: WeekAvailability.empty(monday), declared: false);
 }

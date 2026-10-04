@@ -1,4 +1,5 @@
 import 'package:crimpy/logger.dart';
+import 'package:crimpy/utils/monday_first_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -63,6 +64,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'crimpy',
       theme: CrimpyTheme.lightTheme,
+      localizationsDelegates: crimpyLocalizationsDelegates,
       home: MainPage(),
     );
   }

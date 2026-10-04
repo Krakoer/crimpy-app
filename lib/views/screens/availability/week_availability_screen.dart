@@ -58,7 +58,7 @@ class _WeekAvailabilityScreenState
   @override
   void initState() {
     super.initState();
-    _weekStart = widget.weekStart ?? getStartOfNextWeek(DateTime.now());
+    _weekStart = widget.weekStart ?? getStartOfNextWeek(currentTrainingDay());
     _loadWeek();
   }
 
@@ -480,10 +480,11 @@ class _WeekSwitcher extends StatelessWidget {
   Widget build(BuildContext context) {
     // Derived from the same editable window the list is read for, rather than
     // listed again here, so widening one widens the other. It is recomputed
-    // rather than read off the held list: across a Sunday midnight the list is
-    // still pinned to yesterday's window, and the chip past it is then a week
-    // the list was never asked for, which weekOf fetches on its own.
-    final window = AvailabilityWindow.editable(DateTime.now());
+    // rather than read off the held list: once the week turns over, on Monday
+    // at the 04:00 a training day turns over at, the list is still pinned to
+    // the previous window, and the chip past it is then a week the list was
+    // never asked for, which weekOf fetches on its own.
+    final window = AvailabilityWindow.editable(currentTrainingDay());
     final options = [
       for (var index = 0; index < editableAvailabilityWeeks; index++)
         addCalendarDays(window.from, index * 7),

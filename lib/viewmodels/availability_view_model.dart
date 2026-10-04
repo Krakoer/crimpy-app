@@ -42,7 +42,7 @@ class MyAvailability extends _$MyAvailability {
   @override
   Future<AvailabilityWeeks> build() async {
     final repository = ref.watch(availabilityRepositoryProvider);
-    final window = AvailabilityWindow.editable(DateTime.now());
+    final window = AvailabilityWindow.editable(currentTrainingDay());
     if (repository == null) {
       return (weeks: const <WeekAvailability>[], window: window);
     }
