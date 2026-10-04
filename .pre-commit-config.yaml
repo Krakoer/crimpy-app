@@ -3,8 +3,8 @@ repos:
     hooks:
       - id: flutter-format
         name: Flutter Format
-        entry: dart format --set-exit-if-changed
-        language: system
+        entry: tool/without_git_env.sh dart format --set-exit-if-changed
+        language: script
         files: \.dart$
         pass_filenames: false
         # Matches what CI formats, which is everything. Leaving tool/ out is
@@ -13,8 +13,8 @@ repos:
 
       - id: flutter-analyze
         name: Flutter Analyze
-        entry: flutter analyze
-        language: system
+        entry: tool/without_git_env.sh flutter analyze
+        language: script
         files: \.dart$
         pass_filenames: false
 
@@ -23,7 +23,7 @@ repos:
       # bug it catches.
       - id: custom-lint
         name: Provider Usage
-        entry: dart run custom_lint
-        language: system
+        entry: tool/without_git_env.sh dart run custom_lint
+        language: script
         files: \.dart$
         pass_filenames: false
