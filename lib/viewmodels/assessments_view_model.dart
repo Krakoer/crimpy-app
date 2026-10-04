@@ -148,7 +148,8 @@ class Assessments extends _$Assessments {
   /// watched it.
   void Function() holdOpen() => ref.keepAlive().close;
 
-  /// Save the assessment into the database. If the assessment has already been done today, the previous results will be deleted.
+  /// Save the assessment into the database. A test of it already recorded on
+  /// the session's training day is replaced, see [getSameDayAssessment].
   /// Answers with the id of the session it wrote, which a result kept from
   /// the same run is added to.
   Future<String> saveAssessment(
