@@ -30,7 +30,8 @@ class _MondayFirstMaterialLocalizationsDelegate
   const _MondayFirstMaterialLocalizationsDelegate();
 
   // English only, like the default localizations it extends: the app ships no
-  // other language, so every locale resolves to English and lands here.
+  // other language, so every locale resolves to English and lands here. Adding
+  // a language means giving its localizations the same Monday override.
   @override
   bool isSupported(Locale locale) => locale.languageCode == 'en';
 

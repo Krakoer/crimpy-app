@@ -49,9 +49,12 @@ List<ReminderOccurrence> planAvailabilityReminders({
     );
     if (!when.isAfter(from)) continue;
 
-    // The week the nudge is about is the one starting after the day it fires,
-    // which is the point of asking on a Friday for a program written Saturday.
-    final target = getStartOfNextWeek(day);
+    // The week the nudge is about is the one starting after the training day
+    // it fires on, which is the point of asking on a Friday for a program
+    // written Saturday. Read as a training day, so a nudge set before 04:00
+    // on a Monday asks about the week the home card asks about, the one about
+    // to be trained, rather than the one after it.
+    final target = getStartOfNextWeek(trainingDayOf(when));
     if (declared.contains(target)) continue;
 
     occurrences.add(_availabilityOccurrence(when: when, weekStart: target));

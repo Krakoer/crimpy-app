@@ -60,6 +60,22 @@ void main() {
       expect(occurrences, isEmpty);
     });
 
+    test(
+      'a nudge before 04:00 on a Monday asks about the week starting then',
+      () {
+        // Monday 1 June at 01:00 is still Sunday's training day, so the week to
+        // declare is the one opening that Monday, as on the home card.
+        final occurrences = _plan(
+          reminder: _reminder(dayOfWeek: 0, hour: 1),
+          declared: {_monday},
+          from: DateTime(2026, 5, 31, 12),
+        );
+
+        expect(occurrences, hasLength(1));
+        expect(occurrences.single.when, DateTime(2026, 6, 8, 1));
+      },
+    );
+
     test('plans nothing when the coach set no reminder', () {
       expect(
         planAvailabilityReminders(
